@@ -1,0 +1,23 @@
+mpc:
+  horizon_steps: 18
+  sample_time_seconds: 30
+  soc_ref: 0.65
+  reference_generation:
+    default_solve_stride: 1
+    formal_study_solve_stride: 1
+    hold_policy: zero_order_hold_between_solves
+  objective_weights:
+    q_soc: 40.0
+    q_fc: 0.001
+    q_batt: 0.01
+    q_ramp: 0.08
+  enable_battery_use_in_mpc: true
+  heuristic_reference:
+    fuel_cell_base_ratio: 0.80
+    soc_feedback_gain: 160.0
+    soc_feedback_sign: "increase_fc_when_soc_below_target"
+  objectives:
+    - soc_dev
+    - fuel_cell_power
+    - battery_power
+    - fuel_cell_ramp

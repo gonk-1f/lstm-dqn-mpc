@@ -1,0 +1,19 @@
+{
+  "input_dir": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\total_load_excels",
+  "split_json": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\config\\voyage_split_total_load_721.json",
+  "output_dir": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\spline_1s_diagnostics",
+  "dataset_csv": [
+    "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\spline_1s_diagnostics\\data\\cubic_spline_1s_natural.csv",
+    "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\spline_1s_diagnostics\\data\\cubic_spline_1s_not_a_knot.csv"
+  ],
+  "clipped_dataset_csv": [
+    "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\spline_1s_diagnostics\\data\\cubic_spline_1s_natural_clipped.csv",
+    "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\spline_1s_diagnostics\\data\\cubic_spline_1s_not_a_knot_clipped.csv"
+  ],
+  "physical_check_csv": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\spline_1s_diagnostics\\spline_physical_check.csv",
+  "predictability_audit_csv": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\spline_1s_diagnostics\\spline_predictability_audit.csv",
+  "num_voyages": 66,
+  "online_feasible": false,
+  "uses_future_endpoint": true,
+  "note": "cubic spline 1 s outputs are offline reconstructions, not measured 1 s data"
+}

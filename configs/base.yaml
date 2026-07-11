@@ -1,0 +1,15 @@
+project:
+  name: hydrogen_ship_hierarchical_ems
+  version: 0.1.0
+
+runtime:
+  seed: 42
+  device: cpu
+  log_dir: ./outputs/logs
+  checkpoint_dir: ./outputs/checkpoints
+
+data:
+  raw_root: "C:/Users/20883/OneDrive/Desktop/氢舟一号"
+  processed_root: ./data/processed
+  resample_seconds: 30
+

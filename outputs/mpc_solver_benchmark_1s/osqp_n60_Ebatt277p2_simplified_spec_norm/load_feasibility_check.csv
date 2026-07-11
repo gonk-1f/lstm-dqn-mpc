@@ -1,0 +1,2 @@
+P_fc_max_kw,P_batt_max_kw,P_available_max_kw,P_load_max,P_load_p99,P_load_p95,P_load_mean,num_steps_load_exceeds_698p6,fraction_load_exceeds_698p6,voyages_with_exceedance
+560.0,138.6,698.6,820.1348234744761,689.6971884027361,520.52106508529,208.29111213496205,683,0.0073411653428205985,voyage_063

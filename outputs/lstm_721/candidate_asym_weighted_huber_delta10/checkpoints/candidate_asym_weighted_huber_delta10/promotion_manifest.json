@@ -1,0 +1,16 @@
+{
+  "promoted_at": "2026-06-17T20:03:48",
+  "formal_dir": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_721\\candidate_asym_weighted_huber_delta10\\checkpoints\\candidate_asym_weighted_huber_delta10",
+  "source_dir": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_721_retrain\\checkpoints\\candidate_asym_weighted_huber_delta10_retrain",
+  "backup_dir": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_721\\candidate_asym_weighted_huber_delta10\\checkpoints\\candidate_asym_weighted_huber_delta10\\backup_before_reproducible_retrain_20260617_200348",
+  "files": [
+    "best_lstm_load_predictor.pt",
+    "best_lstm_load_predictor.json",
+    "best_lstm_load_predictor.feature_set.json",
+    "training_curve.csv"
+  ],
+  "selection_metric": "validation_MAE",
+  "best_epoch": 10,
+  "validation_MAE": 4.033183578516726,
+  "validation_RMSE": 6.127308887462103
+}

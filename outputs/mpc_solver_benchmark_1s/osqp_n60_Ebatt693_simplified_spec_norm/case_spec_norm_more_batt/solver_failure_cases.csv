@@ -1,0 +1,1 @@
+voyage_id,step,time_s,status,success,total_controller_ms,iterations,load_total_kw,P_fc_kw,P_batt_kw,SOC,balance_violation_kw,ramp_violation_kw,soc_violation

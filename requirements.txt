@@ -1,0 +1,12 @@
+casadi
+numpy
+pandas
+matplotlib
+xlrd
+scipy
+seaborn
+progressbar
+statsmodels
+sklearn
+PyYAML
+torch

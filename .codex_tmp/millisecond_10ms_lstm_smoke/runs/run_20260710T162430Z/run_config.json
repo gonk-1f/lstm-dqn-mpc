@@ -1,0 +1,29 @@
+{
+  "dataset_root": "data/millisecond_10ms",
+  "split_path": "outputs/config/millisecond_10ms_split_721.json",
+  "output_root": ".codex_tmp/millisecond_10ms_lstm_smoke/runs",
+  "n_trials": 1,
+  "study_timeout_s": 120,
+  "trial_timeout_s": 60,
+  "max_epochs": 2,
+  "patience": 1,
+  "history_steps": 30,
+  "prediction_steps": 6,
+  "robust_top_k": 1,
+  "seeds": [
+    42
+  ],
+  "device": "cuda",
+  "resume_run": null,
+  "dataset_manifest_sha256": "480cecdc2a20775b32091e6f7ca812b50a8248c15207725cca0e45cec8408015",
+  "split_manifest_sha256": "b8d5f046c71e6120b4c43762e128e3104add93d8780b28dc968d9759e7145473",
+  "source_sha256": [
+    "d959cc8ea0c8f6f13ff450705ab4500be1c32aaec34a14fa80f0d1916d5b0905",
+    "f1877326970fa362df1484a47b9df2ee20016603a30f1ba88abbc9dd9c3d0200"
+  ],
+  "resolved_device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "search_space_version": "millisecond_10ms_lstm_search_v1",
+  "run_started_utc": "2026-07-10T16:24:30.403452+00:00",
+  "forecasting_only": true
+}

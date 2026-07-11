@@ -1,0 +1,144 @@
+{
+  "files": [
+    {
+      "path": "checkpoints/selected_seed_42.pt",
+      "bytes": 75093,
+      "sha256": "54551dcb0fd6164ddfebe325b871f61838936018ac250d26819476736cf7f979"
+    },
+    {
+      "path": "figures/error_vs_horizon.png",
+      "bytes": 61701,
+      "sha256": "e69c35c613b637ff75e6093e6a2ed00c50d4eedd10207cf3768c2b5b893b282a"
+    },
+    {
+      "path": "figures/learning_curves_selected_seeds.png",
+      "bytes": 73544,
+      "sha256": "f00f090fc35c1368f75febc586e7c2fc15925376b772412286be67bc13ee78a0"
+    },
+    {
+      "path": "figures/lstm_vs_baselines.png",
+      "bytes": 57999,
+      "sha256": "7c15bb97abd44be77085deaa53179d12492656bce186ef4b6169fa0127f9fe12"
+    },
+    {
+      "path": "figures/optuna_optimization_history.png",
+      "bytes": 55935,
+      "sha256": "b1ed539722c7f574ddf0f08da8741314ca838c9cd9aa9c340bb9dea8f8dc9ba4"
+    },
+    {
+      "path": "figures/optuna_parameter_importance.png",
+      "bytes": 37653,
+      "sha256": "74b1dcc540b59af8a87360a44dac6ea3939c187f5dd1824a0533049a6079007b"
+    },
+    {
+      "path": "figures/prediction_vs_actual_scatter.png",
+      "bytes": 113228,
+      "sha256": "6dd009080639f31a9e8028f018714c5eab10829eedfb494367c6e4589a94c59c"
+    },
+    {
+      "path": "figures/residual_distribution_by_horizon.png",
+      "bytes": 46428,
+      "sha256": "69c83d53fc371a0936e2ac9f45d1bafaad0d3e977f50d3b79c9853ee6e6ab01e"
+    },
+    {
+      "path": "figures/test_sequences/00_26.5.24test_.xlsx_1_23-28s_20bd6d70_prediction_h1_h6.png",
+      "bytes": 302373,
+      "sha256": "916b3de42bd82bb957392b9ac97b0e933ce6027612d50c0f6f6e0ebb75c066fd"
+    },
+    {
+      "path": "figures/test_sequences/01_26.5.24test_.xlsx_5_171-186s_539efac7_prediction_h1_h6.png",
+      "bytes": 199305,
+      "sha256": "6fc01bcdcf1a0963ae06b9a340af868a7b37cc3607448b9b23eaf66976d2096b"
+    },
+    {
+      "path": "figures/test_sequences/02_1036_1.xlsx_3_91-95s_86cde676_prediction_h1_h6.png",
+      "bytes": 155010,
+      "sha256": "732ef2d3b3d8dacc61bda7f9c81d07a1c2c14052546733733b9e969382ac89ff"
+    },
+    {
+      "path": "figures/test_sequences/03_1036_1.xlsx_7_255-263s_fdd3763d_prediction_h1_h6.png",
+      "bytes": 317049,
+      "sha256": "72524ce1890856620e7e2e060de093d9c7344a9b1478ab28d6279151a837d546"
+    },
+    {
+      "path": "metrics/test_baseline_metrics_by_horizon.csv",
+      "bytes": 2720,
+      "sha256": "9e3fa3e30d2994af34b9a71ff8944117e943b76e3f5950851a4ff3724c4e0f03"
+    },
+    {
+      "path": "metrics/test_metrics_by_seed_horizon.csv",
+      "bytes": 867,
+      "sha256": "79eda5cbd204db7bfc8c7658b429505f3fd8afd1ac08d8a29c2f16c70afba409"
+    },
+    {
+      "path": "metrics/test_metrics_by_sequence.csv",
+      "bytes": 4712,
+      "sha256": "10108a47bff695f017a8f12887c5111c45b7c92160d9cbe8ccde050bc37a375c"
+    },
+    {
+      "path": "metrics/test_metrics_seed_mean_std.csv",
+      "bytes": 1050,
+      "sha256": "c25d9bd50c2f303647a6991a1532450ce89c723a5d30ccd119d9c314c24ccaea"
+    },
+    {
+      "path": "metrics/train_validation_test_gap.csv",
+      "bytes": 205,
+      "sha256": "9f887dbf5e750a70b83a065661d1bf579d5aeb4a5e0d49fe749404ce61039598"
+    },
+    {
+      "path": "predictions/test_predictions_seed_42.parquet",
+      "bytes": 221329,
+      "sha256": "77324b38d7ec33de40b90ff4527cc00cbf425b9f16af1cef28c33d62ca5f86fa"
+    },
+    {
+      "path": "REPORT_MILLISECOND_10MS_LSTM.md",
+      "bytes": 1862,
+      "sha256": "f0982f366ae0be4090c42f14b209598ff52a0e148e652da6ea4d21002ba59587"
+    },
+    {
+      "path": "run_config.json",
+      "bytes": 1034,
+      "sha256": "f4ac5f9c2d00028a9e59462b6a47d0929817fbb706c95ed18c44882c016f7922"
+    },
+    {
+      "path": "run_summary.json",
+      "bytes": 2367,
+      "sha256": "6cbdc8dd62c1e00c271fae9ba5a714f605e70357ca33b13d7941e80dd6290482"
+    },
+    {
+      "path": "selection/configuration_ranking.csv",
+      "bytes": 403,
+      "sha256": "385952349379af3d2bf181a91da609b33d637ed05bba99e508be12cf45d5864b"
+    },
+    {
+      "path": "selection/selection_complete.json",
+      "bytes": 748,
+      "sha256": "62c9a094167d494e7ae011eb6beb12980c75ff3d8ab776f83f2495bd949facb6"
+    },
+    {
+      "path": "selection/top3_validation_by_seed.csv",
+      "bytes": 415,
+      "sha256": "34c0c0434d65dd98938bdf6165251cda193bdd4ad6a0dea563b53a7bc399064d"
+    },
+    {
+      "path": "study/study.sqlite3",
+      "bytes": 114688,
+      "sha256": "4da9423caa8df167097f6ba9043286814b2770d4d3946fa0d708148e3ed1d173"
+    },
+    {
+      "path": "study/trial_checkpoints/trial_000.pt",
+      "bytes": 74981,
+      "sha256": "281444e2f54e700a088f63b7895002099a10a3ece9af691a2f3216673c6b6778"
+    },
+    {
+      "path": "study/trial_checkpoints/trial_000_curve.csv",
+      "bytes": 201,
+      "sha256": "c83cce39664d4873b5a1a526527e2af4087a7d7596edba981450fdd135503044"
+    },
+    {
+      "path": "study/trials_partial.csv",
+      "bytes": 909,
+      "sha256": "45d594304377f7a0641452a68cde1ba39bc71654a84dd6875f065e8f015c1583"
+    }
+  ]
+}

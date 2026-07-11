@@ -1,0 +1,74 @@
+{
+  "run_id": "20260630_172612_dp0_total_load_qsoc400_qbatt003_qramp2e-5_qh21_qsoc400_qbatt0p03_qramp2em05",
+  "output_dir": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_mpc_total_load_test_fixed_baseline_v1",
+  "fixed_mpc_p6_comparison.png": {
+    "path": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_mpc_total_load_test_fixed_baseline_v1\\fixed_mpc_p6_comparison.png",
+    "exists": true,
+    "size_bytes": 1113799,
+    "mtime": "2026-06-30T17:28:45",
+    "md5": "76d541b55d072ef5069d55093f3ae68e"
+  },
+  "fixed_mpc_p6_timeseries.csv": {
+    "path": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_mpc_total_load_test_fixed_baseline_v1\\fixed_mpc_p6_timeseries.csv",
+    "exists": true,
+    "size_bytes": 6251023,
+    "mtime": "2026-06-30T17:28:36",
+    "md5": "a2ac8cab08f33f700f88e5137c751eee"
+  },
+  "fixed_mpc_p6_metrics.csv": {
+    "path": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_mpc_total_load_test_fixed_baseline_v1\\fixed_mpc_p6_metrics.csv",
+    "exists": true,
+    "size_bytes": 14692,
+    "mtime": "2026-06-30T17:28:34",
+    "md5": "57986d04746105477e4ce028ef51e6b4"
+  },
+  "fixed_mpc_p6_config.json": {
+    "path": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_mpc_total_load_test_fixed_baseline_v1\\fixed_mpc_p6_config.json",
+    "exists": true,
+    "size_bytes": 6664,
+    "mtime": "2026-06-30T17:28:39",
+    "md5": "5ee59fe193dafb1a084c699d3bf7e75f"
+  },
+  "fixed_mpc_p6_objective_breakdown.csv": {
+    "path": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_mpc_total_load_test_fixed_baseline_v1\\fixed_mpc_p6_objective_breakdown.csv",
+    "exists": true,
+    "size_bytes": 7376,
+    "mtime": "2026-06-30T17:28:34",
+    "md5": "51450f461d2ea07cfe39b1135bf59aee"
+  },
+  "timing_debug_first_steps.csv": {
+    "path": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_mpc_total_load_test_fixed_baseline_v1\\timing_debug_first_steps.csv",
+    "exists": true,
+    "size_bytes": 147878,
+    "mtime": "2026-06-30T17:28:36",
+    "md5": "180360c01745b62c4faf2f458bdea880"
+  },
+  "solver_horizon_debug.json": {
+    "path": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_mpc_total_load_test_fixed_baseline_v1\\solver_horizon_debug.json",
+    "exists": true,
+    "size_bytes": 908,
+    "mtime": "2026-06-30T17:28:36",
+    "md5": "027ff3364479fdcacc506de605695ed5"
+  },
+  "horizon_sensitivity_debug.csv": {
+    "path": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_mpc_total_load_test_fixed_baseline_v1\\horizon_sensitivity_debug.csv",
+    "exists": true,
+    "size_bytes": 2544,
+    "mtime": "2026-06-30T17:28:39",
+    "md5": "560efe5f2629de144fa8f389de46cfd5"
+  },
+  "effective_config_debug.json": {
+    "path": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_mpc_total_load_test_fixed_baseline_v1\\effective_config_debug.json",
+    "exists": true,
+    "size_bytes": 2351,
+    "mtime": "2026-06-30T17:28:39",
+    "md5": "b7aac5a358d042252894d5c43dfbe45e"
+  },
+  "baseline_summary.md": {
+    "path": "C:\\Users\\20883\\OneDrive\\Desktop\\microgrid-mpc-master\\outputs\\lstm_mpc_total_load_test_fixed_baseline_v1\\baseline_summary.md",
+    "exists": true,
+    "size_bytes": 6915,
+    "mtime": "2026-06-30T17:28:46",
+    "md5": "0a86c96d4c86478c39a38989f6b298c4"
+  }
+}

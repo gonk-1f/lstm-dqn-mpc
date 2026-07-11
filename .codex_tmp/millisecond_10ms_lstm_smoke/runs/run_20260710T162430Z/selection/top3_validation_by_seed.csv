@@ -1,0 +1,2 @@
+config_id,seed,validation_mean_horizon_wape_pct,validation_aggregate_mae_kw,best_epoch,elapsed_s,stopped_by_timeout
+"{""batch_size"":64,""dropout"":0.0,""gradient_clip"":5.0,""hidden_size"":32,""learning_rate"":0.00017009062368270733,""loss"":""MSE"",""max_epochs"":2,""mlp_head"":[128,64],""num_layers"":1,""patience"":1,""weight_decay"":1e-06}",42,0.789958224599871,0.1179679710383077,2,4.921999999998661,False
