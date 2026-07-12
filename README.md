@@ -90,7 +90,7 @@ python -m pip install casadi numpy pandas matplotlib xlrd scipy seaborn progress
 | --- | --- | --- |
 | 66 航段数据构建/检查 | `python src/main/build_total_load_dataset_721.py --help` | 可用；默认 46/13/7 |
 | 1 s spline 数据诊断 | `python src/main/build_spline_1s_diagnostics.py --help` | 可用；仅离线重构 |
-| 10 ms 数据审计 | `python src/main/audit_millisecond_10ms_dataset.py --help` | 可用，但精确 split-key 审计当前有测试缺陷 |
+| 10 ms 数据审计 | `python src/main/audit_millisecond_10ms_dataset.py --help` | 可用；严格校验 train/validation/test assignment key 集合 |
 | 30 s LSTM 训练与测试汇总 | `python src/main/run_train_lstm_total_load_721.py --help` | 可用；已有 checkpoint 和逐 horizon 指标 |
 | 1 s LSTM 诊断 | `python src/main/run_lstm_spline_1s_hparam_search.py --help` | 辅助实验；现有 LSTM 未超过简单基线 |
 | 1 s OSQP `N=60` benchmark | `python src/main/benchmark_mpc_qp_osqp_1s.py --help` | 可用；离线 benchmark，不是正式 `N=6` 闭环 |
@@ -104,7 +104,7 @@ python -m pip install casadi numpy pandas matplotlib xlrd scipy seaborn progress
 python -m unittest discover -s tests -v
 ```
 
-当前基线为 141 项中 137 项通过、4 项失败；失败集中在 10 ms 数据审计对 split key 集合的校验，详见 `STATUS.md` 和 `docs/UNFINISHED_TASKS.md`。
+当前基线为 141 项全部通过；测试范围和仍缺失的 DQN 专项覆盖见 `STATUS.md` 与 `docs/PROJECT_MAP.md`。
 
 ## Current status
 

@@ -130,11 +130,22 @@ def audit_dataset(
     if missing_sequences:
         raise ValueError(f"Dataset manifest sequences missing from combined CSV: {missing_sequences}")
 
+    required_splits = ("train", "validation", "test")
+    expected_assignments = split_manifest["assignments"]
+    missing_assignment_splits = sorted(set(required_splits) - set(expected_assignments))
+    extra_assignment_splits = sorted(set(expected_assignments) - set(required_splits))
+    if missing_assignment_splits or extra_assignment_splits:
+        raise ValueError(
+            "Split assignment keys must match required splits: "
+            f"missing={missing_assignment_splits}, extra={extra_assignment_splits}"
+        )
+
     actual_assignments = {
         split: sorted(combined.loc[combined["split"] == split, "sequence_id"].unique().tolist())
-        for split in ("train", "validation", "test")
+        for split in required_splits
     }
-    for split, expected in split_manifest["assignments"].items():
+    for split in required_splits:
+        expected = expected_assignments[split]
         if actual_assignments[split] != sorted(expected):
             raise ValueError(f"Split assignment mismatch for {split}")
     assignment_sets = {name: set(values) for name, values in actual_assignments.items()}

@@ -166,7 +166,7 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 | 1 s 跨 split 泄露 | 逐航次拟合，46/13/7 航次隔离 | 信号在每个 30 s 区间使用未来端点，存在在线因果泄露 |
 | 1 s benchmark 真实度 | 输出显式标记离线/非在线可行 | benchmark 使用未来重构负荷作为 horizon，不能等同 LSTM 闭环 |
 | 10 ms 跨序列窗口 | 按原子序列建窗并保存 hash | 同一工作簿的不同工况段跨 split，可能共享采集条件；需在论文中说明 |
-| 10 ms scaler 泄露 | manifest 和模型均指定 train-only | audit 对 split key 精确集合的实现有缺陷，当前 4 项测试失败 |
+| 10 ms scaler 泄露 | manifest 和模型均指定 train-only；audit 严格要求 train/validation/test key 集合 | 仍需在 CI 中持续执行完整数据审计 |
 | 10 ms 抽点混叠 | 明确记录 direct decimation | 未做抗混叠滤波，不能把高频谱结论外推 |
 | 文件路径可移植性 | 数据副本在仓库内 | 多个 manifest/run config 仍保存旧本地绝对路径 |
 
@@ -175,5 +175,5 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 1. 记录 30 s 数据的采集设备、通道标定、缺失/异常处理和原始文件 hash。
 2. 用独立审计确认原始电池功率符号在全部 66 航次一致。
 3. 为正式在线实验选择真实 1 s/更高频实测数据，或把 spline 路线严格限定为离线模拟。
-4. 修复 10 ms split key 精确校验并在 CI 中审计 manifest、行数、hash、边界和 scaler 范围。
+4. 在 CI 中持续审计 10 ms manifest、assignment key、行数、hash、边界和 scaler 范围。
 5. 将构建脚本和保留元数据中的本地绝对路径迁移为相对路径/显式配置，同时保留原始 hash 和 lineage。

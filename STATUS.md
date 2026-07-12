@@ -51,7 +51,7 @@
 - 1 s Task C (`history=30`, `prediction=6`) 的 LSTM 在 test 上 h1/h6 MAE 约为 1.79/3.85 kW；current-hold 为 0.60/3.57 kW，last-slope 为 0.04/0.80 kW。LSTM 未超过简单基线，因此尚不能作为预测优势证据。
 - `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` 保存 7 个 test 航次上的 693 kWh OSQP benchmark。候选权重仍被报告标为暂定且存在数值约束验收问题，未被正式接受。
 - 已核对的 CLI 入口均可显示 `--help`；完整训练与 benchmark 本轮未重跑。
-- 当前单元测试基线：141 项，137 通过、4 失败。4 个失败来自同一 10 ms split-key 审计测试方法，不是全绿状态。
+- 当前单元测试基线：141 项全部通过；10 ms audit 已严格校验 assignment key 必须恰为 train/validation/test，并覆盖缺失 key 与额外 key 场景。
 
 ## Provisional items
 
@@ -67,8 +67,7 @@
 2. 固定 `N=6` QP-MPC 基线及其权重尚未在 7 个 test 航次上通过物理、性能、失败回退和实时性验收。
 3. 目标 DQN 状态/动作/奖励/环境尚未冻结；现有脚本仍选择 `q_ramp` 或直接功率动作，并使用 1806/1067 kWh 等旧参数。
 4. 1 s LSTM 没有超过简单基线，且 spline 数据非因果，不能支撑在线预测优势结论。
-5. `audit_millisecond_10ms_dataset.py` 未验证 `assignments` 的 key 必须恰为 train/validation/test；缺 key 被忽略，额外 key 触发 `KeyError`，导致 4 项测试失败。
-6. 依赖清单不完整、第三方 SineKAN 许可证未核验、多个跟踪文件含本地绝对路径，干净环境复现尚未闭合。
+5. 依赖清单不完整、第三方 SineKAN 许可证未核验、多个跟踪文件含本地绝对路径，干净环境复现尚未闭合。
 
 ## Next priority tasks
 
@@ -77,7 +76,7 @@
 3. **P1：** 冻结仅选择 `q_h2/q_soc/q_batt` 的动作表、与动作权重无自指关系的物理奖励，以及统一的目标环境。
 4. **P1：** 在相同预算和种子下实现 MLP-DQN 与 SineKAN-DQN 公平比较；KAN-DQN 仅在资源允许时加入。
 5. **P2：** 设计固定/动态权重、真实/预测负荷和计算实时性的论文实验矩阵。
-6. **P3：** 修复 10 ms manifest 审计、锁定依赖、迁移绝对路径、建立 CI 和输出保留策略。
+6. **P3：** 锁定依赖、迁移绝对路径、建立 CI 和输出保留策略。
 
 完整任务和验收条件见 `docs/UNFINISHED_TASKS.md`。
 

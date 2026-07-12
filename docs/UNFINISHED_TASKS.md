@@ -121,23 +121,15 @@
 
 ## P3 — Engineering, provenance, and auxiliary work
 
-### P3-1 Fix exact split-key validation
-
-- **task:** 修复 10 ms audit，要求 `assignments` key 集合严格等于 `train/validation/test`，并返回稳定的 `ValueError` 诊断。
-- **reason:** 当前缺失 key 被忽略，额外 key 触发 `KeyError`；导致 4 项单元测试失败并阻止仓库全绿。
-- **affected_files:** `src/main/audit_millisecond_10ms_dataset.py`, `tests/test_millisecond_10ms_audit.py`.
-- **acceptance_criteria:** missing_train、missing_validation、missing_test、extra_holdout 四种场景均通过；完整测试全绿；错误消息列出 missing/extra 集合。
-- **dependencies:** none. This documentation-only round does not authorize the Python fix.
-
-### P3-2 Lock dependencies and add CI
+### P3-1 Lock dependencies and add CI
 
 - **task:** 用 `pyproject.toml`/lock 或受控 requirements 明确 Python 和核心包版本，修正 `sklearn` 包名并补齐 OSQP/Parquet/Optuna 等依赖，建立 Windows/Linux 至少一条 CI。
 - **reason:** 当前 `requirements.txt` 不完整，无法保证干净环境安装；无 CI 防止测试/路径回归。
 - **affected_files:** `requirements.txt`, future `pyproject.toml`/lock, CI workflow, README installation section.
 - **acceptance_criteria:** 空环境一条命令安装；CLI `--help`、数据小样 smoke 和单元测试在 CI 通过；依赖版本、平台限制和可选训练组清晰。
-- **dependencies:** P3-1 for all-green baseline.
+- **dependencies:** none; the current local unit-test baseline is all green.
 
-### P3-3 Remove local absolute-path assumptions
+### P3-2 Remove local absolute-path assumptions
 
 - **task:** 将代码默认值、manifest 和 run config 中的个人桌面/旧工作区绝对路径迁移为仓库相对路径或显式 CLI/config 输入。
 - **reason:** 当前数据构建、报告和保留输出含不可移植路径，阻止他人复现并可能暴露个人目录。
@@ -145,7 +137,7 @@
 - **acceptance_criteria:** `rg` 审计不再在 active 代码/README/STATUS/新文档中发现个人绝对路径；旧产物若必须保留，另存 sanitized metadata 并保留 hash；从任意 clone 路径可运行 smoke test。
 - **dependencies:** define which outputs are authoritative.
 
-### P3-4 Resolve third-party code and licensing
+### P3-3 Resolve third-party code and licensing
 
 - **task:** 核验 SineKAN 和外部 KAN 的上游 commit、许可证、引用与再分发条件；决定保留完整副本、submodule/vendor 记录或最小实现。
 - **reason:** `SineKAN-main/` 没有 LICENSE/包元数据，不能在发布前假定可自由再分发。
@@ -153,7 +145,7 @@
 - **acceptance_criteria:** 上游 URL/commit/hash 和许可证可验证；项目分发方式合规；最小实现有 parity test；notebook 与正式运行代码边界清楚。
 - **dependencies:** legal/source verification; required before publishing SineKAN results.
 
-### P3-5 Establish output and repository retention policy
+### P3-4 Establish output and repository retention policy
 
 - **task:** 区分原始不可替代数据、权威小型摘要、可重建大型输出、历史诊断和临时工具文件，再经授权执行归档/外部存储/Git LFS 或删除。
 - **reason:** `outputs/` 约 1.4 GiB 且大量文件已跟踪；`.codex_tmp/`, `tmp/`, `.idea/` 也有已跟踪内容，增加 clone 和审阅成本。
@@ -161,10 +153,10 @@
 - **acceptance_criteria:** 每个保留实验有 config、manifest、summary、关键曲线和生成命令；可重建巨型逐步 CSV 不重复进 Git；任何删除先备份并经用户确认；仓库无凭据和个人缓存。
 - **dependencies:** paper evidence inventory and explicit cleanup approval.
 
-### P3-6 Complete or deliberately close the 10 ms auxiliary study
+### P3-5 Complete or deliberately close the 10 ms auxiliary study
 
-- **task:** 修复审计后，以预注册小规模协议运行 10 ms LSTM/baseline，或明确将其关闭为代码可用但无论文结论的辅助路线。
+- **task:** 以预注册小规模协议运行 10 ms LSTM/baseline，或明确将其关闭为代码可用但无论文结论的辅助路线。
 - **reason:** 当前有数据、代码和测试，但无正式 checkpoint/报告；继续悬置会混淆项目范围。
 - **affected_files:** `src/main/run_lstm_millisecond_10ms_search.py`, `src/forecasting/millisecond_multistep_lstm.py`, auxiliary outputs/report.
 - **acceptance_criteria:** 若运行，保存数据 hash、split、seed、配置、逐 horizon baseline 对比和延迟；明确不接入船舶 MPC/DQN。若关闭，在 STATUS/PROJECT_MAP 标记并停止产生新输出。
-- **dependencies:** P3-1, P3-2; no dependency on core P0/P1 work.
+- **dependencies:** P3-1; no dependency on core P0/P1 work.

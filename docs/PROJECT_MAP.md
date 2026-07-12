@@ -47,7 +47,7 @@
 | `src/main/run_lstm_mpc_total_load_test.py` | 上述 30 s 流程的总负荷包装入口 | auxiliary | 可作为迁移参考 |
 | `src/main/run_lstm_mpc_weight_sweep.py` | 历史固定权重搜索 | historical | 不应继续扩展为无约束大搜索 |
 | `src/main/build_millisecond_10ms_dataset.py` | 1 ms 原始数据直接抽点到 10 ms | auxiliary | 默认源路径含本地绝对路径，CLI 可覆盖 |
-| `src/main/audit_millisecond_10ms_dataset.py` | 10 ms manifest/数据审计 | auxiliary | split key 精确集合校验有已知缺陷 |
+| `src/main/audit_millisecond_10ms_dataset.py` | 10 ms manifest/数据审计 | auxiliary | 严格校验 assignment key、逐序列窗口、时间步和来源行 |
 | `src/main/run_lstm_millisecond_10ms_search.py` | 高频 direct multi-output LSTM 与 baseline | auxiliary | 未发现正式 checkpoint/结果目录 |
 | `src/main/run_train_dqn.py` | SineKAN Double-DQN 历史训练入口 | historical | 选择 `q_soc/q_ramp`，使用 1806 kWh、30 s CasADi 环境；不符合目标接口 |
 | `src/main/run_test_dqn.py` | 历史 DQN 测试入口 | historical | 无目标环境 checkpoint 可验收 |
@@ -129,7 +129,7 @@ QP 中 `P_fc + P_batt = load`，SOC 由电池功率更新，FC ramp 是硬约束
 | `tests/test_lstm_spline_1s_hparam_search.py` | 1 s LSTM/baseline 逻辑 | auxiliary |
 | `tests/test_mpc_solver_benchmark_1s.py` | QP/OSQP benchmark | active |
 | `tests/test_lstm_mpc_*` | 30 s CasADi 时序、horizon、zero-delay | historical/supporting |
-| `tests/test_millisecond_*` | 10 ms 构建、审计、模型 | auxiliary；当前 4 项失败集中在 split key 精确校验 |
+| `tests/test_millisecond_*` | 10 ms 构建、审计、模型 | auxiliary；split key 缺失/额外场景已有回归覆盖 |
 | `tests/test_mpc_*` | 初始 dispatch、ramp 开关、SOC reference | supporting |
 | `tests/_deprecated_*linear_interp*` | 旧线性插值 | deprecated |
 | DQN 专项测试 | missing | 目标状态/动作/奖励/网络 parity 尚无测试 |
