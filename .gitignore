@@ -5,6 +5,9 @@ src/sim-data/
 src/data_analysis/solcast/
 
 **.vscode/
+.idea/
+.codex_tmp/
+tmp/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
