@@ -291,7 +291,11 @@ def run_voyage(
     candidate_id: str,
     max_steps: int | None = None,
     initial_soc: float = 0.55,
+    config: QpMpcConfig | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    if config is None:
+        config = candidate_config(candidate_id)
+
     loads = np.asarray(loads_kw, dtype=float).reshape(-1)
     times = np.asarray(times_s, dtype=float).reshape(-1)
     if len(loads) != len(times):
@@ -303,7 +307,6 @@ def run_voyage(
     if not np.allclose(np.diff(times), N6_DT_SECONDS, rtol=0.0, atol=1.0e-9):
         raise ValueError("voyage times must be strictly spaced at 1 s")
 
-    config = candidate_config(candidate_id)
     osqp_module, osqp_error = _try_import_osqp()
     if osqp_module is None:
         raise RuntimeError(f"Cannot import osqp: {osqp_error}")
@@ -754,9 +757,15 @@ def _json_ready(value: Any) -> Any:
     return value
 
 
-def _candidate_metadata(candidate_id: str, *, input_path: Path) -> dict[str, Any]:
+def _candidate_metadata(
+    candidate_id: str,
+    *,
+    input_path: Path,
+    config: QpMpcConfig | None = None,
+) -> dict[str, Any]:
     normalized_id = str(candidate_id).upper()
-    config = candidate_config(normalized_id)
+    if config is None:
+        config = candidate_config(normalized_id)
     return {
         "candidate_id": normalized_id,
         "status": "raw_candidate",
@@ -885,11 +894,16 @@ def write_candidate_artifacts(
     output_root: str | Path,
     input_path: str | Path,
     make_plots: bool = True,
+    config: QpMpcConfig | None = None,
 ) -> Path:
     normalized_id = str(candidate_id).upper()
     case_dir = Path(output_root) / f"candidate_{normalized_id}"
     case_dir.mkdir(parents=True, exist_ok=True)
-    metadata = _candidate_metadata(normalized_id, input_path=Path(input_path))
+    metadata = _candidate_metadata(
+        normalized_id,
+        input_path=Path(input_path),
+        config=config,
+    )
 
     (case_dir / "config.json").write_text(
         json.dumps(_json_ready(metadata), indent=2, ensure_ascii=False) + "\n",
@@ -968,9 +982,11 @@ def run_candidate(
     make_plots: bool = True,
     max_steps_per_voyage: int | None = None,
     expected_voyage_count: int | None = None,
+    config: QpMpcConfig | None = None,
 ) -> dict[str, Any]:
     normalized_id = str(candidate_id).upper()
-    config = candidate_config(normalized_id)
+    if config is None:
+        config = candidate_config(normalized_id)
     data = load_spline_test_data(input_path)
     voyage_count = int(data["voyage_id"].nunique())
     if expected_voyage_count is not None and voyage_count != int(expected_voyage_count):
@@ -1001,6 +1017,7 @@ def run_candidate(
             candidate_id=normalized_id,
             max_steps=max_steps_per_voyage,
             initial_soc=0.55,
+            config=config,
         )
         control_frames.append(controls)
         solver_frames.append(solver)
@@ -1034,6 +1051,7 @@ def run_candidate(
         output_root=output_root,
         input_path=_portable_input_path(Path(input_path)),
         make_plots=make_plots,
+        config=config,
     )
     return {
         "candidate_id": normalized_id,
