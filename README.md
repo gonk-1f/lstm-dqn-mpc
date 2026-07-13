@@ -43,10 +43,11 @@ load data
 | 电池 | `E_batt = 693 kWh`，`|P_batt| <= 346.5 kW`，归一化参考 `P_batt_ref = 346.5 kW` |
 | SOC | `SOC_ref = 0.55`，`SOC_min = 0.2`，`SOC_max = 0.8`，当前 693 kWh benchmark 的 `SOC_band = 0.05` |
 | 燃料电池爬坡 | `48 kW/s` 硬约束 |
-| MPC 求解 | 凸 QP，OSQP，固定稀疏结构、参数更新和 warm start |
+| MPC 求解 | 凸 QP，OSQP，固定稀疏结构、参数更新、warm start 与等价数值缩放 |
+| `N=6` 离线权重实验 | 未来真实样条点 `t+1..t+6`，每次只执行第一步；不使用 LSTM |
 | DQN 目标接口 | SineKAN Q 网络选择 `q_h2`、`q_soc`、`q_batt` |
 
-`N=60` 只用于 1 s 离线 OSQP 求解器/控制 benchmark；论文目标 LSTM 预测时域是 `N=6`。二者不得作为同一个默认配置。当前保留权重 `q_h2=0.5, q_soc=2.0, q_batt=0.05, q_ramp=0, q_terminal_soc=0` 只是 `N=60` benchmark 的暂定候选，不是论文正式权重，也未写入全局配置。
+`N=60` 只作为历史 1 s 离线 OSQP solver/performance benchmark；论文目标 LSTM 预测时域是 `N=6`。二者不得作为同一个默认配置。2026-07-13 的理想预知 `N=6` 实验完整测试了 A–D 四组指定候选，但四组都未通过物理/SOC 门禁，因此没有保留候选，也没有创建 `configs/benchmarks/mpc_1s_n6_provisional.*`。
 
 ## Repository structure
 
@@ -54,7 +55,8 @@ load data
 | --- | --- |
 | `src/forecasting/` | 30 s、1 s 和 10 ms LSTM、scaler、窗口与评价逻辑 |
 | `src/main/` | 数据构建、训练、诊断、CasADi LSTM-MPC 和 OSQP benchmark 入口 |
-| `src/main/mpc_solvers/` | 1 s 凸 QP 形式与约束结构；persistent OSQP 运行逻辑目前在 benchmark 脚本中 |
+| `src/main/mpc_solvers/` | 1 s 凸 QP 形式与约束结构 |
+| `src/main/run_mpc_1s_n6_weight_selection.py` | 离线理想预知 `N=6` 单候选 runner、指标、审计与报告生成 |
 | `src/mpc/` | 历史 CasADi/IPOPT 控制器、燃料电池氢耗曲线等组件 |
 | `src/dqn/` | DQN agent、动作映射、奖励和 MLP/KAN/SineKAN Q 网络 |
 | `src/envs/` | 多个历史 DQN/船舶环境；尚未统一为目标 N=6 QP-MPC 环境 |
@@ -84,7 +86,7 @@ python -m pip install casadi numpy pandas matplotlib xlrd scipy seaborn progress
 
 ## Main workflows
 
-以下入口均来自仓库实际脚本。先用 `--help` 核对参数和输出位置；训练、完整 benchmark 与批量搜索可能耗时，本轮接管没有重新运行它们。
+以下入口均来自仓库实际脚本。先用 `--help` 核对参数和输出位置；训练和历史完整 benchmark 可能耗时。
 
 | 工作流 | 可核对入口 | 状态 |
 | --- | --- | --- |
@@ -93,9 +95,10 @@ python -m pip install casadi numpy pandas matplotlib xlrd scipy seaborn progress
 | 10 ms 数据审计 | `python src/main/audit_millisecond_10ms_dataset.py --help` | 可用；严格校验 train/validation/test assignment key 集合 |
 | 30 s LSTM 训练与测试汇总 | `python src/main/run_train_lstm_total_load_721.py --help` | 可用；已有 checkpoint 和逐 horizon 指标 |
 | 1 s LSTM 诊断 | `python src/main/run_lstm_spline_1s_hparam_search.py --help` | 辅助实验；现有 LSTM 未超过简单基线 |
-| 1 s OSQP `N=60` benchmark | `python src/main/benchmark_mpc_qp_osqp_1s.py --help` | 可用；离线 benchmark，不是正式 `N=6` 闭环 |
+| 1 s OSQP `N=60` benchmark | `python src/main/benchmark_mpc_qp_osqp_1s.py --help` | historical；不再作为默认配置或继续搜索 |
+| 1 s 理想预知 `N=6` 固定权重实验 | `python src/main/run_mpc_1s_n6_weight_selection.py --candidate A` | A–D 已运行；四组均拒绝；不接 LSTM |
 | 30 s CasADi LSTM-MPC | `python src/main/run_lstm_mpc_total_load_test.py --help` | 历史/支持性链路，参数体系与目标 OSQP 主线不同 |
-| 目标 1 s LSTM + `N=6` OSQP 闭环 | 无统一入口 | **not yet unified** |
+| 目标 1 s LSTM + `N=6` OSQP 闭环 | 尚无统一入口 | **not yet unified**；现有 N=6 入口仅使用理想预知负荷 |
 | 目标 DQN 训练与公平比较 | 无可接受入口 | **not yet unified**；现有脚本仍使用旧环境/动作/参数 |
 
 通用测试命令：
@@ -104,22 +107,22 @@ python -m pip install casadi numpy pandas matplotlib xlrd scipy seaborn progress
 python -m unittest discover -s tests -v
 ```
 
-当前基线为 141 项全部通过；测试范围和仍缺失的 DQN 专项覆盖见 `STATUS.md` 与 `docs/PROJECT_MAP.md`。
+当前完整测试结果见 `STATUS.md`；测试范围和仍缺失的 DQN 专项覆盖见 `docs/PROJECT_MAP.md`。
 
 ## Current status
 
 - 66 航段的 30 s 数据读取、46/13/7 划分和 30 s direct multi-output LSTM 路径已存在。
-- natural-clipped 1 s 离线数据、1 s LSTM 诊断以及 `N=60` OSQP-QP benchmark 已有代码和产物。
+- natural-clipped 1 s 离线数据、1 s LSTM 诊断、历史 `N=60` benchmark 以及理想预知 `N=6` runner/产物均已存在。
 - 现有 1 s LSTM 在保留测试集上没有超过 current-hold/last-slope 等简单基线，因此不能作为正式预测优势证据。
-- `693 kWh / 346.5 kW` 的 OSQP 候选权重仍为暂定工程候选，固定 MPC 基线尚未正式接受。
-- 目标 `N=6` OSQP 在线闭环、仅选三项 MPC 权重的 DQN 环境、SineKAN-DQN/MLP-DQN 公平比较均未完成。
+- 指定 A–D 四组 `693 kWh / 346.5 kW`、`N=6` 固定权重全部被拒绝：没有候选完成 7 航段闭环，最坏航段 SOC 净下降均约为 `-0.35`。
+- 目标 `N=6` LSTM-OSQP 在线闭环、合格固定权重、仅选三项 MPC 权重的 DQN 环境、SineKAN-DQN/MLP-DQN 公平比较均未完成。
 - 旧 `277.2 kWh`、`1806 kWh` 及不同动作空间仍存在于历史实现和输出中，但已不代表当前目标配置。
 
 ## Known limitations
 
 - 1 s spline 数据依赖相邻 30 s 节点，是离线重构，不具备在线因果性。
-- 固定 MPC 权重、`SOC_band=0.05` 下的候选行为和数值容差仍需正式验收。
-- LSTM 的 6 步预测与现有 `N=60` benchmark 尚未统一为 `N=6` 在线滚动闭环。
+- 当前四组固定 MPC 权重已完成离线理想预知验收但全部失败；扩大候选或改变目标/约束需要另行设计和授权。
+- LSTM 的 6 步预测尚未接入已验证的 `N=6` 时序执行路径。
 - OSQP benchmark 的求解失败路径只记录失败，尚未形成可部署的控制回退策略。
 - 现有 DQN 分支互不兼容，尚未形成目标状态、动作、奖励和闭环环境。
 - SineKAN-DQN 尚无目标环境下的最终训练结果，也没有与 MLP-DQN/KAN-DQN 的同预算、多随机种子公平对比。
@@ -131,9 +134,9 @@ python -m unittest discover -s tests -v
 - 10 ms 原子序列划分：`outputs/config/millisecond_10ms_split_721.json`，seed `20260710`，scaler 仅拟合训练行。
 - 30 s LSTM 默认 seed 为 `42`；1 s Task C 诊断 seed 为 `123`。
 - 训练窗口必须按航次/原子序列构造，禁止跨边界；scaler 只在训练集拟合。
-- 主要产物位于 `outputs/lstm_total_load_721/`、`outputs/lstm_spline_1s_hparam_search/` 和 `outputs/mpc_solver_benchmark_1s/`。
+- 主要产物位于 `outputs/lstm_total_load_721/`、`outputs/lstm_spline_1s_hparam_search/`、`outputs/mpc_solver_benchmark_1s/` 和 `outputs/mpc_1s_n6_weight_selection/`。
 - 运行前保存配置、随机种子、Git commit、输入 manifest 和逐航次/逐 horizon 指标；不要只保留聚合图。
-- 当前测试并非全绿，不能把仓库状态标记为完全可复现。
+- 本轮代码测试保持全绿；依赖未锁定、历史绝对路径和第三方许可证问题仍使“干净环境完全可复现”结论不成立。
 
 ## Citation and third-party code
 

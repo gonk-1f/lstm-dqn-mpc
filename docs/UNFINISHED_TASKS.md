@@ -14,25 +14,25 @@
 ### P0-1 Freeze the formal timing and data contract
 
 - **task:** 明确正式 1 s 实验的数据来源、decision time、LSTM history、h1–h6 预测含义、MPC stage 0–5 映射、实际负荷反馈和 SOC 更新时间。
-- **reason:** 当前 `N=60` benchmark 直接使用未来 spline 行，30 s CasADi 路径使用另一套时序；离线 spline 又依赖未来端点。若不先冻结因果边界，后续闭环和论文表述都不可验证。
-- **affected_files:** `src/main/run_lstm_mpc_test.py`, `src/main/benchmark_mpc_qp_osqp_1s.py`, `src/main/build_mpc_solver_benchmark_1s_data.py`, `docs/DATA_PROVENANCE.md`, future formal config/spec.
+- **reason:** 离线 ideal-foresight `N=6` 路径已用测试固定为 `t+1..t+6`、只执行第一步和实际 SOC 更新，但正式 LSTM provider 的 history/h1–h6 映射、可用时刻和因果数据仍未接入。`N=60` 已降为历史 benchmark。
+- **affected_files:** formal forecast-provider/controller config, `src/main/run_lstm_mpc_test.py`, `src/main/run_mpc_1s_n6_weight_selection.py`, `docs/DATA_PROVENANCE.md`.
 - **acceptance_criteria:** 一份版本化 contract 明确每个向量元素对应的物理时间；测试可检测 off-by-one、zero-delay 和未来数据泄露；正式数据被标记为 measured/causal 或 offline/reconstructed；论文主实验不把未来 spline 端点写成在线可用信息。
 - **dependencies:** none.
 
 ### P0-2 Implement one reusable `N=6` OSQP closed-loop entry
 
-- **task:** 将凸 QP 和 persistent OSQP workspace 封装为正式控制器，接收 6 步 LSTM 预测、当前 SOC/FC 状态，输出第一步功率并滚动更新。
-- **reason:** 现有 QP/OSQP 只在 `N=60` benchmark 中闭合；30 s LSTM-MPC 使用 CasADi/IPOPT，不能证明目标框架已完成。
-- **affected_files:** `src/main/mpc_solvers/mpc_qp_formulation.py`, `src/main/benchmark_mpc_qp_osqp_1s.py`, new/selected controller module under `src/`, new CLI under `src/main/`, relevant tests.
+- **task:** 从已验证的 ideal-foresight runner 提取可复用正式控制器，接收 6 步 forecast provider 输出、当前 SOC/FC 状态，输出第一步功率并提供确定性失败回退。
+- **reason:** `src/main/run_mpc_1s_n6_weight_selection.py` 已实现正确滚动时序、等价数值缩放、实际功率/SOC 更新和失败终止，但它是离线实验入口，不接 LSTM；最终求解失败时只能终止航段，尚不能部署。
+- **affected_files:** `src/main/mpc_solvers/mpc_qp_formulation.py`, `src/main/run_mpc_1s_n6_weight_selection.py`, new controller/provider module under `src/`, formal CLI and integration tests.
 - **acceptance_criteria:** horizon 固定为 6；固定稀疏结构、参数更新和 warm start 被保留；每步执行的 `P_fc/P_batt` 满足功率平衡、设备边界、SOC 边界和 48 kW/s ramp；SOC 用实际施加的 `P_batt` 更新；逐步记录 status、iterations、residual、solve time 和约束残差；具有经过测试的确定性失败回退，不用 NaN 继续控制。
 - **dependencies:** P0-1.
 
 ### P0-3 Validate and accept one fixed-weight baseline
 
-- **task:** 在正式 7 个 test 航次上验收 `693 kWh / 346.5 kW`、`N=6` 固定 QP-MPC；决定保留、调整或拒绝暂定 `q_h2=0.5, q_soc=2.0, q_batt=0.05`。
-- **reason:** 当前权重来自 `N=60` 离线 benchmark，结果仍有数值约束验收问题，不能直接成为论文基线或 DQN 动作中心。
-- **affected_files:** formal MPC config, fixed-baseline runner, output report schema, `STATUS.md`, MPC tests.
-- **acceptance_criteria:** 实验前注册 hard-constraint tolerance、求解成功率、fallback、SOC、氢耗、电池吞吐和 1 s 实时性门槛；逐航次和聚合结果都保存；所有 hard constraints 在容差内；对任何失败航次给出可复现 case；形成明确的 accepted/rejected 决策，而不是只按加权总分选择。
+- **task:** 基于 A–D 全部被拒绝的结果，先授权并预注册新的固定 `N=6` MPC 设计/候选范围，再验收一个真正可完成 7 航段的基线。
+- **reason:** 2026-07-13 的四候选实验已形成明确 `no_candidate_selected`：闭环覆盖率仅 0.6486–0.7352，最坏航段 SOC 净下降均约 -0.35；不得把 D 当 least-bad，也不得未经授权增加第五候选。历史 `N=60` 锚点不能迁移为正式权重。
+- **affected_files:** future design spec, formal MPC config, `src/main/run_mpc_1s_n6_weight_selection.py` or extracted controller, report schema, `STATUS.md`, MPC tests.
+- **acceptance_criteria:** 先明确允许调整的是权重范围还是控制结构；预注册 hard-constraint tolerance、求解成功率、fallback、SOC、氢耗、电池吞吐和 1 s 实时性门槛；逐航次和聚合结果都保存；7 航段闭环完整、所有 hard constraints 在容差内、最坏 SOC 净下降原则上不低于 -0.03；形成 accepted/rejected 决策，不使用加权总分或 least-bad 替代物理门禁。
 - **dependencies:** P0-2.
 
 ### P0-4 Remove stale parameters from the active execution path

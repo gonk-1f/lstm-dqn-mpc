@@ -1,0 +1,70 @@
+{
+  "candidate_id": "B",
+  "status": "raw_candidate",
+  "solver": "OSQP",
+  "problem_class": "convex_qp",
+  "forecast_source": "offline ideal foresight",
+  "input_data": "outputs/mpc_solver_benchmark_1s/data/test_voyages_spline_1s.parquet",
+  "input_data_note": "natural-clipped cubic-spline 1 s reconstruction; not measured 1 s data",
+  "lstm_used": false,
+  "timing": {
+    "decision_interval_seconds": 1.0,
+    "forecast_samples": "t+1..t+6",
+    "prediction_horizon_steps": 6,
+    "control_horizon_steps": 6,
+    "applied_action": "first step only",
+    "actual_battery_definition": "P_load(t+1) - P_fc(t+1)",
+    "actual_soc_update": "SOC - P_batt/(3600*693)",
+    "voyage_end_policy": "repeat the final sample within the same voyage; never cross voyages"
+  },
+  "initial_state": {
+    "soc": 0.55,
+    "fuel_cell_kw": "clip(first voyage load, 0, 560)",
+    "reset_for_each_voyage": true
+  },
+  "soc_reference": 0.55,
+  "model": {
+    "horizon": 6,
+    "dt_seconds": 1.0,
+    "battery_capacity_kwh": 693.0,
+    "battery_charge_max_kw": 346.5,
+    "battery_discharge_max_kw": 346.5,
+    "battery_power_ref_kw": 346.5,
+    "fuel_cell_min_kw": 0.0,
+    "fuel_cell_max_kw": 560.0,
+    "fuel_cell_ramp_rate_kw_per_s": 48.0,
+    "fuel_cell_ramp_kw": null,
+    "soc_min": 0.2,
+    "soc_max": 0.8,
+    "soc_band": 0.05,
+    "objective_variant": "simplified_normalized_literature_v1",
+    "q_h2": 0.5,
+    "q_soc": 1.5,
+    "q_batt": 0.05,
+    "q_ramp": 0.0,
+    "q_terminal_soc": 0.0
+  },
+  "tolerances": {
+    "actual_balance_kw": 0.01,
+    "qp_balance_kw": 0.1,
+    "power_bound_kw": 0.1,
+    "ramp_kw": 0.1,
+    "soc": 1e-06,
+    "soc_prediction": 1e-05,
+    "fc_above_load_kw": 1.0,
+    "near_limit_kw": 1.0
+  },
+  "osqp_settings": {
+    "persistent_solver_per_voyage": true,
+    "verbose": false,
+    "polishing": true,
+    "warm_starting": true,
+    "eps_abs": 1e-05,
+    "eps_rel": 1e-05,
+    "max_iter": 10000,
+    "adaptive_rho_interval": 25,
+    "affine_variable_and_constraint_scaling": true,
+    "max_iter_recovery": "one cold restart of the same QP; no control fallback"
+  },
+  "scope_note": "N=60 is historical benchmark only; this run does not search N=60 weights."
+}

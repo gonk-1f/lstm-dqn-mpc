@@ -42,7 +42,8 @@
 | `src/main/build_spline_1s_diagnostics.py` | 逐航次生成 natural/not-a-knot 1 s spline 并审计 | auxiliary | natural-clipped 被后续离线实验使用；非因果 |
 | `src/main/run_lstm_spline_1s_hparam_search.py` | 1 s direct multi-output LSTM 与 baseline 对比 | auxiliary | 当前 Task C 未超过简单 baseline |
 | `src/main/build_mpc_solver_benchmark_1s_data.py` | 构建 7 个 test 航次的 1 s benchmark 输入 | auxiliary | 入口来自离线 spline |
-| `src/main/benchmark_mpc_qp_osqp_1s.py` | OSQP `N=60` 求解器/控制 benchmark | active | 对 benchmark 主线 active；不是正式 `N=6` 在线入口 |
+| `src/main/benchmark_mpc_qp_osqp_1s.py` | OSQP `N=60` 求解器/控制 benchmark | historical | 只保留 solver/performance 证据；不再作为默认配置或继续权重搜索 |
+| `src/main/run_mpc_1s_n6_weight_selection.py` | `N=6` ideal-foresight 固定权重实验 | active/auxiliary | `t+1..t+6`、只执行第一步、实际 SOC 更新；A–D 已运行但无候选通过，不是 LSTM 闭环 |
 | `src/main/run_lstm_mpc_test.py` | 30 s CasADi/IPOPT LSTM-MPC | historical | 有预测与实际反馈逻辑，但物理参数/求解器不是目标主线 |
 | `src/main/run_lstm_mpc_total_load_test.py` | 上述 30 s 流程的总负荷包装入口 | auxiliary | 可作为迁移参考 |
 | `src/main/run_lstm_mpc_weight_sweep.py` | 历史固定权重搜索 | historical | 不应继续扩展为无约束大搜索 |
@@ -73,15 +74,17 @@
 | 路径/功能 | 状态 | 审计结论 |
 | --- | --- | --- |
 | `src/main/mpc_solvers/mpc_qp_formulation.py` | active | 构造线性约束、SOC 动力学、归一化凸二次目标；默认参数包含 693 kWh/346.5 kW/560 kW/48 kW/s |
-| `src/main/benchmark_mpc_qp_osqp_1s.py` 内的持久 OSQP workspace | active | 固定稀疏结构，逐步更新边界，warm start，`eps_abs=eps_rel=1e-4`，`max_iter=4000`，polish 开启 |
-| 独立 OSQP solver wrapper | uncertain/missing | 当前没有单独可复用的正式 wrapper；求解器生命周期和回退逻辑主要在 benchmark 脚本中 |
-| `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` | active | 当前 693 kWh `N=60` 离线 benchmark 证据；候选未正式接受 |
+| `src/main/benchmark_mpc_qp_osqp_1s.py` 内的持久 OSQP workspace | historical/supporting | N=60 原始设置为 `eps_abs=eps_rel=1e-4`、`max_iter=4000`；N=6 runner 只复用边界/计时等支持函数 |
+| `src/main/run_mpc_1s_n6_weight_selection.py` 的 N=6 workspace | active/auxiliary | 严格等价仿射缩放，`eps_abs=eps_rel=1e-5`、`max_iter=10000`、固定 rho 更新间隔；max_iter 可冷重启同一 QP，不构造控制 fallback |
+| 独立可部署 OSQP controller wrapper | uncertain/missing | 当前 N=6 入口是离线实验 runner；尚未封装预测 provider 和确定性控制失败回退 |
+| `outputs/mpc_1s_n6_weight_selection/` | active evidence | A–D 配置、逐航段/总体指标、solver 统计、约束审计、曲线与人工拒绝决策；无 provisional 配置 |
+| `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` | historical | 693 kWh `N=60` 离线 benchmark 证据；紧凑指针在 N=6 输出目录中 |
 | `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt277p2_simplified_spec_norm/` | historical | 旧容量研究；不得作为当前物理配置 |
 | `src/mpc/` 与 `src/main/run_lstm_mpc_test.py` | historical/supporting | CasADi/IPOPT、氢耗曲线、回退和历史 SOC 设计；需择取可迁移逻辑，不应直接当 OSQP 主线 |
 | `outputs/lstm_mpc_total_load_test_fixed_baseline_v1/` | historical/supporting | 30 s 固定基线产物，使用不同参数体系 |
 | `configs/mpc.yaml`, `configs/ship_system.yaml` | historical | 含 horizon 18、SOC 0.65、1806 kWh/350 kW 等旧参数 |
 
-QP 中 `P_fc + P_batt = load`，SOC 由电池功率更新，FC ramp 是硬约束。简化 objective 保留氢耗/SOC/电池使用项；`q_ramp=0` 和 `q_terminal_soc=0` 时不含相应软目标。benchmark 失败时记录 NaN/失败状态，但尚无可部署的控制回退动作。
+QP 中 `P_fc + P_batt = load`，SOC 由实际电池功率更新，FC ramp 是硬约束。简化 objective 保留氢耗/SOC/电池使用项；`q_ramp=0` 和 `q_terminal_soc=0` 时不含相应软目标。N=6 离线实验在最终求解失败处终止航段并标记不完整；尚无可部署的控制回退动作。
 
 ## DQN and Q-network modules
 
