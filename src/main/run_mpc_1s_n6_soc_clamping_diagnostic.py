@@ -31,10 +31,13 @@ def build_pulse_profile() -> tuple[np.ndarray, np.ndarray]:
 
 
 def clamping_candidate_config(q_soc: float) -> QpMpcConfig:
+    normalized_q_soc = float(q_soc)
+    if not np.isfinite(normalized_q_soc) or normalized_q_soc not in (10.0, 20.0):
+        raise ValueError("q_soc must be one of {10.0, 20.0}")
     candidate_id = {
         10.0: "QSOC_10",
         20.0: "QSOC_20",
-    }[float(q_soc)]
+    }[normalized_q_soc]
     return qsoc_candidate_config(candidate_id)
 
 

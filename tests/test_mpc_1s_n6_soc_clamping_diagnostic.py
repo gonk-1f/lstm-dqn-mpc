@@ -49,6 +49,24 @@ class TestSocClampingDiagnosticContract(unittest.TestCase):
         self.assertEqual(int(np.count_nonzero(loads == 450.0)), 120)
         self.assertTrue(np.all(loads[(times < 600.0) | (times >= 720.0)] == 300.0))
 
+    def test_pulse_profile_does_not_share_storage_with_constant_profiles(self) -> None:
+        retained_times, retained_loads = build_constant_profile()
+        pulse_times, pulse_loads = build_pulse_profile()
+
+        self.assertFalse(np.shares_memory(retained_times, pulse_times))
+        self.assertFalse(np.shares_memory(retained_loads, pulse_loads))
+        pulse_loads[:] = -1.0
+        np.testing.assert_array_equal(retained_times, np.arange(3601, dtype=float))
+        np.testing.assert_array_equal(
+            retained_loads,
+            np.full(3601, 300.0, dtype=float),
+        )
+        _, fresh_constant_loads = build_constant_profile()
+        np.testing.assert_array_equal(
+            fresh_constant_loads,
+            np.full(3601, 300.0, dtype=float),
+        )
+
     def test_case_matrix_has_exact_ids_values_and_order(self) -> None:
         self.assertEqual(
             build_case_matrix(),
@@ -102,8 +120,26 @@ class TestSocClampingDiagnosticContract(unittest.TestCase):
             },
         )
 
-        with self.assertRaises(KeyError):
-            clamping_candidate_config(5.0)
+    def test_candidate_config_rejects_unsupported_q_soc_with_clear_error(self) -> None:
+        unsupported_values = (
+            5.0,
+            17.5,
+            9.999,
+            10.001,
+            19.999,
+            20.001,
+            float("inf"),
+            float("-inf"),
+            float("nan"),
+        )
+
+        for q_soc in unsupported_values:
+            with self.subTest(q_soc=q_soc):
+                with self.assertRaisesRegex(
+                    ValueError,
+                    r"q_soc must be one of \{10\.0, 20\.0\}",
+                ):
+                    clamping_candidate_config(q_soc)
 
 
 if __name__ == "__main__":
