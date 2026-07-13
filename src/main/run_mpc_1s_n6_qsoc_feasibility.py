@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import platform
+import shutil
+import subprocess
 from dataclasses import asdict
+from importlib.metadata import version as package_version
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 import numpy as np
 import pandas as pd
@@ -46,6 +52,23 @@ QSOC_CANDIDATES: tuple[dict[str, Any], ...] = (
     {"candidate_id": "QSOC_5", "q_h2": 0.5, "q_soc": 5.0, "q_batt": 0.05, "soc_band": 0.05},
     {"candidate_id": "QSOC_10", "q_h2": 0.5, "q_soc": 10.0, "q_batt": 0.05, "soc_band": 0.05},
     {"candidate_id": "QSOC_20", "q_h2": 0.5, "q_soc": 20.0, "q_batt": 0.05, "soc_band": 0.05},
+)
+PROVENANCE_SCHEMA_VERSION = 1
+IMPLEMENTATION_FINGERPRINT_FILES: tuple[Path, ...] = (
+    Path(__file__).resolve(),
+    REPO_ROOT / "src" / "main" / "run_mpc_1s_n6_weight_selection.py",
+    REPO_ROOT / "src" / "main" / "benchmark_mpc_qp_osqp_1s.py",
+    REPO_ROOT / "src" / "main" / "mpc_solvers" / "mpc_qp_formulation.py",
+    REPO_ROOT / "src" / "mpc" / "solvers" / "fc_dp0_curve.py",
+    REPO_ROOT / "data" / "fuel_cell" / "FC_Dp0_curve_for_Python.csv",
+)
+RUNTIME_VERSION_PACKAGES: tuple[str, ...] = (
+    "numpy",
+    "pandas",
+    "scipy",
+    "osqp",
+    "pyarrow",
+    "matplotlib",
 )
 
 FINITE_GATE_METRICS = frozenset(
@@ -101,6 +124,123 @@ def qsoc_candidate_config(candidate_id: str) -> QpMpcConfig:
         battery_power_ref_kw=346.5,
         soc_band=float(selected["soc_band"]),
     )
+
+
+def _sha256_file(path: Path) -> str:
+    if not path.is_file():
+        raise ValueError(f"cannot fingerprint missing file: {path}")
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _implementation_sha256() -> str:
+    digest = hashlib.sha256()
+    for path in IMPLEMENTATION_FINGERPRINT_FILES:
+        if not path.is_file():
+            raise ValueError(f"cannot fingerprint missing implementation file: {path}")
+        digest.update(_portable_repo_path(path).encode("utf-8"))
+        digest.update(b"\0")
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _git_head() -> str:
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    head = result.stdout.strip()
+    if not head:
+        raise ValueError("git rev-parse HEAD returned an empty revision")
+    return head
+
+
+def _runtime_versions() -> dict[str, str]:
+    return {
+        "python": platform.python_version(),
+        **{name: package_version(name) for name in RUNTIME_VERSION_PACKAGES},
+    }
+
+
+def build_diagnostic_provenance(
+    input_path: str | Path,
+    *,
+    generation_id: str,
+) -> dict[str, Any]:
+    generation = str(generation_id).strip()
+    if not generation:
+        raise ValueError("generation_id must be non-empty")
+    path = Path(input_path)
+    return {
+        "schema_version": PROVENANCE_SCHEMA_VERSION,
+        "generation_id": generation,
+        "input_path": _portable_repo_path(path),
+        "input_sha256": _sha256_file(path),
+        "implementation_files": [
+            _portable_repo_path(item) for item in IMPLEMENTATION_FINGERPRINT_FILES
+        ],
+        "implementation_sha256": _implementation_sha256(),
+        "runtime_versions": _runtime_versions(),
+        "git_head": _git_head(),
+        "git_head_role": (
+            "source revision record only; live compatibility is enforced by content and runtime fingerprints"
+        ),
+        "candidate_ids": [str(item["candidate_id"]) for item in QSOC_CANDIDATES],
+    }
+
+
+def _validate_live_provenance(
+    provenance: dict[str, Any],
+    *,
+    expected_input_path: str | Path,
+) -> None:
+    if not isinstance(provenance, dict):
+        raise ValueError("diagnostic_provenance must be an object")
+    generation_id = str(provenance.get("generation_id", "")).strip()
+    if not generation_id:
+        raise ValueError("diagnostic provenance is missing generation_id")
+    expected = build_diagnostic_provenance(
+        expected_input_path,
+        generation_id=generation_id,
+    )
+    live_keys = (
+        "schema_version",
+        "generation_id",
+        "input_path",
+        "input_sha256",
+        "implementation_files",
+        "implementation_sha256",
+        "runtime_versions",
+        "git_head_role",
+        "candidate_ids",
+    )
+    mismatches = [key for key in live_keys if provenance.get(key) != expected[key]]
+    recorded_head = provenance.get("git_head")
+    if not isinstance(recorded_head, str) or not recorded_head.strip():
+        mismatches.append("git_head")
+    if mismatches:
+        raise ValueError(f"diagnostic provenance mismatch: {sorted(set(mismatches))}")
+
+
+def validate_provenance_cohort(provenances: list[dict[str, Any]]) -> None:
+    if len(provenances) != len(QSOC_CANDIDATES):
+        raise ValueError(
+            f"formal diagnosis requires {len(QSOC_CANDIDATES)} provenance records"
+        )
+    if not provenances or any(not isinstance(item, dict) for item in provenances):
+        raise ValueError("formal diagnosis provenance records must be objects")
+    reference = provenances[0]
+    if any(item != reference for item in provenances[1:]):
+        raise ValueError("formal candidate artifacts do not share one provenance generation")
 
 
 def _finite_number(summary: dict[str, Any], key: str) -> float | None:
@@ -237,9 +377,17 @@ def run_qsoc_candidate(
     make_plots: bool = True,
     max_steps_per_voyage: int | None = None,
     expected_voyage_count: int | None = len(EXPECTED_TEST_VOYAGES),
+    diagnostic_provenance: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     normalized_id = str(candidate_id).upper()
-    return run_candidate(
+    provenance = (
+        diagnostic_provenance
+        if diagnostic_provenance is not None
+        else build_diagnostic_provenance(input_path, generation_id=uuid4().hex)
+    )
+    _validate_live_provenance(provenance, expected_input_path=input_path)
+    reset_candidate_directory(output_root, normalized_id)
+    result = run_candidate(
         normalized_id,
         input_path=input_path,
         output_root=output_root,
@@ -247,7 +395,30 @@ def run_qsoc_candidate(
         max_steps_per_voyage=max_steps_per_voyage,
         expected_voyage_count=expected_voyage_count,
         config=qsoc_candidate_config(normalized_id),
+        artifact_metadata={"diagnostic_provenance": provenance},
     )
+    metadata_path = Path(result["case_dir"]) / "config.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    validate_candidate_fingerprint(
+        normalized_id,
+        metadata,
+        expected_input_path=input_path,
+    )
+    return result
+
+
+def reset_candidate_directory(output_root: str | Path, candidate_id: str) -> None:
+    normalized_id = str(_candidate_spec(candidate_id)["candidate_id"])
+    root = Path(output_root).resolve()
+    target = root / f"candidate_{normalized_id}"
+    resolved_target = target.resolve()
+    if resolved_target.parent != root or target.name != f"candidate_{normalized_id}":
+        raise ValueError(f"refusing to reset candidate path outside diagnostic root: {target}")
+    if not target.exists():
+        return
+    if target.is_symlink() or not target.is_dir():
+        raise ValueError(f"refusing to reset unsafe candidate path: {target}")
+    shutil.rmtree(target)
 
 
 def validate_candidate_fingerprint(
@@ -301,6 +472,15 @@ def validate_candidate_fingerprint(
         raise ValueError(
             f"candidate {normalized_id} config fingerprint mismatch: {sorted(mismatches)}"
         )
+    provenance = metadata.get("diagnostic_provenance")
+    if not isinstance(provenance, dict):
+        raise ValueError(
+            f"candidate {normalized_id} config fingerprint is missing diagnostic provenance"
+        )
+    _validate_live_provenance(
+        provenance,
+        expected_input_path=expected_input_path,
+    )
 
 
 def load_formal_summaries(
@@ -310,6 +490,7 @@ def load_formal_summaries(
 ) -> list[dict[str, Any]]:
     root = Path(output_root)
     summaries: list[dict[str, Any]] = []
+    provenances: list[dict[str, Any]] = []
     for candidate in QSOC_CANDIDATES:
         candidate_id = str(candidate["candidate_id"])
         candidate_dir = root / f"candidate_{candidate_id}"
@@ -325,6 +506,7 @@ def load_formal_summaries(
             metadata,
             expected_input_path=expected_input_path,
         )
+        provenances.append(metadata["diagnostic_provenance"])
         payload = json.loads(summary_path.read_text(encoding="utf-8"))
         payload_id = str(payload.get("candidate_id", "")).upper()
         if payload_id != candidate_id:
@@ -333,6 +515,7 @@ def load_formal_summaries(
             )
         payload["candidate_id"] = payload_id
         summaries.append(payload)
+    validate_provenance_cohort(provenances)
     return summaries
 
 
@@ -402,6 +585,9 @@ def write_diagnostic_artifacts(
 ) -> tuple[Path, Path, Path]:
     decision = build_diagnostic_decision(summaries)
     enriched = _enriched_summaries(summaries)
+    enriched_by_candidate = {
+        str(item["candidate_id"]): item for item in enriched
+    }
     output_path = Path(output_root)
     report_path = Path(reports_dir)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -475,8 +661,8 @@ def write_diagnostic_artifacts(
         [
             "",
             "The companion CSV and per-candidate files retain all requested aggregate, per-voyage, and "
-            "solver metrics. If a voyage terminates early, its hydrogen and energy values cover only the "
-            "successfully applied prefix and are not valid full-voyage economic comparisons.",
+            "solver metrics. If a voyage terminates early, its hydrogen, energy, and dispatch-fraction "
+            "values cover only the successfully applied prefix and are not valid full-voyage comparisons.",
             "",
             "## Fixed feasibility gate",
             "",
@@ -511,6 +697,22 @@ def write_diagnostic_artifacts(
         else:
             text = "; ".join(str(reason) for reason in evaluation["reasons"])
         lines.append(f"- **{candidate_id}**: {text}.")
+    lines.extend(
+        [
+            "",
+            "The fixed gates establish only physical, SOC, and solver feasibility. Hydrogen use, battery "
+            "throughput, and fuel-cell-above-load behavior are reported diagnostics without hard acceptance "
+            "thresholds, so a passing witness is not an economic or power-allocation acceptance.",
+        ]
+    )
+    for candidate_id in decision["feasibility_witnesses"]:
+        witness = enriched_by_candidate[str(candidate_id)]
+        lines.append(
+            f"`{candidate_id}` remains only a feasibility witness: hydrogen total is "
+            f"{_format_report_value(witness.get('hydrogen_total_kg'))} kg and FC-above-load fraction is "
+            f"{_format_report_value(witness.get('fc_above_load_fraction'))}; neither metric passed a hard "
+            "economic or dispatch-quality gate in this diagnosis."
+        )
     lines.extend(
         [
             "",
@@ -567,6 +769,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.run_all
         else [args.candidate]
     )
+    provenance = build_diagnostic_provenance(
+        args.input,
+        generation_id=uuid4().hex,
+    )
     for candidate_id in candidate_ids:
         result = run_qsoc_candidate(
             str(candidate_id),
@@ -575,6 +781,7 @@ def main(argv: list[str] | None = None) -> int:
             make_plots=not args.no_plots,
             max_steps_per_voyage=args.max_steps_per_voyage,
             expected_voyage_count=args.expected_voyages,
+            diagnostic_provenance=provenance,
         )
         print(json.dumps(_json_ready(result["summary"]), ensure_ascii=False))
 

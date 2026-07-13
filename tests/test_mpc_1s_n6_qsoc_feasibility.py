@@ -233,6 +233,7 @@ class TestQsocFeasibilityContract(unittest.TestCase):
         )
 
         explicit = QpMpcConfig(horizon=6, q_soc=5.0)
+        artifact_metadata = {"diagnostic_provenance": {"generation_id": "test-generation"}}
         data = pd.DataFrame(
             {
                 "voyage_id": ["v1", "v1"],
@@ -261,14 +262,20 @@ class TestQsocFeasibilityContract(unittest.TestCase):
                 input_path=Path("input.parquet"),
                 output_root=Path("outputs"),
                 make_plots=False,
+                artifact_metadata=artifact_metadata,
             )
 
         self.assertIs(run_voyage.call_args.kwargs["config"], explicit)
         self.assertIs(build_metrics.call_args.kwargs["config"], explicit)
         self.assertIs(write_artifacts.call_args.kwargs["config"], explicit)
+        self.assertIs(
+            write_artifacts.call_args.kwargs["artifact_metadata"],
+            artifact_metadata,
+        )
 
     def test_formal_config_fingerprint_rejects_weight_or_timing_drift(self) -> None:
         from run_mpc_1s_n6_qsoc_feasibility import (
+            build_diagnostic_provenance,
             qsoc_candidate_config,
             validate_candidate_fingerprint,
         )
@@ -277,10 +284,15 @@ class TestQsocFeasibilityContract(unittest.TestCase):
         input_path = Path(
             "outputs/mpc_solver_benchmark_1s/data/test_voyages_spline_1s.parquet"
         )
+        provenance = build_diagnostic_provenance(
+            input_path,
+            generation_id="fingerprint-test",
+        )
         metadata = _candidate_metadata(
             "QSOC_5",
             input_path=input_path,
             config=qsoc_candidate_config("QSOC_5"),
+            artifact_metadata={"diagnostic_provenance": provenance},
         )
         validate_candidate_fingerprint(
             "QSOC_5",
@@ -325,6 +337,112 @@ class TestQsocFeasibilityContract(unittest.TestCase):
 
             self.assertTrue(all(not path.exists() for path in stale_paths))
             self.assertTrue(unrelated.exists())
+
+    def test_provenance_hashes_input_and_rejects_cross_generation_cohorts(self) -> None:
+        from run_mpc_1s_n6_qsoc_feasibility import (
+            build_diagnostic_provenance,
+            validate_provenance_cohort,
+        )
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            input_path = Path(temporary_directory) / "input.parquet"
+            input_path.write_bytes(b"stable-input")
+            first = build_diagnostic_provenance(
+                input_path,
+                generation_id="generation-one",
+            )
+            second = build_diagnostic_provenance(
+                input_path,
+                generation_id="generation-one",
+            )
+            third = build_diagnostic_provenance(
+                input_path,
+                generation_id="generation-one",
+            )
+
+            self.assertEqual(first["generation_id"], "generation-one")
+            self.assertEqual(len(first["input_sha256"]), 64)
+            self.assertEqual(len(first["implementation_sha256"]), 64)
+            self.assertTrue(first["git_head"])
+            self.assertIn(
+                "src/mpc/solvers/fc_dp0_curve.py",
+                first["implementation_files"],
+            )
+            self.assertIn(
+                "data/fuel_cell/FC_Dp0_curve_for_Python.csv",
+                first["implementation_files"],
+            )
+            self.assertEqual(
+                set(first["runtime_versions"]),
+                {"python", "numpy", "pandas", "scipy", "osqp", "pyarrow", "matplotlib"},
+            )
+            validate_provenance_cohort([first, second, third])
+
+            incompatible = {**third, "generation_id": "generation-two"}
+            with self.assertRaises(ValueError):
+                validate_provenance_cohort([first, second, incompatible])
+
+    def test_fingerprint_rejects_input_or_implementation_hash_drift(self) -> None:
+        from run_mpc_1s_n6_qsoc_feasibility import (
+            build_diagnostic_provenance,
+            qsoc_candidate_config,
+            validate_candidate_fingerprint,
+        )
+        from run_mpc_1s_n6_weight_selection import _candidate_metadata
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            input_path = Path(temporary_directory) / "input.parquet"
+            input_path.write_bytes(b"formal-input")
+            provenance = build_diagnostic_provenance(
+                input_path,
+                generation_id="formal-generation",
+            )
+            metadata = _candidate_metadata(
+                "QSOC_5",
+                input_path=input_path,
+                config=qsoc_candidate_config("QSOC_5"),
+                artifact_metadata={"diagnostic_provenance": provenance},
+            )
+            validate_candidate_fingerprint(
+                "QSOC_5",
+                metadata,
+                expected_input_path=input_path,
+            )
+
+            for key in ("input_sha256", "implementation_sha256"):
+                with self.subTest(key=key):
+                    invalid = {
+                        **metadata,
+                        "diagnostic_provenance": {
+                            **provenance,
+                            key: "0" * 64,
+                        },
+                    }
+                    with self.assertRaises(ValueError):
+                        validate_candidate_fingerprint(
+                            "QSOC_5",
+                            invalid,
+                            expected_input_path=input_path,
+                        )
+
+    def test_candidate_reset_removes_only_the_exact_new_diagnostic_directory(self) -> None:
+        from run_mpc_1s_n6_qsoc_feasibility import reset_candidate_directory
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            output_root = root / "mpc_1s_n6_qsoc_feasibility"
+            stale = output_root / "candidate_QSOC_5" / "plots" / "stale.png"
+            sibling = output_root / "candidate_QSOC_10" / "keep.txt"
+            historical = root / "mpc_1s_n6_weight_selection" / "keep.txt"
+            for path in (stale, sibling, historical):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("keep", encoding="utf-8")
+
+            reset_candidate_directory(output_root, "QSOC_5")
+
+            self.assertFalse((output_root / "candidate_QSOC_5").exists())
+            self.assertTrue(sibling.exists())
+            self.assertTrue(historical.exists())
 
 
 if __name__ == "__main__":

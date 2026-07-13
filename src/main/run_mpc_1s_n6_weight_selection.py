@@ -762,11 +762,12 @@ def _candidate_metadata(
     *,
     input_path: Path,
     config: QpMpcConfig | None = None,
+    artifact_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     normalized_id = str(candidate_id).upper()
     if config is None:
         config = candidate_config(normalized_id)
-    return {
+    metadata = {
         "candidate_id": normalized_id,
         "status": "raw_candidate",
         "solver": "OSQP",
@@ -801,6 +802,12 @@ def _candidate_metadata(
         },
         "scope_note": "N=60 is historical benchmark only; this run does not search N=60 weights.",
     }
+    if artifact_metadata:
+        collisions = sorted(set(metadata).intersection(artifact_metadata))
+        if collisions:
+            raise ValueError(f"artifact metadata cannot override base fields: {collisions}")
+        metadata.update(artifact_metadata)
+    return metadata
 
 
 def _constraint_audit_markdown(candidate_id: str, summary: dict[str, Any]) -> str:
@@ -895,6 +902,7 @@ def write_candidate_artifacts(
     input_path: str | Path,
     make_plots: bool = True,
     config: QpMpcConfig | None = None,
+    artifact_metadata: dict[str, Any] | None = None,
 ) -> Path:
     normalized_id = str(candidate_id).upper()
     case_dir = Path(output_root) / f"candidate_{normalized_id}"
@@ -903,6 +911,7 @@ def write_candidate_artifacts(
         normalized_id,
         input_path=Path(input_path),
         config=config,
+        artifact_metadata=artifact_metadata,
     )
 
     (case_dir / "config.json").write_text(
@@ -983,6 +992,7 @@ def run_candidate(
     max_steps_per_voyage: int | None = None,
     expected_voyage_count: int | None = None,
     config: QpMpcConfig | None = None,
+    artifact_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     normalized_id = str(candidate_id).upper()
     if config is None:
@@ -1052,6 +1062,7 @@ def run_candidate(
         input_path=_portable_input_path(Path(input_path)),
         make_plots=make_plots,
         config=config,
+        artifact_metadata=artifact_metadata,
     )
     return {
         "candidate_id": normalized_id,
