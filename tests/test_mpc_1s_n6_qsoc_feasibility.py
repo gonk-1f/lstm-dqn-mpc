@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from dataclasses import asdict
 from pathlib import Path
@@ -17,7 +18,10 @@ for path in (SRC, MAIN_ROOT):
 
 
 def passing_summary(candidate_id: str) -> dict[str, object]:
-    return {
+    from run_mpc_1s_n6_weight_selection import REQUIRED_N6_METRIC_KEYS
+
+    summary: dict[str, object] = {key: 0.0 for key in REQUIRED_N6_METRIC_KEYS}
+    summary.update({
         "candidate_id": candidate_id,
         "voyage_count": 7,
         "is_partial_debug_run": False,
@@ -28,8 +32,22 @@ def passing_summary(candidate_id: str) -> dict[str, object]:
         "soc_min": 0.50,
         "soc_max": 0.60,
         "worst_voyage_soc_net_change": -0.01,
+        "closed_loop_coverage_fraction": 1.0,
+        "solver_success_rate": 1.0,
+        "final_soc": 0.54,
+        "load_energy_mwh": 1.0,
+        "hydrogen_intensity_kg_per_mwh": 1.0,
+        "max_actual_power_balance_residual_kw": 0.0,
+        "max_soc_bound_residual": 0.0,
+        "max_soc_prediction_residual": 0.0,
+        "solve_time_ms_mean": 1.0,
+        "solve_time_ms_p95": 1.5,
+        "solve_time_ms_p99": 1.8,
         "solve_time_ms_max": 2.0,
-    }
+        "primal_residual_max_abs": 1.0e-7,
+        "dual_residual_max_abs": 1.0e-7,
+    })
+    return summary
 
 
 class TestQsocFeasibilityContract(unittest.TestCase):
@@ -82,7 +100,6 @@ class TestQsocFeasibilityContract(unittest.TestCase):
             self.assertEqual(config.fuel_cell_ramp_rate_kw_per_s, 48.0)
             self.assertEqual(config.soc_min, 0.2)
             self.assertEqual(config.soc_max, 0.8)
-            self.assertEqual(config.soc_ref, 0.55)
             self.assertEqual(config.q_h2, 0.5)
             self.assertEqual(config.q_batt, 0.05)
             self.assertEqual(config.soc_band, 0.05)
@@ -136,6 +153,28 @@ class TestQsocFeasibilityContract(unittest.TestCase):
                 self.assertFalse(result["passed"])
                 self.assertTrue(result["reasons"])
                 self.assertNotIn("score", result)
+
+    def test_gate_rejects_nonfinite_or_inconsistent_required_metrics(self) -> None:
+        from run_mpc_1s_n6_qsoc_feasibility import evaluate_candidate_gate
+
+        failures = {
+            "max_actual_power_balance_residual_kw": float("nan"),
+            "max_plan_power_balance_residual_kw": 0.2,
+            "max_fc_bound_residual_kw": 0.2,
+            "max_battery_bound_residual_kw": 0.2,
+            "max_ramp_residual_kw": 0.2,
+            "max_soc_bound_residual": 2.0e-6,
+            "max_soc_prediction_residual": 2.0e-5,
+            "primal_residual_max_abs": float("nan"),
+            "dual_residual_max_abs": float("nan"),
+        }
+        for key, value in failures.items():
+            with self.subTest(key=key):
+                summary = passing_summary("QSOC_5")
+                summary[key] = value
+                result = evaluate_candidate_gate(summary)
+                self.assertFalse(result["passed"])
+                self.assertTrue(result["reasons"])
 
     def test_decision_reports_all_witnesses_without_selecting_a_best(self) -> None:
         from run_mpc_1s_n6_qsoc_feasibility import build_diagnostic_decision
@@ -227,6 +266,65 @@ class TestQsocFeasibilityContract(unittest.TestCase):
         self.assertIs(run_voyage.call_args.kwargs["config"], explicit)
         self.assertIs(build_metrics.call_args.kwargs["config"], explicit)
         self.assertIs(write_artifacts.call_args.kwargs["config"], explicit)
+
+    def test_formal_config_fingerprint_rejects_weight_or_timing_drift(self) -> None:
+        from run_mpc_1s_n6_qsoc_feasibility import (
+            qsoc_candidate_config,
+            validate_candidate_fingerprint,
+        )
+        from run_mpc_1s_n6_weight_selection import _candidate_metadata
+
+        input_path = Path(
+            "outputs/mpc_solver_benchmark_1s/data/test_voyages_spline_1s.parquet"
+        )
+        metadata = _candidate_metadata(
+            "QSOC_5",
+            input_path=input_path,
+            config=qsoc_candidate_config("QSOC_5"),
+        )
+        validate_candidate_fingerprint(
+            "QSOC_5",
+            metadata,
+            expected_input_path=input_path,
+        )
+
+        bad_weight = {**metadata, "model": {**metadata["model"], "q_soc": 10.0}}
+        bad_timing = {
+            **metadata,
+            "timing": {**metadata["timing"], "forecast_samples": "t..t+5"},
+        }
+        for invalid in (bad_weight, bad_timing):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValueError):
+                    validate_candidate_fingerprint(
+                        "QSOC_5",
+                        invalid,
+                        expected_input_path=input_path,
+                    )
+
+    def test_invalidation_removes_only_combined_diagnostic_artifacts(self) -> None:
+        from run_mpc_1s_n6_qsoc_feasibility import invalidate_diagnostic_artifacts
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            output_root = root / "outputs"
+            reports_dir = root / "reports"
+            output_root.mkdir()
+            reports_dir.mkdir()
+            stale_paths = (
+                output_root / "diagnostic_decision.json",
+                reports_dir / "mpc_1s_n6_qsoc_feasibility_summary.md",
+                reports_dir / "mpc_1s_n6_qsoc_feasibility_table.csv",
+            )
+            for path in stale_paths:
+                path.write_text("stale", encoding="utf-8")
+            unrelated = reports_dir / "keep.md"
+            unrelated.write_text("keep", encoding="utf-8")
+
+            invalidate_diagnostic_artifacts(output_root, reports_dir)
+
+            self.assertTrue(all(not path.exists() for path in stale_paths))
+            self.assertTrue(unrelated.exists())
 
 
 if __name__ == "__main__":
