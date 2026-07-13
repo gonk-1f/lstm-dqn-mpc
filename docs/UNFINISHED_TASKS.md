@@ -7,7 +7,7 @@
 - **P2**：形成论文证据所需的实验。
 - **P3**：工程、复现和辅助研究整理。
 
-任务按依赖排序。固定 `N=6` MPC 未通过验收前，不应启动正式 DQN 训练；1 s 离线 spline 不得替代真实在线因果数据结论。
+任务按依赖排序。固定 `N=6` MPC 未被正式接受前，不应启动正式 DQN 训练；1 s 离线 spline 不得替代真实在线因果数据结论。
 
 ## P0 — Close the fixed LSTM-QP-MPC loop
 
@@ -15,7 +15,7 @@
 
 - **task:** 明确正式 1 s 实验的数据来源、decision time、LSTM history、h1–h6 预测含义、MPC stage 0–5 映射、实际负荷反馈和 SOC 更新时间。
 - **reason:** 离线 ideal-foresight `N=6` 路径已用测试固定为 `t+1..t+6`、只执行第一步和实际 SOC 更新，但正式 LSTM provider 的 history/h1–h6 映射、可用时刻和因果数据仍未接入。`N=60` 已降为历史 benchmark。
-- **affected_files:** formal forecast-provider/controller config, `src/main/run_lstm_mpc_test.py`, `src/main/run_mpc_1s_n6_weight_selection.py`, `docs/DATA_PROVENANCE.md`.
+- **affected_files:** formal forecast-provider/controller config, `src/main/run_lstm_mpc_test.py`, `src/main/run_mpc_1s_n6_weight_selection.py`, `src/main/run_mpc_1s_n6_qsoc_feasibility.py`, `docs/DATA_PROVENANCE.md`.
 - **acceptance_criteria:** 一份版本化 contract 明确每个向量元素对应的物理时间；测试可检测 off-by-one、zero-delay 和未来数据泄露；正式数据被标记为 measured/causal 或 offline/reconstructed；论文主实验不把未来 spline 端点写成在线可用信息。
 - **dependencies:** none.
 
@@ -27,12 +27,12 @@
 - **acceptance_criteria:** horizon 固定为 6；固定稀疏结构、参数更新和 warm start 被保留；每步执行的 `P_fc/P_batt` 满足功率平衡、设备边界、SOC 边界和 48 kW/s ramp；SOC 用实际施加的 `P_batt` 更新；逐步记录 status、iterations、residual、solve time 和约束残差；具有经过测试的确定性失败回退，不用 NaN 继续控制。
 - **dependencies:** P0-1.
 
-### P0-3 Validate and accept one fixed-weight baseline
+### P0-3 Review and formally accept one fixed-weight baseline
 
-- **task:** 基于 A–D 全部被拒绝的结果，先授权并预注册新的固定 `N=6` MPC 设计/候选范围，再验收一个真正可完成 7 航段的基线。
-- **reason:** 2026-07-13 的四候选实验已形成明确 `no_candidate_selected`：闭环覆盖率仅 0.6486–0.7352，最坏航段 SOC 净下降均约 -0.35；不得把 D 当 least-bad，也不得未经授权增加第五候选。历史 `N=60` 锚点不能迁移为正式权重。
-- **affected_files:** future design spec, formal MPC config, `src/main/run_mpc_1s_n6_weight_selection.py` or extracted controller, report schema, `STATUS.md`, MPC tests.
-- **acceptance_criteria:** 先明确允许调整的是权重范围还是控制结构；预注册 hard-constraint tolerance、求解成功率、fallback、SOC、氢耗、电池吞吐和 1 s 实时性门槛；逐航次和聚合结果都保存；7 航段闭环完整、所有 hard constraints 在容差内、最坏 SOC 净下降原则上不低于 -0.03；形成 accepted/rejected 决策，不使用加权总分或 least-bad 替代物理门禁。
+- **task:** 对严格预注册诊断得到的 `q_soc=20` 可行性见证做正式工程审查；只有功率分配、氢耗、电池使用和适用边界均有明确依据时，才把它写入 provisional/accepted 固定基线配置。
+- **reason:** 新诊断仅提高 `q_soc`，三组均完成 7 航段；`q_soc=20` 的最坏航段 SOC 净变化为 -0.021640、零求解失败且物理残差合格，证明权重本身可以弥补本次短预测域。但其 FC 高于负荷比例仍为 35.7336%，氢耗为 284.452 kg；这足以构成结构可行性见证，不足以自动构成论文最终选择。历史 `N=60` 锚点仍不能迁移为正式权重。
+- **affected_files:** formal MPC config, `src/main/run_mpc_1s_n6_qsoc_feasibility.py` or extracted controller, report schema, `STATUS.md`, MPC tests.
+- **acceptance_criteria:** 复核 7 航段闭环、hard-constraint tolerance、SOC、氢耗、电池吞吐、FC surplus 和 1 s 实时性；明确可接受的功率分配/经济性标准及 ideal-foresight 到因果预测的外推边界；形成显式 accepted/rejected 决策，不使用加权总分或 least-bad 替代物理门禁；正式接受前保持 DQN 阻塞。
 - **dependencies:** P0-2.
 
 ### P0-4 Remove stale parameters from the active execution path

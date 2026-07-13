@@ -4,6 +4,8 @@
 
 **Approval:** The user explicitly authorized the bounded `q_soc in {5, 10, 20}` diagnosis on 2026-07-13. The authorization fixes every other controller and experiment setting and forbids DQN work or deletion of the N=60 results.
 
+**Executed outcome:** All three candidates completed all seven voyages with zero final solver failures and zero physical-infeasible points. `QSOC_20` was the sole feasibility witness (`worst_voyage_soc_net_change=-0.021640`); it was not promoted to provisional or accepted status, and no DQN work was started.
+
 ## Purpose
 
 The experiment answers one structural question: can the existing terminal-free, six-step MPC complete all seven test voyages and sustain SOC when only the stage SOC weight is increased by one order of magnitude? It is not a general hyperparameter search and it does not establish that values outside the preregistered set will or will not work.

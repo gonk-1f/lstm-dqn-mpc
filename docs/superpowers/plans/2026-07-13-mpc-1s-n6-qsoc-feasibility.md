@@ -8,6 +8,8 @@
 
 **Tech Stack:** Python 3, NumPy, pandas, SciPy sparse matrices, OSQP, matplotlib, `unittest`, Git.
 
+**Executed outcome (2026-07-13):** `QSOC_5`, `QSOC_10`, and `QSOC_20` all completed 93,030 closed-loop steps. Only `QSOC_20` passed every fixed feasibility gate; the result remains a structural witness rather than a provisional/accepted paper configuration.
+
 ---
 
 ### Task 1: Lock the new experiment contract with failing tests

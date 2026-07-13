@@ -44,6 +44,7 @@
 | `src/main/build_mpc_solver_benchmark_1s_data.py` | 构建 7 个 test 航次的 1 s benchmark 输入 | auxiliary | 入口来自离线 spline |
 | `src/main/benchmark_mpc_qp_osqp_1s.py` | OSQP `N=60` 求解器/控制 benchmark | historical | 只保留 solver/performance 证据；不再作为默认配置或继续权重搜索 |
 | `src/main/run_mpc_1s_n6_weight_selection.py` | `N=6` ideal-foresight 固定权重实验 | active/auxiliary | `t+1..t+6`、只执行第一步、实际 SOC 更新；A–D 已运行但无候选通过，不是 LSTM 闭环 |
+| `src/main/run_mpc_1s_n6_qsoc_feasibility.py` | `N=6` 的 `q_soc`-only 结构诊断 | active/auxiliary | 固定其他权重/结构；同代输入/实现/运行时指纹防止产物混用；`q_soc=20` 为唯一可行性见证；不自动创建正式配置或启动 DQN |
 | `src/main/run_lstm_mpc_test.py` | 30 s CasADi/IPOPT LSTM-MPC | historical | 有预测与实际反馈逻辑，但物理参数/求解器不是目标主线 |
 | `src/main/run_lstm_mpc_total_load_test.py` | 上述 30 s 流程的总负荷包装入口 | auxiliary | 可作为迁移参考 |
 | `src/main/run_lstm_mpc_weight_sweep.py` | 历史固定权重搜索 | historical | 不应继续扩展为无约束大搜索 |
@@ -76,8 +77,10 @@
 | `src/main/mpc_solvers/mpc_qp_formulation.py` | active | 构造线性约束、SOC 动力学、归一化凸二次目标；默认参数包含 693 kWh/346.5 kW/560 kW/48 kW/s |
 | `src/main/benchmark_mpc_qp_osqp_1s.py` 内的持久 OSQP workspace | historical/supporting | N=60 原始设置为 `eps_abs=eps_rel=1e-4`、`max_iter=4000`；N=6 runner 只复用边界/计时等支持函数 |
 | `src/main/run_mpc_1s_n6_weight_selection.py` 的 N=6 workspace | active/auxiliary | 严格等价仿射缩放，`eps_abs=eps_rel=1e-5`、`max_iter=10000`、固定 rho 更新间隔；max_iter 可冷重启同一 QP，不构造控制 fallback |
+| `src/main/run_mpc_1s_n6_qsoc_feasibility.py` | active/auxiliary | 通过显式配置复用同一 N=6 workspace，校验候选 config 指纹和有限残差；仅测试 `q_soc={5,10,20}` |
 | 独立可部署 OSQP controller wrapper | uncertain/missing | 当前 N=6 入口是离线实验 runner；尚未封装预测 provider 和确定性控制失败回退 |
 | `outputs/mpc_1s_n6_weight_selection/` | active evidence | A–D 配置、逐航段/总体指标、solver 统计、约束审计、曲线与人工拒绝决策；无 provisional 配置 |
+| `outputs/mpc_1s_n6_qsoc_feasibility/` | active evidence | 三个 `q_soc` 配置、逐航段/总体指标、solver 统计、约束审计、曲线和结构诊断；`QSOC_20` 为 witness，非 accepted 配置 |
 | `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` | historical | 693 kWh `N=60` 离线 benchmark 证据；紧凑指针在 N=6 输出目录中 |
 | `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt277p2_simplified_spec_norm/` | historical | 旧容量研究；不得作为当前物理配置 |
 | `src/mpc/` 与 `src/main/run_lstm_mpc_test.py` | historical/supporting | CasADi/IPOPT、氢耗曲线、回退和历史 SOC 设计；需择取可迁移逻辑，不应直接当 OSQP 主线 |
@@ -131,6 +134,7 @@ QP 中 `P_fc + P_batt = load`，SOC 由实际电池功率更新，FC ramp 是硬
 | `tests/test_spline_1s_diagnostics.py` | spline 构建和物理标记 | active |
 | `tests/test_lstm_spline_1s_hparam_search.py` | 1 s LSTM/baseline 逻辑 | auxiliary |
 | `tests/test_mpc_solver_benchmark_1s.py` | QP/OSQP benchmark | active |
+| `tests/test_mpc_1s_n6_qsoc_feasibility.py` | 新候选冻结、显式配置注入、门禁、config 指纹、产物失效 | active |
 | `tests/test_lstm_mpc_*` | 30 s CasADi 时序、horizon、zero-delay | historical/supporting |
 | `tests/test_millisecond_*` | 10 ms 构建、审计、模型 | auxiliary；split key 缺失/额外场景已有回归覆盖 |
 | `tests/test_mpc_*` | 初始 dispatch、ramp 开关、SOC reference | supporting |

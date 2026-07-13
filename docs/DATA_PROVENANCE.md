@@ -109,6 +109,8 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 - MPC 预测/控制时域均为 6，但每次只执行第一步；实际电池功率由 `load_actual(t+1)-P_fc(t+1)` 得到，SOC 用该实际功率更新。
 - 这是 offline oracle/ideal-foresight 实验，`lstm_used=false`。它用于固定权重的上界诊断，不能写成 LSTM 预测闭环或在线控制证据。
 - A–D 四组固定候选产物位于 `outputs/mpc_1s_n6_weight_selection/`；四组均因闭环不完整和严重 SOC 下降被拒绝，没有 provisional/accepted 配置。
+- 严格限定的后续诊断入口为 `src/main/run_mpc_1s_n6_qsoc_feasibility.py`，产物位于 `outputs/mpc_1s_n6_qsoc_feasibility/`，报告位于 `reports/mpc_1s_n6_qsoc_feasibility_*`。它复用相同数据、时序和实际 SOC 更新，只把 `q_soc` 改为 5、10、20；三组均完成 7 航段，`q_soc=20` 是唯一满足最坏航段 SOC 净变化不低于 -0.03 的可行性见证。每个候选的 `config.json` 记录同一 generation、输入 SHA256、六个直接运行依赖的联合 SHA256、源 Git 提交和 Python/数值栈版本；`--report-only` 会拒绝跨 generation、输入漂移、实现/曲线数据漂移或运行时版本漂移的候选组合。
+- 该见证仍属于 offline ideal-foresight 结构诊断。它没有使用 LSTM、没有创建 provisional/accepted 配置，也不能证明因果在线预测条件下具有相同行为。
 
 ### Forecast configuration and evidence
 
@@ -174,7 +176,7 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 | 30 s 跨航次窗口 | split manifest 声明不跨航次，训练代码按 voyage 分组 | 应增加对所有正式入口的统一 invariant 测试 |
 | 30 s scaler 泄露 | 只拟合 train 航次 | 保存的旧 checkpoint/run_config 含旧绝对路径，需迁移后重验 |
 | 1 s 跨 split 泄露 | 逐航次拟合，46/13/7 航次隔离 | 信号在每个 30 s 区间使用未来端点，存在在线因果泄露 |
-| 1 s benchmark 真实度 | N=60 标为 historical；N=6 config/report 显式记录 offline ideal foresight、`lstm_used=false` 和 `t+1..t+6` | 使用未来重构负荷作为 horizon，不能等同 LSTM 闭环或在线控制 |
+| 1 s benchmark 真实度 | N=60 标为 historical；A–D 和 `q_soc`-only N=6 config/report 均显式记录 offline ideal foresight、`lstm_used=false` 和 `t+1..t+6` | 使用未来重构负荷作为 horizon，不能等同 LSTM 闭环或在线控制 |
 | 10 ms 跨序列窗口 | 按原子序列建窗并保存 hash | 同一工作簿的不同工况段跨 split，可能共享采集条件；需在论文中说明 |
 | 10 ms scaler 泄露 | manifest 和模型均指定 train-only；audit 严格要求 train/validation/test key 集合 | 仍需在 CI 中持续执行完整数据审计 |
 | 10 ms 抽点混叠 | 明确记录 direct decimation | 未做抗混叠滤波，不能把高频谱结论外推 |
