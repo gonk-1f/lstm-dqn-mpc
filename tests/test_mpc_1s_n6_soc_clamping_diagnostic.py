@@ -128,6 +128,7 @@ class TestSocClampingDiagnosticContract(unittest.TestCase):
                 "soc_band": 0.05,
                 "objective_variant": "simplified_normalized_literature_v1",
                 "q_h2": 0.5,
+                "q_fc_var": 0.0,
                 "q_batt": 0.05,
                 "q_ramp": 0.0,
                 "q_terminal_soc": 0.0,

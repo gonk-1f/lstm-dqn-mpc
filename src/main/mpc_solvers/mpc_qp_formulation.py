@@ -44,6 +44,7 @@ class QpMpcConfig:
     soc_band: float = 0.05
     objective_variant: str = "simplified_normalized_literature_v1"
     q_h2: float = 1.0
+    q_fc_var: float = 0.0
     q_soc: float = 1.0
     q_batt: float = 0.05
     q_ramp: float = 0.0
@@ -101,10 +102,14 @@ def _validate_config(config: QpMpcConfig) -> None:
         raise ValueError("soc_max must be greater than soc_min")
     if float(config.soc_band) <= 0.0:
         raise ValueError("soc_band must be positive")
-    for name in ("q_h2", "q_soc", "q_batt", "q_ramp", "q_terminal_soc"):
+    for name in ("q_h2", "q_fc_var", "q_soc", "q_batt", "q_ramp", "q_terminal_soc"):
         if float(getattr(config, name)) < 0.0:
             raise ValueError(f"{name} must be nonnegative")
-    if str(config.objective_variant) not in {"simplified_normalized_literature_v1", "legacy_raw_h2_soc_batt_ramp_terminal"}:
+    if str(config.objective_variant) not in {
+        "n6_h2_fc_variation_battery_v1",
+        "simplified_normalized_literature_v1",
+        "legacy_raw_h2_soc_batt_ramp_terminal",
+    }:
         raise ValueError(f"unsupported objective_variant: {config.objective_variant}")
 
 
@@ -143,7 +148,31 @@ def build_qp_problem(
     if h2_reference <= 0.0:
         raise ValueError("h2 reference denominator must be positive")
     objective_terms: list[str]
-    if objective_variant == "simplified_normalized_literature_v1":
+    if objective_variant == "n6_h2_fc_variation_battery_v1":
+        objective_terms = ["H2_norm", "FC_var_norm", "Batt_norm"]
+        batt_ref2 = float(config.battery_power_ref_kw) ** 2
+        fc_variation_ref2 = float(config.fuel_cell_ramp_rate_kw_per_s * config.dt_seconds) ** 2
+        if fc_variation_ref2 <= 0.0:
+            raise ValueError("fuel-cell variation reference must be positive")
+        for k in range(horizon):
+            idx = fc0 + k
+            hessian[idx, idx] += 2.0 * float(config.q_h2) * h2_quad / h2_reference
+            linear[idx] += float(config.q_h2) * h2_linear / h2_reference
+        first_fc = fc0
+        fc_variation_weight = float(config.q_fc_var) / fc_variation_ref2
+        hessian[first_fc, first_fc] += 2.0 * fc_variation_weight
+        linear[first_fc] += -2.0 * fc_variation_weight * float(prev_fc_kw)
+        for k in range(1, horizon):
+            current = fc0 + k
+            previous = current - 1
+            hessian[current, current] += 2.0 * fc_variation_weight
+            hessian[previous, previous] += 2.0 * fc_variation_weight
+            hessian[current, previous] += -2.0 * fc_variation_weight
+            hessian[previous, current] += -2.0 * fc_variation_weight
+        for k in range(horizon):
+            idx = batt0 + k
+            hessian[idx, idx] += 2.0 * float(config.q_batt) / batt_ref2
+    elif objective_variant == "simplified_normalized_literature_v1":
         objective_terms = ["H2_norm", "SOC_norm", "Batt_norm"]
         batt_ref2 = float(config.battery_power_ref_kw) ** 2
         soc_band2 = float(config.soc_band) ** 2
@@ -267,7 +296,11 @@ def build_qp_problem(
         ),
         "objective_variant": objective_variant,
         "objective_terms": objective_terms,
+        "soc_cost_in_objective": "SOC_norm" in objective_terms or "soc" in objective_terms,
         "battery_power_ref_kw": float(config.battery_power_ref_kw),
+        "fuel_cell_variation_ref_kw_per_step": float(
+            config.fuel_cell_ramp_rate_kw_per_s * config.dt_seconds
+        ),
         "soc_band": float(config.soc_band),
         "h2_reference_kg_per_step": h2_reference,
         "h2_curve_csv": str(CURVE_CSV_PATH),
@@ -280,8 +313,17 @@ def build_qp_problem(
         "diagnostics_computed": bool(include_diagnostics),
         "battery_cost_form": (
             "normalized (P_batt / P_batt_ref)^2"
-            if objective_variant == "simplified_normalized_literature_v1"
+            if objective_variant
+            in {
+                "n6_h2_fc_variation_battery_v1",
+                "simplified_normalized_literature_v1",
+            }
             else "legacy raw quadratic P_batt^2"
+        ),
+        "fuel_cell_variation_cost_form": (
+            "((P_fc[0] - P_fc_prev) / 48)^2 and ((P_fc[k] - P_fc[k-1]) / 48)^2"
+            if objective_variant == "n6_h2_fc_variation_battery_v1"
+            else "not active in this objective variant"
         ),
     }
     return QpProblem(P=P, q=linear, A=A, l=l, u=u, metadata=metadata)

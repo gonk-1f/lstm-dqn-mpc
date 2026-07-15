@@ -218,17 +218,16 @@ class TestQsocFeasibilityContract(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     build_diagnostic_decision(invalid)
 
-    def test_old_candidates_remain_fixed_and_shared_runner_accepts_explicit_config(self) -> None:
+    def test_new_main_candidates_do_not_break_shared_runner_explicit_config(self) -> None:
         import run_mpc_1s_n6_weight_selection as base
         from mpc_solvers.mpc_qp_formulation import QpMpcConfig
 
         self.assertEqual(
             base.CANDIDATES,
             (
-                {"candidate_id": "A", "q_h2": 0.5, "q_soc": 2.0, "q_batt": 0.05, "soc_band": 0.05},
-                {"candidate_id": "B", "q_h2": 0.5, "q_soc": 1.5, "q_batt": 0.05, "soc_band": 0.05},
-                {"candidate_id": "C", "q_h2": 0.5, "q_soc": 2.0, "q_batt": 0.05, "soc_band": 0.075},
-                {"candidate_id": "D", "q_h2": 0.5, "q_soc": 2.0, "q_batt": 0.075, "soc_band": 0.05},
+                {"candidate_id": "A", "q_h2": 0.5, "q_fc_var": 0.05, "q_batt": 0.05},
+                {"candidate_id": "B", "q_h2": 0.5, "q_fc_var": 0.10, "q_batt": 0.05},
+                {"candidate_id": "C", "q_h2": 0.5, "q_fc_var": 0.10, "q_batt": 0.10},
             ),
         )
 

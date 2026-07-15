@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -27,8 +27,10 @@ from mpc_solvers.mpc_qp_formulation import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_INPUT_PATH = REPO_ROOT / "outputs" / "mpc_solver_benchmark_1s" / "data" / "test_voyages_spline_1s.parquet"
-DEFAULT_OUTPUT_ROOT = REPO_ROOT / "outputs" / "mpc_1s_n6_weight_selection"
+DEFAULT_OUTPUT_ROOT = REPO_ROOT / "outputs" / "mpc_1s_n6_h2_fcvar_batt"
 DEFAULT_REPORTS_DIR = REPO_ROOT / "reports"
+DEFAULT_SUMMARY_REPORT = DEFAULT_REPORTS_DIR / "mpc_1s_n6_h2_fcvar_batt_summary.md"
+DEFAULT_TABLE_REPORT = DEFAULT_REPORTS_DIR / "mpc_1s_n6_h2_fcvar_batt_table.csv"
 DEFAULT_SELECTION_CONFIG = REPO_ROOT / "configs" / "benchmarks" / "mpc_1s_n6_provisional.json"
 EXPECTED_TEST_VOYAGES: tuple[str, ...] = tuple(f"voyage_{index:03d}" for index in range(60, 67))
 N6_HORIZON = 6
@@ -49,7 +51,7 @@ N6_TOLERANCES: dict[str, float] = {
     "ramp_kw": 0.1,
     "soc": 1.0e-6,
     "soc_prediction": 1.0e-5,
-    "fc_above_load_kw": 1.0,
+    "fc_above_load_kw": 1.0e-6,
     "near_limit_kw": 1.0,
 }
 REQUIRED_N6_METRIC_KEYS: frozenset[str] = frozenset(
@@ -78,6 +80,7 @@ REQUIRED_N6_METRIC_KEYS: frozenset[str] = frozenset(
         "battery_charge_energy_kwh",
         "battery_discharge_energy_kwh",
         "battery_throughput_kwh",
+        "fc_power_change_rms_kw",
         "fc_at_max_fraction",
         "battery_near_limit_fraction",
         "fc_above_load_fraction",
@@ -86,10 +89,24 @@ REQUIRED_N6_METRIC_KEYS: frozenset[str] = frozenset(
 )
 
 CANDIDATES: tuple[dict[str, Any], ...] = (
-    {"candidate_id": "A", "q_h2": 0.5, "q_soc": 2.0, "q_batt": 0.05, "soc_band": 0.05},
-    {"candidate_id": "B", "q_h2": 0.5, "q_soc": 1.5, "q_batt": 0.05, "soc_band": 0.05},
-    {"candidate_id": "C", "q_h2": 0.5, "q_soc": 2.0, "q_batt": 0.05, "soc_band": 0.075},
-    {"candidate_id": "D", "q_h2": 0.5, "q_soc": 2.0, "q_batt": 0.075, "soc_band": 0.05},
+    {"candidate_id": "A", "q_h2": 0.5, "q_fc_var": 0.05, "q_batt": 0.05},
+    {"candidate_id": "B", "q_h2": 0.5, "q_fc_var": 0.10, "q_batt": 0.05},
+    {"candidate_id": "C", "q_h2": 0.5, "q_fc_var": 0.10, "q_batt": 0.10},
+)
+CORE_TABLE_COLUMNS: tuple[str, ...] = (
+    "candidate_id",
+    "completion_rate",
+    "solver_failure_count",
+    "worst_voyage_soc_net_change",
+    "global_soc_range",
+    "hydrogen_total_kg",
+    "battery_charge_energy_kwh",
+    "battery_discharge_energy_kwh",
+    "battery_throughput_kwh",
+    "fc_power_change_rms_kw",
+    "fc_above_load_fraction",
+    "solve_time_ms_mean",
+    "solve_time_ms_p99",
 )
 
 
@@ -214,6 +231,28 @@ def _setup_n6_osqp_solver(osqp_module: Any, problem: QpProblem) -> Any:
     return solver
 
 
+def scaled_linear_for_previous_fc(
+    base_scaled_linear: np.ndarray,
+    *,
+    config: QpMpcConfig,
+    transform: N6QpTransform,
+    base_previous_fc_kw: float,
+    previous_fc_kw: float,
+) -> np.ndarray:
+    linear = np.asarray(base_scaled_linear, dtype=float).copy()
+    if str(config.objective_variant) != "n6_h2_fc_variation_battery_v1":
+        return linear
+    variation_ref_kw = float(config.fuel_cell_ramp_rate_kw_per_s) * float(config.dt_seconds)
+    delta_physical = (
+        -2.0
+        * float(config.q_fc_var)
+        * (float(previous_fc_kw) - float(base_previous_fc_kw))
+        / (variation_ref_kw**2)
+    )
+    linear[0] += float(transform.variable_scale[0]) * delta_physical
+    return linear
+
+
 def candidate_config(candidate_id: str) -> QpMpcConfig:
     selected = next(
         (candidate for candidate in CANDIDATES if candidate["candidate_id"] == str(candidate_id).upper()),
@@ -221,17 +260,22 @@ def candidate_config(candidate_id: str) -> QpMpcConfig:
     )
     if selected is None:
         raise ValueError(f"candidate_id must be one of {[item['candidate_id'] for item in CANDIDATES]}")
-    return default_config(
+    base = default_config(
         horizon=N6_HORIZON,
         battery_capacity_kwh=693.0,
         q_h2=float(selected["q_h2"]),
-        q_soc=float(selected["q_soc"]),
+        q_soc=0.0,
         q_batt=float(selected["q_batt"]),
         q_ramp=0.0,
         q_terminal_soc=0.0,
         battery_power_max_kw=346.5,
         battery_power_ref_kw=346.5,
-        soc_band=float(selected["soc_band"]),
+        soc_band=0.05,
+    )
+    return replace(
+        base,
+        objective_variant="n6_h2_fc_variation_battery_v1",
+        q_fc_var=float(selected["q_fc_var"]),
     )
 
 
@@ -324,6 +368,8 @@ def run_voyage(
     )
     scaled_setup_problem, transform = scale_n6_qp_problem(setup_problem, config=config)
     solver = _setup_n6_osqp_solver(osqp_module, scaled_setup_problem)
+    setup_previous_fc = float(prev_fc_actual)
+    base_scaled_linear = scaled_setup_problem.q.copy()
 
     decision_count = len(loads) - 1
     if max_steps is not None:
@@ -344,10 +390,18 @@ def run_voyage(
             prev_fc_kw=prev_fc_before,
         )
         scaled_lower, scaled_upper = transform.transform_bounds(lower, upper)
+        scaled_linear = scaled_linear_for_previous_fc(
+            base_scaled_linear,
+            config=config,
+            transform=transform,
+            base_previous_fc_kw=setup_previous_fc,
+            previous_fc_kw=prev_fc_before,
+        )
         result, solve_ms = _solve_with_persistent_osqp(
             solver,
             lower=scaled_lower,
             upper=scaled_upper,
+            linear=scaled_linear,
         )
         initial_status = str(result.info.status)
         initial_status_lower = initial_status.lower()
@@ -376,6 +430,7 @@ def run_voyage(
                 solver,
                 lower=scaled_lower,
                 upper=scaled_upper,
+                linear=scaled_recovery_problem.q,
             )
             solve_ms = float(solve_ms) + float(recovery_setup_ms) + float(recovery_solve_ms)
             attempt_count = 2
@@ -607,6 +662,10 @@ def _physical_metrics(frame: pd.DataFrame, *, config: QpMpcConfig) -> dict[str, 
     load = pd.to_numeric(applied["load_actual_kw"], errors="coerce")
     p_fc = pd.to_numeric(applied["P_fc_actual_kw"], errors="coerce")
     p_batt = pd.to_numeric(applied["P_batt_actual_kw"], errors="coerce")
+    fc_delta = pd.to_numeric(
+        applied.get("fc_delta_actual_kw", pd.Series(dtype=float)),
+        errors="coerce",
+    ).dropna()
     soc = pd.to_numeric(applied["SOC_actual"], errors="coerce")
     h2 = pd.to_numeric(applied["h2_kg_step"], errors="coerce")
 
@@ -660,6 +719,11 @@ def _physical_metrics(frame: pd.DataFrame, *, config: QpMpcConfig) -> dict[str, 
         "battery_charge_energy_kwh": charge,
         "battery_discharge_energy_kwh": discharge,
         "battery_throughput_kwh": charge + discharge,
+        "fc_power_change_rms_kw": (
+            float(np.sqrt(np.mean(np.square(fc_delta.to_numpy(dtype=float)))))
+            if len(fc_delta)
+            else float("nan")
+        ),
         "fc_at_max_fraction": (
             float((p_fc >= float(config.fuel_cell_max_kw) - N6_TOLERANCES["near_limit_kw"]).mean())
             if len(p_fc)
@@ -734,8 +798,12 @@ def build_candidate_metrics(
         overall["final_soc"] = float(voyage_metrics["final_soc"].mean())
         overall["soc_net_change"] = float(voyage_metrics["soc_net_change"].mean())
         overall["worst_voyage_soc_net_change"] = float(voyage_metrics["soc_net_change"].min())
+        overall["completion_rate"] = float(
+            voyage_metrics["closed_loop_complete"].astype(bool).mean()
+        )
     else:
         overall["worst_voyage_soc_net_change"] = float("nan")
+        overall["completion_rate"] = float("nan")
     overall.update(
         {key: value for key, value in overall_solver.items() if key not in {"scope", "voyage_id"}}
     )
@@ -880,6 +948,7 @@ def _write_voyage_plot(frame: pd.DataFrame, destination: Path, *, candidate_id: 
     axes[1].set_ylabel("Battery (kW)")
     axes[2].plot(plotted["time_s"], plotted["SOC_actual"], color="tab:green", linewidth=1.0)
     axes[2].axhline(0.2, color="0.6", linestyle="--", linewidth=0.8)
+    axes[2].axhline(0.55, color="tab:blue", linestyle=":", linewidth=0.8)
     axes[2].axhline(0.8, color="0.6", linestyle="--", linewidth=0.8)
     axes[2].set_ylabel("SOC")
     axes[2].set_xlabel("Voyage time (s)")
@@ -889,6 +958,50 @@ def _write_voyage_plot(frame: pd.DataFrame, destination: Path, *, candidate_id: 
     figure.suptitle(f"N=6 candidate {candidate_id}: {voyage_id}")
     figure.savefig(destination, dpi=140)
     plt.close(figure)
+
+
+def write_core_candidate_plots(
+    controls: pd.DataFrame,
+    *,
+    output_root: str | Path,
+    candidate_id: str,
+) -> Path:
+    normalized_id = str(candidate_id).upper()
+    if normalized_id not in {item["candidate_id"] for item in CANDIDATES}:
+        raise ValueError(f"candidate_id must be one of {[item['candidate_id'] for item in CANDIDATES]}")
+    candidate_dir = Path(output_root) / f"candidate_{normalized_id}"
+    candidate_dir.mkdir(parents=True, exist_ok=True)
+    for voyage_id, frame in controls.groupby("voyage_id", sort=True):
+        _write_voyage_plot(
+            frame,
+            candidate_dir / f"{str(voyage_id)}_power_soc.png",
+            candidate_id=normalized_id,
+        )
+    return candidate_dir
+
+
+def write_core_summary_table(
+    summaries: list[dict[str, Any]],
+    *,
+    reports_dir: str | Path = DEFAULT_REPORTS_DIR,
+) -> Path:
+    by_candidate = {str(summary["candidate_id"]).upper(): summary for summary in summaries}
+    expected_ids = tuple(item["candidate_id"] for item in CANDIDATES)
+    if tuple(by_candidate) != expected_ids:
+        raise ValueError(f"core summary requires candidates {expected_ids} in order")
+    rows: list[dict[str, Any]] = []
+    for candidate_id in expected_ids:
+        summary = by_candidate[candidate_id]
+        row = {key: summary.get(key) for key in CORE_TABLE_COLUMNS if key != "global_soc_range"}
+        row["global_soc_range"] = (
+            f"{float(summary['soc_min']):.12g}..{float(summary['soc_max']):.12g}"
+        )
+        rows.append(row)
+    report_dir = Path(reports_dir)
+    report_dir.mkdir(parents=True, exist_ok=True)
+    table_path = report_dir / DEFAULT_TABLE_REPORT.name
+    pd.DataFrame(rows, columns=CORE_TABLE_COLUMNS).to_csv(table_path, index=False)
+    return table_path
 
 
 def write_candidate_artifacts(
@@ -983,16 +1096,13 @@ def _portable_input_path(input_path: Path) -> Path:
         return input_path
 
 
-def run_candidate(
+def _evaluate_candidate(
     candidate_id: str,
     *,
     input_path: str | Path = DEFAULT_INPUT_PATH,
-    output_root: str | Path = DEFAULT_OUTPUT_ROOT,
-    make_plots: bool = True,
     max_steps_per_voyage: int | None = None,
     expected_voyage_count: int | None = None,
     config: QpMpcConfig | None = None,
-    artifact_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     normalized_id = str(candidate_id).upper()
     if config is None:
@@ -1052,25 +1162,75 @@ def run_candidate(
         reference_energy_by_voyage
     )
     solver_statistics.insert(0, "candidate_id", normalized_id)
-    case_dir = write_candidate_artifacts(
-        candidate_id=normalized_id,
-        summary=summary,
-        voyage_metrics=voyage_metrics,
-        solver_statistics=solver_statistics,
-        controls=control_df,
-        output_root=output_root,
-        input_path=_portable_input_path(Path(input_path)),
-        make_plots=make_plots,
-        config=config,
-        artifact_metadata=artifact_metadata,
-    )
     return {
         "candidate_id": normalized_id,
         "summary": summary,
         "voyage_metrics": voyage_metrics,
         "solver_statistics": solver_statistics,
-        "case_dir": case_dir,
+        "controls": control_df,
     }
+
+
+def run_candidate(
+    candidate_id: str,
+    *,
+    input_path: str | Path = DEFAULT_INPUT_PATH,
+    output_root: str | Path = DEFAULT_OUTPUT_ROOT,
+    make_plots: bool = True,
+    max_steps_per_voyage: int | None = None,
+    expected_voyage_count: int | None = None,
+    config: QpMpcConfig | None = None,
+    artifact_metadata: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    result = _evaluate_candidate(
+        candidate_id,
+        input_path=input_path,
+        max_steps_per_voyage=max_steps_per_voyage,
+        expected_voyage_count=expected_voyage_count,
+        config=config,
+    )
+    case_dir = write_candidate_artifacts(
+        candidate_id=str(result["candidate_id"]),
+        summary=result["summary"],
+        voyage_metrics=result["voyage_metrics"],
+        solver_statistics=result["solver_statistics"],
+        controls=result["controls"],
+        output_root=output_root,
+        input_path=_portable_input_path(Path(input_path)),
+        make_plots=make_plots,
+        config=config or candidate_config(str(result["candidate_id"])),
+        artifact_metadata=artifact_metadata,
+    )
+    return {**result, "case_dir": case_dir}
+
+
+def run_core_experiment(
+    *,
+    input_path: str | Path = DEFAULT_INPUT_PATH,
+    output_root: str | Path = DEFAULT_OUTPUT_ROOT,
+    reports_dir: str | Path = DEFAULT_REPORTS_DIR,
+    make_plots: bool = True,
+    max_steps_per_voyage: int | None = None,
+    expected_voyage_count: int | None = len(EXPECTED_TEST_VOYAGES),
+) -> pd.DataFrame:
+    summaries: list[dict[str, Any]] = []
+    for candidate in CANDIDATES:
+        candidate_id = str(candidate["candidate_id"])
+        result = _evaluate_candidate(
+            candidate_id,
+            input_path=input_path,
+            max_steps_per_voyage=max_steps_per_voyage,
+            expected_voyage_count=expected_voyage_count,
+        )
+        summaries.append(result["summary"])
+        if make_plots:
+            write_core_candidate_plots(
+                result["controls"],
+                output_root=output_root,
+                candidate_id=candidate_id,
+            )
+    table_path = write_core_summary_table(summaries, reports_dir=reports_dir)
+    return pd.read_csv(table_path)
 
 
 def _format_report_value(value: Any) -> str:
@@ -1097,7 +1257,7 @@ def _validate_explicit_selection(
         if selection.get("selected_candidate") not in {None, ""}:
             raise ValueError("no_candidate_selected decision cannot name a selected candidate")
         if set(by_candidate) != valid_ids:
-            raise ValueError("no_candidate_selected decision requires formal results for A, B, C, and D")
+            raise ValueError("no_candidate_selected decision requires formal results for A, B, and C")
         for candidate_id, summary in by_candidate.items():
             if int(summary.get("voyage_count", -1)) != len(EXPECTED_TEST_VOYAGES):
                 raise ValueError(f"candidate {candidate_id} must contain all seven formal voyages")
@@ -1112,7 +1272,7 @@ def _validate_explicit_selection(
     if status not in {"provisional", "accepted"}:
         raise ValueError("selection status must be provisional, accepted, or no_candidate_selected")
     if set(by_candidate) != valid_ids:
-        raise ValueError("provisional/accepted selection requires formal results for A, B, C, and D")
+        raise ValueError("provisional/accepted selection requires formal results for A, B, and C")
     for candidate_id, candidate_summary in by_candidate.items():
         if int(candidate_summary.get("voyage_count", -1)) != len(EXPECTED_TEST_VOYAGES):
             raise ValueError(f"candidate {candidate_id} must contain all seven formal voyages")
@@ -1305,39 +1465,26 @@ def _resolve_selection_path(explicit_path: Path | None, output_root: Path) -> Pa
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Run one N=6 ideal-foresight OSQP-QP fixed-weight candidate."
+        description="Run the three fixed N=6 H2/FC-variation/battery candidates."
     )
-    parser.add_argument("--candidate", choices=[item["candidate_id"] for item in CANDIDATES])
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT_PATH)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--reports-dir", type=Path, default=DEFAULT_REPORTS_DIR)
-    parser.add_argument("--selection-config", type=Path)
-    parser.add_argument("--report-only", action="store_true")
     parser.add_argument("--no-plots", action="store_true")
     parser.add_argument("--max-steps-per-voyage", type=int)
     parser.add_argument("--expected-voyages", type=int, default=7)
     args = parser.parse_args(argv)
 
-    if not args.report_only:
-        if args.candidate is None:
-            parser.error("--candidate is required unless --report-only is used")
-        result = run_candidate(
-            args.candidate,
-            input_path=args.input,
-            output_root=args.output_root,
-            make_plots=not args.no_plots,
-            max_steps_per_voyage=args.max_steps_per_voyage,
-            expected_voyage_count=args.expected_voyages,
-        )
-        print(json.dumps(_json_ready(result["summary"]), ensure_ascii=False))
-
-    markdown_path, table_path = write_combined_reports(
+    table = run_core_experiment(
+        input_path=args.input,
         output_root=args.output_root,
         reports_dir=args.reports_dir,
-        selection=_load_selection(_resolve_selection_path(args.selection_config, args.output_root)),
+        make_plots=not args.no_plots,
+        max_steps_per_voyage=args.max_steps_per_voyage,
+        expected_voyage_count=args.expected_voyages,
     )
-    print(f"report={markdown_path}")
-    print(f"table={table_path}")
+    print(table.to_string(index=False))
+    print(f"table={Path(args.reports_dir) / DEFAULT_TABLE_REPORT.name}")
     return 0
 
 

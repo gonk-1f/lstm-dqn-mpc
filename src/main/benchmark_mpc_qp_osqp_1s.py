@@ -588,9 +588,18 @@ def _setup_persistent_osqp_solver(osqp_module: Any, problem: Any) -> Any:
     return solver
 
 
-def _solve_with_persistent_osqp(solver: Any, *, lower: np.ndarray, upper: np.ndarray) -> tuple[Any, float]:
+def _solve_with_persistent_osqp(
+    solver: Any,
+    *,
+    lower: np.ndarray,
+    upper: np.ndarray,
+    linear: np.ndarray | None = None,
+) -> tuple[Any, float]:
     start = time.perf_counter()
-    solver.update(l=lower, u=upper)
+    if linear is None:
+        solver.update(l=lower, u=upper)
+    else:
+        solver.update(q=linear, l=lower, u=upper)
     result = solver.solve()
     elapsed_ms = (time.perf_counter() - start) * 1000.0
     return result, float(elapsed_ms)
