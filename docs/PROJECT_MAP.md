@@ -45,6 +45,7 @@
 | `src/main/benchmark_mpc_qp_osqp_1s.py` | OSQP `N=60` 求解器/控制 benchmark | historical | 只保留 solver/performance 证据；不再作为默认配置或继续权重搜索 |
 | `src/main/run_mpc_1s_n6_weight_selection.py` | `N=6` ideal-foresight 固定权重实验 | active/auxiliary | `t+1..t+6`、只执行第一步、实际 SOC 更新；A–D 已运行但无候选通过，不是 LSTM 闭环 |
 | `src/main/run_mpc_1s_n6_qsoc_feasibility.py` | `N=6` 的 `q_soc`-only 结构诊断 | active/auxiliary | 固定其他权重/结构；同代输入/实现/运行时指纹防止产物混用；`q_soc=20` 为唯一可行性见证；不自动创建正式配置或启动 DQN |
+| `src/main/run_mpc_1s_n6_soc_clamping_diagnostic.py` | `N=6` 近参考 SOC 合成诊断 | active/auxiliary | 只比较 q10/q20 的 6 个恒载和 2 个脉冲工况；结论为 `no_evidence_of_SOC_clamping`，不选择正式权重 |
 | `src/main/run_lstm_mpc_test.py` | 30 s CasADi/IPOPT LSTM-MPC | historical | 有预测与实际反馈逻辑，但物理参数/求解器不是目标主线 |
 | `src/main/run_lstm_mpc_total_load_test.py` | 上述 30 s 流程的总负荷包装入口 | auxiliary | 可作为迁移参考 |
 | `src/main/run_lstm_mpc_weight_sweep.py` | 历史固定权重搜索 | historical | 不应继续扩展为无约束大搜索 |
@@ -81,6 +82,7 @@
 | 独立可部署 OSQP controller wrapper | uncertain/missing | 当前 N=6 入口是离线实验 runner；尚未封装预测 provider 和确定性控制失败回退 |
 | `outputs/mpc_1s_n6_weight_selection/` | active evidence | A–D 配置、逐航段/总体指标、solver 统计、约束审计、曲线与人工拒绝决策；无 provisional 配置 |
 | `outputs/mpc_1s_n6_qsoc_feasibility/` | active evidence | 三个 `q_soc` 配置、逐航段/总体指标、solver 统计、约束审计、曲线和结构诊断；`QSOC_20` 为 witness，非 accepted 配置 |
+| `outputs/mpc_1s_n6_soc_clamping_diagnostic/` | active evidence | 8 个 synthetic ideal-foresight 工况的轨迹、指标和 5 组图；不是实船/LSTM/DQN 结果 |
 | `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` | historical | 693 kWh `N=60` 离线 benchmark 证据；紧凑指针在 N=6 输出目录中 |
 | `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt277p2_simplified_spec_norm/` | historical | 旧容量研究；不得作为当前物理配置 |
 | `src/mpc/` 与 `src/main/run_lstm_mpc_test.py` | historical/supporting | CasADi/IPOPT、氢耗曲线、回退和历史 SOC 设计；需择取可迁移逻辑，不应直接当 OSQP 主线 |

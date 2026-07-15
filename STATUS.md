@@ -52,13 +52,14 @@
 - `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` 保存 7 个 test 航次上的 693 kWh OSQP benchmark。候选权重仍被报告标为暂定且存在数值约束验收问题，未被正式接受。
 - `outputs/mpc_1s_n6_weight_selection/` 保存 2026-07-13 的 A–D 四候选离线 ideal-foresight 结果。闭环覆盖率 A/B/C/D 分别为 0.723573/0.714511/0.648608/0.735204；最坏航段 SOC 净变化分别为 -0.349873/-0.349808/-0.350000/-0.349695。A/B/D 各有一个未完成航段，C 有两个；人工结论为 `no_candidate_selected`。
 - `outputs/mpc_1s_n6_qsoc_feasibility/` 保存严格限定的 `q_soc={5,10,20}` 诊断。三组均完成 7 航段、93,030 个应用步，solver failure 和物理不可行点均为 0；最坏航段 SOC 净变化依次为 -0.106636/-0.047082/-0.021640，只有 `q_soc=20` 通过 `-0.03` 门禁。它的总体氢耗为 284.452 kg、电池吞吐为 594.583 kWh、FC 高于负荷比例为 0.357336、p99/max 求解时间为 0.140/45.850 ms。
+- `outputs/mpc_1s_n6_soc_clamping_diagnostic/` 保存 q10/q20 的 8 个合成工况、28,800 个应用步和 5 组图。专项标签为 `no_evidence_of_SOC_clamping`：`SOC0=0.53` 时 q20 正向修正功率为 0，`SOC0=0.57` 时 q10/q20 的 25%/50% 首达时间同为 45/86 s 且均不持续；这不消除其下漂、不对称和额外氢耗问题。
 - N=6 runner 在每个时刻使用 `t+1..t+6`、只执行第一步，以实际功率平衡计算电池功率和 SOC；最终求解失败时终止该航段，不用 NaN/冻结状态伪造后续闭环。
 - 已核对的 CLI 入口均可显示 `--help`；本轮完整运行了三组 `q_soc` 候选，但没有重跑训练、A–D 或历史 N=60 benchmark。
-- 本轮最终 `python -m compileall src` 通过，完整单元测试为 174 项全部通过；10 ms audit 仍严格校验 assignment key 必须恰为 train/validation/test。
+- 本轮最终 `python -m compileall src` 通过，完整单元测试为 206 项全部通过；10 ms audit 仍严格校验 assignment key 必须恰为 train/validation/test。
 
 ## Provisional items
 
-- 当前没有 provisional 固定权重；`configs/benchmarks/mpc_1s_n6_provisional.*` 未创建。`q_soc=20` 只作为 `weight_only_sufficient` 的可行性见证，仍需审查 35.7336% FC 高于负荷、氢耗和正式在线预测边界。
+- 当前没有 provisional 固定权重；`configs/benchmarks/mpc_1s_n6_provisional.*` 未创建。近参考专项未发现 q20 过度 SOC 钳制，但发现下漂、不对称和相对 q10 约 `1.26 kg/h` 的合成恒载氢耗增量；它仍只是可行性见证。
 - A–D 的参数和结果只代表被拒绝的有限候选集，不得把 D 的较高覆盖率解释为 least-bad 保留依据。
 - `N=60` 权重和产物只作历史 benchmark，紧凑入口见 `outputs/mpc_1s_n6_weight_selection/N60_HISTORICAL_BENCHMARK.md`。
 - 1 s spline 仅适合离线算法/求解器研究；若论文声称在线 1 s 预测，必须换用因果可得数据或重新定义实验。
@@ -68,14 +69,14 @@
 ## Blocking issues
 
 1. 已有 ideal-foresight `N=6` 执行路径，但尚无把 LSTM 6 步预测接入该路径的正式闭环入口。
-2. `q_soc=20` 已通过离线 ideal-foresight 的全航段/物理/SOC/求解门禁，但尚未完成正式工程接受，也没有接入因果 LSTM 预测；在明确接受固定基线前不得训练正式 DQN。
+2. `q_soc=20` 已通过离线 ideal-foresight 门禁并完成近参考钳制专项，但尚未解决 SOC 下漂、经济性标准和因果 LSTM 外推边界；在明确接受固定基线前不得训练正式 DQN。
 3. 目标 DQN 状态/动作/奖励/环境尚未冻结；现有脚本仍选择 `q_ramp` 或直接功率动作，并使用 1806/1067 kWh 等旧参数。
 4. 1 s LSTM 没有超过简单基线，且 spline 数据非因果，不能支撑在线预测优势结论。
 5. 依赖清单不完整、第三方 SineKAN 许可证未核验、多个跟踪文件含本地绝对路径，干净环境复现尚未闭合。
 
 ## Next priority tasks
 
-1. **P0：** 对 `q_soc=20` 可行性见证完成正式工程审查，重点判断 FC 高于负荷、氢耗与电池使用是否可接受；只在证据充分时创建 provisional/accepted 配置，不使用 least-bad。
+1. **P0：** 在已排除近参考过度钳制后，继续审查 `q_soc=20` 的 SOC 下漂、FC 高于负荷、氢耗和电池使用；只在接受标准明确且证据充分时创建 provisional/accepted 配置。
 2. **P0：** 将因果可用的 6 步预测 provider 和经过测试的确定性失败回退接入现有 `N=6` 时序/物理执行路径。
 3. **P1：** 冻结仅选择 `q_h2/q_soc/q_batt` 的动作表、与动作权重无自指关系的物理奖励，以及统一的目标环境。
 4. **P1：** 在相同预算和种子下实现 MLP-DQN 与 SineKAN-DQN 公平比较；KAN-DQN 仅在资源允许时加入。

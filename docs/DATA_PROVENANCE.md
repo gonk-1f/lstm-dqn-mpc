@@ -111,6 +111,7 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 - A–D 四组固定候选产物位于 `outputs/mpc_1s_n6_weight_selection/`；四组均因闭环不完整和严重 SOC 下降被拒绝，没有 provisional/accepted 配置。
 - 严格限定的后续诊断入口为 `src/main/run_mpc_1s_n6_qsoc_feasibility.py`，产物位于 `outputs/mpc_1s_n6_qsoc_feasibility/`，报告位于 `reports/mpc_1s_n6_qsoc_feasibility_*`。它复用相同数据、时序和实际 SOC 更新，只把 `q_soc` 改为 5、10、20；三组均完成 7 航段，`q_soc=20` 是唯一满足最坏航段 SOC 净变化不低于 -0.03 的可行性见证。每个候选的 `config.json` 记录同一 generation、输入 SHA256、六个直接运行依赖的联合 SHA256、源 Git 提交和 Python/数值栈版本；`--report-only` 会拒绝跨 generation、输入漂移、实现/曲线数据漂移或运行时版本漂移的候选组合。
 - 该见证仍属于 offline ideal-foresight 结构诊断。它没有使用 LSTM、没有创建 provisional/accepted 配置，也不能证明因果在线预测条件下具有相同行为。
+- 近参考专项入口为 `src/main/run_mpc_1s_n6_soc_clamping_diagnostic.py`。其输入完全由脚本生成：300 kW 恒载 3,600 s，以及 300-450-300 kW、120 s 高负荷脉冲；不读取实船 parquet。产物位于 `outputs/mpc_1s_n6_soc_clamping_diagnostic/`，报告为 `reports/mpc_1s_n6_soc_clamping_*`。所有图片必须解释为 `diagnostic synthetic profile`。
 
 ### Forecast configuration and evidence
 

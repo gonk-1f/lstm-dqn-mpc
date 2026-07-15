@@ -1,5 +1,7 @@
 # N=6 MPC Near-Reference SOC Clamping Diagnostic Design
 
+> Scope update (2026-07-15): at the user's direction, execution was simplified to the fixed eight cases, required metrics, five plot groups, one CSV, and one Markdown report. Proposed general provenance/decision interfaces in this design were intentionally not implemented.
+
 **Date:** 2026-07-14
 
 **Approval:** The user explicitly instructed execution of this bounded diagnostic. The supplied contract fixes the model, case matrix, metrics, plots, three allowed labels, output paths, verification commands, commit message, and Git push workflow. It also forbids full-voyage reruns, formal configuration changes, LSTM/DQN work, and historical-result deletion.

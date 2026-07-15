@@ -30,8 +30,8 @@
 ### P0-3 Review and formally accept one fixed-weight baseline
 
 - **task:** 对严格预注册诊断得到的 `q_soc=20` 可行性见证做正式工程审查；只有功率分配、氢耗、电池使用和适用边界均有明确依据时，才把它写入 provisional/accepted 固定基线配置。
-- **reason:** 新诊断仅提高 `q_soc`，三组均完成 7 航段；`q_soc=20` 的最坏航段 SOC 净变化为 -0.021640、零求解失败且物理残差合格，证明权重本身可以弥补本次短预测域。但其 FC 高于负荷比例仍为 35.7336%，氢耗为 284.452 kg；这足以构成结构可行性见证，不足以自动构成论文最终选择。历史 `N=60` 锚点仍不能迁移为正式权重。
-- **affected_files:** formal MPC config, `src/main/run_mpc_1s_n6_qsoc_feasibility.py` or extracted controller, report schema, `STATUS.md`, MPC tests.
+- **reason:** `q_soc=20` 已通过 7 航段结构门禁；新增 8 工况专项得到 `no_evidence_of_SOC_clamping`，但同时发现 SOC 下漂、上下侧响应不对称和相对 q10 更高的合成恒载氢耗。它仍不足以自动构成论文最终选择，历史 `N=60` 锚点也不能迁移为正式权重。
+- **affected_files:** formal MPC config, `src/main/run_mpc_1s_n6_qsoc_feasibility.py`, `src/main/run_mpc_1s_n6_soc_clamping_diagnostic.py`, report schema, `STATUS.md`, MPC tests.
 - **acceptance_criteria:** 复核 7 航段闭环、hard-constraint tolerance、SOC、氢耗、电池吞吐、FC surplus 和 1 s 实时性；明确可接受的功率分配/经济性标准及 ideal-foresight 到因果预测的外推边界；形成显式 accepted/rejected 决策，不使用加权总分或 least-bad 替代物理门禁；正式接受前保持 DQN 阻塞。
 - **dependencies:** P0-2.
 

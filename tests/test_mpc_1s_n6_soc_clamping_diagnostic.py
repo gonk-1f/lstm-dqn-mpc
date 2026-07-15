@@ -4,6 +4,7 @@ import sys
 import unittest
 from dataclasses import FrozenInstanceError, asdict
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,7 @@ for path in (SRC, MAIN_ROOT):
 
 from run_mpc_1s_n6_soc_clamping_diagnostic import (
     SyntheticCase,
+    _soc_code,
     annotate_correction_power,
     build_case_matrix,
     build_constant_profile,
@@ -24,12 +26,18 @@ from run_mpc_1s_n6_soc_clamping_diagnostic import (
     clamping_candidate_config,
     longest_true_run,
     recovery_milestone,
+    run_synthetic_case,
     steady_state_mask,
     summarize_window,
 )
 
 
 class TestSocClampingDiagnosticContract(unittest.TestCase):
+    def test_soc_code_does_not_truncate_point_fifty_seven(self) -> None:
+        self.assertEqual(_soc_code(0.53), "053")
+        self.assertEqual(_soc_code(0.55), "055")
+        self.assertEqual(_soc_code(0.57), "057")
+
     def test_constant_profile_has_exact_state_samples(self) -> None:
         times, loads = build_constant_profile()
 
@@ -624,6 +632,77 @@ class TestSteadyStateMask(unittest.TestCase):
             with self.subTest(times=times):
                 with self.assertRaisesRegex(ValueError, "1 s"):
                     steady_state_mask(frame, trailing_window_steps=1)
+
+
+class TestSyntheticCaseExecution(unittest.TestCase):
+    @staticmethod
+    def valid_runner_frames(initial_soc: float) -> tuple[pd.DataFrame, pd.DataFrame]:
+        state_times = np.arange(1, 3601, dtype=float)
+        controls = pd.DataFrame(
+            {
+                "decision_time_s": state_times - 1.0,
+                "time_s": state_times,
+                "SOC_before": np.full(3600, initial_soc),
+                "SOC_actual": np.full(3600, initial_soc),
+                "prev_fc_actual_kw": np.full(3600, 300.0),
+                "P_fc_actual_kw": np.full(3600, 300.0),
+                "P_batt_actual_kw": np.zeros(3600),
+                "load_actual_kw": np.full(3600, 300.0),
+                "h2_kg_step": np.full(3600, 0.01),
+                "success": np.ones(3600, dtype=bool),
+            }
+        )
+        solver = pd.DataFrame({"success": np.ones(3600, dtype=bool)})
+        return controls, solver
+
+    def test_case_execution_passes_exact_profile_initial_state_and_config(self) -> None:
+        case = next(
+            item
+            for item in build_case_matrix()
+            if item.case_id == "constant_soc053_qsoc20"
+        )
+        controls, solver = self.valid_runner_frames(case.initial_soc)
+        physical = {
+            "closed_loop_complete": True,
+            "physical_infeasible_point_count": 0,
+            "solver_failure_count": 0,
+        }
+
+        with (
+            patch(
+                "run_mpc_1s_n6_soc_clamping_diagnostic.run_voyage",
+                return_value=(controls, solver),
+            ) as mocked_run,
+            patch(
+                "run_mpc_1s_n6_soc_clamping_diagnostic.build_candidate_metrics",
+                return_value=(physical, pd.DataFrame(), pd.DataFrame()),
+            ),
+        ):
+            trajectory, metrics = run_synthetic_case(case)
+
+        kwargs = mocked_run.call_args.kwargs
+        self.assertEqual(kwargs["voyage_id"], case.case_id)
+        self.assertEqual(kwargs["candidate_id"], "QSOC_20")
+        self.assertEqual(kwargs["initial_soc"], 0.53)
+        self.assertEqual(kwargs["config"].q_soc, 20.0)
+        np.testing.assert_array_equal(kwargs["times_s"], np.arange(3601, dtype=float))
+        np.testing.assert_array_equal(kwargs["loads_kw"], np.full(3601, 300.0))
+        self.assertEqual(len(trajectory), 3600)
+        self.assertEqual(metrics["case_id"], case.case_id)
+        self.assertEqual(metrics["initial_soc"], 0.53)
+
+    def test_case_execution_rejects_incomplete_or_failed_control(self) -> None:
+        case = build_case_matrix()[0]
+        controls, solver = self.valid_runner_frames(case.initial_soc)
+
+        for broken in (controls.iloc[:-1].copy(), controls.assign(success=False)):
+            with self.subTest(row_count=len(broken)):
+                with patch(
+                    "run_mpc_1s_n6_soc_clamping_diagnostic.run_voyage",
+                    return_value=(broken, solver),
+                ):
+                    with self.assertRaises(ValueError):
+                        run_synthetic_case(case)
 
 
 if __name__ == "__main__":

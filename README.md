@@ -49,6 +49,8 @@ load data
 
 `N=60` 只作为历史 1 s 离线 OSQP solver/performance benchmark；论文目标 LSTM 预测时域是 `N=6`。二者不得作为同一个默认配置。2026-07-13 的首轮理想预知 `N=6` 实验完整测试了 A–D 四组指定候选，四组均未通过。随后严格冻结 `q_h2=0.5`、`q_batt=0.05`、`SOC_band=0.05`、`q_terminal_soc=0`，仅测试 `q_soc={5,10,20}`：三组均完成全部 7 航段，`q_soc=20` 是唯一满足最坏航段 SOC 净变化不低于 `-0.03` 等固定门禁的可行性见证。它尚未被提升为 provisional/accepted 论文权重，也未触发 DQN 工作。
 
+随后针对 `q_soc=20` 做了 8 个 1 h 合成工况的近参考 SOC 专项诊断。结论为 `no_evidence_of_SOC_clamping`：它没有在 `SOC0=0.53` 时主动充电，也没有比 q10 更快恢复 `SOC0=0.57`；但仍存在 SOC 下漂、响应不对称和更高氢耗，因此该结论不构成正式权重接受。
+
 ## Repository structure
 
 | 路径 | 内容 |
@@ -58,6 +60,7 @@ load data
 | `src/main/mpc_solvers/` | 1 s 凸 QP 形式与约束结构 |
 | `src/main/run_mpc_1s_n6_weight_selection.py` | 离线理想预知 `N=6` 单候选 runner、指标、审计与报告生成 |
 | `src/main/run_mpc_1s_n6_qsoc_feasibility.py` | 仅改变 `q_soc` 的 `N=6` 结构可行性诊断；使用独立输出/报告路径 |
+| `src/main/run_mpc_1s_n6_soc_clamping_diagnostic.py` | q10/q20 的恒载与脉冲合成诊断；只判断近参考 SOC 是否被过度拉回 |
 | `src/mpc/` | 历史 CasADi/IPOPT 控制器、燃料电池氢耗曲线等组件 |
 | `src/dqn/` | DQN agent、动作映射、奖励和 MLP/KAN/SineKAN Q 网络 |
 | `src/envs/` | 多个历史 DQN/船舶环境；尚未统一为目标 N=6 QP-MPC 环境 |

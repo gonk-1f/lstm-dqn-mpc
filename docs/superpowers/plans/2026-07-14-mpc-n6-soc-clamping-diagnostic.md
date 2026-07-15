@@ -1,5 +1,7 @@
 # N=6 MPC Near-Reference SOC Clamping Diagnostic Implementation Plan
 
+> Scope update (2026-07-15): the user explicitly requested a simpler, core-only implementation. The completed path keeps the fixed eight cases, required metrics/tests, five plot groups, CSV, and report; the broader artifact/provenance/decision API steps below are historical planning notes, not current acceptance requirements.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build and run an isolated eight-case synthetic diagnostic that determines whether `q_soc=20` over-corrects SOC deviations of only ±0.02, without changing formal MPC configuration or retained voyage results.
