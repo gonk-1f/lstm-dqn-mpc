@@ -87,6 +87,75 @@ def h2_quadratic_kg_step_coefficients(config: QpMpcConfig) -> tuple[float, float
     return float(quad), float(linear), float(a1), float(a2)
 
 
+def _add_normalized_h2_cost(
+    hessian: np.ndarray,
+    linear: np.ndarray,
+    *,
+    fc0: int,
+    horizon: int,
+    weight: float,
+    quadratic_kg_per_step: float,
+    linear_kg_per_step: float,
+    reference_kg_per_step: float,
+) -> None:
+    for k in range(horizon):
+        index = fc0 + k
+        hessian[index, index] += 2.0 * weight * quadratic_kg_per_step / reference_kg_per_step
+        linear[index] += weight * linear_kg_per_step / reference_kg_per_step
+
+
+def _add_normalized_battery_power_cost(
+    hessian: np.ndarray,
+    *,
+    batt0: int,
+    horizon: int,
+    weight: float,
+    reference_kw: float,
+) -> None:
+    for k in range(horizon):
+        hessian[batt0 + k, batt0 + k] += 2.0 * weight / reference_kw**2
+
+
+def _add_normalized_soc_tracking_cost(
+    hessian: np.ndarray,
+    linear: np.ndarray,
+    *,
+    soc0: int,
+    horizon: int,
+    weight: float,
+    soc_reference: float,
+    soc_band: float,
+) -> None:
+    for k in range(1, horizon + 1):
+        index = soc0 + k
+        hessian[index, index] += 2.0 * weight / soc_band**2
+        linear[index] += -2.0 * weight * soc_reference / soc_band**2
+
+
+def _add_normalized_fc_variation_cost(
+    hessian: np.ndarray,
+    linear: np.ndarray,
+    *,
+    fc0: int,
+    horizon: int,
+    weight: float,
+    prev_fc_kw: float,
+    reference_kw_per_step: float,
+) -> None:
+    if reference_kw_per_step <= 0.0:
+        raise ValueError("fuel-cell variation reference must be positive")
+    scaled_weight = weight / reference_kw_per_step**2
+    hessian[fc0, fc0] += 2.0 * scaled_weight
+    linear[fc0] += -2.0 * scaled_weight * prev_fc_kw
+    for k in range(1, horizon):
+        current = fc0 + k
+        previous = current - 1
+        hessian[current, current] += 2.0 * scaled_weight
+        hessian[previous, previous] += 2.0 * scaled_weight
+        hessian[current, previous] += -2.0 * scaled_weight
+        hessian[previous, current] += -2.0 * scaled_weight
+
+
 def _validate_config(config: QpMpcConfig) -> None:
     if int(config.horizon) <= 0:
         raise ValueError("horizon must be positive")
@@ -106,7 +175,7 @@ def _validate_config(config: QpMpcConfig) -> None:
         if float(getattr(config, name)) < 0.0:
             raise ValueError(f"{name} must be nonnegative")
     if str(config.objective_variant) not in {
-        "n6_h2_fc_variation_battery_v1",
+        "n6_h2_batt_soc_fcvar_normalized_v1",
         "simplified_normalized_literature_v1",
         "legacy_raw_h2_soc_batt_ramp_terminal",
     }:
@@ -148,45 +217,76 @@ def build_qp_problem(
     if h2_reference <= 0.0:
         raise ValueError("h2 reference denominator must be positive")
     objective_terms: list[str]
-    if objective_variant == "n6_h2_fc_variation_battery_v1":
-        objective_terms = ["H2_norm", "FC_var_norm", "Batt_norm"]
-        batt_ref2 = float(config.battery_power_ref_kw) ** 2
-        fc_variation_ref2 = float(config.fuel_cell_ramp_rate_kw_per_s * config.dt_seconds) ** 2
-        if fc_variation_ref2 <= 0.0:
-            raise ValueError("fuel-cell variation reference must be positive")
-        for k in range(horizon):
-            idx = fc0 + k
-            hessian[idx, idx] += 2.0 * float(config.q_h2) * h2_quad / h2_reference
-            linear[idx] += float(config.q_h2) * h2_linear / h2_reference
-        first_fc = fc0
-        fc_variation_weight = float(config.q_fc_var) / fc_variation_ref2
-        hessian[first_fc, first_fc] += 2.0 * fc_variation_weight
-        linear[first_fc] += -2.0 * fc_variation_weight * float(prev_fc_kw)
-        for k in range(1, horizon):
-            current = fc0 + k
-            previous = current - 1
-            hessian[current, current] += 2.0 * fc_variation_weight
-            hessian[previous, previous] += 2.0 * fc_variation_weight
-            hessian[current, previous] += -2.0 * fc_variation_weight
-            hessian[previous, current] += -2.0 * fc_variation_weight
-        for k in range(horizon):
-            idx = batt0 + k
-            hessian[idx, idx] += 2.0 * float(config.q_batt) / batt_ref2
+    if objective_variant == "n6_h2_batt_soc_fcvar_normalized_v1":
+        objective_terms = [
+            "H2_norm",
+            "Batt_power_sq_norm",
+            "SOC_tracking_sq_norm",
+            "FC_variation_sq_norm",
+        ]
+        _add_normalized_h2_cost(
+            hessian,
+            linear,
+            fc0=fc0,
+            horizon=horizon,
+            weight=float(config.q_h2),
+            quadratic_kg_per_step=h2_quad,
+            linear_kg_per_step=h2_linear,
+            reference_kg_per_step=h2_reference,
+        )
+        _add_normalized_battery_power_cost(
+            hessian,
+            batt0=batt0,
+            horizon=horizon,
+            weight=float(config.q_batt),
+            reference_kw=float(config.battery_power_ref_kw),
+        )
+        _add_normalized_soc_tracking_cost(
+            hessian,
+            linear,
+            soc0=soc0,
+            horizon=horizon,
+            weight=float(config.q_soc),
+            soc_reference=float(soc_reference),
+            soc_band=float(config.soc_band),
+        )
+        _add_normalized_fc_variation_cost(
+            hessian,
+            linear,
+            fc0=fc0,
+            horizon=horizon,
+            weight=float(config.q_fc_var),
+            prev_fc_kw=float(prev_fc_kw),
+            reference_kw_per_step=float(resolved_ramp_kw_per_step(config)),
+        )
     elif objective_variant == "simplified_normalized_literature_v1":
         objective_terms = ["H2_norm", "SOC_norm", "Batt_norm"]
-        batt_ref2 = float(config.battery_power_ref_kw) ** 2
-        soc_band2 = float(config.soc_band) ** 2
-        for k in range(horizon):
-            idx = fc0 + k
-            hessian[idx, idx] += 2.0 * float(config.q_h2) * h2_quad / h2_reference
-            linear[idx] += float(config.q_h2) * h2_linear / h2_reference
-        for k in range(horizon):
-            idx = batt0 + k
-            hessian[idx, idx] += 2.0 * float(config.q_batt) / batt_ref2
-        for k in range(1, horizon + 1):
-            idx = soc0 + k
-            hessian[idx, idx] += 2.0 * float(config.q_soc) / soc_band2
-            linear[idx] += -2.0 * float(config.q_soc) * float(soc_reference) / soc_band2
+        _add_normalized_h2_cost(
+            hessian,
+            linear,
+            fc0=fc0,
+            horizon=horizon,
+            weight=float(config.q_h2),
+            quadratic_kg_per_step=h2_quad,
+            linear_kg_per_step=h2_linear,
+            reference_kg_per_step=h2_reference,
+        )
+        _add_normalized_battery_power_cost(
+            hessian,
+            batt0=batt0,
+            horizon=horizon,
+            weight=float(config.q_batt),
+            reference_kw=float(config.battery_power_ref_kw),
+        )
+        _add_normalized_soc_tracking_cost(
+            hessian,
+            linear,
+            soc0=soc0,
+            horizon=horizon,
+            weight=float(config.q_soc),
+            soc_reference=float(soc_reference),
+            soc_band=float(config.soc_band),
+        )
     else:
         objective_terms = ["h2", "soc", "battery", "ramp", "terminal_soc"]
         for k in range(horizon):
@@ -296,10 +396,19 @@ def build_qp_problem(
         ),
         "objective_variant": objective_variant,
         "objective_terms": objective_terms,
-        "soc_cost_in_objective": "SOC_norm" in objective_terms or "soc" in objective_terms,
+        "objective_uses_term_normalization": objective_variant
+        in {
+            "n6_h2_batt_soc_fcvar_normalized_v1",
+            "simplified_normalized_literature_v1",
+        },
+        "soc_cost_in_objective": bool(
+            {"SOC_tracking_sq_norm", "SOC_norm", "soc"}.intersection(objective_terms)
+        ),
         "battery_power_ref_kw": float(config.battery_power_ref_kw),
         "fuel_cell_variation_ref_kw_per_step": float(
-            config.fuel_cell_ramp_rate_kw_per_s * config.dt_seconds
+            ramp_kw
+            if objective_variant == "n6_h2_batt_soc_fcvar_normalized_v1"
+            else config.fuel_cell_ramp_rate_kw_per_s * config.dt_seconds
         ),
         "soc_band": float(config.soc_band),
         "h2_reference_kg_per_step": h2_reference,
@@ -315,17 +424,44 @@ def build_qp_problem(
             "normalized (P_batt / P_batt_ref)^2"
             if objective_variant
             in {
-                "n6_h2_fc_variation_battery_v1",
+                "n6_h2_batt_soc_fcvar_normalized_v1",
                 "simplified_normalized_literature_v1",
             }
             else "legacy raw quadratic P_batt^2"
         ),
         "fuel_cell_variation_cost_form": (
             "((P_fc[0] - P_fc_prev) / 48)^2 and ((P_fc[k] - P_fc[k-1]) / 48)^2"
-            if objective_variant == "n6_h2_fc_variation_battery_v1"
+            if objective_variant == "n6_h2_batt_soc_fcvar_normalized_v1"
             else "not active in this objective variant"
         ),
     }
+    if objective_variant == "n6_h2_batt_soc_fcvar_normalized_v1":
+        metadata.update(
+            {
+                "q_h2": float(config.q_h2),
+                "q_batt": float(config.q_batt),
+                "q_soc": float(config.q_soc),
+                "q_fc_var": float(config.q_fc_var),
+                "soc_reference": float(soc_reference),
+                "objective_term_descriptions": {
+                    "H2_norm": "sum(k=0..N-1) m_H2(P_fc[k]) / m_H2(560 kW, 1 s)",
+                    "Batt_power_sq_norm": (
+                        "sum(k=0..N-1) (P_batt[k] / 346.5 kW)^2"
+                    ),
+                    "SOC_tracking_sq_norm": (
+                        "sum(k=1..N) ((SOC[k] - SOC_ref) / 0.05)^2"
+                    ),
+                    "FC_variation_sq_norm": (
+                        "((P_fc[0] - P_fc_prev) / 48 kW)^2 + "
+                        "sum(k=1..N-1) ((P_fc[k] - P_fc[k-1]) / 48 kW)^2"
+                    ),
+                },
+                "terminal_soc_cost_in_objective": False,
+                "slack_cost_in_objective": False,
+                "extra_ramp_cost_in_objective": False,
+                "ignored_objective_weight_fields": ["q_ramp", "q_terminal_soc"],
+            }
+        )
     return QpProblem(P=P, q=linear, A=A, l=l, u=u, metadata=metadata)
 
 
