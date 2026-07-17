@@ -33,7 +33,7 @@
 - **reason:** 当前 objective 已固定为 `H2_norm`、`Batt_power_sq_norm`、`SOC_tracking_sq_norm`、`FC_variation_sq_norm`，参考值分别为 `0.00883945296644347 kg/step`、`346.5 kW`、`SOC_ref=0.55`/`SOC_band=0.05`、`48 kW/step`。baseline 为四权重全 1；每项 one-factor 值为 `0.25,0.5,1,2,4`。但是 baseline 与完整 17 配置结果均未运行，不能预先宣称趋势、推荐区间或最佳权重。
 - **affected_files:** `src/main/run_mpc_1s_n6_four_objective_sensitivity.py`, `tests/test_mpc_1s_n6_four_objective_sensitivity.py`, `outputs/mpc_1s_n6_four_objective_sensitivity/`, `reports/mpc_1s_n6_four_objective_sensitivity_summary.md`, `reports/mpc_1s_n6_four_objective_sensitivity_table.csv`, formal MPC config, `STATUS.md`.
 - **acceptance_criteria:** `--baseline` 先完成 7 个固定 test 航段，`--one-factor` 再形成 baseline-first 的 17 个唯一配置；复核 hard-constraint tolerance、SOC、氢耗、电池吞吐、FC variation/surplus、完成率和 1 s 实时性；明确 offline oracle 到因果预测的外推边界；基于物理指标形成显式 accepted/rejected 或证据支持的下一区间，不使用自动 best/score/rank/winner、加权总分或 least-bad 替代人工门禁；正式接受前保持 DQN 阻塞。
-- **dependencies:** P0-2.
+- **dependencies:** P0-1.
 
 ### P0-4 Remove stale parameters from the active execution path
 

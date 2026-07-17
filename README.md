@@ -50,14 +50,14 @@ load data
 `N=60` 只作为历史 1 s 离线 OSQP solver/performance benchmark；论文目标 LSTM 预测时域是 `N=6`，二者不得作为同一个默认配置。当前唯一的正式 `N=6` 离线入口是 `src/main/run_mpc_1s_n6_four_objective_sensitivity.py`，其归一化目标为：
 
 ```text
-J = q_h2    * sum[k=0..5] m_H2(P_fc[k]) / 0.00883945296644347 kg
+J = q_h2    * sum[k=0..5] m_H2(P_fc[k]) / m_H2(560 kW, 1 s)
   + q_batt  * sum[k=0..5] (P_batt[k] / 346.5 kW)^2
   + q_soc   * sum[k=1..6] ((SOC[k] - 0.55) / 0.05)^2
   + q_fc_var * (((P_fc[0] - P_fc_prev) / 48 kW)^2
                 + sum[k=1..5] ((P_fc[k] - P_fc[k-1]) / 48 kW)^2)
 ```
 
-四个归一化参考分别是 560 kW、1 s 时的氢耗 `0.00883945296644347 kg/step`、`346.5 kW` 电池功率、`SOC_ref=0.55` 与 `SOC_band=0.05`、以及 `48 kW/step` 燃料电池变化量。baseline 为 `q_h2=q_batt=q_soc=q_fc_var=1`；one-factor 矩阵对每一项分别使用 `0.25, 0.5, 1, 2, 4`，共享全 1 baseline，共 17 个唯一配置。该流程不自动计算 best/score/rank/winner，也不接受最终权重；baseline 和完整 17 配置当前均为 **未运行**。
+氢耗项使用单一参考 `m_H2(560 kW, 1 s)=0.00883945296644347 kg/step`；其余三个归一化参考是 `346.5 kW` 电池功率、`SOC_ref=0.55` 与 `SOC_band=0.05`、以及 `48 kW/step` 燃料电池变化量。baseline 为 `q_h2=q_batt=q_soc=q_fc_var=1`；one-factor 矩阵对每一项分别使用 `0.25, 0.5, 1, 2, 4`，共享全 1 baseline，共 17 个唯一配置。该流程不自动计算 best/score/rank/winner，也不接受最终权重；baseline 和完整 17 配置当前均为 **未运行**。
 
 ## Repository structure
 
@@ -119,7 +119,7 @@ python -m pip install casadi numpy pandas matplotlib xlrd scipy seaborn progress
 python -m unittest discover -s tests -v
 ```
 
-当前完整测试结果见 `STATUS.md`；测试范围和仍缺失的 DQN 专项覆盖见 `docs/PROJECT_MAP.md`。
+本轮已运行的测试结果见 `STATUS.md`：`N=6` focused test 为 43/43，保留 `N=60` benchmark test 为 17/17；完整 suite 尚未重跑，将在 Task 9 执行。测试范围和仍缺失的 DQN 专项覆盖见 `docs/PROJECT_MAP.md`。
 
 ## Current status
 

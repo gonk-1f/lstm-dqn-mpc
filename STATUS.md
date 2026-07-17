@@ -51,7 +51,7 @@
 
 - `outputs/lstm_total_load_721/` 保存 30 s、66 航段 LSTM checkpoint 与 test/horizon 指标；7 个 test 航次聚合的 h1 指标约为 RMSE 41.94 kW、MAE 18.18 kW、WAPE 8.40%。
 - 1 s Task C (`history=30`, `prediction=6`) 的 LSTM 在 test 上 h1/h6 MAE 约为 1.79/3.85 kW；current-hold 为 0.60/3.57 kW，last-slope 为 0.04/0.80 kW。LSTM 未超过简单基线，因此尚不能作为预测优势证据。
-- `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` 保存 7 个 test 航次上的 693 kWh OSQP benchmark。候选权重仍被报告标为暂定且存在数值约束验收问题，未被正式接受。
+- `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` 保存 7 个 test 航次上的 693 kWh OSQP benchmark。全部候选均未通过门禁，决策为 `NONE_ACCEPTED`，各候选均为 `accepted=false`；不同候选分别存在 SOC、约束或 solver 问题，因此没有 accepted baseline。
 - `src/main/run_mpc_1s_n6_four_objective_sensitivity.py` 与 `tests/test_mpc_1s_n6_four_objective_sensitivity.py` 冻结了 baseline-first 的 17 配置、`t+1..t+6`、第一步执行、实际功率/SOC 更新和无自动最优选择的契约。
 - `outputs/mpc_1s_n6_four_objective_sensitivity/`、`reports/mpc_1s_n6_four_objective_sensitivity_summary.md` 与 `reports/mpc_1s_n6_four_objective_sensitivity_table.csv` 当前均不存在；全 1 baseline 和完整 17 配置 one-factor 结果均为 **未运行**，因此没有可报告的完成率、数值趋势或推荐区间。
 - `N=6` runner 在每个时刻使用 `t+1..t+6`、只执行第一步，以实际功率平衡计算电池功率和 SOC；最终求解失败时终止该航段，不用 NaN/冻结状态伪造后续闭环。
