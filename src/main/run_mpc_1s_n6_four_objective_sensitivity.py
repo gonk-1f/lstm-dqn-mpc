@@ -1595,6 +1595,14 @@ def write_summary_figures(table: pd.DataFrame, summary_dir: Path) -> None:
         raise ValueError(f"summary figures are missing required columns: {missing}")
     output_root = Path(summary_dir)
     output_root.mkdir(parents=True, exist_ok=True)
+    allowed_names = {f"{name}_sensitivity.png" for name in WEIGHT_NAMES}
+    unexpected_names = {
+        path.name for path in output_root.iterdir() if path.name not in allowed_names
+    }
+    if unexpected_names:
+        raise ValueError(
+            f"summary directory contains unexpected entries: {sorted(unexpected_names)}"
+        )
     baseline = table.iloc[[0]].copy()
     panel_specs = (
         ("total_h2_kg", "Total H2 (kg)"),
@@ -1649,6 +1657,11 @@ def write_summary_figures(table: pd.DataFrame, summary_dir: Path) -> None:
             bbox_inches="tight",
         )
         plt.close(figure)
+    artifacts = list(output_root.iterdir())
+    if {path.name for path in artifacts} != allowed_names or not all(
+        path.is_file() for path in artifacts
+    ):
+        raise ValueError("summary directory does not contain the exact four figure files")
 
 
 def run_experiment(

@@ -1544,6 +1544,26 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
             with self.assertRaises(ValueError):
                 module.write_summary_table(table.assign(score=1.0), root / "bad.csv")
 
+    def test_summary_figures_reject_unknown_entry_without_deleting_or_plotting(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        table = self._summary_table(module)
+        with tempfile.TemporaryDirectory() as temporary:
+            summary_dir = Path(temporary) / "summary"
+            summary_dir.mkdir()
+            stale = summary_dir / "stale_extra.png"
+            stale.write_bytes(b"stale")
+
+            with (
+                patch.object(module.plt, "subplots") as subplots,
+                self.assertRaisesRegex(ValueError, "unexpected"),
+            ):
+                module.write_summary_figures(table, summary_dir)
+
+            subplots.assert_not_called()
+            self.assertEqual({path.name for path in summary_dir.iterdir()}, {stale.name})
+            self.assertEqual(stale.read_bytes(), b"stale")
+
     def test_parser_is_minimal_required_and_mutually_exclusive(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
 
