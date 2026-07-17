@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import numpy as np
+import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 for path in (ROOT / "src", ROOT / "src" / "main"):
@@ -563,6 +564,528 @@ class TestSensitivityRunnerContract(unittest.TestCase):
         self.assertTrue(np.isnan(controls.iloc[0]["SOC_actual"]))
         self.assertEqual(controls.iloc[0]["voyage_expected_steps"], 3)
         self.assertEqual(solver_rows.iloc[0]["status"], "primal infeasible")
+
+    def test_run_voyage_rejects_nonfinite_or_out_of_bounds_initial_soc(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.build_sensitivity_cases()[0]
+        config = module.four_objective_config(case)
+        for initial_soc in (float("nan"), float("inf"), 0.19, 0.81):
+            with self.subTest(initial_soc=initial_soc):
+                with (
+                    patch.object(module, "_try_import_osqp") as try_import,
+                    self.assertRaisesRegex(ValueError, "initial_soc"),
+                ):
+                    module.run_voyage(
+                        voyage_id="voyage_test",
+                        loads_kw=np.array([100.0, 110.0]),
+                        times_s=np.array([0.0, 1.0]),
+                        case=case,
+                        config=config,
+                        initial_soc=initial_soc,
+                    )
+                try_import.assert_not_called()
+
+    def test_max_iter_cold_restart_can_succeed_without_counting_initial_attempt_solved(
+        self,
+    ) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.build_sensitivity_cases()[0]
+        config = module.four_objective_config(case)
+        max_iter_result = SimpleNamespace(
+            x=np.zeros(19, dtype=float),
+            info=SimpleNamespace(
+                status="maximum iterations reached",
+                iter=20000,
+                prim_res=0.1,
+                dual_res=0.2,
+            ),
+        )
+        normalized_solution = np.zeros(19, dtype=float)
+        normalized_solution[0] = 110.0 / 560.0
+        solved_result = SimpleNamespace(
+            x=normalized_solution,
+            info=SimpleNamespace(
+                status="solved",
+                iter=75,
+                prim_res=1.0e-8,
+                dual_res=2.0e-8,
+            ),
+        )
+
+        with (
+            patch.object(module, "_try_import_osqp", return_value=(object(), None)),
+            patch.object(
+                module,
+                "_setup_n6_osqp_solver",
+                side_effect=["warm_solver", "cold_solver"],
+            ) as setup,
+            patch.object(
+                module,
+                "_solve_with_persistent_osqp",
+                side_effect=[(max_iter_result, 2.0), (solved_result, 0.5)],
+            ),
+        ):
+            controls, solver_rows = module.run_voyage(
+                voyage_id="voyage_test",
+                loads_kw=np.array([100.0, 110.0]),
+                times_s=np.array([0.0, 1.0]),
+                case=case,
+                config=config,
+            )
+
+        self.assertEqual(setup.call_count, 2)
+        self.assertTrue(bool(controls.iloc[0]["success"]))
+        self.assertEqual(solver_rows.iloc[0]["initial_status"], "maximum iterations reached")
+        self.assertEqual(solver_rows.iloc[0]["status"], "solved")
+        self.assertTrue(bool(solver_rows.iloc[0]["max_iter_reached"]))
+        self.assertTrue(bool(solver_rows.iloc[0]["cold_restart_used"]))
+        self.assertTrue(bool(solver_rows.iloc[0]["cold_restart_succeeded"]))
+        self.assertEqual(solver_rows.iloc[0]["attempt_count"], 2)
+
+    def test_two_successful_steps_refresh_previous_fc_soc_and_osqp_updates(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.SensitivityCase(
+            config_id="synthetic_weights",
+            varied_weight=None,
+            weight_value=1.0,
+            q_h2=0.25,
+            q_batt=0.5,
+            q_soc=2.0,
+            q_fc_var=4.0,
+        )
+        config = module.four_objective_config(case)
+        solved_result = SimpleNamespace(
+            x=np.zeros(19, dtype=float),
+            info=SimpleNamespace(
+                status="solved",
+                iter=25,
+                prim_res=1.0e-8,
+                dual_res=1.0e-8,
+            ),
+        )
+        applied_steps = [
+            {
+                "P_fc_plan_kw": 110.0,
+                "P_batt_plan_kw": 50.0,
+                "SOC_predicted": 0.54,
+                "P_fc_actual_kw": 110.0,
+                "P_batt_actual_kw": 50.0,
+                "SOC_actual": 0.54,
+            },
+            {
+                "P_fc_plan_kw": 130.0,
+                "P_batt_plan_kw": -20.0,
+                "SOC_predicted": 0.55,
+                "P_fc_actual_kw": 130.0,
+                "P_batt_actual_kw": -20.0,
+                "SOC_actual": 0.55,
+            },
+        ]
+
+        with (
+            patch.object(module, "_try_import_osqp", return_value=(object(), None)),
+            patch.object(module, "_setup_n6_osqp_solver", return_value="solver"),
+            patch.object(
+                module,
+                "_solve_with_persistent_osqp",
+                side_effect=[(solved_result, 0.1), (solved_result, 0.2)],
+            ) as solve,
+            patch.object(
+                module,
+                "extract_first_step",
+                side_effect=applied_steps,
+            ) as extract,
+        ):
+            controls, solver_rows = module.run_voyage(
+                voyage_id="voyage_synthetic",
+                loads_kw=np.array([100.0, 160.0, 110.0]),
+                times_s=np.array([0.0, 1.0, 2.0]),
+                case=case,
+                config=config,
+            )
+
+        self.assertTrue(controls["success"].all())
+        self.assertTrue(solver_rows["success"].all())
+        self.assertEqual(list(controls["prev_fc_actual_kw"]), [100.0, 110.0])
+        self.assertEqual(list(controls["SOC_before"]), [0.55, 0.54])
+        self.assertEqual(extract.call_args_list[0].kwargs["current_soc"], 0.55)
+        self.assertEqual(extract.call_args_list[1].kwargs["current_soc"], 0.54)
+
+        first_update = solve.call_args_list[0].kwargs
+        second_update = solve.call_args_list[1].kwargs
+        self.assertFalse(np.array_equal(first_update["linear"], second_update["linear"]))
+        self.assertFalse(np.array_equal(first_update["lower"], second_update["lower"]))
+        self.assertFalse(np.array_equal(first_update["upper"], second_update["upper"]))
+
+        h2_reference = module.physical_h2_kg_step(config, config.fuel_cell_max_kw)
+        expected_raw = {
+            "p_batt_sq_kw2_step": [50.0**2, (-20.0) ** 2],
+            "soc_error_sq_step": [(0.54 - 0.55) ** 2, 0.0],
+            "fc_delta_sq_kw2_step": [10.0**2, 20.0**2],
+        }
+        for column, expected in expected_raw.items():
+            np.testing.assert_allclose(controls[column], expected, rtol=0.0, atol=1.0e-15)
+        np.testing.assert_allclose(
+            controls["J_h2_norm_step"],
+            controls["h2_kg_step"] / h2_reference,
+        )
+        np.testing.assert_allclose(
+            controls["J_batt_norm_step"],
+            np.array(expected_raw["p_batt_sq_kw2_step"]) / 346.5**2,
+        )
+        np.testing.assert_allclose(
+            controls["J_soc_norm_step"],
+            np.array(expected_raw["soc_error_sq_step"]) / 0.05**2,
+        )
+        np.testing.assert_allclose(
+            controls["J_fc_var_norm_step"],
+            np.array(expected_raw["fc_delta_sq_kw2_step"]) / 48.0**2,
+        )
+        weighted_columns = {
+            "weighted_h2_contribution_step": ("J_h2_norm_step", case.q_h2),
+            "weighted_batt_contribution_step": ("J_batt_norm_step", case.q_batt),
+            "weighted_soc_contribution_step": ("J_soc_norm_step", case.q_soc),
+            "weighted_fc_var_contribution_step": ("J_fc_var_norm_step", case.q_fc_var),
+        }
+        for weighted, (normalized, weight) in weighted_columns.items():
+            np.testing.assert_allclose(controls[weighted], controls[normalized] * weight)
+        np.testing.assert_allclose(
+            controls["total_weighted_objective_step"],
+            controls[list(weighted_columns)].sum(axis=1),
+        )
+        for normalized, cumulative in (
+            ("J_h2_norm_step", "cum_J_h2_norm"),
+            ("J_batt_norm_step", "cum_J_batt_norm"),
+            ("J_soc_norm_step", "cum_J_soc_norm"),
+            ("J_fc_var_norm_step", "cum_J_fc_var_norm"),
+        ):
+            np.testing.assert_allclose(controls[cumulative], controls[normalized].cumsum())
+
+
+class TestSensitivityMetrics(unittest.TestCase):
+    @staticmethod
+    def _synthetic_two_step_frames(
+        module,
+        case,
+        config,
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        h2_steps = np.array([0.001, 0.002], dtype=float)
+        batt_sq = np.array([50.0**2, (-20.0) ** 2], dtype=float)
+        soc_sq = np.array([(0.54 - 0.55) ** 2, 0.0], dtype=float)
+        fc_delta_sq = np.array([10.0**2, 20.0**2], dtype=float)
+        h2_reference = module.physical_h2_kg_step(config, config.fuel_cell_max_kw)
+        normalized = {
+            "J_h2_norm_step": h2_steps / h2_reference,
+            "J_batt_norm_step": batt_sq / config.battery_power_ref_kw**2,
+            "J_soc_norm_step": soc_sq / config.soc_band**2,
+            "J_fc_var_norm_step": fc_delta_sq
+            / module.resolved_ramp_kw_per_step(config) ** 2,
+        }
+        controls = pd.DataFrame(
+            {
+                "config_id": case.config_id,
+                "voyage_id": "voyage_synthetic",
+                "voyage_expected_steps": 2,
+                "SOC_before": [0.55, 0.54],
+                "SOC_actual": [0.54, 0.55],
+                "P_fc_actual_kw": [110.0, 130.0],
+                "P_batt_actual_kw": [50.0, -20.0],
+                "fc_delta_actual_kw": [10.0, 20.0],
+                "actual_balance_residual_kw": [0.0, 0.01],
+                "h2_kg_step": h2_steps,
+                "p_batt_sq_kw2_step": batt_sq,
+                "soc_error_sq_step": soc_sq,
+                "fc_delta_sq_kw2_step": fc_delta_sq,
+                **normalized,
+                "success": [True, True],
+            }
+        )
+        solver_rows = pd.DataFrame(
+            {
+                "voyage_id": "voyage_synthetic",
+                "status": ["solved", "solved"],
+                "success": [True, True],
+                "max_iter_reached": [False, False],
+                "solve_ms": [1.0, 3.0],
+                "time_s": [1.0, 2.0],
+            }
+        )
+        return controls, solver_rows
+
+    def test_voyage_metrics_sum_raw_normalized_and_weighted_objectives(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.SensitivityCase(
+            config_id="synthetic_weights",
+            varied_weight=None,
+            weight_value=1.0,
+            q_h2=0.25,
+            q_batt=0.5,
+            q_soc=2.0,
+            q_fc_var=4.0,
+        )
+        config = module.four_objective_config(case)
+        controls, solver_rows = self._synthetic_two_step_frames(module, case, config)
+
+        metrics = module.build_voyage_metrics(
+            controls,
+            solver_rows,
+            case=case,
+            config=config,
+        )
+
+        self.assertTrue(metrics["completed"])
+        self.assertTrue(metrics["metrics_comparable"])
+        self.assertEqual(metrics["sum_p_batt_sq_kw2"], 50.0**2 + (-20.0) ** 2)
+        self.assertAlmostEqual(metrics["sum_soc_error_sq"], (0.54 - 0.55) ** 2)
+        self.assertEqual(metrics["sum_fc_delta_sq_kw2"], 10.0**2 + 20.0**2)
+        self.assertAlmostEqual(
+            metrics["J_batt_norm"], metrics["sum_p_batt_sq_kw2"] / 346.5**2
+        )
+        self.assertAlmostEqual(
+            metrics["J_soc_norm"], metrics["sum_soc_error_sq"] / 0.05**2
+        )
+        self.assertAlmostEqual(
+            metrics["J_fc_var_norm"], metrics["sum_fc_delta_sq_kw2"] / 48.0**2
+        )
+        self.assertAlmostEqual(
+            metrics["total_weighted_objective"],
+            metrics["weighted_h2_contribution"]
+            + metrics["weighted_batt_contribution"]
+            + metrics["weighted_soc_contribution"]
+            + metrics["weighted_fc_var_contribution"],
+        )
+        self.assertEqual(
+            (metrics["expected_step_count"], metrics["attempted_step_count"]),
+            (2, 2),
+        )
+        self.assertEqual(metrics["applied_step_count"], 2)
+        self.assertEqual((metrics["initial_soc"], metrics["final_soc"]), (0.55, 0.55))
+        self.assertEqual((metrics["max_fc_kw"], metrics["min_fc_kw"]), (130.0, 110.0))
+        self.assertEqual(metrics["max_batt_discharge_kw"], 50.0)
+        self.assertEqual(metrics["max_batt_charge_kw"], 20.0)
+
+    def test_final_max_iter_failure_is_recorded_as_nan_and_prefix_noncomparable(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.build_sensitivity_cases()[0]
+        config = module.four_objective_config(case)
+        normalized_solution = np.zeros(19, dtype=float)
+        normalized_solution[0] = 100.0 / 560.0
+        solved_result = SimpleNamespace(
+            x=normalized_solution,
+            info=SimpleNamespace(
+                status="solved",
+                iter=25,
+                prim_res=1.0e-8,
+                dual_res=1.0e-8,
+            ),
+        )
+        max_iter_result = SimpleNamespace(
+            x=np.zeros(19, dtype=float),
+            info=SimpleNamespace(
+                status="maximum iterations reached",
+                iter=20000,
+                prim_res=0.1,
+                dual_res=0.2,
+            ),
+        )
+        with (
+            patch.object(module, "_try_import_osqp", return_value=(object(), None)),
+            patch.object(
+                module,
+                "_setup_n6_osqp_solver",
+                side_effect=["warm_solver", "cold_solver"],
+            ),
+            patch.object(
+                module,
+                "_solve_with_persistent_osqp",
+                side_effect=[
+                    (solved_result, 0.5),
+                    (max_iter_result, 1.0),
+                    (max_iter_result, 2.0),
+                ],
+            ) as solve,
+        ):
+            controls, solver_rows = module.run_voyage(
+                voyage_id="voyage_failed",
+                loads_kw=np.array([100.0, 110.0, 120.0]),
+                times_s=np.array([0.0, 1.0, 2.0]),
+                case=case,
+                config=config,
+            )
+
+        self.assertEqual(solve.call_count, 3)
+        self.assertEqual((len(controls), len(solver_rows)), (2, 2))
+        self.assertTrue(bool(controls.iloc[0]["success"]))
+        self.assertFalse(bool(controls.iloc[1]["success"]))
+        self.assertEqual(controls.iloc[1]["SOC_before"], controls.iloc[0]["SOC_actual"])
+        self.assertEqual(solver_rows.iloc[1]["attempt_count"], 2)
+        self.assertFalse(bool(solver_rows.iloc[1]["cold_restart_succeeded"]))
+        failed_nan_columns = [
+            "P_fc_plan_kw",
+            "P_batt_plan_kw",
+            "SOC_predicted",
+            "P_fc_actual_kw",
+            "P_batt_actual_kw",
+            "SOC_actual",
+            "h2_kg_step",
+            "p_batt_sq_kw2_step",
+            "soc_error_sq_step",
+            "fc_delta_sq_kw2_step",
+            "J_h2_norm_step",
+            "J_batt_norm_step",
+            "J_soc_norm_step",
+            "J_fc_var_norm_step",
+            "weighted_h2_contribution_step",
+            "weighted_batt_contribution_step",
+            "weighted_soc_contribution_step",
+            "weighted_fc_var_contribution_step",
+            "total_weighted_objective_step",
+            "cum_J_h2_norm",
+            "cum_J_batt_norm",
+            "cum_J_soc_norm",
+            "cum_J_fc_var_norm",
+        ]
+        self.assertTrue(controls.loc[1, failed_nan_columns].isna().all())
+
+        metrics = module.build_voyage_metrics(
+            controls,
+            solver_rows,
+            case=case,
+            config=config,
+        )
+        self.assertFalse(metrics["completed"])
+        self.assertFalse(metrics["metrics_comparable"])
+        self.assertEqual(metrics["solver_failure_count"], 1)
+        self.assertEqual(metrics["max_iter_count"], 1)
+        self.assertEqual(metrics["applied_step_count"], 1)
+        self.assertEqual(metrics["final_soc"], controls.iloc[0]["SOC_actual"])
+        self.assertAlmostEqual(
+            metrics["total_weighted_objective"],
+            controls.iloc[0]["total_weighted_objective_step"],
+        )
+
+    def test_configuration_summary_sums_metrics_uses_combined_timing_and_has_no_rank(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.build_sensitivity_cases()[0]
+        config = module.four_objective_config(case)
+        controls, solver_rows = self._synthetic_two_step_frames(module, case, config)
+        first = module.build_voyage_metrics(
+            controls,
+            solver_rows,
+            case=case,
+            config=config,
+        )
+        second = dict(first)
+        second.update(
+            {
+                "voyage_id": "voyage_failed",
+                "completed": False,
+                "metrics_comparable": False,
+                "solver_failure_count": 1,
+                "primal_infeasible_count": 1,
+                "max_iter_count": 1,
+                "attempted_step_count": 1,
+                "applied_step_count": 1,
+            }
+        )
+        voyage_metrics = pd.DataFrame([first, second])
+        combined_solver_rows = pd.DataFrame(
+            {
+                "solve_ms": [1.0, 9.0, 5.0],
+                "success": [True, True, False],
+            }
+        )
+
+        summary = module.build_configuration_summary(
+            voyage_metrics,
+            combined_solver_rows,
+            case=case,
+        )
+
+        self.assertEqual(summary["voyage_count"], 2)
+        self.assertEqual(summary["completed_voyage_count"], 1)
+        self.assertEqual(summary["completion_rate"], 0.5)
+        self.assertFalse(summary["metrics_comparable"])
+        self.assertEqual(summary["mean_solve_time_ms"], 5.0)
+        self.assertEqual(summary["max_solve_time_ms"], 9.0)
+        self.assertAlmostEqual(summary["p95_solve_time_ms"], 8.6)
+        for name in (
+            "solver_failure_count",
+            "primal_infeasible_count",
+            "max_iter_count",
+            "total_h2_kg",
+            "sum_p_batt_sq_kw2",
+            "sum_soc_error_sq",
+            "sum_fc_delta_sq_kw2",
+            "J_h2_norm",
+            "J_batt_norm",
+            "J_soc_norm",
+            "J_fc_var_norm",
+            "weighted_h2_contribution",
+            "weighted_batt_contribution",
+            "weighted_soc_contribution",
+            "weighted_fc_var_contribution",
+            "total_weighted_objective",
+        ):
+            self.assertAlmostEqual(summary[name], voyage_metrics[name].sum())
+        for forbidden in ("selected", "score", "rank", "winner", "best"):
+            self.assertFalse(any(forbidden in name.lower() for name in summary))
+
+    def test_evaluate_configuration_groups_voyages_in_sorted_order(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.build_sensitivity_cases()[0]
+        data = pd.DataFrame(
+            {
+                "voyage_id": ["voyage_b", "voyage_b", "voyage_a", "voyage_a"],
+                "time_s": [0.0, 1.0, 0.0, 1.0],
+                "load_total_kw": [200.0, 210.0, 100.0, 110.0],
+            }
+        )
+
+        def fake_run_voyage(**kwargs):
+            voyage_id = kwargs["voyage_id"]
+            return (
+                pd.DataFrame({"voyage_id": [voyage_id], "marker": ["control"]}),
+                pd.DataFrame({"voyage_id": [voyage_id], "marker": ["solver"]}),
+            )
+
+        def fake_metrics(controls, solver_rows, **_kwargs):
+            self.assertEqual(controls.iloc[0]["voyage_id"], solver_rows.iloc[0]["voyage_id"])
+            return {"voyage_id": controls.iloc[0]["voyage_id"], "completed": True}
+
+        with (
+            patch.object(module, "run_voyage", side_effect=fake_run_voyage) as run,
+            patch.object(module, "build_voyage_metrics", side_effect=fake_metrics) as metrics,
+            patch.object(
+                module,
+                "build_configuration_summary",
+                return_value={"config_id": case.config_id},
+            ) as summarize,
+        ):
+            result = module.evaluate_configuration(case, data=data)
+
+        self.assertEqual(
+            [call.kwargs["voyage_id"] for call in run.call_args_list],
+            ["voyage_a", "voyage_b"],
+        )
+        self.assertEqual(metrics.call_count, 2)
+        summarize.assert_called_once()
+        self.assertEqual(list(result["controls"]["voyage_id"]), ["voyage_a", "voyage_b"])
+        self.assertEqual(
+            list(result["solver_rows"]["voyage_id"]), ["voyage_a", "voyage_b"]
+        )
+        self.assertEqual(
+            list(result["voyage_metrics"]["voyage_id"]), ["voyage_a", "voyage_b"]
+        )
+        self.assertIs(result["case"], case)
+        self.assertEqual(result["summary"], {"config_id": case.config_id})
 
 
 if __name__ == "__main__":

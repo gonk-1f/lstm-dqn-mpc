@@ -365,12 +365,25 @@ def run_voyage(
         raise ValueError("voyage loads and times must be finite")
     if not np.allclose(np.diff(times), N6_DT_SECONDS, rtol=0.0, atol=1.0e-9):
         raise ValueError("voyage times must be strictly spaced at 1 s")
+    try:
+        initial_soc_value = float(initial_soc)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"initial_soc must be a finite number, got {initial_soc!r}") from exc
+    if (
+        not np.isfinite(initial_soc_value)
+        or initial_soc_value < float(config.soc_min)
+        or initial_soc_value > float(config.soc_max)
+    ):
+        raise ValueError(
+            "initial_soc must be finite and within "
+            f"[{config.soc_min}, {config.soc_max}], got {initial_soc!r}"
+        )
 
     osqp_module, osqp_error = _try_import_osqp()
     if osqp_module is None:
         raise RuntimeError(f"Cannot import osqp: {osqp_error}")
 
-    current_soc = float(initial_soc)
+    current_soc = initial_soc_value
     prev_fc_actual = float(
         np.clip(loads[0], config.fuel_cell_min_kw, config.fuel_cell_max_kw)
     )
@@ -396,6 +409,7 @@ def run_voyage(
         decision_count = min(decision_count, max(0, int(max_steps)))
     control_rows: list[dict[str, Any]] = []
     solver_rows: list[dict[str, Any]] = []
+    h2_reference = physical_h2_kg_step(config, float(config.fuel_cell_max_kw))
 
     for decision_index in range(decision_count):
         execution_index = decision_index + 1
@@ -544,6 +558,55 @@ def run_voyage(
             if success
             else float("nan")
         )
+        if success:
+            raw_h2 = physical_h2_kg_step(config, p_fc)
+            raw_batt = p_batt_actual**2
+            raw_soc = (soc_actual - FIXED_SOC_REFERENCE) ** 2
+            raw_fc_var = fc_delta**2
+            j_h2 = raw_h2 / h2_reference
+            j_batt = raw_batt / float(config.battery_power_ref_kw) ** 2
+            j_soc = raw_soc / float(config.soc_band) ** 2
+            j_fc_var = raw_fc_var / float(resolved_ramp_kw_per_step(config)) ** 2
+            weighted_h2 = float(case.q_h2) * j_h2
+            weighted_batt = float(case.q_batt) * j_batt
+            weighted_soc = float(case.q_soc) * j_soc
+            weighted_fc_var = float(case.q_fc_var) * j_fc_var
+            objective_steps = {
+                "h2_kg_step": raw_h2,
+                "p_batt_sq_kw2_step": raw_batt,
+                "soc_error_sq_step": raw_soc,
+                "fc_delta_sq_kw2_step": raw_fc_var,
+                "J_h2_norm_step": j_h2,
+                "J_batt_norm_step": j_batt,
+                "J_soc_norm_step": j_soc,
+                "J_fc_var_norm_step": j_fc_var,
+                "weighted_h2_contribution_step": weighted_h2,
+                "weighted_batt_contribution_step": weighted_batt,
+                "weighted_soc_contribution_step": weighted_soc,
+                "weighted_fc_var_contribution_step": weighted_fc_var,
+                "total_weighted_objective_step": (
+                    weighted_h2 + weighted_batt + weighted_soc + weighted_fc_var
+                ),
+            }
+        else:
+            objective_steps = {
+                name: float("nan")
+                for name in (
+                    "h2_kg_step",
+                    "p_batt_sq_kw2_step",
+                    "soc_error_sq_step",
+                    "fc_delta_sq_kw2_step",
+                    "J_h2_norm_step",
+                    "J_batt_norm_step",
+                    "J_soc_norm_step",
+                    "J_fc_var_norm_step",
+                    "weighted_h2_contribution_step",
+                    "weighted_batt_contribution_step",
+                    "weighted_soc_contribution_step",
+                    "weighted_fc_var_contribution_step",
+                    "total_weighted_objective_step",
+                )
+            }
 
         control_rows.append(
             {
@@ -570,9 +633,7 @@ def run_voyage(
                 "ramp_residual_kw": ramp_residual,
                 "soc_bound_residual": soc_bound_residual,
                 "soc_prediction_residual": soc_prediction_residual,
-                "h2_kg_step": (
-                    physical_h2_kg_step(config, p_fc) if success else float("nan")
-                ),
+                **objective_steps,
                 "success": success,
                 "status": status,
             }
@@ -602,7 +663,247 @@ def run_voyage(
         if not success:
             break
 
-    return pd.DataFrame(control_rows), pd.DataFrame(solver_rows)
+    controls = pd.DataFrame(control_rows)
+    if not controls.empty:
+        successful = controls["success"].fillna(False).astype(bool)
+        for step_column, cumulative_column in (
+            ("J_h2_norm_step", "cum_J_h2_norm"),
+            ("J_batt_norm_step", "cum_J_batt_norm"),
+            ("J_soc_norm_step", "cum_J_soc_norm"),
+            ("J_fc_var_norm_step", "cum_J_fc_var_norm"),
+        ):
+            controls[cumulative_column] = float("nan")
+            controls.loc[successful, cumulative_column] = (
+                controls.loc[successful, step_column].cumsum()
+            )
+    return controls, pd.DataFrame(solver_rows)
+
+
+def build_voyage_metrics(
+    controls: pd.DataFrame,
+    solver_rows: pd.DataFrame,
+    *,
+    case: SensitivityCase,
+    config: QpMpcConfig,
+) -> dict[str, Any]:
+    success = controls["success"].fillna(False).astype(bool)
+    applied = controls.loc[success]
+    solver_success = solver_rows["success"].fillna(False).astype(bool)
+    failed_solver = solver_rows.loc[~solver_success]
+    status = solver_rows["status"].fillna("").astype(str)
+    solve_ms = pd.to_numeric(solver_rows["solve_ms"], errors="coerce").dropna()
+    successful_soc = pd.to_numeric(applied["SOC_actual"], errors="coerce").dropna()
+    successful_fc = pd.to_numeric(applied["P_fc_actual_kw"], errors="coerce").dropna()
+    successful_batt = pd.to_numeric(
+        applied["P_batt_actual_kw"], errors="coerce"
+    ).dropna()
+    successful_fc_delta = pd.to_numeric(
+        applied["fc_delta_actual_kw"], errors="coerce"
+    ).dropna()
+    successful_balance = pd.to_numeric(
+        applied["actual_balance_residual_kw"], errors="coerce"
+    ).dropna()
+
+    expected_count = int(pd.to_numeric(controls["voyage_expected_steps"]).max())
+    completed = bool(len(solver_rows) == expected_count and solver_success.all())
+    initial_soc = float(controls.iloc[0]["SOC_before"])
+    final_soc = float(applied.iloc[-1]["SOC_actual"]) if len(applied) else initial_soc
+    first_failure_time_s = (
+        float(failed_solver.iloc[0]["time_s"]) if len(failed_solver) else float("nan")
+    )
+    first_failure_status = (
+        str(failed_solver.iloc[0]["status"]) if len(failed_solver) else ""
+    )
+    j_h2_norm = float(applied["J_h2_norm_step"].sum())
+    j_batt_norm = float(applied["J_batt_norm_step"].sum())
+    j_soc_norm = float(applied["J_soc_norm_step"].sum())
+    j_fc_var_norm = float(applied["J_fc_var_norm_step"].sum())
+    weighted_h2 = float(case.q_h2) * j_h2_norm
+    weighted_batt = float(case.q_batt) * j_batt_norm
+    weighted_soc = float(case.q_soc) * j_soc_norm
+    weighted_fc_var = float(case.q_fc_var) * j_fc_var_norm
+
+    return {
+        "config_id": case.config_id,
+        "q_h2": float(case.q_h2),
+        "q_batt": float(case.q_batt),
+        "q_soc": float(case.q_soc),
+        "q_fc_var": float(case.q_fc_var),
+        "voyage_id": str(controls.iloc[0]["voyage_id"]),
+        "completed": completed,
+        "solver_failure_count": int((~solver_success).sum()),
+        "primal_infeasible_count": int(
+            status.str.contains("primal infeasible", case=False, regex=False).sum()
+        ),
+        "max_iter_count": int(solver_rows["max_iter_reached"].fillna(False).sum()),
+        "first_failure_time_s": first_failure_time_s,
+        "mean_solve_time_ms": float(solve_ms.mean()),
+        "p95_solve_time_ms": float(solve_ms.quantile(0.95)),
+        "max_solve_time_ms": float(solve_ms.max()),
+        "initial_soc": initial_soc,
+        "final_soc": final_soc,
+        "delta_soc": final_soc - initial_soc,
+        "min_soc": (
+            min(initial_soc, float(successful_soc.min()))
+            if len(successful_soc)
+            else initial_soc
+        ),
+        "max_soc": (
+            max(initial_soc, float(successful_soc.max()))
+            if len(successful_soc)
+            else initial_soc
+        ),
+        "max_power_balance_residual_kw": (
+            float(successful_balance.max()) if len(successful_balance) else float("nan")
+        ),
+        "max_fc_ramp_kw_per_step": (
+            float(successful_fc_delta.abs().max())
+            if len(successful_fc_delta)
+            else float("nan")
+        ),
+        "max_fc_kw": float(successful_fc.max()) if len(successful_fc) else float("nan"),
+        "min_fc_kw": float(successful_fc.min()) if len(successful_fc) else float("nan"),
+        "max_batt_discharge_kw": (
+            float(successful_batt.clip(lower=0.0).max())
+            if len(successful_batt)
+            else float("nan")
+        ),
+        "max_batt_charge_kw": (
+            float((-successful_batt.clip(upper=0.0)).max())
+            if len(successful_batt)
+            else float("nan")
+        ),
+        "total_h2_kg": float(applied["h2_kg_step"].sum()),
+        "sum_p_batt_sq_kw2": float(applied["p_batt_sq_kw2_step"].sum()),
+        "sum_soc_error_sq": float(applied["soc_error_sq_step"].sum()),
+        "sum_fc_delta_sq_kw2": float(applied["fc_delta_sq_kw2_step"].sum()),
+        "J_h2_norm": j_h2_norm,
+        "J_batt_norm": j_batt_norm,
+        "J_soc_norm": j_soc_norm,
+        "J_fc_var_norm": j_fc_var_norm,
+        "weighted_h2_contribution": weighted_h2,
+        "weighted_batt_contribution": weighted_batt,
+        "weighted_soc_contribution": weighted_soc,
+        "weighted_fc_var_contribution": weighted_fc_var,
+        "total_weighted_objective": (
+            weighted_h2 + weighted_batt + weighted_soc + weighted_fc_var
+        ),
+        "expected_step_count": expected_count,
+        "attempted_step_count": int(len(solver_rows)),
+        "applied_step_count": int(success.sum()),
+        "first_failure_status": first_failure_status,
+        "metrics_comparable": completed,
+    }
+
+
+def build_configuration_summary(
+    voyage_metrics: pd.DataFrame,
+    solver_rows: pd.DataFrame,
+    *,
+    case: SensitivityCase,
+) -> dict[str, Any]:
+    completed = voyage_metrics["completed"].astype(bool)
+    solve_ms = pd.to_numeric(solver_rows["solve_ms"], errors="coerce").dropna()
+    sum_columns = [
+        "solver_failure_count",
+        "primal_infeasible_count",
+        "max_iter_count",
+        "total_h2_kg",
+        "sum_p_batt_sq_kw2",
+        "sum_soc_error_sq",
+        "sum_fc_delta_sq_kw2",
+        "J_h2_norm",
+        "J_batt_norm",
+        "J_soc_norm",
+        "J_fc_var_norm",
+        "weighted_h2_contribution",
+        "weighted_batt_contribution",
+        "weighted_soc_contribution",
+        "weighted_fc_var_contribution",
+        "total_weighted_objective",
+    ]
+    summary: dict[str, Any] = {
+        "config_id": case.config_id,
+        "varied_weight": case.varied_weight or "baseline",
+        "weight_value": float(case.weight_value),
+        "q_h2": float(case.q_h2),
+        "q_batt": float(case.q_batt),
+        "q_soc": float(case.q_soc),
+        "q_fc_var": float(case.q_fc_var),
+        "voyage_count": int(len(voyage_metrics)),
+        "completed_voyage_count": int(completed.sum()),
+        "completion_rate": float(completed.mean()),
+        "initial_soc": float(voyage_metrics["initial_soc"].mean()),
+        "final_soc_mean": float(voyage_metrics["final_soc"].mean()),
+        "delta_soc_mean": float(voyage_metrics["delta_soc"].mean()),
+        "min_soc": float(voyage_metrics["min_soc"].min()),
+        "max_soc": float(voyage_metrics["max_soc"].max()),
+        "max_power_balance_residual_kw": float(
+            voyage_metrics["max_power_balance_residual_kw"].max()
+        ),
+        "max_fc_ramp_kw_per_step": float(
+            voyage_metrics["max_fc_ramp_kw_per_step"].max()
+        ),
+        "max_fc_kw": float(voyage_metrics["max_fc_kw"].max()),
+        "min_fc_kw": float(voyage_metrics["min_fc_kw"].min()),
+        "max_batt_discharge_kw": float(
+            voyage_metrics["max_batt_discharge_kw"].max()
+        ),
+        "max_batt_charge_kw": float(voyage_metrics["max_batt_charge_kw"].max()),
+        "mean_solve_time_ms": float(solve_ms.mean()),
+        "p95_solve_time_ms": float(solve_ms.quantile(0.95)),
+        "max_solve_time_ms": float(solve_ms.max()),
+        "metrics_comparable": bool(completed.all()),
+    }
+    summary.update(
+        {name: float(pd.to_numeric(voyage_metrics[name]).sum()) for name in sum_columns}
+    )
+    for name in (
+        "solver_failure_count",
+        "primal_infeasible_count",
+        "max_iter_count",
+    ):
+        summary[name] = int(summary[name])
+    return summary
+
+
+def evaluate_configuration(
+    case: SensitivityCase,
+    *,
+    data: pd.DataFrame,
+) -> dict[str, Any]:
+    config = four_objective_config(case)
+    control_frames: list[pd.DataFrame] = []
+    solver_frames: list[pd.DataFrame] = []
+    metric_rows: list[dict[str, Any]] = []
+    for voyage_id, voyage in data.groupby("voyage_id", sort=True):
+        controls, solver_rows = run_voyage(
+            voyage_id=str(voyage_id),
+            loads_kw=voyage["load_total_kw"].to_numpy(dtype=float),
+            times_s=voyage["time_s"].to_numpy(dtype=float),
+            case=case,
+            config=config,
+        )
+        control_frames.append(controls)
+        solver_frames.append(solver_rows)
+        metric_rows.append(
+            build_voyage_metrics(controls, solver_rows, case=case, config=config)
+        )
+    controls = pd.concat(control_frames, ignore_index=True)
+    solver_rows = pd.concat(solver_frames, ignore_index=True)
+    voyage_metrics = pd.DataFrame(metric_rows)
+    return {
+        "case": case,
+        "config": config,
+        "controls": controls,
+        "solver_rows": solver_rows,
+        "voyage_metrics": voyage_metrics,
+        "summary": build_configuration_summary(
+            voyage_metrics,
+            solver_rows,
+            case=case,
+        ),
+    }
 
 
 def _expected_step_count(frame: pd.DataFrame) -> int:
