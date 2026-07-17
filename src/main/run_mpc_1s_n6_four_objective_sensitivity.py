@@ -365,6 +365,14 @@ def run_voyage(
         raise ValueError("voyage loads and times must be finite")
     if not np.allclose(np.diff(times), N6_DT_SECONDS, rtol=0.0, atol=1.0e-9):
         raise ValueError("voyage times must be strictly spaced at 1 s")
+    if max_steps is not None and (
+        isinstance(max_steps, (bool, np.bool_))
+        or not isinstance(max_steps, (int, np.integer))
+        or int(max_steps) < 1
+    ):
+        raise ValueError(
+            f"max_steps must be a positive integer or None, got {max_steps!r}"
+        )
     try:
         initial_soc_value = float(initial_soc)
     except (TypeError, ValueError) as exc:
@@ -406,7 +414,7 @@ def run_voyage(
 
     decision_count = len(loads) - 1
     if max_steps is not None:
-        decision_count = min(decision_count, max(0, int(max_steps)))
+        decision_count = min(decision_count, int(max_steps))
     control_rows: list[dict[str, Any]] = []
     solver_rows: list[dict[str, Any]] = []
     h2_reference = physical_h2_kg_step(config, float(config.fuel_cell_max_kw))
@@ -679,6 +687,69 @@ def run_voyage(
     return controls, pd.DataFrame(solver_rows)
 
 
+def _normalized_success_flags(values: pd.Series) -> pd.Series:
+    return (
+        values.astype("string")
+        .str.strip()
+        .str.lower()
+        .map(
+            {
+                "true": True,
+                "1": True,
+                "1.0": True,
+                "false": False,
+                "0": False,
+                "0.0": False,
+            }
+        )
+        .astype("boolean")
+    )
+
+
+def _voyage_metric_rows_aligned(
+    controls: pd.DataFrame,
+    solver_rows: pd.DataFrame,
+) -> bool:
+    required = {"voyage_id", "decision_index", "execution_index", "success"}
+    if (
+        len(controls) != len(solver_rows)
+        or not required.issubset(controls.columns)
+        or not required.issubset(solver_rows.columns)
+    ):
+        return False
+
+    def normalized(frame: pd.DataFrame) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "voyage_id": frame["voyage_id"].astype("string").str.strip(),
+                "decision_index": pd.to_numeric(
+                    frame["decision_index"], errors="coerce"
+                ).astype("Float64"),
+                "execution_index": pd.to_numeric(
+                    frame["execution_index"], errors="coerce"
+                ).astype("Float64"),
+                "success": _normalized_success_flags(frame["success"]),
+            }
+        ).reset_index(drop=True)
+
+    control_key = normalized(controls)
+    solver_key = normalized(solver_rows)
+    if (
+        control_key.isna().any().any()
+        or solver_key.isna().any().any()
+        or control_key["voyage_id"].eq("").any()
+        or solver_key["voyage_id"].eq("").any()
+        or not np.isfinite(
+            control_key[["decision_index", "execution_index"]].to_numpy(dtype=float)
+        ).all()
+        or not np.isfinite(
+            solver_key[["decision_index", "execution_index"]].to_numpy(dtype=float)
+        ).all()
+    ):
+        return False
+    return bool(control_key.equals(solver_key))
+
+
 def build_voyage_metrics(
     controls: pd.DataFrame,
     solver_rows: pd.DataFrame,
@@ -686,9 +757,11 @@ def build_voyage_metrics(
     case: SensitivityCase,
     config: QpMpcConfig,
 ) -> dict[str, Any]:
-    success = controls["success"].fillna(False).astype(bool)
+    success = _normalized_success_flags(controls["success"]).fillna(False).astype(bool)
     applied = controls.loc[success]
-    solver_success = solver_rows["success"].fillna(False).astype(bool)
+    solver_success = (
+        _normalized_success_flags(solver_rows["success"]).fillna(False).astype(bool)
+    )
     failed_solver = solver_rows.loc[~solver_success]
     status = solver_rows["status"].fillna("").astype(str)
     solve_ms = pd.to_numeric(solver_rows["solve_ms"], errors="coerce").dropna()
@@ -705,7 +778,12 @@ def build_voyage_metrics(
     ).dropna()
 
     expected_count = int(pd.to_numeric(controls["voyage_expected_steps"]).max())
-    completed = bool(len(solver_rows) == expected_count and solver_success.all())
+    completed = bool(
+        len(controls) == expected_count
+        and len(solver_rows) == expected_count
+        and _voyage_metric_rows_aligned(controls, solver_rows)
+        and solver_success.all()
+    )
     initial_soc = float(controls.iloc[0]["SOC_before"])
     final_soc = float(applied.iloc[-1]["SOC_actual"]) if len(applied) else initial_soc
     first_failure_time_s = (

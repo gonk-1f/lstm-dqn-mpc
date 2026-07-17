@@ -586,6 +586,27 @@ class TestSensitivityRunnerContract(unittest.TestCase):
                     )
                 try_import.assert_not_called()
 
+    def test_run_voyage_rejects_nonpositive_or_noninteger_max_steps(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.build_sensitivity_cases()[0]
+        config = module.four_objective_config(case)
+        for max_steps in (0, -1, 1.5, True):
+            with self.subTest(max_steps=max_steps):
+                with (
+                    patch.object(module, "_try_import_osqp") as try_import,
+                    self.assertRaisesRegex(ValueError, "max_steps"),
+                ):
+                    module.run_voyage(
+                        voyage_id="voyage_test",
+                        loads_kw=np.array([100.0, 110.0]),
+                        times_s=np.array([0.0, 1.0]),
+                        case=case,
+                        config=config,
+                        max_steps=max_steps,
+                    )
+                try_import.assert_not_called()
+
     def test_max_iter_cold_restart_can_succeed_without_counting_initial_attempt_solved(
         self,
     ) -> None:
@@ -789,6 +810,8 @@ class TestSensitivityMetrics(unittest.TestCase):
                 "config_id": case.config_id,
                 "voyage_id": "voyage_synthetic",
                 "voyage_expected_steps": 2,
+                "decision_index": [0, 1],
+                "execution_index": [1, 2],
                 "SOC_before": [0.55, 0.54],
                 "SOC_actual": [0.54, 0.55],
                 "P_fc_actual_kw": [110.0, 130.0],
@@ -806,8 +829,10 @@ class TestSensitivityMetrics(unittest.TestCase):
         solver_rows = pd.DataFrame(
             {
                 "voyage_id": "voyage_synthetic",
+                "decision_index": ["0", "1"],
+                "execution_index": [1.0, 2.0],
                 "status": ["solved", "solved"],
-                "success": [True, True],
+                "success": [1, 1],
                 "max_iter_reached": [False, False],
                 "solve_ms": [1.0, 3.0],
                 "time_s": [1.0, 2.0],
@@ -867,6 +892,51 @@ class TestSensitivityMetrics(unittest.TestCase):
         self.assertEqual((metrics["max_fc_kw"], metrics["min_fc_kw"]), (130.0, 110.0))
         self.assertEqual(metrics["max_batt_discharge_kw"], 50.0)
         self.assertEqual(metrics["max_batt_charge_kw"], 20.0)
+
+    def test_voyage_metrics_reject_missing_control_rows_as_noncomparable(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.build_sensitivity_cases()[0]
+        config = module.four_objective_config(case)
+        controls, solver_rows = self._synthetic_two_step_frames(module, case, config)
+
+        metrics = module.build_voyage_metrics(
+            controls.iloc[:1].copy(),
+            solver_rows,
+            case=case,
+            config=config,
+        )
+
+        self.assertFalse(metrics["completed"])
+        self.assertFalse(metrics["metrics_comparable"])
+
+    def test_voyage_metrics_require_control_solver_row_alignment(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.build_sensitivity_cases()[0]
+        config = module.four_objective_config(case)
+        mismatch_cases = {
+            "voyage_id": "other_voyage",
+            "decision_index": "99",
+            "execution_index": 99,
+            "success": 0,
+        }
+        for column, bad_value in mismatch_cases.items():
+            with self.subTest(column=column):
+                controls, solver_rows = self._synthetic_two_step_frames(
+                    module, case, config
+                )
+                solver_rows.loc[1, column] = bad_value
+
+                metrics = module.build_voyage_metrics(
+                    controls,
+                    solver_rows,
+                    case=case,
+                    config=config,
+                )
+
+                self.assertFalse(metrics["completed"])
+                self.assertFalse(metrics["metrics_comparable"])
 
     def test_final_max_iter_failure_is_recorded_as_nan_and_prefix_noncomparable(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
