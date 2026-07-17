@@ -380,6 +380,11 @@ def build_qp_problem(
     else:
         min_eig = float("nan")
         convex_qp = None
+    fuel_cell_max_reference = str(float(config.fuel_cell_max_kw)).removesuffix(".0")
+    dt_reference = str(float(config.dt_seconds)).removesuffix(".0")
+    battery_power_reference = str(float(config.battery_power_ref_kw)).removesuffix(".0")
+    soc_band_reference = str(float(config.soc_band)).removesuffix(".0")
+    fc_variation_reference = str(float(ramp_kw)).removesuffix(".0")
     metadata = {
         "horizon": horizon,
         "dt_seconds": float(config.dt_seconds),
@@ -430,7 +435,8 @@ def build_qp_problem(
             else "legacy raw quadratic P_batt^2"
         ),
         "fuel_cell_variation_cost_form": (
-            "((P_fc[0] - P_fc_prev) / 48)^2 and ((P_fc[k] - P_fc[k-1]) / 48)^2"
+            f"((P_fc[0] - P_fc_prev) / {fc_variation_reference})^2 and "
+            f"((P_fc[k] - P_fc[k-1]) / {fc_variation_reference})^2"
             if objective_variant == "n6_h2_batt_soc_fcvar_normalized_v1"
             else "not active in this objective variant"
         ),
@@ -444,16 +450,22 @@ def build_qp_problem(
                 "q_fc_var": float(config.q_fc_var),
                 "soc_reference": float(soc_reference),
                 "objective_term_descriptions": {
-                    "H2_norm": "sum(k=0..N-1) m_H2(P_fc[k]) / m_H2(560 kW, 1 s)",
+                    "H2_norm": (
+                        "sum(k=0..N-1) m_H2(P_fc[k]) / "
+                        f"m_H2({fuel_cell_max_reference} kW, {dt_reference} s)"
+                    ),
                     "Batt_power_sq_norm": (
-                        "sum(k=0..N-1) (P_batt[k] / 346.5 kW)^2"
+                        "sum(k=0..N-1) "
+                        f"(P_batt[k] / {battery_power_reference} kW)^2"
                     ),
                     "SOC_tracking_sq_norm": (
-                        "sum(k=1..N) ((SOC[k] - SOC_ref) / 0.05)^2"
+                        "sum(k=1..N) "
+                        f"((SOC[k] - SOC_ref) / {soc_band_reference})^2"
                     ),
                     "FC_variation_sq_norm": (
-                        "((P_fc[0] - P_fc_prev) / 48 kW)^2 + "
-                        "sum(k=1..N-1) ((P_fc[k] - P_fc[k-1]) / 48 kW)^2"
+                        f"((P_fc[0] - P_fc_prev) / {fc_variation_reference} kW)^2 + "
+                        "sum(k=1..N-1) "
+                        f"((P_fc[k] - P_fc[k-1]) / {fc_variation_reference} kW)^2"
                     ),
                 },
                 "terminal_soc_cost_in_objective": False,

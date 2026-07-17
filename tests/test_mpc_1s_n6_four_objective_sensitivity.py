@@ -175,6 +175,40 @@ class TestFourObjectiveQp(unittest.TestCase):
         h2_only = problem(objective_config(q_h2=1.0))
         self.assertGreater(h2_only.q[0], 0.0)
 
+    def test_nondefault_references_keep_metadata_descriptions_truthful(self) -> None:
+        cfg = replace(
+            objective_config(q_h2=1.0, q_batt=1.0, q_soc=1.0, q_fc_var=1.0),
+            dt_seconds=2.5,
+            fuel_cell_max_kw=420.0,
+            battery_power_ref_kw=111.25,
+            soc_band=0.0375,
+            fuel_cell_ramp_kw=17.5,
+        )
+        qp = problem(cfg)
+        h2_quad, h2_linear, _, _ = h2_quadratic_kg_step_coefficients(cfg)
+        h2_reference = h2_quad * 420.0**2 + h2_linear * 420.0
+
+        self.assertAlmostEqual(qp.metadata["h2_reference_kg_per_step"], h2_reference)
+        self.assertEqual(qp.metadata["battery_power_ref_kw"], 111.25)
+        self.assertEqual(qp.metadata["soc_band"], 0.0375)
+        self.assertEqual(qp.metadata["fuel_cell_variation_ref_kw_per_step"], 17.5)
+        self.assertEqual(
+            qp.metadata["fuel_cell_variation_cost_form"],
+            "((P_fc[0] - P_fc_prev) / 17.5)^2 and ((P_fc[k] - P_fc[k-1]) / 17.5)^2",
+        )
+        self.assertEqual(
+            qp.metadata["objective_term_descriptions"],
+            {
+                "H2_norm": "sum(k=0..N-1) m_H2(P_fc[k]) / m_H2(420 kW, 2.5 s)",
+                "Batt_power_sq_norm": "sum(k=0..N-1) (P_batt[k] / 111.25 kW)^2",
+                "SOC_tracking_sq_norm": "sum(k=1..N) ((SOC[k] - SOC_ref) / 0.0375)^2",
+                "FC_variation_sq_norm": (
+                    "((P_fc[0] - P_fc_prev) / 17.5 kW)^2 + "
+                    "sum(k=1..N-1) ((P_fc[k] - P_fc[k-1]) / 17.5 kW)^2"
+                ),
+            },
+        )
+
     def test_legacy_soft_weights_are_ignored_and_constraints_do_not_change(self) -> None:
         cfg = objective_config(q_h2=1.0, q_batt=1.0, q_soc=1.0, q_fc_var=1.0)
         base = problem(cfg)
