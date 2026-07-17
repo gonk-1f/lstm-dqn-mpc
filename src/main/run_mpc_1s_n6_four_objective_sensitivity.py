@@ -1181,57 +1181,59 @@ def write_voyage_plot(
     ordered = frame.sort_values("time_s", kind="stable")
     time_s = pd.to_numeric(ordered["time_s"], errors="coerce")
     figure, axes = plt.subplots(4, 1, sharex=True, figsize=(11, 12))
-    axes = np.asarray(axes).reshape(-1)
+    try:
+        axes = np.asarray(axes).reshape(-1)
 
-    axes[0].plot(time_s, ordered["load_actual_kw"], label="Load", linewidth=1.2)
-    axes[0].plot(time_s, ordered["P_fc_actual_kw"], label="Fuel cell", linewidth=1.2)
-    axes[0].set_ylabel("Power (kW)")
-    axes[0].legend(loc="best")
+        axes[0].plot(time_s, ordered["load_actual_kw"], label="Load", linewidth=1.2)
+        axes[0].plot(time_s, ordered["P_fc_actual_kw"], label="Fuel cell", linewidth=1.2)
+        axes[0].set_ylabel("Power (kW)")
+        axes[0].legend(loc="best")
 
-    axes[1].plot(time_s, ordered["P_batt_actual_kw"], label="Battery", linewidth=1.2)
-    axes[1].axhline(346.5, color="0.45", linestyle="--", linewidth=0.9)
-    axes[1].axhline(-346.5, color="0.45", linestyle="--", linewidth=0.9)
-    axes[1].set_ylabel("P_batt (kW)")
-    axes[1].legend(loc="best")
+        axes[1].plot(time_s, ordered["P_batt_actual_kw"], label="Battery", linewidth=1.2)
+        axes[1].axhline(346.5, color="0.45", linestyle="--", linewidth=0.9)
+        axes[1].axhline(-346.5, color="0.45", linestyle="--", linewidth=0.9)
+        axes[1].set_ylabel("P_batt (kW)")
+        axes[1].legend(loc="best")
 
-    axes[2].plot(time_s, ordered["SOC_actual"], label="SOC", linewidth=1.2)
-    axes[2].axhline(0.2, color="0.45", linestyle="--", linewidth=0.9)
-    axes[2].axhline(FIXED_SOC_REFERENCE, color="tab:green", linestyle=":", linewidth=1.0)
-    axes[2].axhline(0.8, color="0.45", linestyle="--", linewidth=0.9)
-    axes[2].set_ylabel("SOC")
-    axes[2].legend(loc="best")
+        axes[2].plot(time_s, ordered["SOC_actual"], label="SOC", linewidth=1.2)
+        axes[2].axhline(0.2, color="0.45", linestyle="--", linewidth=0.9)
+        axes[2].axhline(FIXED_SOC_REFERENCE, color="tab:green", linestyle=":", linewidth=1.0)
+        axes[2].axhline(0.8, color="0.45", linestyle="--", linewidth=0.9)
+        axes[2].set_ylabel("SOC")
+        axes[2].legend(loc="best")
 
-    for column, label in (
-        ("cum_J_h2_norm", "H2 norm"),
-        ("cum_J_batt_norm", "Battery norm"),
-        ("cum_J_soc_norm", "SOC norm"),
-        ("cum_J_fc_var_norm", "FC variation norm"),
-    ):
-        axes[3].plot(time_s, ordered[column], label=label, linewidth=1.1)
-    axes[3].set_ylabel("Cumulative objective")
-    axes[3].set_xlabel("Time (s)")
-    axes[3].legend(loc="best", ncol=2)
+        for column, label in (
+            ("cum_J_h2_norm", "H2 norm"),
+            ("cum_J_batt_norm", "Battery norm"),
+            ("cum_J_soc_norm", "SOC norm"),
+            ("cum_J_fc_var_norm", "FC variation norm"),
+        ):
+            axes[3].plot(time_s, ordered[column], label=label, linewidth=1.1)
+        axes[3].set_ylabel("Cumulative objective")
+        axes[3].set_xlabel("Time (s)")
+        axes[3].legend(loc="best", ncol=2)
 
-    success = _normalized_success_flags(ordered["success"]).fillna(False).astype(bool)
-    failures = ordered.loc[~success]
-    if not failures.empty:
-        failure_time = float(failures.iloc[0]["time_s"])
+        success = _normalized_success_flags(ordered["success"]).fillna(False).astype(bool)
+        failures = ordered.loc[~success]
+        if not failures.empty:
+            failure_time = float(failures.iloc[0]["time_s"])
+            for axis in axes:
+                axis.axvline(
+                    failure_time,
+                    color="tab:red",
+                    linestyle=":",
+                    linewidth=1.2,
+                    label="First failure",
+                )
         for axis in axes:
-            axis.axvline(
-                failure_time,
-                color="tab:red",
-                linestyle=":",
-                linewidth=1.2,
-                label="First failure",
-            )
-    for axis in axes:
-        axis.grid(True, alpha=0.25)
-    figure.suptitle(f"{config_id}: {ordered.iloc[0]['voyage_id']}")
-    figure.tight_layout()
-    path = Path(output_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    figure.savefig(path, dpi=150, bbox_inches="tight")
-    plt.close(figure)
+            axis.grid(True, alpha=0.25)
+        figure.suptitle(f"{config_id}: {ordered.iloc[0]['voyage_id']}")
+        figure.tight_layout()
+        path = Path(output_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        figure.savefig(path, dpi=150, bbox_inches="tight")
+    finally:
+        plt.close(figure)
 
 
 def write_configuration_artifacts(
@@ -1251,7 +1253,15 @@ def write_configuration_artifacts(
     )
     plot_dir = case_dir / "plots"
     plot_dir.mkdir()
-    result["voyage_metrics"].to_csv(case_dir / "voyage_metrics.csv", index=False)
+    try:
+        configuration_p95 = float(result["summary"]["p95_solve_time_ms"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("configuration p95 solve time is missing or invalid") from exc
+    if not np.isfinite(configuration_p95):
+        raise ValueError("configuration p95 solve time must be finite")
+    voyage_metrics = result["voyage_metrics"].copy()
+    voyage_metrics["configuration_p95_solve_time_ms"] = configuration_p95
+    voyage_metrics.to_csv(case_dir / "voyage_metrics.csv", index=False)
     for voyage_id, frame in result["controls"].groupby("voyage_id", sort=True):
         write_voyage_plot(
             frame,
@@ -1313,42 +1323,92 @@ def _rebuild_configuration_summary(
     case: SensitivityCase,
     persisted_summary: dict[str, Any],
 ) -> dict[str, Any]:
-    required = {
-        "completed",
-        "initial_soc",
-        "final_soc",
-        "delta_soc",
-        "min_soc",
-        "max_soc",
+    conditionally_finite_physical = {
         "max_power_balance_residual_kw",
         "max_fc_ramp_kw_per_step",
         "max_fc_kw",
         "min_fc_kw",
         "max_batt_discharge_kw",
         "max_batt_charge_kw",
-        "mean_solve_time_ms",
-        "max_solve_time_ms",
+    }
+    always_finite_numeric = {
+        *WEIGHT_NAMES,
+        "expected_step_count",
         "attempted_step_count",
+        "applied_step_count",
+        "mean_solve_time_ms",
+        "p95_solve_time_ms",
+        "max_solve_time_ms",
+        "initial_soc",
+        "final_soc",
+        "delta_soc",
+        "min_soc",
+        "max_soc",
+        "configuration_p95_solve_time_ms",
         *_SUMMARY_SUM_COLUMNS,
+    }
+    required = {
+        "completed",
+        *always_finite_numeric,
+        *conditionally_finite_physical,
     }
     missing = sorted(required.difference(voyage_metrics.columns))
     if missing:
         raise ValueError(f"voyage metrics cannot rebuild summary; missing: {missing}")
+    numeric_metrics = voyage_metrics.copy()
+    for name in sorted(always_finite_numeric):
+        values = pd.to_numeric(voyage_metrics[name], errors="coerce")
+        if values.isna().any() or not np.isfinite(values.to_numpy(dtype=float)).all():
+            raise ValueError(f"{name} must contain finite numeric values")
+        numeric_metrics[name] = values
+    count_columns = {
+        "expected_step_count",
+        "attempted_step_count",
+        "applied_step_count",
+        "solver_failure_count",
+        "primal_infeasible_count",
+        "max_iter_count",
+    }
+    for name in count_columns:
+        if (numeric_metrics[name] < 0).any():
+            raise ValueError(f"{name} must contain non-negative values")
+    if float(numeric_metrics["attempted_step_count"].sum()) <= 0.0:
+        raise ValueError("attempted_step_count must have a positive configuration total")
+    applied = numeric_metrics["applied_step_count"]
+    for name in sorted(conditionally_finite_physical):
+        raw_values = voyage_metrics[name]
+        values = pd.to_numeric(raw_values, errors="coerce")
+        invalid_tokens = raw_values.notna() & values.isna()
+        infinite = values.notna() & ~np.isfinite(values.to_numpy(dtype=float))
+        missing_after_applied = values.isna() & applied.gt(0)
+        if invalid_tokens.any() or infinite.any() or missing_after_applied.any():
+            raise ValueError(
+                f"{name} must be finite numeric when applied_step_count is positive; "
+                "only NaN with zero applied steps is allowed"
+            )
+        numeric_metrics[name] = values
+
+    configuration_p95_values = numeric_metrics[
+        "configuration_p95_solve_time_ms"
+    ].to_numpy(dtype=float)
+    if not np.equal(configuration_p95_values, configuration_p95_values[0]).all():
+        raise ValueError("configuration p95 values must be identical in every voyage row")
+    configuration_p95 = float(configuration_p95_values[0])
+    try:
+        persisted_p95 = float(persisted_summary["p95_solve_time_ms"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("persisted exact aggregate p95 is invalid") from exc
+    if not np.isfinite(persisted_p95) or persisted_p95 != configuration_p95:
+        raise ValueError("configuration p95 mismatch between CSV and persisted summary")
+
     completed = (
         _normalized_success_flags(voyage_metrics["completed"])
         .fillna(False)
         .astype(bool)
     )
-    attempted = pd.to_numeric(
-        voyage_metrics["attempted_step_count"], errors="coerce"
-    )
-    voyage_means = pd.to_numeric(
-        voyage_metrics["mean_solve_time_ms"], errors="coerce"
-    )
-    if attempted.isna().any() or voyage_means.isna().any() or attempted.sum() <= 0:
-        mean_solve_ms = float("nan")
-    else:
-        mean_solve_ms = float((attempted * voyage_means).sum() / attempted.sum())
+    attempted = numeric_metrics["attempted_step_count"]
+    voyage_means = numeric_metrics["mean_solve_time_ms"]
+    mean_solve_ms = float((attempted * voyage_means).sum() / attempted.sum())
     rebuilt: dict[str, Any] = {
         "config_id": case.config_id,
         "varied_weight": case.varied_weight or "baseline",
@@ -1360,35 +1420,33 @@ def _rebuild_configuration_summary(
         "voyage_count": int(len(voyage_metrics)),
         "completed_voyage_count": int(completed.sum()),
         "completion_rate": float(completed.mean()),
-        "initial_soc": float(pd.to_numeric(voyage_metrics["initial_soc"]).mean()),
-        "final_soc_mean": float(pd.to_numeric(voyage_metrics["final_soc"]).mean()),
-        "delta_soc_mean": float(pd.to_numeric(voyage_metrics["delta_soc"]).mean()),
-        "min_soc": float(pd.to_numeric(voyage_metrics["min_soc"]).min()),
-        "max_soc": float(pd.to_numeric(voyage_metrics["max_soc"]).max()),
+        "initial_soc": float(numeric_metrics["initial_soc"].mean()),
+        "final_soc_mean": float(numeric_metrics["final_soc"].mean()),
+        "delta_soc_mean": float(numeric_metrics["delta_soc"].mean()),
+        "min_soc": float(numeric_metrics["min_soc"].min()),
+        "max_soc": float(numeric_metrics["max_soc"].max()),
         "max_power_balance_residual_kw": float(
-            pd.to_numeric(voyage_metrics["max_power_balance_residual_kw"]).max()
+            numeric_metrics["max_power_balance_residual_kw"].max()
         ),
         "max_fc_ramp_kw_per_step": float(
-            pd.to_numeric(voyage_metrics["max_fc_ramp_kw_per_step"]).max()
+            numeric_metrics["max_fc_ramp_kw_per_step"].max()
         ),
-        "max_fc_kw": float(pd.to_numeric(voyage_metrics["max_fc_kw"]).max()),
-        "min_fc_kw": float(pd.to_numeric(voyage_metrics["min_fc_kw"]).min()),
+        "max_fc_kw": float(numeric_metrics["max_fc_kw"].max()),
+        "min_fc_kw": float(numeric_metrics["min_fc_kw"].min()),
         "max_batt_discharge_kw": float(
-            pd.to_numeric(voyage_metrics["max_batt_discharge_kw"]).max()
+            numeric_metrics["max_batt_discharge_kw"].max()
         ),
         "max_batt_charge_kw": float(
-            pd.to_numeric(voyage_metrics["max_batt_charge_kw"]).max()
+            numeric_metrics["max_batt_charge_kw"].max()
         ),
         "mean_solve_time_ms": mean_solve_ms,
-        "p95_solve_time_ms": persisted_summary.get("p95_solve_time_ms"),
-        "max_solve_time_ms": float(
-            pd.to_numeric(voyage_metrics["max_solve_time_ms"]).max()
-        ),
+        "p95_solve_time_ms": configuration_p95,
+        "max_solve_time_ms": float(numeric_metrics["max_solve_time_ms"].max()),
         "metrics_comparable": bool(completed.all()),
     }
     rebuilt.update(
         {
-            name: float(pd.to_numeric(voyage_metrics[name]).sum())
+            name: float(numeric_metrics[name].sum())
             for name in _SUMMARY_SUM_COLUMNS
         }
     )
@@ -1400,28 +1458,24 @@ def _rebuild_configuration_summary(
         raise ValueError("persisted configuration summary schema does not match metrics")
     for name, rebuilt_value in rebuilt.items():
         persisted_value = persisted_summary[name]
-        if name == "p95_solve_time_ms":
-            try:
-                if not np.isfinite(float(persisted_value)):
-                    raise ValueError("persisted exact aggregate p95 is not finite")
-            except (TypeError, ValueError) as exc:
-                raise ValueError("persisted exact aggregate p95 is invalid") from exc
-            continue
         if isinstance(rebuilt_value, (int, float, np.integer, np.floating)) and not isinstance(
             rebuilt_value, (bool, np.bool_)
         ):
-            try:
-                matches = bool(
-                    np.isclose(
-                        float(rebuilt_value),
-                        float(persisted_value),
-                        rtol=1.0e-12,
-                        atol=1.0e-12,
-                        equal_nan=True,
+            if persisted_value is None and np.isnan(float(rebuilt_value)):
+                matches = True
+            else:
+                try:
+                    matches = bool(
+                        np.isclose(
+                            float(rebuilt_value),
+                            float(persisted_value),
+                            rtol=1.0e-12,
+                            atol=1.0e-12,
+                            equal_nan=True,
+                        )
                     )
-                )
-            except (TypeError, ValueError):
-                matches = False
+                except (TypeError, ValueError):
+                    matches = False
         else:
             matches = rebuilt_value == persisted_value
         if not matches:
@@ -1429,7 +1483,13 @@ def _rebuild_configuration_summary(
     # CSV values are authoritative and are all checked above. Returning the JSON
     # serialization preserves the exact original row, including the persisted
     # all-step p95 that cannot be derived from seven voyage-level percentiles.
-    return dict(persisted_summary)
+    reused_summary = dict(persisted_summary)
+    for name, rebuilt_value in rebuilt.items():
+        if reused_summary[name] is None and isinstance(rebuilt_value, float) and np.isnan(
+            rebuilt_value
+        ):
+            reused_summary[name] = rebuilt_value
+    return reused_summary
 
 
 def load_matching_case(
@@ -1490,13 +1550,14 @@ def load_matching_case(
     if "config_id" not in voyage_metrics or not voyage_metrics["config_id"].astype(str).eq(case.config_id).all():
         raise ValueError("voyage metrics configuration mismatch")
     for name, expected_weight in expected_weights.items():
-        if name not in voyage_metrics or not np.allclose(
-            pd.to_numeric(voyage_metrics[name], errors="coerce"),
-            expected_weight,
-            rtol=0.0,
-            atol=0.0,
-        ):
+        if name not in voyage_metrics:
+            raise ValueError(f"voyage metrics weight is missing: {name}")
+        values = pd.to_numeric(voyage_metrics[name], errors="coerce")
+        if values.isna().any() or not np.isfinite(values.to_numpy(dtype=float)).all():
+            raise ValueError(f"{name} must contain finite numeric values")
+        if not np.allclose(values, expected_weight, rtol=0.0, atol=0.0):
             raise ValueError(f"voyage metrics weight mismatch: {name}")
+        voyage_metrics[name] = values
 
     expected_plot_names = {
         f"{voyage}_power_soc_objectives.png" for voyage in expected_voyage_list
@@ -1536,6 +1597,22 @@ def write_summary_table(table: pd.DataFrame, output_path: Path) -> None:
 
 def write_summary_report(table: pd.DataFrame, output_path: Path) -> None:
     _validate_summary_table(table)
+    count_columns = ("voyage_count", "completed_voyage_count")
+    missing_counts = [name for name in count_columns if name not in table.columns]
+    if missing_counts:
+        raise ValueError(
+            f"summary report is missing required columns: {missing_counts}"
+        )
+    numeric_counts: dict[str, pd.Series] = {}
+    for name in count_columns:
+        values = pd.to_numeric(table[name], errors="coerce")
+        if (
+            values.isna().any()
+            or not np.isfinite(values.to_numpy(dtype=float)).all()
+            or (values < 0).any()
+        ):
+            raise ValueError(f"summary report {name} must contain finite non-negative values")
+        numeric_counts[name] = values
     expected_ids = [case.config_id for case in build_sensitivity_cases()]
     actual_ids = table["config_id"].astype(str).tolist()
     if actual_ids == expected_ids:
@@ -1544,12 +1621,8 @@ def write_summary_report(table: pd.DataFrame, output_path: Path) -> None:
         coverage = "baseline-only"
     else:
         coverage = "incomplete one-factor table"
-    voyage_count = int(pd.to_numeric(table.get("voyage_count", 0), errors="coerce").fillna(0).sum())
-    completed_count = int(
-        pd.to_numeric(table.get("completed_voyage_count", 0), errors="coerce")
-        .fillna(0)
-        .sum()
-    )
+    voyage_count = int(numeric_counts["voyage_count"].sum())
+    completed_count = int(numeric_counts["completed_voyage_count"].sum())
     lines = [
         "# N=6 Four-Objective MPC Sensitivity",
         "",
@@ -1621,42 +1694,44 @@ def write_summary_figures(table: pd.DataFrame, summary_dir: Path) -> None:
         ):
             raise ValueError(f"{weight_name} sensitivity requires weights 0.25,0.5,1,2,4")
         figure, axes = plt.subplots(3, 2, figsize=(12, 11), sharex=True)
-        flat_axes = np.asarray(axes).reshape(-1)
-        for axis, (metric, label) in zip(flat_axes[:4], panel_specs):
-            axis.plot(x_values, pd.to_numeric(subset[metric]), marker="o")
-            axis.set_ylabel(label)
-        flat_axes[4].plot(
-            x_values,
-            pd.to_numeric(subset["final_soc_mean"]),
-            marker="o",
-            label="Final SOC mean",
-        )
-        flat_axes[4].plot(
-            x_values,
-            pd.to_numeric(subset["min_soc"]),
-            marker="s",
-            label="Minimum SOC",
-        )
-        flat_axes[4].set_ylabel("SOC")
-        flat_axes[4].legend(loc="best")
-        flat_axes[5].plot(
-            x_values,
-            pd.to_numeric(subset["completion_rate"]),
-            marker="o",
-        )
-        flat_axes[5].set_ylabel("Completion rate")
-        for axis in flat_axes:
-            axis.grid(True, alpha=0.25)
-            axis.set_xlabel(weight_name)
-            axis.set_xticks(WEIGHT_VALUES)
-        figure.suptitle(f"{weight_name} one-factor sensitivity")
-        figure.tight_layout()
-        figure.savefig(
-            output_root / f"{weight_name}_sensitivity.png",
-            dpi=150,
-            bbox_inches="tight",
-        )
-        plt.close(figure)
+        try:
+            flat_axes = np.asarray(axes).reshape(-1)
+            for axis, (metric, label) in zip(flat_axes[:4], panel_specs):
+                axis.plot(x_values, pd.to_numeric(subset[metric]), marker="o")
+                axis.set_ylabel(label)
+            flat_axes[4].plot(
+                x_values,
+                pd.to_numeric(subset["final_soc_mean"]),
+                marker="o",
+                label="Final SOC mean",
+            )
+            flat_axes[4].plot(
+                x_values,
+                pd.to_numeric(subset["min_soc"]),
+                marker="s",
+                label="Minimum SOC",
+            )
+            flat_axes[4].set_ylabel("SOC")
+            flat_axes[4].legend(loc="best")
+            flat_axes[5].plot(
+                x_values,
+                pd.to_numeric(subset["completion_rate"]),
+                marker="o",
+            )
+            flat_axes[5].set_ylabel("Completion rate")
+            for axis in flat_axes:
+                axis.grid(True, alpha=0.25)
+                axis.set_xlabel(weight_name)
+                axis.set_xticks(WEIGHT_VALUES)
+            figure.suptitle(f"{weight_name} one-factor sensitivity")
+            figure.tight_layout()
+            figure.savefig(
+                output_root / f"{weight_name}_sensitivity.png",
+                dpi=150,
+                bbox_inches="tight",
+            )
+        finally:
+            plt.close(figure)
     artifacts = list(output_root.iterdir())
     if {path.name for path in artifacts} != allowed_names or not all(
         path.is_file() for path in artifacts

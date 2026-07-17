@@ -1367,6 +1367,14 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
             )
             self.assertTrue(metadata["first_move_only"])
             self.assertEqual(metadata["configuration_summary"], result["summary"])
+            written_metrics = pd.read_csv(case_dir / "voyage_metrics.csv")
+            self.assertIn("configuration_p95_solve_time_ms", written_metrics.columns)
+            np.testing.assert_allclose(
+                written_metrics["configuration_p95_solve_time_ms"],
+                result["summary"]["p95_solve_time_ms"],
+                rtol=0.0,
+                atol=0.0,
+            )
 
     def test_diagnostic_artifact_has_one_plot_and_is_incomplete(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
@@ -1474,6 +1482,137 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
                     formal_complete=True,
                 )
 
+    def test_reuse_cross_checks_exact_p95_between_csv_and_json(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        result = self._synthetic_result(module, module.EXPECTED_TEST_VOYAGES)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            input_path = root / "input.parquet"
+            input_path.write_bytes(b"input")
+            with patch.object(module, "write_voyage_plot", side_effect=self._fake_plot):
+                case_dir = module.write_configuration_artifacts(
+                    result,
+                    output_dir=root / "output",
+                    input_path=input_path,
+                    overwrite=False,
+                    diagnostic_voyage=None,
+                )
+            metadata_path = case_dir / "config.json"
+            metrics_path = case_dir / "voyage_metrics.csv"
+            original_metadata = json.loads(metadata_path.read_text("utf-8"))
+            original_metrics = pd.read_csv(metrics_path)
+
+            changed_metadata = json.loads(json.dumps(original_metadata))
+            changed_metadata["configuration_summary"]["p95_solve_time_ms"] += 1.0
+            metadata_path.write_text(json.dumps(changed_metadata), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "p95"):
+                module.load_matching_case(
+                    case_dir,
+                    case=result["case"],
+                    input_path=input_path,
+                    expected_voyages=module.EXPECTED_TEST_VOYAGES,
+                    formal_complete=True,
+                )
+            metadata_path.write_text(json.dumps(original_metadata), encoding="utf-8")
+
+            for name, bad_value in (("inconsistent", 99.0), ("infinite", np.inf)):
+                with self.subTest(name=name):
+                    changed_metrics = original_metrics.copy()
+                    changed_metrics.loc[0, "configuration_p95_solve_time_ms"] = bad_value
+                    changed_metrics.to_csv(metrics_path, index=False)
+                    with self.assertRaisesRegex(ValueError, "p95"):
+                        module.load_matching_case(
+                            case_dir,
+                            case=result["case"],
+                            input_path=input_path,
+                            expected_voyages=module.EXPECTED_TEST_VOYAGES,
+                            formal_complete=True,
+                        )
+
+    def test_reuse_rejects_missing_nonnumeric_infinite_or_negative_metrics(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        result = self._synthetic_result(module, module.EXPECTED_TEST_VOYAGES)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            input_path = root / "input.parquet"
+            input_path.write_bytes(b"input")
+            with patch.object(module, "write_voyage_plot", side_effect=self._fake_plot):
+                case_dir = module.write_configuration_artifacts(
+                    result,
+                    output_dir=root / "output",
+                    input_path=input_path,
+                    overwrite=False,
+                    diagnostic_voyage=None,
+                )
+            metrics_path = case_dir / "voyage_metrics.csv"
+            original = pd.read_csv(metrics_path)
+            mutations = (
+                ("solver_failure_count", np.nan, "finite numeric"),
+                ("mean_solve_time_ms", "not-a-number", "finite numeric"),
+                ("initial_soc", np.inf, "finite numeric"),
+                ("expected_step_count", np.inf, "finite numeric"),
+                ("attempted_step_count", -1, "non-negative"),
+                ("applied_step_count", np.nan, "finite numeric"),
+            )
+            for column, bad_value, message in mutations:
+                with self.subTest(column=column):
+                    changed = original.copy()
+                    if isinstance(bad_value, str):
+                        changed[column] = changed[column].astype(object)
+                    elif not np.isfinite(float(bad_value)):
+                        changed[column] = changed[column].astype(float)
+                    changed.loc[0, column] = bad_value
+                    changed.to_csv(metrics_path, index=False)
+                    with self.assertRaisesRegex(ValueError, message):
+                        module.load_matching_case(
+                            case_dir,
+                            case=result["case"],
+                            input_path=input_path,
+                            expected_voyages=module.EXPECTED_TEST_VOYAGES,
+                            formal_complete=True,
+                        )
+
+    def test_reuse_allows_conditional_physical_nan_when_no_step_was_applied(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        result = self._synthetic_result(module, module.EXPECTED_TEST_VOYAGES)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            input_path = root / "input.parquet"
+            input_path.write_bytes(b"input")
+            with patch.object(module, "write_voyage_plot", side_effect=self._fake_plot):
+                case_dir = module.write_configuration_artifacts(
+                    result,
+                    output_dir=root / "output",
+                    input_path=input_path,
+                    overwrite=False,
+                    diagnostic_voyage=None,
+                )
+            metrics_path = case_dir / "voyage_metrics.csv"
+            metrics = pd.read_csv(metrics_path)
+            metrics.loc[0, "applied_step_count"] = 0
+            for column in (
+                "max_power_balance_residual_kw",
+                "max_fc_ramp_kw_per_step",
+                "max_fc_kw",
+                "min_fc_kw",
+                "max_batt_discharge_kw",
+                "max_batt_charge_kw",
+            ):
+                metrics.loc[0, column] = np.nan
+            metrics.to_csv(metrics_path, index=False)
+
+            loaded = module.load_matching_case(
+                case_dir,
+                case=result["case"],
+                input_path=input_path,
+                expected_voyages=module.EXPECTED_TEST_VOYAGES,
+                formal_complete=True,
+            )
+            self.assertEqual(loaded, result["summary"])
+
     def test_voyage_plot_has_four_axes_and_marks_failure_on_every_axis(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
 
@@ -1504,6 +1643,23 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
                     for line in axis.lines
                 )
             )
+
+    def test_voyage_plot_closes_figure_when_save_fails(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        frame = self._synthetic_result(module, ("voyage_060",))["controls"]
+        module.plt.close("all")
+        before = module.plt.get_fignums()
+        with tempfile.TemporaryDirectory() as temporary, patch(
+            "matplotlib.figure.Figure.savefig", side_effect=RuntimeError("save failed")
+        ):
+            with self.assertRaisesRegex(RuntimeError, "save failed"):
+                module.write_voyage_plot(
+                    frame,
+                    Path(temporary) / "plot.png",
+                    config_id="baseline_1_1_1_1",
+                )
+        self.assertEqual(module.plt.get_fignums(), before)
 
     def test_summary_outputs_have_exact_schema_paths_and_no_selection_fields(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
@@ -1543,6 +1699,33 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
             self.assertIn("no automatic best", report)
             with self.assertRaises(ValueError):
                 module.write_summary_table(table.assign(score=1.0), root / "bad.csv")
+
+    def test_summary_report_requires_explicit_voyage_count_columns(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        table = self._summary_table(module)
+        with tempfile.TemporaryDirectory() as temporary:
+            for column in ("voyage_count", "completed_voyage_count"):
+                with self.subTest(column=column), self.assertRaisesRegex(
+                    ValueError, column
+                ):
+                    module.write_summary_report(
+                        table.drop(columns=column),
+                        Path(temporary) / "summary.md",
+                    )
+
+    def test_summary_figure_closes_figure_when_save_fails(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        table = self._summary_table(module)
+        module.plt.close("all")
+        before = module.plt.get_fignums()
+        with tempfile.TemporaryDirectory() as temporary, patch(
+            "matplotlib.figure.Figure.savefig", side_effect=RuntimeError("save failed")
+        ):
+            with self.assertRaisesRegex(RuntimeError, "save failed"):
+                module.write_summary_figures(table, Path(temporary) / "summary")
+        self.assertEqual(module.plt.get_fignums(), before)
 
     def test_summary_figures_reject_unknown_entry_without_deleting_or_plotting(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
