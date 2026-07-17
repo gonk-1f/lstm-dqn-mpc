@@ -205,14 +205,25 @@ class TestFourObjectiveQp(unittest.TestCase):
         self.assertEqual(qp.metadata["variable_order"], "P_fc[0:N], P_batt[0:N], SOC[0:N+1]")
         self.assertEqual(qp.metadata["n_variables"], 7)
         self.assertEqual(qp.metadata["n_constraints"], 14)
-        np.testing.assert_allclose(
-            matrix[8, [2, 4, 5]], [1.0 / (3600.0 * 693.0), -1.0, 1.0]
+
+        soc_coefficient = 1.0 / (3600.0 * 693.0)
+        np.testing.assert_array_equal(
+            matrix[8], [0.0, 0.0, soc_coefficient, 0.0, -1.0, 1.0, 0.0]
         )
-        np.testing.assert_allclose(matrix[10, [0, 2]], [1.0, 1.0])
-        self.assertEqual((qp.l[10], qp.u[10]), (250.0, 250.0))
-        np.testing.assert_allclose(matrix[12, :2], [1.0, 0.0])
+        np.testing.assert_array_equal(
+            matrix[9], [0.0, 0.0, 0.0, soc_coefficient, 0.0, -1.0, 1.0]
+        )
+        np.testing.assert_array_equal(qp.l[8:10], [0.0, 0.0])
+        np.testing.assert_array_equal(qp.u[8:10], [0.0, 0.0])
+
+        np.testing.assert_array_equal(matrix[10], [1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0])
+        np.testing.assert_array_equal(matrix[11], [0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0])
+        np.testing.assert_array_equal(qp.l[10:12], [250.0, 300.0])
+        np.testing.assert_array_equal(qp.u[10:12], [250.0, 300.0])
+
+        np.testing.assert_array_equal(matrix[12], [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         self.assertEqual((qp.l[12], qp.u[12]), (152.0, 248.0))
-        np.testing.assert_allclose(matrix[13, :2], [-1.0, 1.0])
+        np.testing.assert_array_equal(matrix[13], [-1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         self.assertEqual((qp.l[13], qp.u[13]), (-48.0, 48.0))
 
     def test_obsolete_n6_objective_variants_are_rejected(self) -> None:
