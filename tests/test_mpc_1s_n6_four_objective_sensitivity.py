@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import sys
+import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
@@ -1156,6 +1158,522 @@ class TestSensitivityMetrics(unittest.TestCase):
         )
         self.assertIs(result["case"], case)
         self.assertEqual(result["summary"], {"config_id": case.config_id})
+
+
+class TestSensitivityArtifactsAndCli(unittest.TestCase):
+    @staticmethod
+    def _synthetic_result(module, voyages: tuple[str, ...]) -> dict:
+        case = module.build_sensitivity_cases()[0]
+        config = module.four_objective_config(case)
+        metrics_rows = []
+        control_rows = []
+        solver_rows = []
+        for index, voyage_id in enumerate(voyages):
+            total_h2 = 0.01 + index * 0.001
+            batt_sq = 100.0 + index
+            soc_sq = 0.001 + index * 0.0001
+            fc_sq = 25.0 + index
+            j_h2 = total_h2 / module.physical_h2_kg_step(
+                config, config.fuel_cell_max_kw
+            )
+            j_batt = batt_sq / config.battery_power_ref_kw**2
+            j_soc = soc_sq / config.soc_band**2
+            j_fc = fc_sq / module.resolved_ramp_kw_per_step(config) ** 2
+            solve_ms = 1.0 + index
+            metrics_rows.append(
+                {
+                    "config_id": case.config_id,
+                    "q_h2": case.q_h2,
+                    "q_batt": case.q_batt,
+                    "q_soc": case.q_soc,
+                    "q_fc_var": case.q_fc_var,
+                    "voyage_id": voyage_id,
+                    "completed": True,
+                    "solver_failure_count": 0,
+                    "primal_infeasible_count": 0,
+                    "max_iter_count": 0,
+                    "first_failure_time_s": np.nan,
+                    "mean_solve_time_ms": solve_ms,
+                    "p95_solve_time_ms": solve_ms,
+                    "max_solve_time_ms": solve_ms,
+                    "initial_soc": 0.55,
+                    "final_soc": 0.549 - index * 0.0001,
+                    "delta_soc": -0.001 - index * 0.0001,
+                    "min_soc": 0.549 - index * 0.0001,
+                    "max_soc": 0.55,
+                    "max_power_balance_residual_kw": 0.0,
+                    "max_fc_ramp_kw_per_step": 10.0,
+                    "max_fc_kw": 210.0,
+                    "min_fc_kw": 190.0,
+                    "max_batt_discharge_kw": 20.0,
+                    "max_batt_charge_kw": 5.0,
+                    "total_h2_kg": total_h2,
+                    "sum_p_batt_sq_kw2": batt_sq,
+                    "sum_soc_error_sq": soc_sq,
+                    "sum_fc_delta_sq_kw2": fc_sq,
+                    "J_h2_norm": j_h2,
+                    "J_batt_norm": j_batt,
+                    "J_soc_norm": j_soc,
+                    "J_fc_var_norm": j_fc,
+                    "weighted_h2_contribution": j_h2,
+                    "weighted_batt_contribution": j_batt,
+                    "weighted_soc_contribution": j_soc,
+                    "weighted_fc_var_contribution": j_fc,
+                    "total_weighted_objective": j_h2 + j_batt + j_soc + j_fc,
+                    "expected_step_count": 2,
+                    "attempted_step_count": 2,
+                    "applied_step_count": 2,
+                    "first_failure_status": "",
+                    "metrics_comparable": True,
+                }
+            )
+            for step in range(2):
+                control_rows.append(
+                    {
+                        "voyage_id": voyage_id,
+                        "time_s": float(step + 1),
+                        "load_actual_kw": 200.0 + step,
+                        "P_fc_actual_kw": 190.0 + step,
+                        "P_batt_actual_kw": 10.0,
+                        "SOC_actual": 0.55 - (step + 1) * 0.0001,
+                        "cum_J_h2_norm": 0.1 * (step + 1),
+                        "cum_J_batt_norm": 0.2 * (step + 1),
+                        "cum_J_soc_norm": 0.3 * (step + 1),
+                        "cum_J_fc_var_norm": 0.4 * (step + 1),
+                        "success": True,
+                        "status": "solved",
+                    }
+                )
+            solver_rows.extend([{"solve_ms": solve_ms}, {"solve_ms": solve_ms}])
+        voyage_metrics = pd.DataFrame(metrics_rows)
+        solver_frame = pd.DataFrame(solver_rows)
+        return {
+            "case": case,
+            "config": config,
+            "controls": pd.DataFrame(control_rows),
+            "solver_rows": solver_frame,
+            "voyage_metrics": voyage_metrics,
+            "summary": module.build_configuration_summary(
+                voyage_metrics, solver_frame, case=case
+            ),
+        }
+
+    @classmethod
+    def _summary_table(cls, module) -> pd.DataFrame:
+        baseline = cls._synthetic_result(module, module.EXPECTED_TEST_VOYAGES)[
+            "summary"
+        ]
+        rows = []
+        for index, case in enumerate(module.build_sensitivity_cases()):
+            row = dict(baseline)
+            row.update(
+                {
+                    "config_id": case.config_id,
+                    "varied_weight": case.varied_weight or "baseline",
+                    "weight_value": case.weight_value,
+                    "q_h2": case.q_h2,
+                    "q_batt": case.q_batt,
+                    "q_soc": case.q_soc,
+                    "q_fc_var": case.q_fc_var,
+                    "total_h2_kg": baseline["total_h2_kg"] + index,
+                    "sum_p_batt_sq_kw2": baseline["sum_p_batt_sq_kw2"] + index,
+                    "sum_soc_error_sq": baseline["sum_soc_error_sq"] + index,
+                    "sum_fc_delta_sq_kw2": baseline["sum_fc_delta_sq_kw2"] + index,
+                }
+            )
+            rows.append(row)
+        return pd.DataFrame(rows)
+
+    @staticmethod
+    def _fake_plot(_frame, path, **_kwargs) -> None:
+        Path(path).write_bytes(b"plot")
+
+    def test_prepare_case_dir_guards_paths_and_overwrites_only_exact_case(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.build_sensitivity_cases()[0]
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "output"
+            case_dir = module.prepare_case_dir(root, case, overwrite=False)
+            marker = case_dir / "old.txt"
+            marker.write_text("old", encoding="utf-8")
+            sibling = root / "keep"
+            sibling.mkdir()
+            (sibling / "keep.txt").write_text("keep", encoding="utf-8")
+            with self.assertRaises(FileExistsError):
+                module.prepare_case_dir(root, case, overwrite=False)
+            recreated = module.prepare_case_dir(root, case, overwrite=True)
+            self.assertEqual(recreated, case_dir)
+            self.assertFalse(marker.exists())
+            self.assertTrue((sibling / "keep.txt").is_file())
+
+            escaped = replace(case, config_id="../escaped")
+            with self.assertRaisesRegex(ValueError, "escaped"):
+                module.prepare_case_dir(root, escaped, overwrite=False)
+            diagnostic = module.prepare_case_dir(
+                root,
+                replace(case, config_id="diagnostic_case"),
+                overwrite=False,
+                diagnostic_voyage="voyage_060",
+            )
+            self.assertEqual(
+                diagnostic.parent,
+                (root / "diagnostics" / "voyage_060").resolve(),
+            )
+
+    def test_configuration_artifacts_are_compact_and_metadata_is_complete(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        result = self._synthetic_result(module, module.EXPECTED_TEST_VOYAGES)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            input_path = root / "input.parquet"
+            input_path.write_bytes(b"frozen-input")
+            with patch.object(module, "write_voyage_plot", side_effect=self._fake_plot):
+                case_dir = module.write_configuration_artifacts(
+                    result,
+                    output_dir=root / "artifacts",
+                    input_path=input_path,
+                    overwrite=False,
+                    diagnostic_voyage=None,
+                )
+            self.assertEqual(
+                {path.name for path in case_dir.iterdir()},
+                {"config.json", "voyage_metrics.csv", "plots"},
+            )
+            self.assertEqual(
+                {path.name for path in (case_dir / "plots").iterdir()},
+                {
+                    f"{voyage}_power_soc_objectives.png"
+                    for voyage in module.EXPECTED_TEST_VOYAGES
+                },
+            )
+            metadata = json.loads((case_dir / "config.json").read_text("utf-8"))
+            self.assertEqual(metadata["config_id"], "baseline_1_1_1_1")
+            self.assertEqual(set(metadata["weights"]), set(module.WEIGHT_NAMES))
+            self.assertEqual(metadata["model"]["objective_variant"], module.OBJECTIVE_VARIANT)
+            self.assertEqual(metadata["soc_reference"], 0.55)
+            self.assertEqual(metadata["qp_metadata"]["objective_variant"], module.OBJECTIVE_VARIANT)
+            self.assertFalse(Path(metadata["input_path"]).is_absolute())
+            self.assertEqual(metadata["input_sha256"], module.sha256_file(input_path))
+            self.assertEqual(len(metadata["implementation_sha256"]), 64)
+            self.assertEqual(metadata["voyages"], list(module.EXPECTED_TEST_VOYAGES))
+            self.assertTrue(metadata["formal_complete"])
+            self.assertFalse(metadata["lstm_used"])
+            self.assertFalse(metadata["dqn_used"])
+            self.assertEqual(
+                metadata["forecast"],
+                "t+1..t+6 actual natural-clipped spline load",
+            )
+            self.assertTrue(metadata["first_move_only"])
+            self.assertEqual(metadata["configuration_summary"], result["summary"])
+
+    def test_diagnostic_artifact_has_one_plot_and_is_incomplete(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        result = self._synthetic_result(module, ("voyage_060",))
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            input_path = root / "input.parquet"
+            input_path.write_bytes(b"input")
+            with patch.object(module, "write_voyage_plot", side_effect=self._fake_plot):
+                case_dir = module.write_configuration_artifacts(
+                    result,
+                    output_dir=root / "output",
+                    input_path=input_path,
+                    overwrite=False,
+                    diagnostic_voyage="voyage_060",
+                )
+            self.assertEqual(
+                case_dir.parent,
+                (root / "output" / "diagnostics" / "voyage_060").resolve(),
+            )
+            self.assertEqual(len(list((case_dir / "plots").iterdir())), 1)
+            self.assertFalse(
+                json.loads((case_dir / "config.json").read_text("utf-8"))[
+                    "formal_complete"
+                ]
+            )
+
+    def test_load_matching_case_round_trips_summary_and_rejects_stale_metadata(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        result = self._synthetic_result(module, module.EXPECTED_TEST_VOYAGES)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            input_path = root / "input.parquet"
+            input_path.write_bytes(b"input")
+            with patch.object(module, "write_voyage_plot", side_effect=self._fake_plot):
+                case_dir = module.write_configuration_artifacts(
+                    result,
+                    output_dir=root / "output",
+                    input_path=input_path,
+                    overwrite=False,
+                    diagnostic_voyage=None,
+                )
+            loaded = module.load_matching_case(
+                case_dir,
+                case=result["case"],
+                input_path=input_path,
+                expected_voyages=module.EXPECTED_TEST_VOYAGES,
+                formal_complete=True,
+            )
+            self.assertEqual(loaded, result["summary"])
+
+            metadata_path = case_dir / "config.json"
+            original = json.loads(metadata_path.read_text("utf-8"))
+            mutations = {
+                "weight": lambda value: value["weights"].__setitem__("q_h2", 0.25),
+                "objective": lambda value: value["model"].__setitem__(
+                    "objective_variant", "stale"
+                ),
+                "input": lambda value: value.__setitem__("input_sha256", "0" * 64),
+                "implementation": lambda value: value.__setitem__(
+                    "implementation_sha256", "0" * 64
+                ),
+                "complete": lambda value: value.__setitem__("formal_complete", False),
+                "voyages": lambda value: value.__setitem__(
+                    "voyages", list(reversed(value["voyages"]))
+                ),
+            }
+            for name, mutate in mutations.items():
+                with self.subTest(name=name):
+                    changed = json.loads(json.dumps(original))
+                    mutate(changed)
+                    metadata_path.write_text(json.dumps(changed), encoding="utf-8")
+                    with self.assertRaises(ValueError):
+                        module.load_matching_case(
+                            case_dir,
+                            case=result["case"],
+                            input_path=input_path,
+                            expected_voyages=module.EXPECTED_TEST_VOYAGES,
+                            formal_complete=True,
+                        )
+            metadata_path.write_text(json.dumps(original), encoding="utf-8")
+
+            metrics_path = case_dir / "voyage_metrics.csv"
+            original_metrics = metrics_path.read_text("utf-8")
+            result["voyage_metrics"].iloc[:-1].to_csv(metrics_path, index=False)
+            with self.assertRaises(ValueError):
+                module.load_matching_case(
+                    case_dir,
+                    case=result["case"],
+                    input_path=input_path,
+                    expected_voyages=module.EXPECTED_TEST_VOYAGES,
+                    formal_complete=True,
+                )
+            metrics_path.write_text(original_metrics, encoding="utf-8")
+            plot = case_dir / "plots" / "voyage_066_power_soc_objectives.png"
+            plot.unlink()
+            with self.assertRaises(ValueError):
+                module.load_matching_case(
+                    case_dir,
+                    case=result["case"],
+                    input_path=input_path,
+                    expected_voyages=module.EXPECTED_TEST_VOYAGES,
+                    formal_complete=True,
+                )
+
+    def test_voyage_plot_has_four_axes_and_marks_failure_on_every_axis(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        frame = self._synthetic_result(module, ("voyage_060",))["controls"]
+        frame.loc[1, "success"] = False
+        frame.loc[1, "status"] = "maximum iterations reached"
+        captured = []
+        original_subplots = module.plt.subplots
+
+        def capture(*args, **kwargs):
+            figure, axes = original_subplots(*args, **kwargs)
+            captured.append((figure, axes))
+            return figure, axes
+
+        with tempfile.TemporaryDirectory() as temporary, patch.object(
+            module.plt, "subplots", side_effect=capture
+        ):
+            output = Path(temporary) / "plot.png"
+            module.write_voyage_plot(frame, output, config_id="baseline_1_1_1_1")
+            self.assertTrue(output.is_file())
+        figure, axes = captured[0]
+        self.assertEqual(len(figure.axes), 4)
+        for axis in np.asarray(axes).reshape(-1):
+            self.assertTrue(
+                any(
+                    len(np.asarray(line.get_xdata()).reshape(-1)) == 2
+                    and np.allclose(line.get_xdata(), [2.0, 2.0])
+                    for line in axis.lines
+                )
+            )
+
+    def test_summary_outputs_have_exact_schema_paths_and_no_selection_fields(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        table = self._summary_table(module)
+        captured = []
+        original_subplots = module.plt.subplots
+
+        def capture(*args, **kwargs):
+            figure, axes = original_subplots(*args, **kwargs)
+            captured.append(figure)
+            return figure, axes
+
+        with tempfile.TemporaryDirectory() as temporary, patch.object(
+            module.plt, "subplots", side_effect=capture
+        ):
+            root = Path(temporary)
+            module.write_summary_figures(table, root / "summary")
+            self.assertEqual(
+                {path.name for path in (root / "summary").iterdir()},
+                {f"{name}_sensitivity.png" for name in module.WEIGHT_NAMES},
+            )
+            self.assertEqual([len(figure.axes) for figure in captured], [6] * 4)
+            table_path = root / "table.csv"
+            report_path = root / "summary.md"
+            module.write_summary_table(table, table_path)
+            module.write_summary_report(table, report_path)
+            written = pd.read_csv(table_path)
+            self.assertEqual(len(written), 17)
+            self.assertEqual(len(written[list(module.WEIGHT_NAMES)].drop_duplicates()), 17)
+            for forbidden in ("selected", "score", "rank", "winner", "best"):
+                self.assertFalse(any(forbidden in name.lower() for name in written.columns))
+            report = report_path.read_text("utf-8").lower()
+            self.assertIn("offline oracle", report)
+            self.assertIn("no lstm", report)
+            self.assertIn("no dqn", report)
+            self.assertIn("no automatic best", report)
+            with self.assertRaises(ValueError):
+                module.write_summary_table(table.assign(score=1.0), root / "bad.csv")
+
+    def test_parser_is_minimal_required_and_mutually_exclusive(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        parser = module.build_parser()
+        baseline = parser.parse_args(
+            ["--baseline", "--voyage", "voyage_060", "--output-dir", "custom", "--overwrite"]
+        )
+        self.assertTrue(baseline.baseline)
+        self.assertFalse(baseline.one_factor)
+        self.assertEqual(baseline.voyage, "voyage_060")
+        self.assertEqual(baseline.output_dir, Path("custom"))
+        self.assertTrue(baseline.overwrite)
+        for arguments in (
+            [],
+            ["--baseline", "--one-factor"],
+            ["--baseline", "--voyage", "voyage_999"],
+            ["--baseline", "--input", "input.parquet"],
+            ["--baseline", "--max-steps", "1"],
+        ):
+            with (
+                self.subTest(arguments=arguments),
+                patch("sys.stderr"),
+                self.assertRaises(SystemExit),
+            ):
+                parser.parse_args(arguments)
+
+    def test_run_experiment_sequences_modes_reuses_baseline_and_skips_reports_for_diagnostic(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        formal_data = pd.DataFrame(
+            {
+                "voyage_id": list(module.EXPECTED_TEST_VOYAGES),
+                "time_s": np.zeros(7),
+                "load_total_kw": np.ones(7),
+            }
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            input_path = root / "input.parquet"
+            input_path.write_bytes(b"input")
+
+            def evaluate(case, *, data):
+                voyages = tuple(sorted(data["voyage_id"].astype(str).unique()))
+                result = self._synthetic_result(module, voyages)
+                result["case"] = case
+                result["config"] = module.four_objective_config(case)
+                result["summary"].update(
+                    {
+                        "config_id": case.config_id,
+                        "varied_weight": case.varied_weight or "baseline",
+                        "weight_value": case.weight_value,
+                        **{name: getattr(case, name) for name in module.WEIGHT_NAMES},
+                    }
+                )
+                return result
+
+            with (
+                patch.object(module, "load_spline_test_data", return_value=formal_data),
+                patch.object(module, "evaluate_configuration", side_effect=evaluate) as run,
+                patch.object(module, "write_configuration_artifacts"),
+                patch.object(module, "write_summary_table") as table_writer,
+                patch.object(module, "write_summary_report") as report_writer,
+                patch.object(module, "write_summary_figures") as figure_writer,
+            ):
+                table = module.run_experiment(
+                    mode="one-factor",
+                    input_path=input_path,
+                    output_dir=root / "output",
+                )
+            self.assertEqual(len(table), 17)
+            self.assertEqual(
+                [call.args[0].config_id for call in run.call_args_list],
+                [case.config_id for case in module.build_sensitivity_cases()],
+            )
+            table_writer.assert_called_once()
+            report_writer.assert_called_once()
+            figure_writer.assert_called_once_with(table, root / "output" / "summary")
+
+            baseline_dir = root / "reuse" / "baseline_1_1_1_1"
+            baseline_dir.mkdir(parents=True)
+            expected_summary = self._synthetic_result(
+                module, module.EXPECTED_TEST_VOYAGES
+            )["summary"]
+            with (
+                patch.object(module, "load_spline_test_data", return_value=formal_data),
+                patch.object(module, "load_matching_case", return_value=expected_summary) as reuse,
+                patch.object(module, "evaluate_configuration") as evaluate_mock,
+                patch.object(module, "write_summary_table"),
+                patch.object(module, "write_summary_report"),
+            ):
+                reused = module.run_experiment(
+                    mode="baseline",
+                    input_path=input_path,
+                    output_dir=root / "reuse",
+                )
+            self.assertEqual(reused.iloc[0].to_dict(), expected_summary)
+            reuse.assert_called_once()
+            evaluate_mock.assert_not_called()
+
+            with (
+                patch.object(module, "load_spline_test_data", return_value=formal_data),
+                patch.object(module, "evaluate_configuration", side_effect=evaluate),
+                patch.object(module, "write_configuration_artifacts") as artifact_writer,
+                patch.object(module, "write_summary_table") as diagnostic_table,
+                patch.object(module, "write_summary_report") as diagnostic_report,
+                patch.object(module, "write_summary_figures") as diagnostic_figures,
+            ):
+                diagnostic = module.run_experiment(
+                    mode="baseline",
+                    input_path=input_path,
+                    output_dir=root / "diagnostic",
+                    voyage_id="voyage_060",
+                )
+            self.assertEqual(len(diagnostic), 1)
+            self.assertEqual(artifact_writer.call_args.kwargs["diagnostic_voyage"], "voyage_060")
+            diagnostic_table.assert_not_called()
+            diagnostic_report.assert_not_called()
+            diagnostic_figures.assert_not_called()
+
+    def test_main_maps_exact_mode_to_run_experiment(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        with patch.object(module, "run_experiment") as run:
+            module.main(["--baseline", "--voyage", "voyage_060"])
+        run.assert_called_once_with(
+            mode="baseline",
+            output_dir=module.DEFAULT_OUTPUT_DIR,
+            voyage_id="voyage_060",
+            overwrite=False,
+        )
 
 
 if __name__ == "__main__":

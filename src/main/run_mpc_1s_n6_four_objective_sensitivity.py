@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import argparse
+import hashlib
+import json
+import shutil
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import sparse
@@ -1039,10 +1044,11 @@ def load_spline_test_data(input_path: str | Path) -> pd.DataFrame:
 
 
 def _portable_input_path(input_path: Path) -> Path:
+    resolved = input_path.resolve()
     try:
-        return input_path.resolve().relative_to(REPO_ROOT.resolve())
+        return resolved.relative_to(REPO_ROOT.resolve())
     except ValueError:
-        return input_path
+        return Path("external") / resolved.name
 
 
 def _json_ready(value: Any) -> Any:
@@ -1050,6 +1056,10 @@ def _json_ready(value: Any) -> Any:
         return {str(key): _json_ready(item) for key, item in value.items()}
     if isinstance(value, (list, tuple)):
         return [_json_ready(item) for item in value]
+    if isinstance(value, np.ndarray):
+        return [_json_ready(item) for item in value.tolist()]
+    if isinstance(value, (np.bool_,)):
+        return bool(value)
     if isinstance(value, (np.integer,)):
         return int(value)
     if isinstance(value, (np.floating, float)):
@@ -1058,3 +1068,674 @@ def _json_ready(value: Any) -> Any:
     if isinstance(value, Path):
         return value.as_posix()
     return value
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _implementation_sha256() -> str:
+    formulation_path = Path(__file__).parent / "mpc_solvers" / "mpc_qp_formulation.py"
+    return hashlib.sha256(
+        (sha256_file(Path(__file__)) + sha256_file(formulation_path)).encode("ascii")
+    ).hexdigest()
+
+
+def prepare_case_dir(
+    output_dir: Path,
+    case: SensitivityCase,
+    *,
+    overwrite: bool,
+    diagnostic_voyage: str | None = None,
+) -> Path:
+    root = Path(output_dir).resolve()
+    if diagnostic_voyage is None:
+        parent = root
+    else:
+        diagnostics_root = (root / "diagnostics").resolve()
+        parent = (diagnostics_root / str(diagnostic_voyage)).resolve()
+        if parent.parent != diagnostics_root:
+            raise ValueError("diagnostic path escaped output directory")
+    parent.mkdir(parents=True, exist_ok=True)
+    case_dir = (parent / case.config_id).resolve()
+    if case_dir.parent != parent:
+        raise ValueError("configuration path escaped output directory")
+    if case_dir.exists():
+        if not overwrite:
+            raise FileExistsError(
+                f"existing configuration requires validation or --overwrite: {case_dir}"
+            )
+        shutil.rmtree(case_dir)
+    case_dir.mkdir(parents=True)
+    return case_dir
+
+
+def configuration_metadata(
+    result: dict[str, Any],
+    *,
+    input_path: Path,
+    formal_complete: bool,
+) -> dict[str, Any]:
+    case = result["case"]
+    config = result["config"]
+    qp_metadata = build_qp_problem(
+        config,
+        load_forecast_kw=np.zeros(N6_HORIZON),
+        current_soc=FIXED_SOC_REFERENCE,
+        prev_fc_kw=0.0,
+        soc_reference=FIXED_SOC_REFERENCE,
+    ).metadata
+    return {
+        "config_id": case.config_id,
+        "weights": {
+            name: float(getattr(case, name)) for name in WEIGHT_NAMES
+        },
+        "model": asdict(config),
+        "soc_reference": FIXED_SOC_REFERENCE,
+        "qp_metadata": qp_metadata,
+        "input_path": _portable_input_path(Path(input_path)).as_posix(),
+        "input_sha256": sha256_file(Path(input_path)),
+        "implementation_sha256": _implementation_sha256(),
+        "voyages": result["voyage_metrics"]["voyage_id"].astype(str).tolist(),
+        "formal_complete": bool(formal_complete),
+        "lstm_used": False,
+        "dqn_used": False,
+        "forecast": "t+1..t+6 actual natural-clipped spline load",
+        "first_move_only": True,
+        "configuration_summary": result["summary"],
+        "configuration_summary_provenance": {
+            "recoverable_fields": "validated against voyage_metrics.csv on reuse",
+            "p95_solve_time_ms": (
+                "exact all-solver-step aggregate persisted because voyage-level "
+                "p95 values cannot recover it exactly"
+            ),
+        },
+    }
+
+
+def write_voyage_plot(
+    frame: pd.DataFrame,
+    output_path: Path,
+    *,
+    config_id: str,
+) -> None:
+    required = {
+        "time_s",
+        "load_actual_kw",
+        "P_fc_actual_kw",
+        "P_batt_actual_kw",
+        "SOC_actual",
+        "cum_J_h2_norm",
+        "cum_J_batt_norm",
+        "cum_J_soc_norm",
+        "cum_J_fc_var_norm",
+        "success",
+    }
+    missing = sorted(required.difference(frame.columns))
+    if missing:
+        raise ValueError(f"voyage plot is missing required columns: {missing}")
+    ordered = frame.sort_values("time_s", kind="stable")
+    time_s = pd.to_numeric(ordered["time_s"], errors="coerce")
+    figure, axes = plt.subplots(4, 1, sharex=True, figsize=(11, 12))
+    axes = np.asarray(axes).reshape(-1)
+
+    axes[0].plot(time_s, ordered["load_actual_kw"], label="Load", linewidth=1.2)
+    axes[0].plot(time_s, ordered["P_fc_actual_kw"], label="Fuel cell", linewidth=1.2)
+    axes[0].set_ylabel("Power (kW)")
+    axes[0].legend(loc="best")
+
+    axes[1].plot(time_s, ordered["P_batt_actual_kw"], label="Battery", linewidth=1.2)
+    axes[1].axhline(346.5, color="0.45", linestyle="--", linewidth=0.9)
+    axes[1].axhline(-346.5, color="0.45", linestyle="--", linewidth=0.9)
+    axes[1].set_ylabel("P_batt (kW)")
+    axes[1].legend(loc="best")
+
+    axes[2].plot(time_s, ordered["SOC_actual"], label="SOC", linewidth=1.2)
+    axes[2].axhline(0.2, color="0.45", linestyle="--", linewidth=0.9)
+    axes[2].axhline(FIXED_SOC_REFERENCE, color="tab:green", linestyle=":", linewidth=1.0)
+    axes[2].axhline(0.8, color="0.45", linestyle="--", linewidth=0.9)
+    axes[2].set_ylabel("SOC")
+    axes[2].legend(loc="best")
+
+    for column, label in (
+        ("cum_J_h2_norm", "H2 norm"),
+        ("cum_J_batt_norm", "Battery norm"),
+        ("cum_J_soc_norm", "SOC norm"),
+        ("cum_J_fc_var_norm", "FC variation norm"),
+    ):
+        axes[3].plot(time_s, ordered[column], label=label, linewidth=1.1)
+    axes[3].set_ylabel("Cumulative objective")
+    axes[3].set_xlabel("Time (s)")
+    axes[3].legend(loc="best", ncol=2)
+
+    success = _normalized_success_flags(ordered["success"]).fillna(False).astype(bool)
+    failures = ordered.loc[~success]
+    if not failures.empty:
+        failure_time = float(failures.iloc[0]["time_s"])
+        for axis in axes:
+            axis.axvline(
+                failure_time,
+                color="tab:red",
+                linestyle=":",
+                linewidth=1.2,
+                label="First failure",
+            )
+    for axis in axes:
+        axis.grid(True, alpha=0.25)
+    figure.suptitle(f"{config_id}: {ordered.iloc[0]['voyage_id']}")
+    figure.tight_layout()
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    figure.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(figure)
+
+
+def write_configuration_artifacts(
+    result: dict[str, Any],
+    *,
+    output_dir: Path,
+    input_path: Path,
+    overwrite: bool,
+    diagnostic_voyage: str | None,
+) -> Path:
+    case = result["case"]
+    case_dir = prepare_case_dir(
+        Path(output_dir),
+        case,
+        overwrite=overwrite,
+        diagnostic_voyage=diagnostic_voyage,
+    )
+    plot_dir = case_dir / "plots"
+    plot_dir.mkdir()
+    result["voyage_metrics"].to_csv(case_dir / "voyage_metrics.csv", index=False)
+    for voyage_id, frame in result["controls"].groupby("voyage_id", sort=True):
+        write_voyage_plot(
+            frame,
+            plot_dir / f"{voyage_id}_power_soc_objectives.png",
+            config_id=case.config_id,
+        )
+    metadata = configuration_metadata(
+        result,
+        input_path=Path(input_path),
+        formal_complete=diagnostic_voyage is None,
+    )
+    (case_dir / "config.json").write_text(
+        json.dumps(_json_ready(metadata), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return case_dir
+
+
+_SUMMARY_SUM_COLUMNS: tuple[str, ...] = (
+    "solver_failure_count",
+    "primal_infeasible_count",
+    "max_iter_count",
+    "total_h2_kg",
+    "sum_p_batt_sq_kw2",
+    "sum_soc_error_sq",
+    "sum_fc_delta_sq_kw2",
+    "J_h2_norm",
+    "J_batt_norm",
+    "J_soc_norm",
+    "J_fc_var_norm",
+    "weighted_h2_contribution",
+    "weighted_batt_contribution",
+    "weighted_soc_contribution",
+    "weighted_fc_var_contribution",
+    "total_weighted_objective",
+)
+_FORBIDDEN_FIELD_TOKENS: tuple[str, ...] = (
+    "selected",
+    "score",
+    "rank",
+    "winner",
+    "best",
+)
+
+
+def _reject_forbidden_fields(columns: Any) -> None:
+    forbidden = [
+        str(column)
+        for column in columns
+        if any(token in str(column).lower() for token in _FORBIDDEN_FIELD_TOKENS)
+    ]
+    if forbidden:
+        raise ValueError(f"automatic selection fields are forbidden: {forbidden}")
+
+
+def _rebuild_configuration_summary(
+    voyage_metrics: pd.DataFrame,
+    *,
+    case: SensitivityCase,
+    persisted_summary: dict[str, Any],
+) -> dict[str, Any]:
+    required = {
+        "completed",
+        "initial_soc",
+        "final_soc",
+        "delta_soc",
+        "min_soc",
+        "max_soc",
+        "max_power_balance_residual_kw",
+        "max_fc_ramp_kw_per_step",
+        "max_fc_kw",
+        "min_fc_kw",
+        "max_batt_discharge_kw",
+        "max_batt_charge_kw",
+        "mean_solve_time_ms",
+        "max_solve_time_ms",
+        "attempted_step_count",
+        *_SUMMARY_SUM_COLUMNS,
+    }
+    missing = sorted(required.difference(voyage_metrics.columns))
+    if missing:
+        raise ValueError(f"voyage metrics cannot rebuild summary; missing: {missing}")
+    completed = (
+        _normalized_success_flags(voyage_metrics["completed"])
+        .fillna(False)
+        .astype(bool)
+    )
+    attempted = pd.to_numeric(
+        voyage_metrics["attempted_step_count"], errors="coerce"
+    )
+    voyage_means = pd.to_numeric(
+        voyage_metrics["mean_solve_time_ms"], errors="coerce"
+    )
+    if attempted.isna().any() or voyage_means.isna().any() or attempted.sum() <= 0:
+        mean_solve_ms = float("nan")
+    else:
+        mean_solve_ms = float((attempted * voyage_means).sum() / attempted.sum())
+    rebuilt: dict[str, Any] = {
+        "config_id": case.config_id,
+        "varied_weight": case.varied_weight or "baseline",
+        "weight_value": float(case.weight_value),
+        "q_h2": float(case.q_h2),
+        "q_batt": float(case.q_batt),
+        "q_soc": float(case.q_soc),
+        "q_fc_var": float(case.q_fc_var),
+        "voyage_count": int(len(voyage_metrics)),
+        "completed_voyage_count": int(completed.sum()),
+        "completion_rate": float(completed.mean()),
+        "initial_soc": float(pd.to_numeric(voyage_metrics["initial_soc"]).mean()),
+        "final_soc_mean": float(pd.to_numeric(voyage_metrics["final_soc"]).mean()),
+        "delta_soc_mean": float(pd.to_numeric(voyage_metrics["delta_soc"]).mean()),
+        "min_soc": float(pd.to_numeric(voyage_metrics["min_soc"]).min()),
+        "max_soc": float(pd.to_numeric(voyage_metrics["max_soc"]).max()),
+        "max_power_balance_residual_kw": float(
+            pd.to_numeric(voyage_metrics["max_power_balance_residual_kw"]).max()
+        ),
+        "max_fc_ramp_kw_per_step": float(
+            pd.to_numeric(voyage_metrics["max_fc_ramp_kw_per_step"]).max()
+        ),
+        "max_fc_kw": float(pd.to_numeric(voyage_metrics["max_fc_kw"]).max()),
+        "min_fc_kw": float(pd.to_numeric(voyage_metrics["min_fc_kw"]).min()),
+        "max_batt_discharge_kw": float(
+            pd.to_numeric(voyage_metrics["max_batt_discharge_kw"]).max()
+        ),
+        "max_batt_charge_kw": float(
+            pd.to_numeric(voyage_metrics["max_batt_charge_kw"]).max()
+        ),
+        "mean_solve_time_ms": mean_solve_ms,
+        "p95_solve_time_ms": persisted_summary.get("p95_solve_time_ms"),
+        "max_solve_time_ms": float(
+            pd.to_numeric(voyage_metrics["max_solve_time_ms"]).max()
+        ),
+        "metrics_comparable": bool(completed.all()),
+    }
+    rebuilt.update(
+        {
+            name: float(pd.to_numeric(voyage_metrics[name]).sum())
+            for name in _SUMMARY_SUM_COLUMNS
+        }
+    )
+    for name in ("solver_failure_count", "primal_infeasible_count", "max_iter_count"):
+        rebuilt[name] = int(rebuilt[name])
+
+    _reject_forbidden_fields(persisted_summary)
+    if set(persisted_summary) != set(rebuilt):
+        raise ValueError("persisted configuration summary schema does not match metrics")
+    for name, rebuilt_value in rebuilt.items():
+        persisted_value = persisted_summary[name]
+        if name == "p95_solve_time_ms":
+            try:
+                if not np.isfinite(float(persisted_value)):
+                    raise ValueError("persisted exact aggregate p95 is not finite")
+            except (TypeError, ValueError) as exc:
+                raise ValueError("persisted exact aggregate p95 is invalid") from exc
+            continue
+        if isinstance(rebuilt_value, (int, float, np.integer, np.floating)) and not isinstance(
+            rebuilt_value, (bool, np.bool_)
+        ):
+            try:
+                matches = bool(
+                    np.isclose(
+                        float(rebuilt_value),
+                        float(persisted_value),
+                        rtol=1.0e-12,
+                        atol=1.0e-12,
+                        equal_nan=True,
+                    )
+                )
+            except (TypeError, ValueError):
+                matches = False
+        else:
+            matches = rebuilt_value == persisted_value
+        if not matches:
+            raise ValueError(f"persisted summary mismatch for {name}")
+    # CSV values are authoritative and are all checked above. Returning the JSON
+    # serialization preserves the exact original row, including the persisted
+    # all-step p95 that cannot be derived from seven voyage-level percentiles.
+    return dict(persisted_summary)
+
+
+def load_matching_case(
+    case_dir: Path,
+    *,
+    case: SensitivityCase,
+    input_path: Path,
+    expected_voyages: tuple[str, ...],
+    formal_complete: bool,
+) -> dict[str, Any]:
+    directory = Path(case_dir)
+    expected_root_entries = {"config.json", "voyage_metrics.csv", "plots"}
+    if not directory.is_dir() or {path.name for path in directory.iterdir()} != expected_root_entries:
+        raise ValueError(f"configuration artifact set is incomplete or unexpected: {directory}")
+    metadata_path = directory / "config.json"
+    metrics_path = directory / "voyage_metrics.csv"
+    plot_dir = directory / "plots"
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"invalid configuration metadata: {metadata_path}") from exc
+
+    if metadata.get("config_id") != case.config_id:
+        raise ValueError("configuration id mismatch")
+    weights = metadata.get("weights")
+    expected_weights = {name: float(getattr(case, name)) for name in WEIGHT_NAMES}
+    if not isinstance(weights, dict) or set(weights) != set(WEIGHT_NAMES):
+        raise ValueError("configuration weight schema mismatch")
+    try:
+        weight_matches = all(float(weights[name]) == value for name, value in expected_weights.items())
+    except (TypeError, ValueError):
+        weight_matches = False
+    if not weight_matches:
+        raise ValueError("configuration weights mismatch")
+    if metadata.get("model", {}).get("objective_variant") != OBJECTIVE_VARIANT:
+        raise ValueError("objective variant mismatch")
+    if metadata.get("qp_metadata", {}).get("objective_variant") != OBJECTIVE_VARIANT:
+        raise ValueError("QP objective variant mismatch")
+    if metadata.get("input_sha256") != sha256_file(Path(input_path)):
+        raise ValueError("input SHA256 mismatch")
+    if metadata.get("implementation_sha256") != _implementation_sha256():
+        raise ValueError("implementation SHA256 mismatch")
+    if metadata.get("formal_complete") is not bool(formal_complete):
+        raise ValueError("configuration completeness mismatch")
+    expected_voyage_list = [str(voyage) for voyage in expected_voyages]
+    if metadata.get("voyages") != expected_voyage_list:
+        raise ValueError("configuration voyage metadata mismatch")
+
+    try:
+        voyage_metrics = pd.read_csv(metrics_path, dtype={"voyage_id": "string"})
+    except (OSError, ValueError, pd.errors.ParserError) as exc:
+        raise ValueError(f"invalid voyage metrics: {metrics_path}") from exc
+    if len(voyage_metrics) != len(expected_voyage_list):
+        raise ValueError("voyage metrics row count mismatch")
+    actual_voyages = voyage_metrics["voyage_id"].astype(str).tolist()
+    if actual_voyages != expected_voyage_list:
+        raise ValueError("voyage metrics IDs mismatch")
+    if "config_id" not in voyage_metrics or not voyage_metrics["config_id"].astype(str).eq(case.config_id).all():
+        raise ValueError("voyage metrics configuration mismatch")
+    for name, expected_weight in expected_weights.items():
+        if name not in voyage_metrics or not np.allclose(
+            pd.to_numeric(voyage_metrics[name], errors="coerce"),
+            expected_weight,
+            rtol=0.0,
+            atol=0.0,
+        ):
+            raise ValueError(f"voyage metrics weight mismatch: {name}")
+
+    expected_plot_names = {
+        f"{voyage}_power_soc_objectives.png" for voyage in expected_voyage_list
+    }
+    if not plot_dir.is_dir() or {path.name for path in plot_dir.iterdir()} != expected_plot_names:
+        raise ValueError("voyage plot set mismatch")
+    if not all(path.is_file() for path in plot_dir.iterdir()):
+        raise ValueError("voyage plot path is not a file")
+    persisted_summary = metadata.get("configuration_summary")
+    if not isinstance(persisted_summary, dict):
+        raise ValueError("configuration summary metadata is missing")
+    return _rebuild_configuration_summary(
+        voyage_metrics,
+        case=case,
+        persisted_summary=persisted_summary,
+    )
+
+
+def _validate_summary_table(table: pd.DataFrame) -> None:
+    _reject_forbidden_fields(table.columns)
+    required = {"config_id", *WEIGHT_NAMES}
+    missing = sorted(required.difference(table.columns))
+    if missing:
+        raise ValueError(f"summary table is missing required columns: {missing}")
+    if table["config_id"].astype(str).duplicated().any():
+        raise ValueError("summary table configuration IDs must be unique")
+    if table[list(WEIGHT_NAMES)].duplicated().any():
+        raise ValueError("summary table weight tuples must be unique")
+
+
+def write_summary_table(table: pd.DataFrame, output_path: Path) -> None:
+    _validate_summary_table(table)
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    table.to_csv(path, index=False)
+
+
+def write_summary_report(table: pd.DataFrame, output_path: Path) -> None:
+    _validate_summary_table(table)
+    expected_ids = [case.config_id for case in build_sensitivity_cases()]
+    actual_ids = table["config_id"].astype(str).tolist()
+    if actual_ids == expected_ids:
+        coverage = "complete 17-configuration one-factor matrix"
+    elif actual_ids == expected_ids[:1]:
+        coverage = "baseline-only"
+    else:
+        coverage = "incomplete one-factor table"
+    voyage_count = int(pd.to_numeric(table.get("voyage_count", 0), errors="coerce").fillna(0).sum())
+    completed_count = int(
+        pd.to_numeric(table.get("completed_voyage_count", 0), errors="coerce")
+        .fillna(0)
+        .sum()
+    )
+    lines = [
+        "# N=6 Four-Objective MPC Sensitivity",
+        "",
+        f"- Coverage: {coverage}; {len(table)} configuration row(s).",
+        f"- Voyage completion: {completed_count}/{voyage_count} configuration-voyage runs.",
+        "- Boundary: offline oracle using t+1..t+6 actual natural-clipped spline load.",
+        "- Model usage: no LSTM; no DQN; first optimized move only.",
+        "- Decision boundary: no automatic best, score, rank, winner, or final weight selection.",
+        "",
+    ]
+    if coverage != "complete 17-configuration one-factor matrix":
+        lines.append(
+            "No sensitivity trend is claimed because the complete one-factor matrix is absent."
+        )
+    else:
+        lines.append(
+            "Physical trends and trade-offs must be read from the table and four sensitivity figures; this report does not name an optimum."
+        )
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_summary_figures(table: pd.DataFrame, summary_dir: Path) -> None:
+    _validate_summary_table(table)
+    cases = build_sensitivity_cases()
+    expected_ids = [case.config_id for case in cases]
+    if table["config_id"].astype(str).tolist() != expected_ids:
+        raise ValueError("summary figures require the exact baseline-first 17-case table")
+    required_metrics = {
+        "varied_weight",
+        "weight_value",
+        "total_h2_kg",
+        "sum_p_batt_sq_kw2",
+        "sum_soc_error_sq",
+        "sum_fc_delta_sq_kw2",
+        "final_soc_mean",
+        "min_soc",
+        "completion_rate",
+    }
+    missing = sorted(required_metrics.difference(table.columns))
+    if missing:
+        raise ValueError(f"summary figures are missing required columns: {missing}")
+    output_root = Path(summary_dir)
+    output_root.mkdir(parents=True, exist_ok=True)
+    baseline = table.iloc[[0]].copy()
+    panel_specs = (
+        ("total_h2_kg", "Total H2 (kg)"),
+        ("sum_p_batt_sq_kw2", "Sum P_batt^2 (kW^2)"),
+        ("sum_soc_error_sq", "Sum SOC error^2"),
+        ("sum_fc_delta_sq_kw2", "Sum FC delta^2 (kW^2)"),
+    )
+    for weight_name in WEIGHT_NAMES:
+        changed = table.loc[table["varied_weight"].astype(str).eq(weight_name)]
+        subset = pd.concat([baseline, changed], ignore_index=True).sort_values(
+            "weight_value", kind="stable"
+        )
+        x_values = pd.to_numeric(subset["weight_value"], errors="raise").to_numpy(dtype=float)
+        if len(subset) != 5 or not np.allclose(
+            x_values, WEIGHT_VALUES, rtol=0.0, atol=0.0
+        ):
+            raise ValueError(f"{weight_name} sensitivity requires weights 0.25,0.5,1,2,4")
+        figure, axes = plt.subplots(3, 2, figsize=(12, 11), sharex=True)
+        flat_axes = np.asarray(axes).reshape(-1)
+        for axis, (metric, label) in zip(flat_axes[:4], panel_specs):
+            axis.plot(x_values, pd.to_numeric(subset[metric]), marker="o")
+            axis.set_ylabel(label)
+        flat_axes[4].plot(
+            x_values,
+            pd.to_numeric(subset["final_soc_mean"]),
+            marker="o",
+            label="Final SOC mean",
+        )
+        flat_axes[4].plot(
+            x_values,
+            pd.to_numeric(subset["min_soc"]),
+            marker="s",
+            label="Minimum SOC",
+        )
+        flat_axes[4].set_ylabel("SOC")
+        flat_axes[4].legend(loc="best")
+        flat_axes[5].plot(
+            x_values,
+            pd.to_numeric(subset["completion_rate"]),
+            marker="o",
+        )
+        flat_axes[5].set_ylabel("Completion rate")
+        for axis in flat_axes:
+            axis.grid(True, alpha=0.25)
+            axis.set_xlabel(weight_name)
+            axis.set_xticks(WEIGHT_VALUES)
+        figure.suptitle(f"{weight_name} one-factor sensitivity")
+        figure.tight_layout()
+        figure.savefig(
+            output_root / f"{weight_name}_sensitivity.png",
+            dpi=150,
+            bbox_inches="tight",
+        )
+        plt.close(figure)
+
+
+def run_experiment(
+    *,
+    mode: str,
+    input_path: Path = DEFAULT_INPUT_PATH,
+    output_dir: Path = DEFAULT_OUTPUT_DIR,
+    voyage_id: str | None = None,
+    overwrite: bool = False,
+) -> pd.DataFrame:
+    if mode not in {"baseline", "one-factor"}:
+        raise ValueError("mode must be 'baseline' or 'one-factor'")
+    cases = build_sensitivity_cases()
+    selected_cases = cases[:1] if mode == "baseline" else cases
+    data = load_spline_test_data(Path(input_path))
+    if voyage_id is None:
+        actual_voyages = tuple(sorted(data["voyage_id"].astype(str).unique()))
+        if actual_voyages != EXPECTED_TEST_VOYAGES:
+            raise ValueError(
+                f"formal run requires {EXPECTED_TEST_VOYAGES}, found {actual_voyages}"
+            )
+    else:
+        if voyage_id not in EXPECTED_TEST_VOYAGES:
+            raise ValueError(f"unsupported voyage: {voyage_id}")
+        data = data.loc[data["voyage_id"].astype(str).eq(voyage_id)].copy()
+        if data.empty:
+            raise ValueError(f"input does not contain diagnostic voyage: {voyage_id}")
+
+    root = Path(output_dir)
+    summaries: list[dict[str, Any]] = []
+    for case in selected_cases:
+        case_dir = (
+            root / case.config_id
+            if voyage_id is None
+            else root / "diagnostics" / voyage_id / case.config_id
+        )
+        if case_dir.exists() and not overwrite:
+            expected = EXPECTED_TEST_VOYAGES if voyage_id is None else (voyage_id,)
+            summary = load_matching_case(
+                case_dir,
+                case=case,
+                input_path=Path(input_path),
+                expected_voyages=expected,
+                formal_complete=voyage_id is None,
+            )
+        else:
+            result = evaluate_configuration(case, data=data)
+            write_configuration_artifacts(
+                result,
+                output_dir=root,
+                input_path=Path(input_path),
+                overwrite=overwrite,
+                diagnostic_voyage=voyage_id,
+            )
+            summary = result["summary"]
+        summaries.append(summary)
+    table = pd.DataFrame(summaries)
+    if voyage_id is None:
+        write_summary_table(table, DEFAULT_TABLE_REPORT)
+        write_summary_report(table, DEFAULT_SUMMARY_REPORT)
+        if len(table) == len(cases):
+            write_summary_figures(table, root / "summary")
+    return table
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Run N=6 normalized four-objective MPC sensitivity"
+    )
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--baseline", action="store_true")
+    mode.add_argument("--one-factor", action="store_true")
+    parser.add_argument("--voyage", choices=EXPECTED_TEST_VOYAGES)
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
+    parser.add_argument("--overwrite", action="store_true")
+    return parser
+
+
+def main(argv: list[str] | None = None) -> None:
+    arguments = build_parser().parse_args(argv)
+    run_experiment(
+        mode="baseline" if arguments.baseline else "one-factor",
+        output_dir=arguments.output_dir,
+        voyage_id=arguments.voyage,
+        overwrite=arguments.overwrite,
+    )
+
+
+if __name__ == "__main__":
+    main()
