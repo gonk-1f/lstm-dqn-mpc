@@ -44,12 +44,20 @@ load data
 | SOC | `SOC_ref = 0.55`，`SOC_min = 0.2`，`SOC_max = 0.8`，当前 693 kWh benchmark 的 `SOC_band = 0.05` |
 | 燃料电池爬坡 | `48 kW/s` 硬约束 |
 | MPC 求解 | 凸 QP，OSQP，固定稀疏结构、参数更新、warm start 与等价数值缩放 |
-| `N=6` 离线权重实验 | 未来真实样条点 `t+1..t+6`，每次只执行第一步；不使用 LSTM |
+| `N=6` 四目标灵敏度 | offline oracle 使用真实样条点 `t+1..t+6`，每次只执行第一步；不使用 LSTM 或 DQN |
 | DQN 目标接口 | SineKAN Q 网络选择 `q_h2`、`q_soc`、`q_batt` |
 
-`N=60` 只作为历史 1 s 离线 OSQP solver/performance benchmark；论文目标 LSTM 预测时域是 `N=6`。二者不得作为同一个默认配置。2026-07-13 的首轮理想预知 `N=6` 实验完整测试了 A–D 四组指定候选，四组均未通过。随后严格冻结 `q_h2=0.5`、`q_batt=0.05`、`SOC_band=0.05`、`q_terminal_soc=0`，仅测试 `q_soc={5,10,20}`：三组均完成全部 7 航段，`q_soc=20` 是唯一满足最坏航段 SOC 净变化不低于 `-0.03` 等固定门禁的可行性见证。它尚未被提升为 provisional/accepted 论文权重，也未触发 DQN 工作。
+`N=60` 只作为历史 1 s 离线 OSQP solver/performance benchmark；论文目标 LSTM 预测时域是 `N=6`，二者不得作为同一个默认配置。当前唯一的正式 `N=6` 离线入口是 `src/main/run_mpc_1s_n6_four_objective_sensitivity.py`，其归一化目标为：
 
-随后针对 `q_soc=20` 做了 8 个 1 h 合成工况的近参考 SOC 专项诊断。结论为 `no_evidence_of_SOC_clamping`：它没有在 `SOC0=0.53` 时主动充电，也没有比 q10 更快恢复 `SOC0=0.57`；但仍存在 SOC 下漂、响应不对称和更高氢耗，因此该结论不构成正式权重接受。
+```text
+J = q_h2    * sum[k=0..5] m_H2(P_fc[k]) / 0.00883945296644347 kg
+  + q_batt  * sum[k=0..5] (P_batt[k] / 346.5 kW)^2
+  + q_soc   * sum[k=1..6] ((SOC[k] - 0.55) / 0.05)^2
+  + q_fc_var * (((P_fc[0] - P_fc_prev) / 48 kW)^2
+                + sum[k=1..5] ((P_fc[k] - P_fc[k-1]) / 48 kW)^2)
+```
+
+四个归一化参考分别是 560 kW、1 s 时的氢耗 `0.00883945296644347 kg/step`、`346.5 kW` 电池功率、`SOC_ref=0.55` 与 `SOC_band=0.05`、以及 `48 kW/step` 燃料电池变化量。baseline 为 `q_h2=q_batt=q_soc=q_fc_var=1`；one-factor 矩阵对每一项分别使用 `0.25, 0.5, 1, 2, 4`，共享全 1 baseline，共 17 个唯一配置。该流程不自动计算 best/score/rank/winner，也不接受最终权重；baseline 和完整 17 配置当前均为 **未运行**。
 
 ## Repository structure
 
@@ -58,9 +66,8 @@ load data
 | `src/forecasting/` | 30 s、1 s 和 10 ms LSTM、scaler、窗口与评价逻辑 |
 | `src/main/` | 数据构建、训练、诊断、CasADi LSTM-MPC 和 OSQP benchmark 入口 |
 | `src/main/mpc_solvers/` | 1 s 凸 QP 形式与约束结构 |
-| `src/main/run_mpc_1s_n6_weight_selection.py` | 离线理想预知 `N=6` 单候选 runner、指标、审计与报告生成 |
-| `src/main/run_mpc_1s_n6_qsoc_feasibility.py` | 仅改变 `q_soc` 的 `N=6` 结构可行性诊断；使用独立输出/报告路径 |
-| `src/main/run_mpc_1s_n6_soc_clamping_diagnostic.py` | q10/q20 的恒载与脉冲合成诊断；只判断近参考 SOC 是否被过度拉回 |
+| `src/main/run_mpc_1s_n6_four_objective_sensitivity.py` | 唯一 `N=6` offline-oracle baseline/one-factor runner；固定 17 配置、第一步执行、指标、图和报告 |
+| `tests/test_mpc_1s_n6_four_objective_sensitivity.py` | 唯一 `N=6` 四目标 focused test；冻结目标、时序、物理更新、产物与 CLI 契约 |
 | `src/mpc/` | 历史 CasADi/IPOPT 控制器、燃料电池氢耗曲线等组件 |
 | `src/dqn/` | DQN agent、动作映射、奖励和 MLP/KAN/SineKAN Q 网络 |
 | `src/envs/` | 多个历史 DQN/船舶环境；尚未统一为目标 N=6 QP-MPC 环境 |
@@ -100,8 +107,8 @@ python -m pip install casadi numpy pandas matplotlib xlrd scipy seaborn progress
 | 30 s LSTM 训练与测试汇总 | `python src/main/run_train_lstm_total_load_721.py --help` | 可用；已有 checkpoint 和逐 horizon 指标 |
 | 1 s LSTM 诊断 | `python src/main/run_lstm_spline_1s_hparam_search.py --help` | 辅助实验；现有 LSTM 未超过简单基线 |
 | 1 s OSQP `N=60` benchmark | `python src/main/benchmark_mpc_qp_osqp_1s.py --help` | historical；不再作为默认配置或继续搜索 |
-| 1 s 理想预知 `N=6` 固定权重实验 | `python src/main/run_mpc_1s_n6_weight_selection.py --candidate A` | A–D 已运行；四组均拒绝；不接 LSTM |
-| `N=6` 的 `q_soc`-only 可行性诊断 | `python src/main/run_mpc_1s_n6_qsoc_feasibility.py --all` | `q_soc={5,10,20}` 已运行；`q_soc=20` 为可行性见证；非正式接受配置 |
+| `N=6` 四目标全 1 baseline | `python src/main/run_mpc_1s_n6_four_objective_sensitivity.py --baseline` | **未运行**；offline oracle；不接 LSTM/DQN；只执行第一步 |
+| `N=6` 四目标 17 配置 one-factor | `python src/main/run_mpc_1s_n6_four_objective_sensitivity.py --one-factor` | **未运行**；不自动选择 best 或最终权重 |
 | 30 s CasADi LSTM-MPC | `python src/main/run_lstm_mpc_total_load_test.py --help` | 历史/支持性链路，参数体系与目标 OSQP 主线不同 |
 | 目标 1 s LSTM + `N=6` OSQP 闭环 | 尚无统一入口 | **not yet unified**；现有 N=6 入口仅使用理想预知负荷 |
 | 目标 DQN 训练与公平比较 | 无可接受入口 | **not yet unified**；现有脚本仍使用旧环境/动作/参数 |
@@ -117,17 +124,16 @@ python -m unittest discover -s tests -v
 ## Current status
 
 - 66 航段的 30 s 数据读取、46/13/7 划分和 30 s direct multi-output LSTM 路径已存在。
-- natural-clipped 1 s 离线数据、1 s LSTM 诊断、历史 `N=60` benchmark 以及理想预知 `N=6` runner/产物均已存在。
+- natural-clipped 1 s 离线数据、1 s LSTM 诊断、历史 `N=60` benchmark，以及唯一的 `N=6` 四目标 runner/focused test 均已存在。
 - 现有 1 s LSTM 在保留测试集上没有超过 current-hold/last-slope 等简单基线，因此不能作为正式预测优势证据。
-- 指定 A–D 四组 `693 kWh / 346.5 kW`、`N=6` 固定权重全部被拒绝：没有候选完成 7 航段闭环，最坏航段 SOC 净下降均约为 `-0.35`。
-- 严格限定的 `q_soc={5,10,20}` 诊断中三组均完成 7 航段；`q_soc=20` 的最坏航段 SOC 净变化为 `-0.021640`，但氢耗为 `284.452 kg`、FC 高于负荷比例为 `35.7336%`，因此只记录为结构可行性见证。
+- 全 1 baseline 与 17 配置 one-factor 正式结果均 **未运行**；`outputs/mpc_1s_n6_four_objective_sensitivity/` 和两份 `reports/mpc_1s_n6_four_objective_sensitivity_*` 当前不存在，不能报告数值或趋势。
 - 目标 `N=6` LSTM-OSQP 在线闭环、正式接受的固定权重、仅选三项 MPC 权重的 DQN 环境、SineKAN-DQN/MLP-DQN 公平比较均未完成。
 - 旧 `277.2 kWh`、`1806 kWh` 及不同动作空间仍存在于历史实现和输出中，但已不代表当前目标配置。
 
 ## Known limitations
 
 - 1 s spline 数据依赖相邻 30 s 节点，是离线重构，不具备在线因果性。
-- `q_soc=20` 已证明在当前离线理想预知实验中仅提高阶段 SOC 权重可以弥补短时域的 SOC 累计代价不足；其功率分配和经济性仍需正式工程审查，不能外推为在线 LSTM 闭环或最终最优权重。
+- 四目标 baseline 和 one-factor 矩阵尚未运行；在读取完整物理指标和逐航次曲线并完成人工审查前，不能声称任何趋势、下一搜索区间或最终最优权重。
 - LSTM 的 6 步预测尚未接入已验证的 `N=6` 时序执行路径。
 - OSQP benchmark 的求解失败路径只记录失败，尚未形成可部署的控制回退策略。
 - 现有 DQN 分支互不兼容，尚未形成目标状态、动作、奖励和闭环环境。
@@ -140,9 +146,9 @@ python -m unittest discover -s tests -v
 - 10 ms 原子序列划分：`outputs/config/millisecond_10ms_split_721.json`，seed `20260710`，scaler 仅拟合训练行。
 - 30 s LSTM 默认 seed 为 `42`；1 s Task C 诊断 seed 为 `123`。
 - 训练窗口必须按航次/原子序列构造，禁止跨边界；scaler 只在训练集拟合。
-- 主要产物位于 `outputs/lstm_total_load_721/`、`outputs/lstm_spline_1s_hparam_search/`、`outputs/mpc_solver_benchmark_1s/`、`outputs/mpc_1s_n6_weight_selection/` 和 `outputs/mpc_1s_n6_qsoc_feasibility/`。
+- 已存在的主要产物位于 `outputs/lstm_total_load_721/`、`outputs/lstm_spline_1s_hparam_search/` 和 `outputs/mpc_solver_benchmark_1s/`。`N=6` 四目标运行将写入 `outputs/mpc_1s_n6_four_objective_sensitivity/`、`reports/mpc_1s_n6_four_objective_sensitivity_summary.md` 与 `reports/mpc_1s_n6_four_objective_sensitivity_table.csv`；三者当前均不存在。
 - 运行前保存配置、随机种子、Git commit、输入 manifest 和逐航次/逐 horizon 指标；不要只保留聚合图。
-- 本轮代码测试保持全绿；依赖未锁定、历史绝对路径和第三方许可证问题仍使“干净环境完全可复现”结论不成立。
+- 本轮 focused 与保留 `N=60` 回归测试状态见 `STATUS.md`；依赖未锁定、历史绝对路径和第三方许可证问题仍使“干净环境完全可复现”结论不成立。
 
 ## Citation and third-party code
 

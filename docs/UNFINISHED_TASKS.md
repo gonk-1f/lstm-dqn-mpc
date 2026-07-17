@@ -15,24 +15,24 @@
 
 - **task:** 明确正式 1 s 实验的数据来源、decision time、LSTM history、h1–h6 预测含义、MPC stage 0–5 映射、实际负荷反馈和 SOC 更新时间。
 - **reason:** 离线 ideal-foresight `N=6` 路径已用测试固定为 `t+1..t+6`、只执行第一步和实际 SOC 更新，但正式 LSTM provider 的 history/h1–h6 映射、可用时刻和因果数据仍未接入。`N=60` 已降为历史 benchmark。
-- **affected_files:** formal forecast-provider/controller config, `src/main/run_lstm_mpc_test.py`, `src/main/run_mpc_1s_n6_weight_selection.py`, `src/main/run_mpc_1s_n6_qsoc_feasibility.py`, `docs/DATA_PROVENANCE.md`.
+- **affected_files:** formal forecast-provider/controller config, `src/main/run_lstm_mpc_test.py`, `src/main/run_mpc_1s_n6_four_objective_sensitivity.py`, `tests/test_mpc_1s_n6_four_objective_sensitivity.py`, `docs/DATA_PROVENANCE.md`.
 - **acceptance_criteria:** 一份版本化 contract 明确每个向量元素对应的物理时间；测试可检测 off-by-one、zero-delay 和未来数据泄露；正式数据被标记为 measured/causal 或 offline/reconstructed；论文主实验不把未来 spline 端点写成在线可用信息。
 - **dependencies:** none.
 
 ### P0-2 Implement one reusable `N=6` OSQP closed-loop entry
 
 - **task:** 从已验证的 ideal-foresight runner 提取可复用正式控制器，接收 6 步 forecast provider 输出、当前 SOC/FC 状态，输出第一步功率并提供确定性失败回退。
-- **reason:** `src/main/run_mpc_1s_n6_weight_selection.py` 已实现正确滚动时序、等价数值缩放、实际功率/SOC 更新和失败终止，但它是离线实验入口，不接 LSTM；最终求解失败时只能终止航段，尚不能部署。
-- **affected_files:** `src/main/mpc_solvers/mpc_qp_formulation.py`, `src/main/run_mpc_1s_n6_weight_selection.py`, new controller/provider module under `src/`, formal CLI and integration tests.
+- **reason:** `src/main/run_mpc_1s_n6_four_objective_sensitivity.py` 已实现正确滚动时序、等价数值缩放、实际功率/SOC 更新和失败终止，但它是 offline-oracle 实验入口，不接 LSTM；最终求解失败时只能终止航段，尚不能部署。
+- **affected_files:** `src/main/mpc_solvers/mpc_qp_formulation.py`, `src/main/run_mpc_1s_n6_four_objective_sensitivity.py`, new controller/provider module under `src/`, formal CLI and integration tests.
 - **acceptance_criteria:** horizon 固定为 6；固定稀疏结构、参数更新和 warm start 被保留；每步执行的 `P_fc/P_batt` 满足功率平衡、设备边界、SOC 边界和 48 kW/s ramp；SOC 用实际施加的 `P_batt` 更新；逐步记录 status、iterations、residual、solve time 和约束残差；具有经过测试的确定性失败回退，不用 NaN 继续控制。
 - **dependencies:** P0-1.
 
-### P0-3 Review and formally accept one fixed-weight baseline
+### P0-3 Run the four-objective matrix and manually accept or reject a fixed baseline
 
-- **task:** 对严格预注册诊断得到的 `q_soc=20` 可行性见证做正式工程审查；只有功率分配、氢耗、电池使用和适用边界均有明确依据时，才把它写入 provisional/accepted 固定基线配置。
-- **reason:** `q_soc=20` 已通过 7 航段结构门禁；新增 8 工况专项得到 `no_evidence_of_SOC_clamping`，但同时发现 SOC 下漂、上下侧响应不对称和相对 q10 更高的合成恒载氢耗。它仍不足以自动构成论文最终选择，历史 `N=60` 锚点也不能迁移为正式权重。
-- **affected_files:** formal MPC config, `src/main/run_mpc_1s_n6_qsoc_feasibility.py`, `src/main/run_mpc_1s_n6_soc_clamping_diagnostic.py`, report schema, `STATUS.md`, MPC tests.
-- **acceptance_criteria:** 复核 7 航段闭环、hard-constraint tolerance、SOC、氢耗、电池吞吐、FC surplus 和 1 s 实时性；明确可接受的功率分配/经济性标准及 ideal-foresight 到因果预测的外推边界；形成显式 accepted/rejected 决策，不使用加权总分或 least-bad 替代物理门禁；正式接受前保持 DQN 阻塞。
+- **task:** 先运行四权重全 1 baseline，再运行完整 17 配置 one-factor；逐航次审查功率分配、氢耗、电池使用、SOC、FC variation、硬约束和求解状态，只在证据充分时形成 provisional/accepted 固定基线。
+- **reason:** 当前 objective 已固定为 `H2_norm`、`Batt_power_sq_norm`、`SOC_tracking_sq_norm`、`FC_variation_sq_norm`，参考值分别为 `0.00883945296644347 kg/step`、`346.5 kW`、`SOC_ref=0.55`/`SOC_band=0.05`、`48 kW/step`。baseline 为四权重全 1；每项 one-factor 值为 `0.25,0.5,1,2,4`。但是 baseline 与完整 17 配置结果均未运行，不能预先宣称趋势、推荐区间或最佳权重。
+- **affected_files:** `src/main/run_mpc_1s_n6_four_objective_sensitivity.py`, `tests/test_mpc_1s_n6_four_objective_sensitivity.py`, `outputs/mpc_1s_n6_four_objective_sensitivity/`, `reports/mpc_1s_n6_four_objective_sensitivity_summary.md`, `reports/mpc_1s_n6_four_objective_sensitivity_table.csv`, formal MPC config, `STATUS.md`.
+- **acceptance_criteria:** `--baseline` 先完成 7 个固定 test 航段，`--one-factor` 再形成 baseline-first 的 17 个唯一配置；复核 hard-constraint tolerance、SOC、氢耗、电池吞吐、FC variation/surplus、完成率和 1 s 实时性；明确 offline oracle 到因果预测的外推边界；基于物理指标形成显式 accepted/rejected 或证据支持的下一区间，不使用自动 best/score/rank/winner、加权总分或 least-bad 替代人工门禁；正式接受前保持 DQN 阻塞。
 - **dependencies:** P0-2.
 
 ### P0-4 Remove stale parameters from the active execution path
@@ -47,7 +47,7 @@
 
 ### P1-1 Define the three-weight action space
 
-- **task:** 只为 `q_h2`、`q_soc`、`q_batt` 定义有限、可解释、始终保持 QP 凸性的动作表；移除目标路径中的 `q_ramp`、terminal、直接功率和左右侧动作。
+- **task:** 在 P0-3 人工冻结固定 baseline（包括 `q_fc_var`）后，只为 `q_h2`、`q_soc`、`q_batt` 定义有限、可解释、始终保持 QP 凸性的 DQN 动作表；移除目标路径中的 `q_ramp`、terminal、直接功率和左右侧动作。
 - **reason:** 现有 `action_mapper.py`、`run_train_dqn.py` 和环境使用不同动作语义，无法比较或复现。
 - **affected_files:** `src/dqn/utils/action_mapper.py`, `outputs/config/dqn_mpc_action_table.json`, formal DQN config, action tests.
 - **acceptance_criteria:** 每个 action ID 唯一映射三项非负权重；所有动作保持同一硬约束和 horizon；动作表版本/hash 随 checkpoint 保存；测试覆盖边界、重复项、无效权重和 deterministic mapping。

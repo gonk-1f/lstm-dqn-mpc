@@ -101,17 +101,16 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 - OSQP benchmark 数据构建：`src/main/build_mpc_solver_benchmark_1s_data.py`。
 - benchmark 输入：`outputs/mpc_solver_benchmark_1s/data/test_voyages_spline_1s.parquet`，包含 7 个 test 航次、93,037 行。
 
-### N=6 ideal-foresight control experiment
+### N=6 four-objective offline-oracle experiment
 
-- 入口：`src/main/run_mpc_1s_n6_weight_selection.py`。
-- 输入仅为上述 7 个 test 航次的 natural-clipped parquet；正式运行强制检查 `voyage_060..voyage_066`、`split=test`、数据版本和逐航段严格 1 s 间隔。
-- 时刻 `t` 使用同航段的真实重构点 `t+1..t+6`；航段尾部只重复本航段末点，不跨航段。
+- 唯一入口：`src/main/run_mpc_1s_n6_four_objective_sensitivity.py`；唯一 focused test：`tests/test_mpc_1s_n6_four_objective_sensitivity.py`。
+- 固定输入：`outputs/mpc_solver_benchmark_1s/data/test_voyages_spline_1s.parquet`。正式运行强制检查 `voyage_060..voyage_066`、`split=test`、数据版本和逐航段严格 1 s 间隔。
+- 时刻 `t` 使用同航段的真实重构点 `t+1..t+6`；航段尾部只重复本航段末点，不跨航段。该信息在决策时并非因果可得，因此实验标签必须是 offline oracle/ideal foresight。
 - MPC 预测/控制时域均为 6，但每次只执行第一步；实际电池功率由 `load_actual(t+1)-P_fc(t+1)` 得到，SOC 用该实际功率更新。
-- 这是 offline oracle/ideal-foresight 实验，`lstm_used=false`。它用于固定权重的上界诊断，不能写成 LSTM 预测闭环或在线控制证据。
-- A–D 四组固定候选产物位于 `outputs/mpc_1s_n6_weight_selection/`；四组均因闭环不完整和严重 SOC 下降被拒绝，没有 provisional/accepted 配置。
-- 严格限定的后续诊断入口为 `src/main/run_mpc_1s_n6_qsoc_feasibility.py`，产物位于 `outputs/mpc_1s_n6_qsoc_feasibility/`，报告位于 `reports/mpc_1s_n6_qsoc_feasibility_*`。它复用相同数据、时序和实际 SOC 更新，只把 `q_soc` 改为 5、10、20；三组均完成 7 航段，`q_soc=20` 是唯一满足最坏航段 SOC 净变化不低于 -0.03 的可行性见证。每个候选的 `config.json` 记录同一 generation、输入 SHA256、六个直接运行依赖的联合 SHA256、源 Git 提交和 Python/数值栈版本；`--report-only` 会拒绝跨 generation、输入漂移、实现/曲线数据漂移或运行时版本漂移的候选组合。
-- 该见证仍属于 offline ideal-foresight 结构诊断。它没有使用 LSTM、没有创建 provisional/accepted 配置，也不能证明因果在线预测条件下具有相同行为。
-- 近参考专项入口为 `src/main/run_mpc_1s_n6_soc_clamping_diagnostic.py`。其输入完全由脚本生成：300 kW 恒载 3,600 s，以及 300-450-300 kW、120 s 高负荷脉冲；不读取实船 parquet。产物位于 `outputs/mpc_1s_n6_soc_clamping_diagnostic/`，报告为 `reports/mpc_1s_n6_soc_clamping_*`。所有图片必须解释为 `diagnostic synthetic profile`。
+- 四项目标是 `H2_norm`、`Batt_power_sq_norm`、`SOC_tracking_sq_norm` 和 `FC_variation_sq_norm`。归一化参考分别为 `m_H2(560 kW, 1 s)=0.00883945296644347 kg/step`、`346.5 kW`、`SOC_ref=0.55` 与 `SOC_band=0.05`、`48 kW/step`；FC variation 包含第一步相对 `P_fc_prev` 以及后续相邻步差。
+- baseline 固定 `q_h2=q_batt=q_soc=q_fc_var=1`。one-factor 对每项分别取 `0.25, 0.5, 1, 2, 4`，其余项保持 1；共享 baseline 后总计 17 个唯一配置。
+- 命令仅为 `python src/main/run_mpc_1s_n6_four_objective_sensitivity.py --baseline` 与 `python src/main/run_mpc_1s_n6_four_objective_sensitivity.py --one-factor`。两者均不使用 LSTM 或 DQN，只执行优化第一步，也不自动生成 best/score/rank/winner 或最终权重。
+- 运行产物路径为 `outputs/mpc_1s_n6_four_objective_sensitivity/`；汇总报告路径为 `reports/mpc_1s_n6_four_objective_sensitivity_summary.md` 和 `reports/mpc_1s_n6_four_objective_sensitivity_table.csv`。三者当前均不存在；全 1 baseline 与完整 17 配置结果均为 **未运行**，不得填写数值、趋势或推荐区间。
 
 ### Forecast configuration and evidence
 
@@ -177,7 +176,7 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 | 30 s 跨航次窗口 | split manifest 声明不跨航次，训练代码按 voyage 分组 | 应增加对所有正式入口的统一 invariant 测试 |
 | 30 s scaler 泄露 | 只拟合 train 航次 | 保存的旧 checkpoint/run_config 含旧绝对路径，需迁移后重验 |
 | 1 s 跨 split 泄露 | 逐航次拟合，46/13/7 航次隔离 | 信号在每个 30 s 区间使用未来端点，存在在线因果泄露 |
-| 1 s benchmark 真实度 | N=60 标为 historical；A–D 和 `q_soc`-only N=6 config/report 均显式记录 offline ideal foresight、`lstm_used=false` 和 `t+1..t+6` | 使用未来重构负荷作为 horizon，不能等同 LSTM 闭环或在线控制 |
+| 1 s benchmark 真实度 | N=60 标为 historical；当前 N=6 四目标契约显式固定 offline oracle、`lstm_used=false`、`dqn_used=false`、第一步执行和 `t+1..t+6` | 使用未来重构负荷作为 horizon，不能等同 LSTM 闭环或在线控制；正式结果尚未运行 |
 | 10 ms 跨序列窗口 | 按原子序列建窗并保存 hash | 同一工作簿的不同工况段跨 split，可能共享采集条件；需在论文中说明 |
 | 10 ms scaler 泄露 | manifest 和模型均指定 train-only；audit 严格要求 train/validation/test key 集合 | 仍需在 CI 中持续执行完整数据审计 |
 | 10 ms 抽点混叠 | 明确记录 direct decimation | 未做抗混叠滤波，不能把高频谱结论外推 |

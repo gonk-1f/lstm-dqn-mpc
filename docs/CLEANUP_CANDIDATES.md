@@ -4,6 +4,12 @@
 
 本文件是审计清单，不是删除授权。本轮不得依据它执行 `git rm`、删除/移动目录、重写 Git 历史或清空 outputs。任何清理都必须先确认权威产物、可重建性、备份位置、论文引用和用户授权。
 
+## Authorized cleanup record — 2026-07-17
+
+用户在独立于本清单的明确指令中，仅授权删除已经闭合的旧 `N=6` 实验簇。执行前逐项验证了 Git 跟踪状态、工作树脏文件、递归根的物理内容、仓库内绝对路径和 reparse 边界；实际删除为 **129 个 tracked 文件 + 23 个 untracked 文件**：tracked 包含 3 个已知脏文件、11 个普通脚本/测试/报告文件和 4 个旧输出根内的 115 个文件，untracked 包含 2 个旧报告和 21 张旧图。该记录只描述已经授权并执行的精确集合，不构成后续删除授权。
+
+本次明确保留且未修改：`.codex_tmp/`（1,041 个 tracked 文件）、`tmp/`（10 个 tracked 文件）、全部 `N=60` 树及 benchmark runner/test、`docs/superpowers/specs/` 与 `docs/superpowers/plans/` 历史记录、所有 LSTM/DQN 代码与产物、原始/划分/spline 数据、Dp0 曲线、`src/mpc/`、新的四目标 runner/focused test 和 QP 形式。新的 `N=6` 输出/报告尚未运行或创建。
+
 扫描日期为 2026-07-12。排除 `.git/` 和本地虚拟环境后，工作树约 2,884 个文件、1.73 GB；`outputs/` 约 1.40 GB，是主要体量来源。数字是接管时快照，后续会变化。
 
 ## Can be ignored for future files

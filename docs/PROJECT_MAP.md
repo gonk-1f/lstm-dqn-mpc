@@ -43,9 +43,7 @@
 | `src/main/run_lstm_spline_1s_hparam_search.py` | 1 s direct multi-output LSTM 与 baseline 对比 | auxiliary | 当前 Task C 未超过简单 baseline |
 | `src/main/build_mpc_solver_benchmark_1s_data.py` | 构建 7 个 test 航次的 1 s benchmark 输入 | auxiliary | 入口来自离线 spline |
 | `src/main/benchmark_mpc_qp_osqp_1s.py` | OSQP `N=60` 求解器/控制 benchmark | historical | 只保留 solver/performance 证据；不再作为默认配置或继续权重搜索 |
-| `src/main/run_mpc_1s_n6_weight_selection.py` | `N=6` ideal-foresight 固定权重实验 | active/auxiliary | `t+1..t+6`、只执行第一步、实际 SOC 更新；A–D 已运行但无候选通过，不是 LSTM 闭环 |
-| `src/main/run_mpc_1s_n6_qsoc_feasibility.py` | `N=6` 的 `q_soc`-only 结构诊断 | active/auxiliary | 固定其他权重/结构；同代输入/实现/运行时指纹防止产物混用；`q_soc=20` 为唯一可行性见证；不自动创建正式配置或启动 DQN |
-| `src/main/run_mpc_1s_n6_soc_clamping_diagnostic.py` | `N=6` 近参考 SOC 合成诊断 | active/auxiliary | 只比较 q10/q20 的 6 个恒载和 2 个脉冲工况；结论为 `no_evidence_of_SOC_clamping`，不选择正式权重 |
+| `src/main/run_mpc_1s_n6_four_objective_sensitivity.py` | `N=6` 四目标 baseline/one-factor offline-oracle 实验 | active/auxiliary | 唯一入口；`t+1..t+6`、只执行第一步、实际 SOC 更新；全 1 baseline 和 17 配置均未运行，不自动选择 best |
 | `src/main/run_lstm_mpc_test.py` | 30 s CasADi/IPOPT LSTM-MPC | historical | 有预测与实际反馈逻辑，但物理参数/求解器不是目标主线 |
 | `src/main/run_lstm_mpc_total_load_test.py` | 上述 30 s 流程的总负荷包装入口 | auxiliary | 可作为迁移参考 |
 | `src/main/run_lstm_mpc_weight_sweep.py` | 历史固定权重搜索 | historical | 不应继续扩展为无约束大搜索 |
@@ -77,19 +75,16 @@
 | --- | --- | --- |
 | `src/main/mpc_solvers/mpc_qp_formulation.py` | active | 构造线性约束、SOC 动力学、归一化凸二次目标；默认参数包含 693 kWh/346.5 kW/560 kW/48 kW/s |
 | `src/main/benchmark_mpc_qp_osqp_1s.py` 内的持久 OSQP workspace | historical/supporting | N=60 原始设置为 `eps_abs=eps_rel=1e-4`、`max_iter=4000`；N=6 runner 只复用边界/计时等支持函数 |
-| `src/main/run_mpc_1s_n6_weight_selection.py` 的 N=6 workspace | active/auxiliary | 严格等价仿射缩放，`eps_abs=eps_rel=1e-5`、`max_iter=10000`、固定 rho 更新间隔；max_iter 可冷重启同一 QP，不构造控制 fallback |
-| `src/main/run_mpc_1s_n6_qsoc_feasibility.py` | active/auxiliary | 通过显式配置复用同一 N=6 workspace，校验候选 config 指纹和有限残差；仅测试 `q_soc={5,10,20}` |
+| `src/main/run_mpc_1s_n6_four_objective_sensitivity.py` 的 N=6 workspace | active/auxiliary | 严格等价仿射缩放，`eps_abs=eps_rel=1e-5`、`max_iter=20000`、persistent OSQP 与 warm start；不构造控制 fallback |
 | 独立可部署 OSQP controller wrapper | uncertain/missing | 当前 N=6 入口是离线实验 runner；尚未封装预测 provider 和确定性控制失败回退 |
-| `outputs/mpc_1s_n6_weight_selection/` | active evidence | A–D 配置、逐航段/总体指标、solver 统计、约束审计、曲线与人工拒绝决策；无 provisional 配置 |
-| `outputs/mpc_1s_n6_qsoc_feasibility/` | active evidence | 三个 `q_soc` 配置、逐航段/总体指标、solver 统计、约束审计、曲线和结构诊断；`QSOC_20` 为 witness，非 accepted 配置 |
-| `outputs/mpc_1s_n6_soc_clamping_diagnostic/` | active evidence | 8 个 synthetic ideal-foresight 工况的轨迹、指标和 5 组图；不是实船/LSTM/DQN 结果 |
-| `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` | historical | 693 kWh `N=60` 离线 benchmark 证据；紧凑指针在 N=6 输出目录中 |
+| `outputs/mpc_1s_n6_four_objective_sensitivity/` 与 `reports/mpc_1s_n6_four_objective_sensitivity_*` | planned active evidence | baseline/17 配置产物与两份汇总报告；当前均不存在，结果未运行 |
+| `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` | historical | 693 kWh `N=60` 离线 benchmark 证据；直接保留，不依赖 N=6 指针 |
 | `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt277p2_simplified_spec_norm/` | historical | 旧容量研究；不得作为当前物理配置 |
 | `src/mpc/` 与 `src/main/run_lstm_mpc_test.py` | historical/supporting | CasADi/IPOPT、氢耗曲线、回退和历史 SOC 设计；需择取可迁移逻辑，不应直接当 OSQP 主线 |
 | `outputs/lstm_mpc_total_load_test_fixed_baseline_v1/` | historical/supporting | 30 s 固定基线产物，使用不同参数体系 |
 | `configs/mpc.yaml`, `configs/ship_system.yaml` | historical | 含 horizon 18、SOC 0.65、1806 kWh/350 kW 等旧参数 |
 
-QP 中 `P_fc + P_batt = load`，SOC 由实际电池功率更新，FC ramp 是硬约束。简化 objective 保留氢耗/SOC/电池使用项；`q_ramp=0` 和 `q_terminal_soc=0` 时不含相应软目标。N=6 离线实验在最终求解失败处终止航段并标记不完整；尚无可部署的控制回退动作。
+QP 中 `P_fc + P_batt = load`，SOC 由实际电池功率更新，FC ramp 是硬约束。活动 N=6 objective 包含 `H2_norm`、`Batt_power_sq_norm`、`SOC_tracking_sq_norm`、`FC_variation_sq_norm`，参考值依次为 `0.00883945296644347 kg/step`、`346.5 kW`、`SOC_ref=0.55`/`SOC_band=0.05`、`48 kW/step`；`q_ramp=0` 和 `q_terminal_soc=0`。baseline 四权重全 1，one-factor 每项取 `0.25,0.5,1,2,4`，共 17 配置。N=6 离线实验在最终求解失败处终止航段并标记不完整；尚无可部署的控制回退动作。
 
 ## DQN and Q-network modules
 
@@ -136,7 +131,7 @@ QP 中 `P_fc + P_batt = load`，SOC 由实际电池功率更新，FC ramp 是硬
 | `tests/test_spline_1s_diagnostics.py` | spline 构建和物理标记 | active |
 | `tests/test_lstm_spline_1s_hparam_search.py` | 1 s LSTM/baseline 逻辑 | auxiliary |
 | `tests/test_mpc_solver_benchmark_1s.py` | QP/OSQP benchmark | active |
-| `tests/test_mpc_1s_n6_qsoc_feasibility.py` | 新候选冻结、显式配置注入、门禁、config 指纹、产物失效 | active |
+| `tests/test_mpc_1s_n6_four_objective_sensitivity.py` | 唯一 N=6 focused test；四目标系数、17 配置、oracle 时序、第一步执行、物理指标、产物与 CLI 契约 | active |
 | `tests/test_lstm_mpc_*` | 30 s CasADi 时序、horizon、zero-delay | historical/supporting |
 | `tests/test_millisecond_*` | 10 ms 构建、审计、模型 | auxiliary；split key 缺失/额外场景已有回归覆盖 |
 | `tests/test_mpc_*` | 初始 dispatch、ramp 开关、SOC reference | supporting |
