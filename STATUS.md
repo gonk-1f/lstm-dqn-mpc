@@ -29,8 +29,8 @@
 | `SOC_band` | 0.05 | 四目标 SOC tracking 归一化参考 |
 | FC ramp | 48 kW/s | QP 中为硬约束 |
 | LSTM | history 30, prediction 6 | direct multi-output |
-| 四目标灵敏度 horizon | `N=6` | baseline 与 one-factor 结果均未运行 |
-| baseline 权重 | `q_h2=q_batt=q_soc=q_fc_var=1` | 先运行并人工审查，不自动接受 |
+| 四目标灵敏度 horizon | `N=6` | baseline 已正式运行；完整 one-factor 矩阵未运行 |
+| baseline 权重 | `q_h2=q_batt=q_soc=q_fc_var=1` | 已运行和人工审查，不自动接受，当前没有 accepted 权重 |
 | one-factor 矩阵 | 每项取 `0.25, 0.5, 1, 2, 4` | 共享全 1 baseline，共 17 个唯一配置 |
 | historical benchmark horizon | `N=60` | 仅历史 solver/performance benchmark |
 
@@ -53,13 +53,16 @@
 - 1 s Task C (`history=30`, `prediction=6`) 的 LSTM 在 test 上 h1/h6 MAE 约为 1.79/3.85 kW；current-hold 为 0.60/3.57 kW，last-slope 为 0.04/0.80 kW。LSTM 未超过简单基线，因此尚不能作为预测优势证据。
 - `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` 保存 7 个 test 航次上的 693 kWh OSQP benchmark。全部候选均未通过门禁，决策为 `NONE_ACCEPTED`，各候选均为 `accepted=false`；不同候选分别存在 SOC、约束或 solver 问题，因此没有 accepted baseline。
 - `src/main/run_mpc_1s_n6_four_objective_sensitivity.py` 与 `tests/test_mpc_1s_n6_four_objective_sensitivity.py` 冻结了 baseline-first 的 17 配置、`t+1..t+6`、第一步执行、实际功率/SOC 更新和无自动最优选择的契约。
-- `outputs/mpc_1s_n6_four_objective_sensitivity/`、`reports/mpc_1s_n6_four_objective_sensitivity_summary.md` 与 `reports/mpc_1s_n6_four_objective_sensitivity_table.csv` 当前均不存在；全 1 baseline 和完整 17 配置 one-factor 结果均为 **未运行**，因此没有可报告的完成率、数值趋势或推荐区间。
+- 全 1 baseline 产物已写入 `outputs/mpc_1s_n6_four_objective_sensitivity/baseline_1_1_1_1/`、`reports/mpc_1s_n6_four_objective_sensitivity_summary.md` 与 `reports/mpc_1s_n6_four_objective_sensitivity_table.csv`。7/7 航次完成，93030/93030/93030 个 expected/attempted/applied 步，solver failure、primal infeasible 和 max-iter 均为 0，`formal_complete=true`。
+- baseline 总氢耗为 `218.448931 kg`；平均 SOC 从 `0.55` 降至 `0.287935`，平均变化 `-0.262065`，全局最低值为 `0.199997215`；平均/95 分位/最大求解时间为 `0.183878/0.464255/16.989700 ms`。归一化/加权四项总量为 H2 `24712.946847`、battery `3643.932321`、SOC `1869104.558203`、FC variation `56.592723`，总和 `1897518.030093`。
+- 七张逐航次图均显示 SOC 从 `0.55` 下降且没有恢复；燃料电池承担主要负荷，电池主要放电补差。`voyage_063` 约 9400 s 到达 SOC 下界后电池近零、FC 几乎独自跟随负荷；最低 SOC 相对 `0.2` 的残差 `2.7846e-6` 超过 runner 声明的 `1e-6` 容差，分类为小幅数值约束容差超限，而不是 solver failure。
+- 完整 17-case one-factor 矩阵仍为 **未运行**；只有 baseline 一行，不能据此报告灵敏度趋势、推荐区间、optimum 或 accepted 固定权重。
 - `N=6` runner 在每个时刻使用 `t+1..t+6`、只执行第一步，以实际功率平衡计算电池功率和 SOC；最终求解失败时终止该航段，不用 NaN/冻结状态伪造后续闭环。
-- 本轮未运行新的正式实验，也未重跑 LSTM/DQN 或历史 `N=60` benchmark。清理后的 focused test 为 43/43 通过，保留 `N=60` benchmark test 为 17/17 通过。
+- 本轮只运行了新的正式全 1 baseline；未运行 one-factor，未重跑 LSTM/DQN 或历史 `N=60` benchmark。此前清理后的 focused test 为 43/43 通过，保留 `N=60` benchmark test 为 17/17 通过。
 
 ## Provisional items
 
-- 当前没有 provisional 固定权重；`configs/benchmarks/mpc_1s_n6_provisional.*` 未创建。四目标 baseline/one-factor 尚未运行，不能先验指定趋势或候选。
+- 当前没有 provisional 或 accepted 固定权重；`configs/benchmarks/mpc_1s_n6_provisional.*` 未创建。四目标 baseline 已运行但未被接受，one-factor 尚未运行，不能从单一 baseline 指定趋势、候选或最优权重。
 - 17 配置矩阵只提供逐项物理灵敏度；runner 禁止自动 best/score/rank/winner。完整结果运行后仍须人工审查 SOC、氢耗、电池使用、FC 波动、约束和求解状态，才能决定下一步区间或接受/拒绝。
 - `N=60` 权重和产物只作历史 benchmark，保留证据直接位于 `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/`，不依赖任何已删除的 `N=6` 指针。
 - 1 s spline 仅适合离线算法/求解器研究；若论文声称在线 1 s 预测，必须换用因果可得数据或重新定义实验。
@@ -69,14 +72,14 @@
 ## Blocking issues
 
 1. 已有 ideal-foresight `N=6` 执行路径，但尚无把 LSTM 6 步预测接入该路径的正式闭环入口。
-2. 四目标全 1 baseline 与 17 配置 one-factor 尚未运行和人工审查；在依据物理指标明确接受固定基线前，不得训练正式 DQN。
+2. 四目标全 1 baseline 已运行和人工审查，但完整 17-case one-factor 尚未运行，且 baseline 有持续 SOC 消耗及一次小幅 SOC 容差超限；在依据完整物理证据明确接受固定权重前，不得训练正式 DQN。
 3. 目标 DQN 状态/动作/奖励/环境尚未冻结；现有脚本仍选择 `q_ramp` 或直接功率动作，并使用 1806/1067 kWh 等旧参数。
 4. 1 s LSTM 没有超过简单基线，且 spline 数据非因果，不能支撑在线预测优势结论。
 5. 依赖清单不完整、第三方 SineKAN 许可证未核验、多个跟踪文件含本地绝对路径，干净环境复现尚未闭合。
 
 ## Next priority tasks
 
-1. **P0：** 先运行并审查全 1 baseline，再运行完整 17 配置 one-factor；只根据逐航次物理证据决定下一搜索区间或 accepted/rejected，不使用自动综合分数选 best。
+1. **P0：** baseline 已完成；下一步运行并审查完整 17-case one-factor 矩阵，只根据逐航次物理证据决定下一搜索区间或 accepted/rejected，不使用自动综合分数选 best。
 2. **P0：** 将因果可用的 6 步预测 provider 和经过测试的确定性失败回退接入现有 `N=6` 时序/物理执行路径。
 3. **P1：** 冻结仅选择 `q_h2/q_soc/q_batt` 的动作表、与动作权重无自指关系的物理奖励，以及统一的目标环境。
 4. **P1：** 在相同预算和种子下实现 MLP-DQN 与 SineKAN-DQN 公平比较；KAN-DQN 仅在资源允许时加入。
