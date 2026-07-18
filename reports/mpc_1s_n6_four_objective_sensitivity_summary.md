@@ -1,37 +1,69 @@
-# N=6 Four-Objective MPC Sensitivity
+# N=6 四目标归一化 MPC 单因素灵敏度
 
-- Coverage: baseline-only; 1 configuration row(s).
-- Voyage completion: 7/7 configuration-voyage runs.
-- Step completion: 93,030 expected / 93,030 attempted / 93,030 applied.
-- Boundary: offline oracle using t+1..t+6 actual natural-clipped spline load.
-- Model usage: no LSTM; no DQN; first optimized move only.
-- Decision boundary: no automatic best, score, rank, winner, or final weight selection.
+- Coverage: complete 17-configuration one-factor matrix; 17 个配置。
+- 配置-航段完成率：107/119。
+- 边界：offline oracle 使用可获得的 t+1..t+6 actual natural-clipped spline load；航段尾部采用同航段末样本 edge-hold，绝不跨航段；只执行第一步。
+- Model usage: no LSTM; no DQN; first optimized move only；不增加终端 SOC、slack、额外 ramp cost 或回退控制。
+- 决策边界：no automatic best, score, rank, winner, or final weight selection。
 
-## All-ones baseline facts
+## 全 1 baseline
 
-- Weights: `q_h2=q_batt=q_soc=q_fc_var=1`; `q_ramp=q_terminal_soc=0`.
-- Solver outcomes: 0 failures, 0 primal-infeasible statuses, and 0 maximum-iteration events.
-- SOC: mean initial `0.550000000`, mean final `0.287935264`, mean delta `-0.262064736`, observed range `0.199997215` to `0.550000000`.
-- Power: maximum balance residual `2.8422e-14 kW`, maximum FC ramp `15.990419 kW/step`, FC range `-1.4416e-7` to `560.026469 kW`, maximum battery discharge/charge `260.134823/35.040915 kW`.
-- Hydrogen and timing: total H2 `218.448931 kg`; mean/p95/maximum solve time `0.183878/0.464255/16.989700 ms`.
-- Raw objective totals `[H2 kg, P_batt^2 kW^2, SOC error^2, FC delta^2 kW^2]`: `[218.448931, 437498713.357305, 4672.761396, 130389.632686]`.
-- Normalized totals `[H2, battery, SOC, FC variation]`: `[24712.946847, 3643.932321, 1869104.558203, 56.592723]`. The weighted contributions are identical at the all-ones baseline and sum to `1897518.030093`.
+7/7 航段完成；总氢耗 `218.448931 kg`，平均 final SOC `0.287935`，全局 min SOC `0.199997215`。
+最大电池放电/充电为 `260.135/35.041 kW`；平均/p95/最大求解时间为 `0.178247/0.472075/14.804800 ms`。
+平均 SOC 净下降；存在充电功率，轨迹不能描述为严格逐点下降；平均 final SOC 低于 SOC_ref=0.55。
 
-| voyage | completed | steps expected/attempted/applied | SOC initial -> final (delta) | SOC min/max | H2 (kg) | solver failure / primal infeasible / max iter |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| voyage_060 | true | 10650/10650/10650 | 0.550000 -> 0.286047 (-0.263953) | 0.286047/0.550000 | 23.008883 | 0/0/0 |
-| voyage_061 | true | 10740/10740/10740 | 0.550000 -> 0.277118 (-0.272882) | 0.277118/0.550000 | 17.160355 | 0/0/0 |
-| voyage_062 | true | 10650/10650/10650 | 0.550000 -> 0.230196 (-0.319804) | 0.230196/0.550000 | 16.369603 | 0/0/0 |
-| voyage_063 | true | 32370/32370/32370 | 0.550000 -> 0.199999 (-0.350001) | 0.199997/0.550000 | 114.502605 | 0/0/0 |
-| voyage_064 | true | 7140/7140/7140 | 0.550000 -> 0.400242 (-0.149758) | 0.400242/0.550000 | 9.121052 | 0/0/0 |
-| voyage_065 | true | 10740/10740/10740 | 0.550000 -> 0.320276 (-0.229724) | 0.320276/0.550000 | 18.261102 | 0/0/0 |
-| voyage_066 | true | 10740/10740/10740 | 0.550000 -> 0.301669 (-0.248331) | 0.301669/0.550000 | 20.025330 | 0/0/0 |
+## 已执行轨迹约束审计
 
-## Physical and numerical review
+最大功率平衡残差 `5.684e-14 kW`；最大 FC 步变 `41.657406 kW`；FC/电池功率边界最大数值残差 `0.026469/0.015195 kW`。
+SOC 上下界最大数值残差 `5.860e-06`；11 个配置超过 runner 的 `1e-06` SOC 审计容差，不能笼统表述为严格零越界。
 
-- All seven plots show SOC falling from `0.55` without recovery. The fuel cell supplies the main share of load, while the battery mainly discharges to cover the difference. Charging is absent or negligible except for small transients in voyages 060 and 062 and a maximum `35.040915 kW` transient in voyage 063.
-- Voyage 063 reaches the lower SOC boundary at about 9,400 s; the battery then remains near zero and the fuel cell follows nearly all subsequent load. No solver-failure markers appear in any of the seven plots.
-- The voyage 063 minimum SOC is `0.199997215`, a lower-bound residual of `2.7846e-6`. This exceeds the runner's declared SOC audit tolerance of `1e-6`, so it is recorded as a small numerical constraint-tolerance exceedance, not hidden by the 7/7 solver completion. The FC upper residual `0.026469 kW` remains within the declared `0.1 kW` power-bound tolerance; balance, battery-power, and ramp checks also remain within their declared tolerances.
-- `formal_complete=true` records complete formal coverage of the seven voyages; it is not an acceptance decision for the physical behavior or final weights.
+## 17 配置核心表
 
-The complete baseline-first 17-case one-factor matrix has not been run; only its baseline row exists. Therefore no sensitivity trend, optimum, recommended interval, accepted weight set, or final weight selection is claimed.
+不完整配置的累计量由完整航段与失败前缀组成，`metrics_comparable=false`，不得横向比较；下表以“截断”代替这些累计物理量。
+
+| 配置 | 完成 | 失败 (P/M事件) | H2 kg | ΣP_batt² | ΣSOC error² | ΣΔP_fc² | final SOC | min SOC |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| baseline_1_1_1_1 | 7/7 | 0 (0/0) | 218.448931 | 4.375e+08 | 4672.761 | 130389.633 | 0.287935 | 0.199997 |
+| q_h2_0p25 | 7/7 | 0 (0/0) | 263.567088 | 7.358e+07 | 1202.768 | 124877.453 | 0.454132 | 0.298854 |
+| q_h2_0p5 | 7/7 | 0 (0/0) | 244.995901 | 1.597e+08 | 3001.828 | 131085.080 | 0.385734 | 0.199995 |
+| q_h2_2 | 6/7 | 1 (0/1) | 截断 | 截断 | 截断 | 截断 | 截断 | 截断 |
+| q_h2_4 | 1/7 | 6 (0/12) | 截断 | 截断 | 截断 | 截断 | 截断 | 截断 |
+| q_batt_0p25 | 5/7 | 2 (1/4) | 截断 | 截断 | 截断 | 截断 | 截断 | 截断 |
+| q_batt_0p5 | 6/7 | 1 (0/1) | 截断 | 截断 | 截断 | 截断 | 截断 | 截断 |
+| q_batt_2 | 7/7 | 0 (0/0) | 243.469658 | 1.674e+08 | 3162.987 | 152681.422 | 0.380343 | 0.199997 |
+| q_batt_4 | 7/7 | 0 (0/0) | 258.853538 | 7.756e+07 | 1797.014 | 161968.130 | 0.436202 | 0.205844 |
+| q_soc_0p25 | 6/7 | 1 (0/2) | 截断 | 截断 | 截断 | 截断 | 截断 | 截断 |
+| q_soc_0p5 | 6/7 | 1 (0/2) | 截断 | 截断 | 截断 | 截断 | 截断 | 截断 |
+| q_soc_2 | 7/7 | 0 (0/0) | 222.843101 | 3.815e+08 | 4427.988 | 129813.431 | 0.304730 | 0.199996 |
+| q_soc_4 | 7/7 | 0 (0/0) | 230.939115 | 2.938e+08 | 3802.670 | 120699.768 | 0.335196 | 0.200002 |
+| q_fc_var_0p25 | 7/7 | 0 (0/0) | 218.983741 | 4.244e+08 | 4638.852 | 158338.947 | 0.289901 | 0.199999 |
+| q_fc_var_0p5 | 7/7 | 0 (0/0) | 218.674186 | 4.298e+08 | 4657.637 | 149543.396 | 0.288738 | 0.199997 |
+| q_fc_var_2 | 7/7 | 0 (0/1) | 218.239259 | 4.536e+08 | 4689.532 | 100802.849 | 0.287267 | 0.199997 |
+| q_fc_var_4 | 7/7 | 0 (0/1) | 218.018987 | 4.852e+08 | 4714.010 | 64072.309 | 0.286675 | 0.199996 |
+
+明显不可接受（航段不完整）：q_h2_2 6/7；q_h2_4 1/7；q_batt_0p25 5/7；q_batt_0p5 6/7；q_soc_0p25 6/7；q_soc_0p5 6/7。
+
+## 可比趋势与完成率边界
+
+- `q_h2` 完整点 0.25→0.5→1：H2 `263.567 → 244.996 → 218.449 kg`，ΣP_batt² `73576725 → 159725065 → 437498713`，平均 final SOC `0.4541 → 0.3857 → 0.2879`。
+- `q_batt` 完整点 1→2→4：ΣP_batt² `437498713 → 167401895 → 77562874`，平均 final SOC `0.2879 → 0.3803 → 0.4362`，代价是 H2 `218.449 → 243.470 → 258.854 kg`、ΣΔP_fc² `130390 → 152681 → 161968`。
+- `q_soc` 完整点 1→2→4：ΣSOC error² `4673 → 4428 → 3803`，平均 final SOC `0.2879 → 0.3047 → 0.3352`，H2 `218.449 → 222.843 → 230.939 kg`。
+- `q_fc_var` 0.25→0.5→1→2→4 全部完成：ΣΔP_fc² `158339 → 149543 → 130390 → 100803 → 64072`，但 ΣP_batt² 同时为 `424411634 → 429824665 → 437498713 → 453612538 → 485158635`。
+
+完成率转折：q_h2:[1,2]；q_batt:[0.5,1]；q_soc:[0.5,1]；q_fc_var: tested [0.25,4] has no completion boundary。
+机器报告不自动生成建议搜索区间；下一轮范围必须由人工结合物理趋势与逐航段图审阅。
+
+求解事件合计：final failures `12`，primal-infeasible `1`，max-iter `24`。
+max-iter 统计包含冷重启后恢复的尝试，因此事件数不等于最终失败数。
+accepted fixed weight: none
+
+## 人工审阅：下一轮候选区间
+
+本节是基于上表和逐航段图的人工物理审阅，不是自动评分，也不构成新实验授权或最终权重选择。
+
+- `q_h2:[0.25,0.5]`：两端均 7/7 完成；相较全 1 baseline，平均 final SOC 从 `0.287935` 提高到 `0.385734/0.454132`，代价是总氢耗增至 `244.995901/263.567088 kg`。`q_h2=2/4` 已出现不完整航段，因此不作为下一轮行为搜索区间。
+- `q_batt:[2,4]`：两端均 7/7 完成，电池功率平方量和 SOC 下降均明显减小；对应总氢耗和 FC 变化量增加，仍需联合权衡，且没有任何一点实现 SOC 荷电维持。
+- `q_soc:[2,4]`：两端均 7/7 完成，SOC 偏差和净下降随权重提高而减小；平均 final SOC 仍只有 `0.304730/0.335196`，不能据此接受固定权重。
+- `q_fc_var`：已测 `[0.25,4]` 全部完成，FC 变化平方量单调下降，但电池功率平方量单调上升，且没有完成率边界；本轮数据**无法确认**比 `[0.25,4]` 更窄的下一轮区间。
+
+结论：本轮 `accepted fixed weight: none`。下一轮联合筛选必须等待人工确认，不能由本报告自动启动。

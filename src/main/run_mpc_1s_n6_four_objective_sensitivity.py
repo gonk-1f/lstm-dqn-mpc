@@ -68,6 +68,14 @@ N6_TOLERANCES: dict[str, float] = {
     "fc_above_load_kw": 1.0e-6,
     "near_limit_kw": 1.0,
 }
+N6_STATE_COMMIT_TOLERANCES: dict[str, float] = {
+    "actual_balance_kw": 0.01,
+    "qp_balance_kw": 0.1,
+    "power_bound_kw": 0.1,
+    "ramp_kw": 0.1,
+    "soc": 1.0e-5,
+    "soc_prediction": 1.0e-5,
+}
 
 WEIGHT_NAMES: tuple[str, ...] = ("q_h2", "q_batt", "q_soc", "q_fc_var")
 WEIGHT_VALUES: tuple[float, ...] = (0.25, 0.5, 1.0, 2.0, 4.0)
@@ -487,24 +495,117 @@ def run_voyage(
             )
             attempt_count = 2
 
-        status = str(result.info.status)
-        status_lower = status.lower()
-        success = bool(status_lower.startswith("solved") and result.x is not None)
-        solved_inaccurate = bool("solved inaccurate" in status_lower)
+        solver_status = str(result.info.status)
+        solver_status_lower = solver_status.lower()
+        solver_claimed_success = bool(
+            solver_status_lower.startswith("solved") and result.x is not None
+        )
+        solved_inaccurate = bool("solved inaccurate" in solver_status_lower)
         max_iter_reached = bool(
             cold_restart_used
-            or "maximum iterations" in status_lower
-            or "max_iter" in status_lower
+            or "maximum iterations" in solver_status_lower
+            or "max_iter" in solver_status_lower
+        )
+        rejection_reason = ""
+        candidate_applied: dict[str, float] | None = None
+        if solver_claimed_success:
+            solution = np.asarray(result.x, dtype=float).reshape(-1)
+            if len(solution) != len(transform.variable_scale):
+                rejection_reason = "invalid_solution_shape"
+            elif not np.isfinite(solution).all():
+                rejection_reason = "nonfinite_solution"
+            else:
+                candidate_applied = extract_first_step(
+                    transform.to_physical(solution),
+                    config=config,
+                    load_actual_kw=load_actual,
+                    current_soc=soc_before,
+                )
+                if not np.isfinite(
+                    np.asarray(tuple(candidate_applied.values()), dtype=float)
+                ).all():
+                    rejection_reason = "nonfinite_candidate"
+                    candidate_applied = None
+        else:
+            rejection_reason = "solver_not_solved"
+
+        if candidate_applied is not None:
+            candidate_p_fc = float(candidate_applied["P_fc_actual_kw"])
+            candidate_p_batt_actual = float(candidate_applied["P_batt_actual_kw"])
+            candidate_p_batt_plan = float(candidate_applied["P_batt_plan_kw"])
+            candidate_soc_actual = float(candidate_applied["SOC_actual"])
+            candidate_fc_delta = candidate_p_fc - prev_fc_before
+            plan_balance_residual = abs(
+                float(candidate_applied["P_fc_plan_kw"])
+                + candidate_p_batt_plan
+                - float(load_horizon[0])
+            )
+            actual_balance_residual = abs(
+                candidate_p_fc + candidate_p_batt_actual - load_actual
+            )
+            fc_bound_residual = max(
+                0.0,
+                float(config.fuel_cell_min_kw) - candidate_p_fc,
+                candidate_p_fc - float(config.fuel_cell_max_kw),
+            )
+            battery_bound_residual = max(
+                0.0,
+                -float(config.battery_charge_max_kw) - candidate_p_batt_actual,
+                candidate_p_batt_actual - float(config.battery_discharge_max_kw),
+            )
+            ramp_residual = max(
+                0.0,
+                abs(candidate_fc_delta) - float(resolved_ramp_kw_per_step(config)),
+            )
+            soc_bound_residual = max(
+                0.0,
+                float(config.soc_min) - candidate_soc_actual,
+                candidate_soc_actual - float(config.soc_max),
+            )
+            soc_prediction_residual = abs(
+                float(candidate_applied["SOC_predicted"]) - candidate_soc_actual
+            )
+            commit_checks = {
+                "actual_balance_kw": actual_balance_residual,
+                "qp_balance_kw": plan_balance_residual,
+                "fc_power_bound_kw": fc_bound_residual,
+                "battery_power_bound_kw": battery_bound_residual,
+                "ramp_kw": ramp_residual,
+                "soc": soc_bound_residual,
+                "soc_prediction": soc_prediction_residual,
+            }
+            commit_limits = {
+                "actual_balance_kw": N6_STATE_COMMIT_TOLERANCES["actual_balance_kw"],
+                "qp_balance_kw": N6_STATE_COMMIT_TOLERANCES["qp_balance_kw"],
+                "fc_power_bound_kw": N6_STATE_COMMIT_TOLERANCES["power_bound_kw"],
+                "battery_power_bound_kw": N6_STATE_COMMIT_TOLERANCES["power_bound_kw"],
+                "ramp_kw": N6_STATE_COMMIT_TOLERANCES["ramp_kw"],
+                "soc": N6_STATE_COMMIT_TOLERANCES["soc"],
+                "soc_prediction": N6_STATE_COMMIT_TOLERANCES["soc_prediction"],
+            }
+            rejected_fields = [
+                name for name, value in commit_checks.items() if value > commit_limits[name]
+            ]
+            if rejected_fields:
+                rejection_reason = "commit tolerance gate: " + ",".join(rejected_fields)
+        else:
+            plan_balance_residual = float("nan")
+            actual_balance_residual = float("nan")
+            fc_bound_residual = float("nan")
+            battery_bound_residual = float("nan")
+            ramp_residual = float("nan")
+            soc_bound_residual = float("nan")
+            soc_prediction_residual = float("nan")
+
+        success = bool(solver_claimed_success and not rejection_reason)
+        status = (
+            solver_status
+            if success or not solver_claimed_success
+            else f"{solver_status}; {rejection_reason}"
         )
         cold_restart_succeeded = bool(cold_restart_used and success)
-
-        if success:
-            applied = extract_first_step(
-                transform.to_physical(np.asarray(result.x, dtype=float)),
-                config=config,
-                load_actual_kw=load_actual,
-                current_soc=soc_before,
-            )
+        if success and candidate_applied is not None:
+            applied = candidate_applied
             prev_fc_actual = float(applied["P_fc_actual_kw"])
             current_soc = float(applied["SOC_actual"])
         else:
@@ -519,58 +620,8 @@ def run_voyage(
 
         p_fc = float(applied["P_fc_actual_kw"])
         p_batt_actual = float(applied["P_batt_actual_kw"])
-        p_batt_plan = float(applied["P_batt_plan_kw"])
         soc_actual = float(applied["SOC_actual"])
         fc_delta = p_fc - prev_fc_before if success else float("nan")
-        plan_balance_residual = (
-            abs(
-                float(applied["P_fc_plan_kw"])
-                + p_batt_plan
-                - float(load_horizon[0])
-            )
-            if success
-            else float("nan")
-        )
-        actual_balance_residual = (
-            abs(p_fc + p_batt_actual - load_actual) if success else float("nan")
-        )
-        fc_bound_residual = (
-            max(
-                0.0,
-                float(config.fuel_cell_min_kw) - p_fc,
-                p_fc - float(config.fuel_cell_max_kw),
-            )
-            if success
-            else float("nan")
-        )
-        battery_bound_residual = (
-            max(
-                0.0,
-                -float(config.battery_charge_max_kw) - p_batt_actual,
-                p_batt_actual - float(config.battery_discharge_max_kw),
-            )
-            if success
-            else float("nan")
-        )
-        ramp_residual = (
-            max(0.0, abs(fc_delta) - float(resolved_ramp_kw_per_step(config)))
-            if success
-            else float("nan")
-        )
-        soc_bound_residual = (
-            max(
-                0.0,
-                float(config.soc_min) - soc_actual,
-                soc_actual - float(config.soc_max),
-            )
-            if success
-            else float("nan")
-        )
-        soc_prediction_residual = (
-            abs(float(applied["SOC_predicted"]) - soc_actual)
-            if success
-            else float("nan")
-        )
         if success:
             raw_h2 = physical_h2_kg_step(config, p_fc)
             raw_batt = p_batt_actual**2
@@ -649,6 +700,8 @@ def run_voyage(
                 **objective_steps,
                 "success": success,
                 "status": status,
+                "solver_status": solver_status,
+                "rejection_reason": rejection_reason,
             }
         )
         solver_rows.append(
@@ -660,6 +713,8 @@ def run_voyage(
                 "execution_index": int(execution_index),
                 "time_s": float(times[execution_index]),
                 "status": status,
+                "solver_status": solver_status,
+                "rejection_reason": rejection_reason,
                 "initial_status": initial_status,
                 "success": success,
                 "solved_inaccurate": solved_inaccurate,
@@ -1079,10 +1134,15 @@ def sha256_file(path: Path) -> str:
 
 
 def _implementation_sha256() -> str:
-    formulation_path = Path(__file__).parent / "mpc_solvers" / "mpc_qp_formulation.py"
-    return hashlib.sha256(
-        (sha256_file(Path(__file__)) + sha256_file(formulation_path)).encode("ascii")
-    ).hexdigest()
+    dependencies = (
+        Path(__file__),
+        REPO_ROOT / "src/main/mpc_solvers/mpc_qp_formulation.py",
+        REPO_ROOT / "src/main/benchmark_mpc_qp_osqp_1s.py",
+        REPO_ROOT / "src/mpc/solvers/fc_dp0_curve.py",
+        REPO_ROOT / "data/fuel_cell/FC_Dp0_curve_for_Python.csv",
+    )
+    component_hashes = "".join(sha256_file(path) for path in dependencies)
+    return hashlib.sha256(component_hashes.encode("ascii")).hexdigest()
 
 
 def prepare_case_dir(
@@ -1144,7 +1204,12 @@ def configuration_metadata(
         "formal_complete": bool(formal_complete),
         "lstm_used": False,
         "dqn_used": False,
-        "forecast": "t+1..t+6 actual natural-clipped spline load",
+        "forecast": "t+1..t+6 actual natural-clipped spline load where available",
+        "forecast_tail_policy": (
+            "same-voyage final sample edge-hold; never crosses voyage boundary"
+        ),
+        "audit_tolerances": dict(N6_TOLERANCES),
+        "state_commit_tolerances": dict(N6_STATE_COMMIT_TOLERANCES),
         "first_move_only": True,
         "configuration_summary": result["summary"],
         "configuration_summary_provenance": {
@@ -1599,16 +1664,112 @@ def write_summary_table(table: pd.DataFrame, output_path: Path) -> None:
     table.to_csv(path, index=False)
 
 
+def _validated_comparability(table: pd.DataFrame) -> np.ndarray:
+    required = {
+        "voyage_count",
+        "completed_voyage_count",
+        "completion_rate",
+        "metrics_comparable",
+    }
+    missing = sorted(required.difference(table.columns))
+    if missing:
+        raise ValueError(f"comparability validation is missing columns: {missing}")
+    voyage_count = pd.to_numeric(table["voyage_count"], errors="coerce")
+    completed = pd.to_numeric(table["completed_voyage_count"], errors="coerce")
+    completion_rate = pd.to_numeric(table["completion_rate"], errors="coerce")
+    flags = _normalized_success_flags(table["metrics_comparable"])
+    if (
+        voyage_count.isna().any()
+        or completed.isna().any()
+        or completion_rate.isna().any()
+        or flags.isna().any()
+        or (voyage_count <= 0).any()
+        or (completed < 0).any()
+        or (completed > voyage_count).any()
+    ):
+        raise ValueError("completion and metrics_comparable values are invalid")
+    expected_rate = completed / voyage_count
+    if not np.allclose(
+        completion_rate.to_numpy(dtype=float),
+        expected_rate.to_numpy(dtype=float),
+        rtol=0.0,
+        atol=1.0e-12,
+    ):
+        raise ValueError("completion_rate is inconsistent with completed voyage counts")
+    expected_flags = completed.eq(voyage_count).to_numpy(dtype=bool)
+    actual_flags = flags.astype(bool).to_numpy()
+    if not np.array_equal(actual_flags, expected_flags):
+        raise ValueError("metrics_comparable is inconsistent with voyage completion")
+    return actual_flags
+
+
+def _completion_boundaries(table: pd.DataFrame, comparable: np.ndarray) -> list[str]:
+    flag_by_id = dict(zip(table["config_id"].astype(str), comparable.tolist()))
+    baseline = table.iloc[[0]]
+    boundaries: list[str] = []
+    for weight_name in WEIGHT_NAMES:
+        changed = table.loc[table["varied_weight"].astype(str).eq(weight_name)]
+        subset = pd.concat([baseline, changed], ignore_index=True).sort_values(
+            "weight_value", kind="stable"
+        )
+        weights = pd.to_numeric(subset["weight_value"]).to_numpy(dtype=float)
+        flags = np.asarray(
+            [flag_by_id[config_id] for config_id in subset["config_id"].astype(str)],
+            dtype=bool,
+        )
+        transitions = [
+            f"[{left:g},{right:g}]"
+            for left, right, left_ok, right_ok in zip(
+                weights, weights[1:], flags, flags[1:]
+            )
+            if left_ok != right_ok
+        ]
+        if transitions:
+            boundaries.append(f"{weight_name}:{','.join(transitions)}")
+        else:
+            boundaries.append(
+                f"{weight_name}: tested [{weights[0]:g},{weights[-1]:g}] has no completion boundary"
+            )
+    return boundaries
+
+
 def write_summary_report(table: pd.DataFrame, output_path: Path) -> None:
     _validate_summary_table(table)
-    count_columns = ("voyage_count", "completed_voyage_count")
-    missing_counts = [name for name in count_columns if name not in table.columns]
-    if missing_counts:
+    required_columns = {
+        "varied_weight",
+        "weight_value",
+        "voyage_count",
+        "completed_voyage_count",
+        "completion_rate",
+        "metrics_comparable",
+        "solver_failure_count",
+        "primal_infeasible_count",
+        "max_iter_count",
+        "total_h2_kg",
+        "sum_p_batt_sq_kw2",
+        "sum_soc_error_sq",
+        "sum_fc_delta_sq_kw2",
+        "initial_soc",
+        "final_soc_mean",
+        "min_soc",
+        "max_soc",
+        "max_batt_discharge_kw",
+        "max_batt_charge_kw",
+        "max_power_balance_residual_kw",
+        "max_fc_ramp_kw_per_step",
+        "max_fc_kw",
+        "min_fc_kw",
+        "mean_solve_time_ms",
+        "p95_solve_time_ms",
+        "max_solve_time_ms",
+    }
+    missing_columns = sorted(required_columns.difference(table.columns))
+    if missing_columns:
         raise ValueError(
-            f"summary report is missing required columns: {missing_counts}"
+            f"summary report is missing required columns: {missing_columns}"
         )
     numeric_counts: dict[str, pd.Series] = {}
-    for name in count_columns:
+    for name in ("voyage_count", "completed_voyage_count"):
         values = pd.to_numeric(table[name], errors="coerce")
         if (
             values.isna().any()
@@ -1627,27 +1788,244 @@ def write_summary_report(table: pd.DataFrame, output_path: Path) -> None:
         coverage = "incomplete one-factor table"
     voyage_count = int(numeric_counts["voyage_count"].sum())
     completed_count = int(numeric_counts["completed_voyage_count"].sum())
+    comparable = _validated_comparability(table)
+    solver_failures = int(pd.to_numeric(table["solver_failure_count"]).sum())
+    primal_events = int(pd.to_numeric(table["primal_infeasible_count"]).sum())
+    max_iter_events = int(pd.to_numeric(table["max_iter_count"]).sum())
+    max_balance_residual = float(
+        pd.to_numeric(table["max_power_balance_residual_kw"]).max()
+    )
+    max_fc_ramp = float(pd.to_numeric(table["max_fc_ramp_kw_per_step"]).max())
+    max_fc_bound_residual = max(
+        0.0,
+        float(pd.to_numeric(table["max_fc_kw"]).max()) - 560.0,
+        -float(pd.to_numeric(table["min_fc_kw"]).min()),
+    )
+    max_batt_bound_residual = max(
+        0.0,
+        float(pd.to_numeric(table["max_batt_discharge_kw"]).max()) - 346.5,
+        float(pd.to_numeric(table["max_batt_charge_kw"]).max()) - 346.5,
+    )
+    soc_residuals = np.maximum.reduce(
+        (
+            np.zeros(len(table), dtype=float),
+            0.2 - pd.to_numeric(table["min_soc"]).to_numpy(dtype=float),
+            pd.to_numeric(table["max_soc"]).to_numpy(dtype=float) - 0.8,
+        )
+    )
+    max_soc_bound_residual = float(soc_residuals.max())
+    soc_tolerance = N6_TOLERANCES["soc"]
+    strict_soc_audit_failures = int((soc_residuals > soc_tolerance).sum())
     lines = [
-        "# N=6 Four-Objective MPC Sensitivity",
+        "# N=6 四目标归一化 MPC 单因素灵敏度",
         "",
-        f"- Coverage: {coverage}; {len(table)} configuration row(s).",
-        f"- Voyage completion: {completed_count}/{voyage_count} configuration-voyage runs.",
-        "- Boundary: offline oracle using t+1..t+6 actual natural-clipped spline load.",
-        "- Model usage: no LSTM; no DQN; first optimized move only.",
-        "- Decision boundary: no automatic best, score, rank, winner, or final weight selection.",
+        f"- Coverage: {coverage}; {len(table)} 个配置。",
+        f"- 配置-航段完成率：{completed_count}/{voyage_count}。",
+        "- 边界：offline oracle 使用可获得的 t+1..t+6 actual natural-clipped spline load；航段尾部采用同航段末样本 edge-hold，绝不跨航段；只执行第一步。",
+        "- Model usage: no LSTM; no DQN; first optimized move only；不增加终端 SOC、slack、额外 ramp cost 或回退控制。",
+        "- 决策边界：no automatic best, score, rank, winner, or final weight selection。",
         "",
     ]
-    if coverage != "complete 17-configuration one-factor matrix":
-        lines.append(
-            "No sensitivity trend is claimed because the complete one-factor matrix is absent."
+    baseline = table.iloc[0]
+    lines.extend(["## 全 1 baseline", ""])
+    if comparable[0]:
+        initial_soc = float(baseline["initial_soc"])
+        final_soc = float(baseline["final_soc_mean"])
+        if final_soc < initial_soc - 1.0e-12:
+            soc_direction = "平均 SOC 净下降"
+        elif final_soc > initial_soc + 1.0e-12:
+            soc_direction = "平均 SOC 净上升"
+        else:
+            soc_direction = "平均 SOC 无净变化"
+        charge_observation = (
+            "存在充电功率，轨迹不能描述为严格逐点下降"
+            if float(baseline["max_batt_charge_kw"]) > 1.0e-9
+            else "未出现充电功率"
+        )
+        reference_observation = (
+            "平均 final SOC 低于 SOC_ref=0.55"
+            if final_soc < FIXED_SOC_REFERENCE
+            else "平均 final SOC 不低于 SOC_ref=0.55"
+        )
+        lines.extend(
+            [
+                (
+                    f"{int(baseline['completed_voyage_count'])}/{int(baseline['voyage_count'])} 航段完成；"
+                    f"总氢耗 `{float(baseline['total_h2_kg']):.6f} kg`，"
+                    f"平均 final SOC `{final_soc:.6f}`，"
+                    f"全局 min SOC `{float(baseline['min_soc']):.9f}`。"
+                ),
+                (
+                    f"最大电池放电/充电为 `{float(baseline['max_batt_discharge_kw']):.3f}/"
+                    f"{float(baseline['max_batt_charge_kw']):.3f} kW`；"
+                    f"平均/p95/最大求解时间为 `{float(baseline['mean_solve_time_ms']):.6f}/"
+                    f"{float(baseline['p95_solve_time_ms']):.6f}/"
+                    f"{float(baseline['max_solve_time_ms']):.6f} ms`。"
+                ),
+                f"{soc_direction}；{charge_observation}；{reference_observation}。",
+            ]
         )
     else:
         lines.append(
-            "Physical trends and trade-offs must be read from the table and four sensitivity figures; this report does not name an optimum."
+            f"仅完成 {int(baseline['completed_voyage_count'])}/{int(baseline['voyage_count'])} 航段；累计物理量为截断前缀，不可比较。"
         )
+    lines.extend(
+        [
+            "",
+            "## 已执行轨迹约束审计",
+            "",
+            (
+                f"最大功率平衡残差 `{max_balance_residual:.3e} kW`；最大 FC 步变 "
+                f"`{max_fc_ramp:.6f} kW`；FC/电池功率边界最大数值残差 "
+                f"`{max_fc_bound_residual:.6f}/{max_batt_bound_residual:.6f} kW`。"
+            ),
+            (
+                f"SOC 上下界最大数值残差 `{max_soc_bound_residual:.3e}`；"
+                f"{strict_soc_audit_failures} 个配置超过 runner 的 `{soc_tolerance:.0e}` "
+                "SOC 审计容差，不能笼统表述为严格零越界。"
+            ),
+            "",
+        ]
+    )
+    if coverage != "complete 17-configuration one-factor matrix":
+        lines.append(
+            "完整 17 配置矩阵不存在，因此不报告灵敏度趋势或区间。"
+        )
+    else:
+        lines.extend(
+            [
+                "## 17 配置核心表",
+                "",
+                "不完整配置的累计量由完整航段与失败前缀组成，`metrics_comparable=false`，不得横向比较；下表以“截断”代替这些累计物理量。",
+                "",
+                "| 配置 | 完成 | 失败 (P/M事件) | H2 kg | ΣP_batt² | ΣSOC error² | ΣΔP_fc² | final SOC | min SOC |",
+                "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+            ]
+        )
+        for row_index, (_, row) in enumerate(table.iterrows()):
+            if comparable[row_index]:
+                physical = (
+                    f"{float(row['total_h2_kg']):.6f} | "
+                    f"{float(row['sum_p_batt_sq_kw2']):.3e} | "
+                    f"{float(row['sum_soc_error_sq']):.3f} | "
+                    f"{float(row['sum_fc_delta_sq_kw2']):.3f} | "
+                    f"{float(row['final_soc_mean']):.6f} | "
+                    f"{float(row['min_soc']):.6f}"
+                )
+            else:
+                physical = "截断 | 截断 | 截断 | 截断 | 截断 | 截断"
+            lines.append(
+                f"| {row['config_id']} | {int(row['completed_voyage_count'])}/"
+                f"{int(row['voyage_count'])} | {int(row['solver_failure_count'])} "
+                f"({int(row['primal_infeasible_count'])}/{int(row['max_iter_count'])}) | "
+                f"{physical} |"
+            )
+
+        indexed = table.set_index("config_id")
+        unacceptable = table.loc[~comparable]
+        if unacceptable.empty:
+            lines.extend(["", "没有因航段不完整而直接拒绝的配置；完整不等于已接受。"])
+        else:
+            rejected = "；".join(
+                f"{row['config_id']} {int(row['completed_voyage_count'])}/{int(row['voyage_count'])}"
+                for _, row in unacceptable.iterrows()
+            )
+            lines.extend(
+                [
+                    "",
+                    f"明显不可接受（航段不完整）：{rejected}。",
+                ]
+            )
+        def values(config_ids: tuple[str, ...], field: str, digits: int) -> str:
+            return " → ".join(
+                f"{float(indexed.at[config_id, field]):.{digits}f}"
+                for config_id in config_ids
+            )
+
+        comparable_by_id = dict(
+            zip(table["config_id"].astype(str), comparable.tolist())
+        )
+
+        def all_comparable(*config_ids: str) -> bool:
+            return all(comparable_by_id[config_id] for config_id in config_ids)
+
+        lines.extend(["", "## 可比趋势与完成率边界", ""])
+        if all_comparable("q_h2_0p25", "q_h2_0p5", "baseline_1_1_1_1"):
+            lines.append(
+                "- `q_h2` 完整点 0.25→0.5→1：H2 `"
+                + values(("q_h2_0p25", "q_h2_0p5", "baseline_1_1_1_1"), "total_h2_kg", 3)
+                + " kg`，ΣP_batt² `"
+                + values(("q_h2_0p25", "q_h2_0p5", "baseline_1_1_1_1"), "sum_p_batt_sq_kw2", 0)
+                + "`，平均 final SOC `"
+                + values(("q_h2_0p25", "q_h2_0p5", "baseline_1_1_1_1"), "final_soc_mean", 4)
+                + "`。"
+            )
+        else:
+            lines.append("- `q_h2`：完整可比点不足，物理趋势无法确认。")
+        if all_comparable("baseline_1_1_1_1", "q_batt_2", "q_batt_4"):
+            lines.append(
+                "- `q_batt` 完整点 1→2→4：ΣP_batt² `"
+                + values(("baseline_1_1_1_1", "q_batt_2", "q_batt_4"), "sum_p_batt_sq_kw2", 0)
+                + "`，平均 final SOC `"
+                + values(("baseline_1_1_1_1", "q_batt_2", "q_batt_4"), "final_soc_mean", 4)
+                + "`，代价是 H2 `"
+                + values(("baseline_1_1_1_1", "q_batt_2", "q_batt_4"), "total_h2_kg", 3)
+                + " kg`、ΣΔP_fc² `"
+                + values(("baseline_1_1_1_1", "q_batt_2", "q_batt_4"), "sum_fc_delta_sq_kw2", 0)
+                + "`。"
+            )
+        else:
+            lines.append("- `q_batt`：完整可比点不足，物理趋势无法确认。")
+        if all_comparable("baseline_1_1_1_1", "q_soc_2", "q_soc_4"):
+            lines.append(
+                "- `q_soc` 完整点 1→2→4：ΣSOC error² `"
+                + values(("baseline_1_1_1_1", "q_soc_2", "q_soc_4"), "sum_soc_error_sq", 0)
+                + "`，平均 final SOC `"
+                + values(("baseline_1_1_1_1", "q_soc_2", "q_soc_4"), "final_soc_mean", 4)
+                + "`，H2 `"
+                + values(("baseline_1_1_1_1", "q_soc_2", "q_soc_4"), "total_h2_kg", 3)
+                + " kg`。"
+            )
+        else:
+            lines.append("- `q_soc`：完整可比点不足，物理趋势无法确认。")
+        fc_ids = (
+            "q_fc_var_0p25",
+            "q_fc_var_0p5",
+            "baseline_1_1_1_1",
+            "q_fc_var_2",
+            "q_fc_var_4",
+        )
+        if all_comparable(*fc_ids):
+            lines.append(
+                "- `q_fc_var` 0.25→0.5→1→2→4 全部完成：ΣΔP_fc² `"
+                + values(fc_ids, "sum_fc_delta_sq_kw2", 0)
+                + "`，但 ΣP_batt² 同时为 `"
+                + values(fc_ids, "sum_p_batt_sq_kw2", 0)
+                + "`。"
+            )
+        else:
+            lines.append("- `q_fc_var`：完整可比点不足，物理趋势无法确认。")
+        lines.extend(
+            [
+                "",
+                "完成率转折：" + "；".join(_completion_boundaries(table, comparable)) + "。",
+                "机器报告不自动生成建议搜索区间；下一轮范围必须由人工结合物理趋势与逐航段图审阅。",
+            ]
+        )
+    lines.extend(
+        [
+            "",
+            f"求解事件合计：final failures `{solver_failures}`，primal-infeasible `{primal_events}`，max-iter `{max_iter_events}`。",
+        ]
+    )
+    if max_iter_events:
+        lines.append(
+            "max-iter 统计包含冷重启后恢复的尝试，因此事件数不等于最终失败数。"
+        )
+    lines.extend(["accepted fixed weight: none", ""])
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
 
 
 def write_summary_figures(table: pd.DataFrame, summary_dir: Path) -> None:
@@ -1666,10 +2044,17 @@ def write_summary_figures(table: pd.DataFrame, summary_dir: Path) -> None:
         "final_soc_mean",
         "min_soc",
         "completion_rate",
+        "metrics_comparable",
     }
     missing = sorted(required_metrics.difference(table.columns))
     if missing:
         raise ValueError(f"summary figures are missing required columns: {missing}")
+    comparable_by_id = dict(
+        zip(
+            table["config_id"].astype(str),
+            _validated_comparability(table).tolist(),
+        )
+    )
     output_root = Path(summary_dir)
     output_root.mkdir(parents=True, exist_ok=True)
     allowed_names = {f"{name}_sensitivity.png" for name in WEIGHT_NAMES}
@@ -1697,32 +2082,56 @@ def write_summary_figures(table: pd.DataFrame, summary_dir: Path) -> None:
             x_values, WEIGHT_VALUES, rtol=0.0, atol=0.0
         ):
             raise ValueError(f"{weight_name} sensitivity requires weights 0.25,0.5,1,2,4")
+        comparable = np.asarray(
+            [comparable_by_id[config_id] for config_id in subset["config_id"].astype(str)],
+            dtype=bool,
+        )
         figure, axes = plt.subplots(3, 2, figsize=(12, 11), sharex=True)
         try:
             flat_axes = np.asarray(axes).reshape(-1)
             for axis, (metric, label) in zip(flat_axes[:4], panel_specs):
-                axis.plot(x_values, pd.to_numeric(subset[metric]), marker="o")
+                values = pd.to_numeric(subset[metric]).to_numpy(dtype=float)
+                axis.plot(x_values, np.where(comparable, values, np.nan), marker="o")
                 axis.set_ylabel(label)
             flat_axes[4].plot(
                 x_values,
-                pd.to_numeric(subset["final_soc_mean"]),
+                np.where(
+                    comparable,
+                    pd.to_numeric(subset["final_soc_mean"]).to_numpy(dtype=float),
+                    np.nan,
+                ),
                 marker="o",
                 label="Final SOC mean",
             )
             flat_axes[4].plot(
                 x_values,
-                pd.to_numeric(subset["min_soc"]),
+                np.where(
+                    comparable,
+                    pd.to_numeric(subset["min_soc"]).to_numpy(dtype=float),
+                    np.nan,
+                ),
                 marker="s",
                 label="Minimum SOC",
             )
             flat_axes[4].set_ylabel("SOC")
             flat_axes[4].legend(loc="best")
+            completion = pd.to_numeric(subset["completion_rate"]).to_numpy(dtype=float)
             flat_axes[5].plot(
                 x_values,
-                pd.to_numeric(subset["completion_rate"]),
+                completion,
                 marker="o",
             )
             flat_axes[5].set_ylabel("Completion rate")
+            if (~comparable).any():
+                flat_axes[5].scatter(
+                    x_values[~comparable],
+                    completion[~comparable],
+                    marker="x",
+                    color="tab:red",
+                    zorder=3,
+                    label="truncated totals omitted",
+                )
+                flat_axes[5].legend(loc="best", fontsize=8)
             for axis in flat_axes:
                 axis.grid(True, alpha=0.25)
                 axis.set_xlabel(weight_name)
@@ -1770,6 +2179,15 @@ def run_experiment(
             raise ValueError(f"input does not contain diagnostic voyage: {voyage_id}")
 
     root = Path(output_dir)
+    if mode == "baseline" and voyage_id is None:
+        baseline_dir = root / cases[0].config_id
+        one_factor_evidence_exists = (root / "summary").exists() or any(
+            (root / case.config_id).exists() for case in cases[1:]
+        )
+        if one_factor_evidence_exists and (overwrite or not baseline_dir.exists()):
+            raise ValueError(
+                "formal baseline mutation would desynchronize existing one-factor evidence"
+            )
     summaries: list[dict[str, Any]] = []
     for case in selected_cases:
         case_dir = (
@@ -1798,11 +2216,10 @@ def run_experiment(
             summary = result["summary"]
         summaries.append(summary)
     table = pd.DataFrame(summaries)
-    if voyage_id is None:
+    if voyage_id is None and mode == "one-factor":
         write_summary_table(table, DEFAULT_TABLE_REPORT)
         write_summary_report(table, DEFAULT_SUMMARY_REPORT)
-        if len(table) == len(cases):
-            write_summary_figures(table, root / "summary")
+        write_summary_figures(table, root / "summary")
     return table
 
 

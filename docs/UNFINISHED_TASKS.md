@@ -14,7 +14,7 @@
 ### P0-1 Freeze the formal timing and data contract
 
 - **task:** 明确正式 1 s 实验的数据来源、decision time、LSTM history、h1–h6 预测含义、MPC stage 0–5 映射、实际负荷反馈和 SOC 更新时间。
-- **reason:** 离线 ideal-foresight `N=6` 路径已用测试固定为 `t+1..t+6`、只执行第一步和实际 SOC 更新，但正式 LSTM provider 的 history/h1–h6 映射、可用时刻和因果数据仍未接入。`N=60` 已降为历史 benchmark。
+- **reason:** 离线 ideal-foresight `N=6` 路径已用测试固定为可获得的 `t+1..t+6`、航段尾部同航段末样本 edge-hold、只执行第一步和门禁后的实际 SOC 更新，但正式 LSTM provider 的 history/h1–h6 映射、可用时刻和因果数据仍未接入。`N=60` 已降为历史 benchmark。
 - **affected_files:** formal forecast-provider/controller config, `src/main/run_lstm_mpc_test.py`, `src/main/run_mpc_1s_n6_four_objective_sensitivity.py`, `tests/test_mpc_1s_n6_four_objective_sensitivity.py`, `docs/DATA_PROVENANCE.md`.
 - **acceptance_criteria:** 一份版本化 contract 明确每个向量元素对应的物理时间；测试可检测 off-by-one、zero-delay 和未来数据泄露；正式数据被标记为 measured/causal 或 offline/reconstructed；论文主实验不把未来 spline 端点写成在线可用信息。
 - **dependencies:** none.
@@ -27,12 +27,12 @@
 - **acceptance_criteria:** horizon 固定为 6；固定稀疏结构、参数更新和 warm start 被保留；每步执行的 `P_fc/P_batt` 满足功率平衡、设备边界、SOC 边界和 48 kW/s ramp；SOC 用实际施加的 `P_batt` 更新；逐步记录 status、iterations、residual、solve time 和约束残差；具有经过测试的确定性失败回退，不用 NaN 继续控制。
 - **dependencies:** P0-1.
 
-### P0-3 Run the four-objective matrix and manually accept or reject a fixed baseline
+### P0-3 Review the completed four-objective matrix and decide whether to authorize joint screening
 
-- **task:** 先运行四权重全 1 baseline，再运行完整 17 配置 one-factor；逐航次审查功率分配、氢耗、电池使用、SOC、FC variation、硬约束和求解状态，只在证据充分时形成 provisional/accepted 固定基线。
-- **reason:** 当前 objective 已固定为 `H2_norm`、`Batt_power_sq_norm`、`SOC_tracking_sq_norm`、`FC_variation_sq_norm`，参考值分别为 `0.00883945296644347 kg/step`、`346.5 kW`、`SOC_ref=0.55`/`SOC_band=0.05`、`48 kW/step`。baseline 为四权重全 1；每项 one-factor 值为 `0.25,0.5,1,2,4`。但是 baseline 与完整 17 配置结果均未运行，不能预先宣称趋势、推荐区间或最佳权重。
+- **task:** 人工审阅已完成的全 1 baseline 和 17 配置 one-factor 结果，决定是否授权下一轮联合筛选；只有证据充分时才能形成 provisional/accepted 固定基线。
+- **reason:** 17 配置、119 个配置-航段已运行，107 个完整、12 个在失败点终止。降低 `q_h2` 或提高 `q_batt/q_soc` 可减缓 SOC 下降，提高 `q_fc_var` 可降低 FC 变化但增加电池使用；所有完整配置的平均 final SOC 均低于 0.55，因此当前没有 accepted 固定权重。报告区间只是人工审阅边界，不是新实验授权。
 - **affected_files:** `src/main/run_mpc_1s_n6_four_objective_sensitivity.py`, `tests/test_mpc_1s_n6_four_objective_sensitivity.py`, `outputs/mpc_1s_n6_four_objective_sensitivity/`, `reports/mpc_1s_n6_four_objective_sensitivity_summary.md`, `reports/mpc_1s_n6_four_objective_sensitivity_table.csv`, formal MPC config, `STATUS.md`.
-- **acceptance_criteria:** `--baseline` 先完成 7 个固定 test 航段，`--one-factor` 再形成 baseline-first 的 17 个唯一配置；复核 hard-constraint tolerance、SOC、氢耗、电池吞吐、FC variation/surplus、完成率和 1 s 实时性；明确 offline oracle 到因果预测的外推边界；基于物理指标形成显式 accepted/rejected 或证据支持的下一区间，不使用自动 best/score/rank/winner、加权总分或 least-bad 替代人工门禁；正式接受前保持 DQN 阻塞。
+- **acceptance_criteria:** 人工基于逐航段功率/SOC图、完整率、硬约束、氢耗、电池使用和 FC variation 明确授权下一轮区间或接受/拒绝固定权重；不使用自动 best/score/rank/winner、加权总分或 least-bad 替代人工门禁；正式接受前保持 DQN 阻塞。
 - **dependencies:** P0-1.
 
 ### P0-4 Remove stale parameters from the active execution path

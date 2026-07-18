@@ -506,7 +506,10 @@ class TestSensitivityRunnerContract(unittest.TestCase):
         np.testing.assert_allclose(refreshed, scaled_fresh.q, rtol=0.0, atol=1.0e-12)
 
     def test_osqp_settings_are_exact_and_have_no_fixed_adaptive_interval(self) -> None:
-        from run_mpc_1s_n6_four_objective_sensitivity import N6_OSQP_SETTINGS
+        from run_mpc_1s_n6_four_objective_sensitivity import (
+            N6_OSQP_SETTINGS,
+            N6_STATE_COMMIT_TOLERANCES,
+        )
 
         self.assertEqual(
             N6_OSQP_SETTINGS,
@@ -521,6 +524,134 @@ class TestSensitivityRunnerContract(unittest.TestCase):
             },
         )
         self.assertNotIn("adaptive_rho_interval", N6_OSQP_SETTINGS)
+        self.assertEqual(N6_STATE_COMMIT_TOLERANCES["soc"], 1.0e-5)
+
+    def test_solved_candidate_outside_commit_tolerance_is_not_applied(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.build_sensitivity_cases()[0]
+        config = module.four_objective_config(case)
+        solved_result = SimpleNamespace(
+            x=np.zeros(19, dtype=float),
+            info=SimpleNamespace(
+                status="solved inaccurate",
+                iter=50,
+                prim_res=1.0e-5,
+                dual_res=1.0e-5,
+            ),
+        )
+        rejected_step = {
+            "P_fc_plan_kw": 700.0,
+            "P_batt_plan_kw": -590.0,
+            "SOC_predicted": 0.550236,
+            "P_fc_actual_kw": 700.0,
+            "P_batt_actual_kw": -590.0,
+            "SOC_actual": 0.550236,
+        }
+        with (
+            patch.object(module, "_try_import_osqp", return_value=(object(), None)),
+            patch.object(module, "_setup_n6_osqp_solver", return_value="solver"),
+            patch.object(
+                module,
+                "_solve_with_persistent_osqp",
+                return_value=(solved_result, 0.2),
+            ) as solve,
+            patch.object(module, "extract_first_step", return_value=rejected_step),
+        ):
+            controls, solver_rows = module.run_voyage(
+                voyage_id="voyage_test",
+                loads_kw=np.array([100.0, 110.0, 120.0]),
+                times_s=np.array([0.0, 1.0, 2.0]),
+                case=case,
+                config=config,
+            )
+
+        self.assertEqual(solve.call_count, 1)
+        self.assertEqual(len(controls), 1)
+        self.assertFalse(bool(controls.iloc[0]["success"]))
+        self.assertTrue(np.isnan(controls.iloc[0]["SOC_actual"]))
+        self.assertGreater(controls.iloc[0]["fc_bound_residual_kw"], 0.1)
+        self.assertIn("commit tolerance", controls.iloc[0]["status"])
+        self.assertFalse(bool(solver_rows.iloc[0]["success"]))
+        self.assertTrue(bool(solver_rows.iloc[0]["solved_inaccurate"]))
+
+    def test_state_commit_rejects_nonfinite_solution_but_accepts_osqp_scale_soc_residual(
+        self,
+    ) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        case = module.build_sensitivity_cases()[0]
+        config = module.four_objective_config(case)
+        nonfinite_result = SimpleNamespace(
+            x=np.full(19, np.nan),
+            info=SimpleNamespace(
+                status="solved",
+                iter=25,
+                prim_res=1.0e-8,
+                dual_res=1.0e-8,
+            ),
+        )
+        with (
+            patch.object(module, "_try_import_osqp", return_value=(object(), None)),
+            patch.object(module, "_setup_n6_osqp_solver", return_value="solver"),
+            patch.object(
+                module,
+                "_solve_with_persistent_osqp",
+                return_value=(nonfinite_result, 0.1),
+            ),
+            patch.object(module, "extract_first_step") as extract,
+        ):
+            rejected, _ = module.run_voyage(
+                voyage_id="voyage_test",
+                loads_kw=np.array([100.0, 110.0]),
+                times_s=np.array([0.0, 1.0]),
+                case=case,
+                config=config,
+            )
+        extract.assert_not_called()
+        self.assertFalse(bool(rejected.iloc[0]["success"]))
+        self.assertEqual(rejected.iloc[0]["rejection_reason"], "nonfinite_solution")
+        self.assertTrue(np.isnan(rejected.iloc[0]["SOC_actual"]))
+
+        solved_result = SimpleNamespace(
+            x=np.zeros(19, dtype=float),
+            info=SimpleNamespace(
+                status="solved",
+                iter=25,
+                prim_res=1.0e-8,
+                dual_res=1.0e-8,
+            ),
+        )
+        accepted_step = {
+            "P_fc_plan_kw": 110.0,
+            "P_batt_plan_kw": 0.0,
+            "SOC_predicted": 0.2 - 5.86e-6,
+            "P_fc_actual_kw": 110.0,
+            "P_batt_actual_kw": 0.0,
+            "SOC_actual": 0.2 - 5.86e-6,
+        }
+        with (
+            patch.object(module, "_try_import_osqp", return_value=(object(), None)),
+            patch.object(module, "_setup_n6_osqp_solver", return_value="solver"),
+            patch.object(
+                module,
+                "_solve_with_persistent_osqp",
+                return_value=(solved_result, 0.1),
+            ),
+            patch.object(module, "extract_first_step", return_value=accepted_step),
+        ):
+            accepted, _ = module.run_voyage(
+                voyage_id="voyage_test",
+                loads_kw=np.array([100.0, 110.0]),
+                times_s=np.array([0.0, 1.0]),
+                case=case,
+                config=config,
+                initial_soc=0.2,
+            )
+        self.assertTrue(bool(accepted.iloc[0]["success"]))
+        self.assertGreater(accepted.iloc[0]["soc_bound_residual"], module.N6_TOLERANCES["soc"])
+        self.assertLess(accepted.iloc[0]["soc_bound_residual"], module.N6_STATE_COMMIT_TOLERANCES["soc"])
+        self.assertAlmostEqual(accepted.iloc[0]["SOC_actual"], 0.2 - 5.86e-6)
 
     def test_run_voyage_uses_fixed_soc_reference_and_stops_on_final_failure(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
@@ -965,6 +1096,15 @@ class TestSensitivityMetrics(unittest.TestCase):
                 dual_res=0.2,
             ),
         )
+        first_soc = 0.55 - 10.0 / (3600.0 * 693.0)
+        first_applied = {
+            "P_fc_plan_kw": 100.0,
+            "P_batt_plan_kw": 10.0,
+            "SOC_predicted": first_soc,
+            "P_fc_actual_kw": 100.0,
+            "P_batt_actual_kw": 10.0,
+            "SOC_actual": first_soc,
+        }
         with (
             patch.object(module, "_try_import_osqp", return_value=(object(), None)),
             patch.object(
@@ -981,6 +1121,7 @@ class TestSensitivityMetrics(unittest.TestCase):
                     (max_iter_result, 2.0),
                 ],
             ) as solve,
+            patch.object(module, "extract_first_step", return_value=first_applied),
         ):
             controls, solver_rows = module.run_voyage(
                 voyage_id="voyage_failed",
@@ -1363,8 +1504,13 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
             self.assertFalse(metadata["dqn_used"])
             self.assertEqual(
                 metadata["forecast"],
-                "t+1..t+6 actual natural-clipped spline load",
+                "t+1..t+6 actual natural-clipped spline load where available",
             )
+            self.assertEqual(
+                metadata["forecast_tail_policy"],
+                "same-voyage final sample edge-hold; never crosses voyage boundary",
+            )
+            self.assertEqual(metadata["state_commit_tolerances"]["soc"], 1.0e-5)
             self.assertTrue(metadata["first_move_only"])
             self.assertEqual(metadata["configuration_summary"], result["summary"])
             written_metrics = pd.read_csv(case_dir / "voyage_metrics.csv")
@@ -1375,6 +1521,28 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
                 rtol=0.0,
                 atol=0.0,
             )
+
+    def test_implementation_hash_covers_runtime_qp_and_hydrogen_dependencies(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        paths = []
+
+        def fake_hash(path):
+            paths.append(Path(path).resolve())
+            return "0" * 64
+
+        with patch.object(module, "sha256_file", side_effect=fake_hash):
+            digest = module._implementation_sha256()
+
+        self.assertEqual(len(digest), 64)
+        expected = {
+            Path(module.__file__).resolve(),
+            module.REPO_ROOT / "src/main/mpc_solvers/mpc_qp_formulation.py",
+            module.REPO_ROOT / "src/main/benchmark_mpc_qp_osqp_1s.py",
+            module.REPO_ROOT / "src/mpc/solvers/fc_dp0_curve.py",
+            module.REPO_ROOT / "data/fuel_cell/FC_Dp0_curve_for_Python.csv",
+        }
+        self.assertEqual(set(paths), {path.resolve() for path in expected})
 
     def test_diagnostic_artifact_has_one_plot_and_is_incomplete(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
@@ -1726,6 +1894,7 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
             self.assertIn("no lstm", report)
             self.assertIn("no dqn", report)
             self.assertIn("no automatic best", report)
+            self.assertIn("edge-hold", report)
             with self.assertRaises(ValueError):
                 module.write_summary_table(table.assign(score=1.0), root / "bad.csv")
 
@@ -1742,6 +1911,188 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
                         table.drop(columns=column),
                         Path(temporary) / "summary.md",
                     )
+
+    def test_complete_summary_report_marks_truncated_rows_and_keeps_manual_boundary(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        table = self._summary_table(module)
+        truncated = table["config_id"].eq("q_h2_2")
+        table.loc[truncated, "completed_voyage_count"] = 6
+        table.loc[truncated, "completion_rate"] = 6.0 / 7.0
+        table.loc[truncated, "metrics_comparable"] = False
+        table.loc[truncated, "solver_failure_count"] = 1
+        table.loc[truncated, "max_iter_count"] = 1
+        with tempfile.TemporaryDirectory() as temporary:
+            report_path = Path(temporary) / "summary.md"
+            module.write_summary_report(table, report_path)
+            report = report_path.read_text("utf-8")
+
+        self.assertIn("q_h2_2", report)
+        self.assertIn("截断", report)
+        self.assertIn("不完整配置的累计量", report)
+        self.assertIn("不自动生成建议搜索区间", report)
+        self.assertNotIn("`q_h2:[0.25,0.5]`", report)
+        self.assertIn("accepted fixed weight: none", report)
+
+    def test_summary_report_reports_completion_boundaries_without_selecting_intervals(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        table = self._summary_table(module)
+        completion = {
+            "q_h2_2": 6,
+            "q_h2_4": 1,
+            "q_batt_0p25": 5,
+            "q_batt_0p5": 6,
+            "q_soc_0p25": 6,
+            "q_soc_0p5": 6,
+        }
+        for config_id, completed in completion.items():
+            match = table["config_id"].eq(config_id)
+            table.loc[match, "completed_voyage_count"] = completed
+            table.loc[match, "completion_rate"] = completed / 7.0
+            table.loc[match, "metrics_comparable"] = False
+            table.loc[match, "solver_failure_count"] = 7 - completed
+            table.loc[match, "max_iter_count"] = 7 - completed
+
+        def set_values(config_id, **values):
+            match = table["config_id"].eq(config_id)
+            for field, value in values.items():
+                table.loc[match, field] = value
+
+        set_values("q_h2_0p25", min_soc=0.299)
+        set_values("q_h2_0p5", min_soc=0.199995)
+        set_values(
+            "baseline_1_1_1_1",
+            final_soc_mean=0.288,
+            sum_p_batt_sq_kw2=437.5e6,
+            sum_soc_error_sq=4672.0,
+            sum_fc_delta_sq_kw2=130390.0,
+        )
+        set_values(
+            "q_batt_2", final_soc_mean=0.380, sum_p_batt_sq_kw2=167.4e6
+        )
+        set_values(
+            "q_batt_4", final_soc_mean=0.436, sum_p_batt_sq_kw2=77.6e6
+        )
+        set_values(
+            "q_soc_2", final_soc_mean=0.305, sum_soc_error_sq=4428.0
+        )
+        set_values(
+            "q_soc_4", final_soc_mean=0.335, sum_soc_error_sq=3803.0
+        )
+        for config_id, fc_delta, batt_sq in (
+            ("q_fc_var_0p25", 158339.0, 424.4e6),
+            ("q_fc_var_0p5", 149543.0, 429.8e6),
+            ("q_fc_var_2", 100803.0, 453.6e6),
+            ("q_fc_var_4", 64072.0, 485.2e6),
+        ):
+            set_values(
+                config_id,
+                sum_fc_delta_sq_kw2=fc_delta,
+                sum_p_batt_sq_kw2=batt_sq,
+            )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            report_path = Path(temporary) / "summary.md"
+            module.write_summary_report(table, report_path)
+            report = report_path.read_text("utf-8")
+
+        self.assertIn("q_h2:[1,2]", report)
+        self.assertIn("q_batt:[0.5,1]", report)
+        self.assertIn("q_soc:[0.5,1]", report)
+        self.assertIn("q_fc_var: tested [0.25,4] has no completion boundary", report)
+        self.assertNotIn("建议审阅", report)
+        self.assertIn("不自动生成建议搜索区间", report)
+
+    def test_baseline_only_report_has_conditional_behavior_and_soc_upper_audit(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        table = self._summary_table(module).iloc[[0]].copy()
+        table.loc[:, "initial_soc"] = 0.55
+        table.loc[:, "final_soc_mean"] = 0.56
+        table.loc[:, "max_soc"] = 0.800002
+        table.loc[:, "max_batt_charge_kw"] = 0.0
+        with tempfile.TemporaryDirectory() as temporary:
+            report_path = Path(temporary) / "summary.md"
+            module.write_summary_report(table, report_path)
+            report = report_path.read_text("utf-8")
+
+        self.assertIn("## 全 1 baseline", report)
+        self.assertIn("平均 SOC 净上升", report)
+        self.assertIn("未出现充电功率", report)
+        self.assertNotIn("平均 SOC 明显净下降", report)
+        self.assertIn("2.000e-06", report)
+        self.assertIn("完整 17 配置矩阵不存在", report)
+
+    def test_report_and_figures_reject_inconsistent_comparability(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        table = self._summary_table(module)
+        mismatch = table["config_id"].eq("q_h2_2")
+        table.loc[mismatch, "completed_voyage_count"] = 6
+        table.loc[mismatch, "completion_rate"] = 6.0 / 7.0
+        table.loc[mismatch, "metrics_comparable"] = True
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(ValueError, "metrics_comparable"):
+                module.write_summary_report(table, Path(temporary) / "summary.md")
+            with self.assertRaisesRegex(ValueError, "metrics_comparable"):
+                module.write_summary_figures(table, Path(temporary) / "summary")
+
+    def test_summary_figures_omit_truncated_physical_totals(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        table = self._summary_table(module)
+        truncated = table["config_id"].isin(
+            ("q_h2_2", "q_soc_0p25", "q_soc_0p5")
+        )
+        table.loc[truncated, "metrics_comparable"] = False
+        table.loc[truncated, "completed_voyage_count"] = 6
+        table.loc[truncated, "completion_rate"] = 6.0 / 7.0
+        captured = []
+        original_subplots = module.plt.subplots
+
+        def capture(*args, **kwargs):
+            figure, axes = original_subplots(*args, **kwargs)
+            captured.append(figure)
+            return figure, axes
+
+        with tempfile.TemporaryDirectory() as temporary, patch.object(
+            module.plt, "subplots", side_effect=capture
+        ):
+            module.write_summary_figures(table, Path(temporary) / "summary")
+
+        q_h2_figure = captured[0]
+        for axis in q_h2_figure.axes[:5]:
+            for line in axis.lines:
+                y_values = np.asarray(line.get_ydata(), dtype=float)
+                self.assertTrue(np.isnan(y_values[3]))
+        completion = np.asarray(q_h2_figure.axes[5].lines[0].get_ydata(), dtype=float)
+        self.assertAlmostEqual(completion[3], 6.0 / 7.0)
+        q_h2_legend = q_h2_figure.axes[5].get_legend()
+        self.assertIsNotNone(q_h2_legend)
+        self.assertTrue(
+            any("truncated" in text.get_text().lower() for text in q_h2_legend.get_texts())
+        )
+
+        q_soc_figure = captured[2]
+        completion_axis = q_soc_figure.axes[5]
+        legend = completion_axis.get_legend()
+        self.assertIsNotNone(legend)
+        self.assertTrue(
+            any("truncated" in text.get_text().lower() for text in legend.get_texts())
+        )
+        marked_offsets = np.asarray(completion_axis.collections[0].get_offsets(), dtype=float)
+        self.assertTrue(
+            np.allclose(marked_offsets, [[0.25, 6.0 / 7.0], [0.5, 6.0 / 7.0]])
+        )
+        q_soc_figure.canvas.draw()
+        renderer = q_soc_figure.canvas.get_renderer()
+        legend_bounds = legend.get_window_extent(renderer=renderer)
+        axis_bounds = completion_axis.get_window_extent(renderer=renderer)
+        self.assertGreaterEqual(legend_bounds.x0, axis_bounds.x0)
+        self.assertGreaterEqual(legend_bounds.y0, axis_bounds.y0)
+        self.assertLessEqual(legend_bounds.x1, axis_bounds.x1)
+        self.assertLessEqual(legend_bounds.y1, axis_bounds.y1)
 
     def test_summary_figure_closes_figure_when_save_fails(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
@@ -1863,8 +2214,9 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
                 patch.object(module, "load_spline_test_data", return_value=formal_data),
                 patch.object(module, "load_matching_case", return_value=expected_summary) as reuse,
                 patch.object(module, "evaluate_configuration") as evaluate_mock,
-                patch.object(module, "write_summary_table"),
-                patch.object(module, "write_summary_report"),
+                patch.object(module, "write_summary_table") as baseline_table,
+                patch.object(module, "write_summary_report") as baseline_report,
+                patch.object(module, "write_summary_figures") as baseline_figures,
             ):
                 reused = module.run_experiment(
                     mode="baseline",
@@ -1874,6 +2226,23 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
             self.assertEqual(reused.iloc[0].to_dict(), expected_summary)
             reuse.assert_called_once()
             evaluate_mock.assert_not_called()
+            baseline_table.assert_not_called()
+            baseline_report.assert_not_called()
+            baseline_figures.assert_not_called()
+
+            (root / "reuse" / "q_h2_0p25").mkdir()
+            with (
+                patch.object(module, "load_spline_test_data", return_value=formal_data),
+                patch.object(module, "evaluate_configuration") as unsafe_evaluate,
+                self.assertRaisesRegex(ValueError, "one-factor evidence"),
+            ):
+                module.run_experiment(
+                    mode="baseline",
+                    input_path=input_path,
+                    output_dir=root / "reuse",
+                    overwrite=True,
+                )
+            unsafe_evaluate.assert_not_called()
 
             with (
                 patch.object(module, "load_spline_test_data", return_value=formal_data),

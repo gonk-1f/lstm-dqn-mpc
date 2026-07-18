@@ -43,7 +43,7 @@
 | `src/main/run_lstm_spline_1s_hparam_search.py` | 1 s direct multi-output LSTM 与 baseline 对比 | auxiliary | 当前 Task C 未超过简单 baseline |
 | `src/main/build_mpc_solver_benchmark_1s_data.py` | 构建 7 个 test 航次的 1 s benchmark 输入 | auxiliary | 入口来自离线 spline |
 | `src/main/benchmark_mpc_qp_osqp_1s.py` | OSQP `N=60` 求解器/控制 benchmark | historical | 只保留 solver/performance 证据；不再作为默认配置或继续权重搜索 |
-| `src/main/run_mpc_1s_n6_four_objective_sensitivity.py` | `N=6` 四目标 baseline/one-factor offline-oracle 实验 | active/auxiliary | 唯一入口；`t+1..t+6`、只执行第一步、实际 SOC 更新；全 1 baseline 和 17 配置均未运行，不自动选择 best |
+| `src/main/run_mpc_1s_n6_four_objective_sensitivity.py` | `N=6` 四目标 baseline/one-factor offline-oracle 实验 | active/auxiliary | 唯一入口；可获得的 `t+1..t+6`、尾部同航段末样本 edge-hold、只执行第一步、state-commit 门禁后实际 SOC 更新；全 1 baseline 和 17 配置已运行，不自动选择 best |
 | `src/main/run_lstm_mpc_test.py` | 30 s CasADi/IPOPT LSTM-MPC | historical | 有预测与实际反馈逻辑，但物理参数/求解器不是目标主线 |
 | `src/main/run_lstm_mpc_total_load_test.py` | 上述 30 s 流程的总负荷包装入口 | auxiliary | 可作为迁移参考 |
 | `src/main/run_lstm_mpc_weight_sweep.py` | 历史固定权重搜索 | historical | 不应继续扩展为无约束大搜索 |
@@ -77,7 +77,7 @@
 | `src/main/benchmark_mpc_qp_osqp_1s.py` 内的持久 OSQP workspace | historical/supporting | N=60 原始设置为 `eps_abs=eps_rel=1e-4`、`max_iter=4000`；N=6 runner 只复用边界/计时等支持函数 |
 | `src/main/run_mpc_1s_n6_four_objective_sensitivity.py` 的 N=6 workspace | active/auxiliary | 严格等价仿射缩放，`eps_abs=eps_rel=1e-5`、`max_iter=20000`、persistent OSQP 与 warm start；不构造控制 fallback |
 | 独立可部署 OSQP controller wrapper | uncertain/missing | 当前 N=6 入口是离线实验 runner；尚未封装预测 provider 和确定性控制失败回退 |
-| `outputs/mpc_1s_n6_four_objective_sensitivity/` 与 `reports/mpc_1s_n6_four_objective_sensitivity_*` | planned active evidence | baseline/17 配置产物与两份汇总报告；当前均不存在，结果未运行 |
+| `outputs/mpc_1s_n6_four_objective_sensitivity/` 与 `reports/mpc_1s_n6_four_objective_sensitivity_*` | active evidence | 17 配置、119 张逐航段图、4 张汇总图与两份报告；107/119 配置-航段完整，未接受固定权重 |
 | `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt693_simplified_spec_norm/` | historical | 693 kWh `N=60` 离线 benchmark 证据；直接保留，不依赖 N=6 指针 |
 | `outputs/mpc_solver_benchmark_1s/osqp_n60_Ebatt277p2_simplified_spec_norm/` | historical | 旧容量研究；不得作为当前物理配置 |
 | `src/mpc/` 与 `src/main/run_lstm_mpc_test.py` | historical/supporting | CasADi/IPOPT、氢耗曲线、回退和历史 SOC 设计；需择取可迁移逻辑，不应直接当 OSQP 主线 |
