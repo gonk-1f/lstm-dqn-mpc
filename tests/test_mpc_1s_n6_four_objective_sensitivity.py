@@ -1530,6 +1530,35 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
                             formal_complete=True,
                         )
 
+    def test_reuse_preserves_long_p95_through_csv_round_trip(self) -> None:
+        import run_mpc_1s_n6_four_objective_sensitivity as module
+
+        result = self._synthetic_result(module, module.EXPECTED_TEST_VOYAGES)
+        exact_p95 = 0.46425501350313453
+        result["summary"]["p95_solve_time_ms"] = exact_p95
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            input_path = root / "input.parquet"
+            input_path.write_bytes(b"input")
+            with patch.object(module, "write_voyage_plot", side_effect=self._fake_plot):
+                case_dir = module.write_configuration_artifacts(
+                    result,
+                    output_dir=root / "output",
+                    input_path=input_path,
+                    overwrite=False,
+                    diagnostic_voyage=None,
+                )
+
+            loaded = module.load_matching_case(
+                case_dir,
+                case=result["case"],
+                input_path=input_path,
+                expected_voyages=module.EXPECTED_TEST_VOYAGES,
+                formal_complete=True,
+            )
+
+        self.assertEqual(loaded["p95_solve_time_ms"], exact_p95)
+
     def test_reuse_rejects_missing_nonnumeric_infinite_or_negative_metrics(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
 

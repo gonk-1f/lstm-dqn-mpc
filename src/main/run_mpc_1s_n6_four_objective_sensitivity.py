@@ -1539,7 +1539,11 @@ def load_matching_case(
         raise ValueError("configuration voyage metadata mismatch")
 
     try:
-        voyage_metrics = pd.read_csv(metrics_path, dtype={"voyage_id": "string"})
+        voyage_metrics = pd.read_csv(
+            metrics_path,
+            dtype={"voyage_id": "string"},
+            float_precision="round_trip",
+        )
     except (OSError, ValueError, pd.errors.ParserError) as exc:
         raise ValueError(f"invalid voyage metrics: {metrics_path}") from exc
     if len(voyage_metrics) != len(expected_voyage_list):
