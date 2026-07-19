@@ -27,14 +27,14 @@ git branch --show-current
 
 ## Scientific source of truth
 
-- `STATUS.md` 是当前状态的唯一入口；`thread.md`、`project_status.md`、`next_steps.md` 仅保留历史上下文，不继续追加为事实源。
+- `STATUS.md` 是当前状态的唯一入口；旧的 `thread.md`、`project_status.md`、`next_steps.md` 已清理，不再作为事实源。
 - 目标论文主线是：实船负荷 -> LSTM 6 步预测 -> `N=6` 凸 QP-MPC -> OSQP -> SineKAN-DQN 选择 `q_h2/q_soc/q_batt` -> 用实际施加功率更新 SOC。
-- `N=60` 仅为 1 s 离线求解器/控制 benchmark，不得与正式 `N=6` 预测时域混用。
+- `N=60` 历史结果已清理，不得与正式 `N=6` 预测时域混用；`benchmark_mpc_qp_osqp_1s.py` 仅因当前 N=6 入口直接复用其求解辅助函数而保留。
 - 1 s natural-clipped 数据由 30 s 航段离线样条重构并使用未来端点，不得描述为真实在线 1 s 实测数据。
 - 当前物理候选为 `P_fc_max=560 kW`、`E_batt=693 kWh`、`|P_batt|<=346.5 kW`、`SOC_ref=0.55`、`SOC_min=0.2`、`SOC_max=0.8`、FC ramp `48 kW/s`。
-- `q_h2=0.5, q_soc=2.0, q_batt=0.05, q_ramp=0, q_terminal_soc=0` 只是 `N=60` 离线 benchmark 的暂定候选，不得自动提升为全局或论文正式权重。
+- 当前唯一固定 `N=6` 四目标权重为 `q_h2=0.25, q_batt=0.4, q_soc=12.0, q_fc_var=20.0`；不得擅自恢复旧 one-factor 配置或启动权重搜索。
 - 旧 `277.2 kWh`、`1806 kWh`、直接功率动作、左右侧功率动作和选择 `q_ramp` 的 DQN 分支均按历史/待迁移处理，除非任务明确要求审计它们。
-- 固定 `N=6` LSTM-QP-MPC 未被正式接受前，不得启动正式 DQN 训练。KAN/SineKAN 是 Q 网络类型，不是独立控制层。
+- 当前固定 `N=6` 路径仍是离线理想预知负荷，不是 LSTM 闭环；未经用户明确授权不得启动 DQN 训练。KAN/SineKAN 是 Q 网络类型，不是独立控制层。
 - 不得凭文件名、求解器 success 或已有输出宣称科学结论；核对代码、配置、数据来源、闭环行为和指标后再下结论。
 
 ## Paper metric policy
@@ -48,7 +48,7 @@ git branch --show-current
 
 - 只修改当前任务涉及的文件，保留用户已有修改；优先使用 `rg` 和定向读取。
 - 不擅自改变容量、功率边界、SOC 范围、`SOC_band`、数据划分、MPC 权重或控制时序。
-- 不删除源代码、历史结果、第三方代码或大文件；清理先记录在 `docs/CLEANUP_CANDIDATES.md`，取得明确授权后再执行。
+- 不删除源代码、历史结果、第三方代码或大文件；清理必须先取得用户对具体范围的明确授权。
 - 不提交 `venv/`、`.venv/`、缓存、日志、临时目录、编辑器个人设置、凭据或无关大型输出。已被 Git 跟踪但应忽略的内容先记录，不在无关任务中执行 `git rm`。
 - 新代码应保持模块边界、单位和功率正负号清晰，并为关键数据/控制不变量增加测试。
 

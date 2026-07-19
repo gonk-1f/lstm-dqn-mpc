@@ -276,45 +276,24 @@ class TestFourObjectiveQp(unittest.TestCase):
 
 
 class TestSensitivityRunnerContract(unittest.TestCase):
-    def test_exact_17_cases_are_unique_and_in_deterministic_order(self) -> None:
+    def test_only_candidate_c_fixed_case_is_exposed(self) -> None:
         from run_mpc_1s_n6_four_objective_sensitivity import (
             SensitivityCase,
             build_sensitivity_cases,
         )
 
         cases = build_sensitivity_cases()
-        expected_ids = [
-            "baseline_1_1_1_1",
-            "q_h2_0p25",
-            "q_h2_0p5",
-            "q_h2_2",
-            "q_h2_4",
-            "q_batt_0p25",
-            "q_batt_0p5",
-            "q_batt_2",
-            "q_batt_4",
-            "q_soc_0p25",
-            "q_soc_0p5",
-            "q_soc_2",
-            "q_soc_4",
-            "q_fc_var_0p25",
-            "q_fc_var_0p5",
-            "q_fc_var_2",
-            "q_fc_var_4",
-        ]
-        self.assertEqual([case.config_id for case in cases], expected_ids)
-        self.assertEqual(len(cases), 17)
+        self.assertEqual(len(cases), 1)
+        case = cases[0]
         self.assertEqual(
-            len({(case.q_h2, case.q_batt, case.q_soc, case.q_fc_var) for case in cases}),
-            17,
+            case.config_id,
+            "candidate_C_h2_0p25_batt_0p4_soc_12_fcvar_20",
         )
+        self.assertIsNone(case.varied_weight)
+        self.assertEqual(case.weight_value, 1.0)
         self.assertEqual(
-            [case.varied_weight for case in cases],
-            [None] + [name for name in ("q_h2", "q_batt", "q_soc", "q_fc_var") for _ in range(4)],
-        )
-        self.assertEqual(
-            [case.weight_value for case in cases],
-            [1.0] + [value for _ in range(4) for value in (0.25, 0.5, 2.0, 4.0)],
+            (case.q_h2, case.q_batt, case.q_soc, case.q_fc_var),
+            (0.25, 0.4, 12.0, 20.0),
         )
         self.assertTrue(SensitivityCase.__dataclass_params__.frozen)
 
@@ -326,7 +305,13 @@ class TestSensitivityRunnerContract(unittest.TestCase):
         self.assertEqual(module.N6_DT_SECONDS, 1.0)
         self.assertEqual(
             module.EXPECTED_TEST_VOYAGES,
-            tuple(f"voyage_{index:03d}" for index in range(60, 67)),
+            (
+                "voyage_061",
+                "voyage_063",
+                "voyage_064",
+                "voyage_065",
+                "voyage_066",
+            ),
         )
         self.assertEqual(
             module.DEFAULT_INPUT_PATH,
@@ -335,16 +320,10 @@ class TestSensitivityRunnerContract(unittest.TestCase):
         self.assertTrue(module.DEFAULT_INPUT_PATH.is_file())
         self.assertEqual(
             module.DEFAULT_OUTPUT_DIR,
-            ROOT / "outputs" / "mpc_1s_n6_four_objective_sensitivity",
+            ROOT / "outputs" / "mpc_1s_n6_candidate_C",
         )
-        self.assertEqual(
-            module.DEFAULT_SUMMARY_REPORT,
-            ROOT / "reports" / "mpc_1s_n6_four_objective_sensitivity_summary.md",
-        )
-        self.assertEqual(
-            module.DEFAULT_TABLE_REPORT,
-            ROOT / "reports" / "mpc_1s_n6_four_objective_sensitivity_table.csv",
-        )
+        self.assertFalse(hasattr(module, "DEFAULT_SUMMARY_REPORT"))
+        self.assertFalse(hasattr(module, "DEFAULT_TABLE_REPORT"))
 
     def test_baseline_config_freezes_n6_physics_and_four_weights(self) -> None:
         from run_mpc_1s_n6_four_objective_sensitivity import (
@@ -370,7 +349,7 @@ class TestSensitivityRunnerContract(unittest.TestCase):
         self.assertEqual(config.objective_variant, OBJECTIVE_VARIANT)
         self.assertEqual(
             (config.q_h2, config.q_batt, config.q_soc, config.q_fc_var),
-            (1.0, 1.0, 1.0, 1.0),
+            (0.25, 0.4, 12.0, 20.0),
         )
         self.assertEqual((config.q_ramp, config.q_terminal_soc), (0.0, 0.0))
 
@@ -1490,7 +1469,10 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
                 },
             )
             metadata = json.loads((case_dir / "config.json").read_text("utf-8"))
-            self.assertEqual(metadata["config_id"], "baseline_1_1_1_1")
+            self.assertEqual(
+                metadata["config_id"],
+                "candidate_C_h2_0p25_batt_0p4_soc_12_fcvar_20",
+            )
             self.assertEqual(set(metadata["weights"]), set(module.WEIGHT_NAMES))
             self.assertEqual(metadata["model"]["objective_variant"], module.OBJECTIVE_VARIANT)
             self.assertEqual(metadata["soc_reference"], 0.55)
@@ -1498,6 +1480,12 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
             self.assertFalse(Path(metadata["input_path"]).is_absolute())
             self.assertEqual(metadata["input_sha256"], module.sha256_file(input_path))
             self.assertEqual(len(metadata["implementation_sha256"]), 64)
+            self.assertEqual(metadata["source_sha256"], metadata["implementation_sha256"])
+            self.assertFalse(Path(metadata["split_path"]).is_absolute())
+            self.assertEqual(
+                metadata["split_sha256"],
+                module.sha256_file(module.DEFAULT_SPLIT_JSON),
+            )
             self.assertEqual(metadata["voyages"], list(module.EXPECTED_TEST_VOYAGES))
             self.assertTrue(metadata["formal_complete"])
             self.assertFalse(metadata["lstm_used"])
@@ -1599,7 +1587,7 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
             metadata_path = case_dir / "config.json"
             original = json.loads(metadata_path.read_text("utf-8"))
             mutations = {
-                "weight": lambda value: value["weights"].__setitem__("q_h2", 0.25),
+                "weight": lambda value: value["weights"].__setitem__("q_h2", 0.5),
                 "objective": lambda value: value["model"].__setitem__(
                     "objective_variant", "stale"
                 ),
@@ -1858,289 +1846,23 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
                 )
         self.assertEqual(module.plt.get_fignums(), before)
 
-    def test_summary_outputs_have_exact_schema_paths_and_no_selection_fields(self) -> None:
-        import run_mpc_1s_n6_four_objective_sensitivity as module
-
-        table = self._summary_table(module)
-        captured = []
-        original_subplots = module.plt.subplots
-
-        def capture(*args, **kwargs):
-            figure, axes = original_subplots(*args, **kwargs)
-            captured.append(figure)
-            return figure, axes
-
-        with tempfile.TemporaryDirectory() as temporary, patch.object(
-            module.plt, "subplots", side_effect=capture
-        ):
-            root = Path(temporary)
-            module.write_summary_figures(table, root / "summary")
-            self.assertEqual(
-                {path.name for path in (root / "summary").iterdir()},
-                {f"{name}_sensitivity.png" for name in module.WEIGHT_NAMES},
-            )
-            self.assertEqual([len(figure.axes) for figure in captured], [6] * 4)
-            table_path = root / "table.csv"
-            report_path = root / "summary.md"
-            module.write_summary_table(table, table_path)
-            module.write_summary_report(table, report_path)
-            written = pd.read_csv(table_path)
-            self.assertEqual(len(written), 17)
-            self.assertEqual(len(written[list(module.WEIGHT_NAMES)].drop_duplicates()), 17)
-            for forbidden in ("selected", "score", "rank", "winner", "best"):
-                self.assertFalse(any(forbidden in name.lower() for name in written.columns))
-            report = report_path.read_text("utf-8").lower()
-            self.assertIn("offline oracle", report)
-            self.assertIn("no lstm", report)
-            self.assertIn("no dqn", report)
-            self.assertIn("no automatic best", report)
-            self.assertIn("edge-hold", report)
-            with self.assertRaises(ValueError):
-                module.write_summary_table(table.assign(score=1.0), root / "bad.csv")
-
-    def test_summary_report_requires_explicit_voyage_count_columns(self) -> None:
-        import run_mpc_1s_n6_four_objective_sensitivity as module
-
-        table = self._summary_table(module)
-        with tempfile.TemporaryDirectory() as temporary:
-            for column in ("voyage_count", "completed_voyage_count"):
-                with self.subTest(column=column), self.assertRaisesRegex(
-                    ValueError, column
-                ):
-                    module.write_summary_report(
-                        table.drop(columns=column),
-                        Path(temporary) / "summary.md",
-                    )
-
-    def test_complete_summary_report_marks_truncated_rows_and_keeps_manual_boundary(self) -> None:
-        import run_mpc_1s_n6_four_objective_sensitivity as module
-
-        table = self._summary_table(module)
-        truncated = table["config_id"].eq("q_h2_2")
-        table.loc[truncated, "completed_voyage_count"] = 6
-        table.loc[truncated, "completion_rate"] = 6.0 / 7.0
-        table.loc[truncated, "metrics_comparable"] = False
-        table.loc[truncated, "solver_failure_count"] = 1
-        table.loc[truncated, "max_iter_count"] = 1
-        with tempfile.TemporaryDirectory() as temporary:
-            report_path = Path(temporary) / "summary.md"
-            module.write_summary_report(table, report_path)
-            report = report_path.read_text("utf-8")
-
-        self.assertIn("q_h2_2", report)
-        self.assertIn("截断", report)
-        self.assertIn("不完整配置的累计量", report)
-        self.assertIn("不自动生成建议搜索区间", report)
-        self.assertNotIn("`q_h2:[0.25,0.5]`", report)
-        self.assertIn("accepted fixed weight: none", report)
-
-    def test_summary_report_reports_completion_boundaries_without_selecting_intervals(self) -> None:
-        import run_mpc_1s_n6_four_objective_sensitivity as module
-
-        table = self._summary_table(module)
-        completion = {
-            "q_h2_2": 6,
-            "q_h2_4": 1,
-            "q_batt_0p25": 5,
-            "q_batt_0p5": 6,
-            "q_soc_0p25": 6,
-            "q_soc_0p5": 6,
-        }
-        for config_id, completed in completion.items():
-            match = table["config_id"].eq(config_id)
-            table.loc[match, "completed_voyage_count"] = completed
-            table.loc[match, "completion_rate"] = completed / 7.0
-            table.loc[match, "metrics_comparable"] = False
-            table.loc[match, "solver_failure_count"] = 7 - completed
-            table.loc[match, "max_iter_count"] = 7 - completed
-
-        def set_values(config_id, **values):
-            match = table["config_id"].eq(config_id)
-            for field, value in values.items():
-                table.loc[match, field] = value
-
-        set_values("q_h2_0p25", min_soc=0.299)
-        set_values("q_h2_0p5", min_soc=0.199995)
-        set_values(
-            "baseline_1_1_1_1",
-            final_soc_mean=0.288,
-            sum_p_batt_sq_kw2=437.5e6,
-            sum_soc_error_sq=4672.0,
-            sum_fc_delta_sq_kw2=130390.0,
-        )
-        set_values(
-            "q_batt_2", final_soc_mean=0.380, sum_p_batt_sq_kw2=167.4e6
-        )
-        set_values(
-            "q_batt_4", final_soc_mean=0.436, sum_p_batt_sq_kw2=77.6e6
-        )
-        set_values(
-            "q_soc_2", final_soc_mean=0.305, sum_soc_error_sq=4428.0
-        )
-        set_values(
-            "q_soc_4", final_soc_mean=0.335, sum_soc_error_sq=3803.0
-        )
-        for config_id, fc_delta, batt_sq in (
-            ("q_fc_var_0p25", 158339.0, 424.4e6),
-            ("q_fc_var_0p5", 149543.0, 429.8e6),
-            ("q_fc_var_2", 100803.0, 453.6e6),
-            ("q_fc_var_4", 64072.0, 485.2e6),
-        ):
-            set_values(
-                config_id,
-                sum_fc_delta_sq_kw2=fc_delta,
-                sum_p_batt_sq_kw2=batt_sq,
-            )
-
-        with tempfile.TemporaryDirectory() as temporary:
-            report_path = Path(temporary) / "summary.md"
-            module.write_summary_report(table, report_path)
-            report = report_path.read_text("utf-8")
-
-        self.assertIn("q_h2:[1,2]", report)
-        self.assertIn("q_batt:[0.5,1]", report)
-        self.assertIn("q_soc:[0.5,1]", report)
-        self.assertIn("q_fc_var: tested [0.25,4] has no completion boundary", report)
-        self.assertNotIn("建议审阅", report)
-        self.assertIn("不自动生成建议搜索区间", report)
-
-    def test_baseline_only_report_has_conditional_behavior_and_soc_upper_audit(self) -> None:
-        import run_mpc_1s_n6_four_objective_sensitivity as module
-
-        table = self._summary_table(module).iloc[[0]].copy()
-        table.loc[:, "initial_soc"] = 0.55
-        table.loc[:, "final_soc_mean"] = 0.56
-        table.loc[:, "max_soc"] = 0.800002
-        table.loc[:, "max_batt_charge_kw"] = 0.0
-        with tempfile.TemporaryDirectory() as temporary:
-            report_path = Path(temporary) / "summary.md"
-            module.write_summary_report(table, report_path)
-            report = report_path.read_text("utf-8")
-
-        self.assertIn("## 全 1 baseline", report)
-        self.assertIn("平均 SOC 净上升", report)
-        self.assertIn("未出现充电功率", report)
-        self.assertNotIn("平均 SOC 明显净下降", report)
-        self.assertIn("2.000e-06", report)
-        self.assertIn("完整 17 配置矩阵不存在", report)
-
-    def test_report_and_figures_reject_inconsistent_comparability(self) -> None:
-        import run_mpc_1s_n6_four_objective_sensitivity as module
-
-        table = self._summary_table(module)
-        mismatch = table["config_id"].eq("q_h2_2")
-        table.loc[mismatch, "completed_voyage_count"] = 6
-        table.loc[mismatch, "completion_rate"] = 6.0 / 7.0
-        table.loc[mismatch, "metrics_comparable"] = True
-        with tempfile.TemporaryDirectory() as temporary:
-            with self.assertRaisesRegex(ValueError, "metrics_comparable"):
-                module.write_summary_report(table, Path(temporary) / "summary.md")
-            with self.assertRaisesRegex(ValueError, "metrics_comparable"):
-                module.write_summary_figures(table, Path(temporary) / "summary")
-
-    def test_summary_figures_omit_truncated_physical_totals(self) -> None:
-        import run_mpc_1s_n6_four_objective_sensitivity as module
-
-        table = self._summary_table(module)
-        truncated = table["config_id"].isin(
-            ("q_h2_2", "q_soc_0p25", "q_soc_0p5")
-        )
-        table.loc[truncated, "metrics_comparable"] = False
-        table.loc[truncated, "completed_voyage_count"] = 6
-        table.loc[truncated, "completion_rate"] = 6.0 / 7.0
-        captured = []
-        original_subplots = module.plt.subplots
-
-        def capture(*args, **kwargs):
-            figure, axes = original_subplots(*args, **kwargs)
-            captured.append(figure)
-            return figure, axes
-
-        with tempfile.TemporaryDirectory() as temporary, patch.object(
-            module.plt, "subplots", side_effect=capture
-        ):
-            module.write_summary_figures(table, Path(temporary) / "summary")
-
-        q_h2_figure = captured[0]
-        for axis in q_h2_figure.axes[:5]:
-            for line in axis.lines:
-                y_values = np.asarray(line.get_ydata(), dtype=float)
-                self.assertTrue(np.isnan(y_values[3]))
-        completion = np.asarray(q_h2_figure.axes[5].lines[0].get_ydata(), dtype=float)
-        self.assertAlmostEqual(completion[3], 6.0 / 7.0)
-        q_h2_legend = q_h2_figure.axes[5].get_legend()
-        self.assertIsNotNone(q_h2_legend)
-        self.assertTrue(
-            any("truncated" in text.get_text().lower() for text in q_h2_legend.get_texts())
-        )
-
-        q_soc_figure = captured[2]
-        completion_axis = q_soc_figure.axes[5]
-        legend = completion_axis.get_legend()
-        self.assertIsNotNone(legend)
-        self.assertTrue(
-            any("truncated" in text.get_text().lower() for text in legend.get_texts())
-        )
-        marked_offsets = np.asarray(completion_axis.collections[0].get_offsets(), dtype=float)
-        self.assertTrue(
-            np.allclose(marked_offsets, [[0.25, 6.0 / 7.0], [0.5, 6.0 / 7.0]])
-        )
-        q_soc_figure.canvas.draw()
-        renderer = q_soc_figure.canvas.get_renderer()
-        legend_bounds = legend.get_window_extent(renderer=renderer)
-        axis_bounds = completion_axis.get_window_extent(renderer=renderer)
-        self.assertGreaterEqual(legend_bounds.x0, axis_bounds.x0)
-        self.assertGreaterEqual(legend_bounds.y0, axis_bounds.y0)
-        self.assertLessEqual(legend_bounds.x1, axis_bounds.x1)
-        self.assertLessEqual(legend_bounds.y1, axis_bounds.y1)
-
-    def test_summary_figure_closes_figure_when_save_fails(self) -> None:
-        import run_mpc_1s_n6_four_objective_sensitivity as module
-
-        table = self._summary_table(module)
-        module.plt.close("all")
-        before = module.plt.get_fignums()
-        with tempfile.TemporaryDirectory() as temporary, patch(
-            "matplotlib.figure.Figure.savefig", side_effect=RuntimeError("save failed")
-        ):
-            with self.assertRaisesRegex(RuntimeError, "save failed"):
-                module.write_summary_figures(table, Path(temporary) / "summary")
-        self.assertEqual(module.plt.get_fignums(), before)
-
-    def test_summary_figures_reject_unknown_entry_without_deleting_or_plotting(self) -> None:
-        import run_mpc_1s_n6_four_objective_sensitivity as module
-
-        table = self._summary_table(module)
-        with tempfile.TemporaryDirectory() as temporary:
-            summary_dir = Path(temporary) / "summary"
-            summary_dir.mkdir()
-            stale = summary_dir / "stale_extra.png"
-            stale.write_bytes(b"stale")
-
-            with (
-                patch.object(module.plt, "subplots") as subplots,
-                self.assertRaisesRegex(ValueError, "unexpected"),
-            ):
-                module.write_summary_figures(table, summary_dir)
-
-            subplots.assert_not_called()
-            self.assertEqual({path.name for path in summary_dir.iterdir()}, {stale.name})
-            self.assertEqual(stale.read_bytes(), b"stale")
-
-    def test_parser_is_minimal_required_and_mutually_exclusive(self) -> None:
+    def test_parser_keeps_baseline_compatibility_without_one_factor_branch(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
 
         parser = module.build_parser()
+        diagnostic_voyage = module.EXPECTED_TEST_VOYAGES[0]
         baseline = parser.parse_args(
-            ["--baseline", "--voyage", "voyage_060", "--output-dir", "custom", "--overwrite"]
+            ["--baseline", "--voyage", diagnostic_voyage, "--output-dir", "custom", "--overwrite"]
         )
         self.assertTrue(baseline.baseline)
-        self.assertFalse(baseline.one_factor)
-        self.assertEqual(baseline.voyage, "voyage_060")
+        self.assertFalse(hasattr(baseline, "one_factor"))
+        self.assertEqual(baseline.voyage, diagnostic_voyage)
         self.assertEqual(baseline.output_dir, Path("custom"))
         self.assertTrue(baseline.overwrite)
+        default = parser.parse_args([])
+        self.assertFalse(default.baseline)
         for arguments in (
-            [],
+            ["--one-factor"],
             ["--baseline", "--one-factor"],
             ["--baseline", "--voyage", "voyage_999"],
             ["--baseline", "--input", "input.parquet"],
@@ -2153,126 +1875,64 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
             ):
                 parser.parse_args(arguments)
 
-    def test_run_experiment_sequences_modes_reuses_baseline_and_skips_reports_for_diagnostic(self) -> None:
+    def test_run_experiment_evaluates_or_reuses_only_candidate_c(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
 
         formal_data = pd.DataFrame(
             {
                 "voyage_id": list(module.EXPECTED_TEST_VOYAGES),
-                "time_s": np.zeros(7),
-                "load_total_kw": np.ones(7),
+                "time_s": np.zeros(len(module.EXPECTED_TEST_VOYAGES)),
+                "load_total_kw": np.ones(len(module.EXPECTED_TEST_VOYAGES)),
             }
         )
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             input_path = root / "input.parquet"
             input_path.write_bytes(b"input")
-
-            def evaluate(case, *, data):
-                voyages = tuple(sorted(data["voyage_id"].astype(str).unique()))
-                result = self._synthetic_result(module, voyages)
-                result["case"] = case
-                result["config"] = module.four_objective_config(case)
-                result["summary"].update(
-                    {
-                        "config_id": case.config_id,
-                        "varied_weight": case.varied_weight or "baseline",
-                        "weight_value": case.weight_value,
-                        **{name: getattr(case, name) for name in module.WEIGHT_NAMES},
-                    }
-                )
-                return result
+            case = module.build_sensitivity_cases()[0]
+            result = self._synthetic_result(module, module.EXPECTED_TEST_VOYAGES)
+            result["case"] = case
+            result["config"] = module.four_objective_config(case)
 
             with (
                 patch.object(module, "load_spline_test_data", return_value=formal_data),
-                patch.object(module, "evaluate_configuration", side_effect=evaluate) as run,
-                patch.object(module, "write_configuration_artifacts"),
-                patch.object(module, "write_summary_table") as table_writer,
-                patch.object(module, "write_summary_report") as report_writer,
-                patch.object(module, "write_summary_figures") as figure_writer,
+                patch.object(module, "evaluate_configuration", return_value=result) as evaluate,
+                patch.object(module, "write_configuration_artifacts") as write_artifacts,
             ):
                 table = module.run_experiment(
-                    mode="one-factor",
                     input_path=input_path,
                     output_dir=root / "output",
                 )
-            self.assertEqual(len(table), 17)
-            self.assertEqual(
-                [call.args[0].config_id for call in run.call_args_list],
-                [case.config_id for case in module.build_sensitivity_cases()],
-            )
-            table_writer.assert_called_once()
-            report_writer.assert_called_once()
-            figure_writer.assert_called_once_with(table, root / "output" / "summary")
 
-            baseline_dir = root / "reuse" / "baseline_1_1_1_1"
-            baseline_dir.mkdir(parents=True)
-            expected_summary = self._synthetic_result(
-                module, module.EXPECTED_TEST_VOYAGES
-            )["summary"]
+            self.assertEqual(table["config_id"].tolist(), [case.config_id])
+            evaluate.assert_called_once_with(case, data=formal_data)
+            write_artifacts.assert_called_once()
+
+            case_dir = root / "reuse" / case.config_id
+            case_dir.mkdir(parents=True)
+            expected_summary = result["summary"]
             with (
                 patch.object(module, "load_spline_test_data", return_value=formal_data),
                 patch.object(module, "load_matching_case", return_value=expected_summary) as reuse,
-                patch.object(module, "evaluate_configuration") as evaluate_mock,
-                patch.object(module, "write_summary_table") as baseline_table,
-                patch.object(module, "write_summary_report") as baseline_report,
-                patch.object(module, "write_summary_figures") as baseline_figures,
+                patch.object(module, "evaluate_configuration") as evaluate_reuse,
             ):
                 reused = module.run_experiment(
-                    mode="baseline",
                     input_path=input_path,
                     output_dir=root / "reuse",
                 )
             self.assertEqual(reused.iloc[0].to_dict(), expected_summary)
             reuse.assert_called_once()
-            evaluate_mock.assert_not_called()
-            baseline_table.assert_not_called()
-            baseline_report.assert_not_called()
-            baseline_figures.assert_not_called()
+            evaluate_reuse.assert_not_called()
 
-            (root / "reuse" / "q_h2_0p25").mkdir()
-            with (
-                patch.object(module, "load_spline_test_data", return_value=formal_data),
-                patch.object(module, "evaluate_configuration") as unsafe_evaluate,
-                self.assertRaisesRegex(ValueError, "one-factor evidence"),
-            ):
-                module.run_experiment(
-                    mode="baseline",
-                    input_path=input_path,
-                    output_dir=root / "reuse",
-                    overwrite=True,
-                )
-            unsafe_evaluate.assert_not_called()
-
-            with (
-                patch.object(module, "load_spline_test_data", return_value=formal_data),
-                patch.object(module, "evaluate_configuration", side_effect=evaluate),
-                patch.object(module, "write_configuration_artifacts") as artifact_writer,
-                patch.object(module, "write_summary_table") as diagnostic_table,
-                patch.object(module, "write_summary_report") as diagnostic_report,
-                patch.object(module, "write_summary_figures") as diagnostic_figures,
-            ):
-                diagnostic = module.run_experiment(
-                    mode="baseline",
-                    input_path=input_path,
-                    output_dir=root / "diagnostic",
-                    voyage_id="voyage_060",
-                )
-            self.assertEqual(len(diagnostic), 1)
-            self.assertEqual(artifact_writer.call_args.kwargs["diagnostic_voyage"], "voyage_060")
-            diagnostic_table.assert_not_called()
-            diagnostic_report.assert_not_called()
-            diagnostic_figures.assert_not_called()
-
-    def test_main_maps_exact_mode_to_run_experiment(self) -> None:
+    def test_main_runs_fixed_candidate_c_with_compatible_baseline_flag(self) -> None:
         import run_mpc_1s_n6_four_objective_sensitivity as module
 
+        diagnostic_voyage = module.EXPECTED_TEST_VOYAGES[0]
         with patch.object(module, "run_experiment") as run:
-            module.main(["--baseline", "--voyage", "voyage_060"])
+            module.main(["--baseline", "--voyage", diagnostic_voyage])
         run.assert_called_once_with(
-            mode="baseline",
             output_dir=module.DEFAULT_OUTPUT_DIR,
-            voyage_id="voyage_060",
+            voyage_id=diagnostic_voyage,
             overwrite=False,
         )
 

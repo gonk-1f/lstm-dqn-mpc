@@ -15,7 +15,6 @@ from build_spline_1s_diagnostics import (  # noqa: E402
     compute_predictability_audit,
     reconstruct_voyage_spline,
 )
-from run_spline_1s_lstm_diagnostic import prepare_spline_lstm_source  # noqa: E402
 
 
 class TestSpline1sDiagnostics(unittest.TestCase):
@@ -134,57 +133,6 @@ class TestSpline1sDiagnostics(unittest.TestCase):
         self.assertAlmostEqual(float(row["last_slope_h6_MAE"]), 0.0)
         self.assertFalse(bool(row["online_feasible"]))
         self.assertTrue(bool(row["uses_future_endpoint"]))
-
-    def test_prepare_spline_lstm_source_adds_voyage_name_and_split_metadata(self) -> None:
-        with self.subTest("source conversion"):
-            source = pd.DataFrame(
-                {
-                    "dataset_version": ["demo"] * 4,
-                    "voyage_id": ["voyage_001", "voyage_001", "voyage_002", "voyage_002"],
-                    "split": ["train", "train", "test", "test"],
-                    "timestamp": pd.to_datetime(
-                        [
-                            "2024-01-01 00:00:00",
-                            "2024-01-01 00:00:01",
-                            "2024-01-02 00:00:00",
-                            "2024-01-02 00:00:01",
-                        ]
-                    ),
-                    "time_s": [0.0, 1.0, 0.0, 1.0],
-                    "load_total_kw": [1.0, 2.0, 3.0, 4.0],
-                    "online_feasible": [False] * 4,
-                    "uses_future_endpoint": [True] * 4,
-                }
-            )
-            split = {
-                "train_voyages": ["voyage_001"],
-                "validation_voyages": [],
-                "test_voyages": ["voyage_002"],
-            }
-            import tempfile
-
-            with tempfile.TemporaryDirectory() as tmp:
-                root = Path(tmp)
-                source_csv = root / "source.csv"
-                split_json = root / "split.json"
-                source.to_csv(source_csv, index=False)
-                split_json.write_text(__import__("json").dumps(split), encoding="utf-8")
-
-                result = prepare_spline_lstm_source(
-                    source_csv=source_csv,
-                    base_split_json=split_json,
-                    output_dir=root / "prepared",
-                    dataset_version="demo",
-                )
-
-                prepared = pd.read_csv(result["source_csv"])
-                self.assertIn("voyage_name", prepared.columns)
-                self.assertEqual(prepared["voyage_name"].tolist(), prepared["voyage_id"].tolist())
-                payload = __import__("json").loads(Path(result["split_json"]).read_text(encoding="utf-8"))
-                self.assertEqual(payload["sample_interval_seconds"], 1.0)
-                self.assertFalse(payload["online_feasible"])
-                self.assertTrue(payload["uses_future_endpoint"])
-
 
 if __name__ == "__main__":
     unittest.main()

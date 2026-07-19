@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_INPUT_DIR = ROOT / "outputs" / "spline_1s_diagnostics" / "data" / "natural_clipped_by_voyage"
 DEFAULT_OUTPUT_DIR = ROOT / "outputs" / "mpc_solver_benchmark_1s" / "data"
+DEFAULT_SPLIT_JSON = ROOT / "outputs" / "config" / "voyage_split_total_load_721.json"
 SKIP_MARKER = ROOT / "outputs" / "mpc_solver_benchmark_1s" / "SKIP_BENCHMARK_DATA_NOT_READY.txt"
 
 REQUIRED_COLUMNS = (
@@ -47,6 +49,53 @@ def _parse_bool_series(values: pd.Series, *, default: bool) -> pd.Series:
 def _write_skip(reason: str) -> None:
     SKIP_MARKER.parent.mkdir(parents=True, exist_ok=True)
     SKIP_MARKER.write_text(reason.strip() + "\n", encoding="utf-8")
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _apply_active_split(frame: pd.DataFrame, split_json_path: Path) -> tuple[pd.DataFrame, dict[str, Any]]:
+    path = Path(split_json_path)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    required = ("train_voyages", "validation_voyages", "test_voyages")
+    if any(not isinstance(payload.get(name), list) for name in required):
+        raise ValueError(f"Active split JSON is missing voyage lists: {path}")
+
+    groups = {name: [str(value) for value in payload[name]] for name in required}
+    excluded = [str(value) for value in payload.get("excluded_voyages", [])]
+    flattened = [voyage for name in required for voyage in groups[name]]
+    if len(flattened) != len(set(flattened)):
+        raise ValueError("Active train/validation/test voyage lists overlap or contain duplicates")
+    if len(excluded) != len(set(excluded)) or set(flattened).intersection(excluded):
+        raise ValueError("Active excluded voyage list overlaps a dataset split or contains duplicates")
+
+    actual = set(frame["voyage_id"].astype(str).unique())
+    declared = set(flattened).union(excluded)
+    if actual != declared:
+        raise ValueError(
+            "Active split JSON and available 1 s voyages differ: "
+            f"missing={sorted(declared - actual)}, unexpected={sorted(actual - declared)}"
+        )
+
+    split_by_voyage = {
+        voyage: split_name
+        for split_name, key in (
+            ("train", "train_voyages"),
+            ("validation", "validation_voyages"),
+            ("test", "test_voyages"),
+        )
+        for voyage in groups[key]
+    }
+    retained = frame.loc[~frame["voyage_id"].isin(excluded)].copy()
+    retained["split"] = retained["voyage_id"].map(split_by_voyage)
+    if retained["split"].isna().any():
+        raise ValueError("Active split assignment left retained 1 s rows unassigned")
+    return retained, payload
 
 
 def _read_voyage_csv(path: Path) -> pd.DataFrame:
@@ -146,6 +195,7 @@ def build_benchmark_dataset(
     *,
     input_dir: str | Path = DEFAULT_INPUT_DIR,
     output_dir: str | Path = DEFAULT_OUTPUT_DIR,
+    split_json_path: str | Path = DEFAULT_SPLIT_JSON,
 ) -> dict[str, str | int | float | list[str]]:
     source_dir = Path(input_dir)
     out_dir = Path(output_dir)
@@ -164,6 +214,8 @@ def build_benchmark_dataset(
         _write_skip(reason)
         raise ValueError(reason)
 
+    active_split_path = Path(split_json_path)
+    all_data, active_split = _apply_active_split(all_data, active_split_path)
     all_summary = _quality_summary(all_data)
     test_data = all_data[all_data["split"].eq("test")].copy()
     if test_data.empty:
@@ -204,11 +256,13 @@ def build_benchmark_dataset(
         "online_feasible": False,
         "uses_future_endpoint": True,
         "not_measured_1s": True,
-        "train_voyages": sorted(all_data.loc[all_data["split"].eq("train"), "voyage_id"].unique().tolist()),
-        "validation_voyages": sorted(
-            all_data.loc[all_data["split"].isin(["validation", "val"]), "voyage_id"].unique().tolist()
-        ),
-        "test_voyages": sorted(test_data["voyage_id"].unique().tolist()),
+        "authoritative": False,
+        "active_split_json": str(active_split_path),
+        "active_split_sha256": _sha256_file(active_split_path),
+        "train_voyages": [str(value) for value in active_split["train_voyages"]],
+        "validation_voyages": [str(value) for value in active_split["validation_voyages"]],
+        "test_voyages": [str(value) for value in active_split["test_voyages"]],
+        "excluded_voyages": [str(value) for value in active_split.get("excluded_voyages", [])],
         "test_rows": int(len(test_data)),
         "required_columns_preserved": list(REQUIRED_COLUMNS),
     }
@@ -245,4 +299,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

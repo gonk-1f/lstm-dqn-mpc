@@ -1,2 +1,0 @@
-scope,power_balance_violation_max_kw,power_balance_tolerance_kw,SOC_violation_count,SOC_violation_tolerance,battery_power_violation_max_kw,battery_power_violation_count,fc_power_violation_max_kw,fc_power_violation_count,power_bound_violation_tolerance_kw,fc_ramp_max_kw_per_step,fc_ramp_limit_kw_per_step,fc_ramp_violation_count
-overall,0.003735042546963996,0.01,0,1e-06,0.02341368713200609,0,0.04389826499573246,0,0.1,48.0,48.0,0

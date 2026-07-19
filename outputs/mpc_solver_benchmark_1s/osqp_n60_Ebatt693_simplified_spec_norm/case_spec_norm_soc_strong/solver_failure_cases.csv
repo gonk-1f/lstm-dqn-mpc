@@ -1,2 +1,0 @@
-voyage_id,step,time_s,status,success,total_controller_ms,iterations,load_total_kw,P_fc_kw,P_batt_kw,SOC,balance_violation_kw,ramp_violation_kw,soc_violation
-voyage_063,24595,24595.0,maximum iterations reached,False,97.23710000980645,4000,216.6271304300796,,,0.4643553626675709,,,0.0

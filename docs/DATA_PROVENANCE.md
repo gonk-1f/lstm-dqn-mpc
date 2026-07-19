@@ -53,9 +53,7 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 
 ### Build artifacts
 
-- 合并 CSV：`outputs/total_load_dataset_build/total_load_66_segments.csv`。
-- 合并 Parquet：`outputs/total_load_dataset_build/total_load_66_segments.parquet`。
-- 航次摘要：`outputs/total_load_dataset_build/summary_total_load_66.csv`。
+- 原始数据保持在 `total_load_excels/`；重复合并 CSV/Parquet 和旧航次摘要已在仓库精简中删除，未重新生成。
 - 权威划分：`outputs/config/voyage_split_total_load_721.json`。
 
 ### 66-voyage list and split
@@ -64,20 +62,13 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 
 | Split | Voyage IDs | Count |
 | --- | --- | ---: |
-| train | `voyage_001`, `voyage_002`, `voyage_003`, `voyage_004`, `voyage_005`, `voyage_006`, `voyage_007`, `voyage_008`, `voyage_009`, `voyage_010`, `voyage_011`, `voyage_012`, `voyage_013`, `voyage_014`, `voyage_015`, `voyage_016`, `voyage_017`, `voyage_018`, `voyage_019`, `voyage_020`, `voyage_021`, `voyage_022`, `voyage_023`, `voyage_024`, `voyage_025`, `voyage_026`, `voyage_027`, `voyage_028`, `voyage_029`, `voyage_030`, `voyage_031`, `voyage_032`, `voyage_033`, `voyage_034`, `voyage_035`, `voyage_036`, `voyage_037`, `voyage_038`, `voyage_039`, `voyage_040`, `voyage_041`, `voyage_042`, `voyage_043`, `voyage_044`, `voyage_045`, `voyage_046` | 46 |
-| validation | `voyage_047`, `voyage_048`, `voyage_049`, `voyage_050`, `voyage_051`, `voyage_052`, `voyage_053`, `voyage_054`, `voyage_055`, `voyage_056`, `voyage_057`, `voyage_058`, `voyage_059` | 13 |
-| test | `voyage_060`, `voyage_061`, `voyage_062`, `voyage_063`, `voyage_064`, `voyage_065`, `voyage_066` | 7 |
+| train | `voyage_002`, `voyage_005`, `voyage_006`, `voyage_007`, `voyage_008`, `voyage_009`, `voyage_010`, `voyage_012`, `voyage_013`, `voyage_014`, `voyage_015`, `voyage_016`, `voyage_018`, `voyage_019`, `voyage_020`, `voyage_021`, `voyage_023`, `voyage_025`, `voyage_027`, `voyage_028`, `voyage_029`, `voyage_030`, `voyage_031`, `voyage_034`, `voyage_035`, `voyage_036`, `voyage_037`, `voyage_038`, `voyage_039`, `voyage_040`, `voyage_041`, `voyage_042`, `voyage_043`, `voyage_044`, `voyage_046` | 35 |
+| validation | `voyage_047`, `voyage_048`, `voyage_049`, `voyage_050`, `voyage_051`, `voyage_053`, `voyage_054`, `voyage_055`, `voyage_056`, `voyage_057` | 10 |
+| test | `voyage_061`, `voyage_063`, `voyage_064`, `voyage_065`, `voyage_066` | 5 |
 
-### 30 s forecasting line
+排除航段为 `voyage_001, 003, 004, 011, 017, 022, 024, 026, 032, 033, 045, 052, 058, 059, 060, 062`。原始文件和稳定 ID 均保留；排除证据见 `docs/VOYAGE_DATA_QUALITY_AUDIT.md`。划分仍为按开始时间排序的 7:2:1，50 个正常航段按 floor(70%)/floor(20%)/余数得到 35/10/5，不使用随机种子。
 
-- 当前 66 航段入口：`src/main/run_train_lstm_total_load_721.py`。
-- 模型：PyTorch LSTM，一次性输出全部未来步，是 direct multi-output。
-- 默认窗口：history 18 步（9 min），prediction 6 步（3 min），采样 30 s。
-- 默认 seed：42；early stopping patience：10。
-- scaler：只在 train 航次拟合。
-- 窗口：按 `voyage_id` 分组，不跨航次。
-- 输出：`outputs/lstm_total_load_721/`，包含 checkpoint、配置、test 指标和逐 horizon 指标。
-- 历史入口 `src/main/run_train_lstm_721.py` 使用另一套较早的航次集合/划分；其 `outputs/lstm_721/` checkpoint 不应与 66 航段结果混报。
+旧 30 s LSTM 训练入口已从 `src/main` 清理；历史输出未在本轮越权删除，也不属于当前固定 MPC 的运行依赖。
 
 ## B. Offline 1 s cubic-spline reconstruction
 
@@ -88,38 +79,27 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 - 插值：SciPy `CubicSpline`，同时诊断 `bc_type="natural"` 和默认 not-a-knot；后续 retained 输入使用 natural。
 - 时间网格：每 1 s 一个点。
 - 裁剪：natural 结果做 `max(value, 0)` 非负裁剪，形成 natural-clipped 数据。
-- 边界：不跨航次拟合；划分仍沿用 46/13/7。
+- 边界：不跨航次拟合。保存的每航段 1 s CSV 未改写传感器或样条值；当前 benchmark builder 以权威活动 JSON 在内存覆盖其历史内嵌 split 并排除异常航段。
 - 关键标记：构建输出明确记录 `online_feasible=false`、`uses_future_endpoint=true`。
 
 ### Storage and consumers
 
 - 逐航次 66 个 natural-clipped CSV：`outputs/spline_1s_diagnostics/data/natural_clipped_by_voyage/`。
 - 逐航次 manifest：同目录下 `manifest.csv`。
-- 综合诊断和报告：`outputs/spline_1s_diagnostics/`。
-- 1 s LSTM：`src/main/run_lstm_spline_1s_hparam_search.py`。
-- 固定 Task C 结果：`outputs/lstm_spline_1s_hparam_search/fixed_taskC_30_to_6_20260709_145010/`。
+- 重复合并文件、旧图、模型和诊断汇总已清理；逐航次 natural-clipped 文件及 manifest 保留。
 - OSQP benchmark 数据构建：`src/main/build_mpc_solver_benchmark_1s_data.py`。
-- benchmark 输入：`outputs/mpc_solver_benchmark_1s/data/test_voyages_spline_1s.parquet`，包含 7 个 test 航次、93,037 行。
+- benchmark 输入：`outputs/mpc_solver_benchmark_1s/data/test_voyages_spline_1s.parquet`，包含 5 个 test 航次、71,735 行。
 
 ### N=6 four-objective offline-oracle experiment
 
 - 唯一入口：`src/main/run_mpc_1s_n6_four_objective_sensitivity.py`；唯一 focused test：`tests/test_mpc_1s_n6_four_objective_sensitivity.py`。
-- 固定输入：`outputs/mpc_solver_benchmark_1s/data/test_voyages_spline_1s.parquet`。正式运行强制检查 `voyage_060..voyage_066`、`split=test`、数据版本和逐航段严格 1 s 间隔。
+- 固定输入：`outputs/mpc_solver_benchmark_1s/data/test_voyages_spline_1s.parquet`。正式运行从权威活动 JSON 读取 `voyage_061, 063, 064, 065, 066`，并强制检查 `split=test`、数据版本和逐航段严格 1 s 间隔。
 - 时刻 `t` 使用同航段的真实重构点 `t+1..t+6`；航段尾部只重复本航段末点，不跨航段。该信息在决策时并非因果可得，因此实验标签必须是 offline oracle/ideal foresight。
 - MPC 预测/控制时域均为 6，但每次只执行第一步；实际电池功率由 `load_actual(t+1)-P_fc(t+1)` 得到，SOC 用该实际功率更新。
 - 四项目标是 `H2_norm`、`Batt_power_sq_norm`、`SOC_tracking_sq_norm` 和 `FC_variation_sq_norm`。归一化参考分别为 `m_H2(560 kW, 1 s)=0.00883945296644347 kg/step`、`346.5 kW`、`SOC_ref=0.55` 与 `SOC_band=0.05`、`48 kW/step`；FC variation 包含第一步相对 `P_fc_prev` 以及后续相邻步差。
-- baseline 固定 `q_h2=q_batt=q_soc=q_fc_var=1`。one-factor 对每项分别取 `0.25, 0.5, 1, 2, 4`，其余项保持 1；共享 baseline 后总计 17 个唯一配置。
-- 命令仅为 `python src/main/run_mpc_1s_n6_four_objective_sensitivity.py --baseline` 与 `python src/main/run_mpc_1s_n6_four_objective_sensitivity.py --one-factor`。两者均不使用 LSTM 或 DQN，只执行优化第一步，也不自动生成 best/score/rank/winner 或最终权重。
-- 运行产物路径为 `outputs/mpc_1s_n6_four_objective_sensitivity/`；汇总报告路径为 `reports/mpc_1s_n6_four_objective_sensitivity_summary.md` 和 `reports/mpc_1s_n6_four_objective_sensitivity_table.csv`。全 1 baseline 与完整 17 配置均已运行：119 个配置-航段中 107 个完整、12 个在失败点终止。完成率不足 1 的聚合累计量包含不等长失败前缀，`metrics_comparable=false`，不得用于物理量横向比较；本轮未自动或人工接受最终权重。
-
-### Forecast configuration and evidence
-
-- history = 30 s（30 步），prediction = 6 s（6 步）。
-- direct multi-output，不采用 recursive rollout。
-- scaler 只在 train 航次拟合；窗口按航次生成。
-- baseline 包括 current-hold、last-slope、moving-average-hold、EMA-hold。
-- 报告指标包括 MAE、RMSE、WAPE、Bias 和逐 horizon 指标。
-- 当前固定 Task C 的 LSTM test MAE 约为 h1 1.79 kW、h6 3.85 kW；last-slope 约为 h1 0.04 kW、h6 0.80 kW。LSTM 未超过简单基线。
+- 唯一配置为 candidate_C：`q_h2=0.25`、`q_batt=0.4`、`q_soc=12.0`、`q_fc_var=20.0`。旧 17 组 one-factor 配置和 CLI 分支已删除。
+- 兼容命令为 `python src/main/run_mpc_1s_n6_four_objective_sensitivity.py --baseline`；它不使用 LSTM 或 DQN，只执行优化第一步。
+- 运行产物路径为 `outputs/mpc_1s_n6_candidate_C/`。正式结果覆盖新测试集五个航段，均完整且无 solver failure；配置记录源码、活动划分、输入哈希和实际航段列表。
 
 ### Causality boundary
 
@@ -159,15 +139,9 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 - 两个源工作簿都出现在三个 split 中，但分配的原子序列不同；manifest 保存各序列 SHA-256。
 - split 的声明依据是行数匹配、每个 split 覆盖两个工作簿和负载分布相似性，不使用模型或 test 指标。
 
-### Forecasting scope
+### 保留范围
 
-- 模型：`src/forecasting/millisecond_multistep_lstm.py`。
-- 入口：`src/main/run_lstm_millisecond_10ms_search.py`。
-- direct multi-output；按 `sequence_id` 建窗；train-only `StandardScaler`。
-- baseline：current-hold、last-slope、local-linear-trend。
-- 指标：MAE、RMSE、WAPE、Bias、R2 和逐 horizon 指标。
-- 未发现正式的目标 checkpoint/完整结果目录，只有实现、数据、测试和临时 smoke 产物。
-- 该路线只验证短采样预测延迟/误差，不进入船舶 MPC 或 DQN 默认流程。
+保留 1 ms 原始数据、10 ms 抽点数据、构建/审计入口和活动 split JSON。旧 10 ms LSTM 搜索入口与 smoke 产物已删除；该数据不进入当前船舶 MPC 或 DQN 流程。
 
 ## Leakage and integrity audit
 
@@ -175,8 +149,8 @@ QP 主线的符号约定是电池正功率放电、负功率充电，满足 `P_f
 | --- | --- | --- |
 | 30 s 跨航次窗口 | split manifest 声明不跨航次，训练代码按 voyage 分组 | 应增加对所有正式入口的统一 invariant 测试 |
 | 30 s scaler 泄露 | 只拟合 train 航次 | 保存的旧 checkpoint/run_config 含旧绝对路径，需迁移后重验 |
-| 1 s 跨 split 泄露 | 逐航次拟合，46/13/7 航次隔离 | 信号在每个 30 s 区间使用未来端点，存在在线因果泄露 |
-| 1 s benchmark 真实度 | N=60 标为 historical；当前 N=6 四目标契约显式固定 offline oracle、`lstm_used=false`、`dqn_used=false`、第一步执行、可获得的 `t+1..t+6` 及航段尾部同航段末样本 edge-hold | 使用未来重构负荷作为 horizon，不能等同 LSTM 闭环或在线控制；17 配置结果只提供离线上界与灵敏度证据 |
+| 1 s 跨 split 泄露 | 逐航次拟合，审计后 35/10/5 航次隔离 | 信号在每个 30 s 区间使用未来端点，存在在线因果泄露 |
+| 1 s benchmark 真实度 | 当前 N=6 四目标契约显式固定 offline oracle、`lstm_used=false`、`dqn_used=false`、第一步执行、可获得的 `t+1..t+6` 及航段尾部同航段末样本 edge-hold | 使用未来重构负荷作为 horizon，不能等同 LSTM 闭环或在线控制；candidate_C 结果只提供离线控制证据 |
 | 10 ms 跨序列窗口 | 按原子序列建窗并保存 hash | 同一工作簿的不同工况段跨 split，可能共享采集条件；需在论文中说明 |
 | 10 ms scaler 泄露 | manifest 和模型均指定 train-only；audit 严格要求 train/validation/test key 集合 | 仍需在 CI 中持续执行完整数据审计 |
 | 10 ms 抽点混叠 | 明确记录 direct decimation | 未做抗混叠滤波，不能把高频谱结论外推 |

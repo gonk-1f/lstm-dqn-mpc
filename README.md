@@ -23,9 +23,9 @@ load data
 
 | 数据线 | 来源与采样 | 当前用途 | 事实边界 |
 | --- | --- | --- | --- |
-| 原始 30 s 实船航段 | `total_load_excels/` 中 66 个 Excel 航段 | 原始依据、30 s LSTM、历史 CasADi LSTM-MPC | 实测数据；按航次分组，不应跨航次建窗 |
-| 三次样条 1 s 数据 | 由 30 s 航段逐航次离线重构，保存在 `outputs/spline_1s_diagnostics/data/natural_clipped_by_voyage/` | 1 s 预测诊断、OSQP 求解器和离线控制 benchmark | 使用未来端点，不能称为真实在线 1 s 实测数据 |
-| 毫秒原始数据与 10 ms 抽点数据 | `data/millisecond_1ms/` 与 `data/millisecond_10ms/` | 高频短时 LSTM 辅助实验 | 负载尺度与船舶主线不同，不是 MPC/DQN 默认数据源 |
+| 原始 30 s 实船航段 | `total_load_excels/` 中 66 个 Excel 航段 | 原始依据与 1 s 数据构建 | 实测数据；按航次分组，不应跨航次建窗 |
+| 三次样条 1 s 数据 | 由 30 s 航段逐航次离线重构，保存在 `outputs/spline_1s_diagnostics/data/natural_clipped_by_voyage/` | OSQP 离线控制输入 | 使用未来端点，不能称为真实在线 1 s 实测数据 |
+| 毫秒原始数据与 10 ms 抽点数据 | `data/millisecond_1ms/` 与 `data/millisecond_10ms/` | 数据处理与审计 | 负载尺度与船舶主线不同，不是 MPC/DQN 默认数据源 |
 
 详细来源、字段、划分和泄露边界见 `docs/DATA_PROVENANCE.md`。
 
@@ -35,7 +35,7 @@ load data
 
 | 项目 | 当前约定 |
 | --- | --- |
-| 航段 | 66 个；按时间顺序划分为 train/validation/test = 46/13/7 |
+| 航段 | 66 个原始航段；审计排除 16 个异常航段后，50 个正常航段按时间顺序划分为 train/validation/test = 35/10/5 |
 | benchmark 采样间隔 | 1 s（离线 spline 重构） |
 | 1 s 数据 | 30 s 实船数据的 natural cubic spline 离线重构并做非负裁剪 |
 | LSTM | direct multi-output；history = 30，prediction = 6 |
@@ -44,10 +44,10 @@ load data
 | SOC | `SOC_ref = 0.55`，`SOC_min = 0.2`，`SOC_max = 0.8`，当前 693 kWh benchmark 的 `SOC_band = 0.05` |
 | 燃料电池爬坡 | `48 kW/s` 硬约束 |
 | MPC 求解 | 凸 QP，OSQP，固定稀疏结构、参数更新、warm start 与等价数值缩放 |
-| `N=6` 四目标灵敏度 | offline oracle 使用可获得的真实样条点 `t+1..t+6`，航段尾部同航段末样本 edge-hold，每次只执行第一步；不使用 LSTM 或 DQN |
+| `N=6` 四目标固定控制 | offline oracle 使用可获得的真实样条点 `t+1..t+6`，航段尾部同航段末样本 edge-hold，每次只执行第一步；固定 candidate_C，不使用 LSTM 或 DQN |
 | DQN 目标接口 | SineKAN Q 网络选择 `q_h2`、`q_soc`、`q_batt` |
 
-`N=60` 只作为历史 1 s 离线 OSQP solver/performance benchmark；论文目标 LSTM 预测时域是 `N=6`，二者不得作为同一个默认配置。当前唯一的正式 `N=6` 离线入口是 `src/main/run_mpc_1s_n6_four_objective_sensitivity.py`，其归一化目标为：
+历史 `N=60` 结果已清理；`benchmark_mpc_qp_osqp_1s.py` 仅因当前入口直接复用其中的 OSQP 辅助函数而保留。当前唯一的正式 `N=6` 离线入口是 `src/main/run_mpc_1s_n6_four_objective_sensitivity.py`，其归一化目标为：
 
 ```text
 J = q_h2    * sum[k=0..5] m_H2(P_fc[k]) / m_H2(560 kW, 1 s)
@@ -57,28 +57,28 @@ J = q_h2    * sum[k=0..5] m_H2(P_fc[k]) / m_H2(560 kW, 1 s)
                 + sum[k=1..5] ((P_fc[k] - P_fc[k-1]) / 48 kW)^2)
 ```
 
-氢耗项使用单一参考 `m_H2(560 kW, 1 s)=0.00883945296644347 kg/step`；其余三个归一化参考是 `346.5 kW` 电池功率、`SOC_ref=0.55` 与 `SOC_band=0.05`、以及 `48 kW/step` 燃料电池变化量。baseline 为 `q_h2=q_batt=q_soc=q_fc_var=1`；one-factor 矩阵对每一项分别使用 `0.25, 0.5, 1, 2, 4`，共享全 1 baseline，共 17 个唯一配置。全矩阵已正式运行并人工审查；该流程不自动计算 best/score/rank/winner，也未接受最终权重。物理趋势、失败配置和仅供下一轮人工审阅的区间见正式汇总报告。
+氢耗项使用单一参考 `m_H2(560 kW, 1 s)=0.00883945296644347 kg/step`；其余三个归一化参考是 `346.5 kW` 电池功率、`SOC_ref=0.55` 与 `SOC_band=0.05`、以及 `48 kW/step` 燃料电池变化量。唯一固定权重为 `q_h2=0.25`、`q_batt=0.4`、`q_soc=12.0`、`q_fc_var=20.0`。旧 17 组 one-factor 配置、CLI 分支和产物已删除。
 
 ## Repository structure
 
 | 路径 | 内容 |
 | --- | --- |
 | `src/forecasting/` | 30 s、1 s 和 10 ms LSTM、scaler、窗口与评价逻辑 |
-| `src/main/` | 数据构建、训练、诊断、CasADi LSTM-MPC 和 OSQP benchmark 入口 |
+| `src/main/` | 30 s/1 s/毫秒数据构建与审计，以及固定 `N=6` OSQP 入口 |
 | `src/main/mpc_solvers/` | 1 s 凸 QP 形式与约束结构 |
-| `src/main/run_mpc_1s_n6_four_objective_sensitivity.py` | 唯一 `N=6` offline-oracle baseline/one-factor runner；固定 17 配置、第一步执行、指标、图和报告 |
+| `src/main/run_mpc_1s_n6_four_objective_sensitivity.py` | 唯一 `N=6` offline-oracle runner；只运行固定 candidate_C |
 | `tests/test_mpc_1s_n6_four_objective_sensitivity.py` | 唯一 `N=6` 四目标 focused test；冻结目标、时序、物理更新、产物与 CLI 契约 |
 | `src/mpc/` | 历史 CasADi/IPOPT 控制器、燃料电池氢耗曲线等组件 |
 | `src/dqn/` | DQN agent、动作映射、奖励和 MLP/KAN/SineKAN Q 网络 |
 | `src/envs/` | 多个历史 DQN/船舶环境；尚未统一为目标 N=6 QP-MPC 环境 |
 | `configs/` | 旧通用配置；部分容量、SOC 和时域参数已过期，不是当前唯一事实来源 |
-| `outputs/config/` | 可复查的数据划分、动作表和历史权重配置 |
-| `outputs/` | 模型、报告和 benchmark 产物；包含当前证据与历史结果 |
-| `tests/` | 数据、LSTM、MPC、OSQP 和闭环相关单元测试 |
+| `outputs/config/` | 两份保留的数据划分 JSON |
+| `outputs/mpc_1s_n6_candidate_C/` | 当前固定权重在新测试集 5 航段上的结果与图 |
+| `tests/` | 保留数据构建、数据审计和当前 MPC 直接相关测试 |
 | `SineKAN-main/` | 复制的第三方 SineKAN 代码和 notebook，许可证仍待核验 |
-| `docs/` | 接口说明、实验协议及本轮建立的项目地图和审计文档 |
+| `docs/` | 数据来源、接口说明和数据审计文档 |
 
-模块级状态见 `docs/PROJECT_MAP.md`；当前唯一状态入口是 `STATUS.md`。
+当前状态入口是 `STATUS.md`。
 
 ## Installation
 
@@ -97,60 +97,50 @@ python -m pip install casadi numpy pandas matplotlib xlrd scipy seaborn progress
 
 ## Main workflows
 
-以下入口均来自仓库实际脚本。先用 `--help` 核对参数和输出位置；训练和历史完整 benchmark 可能耗时。
+以下入口均来自当前保留脚本。
 
 | 工作流 | 可核对入口 | 状态 |
 | --- | --- | --- |
-| 66 航段数据构建/检查 | `python src/main/build_total_load_dataset_721.py --help` | 可用；默认 46/13/7 |
+| 66 航段数据构建/检查 | `python src/main/build_total_load_dataset_721.py --help` | 可用；原始构建默认 46/13/7，活动审计划分以 JSON 的 35/10/5 为准 |
 | 1 s spline 数据诊断 | `python src/main/build_spline_1s_diagnostics.py --help` | 可用；仅离线重构 |
 | 10 ms 数据审计 | `python src/main/audit_millisecond_10ms_dataset.py --help` | 可用；严格校验 train/validation/test assignment key 集合 |
-| 30 s LSTM 训练与测试汇总 | `python src/main/run_train_lstm_total_load_721.py --help` | 可用；已有 checkpoint 和逐 horizon 指标 |
-| 1 s LSTM 诊断 | `python src/main/run_lstm_spline_1s_hparam_search.py --help` | 辅助实验；现有 LSTM 未超过简单基线 |
-| 1 s OSQP `N=60` benchmark | `python src/main/benchmark_mpc_qp_osqp_1s.py --help` | historical；不再作为默认配置或继续搜索 |
-| `N=6` 四目标全 1 baseline | `python src/main/run_mpc_1s_n6_four_objective_sensitivity.py --baseline` | **已正式运行**；7/7 航次、93030/93030/93030 步，无 solver failure；offline oracle，不接 LSTM/DQN，只执行第一步；尚未接受为最终权重 |
-| `N=6` 四目标 17 配置 one-factor | `python src/main/run_mpc_1s_n6_four_objective_sensitivity.py --one-factor` | **已正式运行**；107/119 个配置-航段完整，12 个最终失败；不自动选择 best 或最终权重 |
-| 30 s CasADi LSTM-MPC | `python src/main/run_lstm_mpc_total_load_test.py --help` | 历史/支持性链路，参数体系与目标 OSQP 主线不同 |
-| 目标 1 s LSTM + `N=6` OSQP 闭环 | 尚无统一入口 | **not yet unified**；现有 N=6 入口仅使用理想预知负荷 |
-| 目标 DQN 训练与公平比较 | 无可接受入口 | **not yet unified**；现有脚本仍使用旧环境/动作/参数 |
+| 固定 candidate_C `N=6` 四目标 MPC | `python src/main/run_mpc_1s_n6_four_objective_sensitivity.py --baseline` | 仅固定权重；offline oracle，不接 LSTM/DQN，只执行第一步 |
 
-通用测试命令：
+本轮最低验证命令：
 
 ```powershell
-python -m unittest discover -s tests -v
+python -m compileall src
+python -m unittest tests.test_mpc_1s_n6_four_objective_sensitivity tests.test_mpc_solver_benchmark_1s
 ```
 
-本轮已运行的测试结果见 `STATUS.md`：`N=6` focused test 为 52/52，保留 `N=60` benchmark test 为 17/17，完整 suite 为 193/193。测试范围和仍缺失的 DQN 专项覆盖见 `docs/PROJECT_MAP.md`。
+本轮验证结果见 `STATUS.md`；按清理任务要求不运行全仓库长时间测试或重新执行权重实验。
 
 ## Current status
 
-- 66 航段的 30 s 数据读取、46/13/7 划分和 30 s direct multi-output LSTM 路径已存在。
-- natural-clipped 1 s 离线数据、1 s LSTM 诊断、历史 `N=60` benchmark，以及唯一的 `N=6` 四目标 runner/focused test 均已存在。
-- 现有 1 s LSTM 在保留测试集上没有超过 current-hold/last-slope 等简单基线，因此不能作为正式预测优势证据。
-- 全 1 baseline 已在 7 个 test 航次上正式完成：93030/93030/93030 个 expected/attempted/applied 步，solver failure、primal infeasible、max-iter 和 state-commit 门禁拒绝均为 0；总氢耗 `218.448931 kg`，平均/95 分位/最大求解时间为 `0.178247/0.472075/14.804800 ms`。
-- baseline 的平均 SOC 从 `0.55` 降到 `0.287935`（平均变化 `-0.262065`），七张曲线均未恢复；`voyage_063` 最低 SOC 为 `0.199997215`，相对下界的 `2.7846e-6` 残差超过 runner 声明的 `1e-6` SOC 容差。该问题属于小幅数值约束容差超限，不能被 7/7 solver completion 隐藏。
-- 完整 17-case one-factor 矩阵已运行：107/119 个配置-航段完整，12 个最终失败、1 个 primal-infeasible 事件和 24 个 max-iter 事件。降低 `q_h2` 或提高 `q_batt/q_soc` 可减缓 SOC 下降；提高 `q_fc_var` 可降低 FC 变化量但增加电池使用。所有完整配置的平均 final SOC 仍低于 0.55，因此没有接受固定权重。
-- 目标 `N=6` LSTM-OSQP 在线闭环、正式接受的固定权重、仅选三项 MPC 权重的 DQN 环境、SineKAN-DQN/MLP-DQN 公平比较均未完成。
-- 旧 `277.2 kWh`、`1806 kWh` 及不同动作空间仍存在于历史实现和输出中，但已不代表当前目标配置。
+- 66 航段的 30 s 原始数据和 natural-clipped 1 s 离线数据均保留；16 个明确异常航段只从活动划分中排除，未删除源文件。
+- 唯一 `N=6` runner 只暴露 candidate_C：`q_h2=0.25`、`q_batt=0.4`、`q_soc=12.0`、`q_fc_var=20.0`。
+- candidate_C 保存新测试集 5/5 航段指标和 5 张正式功率/SOC 图；求解失败、primal infeasible 和 max-iter 均为 0。
+- 旧 A/B、17 组 one-factor、N=60 结果、smoke/临时产物和已废弃入口已清理。
+- 全部 66 航段审计见 `docs/VOYAGE_DATA_QUALITY_AUDIT.md`；`voyage_060` 与另外 15 个明确异常航段均不进入训练、验证或测试。
 
 ## Known limitations
 
 - 1 s spline 数据依赖相邻 30 s 节点，是离线重构，不具备在线因果性。
-- 四目标 baseline 和完整 one-factor 矩阵已运行并完成图表抽查；多个配置持续消耗 SOC 或在接近下界时失败，且 11 个配置有超过 `1e-6`、但仍在 OSQP `1e-5` 量级内的小幅 SOC 容差残差。当前没有 accepted 固定权重，报告中的区间只是下一轮人工审阅边界，不是最优结论。
+- candidate_C 是当前固定配置，不代表已证明全局最优；本轮没有进行任何权重搜索。
 - LSTM 的 6 步预测尚未接入已验证的 `N=6` 时序执行路径。
 - OSQP benchmark 的求解失败路径只记录失败，尚未形成可部署的控制回退策略。
 - 现有 DQN 分支互不兼容，尚未形成目标状态、动作、奖励和闭环环境。
 - SineKAN-DQN 尚无目标环境下的最终训练结果，也没有与 MLP-DQN/KAN-DQN 的同预算、多随机种子公平对比。
-- 当前依赖清单不完整，仓库包含大量已跟踪输出和本地工具临时产物。
+- 当前依赖清单仍不完整，部分保留 manifest 含旧绝对路径。
 
 ## Reproducibility
 
 - 30 s 航次划分：`outputs/config/voyage_split_total_load_721.json`。
 - 10 ms 原子序列划分：`outputs/config/millisecond_10ms_split_721.json`，seed `20260710`，scaler 仅拟合训练行。
-- 30 s LSTM 默认 seed 为 `42`；1 s Task C 诊断 seed 为 `123`。
-- 训练窗口必须按航次/原子序列构造，禁止跨边界；scaler 只在训练集拟合。
-- 已存在的主要产物位于 `outputs/lstm_total_load_721/`、`outputs/lstm_spline_1s_hparam_search/` 和 `outputs/mpc_solver_benchmark_1s/`。完整 `N=6` 四目标 17-case 产物位于 `outputs/mpc_1s_n6_four_objective_sensitivity/`、`reports/mpc_1s_n6_four_objective_sensitivity_summary.md` 与 `reports/mpc_1s_n6_four_objective_sensitivity_table.csv`；不完整配置的累计量只代表失败前缀，须以 `metrics_comparable` 过滤后再比较。
-- 运行前保存配置、随机种子、Git commit、输入 manifest 和逐航次/逐 horizon 指标；不要只保留聚合图。
-- 本轮 focused 与保留 `N=60` 回归测试状态见 `STATUS.md`；依赖未锁定、历史绝对路径和第三方许可证问题仍使“干净环境完全可复现”结论不成立。
+- 1 s benchmark 输入：`outputs/mpc_solver_benchmark_1s/data/test_voyages_spline_1s.parquet`。
+- 固定 MPC 产物：`outputs/mpc_1s_n6_candidate_C/`。
+- candidate_C 配置记录当前源码内容、活动划分和当前 parquet 三类 SHA-256；实际测试航段为 `voyage_061, 063, 064, 065, 066`。
+- 依赖未锁定、历史绝对路径和第三方许可证问题仍使“干净环境完全可复现”结论不成立。
 
 ## Citation and third-party code
 

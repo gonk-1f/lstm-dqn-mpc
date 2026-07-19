@@ -1,4 +1,0 @@
-term_name,q_value,term_sum,term_mean_per_step,term_max_per_step,term_count,unit_note
-H2_norm,1.0,31021.25654146472,0.3334292436499965,1.0001104657238407,93037,forced_origin_Dp0_kg_H2_per_1s_step_divided_by_m_H2_ref
-SOC_norm,1.0,272024.2642413919,2.9238288448831313,10.214150278511728,93037,SOC_next_deviation_squared_divided_by_SOC_band_squared
-Batt_norm,0.01,6608.019028916599,0.07102571051212528,1.0001202788087722,93037,P_batt_kw_squared_divided_by_P_batt_ref_squared

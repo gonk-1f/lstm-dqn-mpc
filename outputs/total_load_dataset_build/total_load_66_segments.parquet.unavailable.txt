@@ -1,5 +1,0 @@
-Parquet was not written because no parquet engine is available: ImportError: Unable to find a usable engine; tried using: 'pyarrow', 'fastparquet'.
-A suitable version of pyarrow or fastparquet is required for parquet support.
-Trying to import the above resulted in these errors:
- - `Import pyarrow` failed. pyarrow is required for parquet support. Use pip or conda to install the pyarrow package.
- - `Import fastparquet` failed. fastparquet is required for parquet support. Use pip or conda to install the fastparquet package.

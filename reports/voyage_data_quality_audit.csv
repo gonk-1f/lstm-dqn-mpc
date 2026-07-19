@@ -1,0 +1,67 @@
+voyage_id,status,abnormal_time_ranges_s,raw_30s_evidence,spline_1s_effect,exclusion_reason
+voyage_001,abnormal,7620-7860;8220;8310;8550-8580;8670-8700;8790;9240-9270,18 rows with FC=0 and battery=0 while propulsion=33.583-40.500 kW; SOC falls in multirow runs; battery currents=0,Zero-sample count expanded; adjacent boundary extension=95 s,Excluded for explicit raw source-load contradiction
+voyage_002,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_003,abnormal,3660-3720,3 rows with FC=0 and battery=0 while propulsion=57.150-59.033 kW; SOC 90.162%->89.462%; battery currents=0,Zero-sample count expanded; adjacent boundary extension=47 s,Excluded for explicit raw source-load contradiction
+voyage_004,abnormal,1860-1920,3 rows with FC=0 and battery=0 while propulsion=53.533-54.867 kW; SOC 93.340%->92.690%; battery currents=0,Zero-sample count expanded; adjacent boundary extension=28 s,Excluded for explicit raw source-load contradiction
+voyage_005,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_006,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_007,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_008,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_009,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_010,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_011,abnormal,4020-4230,8 rows with FC=0 and battery=0 while propulsion=55.890-66.040 kW; SOC 94.570%->91.910%; battery currents=0,Zero-sample count expanded; adjacent boundary extension=23 s,Excluded for explicit raw source-load contradiction
+voyage_012,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_013,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_014,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_015,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_016,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_017,abnormal,4740-4860;4950-5070,10 rows with FC=0 and battery=0 while propulsion=46.233-52.967 kW; SOC falls 1.133 and 1.100 percentage points; battery currents=0,Zero-sample count expanded; no adjacent boundary extension,Excluded for explicit raw source-load contradiction
+voyage_018,normal,,No explicit raw source-load contradiction,No clipped negative spline points,Retained
+voyage_019,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_020,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_021,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_022,abnormal,2670-2700,2 rows with FC=0 and battery=0 while propulsion=57.680-58.670 kW; SOC 91.292%->91.030%; battery currents=0,Zero-sample count expanded; no adjacent boundary extension,Excluded for explicit raw source-load contradiction
+voyage_023,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_024,abnormal,4530-4710,7 rows with FC=0 and battery=0 while propulsion=63.707-78.183 kW; SOC 91.060%->89.310%; battery currents=0,Zero-sample count expanded; adjacent boundary extension=56 s,Excluded for explicit raw source-load contradiction
+voyage_025,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_026,abnormal,26310-26340,2 rows with FC=0 and battery=0 while propulsion=49.680-50.110 kW; SOC 71.680%->71.357%; battery currents=0,Zero-sample count expanded; no adjacent boundary extension,Excluded for explicit raw source-load contradiction
+voyage_027,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_028,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_029,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_030,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_031,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_032,abnormal,2790-2850,3 rows with FC=0 and battery=0 while propulsion=80.987-93.700 kW; SOC 91.073%->90.327%; battery currents=0,Zero-sample count expanded; adjacent boundary extension=26 s,Excluded for explicit raw source-load contradiction
+voyage_033,abnormal,2220-3090,30 rows with FC=0 and battery=0 while propulsion=38.490-52.620 kW; SOC 94.130%->86.120%; battery currents=0,Zero-sample count expanded; no adjacent boundary extension,Excluded for explicit raw source-load contradiction
+voyage_034,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_035,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_036,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_037,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_038,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_039,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_040,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_041,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_042,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_043,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_044,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_045,abnormal,720-960,9 rows with FC=0 and battery=0 while propulsion=62.700-77.300 kW; SOC 95.883%->93.620%; battery currents=0,Zero-sample count expanded; adjacent boundary extension=19 s,Excluded for explicit raw source-load contradiction
+voyage_046,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_047,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_048,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_049,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_050,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_051,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_052,abnormal,2670-2700,2 rows with FC=0 and battery=0 while propulsion=64.520-67.920 kW; SOC 87.590%->87.270%; battery currents=0,Zero-sample count expanded; no adjacent boundary extension,Excluded for explicit raw source-load contradiction
+voyage_053,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_054,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_055,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_056,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_057,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_058,abnormal,3420-3600;3900-4170;9450-9480,19 rows with FC=0 and battery=0 while propulsion=43.800-66.133 kW; SOC falls 1.917 3.050 and 0.317 percentage points; battery currents=0,Zero-sample count expanded; no adjacent boundary extension,Excluded for explicit raw source-load contradiction
+voyage_059,abnormal,4230;4980-5610,23 rows with FC=0 and battery=0 while propulsion=61.733-89.260 kW; long-run SOC 86.193%->79.293%; battery currents=0,Zero-sample count expanded; adjacent boundary extension=17 s,Excluded for explicit raw source-load contradiction
+voyage_060,abnormal,4410-4740,12 rows with FC=0 and battery=0 while propulsion=51.073-74.987 kW; SOC 91.120%->87.820%; battery currents=0,Zero-sample count expanded; begins 25 s before the first raw zero node,Excluded for explicit raw source-load contradiction
+voyage_061,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_062,abnormal,4500-4890,14 rows with FC=0 and battery=0 while propulsion=57.290-83.440 kW; SOC 76.320%->72.615%; battery currents=0,Zero-sample count expanded; adjacent boundary extension=21 s,Excluded for explicit raw source-load contradiction
+voyage_063,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_064,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_065,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained
+voyage_066,normal,,No explicit raw source-load contradiction,Clipped spline artifacts audited; no raw abnormal span,Retained

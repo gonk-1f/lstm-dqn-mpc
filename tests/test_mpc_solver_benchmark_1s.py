@@ -66,7 +66,7 @@ class TestMpcSolverBenchmark1s(unittest.TestCase):
                 {
                     "dataset_version": "cubic_spline_1s_natural_clipped",
                     "voyage_id": "voyage_001",
-                    "split": "train",
+                    "split": "test",
                     "time_original_or_reconstructed": "original_30s_point",
                     "timestamp": "2024-01-01 00:00:00",
                     "time_s": 0.0,
@@ -79,7 +79,7 @@ class TestMpcSolverBenchmark1s(unittest.TestCase):
                 {
                     "dataset_version": "cubic_spline_1s_natural_clipped",
                     "voyage_id": "voyage_066",
-                    "split": "test",
+                    "split": "train",
                     "time_original_or_reconstructed": "original_30s_point",
                     "timestamp": "2024-01-02 00:00:00",
                     "time_s": 0.0,
@@ -92,7 +92,7 @@ class TestMpcSolverBenchmark1s(unittest.TestCase):
                 {
                     "dataset_version": "cubic_spline_1s_natural_clipped",
                     "voyage_id": "voyage_066",
-                    "split": "test",
+                    "split": "train",
                     "time_original_or_reconstructed": "reconstructed_1s_point",
                     "timestamp": "2024-01-02 00:00:01",
                     "time_s": 1.0,
@@ -105,8 +105,24 @@ class TestMpcSolverBenchmark1s(unittest.TestCase):
             ]
             pd.DataFrame([rows[0]]).to_csv(source_dir / "voyage_001__train.csv", index=False)
             pd.DataFrame(rows[1:]).to_csv(source_dir / "voyage_066__test.csv", index=False)
+            active_split_path = root / "voyage_split_total_load_721.json"
+            active_split_path.write_text(
+                json.dumps(
+                    {
+                        "train_voyages": ["voyage_001"],
+                        "validation_voyages": [],
+                        "test_voyages": ["voyage_066"],
+                        "excluded_voyages": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
 
-            result = build_benchmark_dataset(input_dir=source_dir, output_dir=out_dir)
+            result = build_benchmark_dataset(
+                input_dir=source_dir,
+                output_dir=out_dir,
+                split_json_path=active_split_path,
+            )
 
             data = pd.read_parquet(result["parquet_path"])
             self.assertEqual(data["voyage_id"].unique().tolist(), ["voyage_066"])
@@ -121,6 +137,7 @@ class TestMpcSolverBenchmark1s(unittest.TestCase):
             self.assertEqual(split["sample_interval_seconds"], 1.0)
             self.assertFalse(split["online_feasible"])
             self.assertTrue(split["uses_future_endpoint"])
+            self.assertEqual(split["active_split_json"], str(active_split_path))
 
     def test_simplified_spec_config_uses_346p5kw_battery_limit_and_no_soft_ramp(self) -> None:
         from benchmark_mpc_qp_osqp_1s import default_config, json_safe_config
