@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -13,6 +15,7 @@ if str(MAIN_ROOT) not in sys.path:
 from build_spline_1s_diagnostics import (  # noqa: E402
     compute_physical_check,
     compute_predictability_audit,
+    publish_formal_voyages,
     reconstruct_voyage_spline,
 )
 
@@ -133,6 +136,68 @@ class TestSpline1sDiagnostics(unittest.TestCase):
         self.assertAlmostEqual(float(row["last_slope_h6_MAE"]), 0.0)
         self.assertFalse(bool(row["online_feasible"]))
         self.assertTrue(bool(row["uses_future_endpoint"]))
+
+    def test_publish_formal_voyages_preserves_power_identity_after_csv_round_trip(self) -> None:
+        with tempfile.TemporaryDirectory(dir=MAIN_ROOT.parents[1]) as tmp:
+            root = Path(tmp)
+            output_dir = root / "spline"
+            staging_dir = output_dir / "data" / ".staging"
+            staging_dir.mkdir(parents=True)
+            output_name = "voyage_test.csv"
+            fuel_cell_kw = 163.02374559154097
+            battery_kw = 420.39187513157094
+            total_load_kw = fuel_cell_kw + battery_kw
+            pd.DataFrame(
+                {
+                    "timestamp": pd.to_datetime(
+                        ["2024-01-01 00:00:00", "2024-01-01 00:00:01"]
+                    ),
+                    "fuel_cell_total_kw": [fuel_cell_kw, fuel_cell_kw],
+                    "battery_cluster_total_kw": [battery_kw, battery_kw],
+                    "total_load_kw": [total_load_kw, total_load_kw],
+                }
+            ).to_csv(staging_dir / output_name, index=False, encoding="utf-8-sig")
+            split_json = root / "split.json"
+            split_json.write_text(
+                json.dumps(
+                    {
+                        "train_voyages": ["voyage_test"],
+                        "validation_voyages": [],
+                        "test_voyages": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            publish_formal_voyages(
+                staging_dir=staging_dir,
+                voyage_records=[
+                    {
+                        "voyage_id": "voyage_test",
+                        "source_file_name": "source.xlsx",
+                        "output_name": output_name,
+                        "common_overlap_start": "2024-01-01T00:00:00",
+                        "common_overlap_end": "2024-01-01T00:00:01",
+                        "max_required_raw_gap_s": 30.0,
+                        "max_required_raw_gap_channel": "fuel_cell_left_1",
+                        "source_bundle_sha256": "source-hash",
+                        "required_source_channel_hashes_json": "{}",
+                    }
+                ],
+                split_json=split_json,
+                output_dir=output_dir,
+            )
+
+            published = pd.read_csv(
+                output_dir / "data" / "natural_clipped_by_voyage" / output_name,
+                encoding="utf-8-sig",
+            )
+            residual = (
+                published["fuel_cell_total_kw"]
+                + published["battery_cluster_total_kw"]
+                - published["total_load_kw"]
+            ).abs()
+            self.assertLessEqual(float(residual.max()), 1e-12)
 
 if __name__ == "__main__":
     unittest.main()

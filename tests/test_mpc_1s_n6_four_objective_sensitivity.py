@@ -306,7 +306,9 @@ class TestSensitivityRunnerContract(unittest.TestCase):
         self.assertEqual(
             module.EXPECTED_TEST_VOYAGES,
             (
+                "voyage_060",
                 "voyage_061",
+                "voyage_062",
                 "voyage_063",
                 "voyage_064",
                 "voyage_065",
