@@ -14,8 +14,7 @@ import numpy as np
 import pandas as pd
 from scipy import sparse
 
-from benchmark_mpc_qp_osqp_1s import (
-    _h2_kg_for_step,
+from mpc_solvers.osqp_runtime import (
     _qp_bounds_for_step,
     _solve_with_persistent_osqp,
     _try_import_osqp,
@@ -24,6 +23,7 @@ from mpc_solvers.mpc_qp_formulation import (
     QpMpcConfig,
     QpProblem,
     build_qp_problem,
+    h2_quadratic_kg_step_coefficients,
     resolved_ramp_kw_per_step,
 )
 
@@ -289,7 +289,9 @@ def scaled_linear_for_previous_fc(
 
 
 def physical_h2_kg_step(config: QpMpcConfig, p_fc_kw: float) -> float:
-    return float(_h2_kg_for_step(config, float(p_fc_kw)))
+    quad, linear, _, _ = h2_quadratic_kg_step_coefficients(config)
+    p = float(p_fc_kw)
+    return float(quad * p * p + linear * p)
 
 
 def ideal_future_window(loads_kw: np.ndarray, *, decision_index: int) -> np.ndarray:
@@ -1118,7 +1120,7 @@ def _implementation_sha256() -> str:
     dependencies = (
         Path(__file__),
         REPO_ROOT / "src/main/mpc_solvers/mpc_qp_formulation.py",
-        REPO_ROOT / "src/main/benchmark_mpc_qp_osqp_1s.py",
+        REPO_ROOT / "src/main/mpc_solvers/osqp_runtime.py",
         REPO_ROOT / "src/mpc/solvers/fc_dp0_curve.py",
         REPO_ROOT / "data/fuel_cell/FC_Dp0_curve_for_Python.csv",
     )

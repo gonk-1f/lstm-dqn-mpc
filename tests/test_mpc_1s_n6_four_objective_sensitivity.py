@@ -1528,7 +1528,7 @@ class TestSensitivityArtifactsAndCli(unittest.TestCase):
         expected = {
             Path(module.__file__).resolve(),
             module.REPO_ROOT / "src/main/mpc_solvers/mpc_qp_formulation.py",
-            module.REPO_ROOT / "src/main/benchmark_mpc_qp_osqp_1s.py",
+            module.REPO_ROOT / "src/main/mpc_solvers/osqp_runtime.py",
             module.REPO_ROOT / "src/mpc/solvers/fc_dp0_curve.py",
             module.REPO_ROOT / "data/fuel_cell/FC_Dp0_curve_for_Python.csv",
         }
