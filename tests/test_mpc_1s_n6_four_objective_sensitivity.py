@@ -34,10 +34,10 @@ def objective_config(*, horizon: int = 3, **weights: float) -> QpMpcConfig:
     return QpMpcConfig(
         horizon=horizon,
         dt_seconds=1.0,
-        battery_capacity_kwh=693.0,
-        battery_charge_max_kw=346.5,
-        battery_discharge_max_kw=346.5,
-        battery_power_ref_kw=346.5,
+        battery_capacity_kwh=624.0,
+        battery_charge_max_kw=624.0,
+        battery_discharge_max_kw=1248.0,
+        battery_power_ref_kw=624.0,
         fuel_cell_min_kw=0.0,
         fuel_cell_max_kw=560.0,
         fuel_cell_ramp_rate_kw_per_s=48.0,
@@ -74,7 +74,7 @@ class TestFourObjectiveQp(unittest.TestCase):
         expected: dict[str, tuple[np.ndarray, np.ndarray]] = {}
         for weight_name, indices, diagonal, linear in (
             ("q_h2", range(0, horizon), 2.0 * h2_quad / h2_ref, h2_linear / h2_ref),
-            ("q_batt", range(horizon, 2 * horizon), 2.0 / 346.5**2, 0.0),
+            ("q_batt", range(horizon, 2 * horizon), 2.0 / 624.0**2, 0.0),
             (
                 "q_soc",
                 range(2 * horizon + 1, 3 * horizon + 1),
@@ -146,7 +146,7 @@ class TestFourObjectiveQp(unittest.TestCase):
             qp.metadata["objective_term_descriptions"],
             {
                 "H2_norm": "sum(k=0..N-1) m_H2(P_fc[k]) / m_H2(560 kW, 1 s)",
-                "Batt_power_sq_norm": "sum(k=0..N-1) (P_batt[k] / 346.5 kW)^2",
+                "Batt_power_sq_norm": "sum(k=0..N-1) (P_batt[k] / 624 kW)^2",
                 "SOC_tracking_sq_norm": "sum(k=1..N) ((SOC[k] - SOC_ref) / 0.05)^2",
                 "FC_variation_sq_norm": (
                     "((P_fc[0] - P_fc_prev) / 48 kW)^2 + "
@@ -155,7 +155,7 @@ class TestFourObjectiveQp(unittest.TestCase):
             },
         )
         self.assertAlmostEqual(qp.metadata["h2_reference_kg_per_step"], 0.00883945296644347)
-        self.assertEqual(qp.metadata["battery_power_ref_kw"], 346.5)
+        self.assertEqual(qp.metadata["battery_power_ref_kw"], 624.0)
         self.assertEqual(qp.metadata["soc_reference"], SOC_REFERENCE)
         self.assertEqual(qp.metadata["soc_band"], 0.05)
         self.assertEqual(qp.metadata["fuel_cell_variation_ref_kw_per_step"], 48.0)
@@ -245,7 +245,7 @@ class TestFourObjectiveQp(unittest.TestCase):
         self.assertEqual(qp.metadata["n_variables"], 7)
         self.assertEqual(qp.metadata["n_constraints"], 14)
 
-        soc_coefficient = 1.0 / (3600.0 * 693.0)
+        soc_coefficient = 1.0 / (3600.0 * 624.0)
         np.testing.assert_array_equal(
             matrix[8], [0.0, 0.0, soc_coefficient, 0.0, -1.0, 1.0, 0.0]
         )
@@ -335,14 +335,14 @@ class TestSensitivityRunnerContract(unittest.TestCase):
 
         config = four_objective_config(build_sensitivity_cases()[0])
         self.assertEqual((config.horizon, config.dt_seconds), (6, 1.0))
-        self.assertEqual(config.battery_capacity_kwh, 693.0)
+        self.assertEqual(config.battery_capacity_kwh, 624.0)
         self.assertEqual(
             (
                 config.battery_charge_max_kw,
                 config.battery_discharge_max_kw,
                 config.battery_power_ref_kw,
             ),
-            (346.5, 346.5, 346.5),
+            (624.0, 1248.0, 624.0),
         )
         self.assertEqual((config.fuel_cell_min_kw, config.fuel_cell_max_kw), (0.0, 560.0))
         self.assertEqual(config.fuel_cell_ramp_rate_kw_per_s, 48.0)
@@ -393,7 +393,7 @@ class TestSensitivityRunnerContract(unittest.TestCase):
         self.assertEqual(applied["P_batt_plan_kw"], -7.0)
         self.assertEqual(applied["P_batt_actual_kw"], -10.0)
         self.assertEqual(applied["SOC_predicted"], 0.550003)
-        self.assertAlmostEqual(applied["SOC_actual"], 0.55 + 10.0 / (3600.0 * 693.0))
+        self.assertAlmostEqual(applied["SOC_actual"], 0.55 + 10.0 / (3600.0 * 624.0))
 
     def test_affine_transform_roundtrip_constraints_bounds_and_objective(self) -> None:
         from run_mpc_1s_n6_four_objective_sensitivity import (
@@ -420,7 +420,7 @@ class TestSensitivityRunnerContract(unittest.TestCase):
 
         np.testing.assert_array_equal(
             transform.variable_scale,
-            np.r_[np.full(6, 560.0), np.full(6, 346.5), np.full(7, 0.05)],
+            np.r_[np.full(6, 560.0), np.full(6, 624.0), np.full(7, 0.05)],
         )
         np.testing.assert_array_equal(
             transform.variable_offset,
@@ -869,7 +869,7 @@ class TestSensitivityRunnerContract(unittest.TestCase):
         )
         np.testing.assert_allclose(
             controls["J_batt_norm_step"],
-            np.array(expected_raw["p_batt_sq_kw2_step"]) / 346.5**2,
+            np.array(expected_raw["p_batt_sq_kw2_step"]) / 624.0**2,
         )
         np.testing.assert_allclose(
             controls["J_soc_norm_step"],
@@ -982,7 +982,7 @@ class TestSensitivityMetrics(unittest.TestCase):
         self.assertAlmostEqual(metrics["sum_soc_error_sq"], (0.54 - 0.55) ** 2)
         self.assertEqual(metrics["sum_fc_delta_sq_kw2"], 10.0**2 + 20.0**2)
         self.assertAlmostEqual(
-            metrics["J_batt_norm"], metrics["sum_p_batt_sq_kw2"] / 346.5**2
+            metrics["J_batt_norm"], metrics["sum_p_batt_sq_kw2"] / 624.0**2
         )
         self.assertAlmostEqual(
             metrics["J_soc_norm"], metrics["sum_soc_error_sq"] / 0.05**2
@@ -1077,7 +1077,7 @@ class TestSensitivityMetrics(unittest.TestCase):
                 dual_res=0.2,
             ),
         )
-        first_soc = 0.55 - 10.0 / (3600.0 * 693.0)
+        first_soc = 0.55 - 10.0 / (3600.0 * 624.0)
         first_applied = {
             "P_fc_plan_kw": 100.0,
             "P_batt_plan_kw": 10.0,

@@ -31,10 +31,10 @@ def ramp_kw_per_step_from_rate(rate_kw_per_s: float, *, dt_seconds: float) -> fl
 class QpMpcConfig:
     horizon: int = 60
     dt_seconds: float = 1.0
-    battery_capacity_kwh: float = 693.0
-    battery_charge_max_kw: float = 346.5
-    battery_discharge_max_kw: float = 346.5
-    battery_power_ref_kw: float = 346.5
+    battery_capacity_kwh: float = 624.0
+    battery_charge_max_kw: float = 624.0
+    battery_discharge_max_kw: float = 1248.0
+    battery_power_ref_kw: float = 624.0
     fuel_cell_min_kw: float = 0.0
     fuel_cell_max_kw: float = 560.0
     fuel_cell_ramp_rate_kw_per_s: float = 48.0

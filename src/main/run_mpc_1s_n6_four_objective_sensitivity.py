@@ -118,10 +118,10 @@ def four_objective_config(case: SensitivityCase) -> QpMpcConfig:
     return QpMpcConfig(
         horizon=N6_HORIZON,
         dt_seconds=N6_DT_SECONDS,
-        battery_capacity_kwh=693.0,
-        battery_charge_max_kw=346.5,
-        battery_discharge_max_kw=346.5,
-        battery_power_ref_kw=346.5,
+        battery_capacity_kwh=624.0,
+        battery_charge_max_kw=624.0,
+        battery_discharge_max_kw=1248.0,
+        battery_power_ref_kw=624.0,
         fuel_cell_min_kw=0.0,
         fuel_cell_max_kw=560.0,
         fuel_cell_ramp_rate_kw_per_s=48.0,
@@ -183,9 +183,9 @@ def scale_n6_qp_problem(
     if problem.A.shape != (expected_constraints, expected_variables):
         raise ValueError("unexpected N=6 QP constraint dimensions")
 
-    fuel_cell_scale = 560.0
-    battery_scale = 346.5
-    soc_scale = 0.05
+    fuel_cell_scale = float(config.fuel_cell_max_kw)
+    battery_scale = float(config.battery_power_ref_kw)
+    soc_scale = float(config.soc_band)
     ramp_scale = max(float(resolved_ramp_kw_per_step(config)), 1.0)
     variable_scale = np.concatenate(
         [
@@ -1054,10 +1054,10 @@ def load_spline_test_data(input_path: str | Path) -> pd.DataFrame:
     if set(frame["split"].astype(str).unique()) != {"test"}:
         raise ValueError("N=6 sensitivity requires only the test split")
     versions = set(frame["dataset_version"].astype(str).unique())
-    if versions != {"cubic_spline_1s_natural_clipped"}:
+    if versions != {"device_channel_natural_spline_1s"}:
         raise ValueError(
             "N=6 sensitivity requires "
-            "dataset_version=cubic_spline_1s_natural_clipped"
+            "dataset_version=device_channel_natural_spline_1s"
         )
     frame = frame.copy()
     frame["voyage_id"] = frame["voyage_id"].astype(str)
@@ -1240,8 +1240,8 @@ def write_voyage_plot(
         axes[0].legend(loc="best")
 
         axes[1].plot(time_s, ordered["P_batt_actual_kw"], label="Battery", linewidth=1.2)
-        axes[1].axhline(346.5, color="0.45", linestyle="--", linewidth=0.9)
-        axes[1].axhline(-346.5, color="0.45", linestyle="--", linewidth=0.9)
+        axes[1].axhline(1248.0, color="0.45", linestyle="--", linewidth=0.9)
+        axes[1].axhline(-624.0, color="0.45", linestyle="--", linewidth=0.9)
         axes[1].set_ylabel("P_batt (kW)")
         axes[1].legend(loc="best")
 
