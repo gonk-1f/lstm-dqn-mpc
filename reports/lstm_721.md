@@ -1,19 +1,24 @@
-# LSTM18 P6 Asymmetric MAE/Huber Light Test
+# LSTM18 P6 Historical Archive
 
 ## Scope
 
-- This is the active `LSTM18_p6` delta10 control-forecast version.
+- These historical LSTM results use an offline 1 s cubic-spline reconstruction of measured 30 s data.
+- The spline reconstruction is not measured online 1 s data and does not establish real online 1 s forecasting performance.
+- These results are no longer the project's formal load-forecasting result.
+- LSTM is not connected to the current MPC and is not part of the current DQN state space.
+- Only model files, minimal reproducibility configuration, model definitions, selection manifests, and final metric summaries are retained as a historical archive.
+- The LSTM must be retrained and reevaluated when measured 1 s data becomes available.
 - Hidden size, layer count, and epoch scale were not increased.
 - MAPE is not used as a training loss or as the main selection metric because near-zero load points make it unstable.
 - The asymmetric candidates use `w_under=3.0`, high-load P80 bonus `0.5`, and positive-ramp P80 bonus `0.2`.
 - Huber delta is specified in kW and converted to normalized target space during training.
-- Forecast metrics and h1 plots use the control-facing nonnegative projection `pred_kw = clip(pred_raw_kw, 0, None)`; `pred_raw_kw` is retained in the h1 time-series CSV for audit.
+- Historical forecast metrics use the nonnegative projection `pred_kw = clip(pred_raw_kw, 0, None)`.
 
 ## Candidate Selection
 
-- Recommended candidate: `candidate_asym_weighted_huber_delta10`.
-- Selection note: Single retained control-forecast version selected by explicit delta10 decision.
-- Selection priority for this retained version: better control suitability from 0-3h/RMSE behavior while preserving no obvious low-load overprediction.
+- Historically selected archive candidate: `candidate_asym_weighted_huber_delta10`.
+- Selection note: delta10 was the retained candidate in the completed historical comparison.
+- This archived selection is not a current formal forecasting recommendation.
 
 ## Requested Metrics
 
@@ -52,10 +57,8 @@
 
 ## Artifacts
 
-- Four-voyage final evaluation plots: `C:\Users\20883\OneDrive\Desktop\microgrid-mpc-master\outputs\lstm_test\`.
-- Train/validation loss plot: `C:\Users\20883\OneDrive\Desktop\microgrid-mpc-master\outputs\lstm_721\train_val_loss_curves.png`.
-- Metric table: `C:\Users\20883\OneDrive\Desktop\microgrid-mpc-master\outputs\lstm_721\candidate_metrics.csv`.
-- Condition metrics: `C:\Users\20883\OneDrive\Desktop\microgrid-mpc-master\outputs\lstm_721\condition_metrics.csv`.
-- Training curve diagnostics: `C:\Users\20883\OneDrive\Desktop\microgrid-mpc-master\outputs\lstm_721\training_curve_diagnostics.csv`.
-- Training condition coverage: `C:\Users\20883\OneDrive\Desktop\microgrid-mpc-master\outputs\lstm_721\training_condition_coverage.csv`.
-- 0-3h train similarity: `C:\Users\20883\OneDrive\Desktop\microgrid-mpc-master\outputs\lstm_721\early_0_3h_train_similarity.csv`.
+- Model checkpoint and metadata: `outputs/lstm_721/candidate_asym_weighted_huber_delta10/checkpoints/candidate_asym_weighted_huber_delta10/`.
+- Metric table: `outputs/lstm_721/candidate_metrics.csv`.
+- Condition metrics: `outputs/lstm_721/condition_metrics.csv`.
+- Training diagnostics: `outputs/lstm_721/training_curve_diagnostics.csv`.
+- Training condition coverage: `outputs/lstm_721/training_condition_coverage.csv`.
