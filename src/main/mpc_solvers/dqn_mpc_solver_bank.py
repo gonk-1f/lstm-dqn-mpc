@@ -12,45 +12,71 @@ from dqn.utils.action_mapper import (
     get_weight_action,
 )
 
-from .mpc_qp_formulation import QpMpcConfig, build_qp_problem
+from .mpc_qp_formulation import (
+    QpMpcConfig,
+    build_qp_problem,
+)
+
+from .n6_qp_scaling import (
+    FIXED_SOC_REFERENCE,
+    N6_OSQP_SETTINGS,
+    N6QpTransform,
+    _setup_n6_osqp_solver,
+    scale_n6_qp_problem,
+    scaled_linear_for_previous_fc,
+)
+
 from .osqp_runtime import (
     _qp_bounds_for_step,
     _solve_with_persistent_osqp,
     _try_import_osqp,
 )
 
-_OSQP_SETTINGS: dict[str, Any] = {
-    "verbose": False,
-    "polishing": True,
-    "warm_starting": True,
-    "eps_abs": 1.0e-5,
-    "eps_rel": 1.0e-5,
-    "max_iter": 20000,
-    "adaptive_rho": True,
-}
+
+# 暂时保留旧名称，避免现有测试导入失败。
+# 唯一真实设置定义位于 n6_qp_scaling.py。
+_OSQP_SETTINGS = N6_OSQP_SETTINGS
 
 
 @dataclass(frozen=True)
 class _SolverEntry:
     action: MPCWeightAction
     config: QpMpcConfig
+
+    # 物理空间矩阵，保留用于检查和回归测试。
     P: sparse.csc_matrix
     A: sparse.csc_matrix
+
+    # 实际交给OSQP的缩放空间矩阵。
+    scaled_P: sparse.csc_matrix
+    scaled_A: sparse.csc_matrix
+
     solver: Any
+    transform: N6QpTransform
+    setup_previous_fc_kw: float
+    base_scaled_linear: np.ndarray
 
 
 class MpcWeightSolverBank:
     def __init__(self, base_config: QpMpcConfig) -> None:
         osqp_module, import_error = _try_import_osqp()
+
         if osqp_module is None:
             raise RuntimeError(f"Cannot import osqp: {import_error}")
 
         horizon = int(base_config.horizon)
-        setup_load = np.full(horizon, float(base_config.fuel_cell_min_kw), dtype=float)
-        setup_soc = 0.5 * (float(base_config.soc_min) + float(base_config.soc_max))
+
+        setup_load = np.full(
+            horizon,
+            float(base_config.fuel_cell_min_kw),
+            dtype=float,
+        )
+
+        setup_soc = float(FIXED_SOC_REFERENCE)
         setup_prev_fc = float(base_config.fuel_cell_min_kw)
+
         entries: dict[int, _SolverEntry] = {}
-        common_a: sparse.csc_matrix | None = None
+        common_physical_a: sparse.csc_matrix | None = None
 
         for action in DQN_MPC_WEIGHT_ACTIONS:
             config = replace(
@@ -60,31 +86,40 @@ class MpcWeightSolverBank:
                 q_soc=action.q_soc,
                 q_fc_var=action.q_fc_var,
             )
-            problem = build_qp_problem(
+
+            physical_problem = build_qp_problem(
                 config,
                 load_forecast_kw=setup_load,
                 current_soc=setup_soc,
                 prev_fc_kw=setup_prev_fc,
-                soc_reference=setup_soc,
+                soc_reference=FIXED_SOC_REFERENCE,
                 include_diagnostics=False,
             )
-            if common_a is None:
-                common_a = problem.A
-            solver = osqp_module.OSQP()
-            solver.setup(
-                P=problem.P,
-                q=problem.q,
-                A=common_a,
-                l=problem.l,
-                u=problem.u,
-                **_OSQP_SETTINGS,
+
+            scaled_problem, transform = scale_n6_qp_problem(
+                physical_problem,
+                config=config,
             )
+
+            solver = _setup_n6_osqp_solver(
+                osqp_module,
+                scaled_problem,
+            )
+
+            if common_physical_a is None:
+                common_physical_a = physical_problem.A
+
             entries[action.action_id] = _SolverEntry(
                 action=action,
                 config=config,
-                P=problem.P,
-                A=common_a,
+                P=physical_problem.P,
+                A=common_physical_a,
+                scaled_P=scaled_problem.P,
+                scaled_A=scaled_problem.A,
                 solver=solver,
+                transform=transform,
+                setup_previous_fc_kw=setup_prev_fc,
+                base_scaled_linear=scaled_problem.q.copy(),
             )
 
         self._entries = entries
@@ -99,23 +134,60 @@ class MpcWeightSolverBank:
     ) -> tuple[Any, float]:
         action = get_weight_action(action_id)
         entry = self._entries[action.action_id]
-        problem = build_qp_problem(
+
+        if not np.isclose(
+            float(soc_reference),
+            float(FIXED_SOC_REFERENCE),
+            rtol=0.0,
+            atol=1.0e-12,
+        ):
+            raise ValueError(
+                "solver bank currently requires "
+                f"soc_reference={FIXED_SOC_REFERENCE}"
+            )
+
+        lower_physical, upper_physical = _qp_bounds_for_step(
             entry.config,
             load_forecast_kw=load_forecast_kw,
             current_soc=current_soc,
             prev_fc_kw=prev_fc_kw,
-            soc_reference=soc_reference,
-            include_diagnostics=False,
         )
-        lower, upper = _qp_bounds_for_step(
-            entry.config,
-            load_forecast_kw=load_forecast_kw,
-            current_soc=current_soc,
-            prev_fc_kw=prev_fc_kw,
+
+        lower_scaled, upper_scaled = entry.transform.transform_bounds(
+            lower_physical,
+            upper_physical,
         )
-        return _solve_with_persistent_osqp(
+
+        linear_scaled = scaled_linear_for_previous_fc(
+            entry.base_scaled_linear,
+            config=entry.config,
+            transform=entry.transform,
+            base_previous_fc_kw=entry.setup_previous_fc_kw,
+            previous_fc_kw=prev_fc_kw,
+        )
+
+        result, solve_ms = _solve_with_persistent_osqp(
             entry.solver,
-            lower=lower,
-            upper=upper,
-            linear=problem.q,
+            lower=lower_scaled,
+            upper=upper_scaled,
+            linear=linear_scaled,
         )
+
+        # OSQP内部解属于缩放空间。
+        # 为保持当前solve接口兼容，将result.x恢复为物理解；
+        # 同时保留x_scaled和x_physical供后续环境使用。
+        if result.x is not None:
+            scaled_solution = np.asarray(
+                result.x,
+                dtype=float,
+            ).reshape(-1).copy()
+
+            physical_solution = entry.transform.to_physical(
+                scaled_solution
+            )
+
+            result.x_scaled = scaled_solution
+            result.x_physical = physical_solution
+            result.x = physical_solution
+
+        return result, float(solve_ms)

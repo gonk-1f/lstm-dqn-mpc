@@ -24,6 +24,10 @@ from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
     build_qp_problem,
     resolved_ramp_kw_per_step,
 )
+from mpc_solvers.n6_qp_scaling import (  # noqa: E402
+    _setup_n6_osqp_solver,
+    scale_n6_qp_problem,
+)
 from mpc_solvers.osqp_runtime import _try_import_osqp  # noqa: E402
 
 WEIGHT_FIELDS = {"q_h2", "q_batt", "q_soc", "q_fc_var"}
@@ -201,7 +205,15 @@ class TestDqnMpcSolverBank(unittest.TestCase):
                 "adaptive_rho": True,
             },
         )
+
+        # A0 必须保持为正式 Candidate C 权重。
         action = DQN_MPC_WEIGHT_ACTIONS[0]
+
+        self.assertEqual(
+            action.as_tuple(),
+            (0.25, 0.40, 12.0, 20.0),
+        )
+
         direct_config = replace(
             self.base_config,
             q_h2=action.q_h2,
@@ -209,20 +221,42 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             q_soc=action.q_soc,
             q_fc_var=action.q_fc_var,
         )
+
+        # 先构造与正式 Candidate C 相同的物理 QP。
         direct_problem = self._problem(direct_config)
+
+        # 再走正式 N=6 MPC 使用的同一套仿射缩放链路。
+        scaled_problem, transform = scale_n6_qp_problem(
+            direct_problem,
+            config=direct_config,
+        )
+
         osqp_module, import_error = _try_import_osqp()
         self.assertIsNotNone(osqp_module, import_error)
-        direct_solver = osqp_module.OSQP()
-        direct_solver.setup(
-            P=direct_problem.P,
-            q=direct_problem.q,
-            A=direct_problem.A,
-            l=direct_problem.l,
-            u=direct_problem.u,
-            **_OSQP_SETTINGS,
+
+        direct_solver = _setup_n6_osqp_solver(
+            osqp_module,
+            scaled_problem,
         )
+
         direct_result = direct_solver.solve()
 
+        self.assertTrue(
+            str(direct_result.info.status).lower().startswith("solved")
+        )
+        self.assertIsNotNone(direct_result.x)
+
+        direct_scaled_solution = np.asarray(
+            direct_result.x,
+            dtype=float,
+        ).reshape(-1)
+
+        direct_physical_solution = transform.to_physical(
+            direct_scaled_solution
+        )
+
+        # Solver bank A0：
+        # 内部同样应在缩放空间求解，返回时恢复为物理解。
         bank_result, _ = self.bank.solve(
             action_id=0,
             load_forecast_kw=self.load_forecast_kw,
@@ -231,13 +265,75 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             soc_reference=self.soc_reference,
         )
 
-        self.assertTrue(str(direct_result.info.status).lower().startswith("solved"))
-        self.assertTrue(str(bank_result.info.status).lower().startswith("solved"))
+        self.assertTrue(
+            str(bank_result.info.status).lower().startswith("solved")
+        )
+        self.assertIsNotNone(bank_result.x)
+
+        bank_physical_solution = np.asarray(
+            bank_result.x,
+            dtype=float,
+        ).reshape(-1)
+
+        horizon = int(direct_config.horizon)
+
+        # 1. 完整物理决策向量必须一致。
         np.testing.assert_allclose(
-            np.asarray(bank_result.x, dtype=float),
-            np.asarray(direct_result.x, dtype=float),
+            bank_physical_solution,
+            direct_physical_solution,
             rtol=0.0,
             atol=POWER_TOLERANCE_KW,
+        )
+
+        # 决策变量顺序：
+        # [P_fc(0:N), P_batt(0:N), SOC(0:N+1)]
+        bank_p_fc = bank_physical_solution[:horizon]
+        bank_p_batt = bank_physical_solution[horizon: 2 * horizon]
+        bank_soc = bank_physical_solution[2 * horizon:]
+
+        direct_p_fc = direct_physical_solution[:horizon]
+        direct_p_batt = direct_physical_solution[horizon: 2 * horizon]
+        direct_soc = direct_physical_solution[2 * horizon:]
+
+        # 2. 第一时刻燃料电池功率。
+        self.assertAlmostEqual(
+            float(bank_p_fc[0]),
+            float(direct_p_fc[0]),
+            delta=POWER_TOLERANCE_KW,
+        )
+
+        # 3. 第一时刻电池功率。
+        self.assertAlmostEqual(
+            float(bank_p_batt[0]),
+            float(direct_p_batt[0]),
+            delta=POWER_TOLERANCE_KW,
+        )
+
+        # 4. 执行第一步后的 SOC。
+        self.assertAlmostEqual(
+            float(bank_soc[1]),
+            float(direct_soc[1]),
+            delta=SOC_TOLERANCE,
+        )
+
+        # 5. A0 结果必须满足功率平衡。
+        np.testing.assert_allclose(
+            bank_p_fc + bank_p_batt,
+            self.load_forecast_kw,
+            rtol=0.0,
+            atol=POWER_TOLERANCE_KW,
+        )
+
+        # 6. 确认 bank 确实保留了缩放空间解，
+        #    且恢复后就是当前返回的物理解。
+        self.assertTrue(hasattr(bank_result, "x_scaled"))
+        self.assertTrue(hasattr(bank_result, "x_physical"))
+
+        np.testing.assert_allclose(
+            np.asarray(bank_result.x_physical, dtype=float),
+            bank_physical_solution,
+            rtol=0.0,
+            atol=1.0e-12,
         )
 
     def test_repeated_solve_keeps_same_solver_object(self) -> None:
