@@ -94,12 +94,12 @@ def _remap_legacy_mlp_state_dict_keys(state_dict: dict) -> dict:
 
 
 class DQNAgent:
-    """Lower-layer DQN agent for ship power allocation.
+    """DQN agent for selecting complete MPC four-weight actions.
 
     Physical interpretation of `Q(s, a)` in this project:
     `Q(s, a)` estimates the expected discounted cumulative control value when
-    the vessel microgrid is currently in state `s` and the lower layer applies
-    discrete control action `a`, then follows the learned policy afterwards.
+    the vessel microgrid is currently in state `s` and action `a` selects one
+    complete MPC weight tuple, then follows the learned policy afterwards.
     A larger Q-value means that the action is expected to yield better long-run
     tracking, load-balance, SOC-safety, and smoothness performance.
     """
@@ -235,6 +235,9 @@ class DQNAgent:
             torch.nn.utils.clip_grad_norm_(self.q_net.parameters(), self.config.grad_clip_norm)
         self.optimizer.step()
         return float(loss.item())
+
+    def sync_target_network(self) -> None:
+        self.target_q_net.load_state_dict(self.q_net.state_dict())
 
     def observe_states_for_normalization(self, states: np.ndarray) -> bool:
         if not bool(self.config.state_normalization_enabled):
