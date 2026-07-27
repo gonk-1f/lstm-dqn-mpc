@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import io
 import json
 import sys
 from dataclasses import dataclass, field
@@ -31,6 +33,7 @@ from dqn.utils.action_mapper import (  # noqa: E402
 )
 from dqn.utils.state_builder import (  # noqa: E402
     DQN_MPC_STATE_DIM,
+    SOC_REFERENCE,
 )
 from envs.dqn_mpc_weight_env import (  # noqa: E402
     DqnMpcWeightEnv,
@@ -39,6 +42,7 @@ from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
     QpMpcConfig,
 )
 from run_mpc_1s_n6_four_objective_sensitivity import (  # noqa: E402
+    N6_STATE_COMMIT_TOLERANCES,
     build_sensitivity_cases,
     four_objective_config,
 )
@@ -56,6 +60,11 @@ DEFAULT_VOYAGE_DATA_DIR = (
     / "spline_1s_diagnostics"
     / "data"
     / "natural_clipped_by_voyage"
+)
+DEFAULT_BASELINE_OUTPUT_DIR = (
+    REPO_ROOT
+    / "outputs"
+    / "dqn_mpc_mlp_10k_baseline"
 )
 
 ALLOWED_RUNTIME_SPLITS = ("train", "validation")
@@ -94,6 +103,17 @@ class TrainingRuntime:
     target_sync_steps: list[int] = field(
         default_factory=list
     )
+
+
+class _ValidationMpcFailure(RuntimeError):
+    def __init__(
+        self,
+        diagnostic: dict[str, object],
+    ) -> None:
+        super().__init__(
+            "validation MPC solve failed"
+        )
+        self.diagnostic = diagnostic
 
 
 def _tuple_of_unique_strings(
@@ -451,6 +471,298 @@ def create_training_runtime(
     )
 
 
+def _require_finite_scalar(
+    value: object,
+    label: str,
+) -> float:
+    number = float(value)
+
+    if not np.isfinite(number):
+        raise RuntimeError(
+            f"{label} must be finite, got {number}"
+        )
+
+    return number
+
+
+def _validate_environment_step(
+    *,
+    action: int,
+    reward: float,
+    next_state: np.ndarray,
+    info: dict[str, object],
+    base_config: QpMpcConfig,
+) -> None:
+    if not 0 <= int(action) < ACTION_DIM:
+        raise RuntimeError(
+            f"action_id must be in 0..{ACTION_DIM - 1}, "
+            f"got {action}"
+        )
+
+    _require_finite_scalar(reward, "reward")
+
+    state_array = np.asarray(
+        next_state,
+        dtype=np.float64,
+    )
+    if not np.all(np.isfinite(state_array)):
+        raise RuntimeError(
+            "next DQN state contains NaN or Inf"
+        )
+
+    solver_status = str(info.get("solver_status", ""))
+    if not solver_status.lower().startswith("solved"):
+        raise RuntimeError(
+            f"MPC solve failed: status={solver_status!r}"
+        )
+
+    soc_after = _require_finite_scalar(
+        info.get("soc_after"),
+        "SOC",
+    )
+    soc_tolerance = float(
+        N6_STATE_COMMIT_TOLERANCES["soc"]
+    )
+    if (
+        soc_after < float(base_config.soc_min) - soc_tolerance
+        or soc_after
+        > float(base_config.soc_max) + soc_tolerance
+    ):
+        raise RuntimeError(
+            "SOC crossed MPC hard bounds: "
+            f"{soc_after} not in "
+            f"[{base_config.soc_min}, {base_config.soc_max}]"
+        )
+
+
+def _validate_online_q_values(
+    *,
+    agent: DQNAgent,
+    state: np.ndarray,
+    context: str,
+) -> None:
+    state_tensor = torch.as_tensor(
+        np.asarray(state, dtype=np.float32),
+        dtype=agent.tensor_dtype,
+        device=agent.device,
+    ).reshape(1, -1)
+
+    with torch.no_grad():
+        q_values = agent.q_net(state_tensor)
+
+    if not bool(torch.isfinite(q_values).all().item()):
+        raise RuntimeError(
+            f"{context} online Q values contain NaN or Inf"
+        )
+
+
+def _validate_latest_q_diagnostics(
+    agent: DQNAgent,
+) -> dict[str, float]:
+    required = (
+        "q_value_mean",
+        "q_value_std",
+        "target_q_mean",
+        "target_q_std",
+    )
+    diagnostics = agent.latest_update_diagnostics
+    result: dict[str, float] = {}
+
+    for key in required:
+        if key not in diagnostics:
+            raise RuntimeError(
+                f"missing DQN update diagnostic: {key}"
+            )
+        result[key] = _require_finite_scalar(
+            diagnostics[key],
+            key,
+        )
+
+    return result
+
+
+def _loss_statistics(
+    losses: Sequence[float],
+) -> dict[str, float | int | None]:
+    values = np.asarray(losses, dtype=np.float64)
+
+    if values.size == 0:
+        return {
+            "count": 0,
+            "mean": None,
+            "median": None,
+            "min": None,
+            "max": None,
+            "last": None,
+            "recent_1000_mean": None,
+        }
+
+    if not np.all(np.isfinite(values)):
+        raise RuntimeError(
+            "training loss contains NaN or Inf"
+        )
+
+    return {
+        "count": int(values.size),
+        "mean": float(np.mean(values)),
+        "median": float(np.median(values)),
+        "min": float(np.min(values)),
+        "max": float(np.max(values)),
+        "last": float(values[-1]),
+        "recent_1000_mean": float(
+            np.mean(values[-1000:])
+        ),
+    }
+
+
+def _snapshot_online_parameters(
+    agent: DQNAgent,
+) -> dict[str, torch.Tensor]:
+    return {
+        name: parameter.detach().cpu().clone()
+        for name, parameter
+        in agent.q_net.named_parameters()
+    }
+
+
+def _online_parameters_changed(
+    before: dict[str, torch.Tensor],
+    agent: DQNAgent,
+) -> bool:
+    after = dict(agent.q_net.named_parameters())
+
+    if before.keys() != after.keys():
+        raise RuntimeError(
+            "online Q-network parameter structure changed"
+        )
+
+    return any(
+        not torch.equal(
+            before[name],
+            after[name].detach().cpu(),
+        )
+        for name in before
+    )
+
+
+def _optional_finite_float(
+    value: object,
+) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+
+    return number if np.isfinite(number) else None
+
+
+def _solver_result_diagnostic(
+    result: object,
+) -> dict[str, object]:
+    info = getattr(result, "info", None)
+
+    return {
+        "status": str(
+            getattr(info, "status", "")
+        ),
+        "primal_residual": _optional_finite_float(
+            getattr(info, "prim_res", None)
+        ),
+        "dual_residual": _optional_finite_float(
+            getattr(info, "dual_res", None)
+        ),
+        "iterations": int(
+            getattr(info, "iter", 0)
+        ),
+    }
+
+
+def _persistent_same_state_diagnostics(
+    *,
+    env: DqnMpcWeightEnv,
+    load_forecast_kw: np.ndarray,
+    current_soc: float,
+    prev_fc_kw: float,
+) -> list[dict[str, object]]:
+    results: list[dict[str, object]] = []
+
+    for action in DQN_MPC_WEIGHT_ACTIONS:
+        record: dict[str, object] = {
+            "action_id": int(action.action_id),
+            "name": str(action.name),
+            "weights": {
+                "q_h2": float(action.q_h2),
+                "q_batt": float(action.q_batt),
+                "q_soc": float(action.q_soc),
+                "q_fc_var": float(action.q_fc_var),
+            },
+        }
+
+        try:
+            result, solve_ms = env.solver_bank.solve(
+                action_id=action.action_id,
+                load_forecast_kw=load_forecast_kw,
+                current_soc=current_soc,
+                prev_fc_kw=prev_fc_kw,
+                soc_reference=SOC_REFERENCE,
+            )
+            record.update(
+                _solver_result_diagnostic(result)
+            )
+            record["solve_ms"] = (
+                _optional_finite_float(solve_ms)
+            )
+        except Exception as error:
+            record["diagnostic_exception"] = (
+                f"{type(error).__name__}: {error}"
+            )
+
+        results.append(record)
+
+    return results
+
+
+def _serialize_online_state_dict(
+    agent: DQNAgent,
+) -> str:
+    buffer = io.BytesIO()
+    state_dict = {
+        key: value.detach().cpu()
+        for key, value
+        in agent.q_net.state_dict().items()
+    }
+    torch.save(state_dict, buffer)
+    return base64.b64encode(
+        buffer.getvalue()
+    ).decode("ascii")
+
+
+def _write_failure_diagnostic(
+    diagnostic: dict[str, object],
+) -> Path:
+    directory = DEFAULT_BASELINE_OUTPUT_DIR
+
+    if directory.exists():
+        raise FileExistsError(
+            "failure diagnostic output directory "
+            f"already exists: {directory}"
+        )
+
+    directory.mkdir(parents=True, exist_ok=False)
+    path = directory / "failure_diagnostic.json"
+    path.write_text(
+        json.dumps(
+            diagnostic,
+            ensure_ascii=False,
+            indent=2,
+            allow_nan=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
 def run_training_episode(
     *,
     voyage_id: str,
@@ -464,6 +776,14 @@ def run_training_episode(
         initial_soc=0.55,
     )
     state = env.reset()
+    if not np.all(
+        np.isfinite(
+            np.asarray(state, dtype=np.float64)
+        )
+    ):
+        raise RuntimeError(
+            "initial DQN state contains NaN or Inf"
+        )
 
     episode_reward = 0.0
     episode_steps = 0
@@ -475,13 +795,25 @@ def run_training_episode(
             step_before
             < int(runtime.config.warmup_steps)
         )
+        _validate_online_q_values(
+            agent=runtime.agent,
+            state=state,
+            context="training",
+        )
         greedy_action = runtime.agent.greedy_action(state)
         action = runtime.policy.select_action(
             greedy_action=greedy_action,
             action_dim=ACTION_DIM,
             warmup=warmup,
         )
-        next_state, reward, done, _ = env.step(action)
+        next_state, reward, done, info = env.step(action)
+        _validate_environment_step(
+            action=action,
+            reward=reward,
+            next_state=next_state,
+            info=info,
+            base_config=base_config,
+        )
 
         runtime.replay_buffer.push(
             state,
@@ -505,6 +837,15 @@ def run_training_episode(
                     runtime.config.batch_size
                 )
                 loss = runtime.agent.update(batch)
+                _require_finite_scalar(loss, "training loss")
+                _validate_latest_q_diagnostics(
+                    runtime.agent
+                )
+                _validate_online_q_values(
+                    agent=runtime.agent,
+                    state=next_state,
+                    context="post-update",
+                )
                 runtime.losses.append(float(loss))
                 runtime.update_steps.append(
                     int(runtime.global_step)
@@ -593,6 +934,14 @@ def run_validation_episode(
         initial_soc=0.55,
     )
     state = env.reset()
+    if not np.all(
+        np.isfinite(
+            np.asarray(state, dtype=np.float64)
+        )
+    ):
+        raise RuntimeError(
+            "initial validation state contains NaN or Inf"
+        )
 
     episode_reward = 0.0
     episode_steps = 0
@@ -600,14 +949,133 @@ def run_validation_episode(
         ACTION_DIM,
         dtype=np.int64,
     )
+    recent_steps: list[dict[str, object]] = []
     done = False
 
     while not done:
+        _validate_online_q_values(
+            agent=agent,
+            state=state,
+            context="validation",
+        )
         action = agent.greedy_action(state)
-        next_state, reward, done, _ = env.step(action)
+        try:
+            next_state, reward, done, info = env.step(
+                action
+            )
+        except RuntimeError as error:
+            if "MPC solve failed" not in str(error):
+                raise
+
+            decision_index = int(env.decision_index)
+            execution_index = decision_index + 1
+            load_forecast_kw = env._future_window(
+                decision_index
+            )
+            current_load_kw = float(
+                env.loads_kw[decision_index]
+            )
+            previous_load_kw = float(
+                env.loads_kw[
+                    decision_index - 1
+                    if decision_index > 0
+                    else decision_index
+                ]
+            )
+
+            diagnostic: dict[str, object] = {
+                "voyage_id": str(voyage_id),
+                "decision_index": decision_index,
+                "execution_index": execution_index,
+                "action_id": int(action),
+                "current_soc": float(
+                    env.current_soc
+                ),
+                "prev_fc_kw": float(
+                    env.previous_fc_kw
+                ),
+                "previous_batt_kw": float(
+                    env.previous_batt_kw
+                ),
+                "current_load_kw": current_load_kw,
+                "previous_load_kw": previous_load_kw,
+                "future_load_kw": [
+                    float(value)
+                    for value in load_forecast_kw
+                ],
+                "state": [
+                    float(value)
+                    for value in np.asarray(
+                        state,
+                        dtype=np.float64,
+                    )
+                ],
+                "original_solver_status": (
+                    "primal infeasible"
+                    if "primal infeasible" in str(error)
+                    else str(error)
+                ),
+                "original_error": str(error),
+                "original_primal_residual": None,
+                "original_dual_residual": None,
+                "original_iterations": None,
+                "last_20_successful_steps": list(
+                    recent_steps
+                ),
+            }
+            diagnostic[
+                "persistent_same_state_actions"
+            ] = _persistent_same_state_diagnostics(
+                env=env,
+                load_forecast_kw=load_forecast_kw,
+                current_soc=float(env.current_soc),
+                prev_fc_kw=float(env.previous_fc_kw),
+            )
+
+            raise _ValidationMpcFailure(
+                diagnostic
+            ) from error
+
+        _validate_environment_step(
+            action=action,
+            reward=reward,
+            next_state=next_state,
+            info=info,
+            base_config=base_config,
+        )
         action_counts[action] += 1
         episode_reward += float(reward)
         episode_steps += 1
+        recent_steps.append(
+            {
+                "decision_index": int(
+                    info["decision_index"]
+                ),
+                "execution_index": int(
+                    info["execution_index"]
+                ),
+                "action_id": int(action),
+                "load_kw": float(
+                    info["load_actual_kw"]
+                ),
+                "p_fc_kw": float(info["p_fc_kw"]),
+                "p_batt_kw": float(
+                    info["p_batt_kw"]
+                ),
+                "soc_before": float(
+                    info["soc_before"]
+                ),
+                "soc_after": float(
+                    info["soc_after"]
+                ),
+                "fc_delta_kw": float(
+                    info["p_fc_kw"]
+                    - info["p_fc_prev_kw"]
+                ),
+            }
+        )
+        if len(recent_steps) > 20:
+            del recent_steps[0]
         state = next_state
 
     result: dict[str, object] = {
@@ -714,31 +1182,126 @@ def train_dqn_mpc_mlp(
     split = load_voyage_split(split_path)
     runtime = create_training_runtime(resolved_config)
     base_config = build_formal_mpc_config()
+    online_parameters_before = (
+        _snapshot_online_parameters(runtime.agent)
+    )
+    loaded_train_voyages: list[str] = []
+    loaded_validation_voyages: list[str] = []
 
-    train_episodes = train_to_budget(
-        voyage_ids=split.train_voyages,
-        load_voyage=lambda voyage_id: load_voyage_loads(
+    def load_train_voyage(
+        voyage_id: str,
+    ) -> np.ndarray:
+        loads = load_voyage_loads(
             "train",
             voyage_id,
             split=split,
             data_dir=data_dir,
-        ),
-        base_config=base_config,
-        runtime=runtime,
-    )
-    validation = validate_voyages(
-        voyage_ids=split.validation_voyages,
-        load_voyage=lambda voyage_id: load_voyage_loads(
+        )
+        loaded_train_voyages.append(str(voyage_id))
+        return loads
+
+    def load_validation_voyage(
+        voyage_id: str,
+    ) -> np.ndarray:
+        loads = load_voyage_loads(
             "validation",
             voyage_id,
             split=split,
             data_dir=data_dir,
-        ),
+        )
+        loaded_validation_voyages.append(
+            str(voyage_id)
+        )
+        return loads
+
+    train_episodes = train_to_budget(
+        voyage_ids=split.train_voyages,
+        load_voyage=load_train_voyage,
         base_config=base_config,
-        agent=runtime.agent,
+        runtime=runtime,
+    )
+    validation_start_state_dict = (
+        _serialize_online_state_dict(runtime.agent)
+    )
+
+    try:
+        validation = validate_voyages(
+            voyage_ids=split.validation_voyages,
+            load_voyage=load_validation_voyage,
+            base_config=base_config,
+            agent=runtime.agent,
+        )
+    except _ValidationMpcFailure as failure:
+        failure_diagnostic: dict[str, object] = {
+            "training": {
+                "seed": int(resolved_config.seed),
+                "requested_max_steps": int(
+                    resolved_config.max_steps
+                ),
+                "actual_global_step": int(
+                    runtime.global_step
+                ),
+                "training_voyages": [
+                    str(episode["voyage_id"])
+                    for episode in train_episodes
+                ],
+                "gradient_update_count": len(
+                    runtime.update_steps
+                ),
+                "target_sync_steps": list(
+                    runtime.target_sync_steps
+                ),
+                "final_epsilon": float(
+                    runtime.policy.epsilon
+                ),
+                "replay_buffer_size": len(
+                    runtime.replay_buffer
+                ),
+            },
+            "failure_snapshot": failure.diagnostic,
+            (
+                "validation_start_online_q_net_"
+                "state_dict_torch_base64"
+            ): validation_start_state_dict,
+            "data_access": {
+                "train_voyages": (
+                    loaded_train_voyages
+                ),
+                "validation_voyages": (
+                    loaded_validation_voyages
+                ),
+                "test_voyages": [],
+            },
+        }
+        diagnostic_path = _write_failure_diagnostic(
+            failure_diagnostic
+        )
+        raise RuntimeError(
+            "validation MPC failure diagnostic saved "
+            f"to {diagnostic_path}"
+        ) from failure
+    loss_statistics = _loss_statistics(runtime.losses)
+    final_q_diagnostics = (
+        _validate_latest_q_diagnostics(runtime.agent)
+    )
+    online_network_updated = (
+        _online_parameters_changed(
+            online_parameters_before,
+            runtime.agent,
+        )
     )
 
     summary: dict[str, object] = {
+        "seed": int(resolved_config.seed),
+        "requested_max_steps": int(
+            resolved_config.max_steps
+        ),
+        "actual_global_step": int(
+            runtime.global_step
+        ),
+        "warmup_steps": int(
+            resolved_config.warmup_steps
+        ),
         "train_voyage_count": len(split.train_voyages),
         "validation_voyage_count": len(
             split.validation_voyages
@@ -752,19 +1315,164 @@ def train_dqn_mpc_mlp(
         "target_sync_steps": list(
             runtime.target_sync_steps
         ),
+        "final_epsilon": float(
+            runtime.policy.epsilon
+        ),
+        "replay_buffer_size": len(
+            runtime.replay_buffer
+        ),
+        "loss_statistics": loss_statistics,
+        "final_update_diagnostics": (
+            final_q_diagnostics
+        ),
+        "online_network_updated": bool(
+            online_network_updated
+        ),
+        "training_voyages": [
+            str(episode["voyage_id"])
+            for episode in train_episodes
+        ],
+        "data_access": {
+            "train_voyages": loaded_train_voyages,
+            "validation_voyages": (
+                loaded_validation_voyages
+            ),
+            "test_voyages": [],
+        },
         "validation": validation,
     }
 
     return runtime, summary
 
 
-def main() -> None:
-    _, summary = train_dqn_mpc_mlp()
-    print(
+def write_baseline_outputs(
+    *,
+    runtime: TrainingRuntime,
+    summary: dict[str, object],
+    output_dir: str | Path = (
+        DEFAULT_BASELINE_OUTPUT_DIR
+    ),
+) -> dict[str, Path]:
+    directory = Path(output_dir)
+
+    if directory.exists():
+        raise FileExistsError(
+            "baseline output directory already exists: "
+            f"{directory}"
+        )
+
+    validation = summary.get("validation")
+    if not isinstance(validation, dict):
+        raise RuntimeError(
+            "training summary is missing validation"
+        )
+
+    validation_voyages = validation.get("voyages")
+    if not isinstance(validation_voyages, list):
+        raise RuntimeError(
+            "training summary is missing validation voyages"
+        )
+
+    validation_columns = [
+        "voyage_id",
+        "episode_steps",
+        "episode_reward",
+        "mean_reward_per_step",
+        "final_soc",
+        *[
+            f"action_count_A{action_id}"
+            for action_id in range(ACTION_DIM)
+        ],
+    ]
+    validation_frame = pd.DataFrame(
+        validation_voyages,
+        columns=validation_columns,
+    )
+
+    if len(validation_frame) != 13:
+        raise RuntimeError(
+            "formal validation output must contain 13 voyages"
+        )
+
+    numeric_columns = [
+        column
+        for column in validation_columns
+        if column != "voyage_id"
+    ]
+    numeric_values = (
+        validation_frame[numeric_columns]
+        .apply(pd.to_numeric, errors="coerce")
+        .to_numpy(dtype=np.float64)
+    )
+    if not np.all(np.isfinite(numeric_values)):
+        raise RuntimeError(
+            "validation output contains NaN or Inf"
+        )
+
+    action_columns = [
+        f"action_count_A{action_id}"
+        for action_id in range(ACTION_DIM)
+    ]
+    if not np.array_equal(
+        validation_frame[action_columns]
+        .sum(axis=1)
+        .to_numpy(dtype=np.int64),
+        validation_frame["episode_steps"]
+        .to_numpy(dtype=np.int64),
+    ):
+        raise RuntimeError(
+            "validation action counts do not match "
+            "episode steps"
+        )
+
+    directory.mkdir(parents=True, exist_ok=False)
+    model_path = directory / "model_final.pt"
+    validation_path = (
+        directory / "validation_by_voyage.csv"
+    )
+    summary_path = directory / "training_summary.json"
+
+    runtime.agent.save(model_path)
+    validation_frame.to_csv(
+        validation_path,
+        index=False,
+    )
+    summary_path.write_text(
         json.dumps(
             summary,
             ensure_ascii=False,
             indent=2,
+            allow_nan=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    return {
+        "training_summary": summary_path,
+        "validation_by_voyage": validation_path,
+        "model_final": model_path,
+    }
+
+
+def main() -> None:
+    runtime, summary = train_dqn_mpc_mlp()
+    output_paths = write_baseline_outputs(
+        runtime=runtime,
+        summary=summary,
+    )
+    print(
+        json.dumps(
+            {
+                "summary": summary,
+                "output_files": {
+                    key: str(path)
+                    for key, path in output_paths.items()
+                },
+            },
+            ensure_ascii=False,
+            indent=2,
+            allow_nan=False,
         )
     )
 

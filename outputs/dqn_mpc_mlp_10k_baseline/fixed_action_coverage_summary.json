@@ -1,0 +1,2932 @@
+{
+  "generated_at_utc": "2026-07-27T15:04:50.581552+00:00",
+  "experiment": "fixed A0-A6 feasibility coverage on train and validation voyages",
+  "scope": {
+    "train_voyages": 46,
+    "validation_voyages": 13,
+    "evaluated_non_test_voyages": 59,
+    "test_voyages_locked": 7,
+    "actions": 7,
+    "expected_fixed_action_checks": 413,
+    "test_trajectories_read": false
+  },
+  "run_accounting": {
+    "unique_voyage_action_pairs": 413,
+    "missing_pairs": 0,
+    "duplicate_pairs": 0,
+    "all_checks_finished": true,
+    "full_voyage_success_runs": 337,
+    "first_failure_runs": 76,
+    "failure_solver_status_counts": {
+      "primal infeasible": 76
+    }
+  },
+  "data_access": {
+    "loaded_train_voyages": [
+      "voyage_001",
+      "voyage_002",
+      "voyage_003",
+      "voyage_004",
+      "voyage_005",
+      "voyage_006",
+      "voyage_007",
+      "voyage_008",
+      "voyage_009",
+      "voyage_010",
+      "voyage_011",
+      "voyage_012",
+      "voyage_013",
+      "voyage_014",
+      "voyage_015",
+      "voyage_016",
+      "voyage_017",
+      "voyage_018",
+      "voyage_019",
+      "voyage_020",
+      "voyage_021",
+      "voyage_022",
+      "voyage_023",
+      "voyage_024",
+      "voyage_025",
+      "voyage_026",
+      "voyage_027",
+      "voyage_028",
+      "voyage_029",
+      "voyage_030",
+      "voyage_031",
+      "voyage_032",
+      "voyage_033",
+      "voyage_034",
+      "voyage_035",
+      "voyage_036",
+      "voyage_037",
+      "voyage_038",
+      "voyage_039",
+      "voyage_040",
+      "voyage_041",
+      "voyage_042",
+      "voyage_043",
+      "voyage_044",
+      "voyage_045",
+      "voyage_046"
+    ],
+    "loaded_validation_voyages": [
+      "voyage_047",
+      "voyage_048",
+      "voyage_049",
+      "voyage_050",
+      "voyage_051",
+      "voyage_052",
+      "voyage_053",
+      "voyage_054",
+      "voyage_055",
+      "voyage_056",
+      "voyage_057",
+      "voyage_058",
+      "voyage_059"
+    ],
+    "loaded_test_voyages": [],
+    "test_trajectory_accessed": false
+  },
+  "fixed_reward_weights": {
+    "q_h2": 0.25,
+    "q_batt": 0.4,
+    "q_soc": 12.0,
+    "q_fc_var": 20.0
+  },
+  "metric_aggregation": {
+    "best_fixed_action": "maximum mean_fixed_reward_per_step among completed actions; exact ties select the smallest action_id and are also listed",
+    "action_state_and_hydrogen_means": "unweighted arithmetic mean across successful voyages",
+    "pooled_mean_reward_per_step": "sum of completed-voyage rewards divided by sum of their steps",
+    "battery_net_energy_sign": "positive is net discharge; negative is net charge",
+    "failed_action_metrics": "full-voyage success metrics are null after first failure"
+  },
+  "coverage_matrix": {
+    "voyage_001": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_002": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_003": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": false,
+      "A5": true,
+      "A6": false
+    },
+    "voyage_004": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_005": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_006": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_007": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_008": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_009": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_010": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_011": {
+      "A0": false,
+      "A1": false,
+      "A2": false,
+      "A3": false,
+      "A4": false,
+      "A5": false,
+      "A6": false
+    },
+    "voyage_012": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_013": {
+      "A0": false,
+      "A1": true,
+      "A2": false,
+      "A3": false,
+      "A4": false,
+      "A5": true,
+      "A6": false
+    },
+    "voyage_014": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_015": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_016": {
+      "A0": false,
+      "A1": false,
+      "A2": false,
+      "A3": false,
+      "A4": false,
+      "A5": false,
+      "A6": false
+    },
+    "voyage_017": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_018": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_019": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_020": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_021": {
+      "A0": false,
+      "A1": false,
+      "A2": false,
+      "A3": false,
+      "A4": false,
+      "A5": false,
+      "A6": false
+    },
+    "voyage_022": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_023": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": false,
+      "A5": true,
+      "A6": false
+    },
+    "voyage_024": {
+      "A0": false,
+      "A1": false,
+      "A2": false,
+      "A3": false,
+      "A4": false,
+      "A5": false,
+      "A6": false
+    },
+    "voyage_025": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_026": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_027": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_028": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_029": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_030": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_031": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_032": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_033": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_034": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_035": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_036": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_037": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_038": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_039": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_040": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_041": {
+      "A0": false,
+      "A1": false,
+      "A2": false,
+      "A3": false,
+      "A4": false,
+      "A5": false,
+      "A6": false
+    },
+    "voyage_042": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_043": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_044": {
+      "A0": false,
+      "A1": false,
+      "A2": false,
+      "A3": false,
+      "A4": false,
+      "A5": false,
+      "A6": false
+    },
+    "voyage_045": {
+      "A0": false,
+      "A1": false,
+      "A2": false,
+      "A3": false,
+      "A4": false,
+      "A5": false,
+      "A6": false
+    },
+    "voyage_046": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_047": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_048": {
+      "A0": false,
+      "A1": true,
+      "A2": true,
+      "A3": false,
+      "A4": false,
+      "A5": true,
+      "A6": false
+    },
+    "voyage_049": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_050": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_051": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_052": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_053": {
+      "A0": false,
+      "A1": false,
+      "A2": false,
+      "A3": false,
+      "A4": false,
+      "A5": false,
+      "A6": false
+    },
+    "voyage_054": {
+      "A0": false,
+      "A1": false,
+      "A2": false,
+      "A3": false,
+      "A4": false,
+      "A5": false,
+      "A6": false
+    },
+    "voyage_055": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_056": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_057": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_058": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    },
+    "voyage_059": {
+      "A0": true,
+      "A1": true,
+      "A2": true,
+      "A3": true,
+      "A4": true,
+      "A5": true,
+      "A6": true
+    }
+  },
+  "voyage_summary": {
+    "voyage_001": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -5.269120392917654,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_002": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -3.657575426852177,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_003": {
+      "split": "train",
+      "successful_action_count": 5,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A5"
+      ],
+      "failed_actions": [
+        "A4",
+        "A6"
+      ],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -31.022522579460954,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_004": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -6.264119144118489,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_005": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -18.20472371413361,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_006": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -3.250462894695518,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_007": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -4.277921023499133,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_008": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -14.611608244776116,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_009": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -0.8356344346105261,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_010": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -3.5123609277670926,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_011": {
+      "split": "train",
+      "successful_action_count": 0,
+      "successful_actions": [],
+      "failed_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "best_fixed_action": null,
+      "best_fixed_reward_per_step": null,
+      "exact_best_ties": []
+    },
+    "voyage_012": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -1.5334987528112267,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_013": {
+      "split": "train",
+      "successful_action_count": 2,
+      "successful_actions": [
+        "A1",
+        "A5"
+      ],
+      "failed_actions": [
+        "A0",
+        "A2",
+        "A3",
+        "A4",
+        "A6"
+      ],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -58.597832186358055,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_014": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -2.456182307367086,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_015": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -6.295309424665411,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_016": {
+      "split": "train",
+      "successful_action_count": 0,
+      "successful_actions": [],
+      "failed_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "best_fixed_action": null,
+      "best_fixed_reward_per_step": null,
+      "exact_best_ties": []
+    },
+    "voyage_017": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -2.0593639273770585,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_018": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -28.81769686716712,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_019": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -2.355935574028238,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_020": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -12.071038029600217,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_021": {
+      "split": "train",
+      "successful_action_count": 0,
+      "successful_actions": [],
+      "failed_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "best_fixed_action": null,
+      "best_fixed_reward_per_step": null,
+      "exact_best_ties": []
+    },
+    "voyage_022": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -7.879338517970854,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_023": {
+      "split": "train",
+      "successful_action_count": 5,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A5"
+      ],
+      "failed_actions": [
+        "A4",
+        "A6"
+      ],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -27.565214016147213,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_024": {
+      "split": "train",
+      "successful_action_count": 0,
+      "successful_actions": [],
+      "failed_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "best_fixed_action": null,
+      "best_fixed_reward_per_step": null,
+      "exact_best_ties": []
+    },
+    "voyage_025": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -2.4567253894548755,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_026": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -3.18572254454114,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_027": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -1.8007517838008338,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_028": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -2.8744747894142635,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_029": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -2.0413342307955364,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_030": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -1.425769566116228,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_031": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -8.46688239283474,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_032": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -1.9804338972995492,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_033": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -3.20313832619849,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_034": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -2.699781520146884,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_035": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -2.5595414300738204,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_036": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -2.2727175300005737,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_037": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -1.2377262836002776,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_038": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -2.523005448160083,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_039": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -0.7995410612613937,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_040": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -2.7053697111108232,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_041": {
+      "split": "train",
+      "successful_action_count": 0,
+      "successful_actions": [],
+      "failed_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "best_fixed_action": null,
+      "best_fixed_reward_per_step": null,
+      "exact_best_ties": []
+    },
+    "voyage_042": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -0.22808555572255487,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_043": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -15.02283055121944,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_044": {
+      "split": "train",
+      "successful_action_count": 0,
+      "successful_actions": [],
+      "failed_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "best_fixed_action": null,
+      "best_fixed_reward_per_step": null,
+      "exact_best_ties": []
+    },
+    "voyage_045": {
+      "split": "train",
+      "successful_action_count": 0,
+      "successful_actions": [],
+      "failed_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "best_fixed_action": null,
+      "best_fixed_reward_per_step": null,
+      "exact_best_ties": []
+    },
+    "voyage_046": {
+      "split": "train",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -0.4772436611258935,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_047": {
+      "split": "validation",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -1.9058453614627124,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_048": {
+      "split": "validation",
+      "successful_action_count": 3,
+      "successful_actions": [
+        "A1",
+        "A2",
+        "A5"
+      ],
+      "failed_actions": [
+        "A0",
+        "A3",
+        "A4",
+        "A6"
+      ],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -27.646744750517897,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_049": {
+      "split": "validation",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -4.608295419421293,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_050": {
+      "split": "validation",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -18.851750084433714,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_051": {
+      "split": "validation",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -9.196968247067716,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_052": {
+      "split": "validation",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -2.4448173107557936,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_053": {
+      "split": "validation",
+      "successful_action_count": 0,
+      "successful_actions": [],
+      "failed_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "best_fixed_action": null,
+      "best_fixed_reward_per_step": null,
+      "exact_best_ties": []
+    },
+    "voyage_054": {
+      "split": "validation",
+      "successful_action_count": 0,
+      "successful_actions": [],
+      "failed_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "best_fixed_action": null,
+      "best_fixed_reward_per_step": null,
+      "exact_best_ties": []
+    },
+    "voyage_055": {
+      "split": "validation",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -4.830506966379229,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_056": {
+      "split": "validation",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A5",
+      "best_fixed_reward_per_step": -3.549115370401992,
+      "exact_best_ties": [
+        "A5"
+      ]
+    },
+    "voyage_057": {
+      "split": "validation",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -35.275455734469055,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_058": {
+      "split": "validation",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -4.745896438266117,
+      "exact_best_ties": [
+        "A1"
+      ]
+    },
+    "voyage_059": {
+      "split": "validation",
+      "successful_action_count": 7,
+      "successful_actions": [
+        "A0",
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6"
+      ],
+      "failed_actions": [],
+      "best_fixed_action": "A1",
+      "best_fixed_reward_per_step": -7.357944678987365,
+      "exact_best_ties": [
+        "A1"
+      ]
+    }
+  },
+  "action_statistics": {
+    "A0": {
+      "name": "candidate_C",
+      "weights": {
+        "q_h2": 0.25,
+        "q_batt": 0.4,
+        "q_soc": 12.0,
+        "q_fc_var": 20.0
+      },
+      "train": {
+        "successful_voyages": 38,
+        "failed_voyages": 8,
+        "total_voyages": 46,
+        "mean_minimum_soc": 0.41004647890494744,
+        "mean_final_soc": 0.5710619018079411,
+        "pooled_mean_reward_per_step": -14.281966558106468,
+        "mean_of_voyage_mean_reward_per_step": -17.192542965187936,
+        "mean_hydrogen_kg": 60.8139143613634
+      },
+      "validation": {
+        "successful_voyages": 10,
+        "failed_voyages": 3,
+        "total_voyages": 13,
+        "mean_minimum_soc": 0.3798587437372819,
+        "mean_final_soc": 0.5891620213254919,
+        "pooled_mean_reward_per_step": -21.396523020182403,
+        "mean_of_voyage_mean_reward_per_step": -30.123999688385727,
+        "mean_hydrogen_kg": 81.16144038970903
+      },
+      "overall": {
+        "successful_voyages": 48,
+        "failed_voyages": 11,
+        "total_voyages": 59,
+        "mean_minimum_soc": 0.40375736741168383,
+        "mean_final_soc": 0.5748327600407642,
+        "pooled_mean_reward_per_step": -15.772878258080608,
+        "mean_of_voyage_mean_reward_per_step": -19.886596449187472,
+        "mean_hydrogen_kg": 65.05298228393538
+      }
+    },
+    "A1": {
+      "name": "fast_fc_response",
+      "weights": {
+        "q_h2": 0.25,
+        "q_batt": 0.6,
+        "q_soc": 12.0,
+        "q_fc_var": 5.0
+      },
+      "train": {
+        "successful_voyages": 39,
+        "failed_voyages": 7,
+        "total_voyages": 46,
+        "mean_minimum_soc": 0.4533578070485738,
+        "mean_final_soc": 0.5316203693809829,
+        "pooled_mean_reward_per_step": -8.281741765060389,
+        "mean_of_voyage_mean_reward_per_step": -8.724361150445064,
+        "mean_hydrogen_kg": 61.682169313710396
+      },
+      "validation": {
+        "successful_voyages": 11,
+        "failed_voyages": 2,
+        "total_voyages": 13,
+        "mean_minimum_soc": 0.4201273447646056,
+        "mean_final_soc": 0.5361129160249498,
+        "pooled_mean_reward_per_step": -11.480733391600413,
+        "mean_of_voyage_mean_reward_per_step": -12.966362676002397,
+        "mean_hydrogen_kg": 81.70628971459695
+      },
+      "overall": {
+        "successful_voyages": 50,
+        "failed_voyages": 9,
+        "total_voyages": 59,
+        "mean_minimum_soc": 0.44604710534610076,
+        "mean_final_soc": 0.5326087296426556,
+        "pooled_mean_reward_per_step": -8.986223769935751,
+        "mean_of_voyage_mean_reward_per_step": -9.657601486067676,
+        "mean_hydrogen_kg": 66.08747580190543
+      }
+    },
+    "A2": {
+      "name": "medium_response",
+      "weights": {
+        "q_h2": 0.25,
+        "q_batt": 0.5,
+        "q_soc": 10.0,
+        "q_fc_var": 10.0
+      },
+      "train": {
+        "successful_voyages": 38,
+        "failed_voyages": 8,
+        "total_voyages": 46,
+        "mean_minimum_soc": 0.4348870100491479,
+        "mean_final_soc": 0.5418540403766599,
+        "pooled_mean_reward_per_step": -9.827894606194313,
+        "mean_of_voyage_mean_reward_per_step": -11.537791923010298,
+        "mean_hydrogen_kg": 59.604830771121954
+      },
+      "validation": {
+        "successful_voyages": 11,
+        "failed_voyages": 2,
+        "total_voyages": 13,
+        "mean_minimum_soc": 0.39215986377984646,
+        "mean_final_soc": 0.5523326545965637,
+        "pooled_mean_reward_per_step": -17.14368366358525,
+        "mean_of_voyage_mean_reward_per_step": -20.798177217682092,
+        "mean_hydrogen_kg": 82.36535101723857
+      },
+      "overall": {
+        "successful_voyages": 49,
+        "failed_voyages": 10,
+        "total_voyages": 59,
+        "mean_minimum_soc": 0.4252952017029782,
+        "mean_final_soc": 0.5442063823443934,
+        "pooled_mean_reward_per_step": -11.487432989097861,
+        "mean_of_voyage_mean_reward_per_step": -13.61665392793662,
+        "mean_hydrogen_kg": 64.71433531616854
+      }
+    },
+    "A3": {
+      "name": "balanced",
+      "weights": {
+        "q_h2": 0.25,
+        "q_batt": 0.4,
+        "q_soc": 10.0,
+        "q_fc_var": 12.0
+      },
+      "train": {
+        "successful_voyages": 38,
+        "failed_voyages": 8,
+        "total_voyages": 46,
+        "mean_minimum_soc": 0.42395943114043805,
+        "mean_final_soc": 0.5498308642983696,
+        "pooled_mean_reward_per_step": -11.487476510700029,
+        "mean_of_voyage_mean_reward_per_step": -13.611021979431756,
+        "mean_hydrogen_kg": 59.96204948291655
+      },
+      "validation": {
+        "successful_voyages": 10,
+        "failed_voyages": 3,
+        "total_voyages": 13,
+        "mean_minimum_soc": 0.39809321248764123,
+        "mean_final_soc": 0.5634718988985095,
+        "pooled_mean_reward_per_step": -16.578382261807743,
+        "mean_of_voyage_mean_reward_per_step": -22.423712058561463,
+        "mean_hydrogen_kg": 80.08593599619554
+      },
+      "overall": {
+        "successful_voyages": 48,
+        "failed_voyages": 11,
+        "total_voyages": 59,
+        "mean_minimum_soc": 0.4185706355877721,
+        "mean_final_soc": 0.5526727465067321,
+        "pooled_mean_reward_per_step": -12.554316163776225,
+        "mean_of_voyage_mean_reward_per_step": -15.446999079250446,
+        "mean_hydrogen_kg": 64.15452583984968
+      }
+    },
+    "A4": {
+      "name": "strong_fc_smoothing",
+      "weights": {
+        "q_h2": 0.25,
+        "q_batt": 0.25,
+        "q_soc": 12.0,
+        "q_fc_var": 30.0
+      },
+      "train": {
+        "successful_voyages": 36,
+        "failed_voyages": 10,
+        "total_voyages": 46,
+        "mean_minimum_soc": 0.3845232034885256,
+        "mean_final_soc": 0.5990021398615676,
+        "pooled_mean_reward_per_step": -23.75632269569716,
+        "mean_of_voyage_mean_reward_per_step": -27.923971715546607,
+        "mean_hydrogen_kg": 60.74703832262963
+      },
+      "validation": {
+        "successful_voyages": 10,
+        "failed_voyages": 3,
+        "total_voyages": 13,
+        "mean_minimum_soc": 0.33504185397283337,
+        "mean_final_soc": 0.6093340436075494,
+        "pooled_mean_reward_per_step": -38.42903087660189,
+        "mean_of_voyage_mean_reward_per_step": -53.327051902927145,
+        "mean_hydrogen_kg": 82.07446829876025
+      },
+      "overall": {
+        "successful_voyages": 46,
+        "failed_voyages": 13,
+        "total_voyages": 59,
+        "mean_minimum_soc": 0.3737663883764187,
+        "mean_final_soc": 0.6012482058933026,
+        "pooled_mean_reward_per_step": -26.928570600905893,
+        "mean_of_voyage_mean_reward_per_step": -33.446380451933685,
+        "mean_hydrogen_kg": 65.3834361435276
+      }
+    },
+    "A5": {
+      "name": "soc_recovery",
+      "weights": {
+        "q_h2": 0.15,
+        "q_batt": 0.35,
+        "q_soc": 20.0,
+        "q_fc_var": 12.0
+      },
+      "train": {
+        "successful_voyages": 39,
+        "failed_voyages": 7,
+        "total_voyages": 46,
+        "mean_minimum_soc": 0.4513053883842784,
+        "mean_final_soc": 0.5687480345346654,
+        "pooled_mean_reward_per_step": -7.556059913695869,
+        "mean_of_voyage_mean_reward_per_step": -8.124019332618591,
+        "mean_hydrogen_kg": 63.23901076666501
+      },
+      "validation": {
+        "successful_voyages": 11,
+        "failed_voyages": 2,
+        "total_voyages": 13,
+        "mean_minimum_soc": 0.42012237671909514,
+        "mean_final_soc": 0.5818979934900917,
+        "pooled_mean_reward_per_step": -8.98441679877279,
+        "mean_of_voyage_mean_reward_per_step": -12.108218381978766,
+        "mean_hydrogen_kg": 83.64901937537434
+      },
+      "overall": {
+        "successful_voyages": 50,
+        "failed_voyages": 9,
+        "total_voyages": 59,
+        "mean_minimum_soc": 0.4444451258179381,
+        "mean_final_soc": 0.5716410255048592,
+        "pooled_mean_reward_per_step": -7.870612697682009,
+        "mean_of_voyage_mean_reward_per_step": -9.000543123477831,
+        "mean_hydrogen_kg": 67.72921266058106
+      }
+    },
+    "A6": {
+      "name": "economic_discharge",
+      "weights": {
+        "q_h2": 0.5,
+        "q_batt": 0.25,
+        "q_soc": 6.0,
+        "q_fc_var": 8.0
+      },
+      "train": {
+        "successful_voyages": 36,
+        "failed_voyages": 10,
+        "total_voyages": 46,
+        "mean_minimum_soc": 0.35011659565487535,
+        "mean_final_soc": 0.4729716190474259,
+        "pooled_mean_reward_per_step": -56.01443367634104,
+        "mean_of_voyage_mean_reward_per_step": -59.540428761667954,
+        "mean_hydrogen_kg": 55.940494085153304
+      },
+      "validation": {
+        "successful_voyages": 10,
+        "failed_voyages": 3,
+        "total_voyages": 13,
+        "mean_minimum_soc": 0.31312352266661103,
+        "mean_final_soc": 0.4841245182517159,
+        "pooled_mean_reward_per_step": -75.16629340172747,
+        "mean_of_voyage_mean_reward_per_step": -81.66036241560444,
+        "mean_hydrogen_kg": 77.14862614355026
+      },
+      "overall": {
+        "successful_voyages": 46,
+        "failed_voyages": 13,
+        "total_voyages": 59,
+        "mean_minimum_soc": 0.34207462326612226,
+        "mean_final_soc": 0.47539616235270626,
+        "pooled_mean_reward_per_step": -60.15507670867337,
+        "mean_of_voyage_mean_reward_per_step": -64.34910999078457,
+        "mean_hydrogen_kg": 60.55095757610917
+      }
+    }
+  },
+  "candidate_C_A0": {
+    "train_successes": 38,
+    "train_failures": 8,
+    "train_total": 46,
+    "validation_successes": 10,
+    "validation_failures": 3,
+    "validation_total": 13,
+    "failure_voyages": {
+      "train": [
+        "voyage_011",
+        "voyage_013",
+        "voyage_016",
+        "voyage_021",
+        "voyage_024",
+        "voyage_041",
+        "voyage_044",
+        "voyage_045"
+      ],
+      "validation": [
+        "voyage_048",
+        "voyage_053",
+        "voyage_054"
+      ],
+      "overall": [
+        "voyage_011",
+        "voyage_013",
+        "voyage_016",
+        "voyage_021",
+        "voyage_024",
+        "voyage_041",
+        "voyage_044",
+        "voyage_045",
+        "voyage_048",
+        "voyage_053",
+        "voyage_054"
+      ]
+    }
+  },
+  "voyage_feasibility_coverage": {
+    "successful_action_count_by_voyage": {
+      "voyage_001": 7,
+      "voyage_002": 7,
+      "voyage_003": 5,
+      "voyage_004": 7,
+      "voyage_005": 7,
+      "voyage_006": 7,
+      "voyage_007": 7,
+      "voyage_008": 7,
+      "voyage_009": 7,
+      "voyage_010": 7,
+      "voyage_011": 0,
+      "voyage_012": 7,
+      "voyage_013": 2,
+      "voyage_014": 7,
+      "voyage_015": 7,
+      "voyage_016": 0,
+      "voyage_017": 7,
+      "voyage_018": 7,
+      "voyage_019": 7,
+      "voyage_020": 7,
+      "voyage_021": 0,
+      "voyage_022": 7,
+      "voyage_023": 5,
+      "voyage_024": 0,
+      "voyage_025": 7,
+      "voyage_026": 7,
+      "voyage_027": 7,
+      "voyage_028": 7,
+      "voyage_029": 7,
+      "voyage_030": 7,
+      "voyage_031": 7,
+      "voyage_032": 7,
+      "voyage_033": 7,
+      "voyage_034": 7,
+      "voyage_035": 7,
+      "voyage_036": 7,
+      "voyage_037": 7,
+      "voyage_038": 7,
+      "voyage_039": 7,
+      "voyage_040": 7,
+      "voyage_041": 0,
+      "voyage_042": 7,
+      "voyage_043": 7,
+      "voyage_044": 0,
+      "voyage_045": 0,
+      "voyage_046": 7,
+      "voyage_047": 7,
+      "voyage_048": 3,
+      "voyage_049": 7,
+      "voyage_050": 7,
+      "voyage_051": 7,
+      "voyage_052": 7,
+      "voyage_053": 0,
+      "voyage_054": 0,
+      "voyage_055": 7,
+      "voyage_056": 7,
+      "voyage_057": 7,
+      "voyage_058": 7,
+      "voyage_059": 7
+    },
+    "successful_action_count_distribution": {
+      "0": 9,
+      "1": 0,
+      "2": 1,
+      "3": 1,
+      "4": 0,
+      "5": 2,
+      "6": 0,
+      "7": 46
+    },
+    "voyages_by_successful_action_count": {
+      "0": [
+        "voyage_011",
+        "voyage_016",
+        "voyage_021",
+        "voyage_024",
+        "voyage_041",
+        "voyage_044",
+        "voyage_045",
+        "voyage_053",
+        "voyage_054"
+      ],
+      "1": [],
+      "2": [
+        "voyage_013"
+      ],
+      "3": [
+        "voyage_048"
+      ],
+      "4": [],
+      "5": [
+        "voyage_003",
+        "voyage_023"
+      ],
+      "6": [],
+      "7": [
+        "voyage_001",
+        "voyage_002",
+        "voyage_004",
+        "voyage_005",
+        "voyage_006",
+        "voyage_007",
+        "voyage_008",
+        "voyage_009",
+        "voyage_010",
+        "voyage_012",
+        "voyage_014",
+        "voyage_015",
+        "voyage_017",
+        "voyage_018",
+        "voyage_019",
+        "voyage_020",
+        "voyage_022",
+        "voyage_025",
+        "voyage_026",
+        "voyage_027",
+        "voyage_028",
+        "voyage_029",
+        "voyage_030",
+        "voyage_031",
+        "voyage_032",
+        "voyage_033",
+        "voyage_034",
+        "voyage_035",
+        "voyage_036",
+        "voyage_037",
+        "voyage_038",
+        "voyage_039",
+        "voyage_040",
+        "voyage_042",
+        "voyage_043",
+        "voyage_046",
+        "voyage_047",
+        "voyage_049",
+        "voyage_050",
+        "voyage_051",
+        "voyage_052",
+        "voyage_055",
+        "voyage_056",
+        "voyage_057",
+        "voyage_058",
+        "voyage_059"
+      ]
+    },
+    "minimum_successful_actions_for_any_voyage": 0,
+    "all_7_actions_success_voyages": [
+      "voyage_001",
+      "voyage_002",
+      "voyage_004",
+      "voyage_005",
+      "voyage_006",
+      "voyage_007",
+      "voyage_008",
+      "voyage_009",
+      "voyage_010",
+      "voyage_012",
+      "voyage_014",
+      "voyage_015",
+      "voyage_017",
+      "voyage_018",
+      "voyage_019",
+      "voyage_020",
+      "voyage_022",
+      "voyage_025",
+      "voyage_026",
+      "voyage_027",
+      "voyage_028",
+      "voyage_029",
+      "voyage_030",
+      "voyage_031",
+      "voyage_032",
+      "voyage_033",
+      "voyage_034",
+      "voyage_035",
+      "voyage_036",
+      "voyage_037",
+      "voyage_038",
+      "voyage_039",
+      "voyage_040",
+      "voyage_042",
+      "voyage_043",
+      "voyage_046",
+      "voyage_047",
+      "voyage_049",
+      "voyage_050",
+      "voyage_051",
+      "voyage_052",
+      "voyage_055",
+      "voyage_056",
+      "voyage_057",
+      "voyage_058",
+      "voyage_059"
+    ],
+    "partial_action_success_voyages": [
+      "voyage_003",
+      "voyage_013",
+      "voyage_023",
+      "voyage_048"
+    ],
+    "exactly_1_action_success_voyages": [],
+    "A0_failed_but_other_action_succeeded_voyages": [
+      "voyage_013",
+      "voyage_048"
+    ],
+    "all_7_actions_failed_voyages": [
+      "voyage_011",
+      "voyage_016",
+      "voyage_021",
+      "voyage_024",
+      "voyage_041",
+      "voyage_044",
+      "voyage_045",
+      "voyage_053",
+      "voyage_054"
+    ]
+  },
+  "best_fixed_action_by_voyage": {
+    "voyage_001": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -5.269120392917654,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_002": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -3.657575426852177,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_003": {
+      "split": "train",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -31.022522579460954,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_004": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -6.264119144118489,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_005": {
+      "split": "train",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -18.20472371413361,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_006": {
+      "split": "train",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -3.250462894695518,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_007": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -4.277921023499133,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_008": {
+      "split": "train",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -14.611608244776116,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_009": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -0.8356344346105261,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_010": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -3.5123609277670926,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_011": {
+      "split": "train",
+      "action": null,
+      "name": null,
+      "mean_fixed_reward_per_step": null,
+      "exact_ties": []
+    },
+    "voyage_012": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -1.5334987528112267,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_013": {
+      "split": "train",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -58.597832186358055,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_014": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -2.456182307367086,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_015": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -6.295309424665411,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_016": {
+      "split": "train",
+      "action": null,
+      "name": null,
+      "mean_fixed_reward_per_step": null,
+      "exact_ties": []
+    },
+    "voyage_017": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -2.0593639273770585,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_018": {
+      "split": "train",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -28.81769686716712,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_019": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -2.355935574028238,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_020": {
+      "split": "train",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -12.071038029600217,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_021": {
+      "split": "train",
+      "action": null,
+      "name": null,
+      "mean_fixed_reward_per_step": null,
+      "exact_ties": []
+    },
+    "voyage_022": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -7.879338517970854,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_023": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -27.565214016147213,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_024": {
+      "split": "train",
+      "action": null,
+      "name": null,
+      "mean_fixed_reward_per_step": null,
+      "exact_ties": []
+    },
+    "voyage_025": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -2.4567253894548755,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_026": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -3.18572254454114,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_027": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -1.8007517838008338,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_028": {
+      "split": "train",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -2.8744747894142635,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_029": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -2.0413342307955364,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_030": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -1.425769566116228,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_031": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -8.46688239283474,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_032": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -1.9804338972995492,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_033": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -3.20313832619849,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_034": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -2.699781520146884,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_035": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -2.5595414300738204,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_036": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -2.2727175300005737,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_037": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -1.2377262836002776,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_038": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -2.523005448160083,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_039": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -0.7995410612613937,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_040": {
+      "split": "train",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -2.7053697111108232,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_041": {
+      "split": "train",
+      "action": null,
+      "name": null,
+      "mean_fixed_reward_per_step": null,
+      "exact_ties": []
+    },
+    "voyage_042": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -0.22808555572255487,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_043": {
+      "split": "train",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -15.02283055121944,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_044": {
+      "split": "train",
+      "action": null,
+      "name": null,
+      "mean_fixed_reward_per_step": null,
+      "exact_ties": []
+    },
+    "voyage_045": {
+      "split": "train",
+      "action": null,
+      "name": null,
+      "mean_fixed_reward_per_step": null,
+      "exact_ties": []
+    },
+    "voyage_046": {
+      "split": "train",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -0.4772436611258935,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_047": {
+      "split": "validation",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -1.9058453614627124,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_048": {
+      "split": "validation",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -27.646744750517897,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_049": {
+      "split": "validation",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -4.608295419421293,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_050": {
+      "split": "validation",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -18.851750084433714,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_051": {
+      "split": "validation",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -9.196968247067716,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_052": {
+      "split": "validation",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -2.4448173107557936,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_053": {
+      "split": "validation",
+      "action": null,
+      "name": null,
+      "mean_fixed_reward_per_step": null,
+      "exact_ties": []
+    },
+    "voyage_054": {
+      "split": "validation",
+      "action": null,
+      "name": null,
+      "mean_fixed_reward_per_step": null,
+      "exact_ties": []
+    },
+    "voyage_055": {
+      "split": "validation",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -4.830506966379229,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_056": {
+      "split": "validation",
+      "action": "A5",
+      "name": "soc_recovery",
+      "mean_fixed_reward_per_step": -3.549115370401992,
+      "exact_ties": [
+        "A5"
+      ]
+    },
+    "voyage_057": {
+      "split": "validation",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -35.275455734469055,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_058": {
+      "split": "validation",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -4.745896438266117,
+      "exact_ties": [
+        "A1"
+      ]
+    },
+    "voyage_059": {
+      "split": "validation",
+      "action": "A1",
+      "name": "fast_fc_response",
+      "mean_fixed_reward_per_step": -7.357944678987365,
+      "exact_ties": [
+        "A1"
+      ]
+    }
+  },
+  "best_fixed_action_counts": {
+    "A0": 0,
+    "A1": 15,
+    "A2": 0,
+    "A3": 0,
+    "A4": 0,
+    "A5": 35,
+    "A6": 0
+  },
+  "exact_best_action_ties": {},
+  "best_action_interpretation": {
+    "distinct_best_actions_observed": [
+      "A1",
+      "A5"
+    ],
+    "different_voyages_have_different_best_fixed_actions": true,
+    "research_scope": "Different best fixed actions under the common reward support inter-voyage weight dependence, but alone do not prove that within-voyage DQN switching is necessary."
+  },
+  "action_space_coverage": {
+    "case": "case_2_some_voyages_have_no_feasible_fixed_action",
+    "every_non_test_voyage_has_at_least_one_successful_action": false,
+    "all_7_actions_failed_voyages": [
+      "voyage_011",
+      "voyage_016",
+      "voyage_021",
+      "voyage_024",
+      "voyage_041",
+      "voyage_044",
+      "voyage_045",
+      "voyage_053",
+      "voyage_054"
+    ],
+    "evidence_requires_expanding_weight_range": null,
+    "conclusion": "Some train/validation voyages have no successful fixed A0-A6 action; further diagnosis is required before attributing this to weight range versus the N=6 MPC mechanism."
+  },
+  "train_data_scale": {
+    "sample_count_by_voyage": {
+      "voyage_001": 10770,
+      "voyage_002": 7171,
+      "voyage_003": 14370,
+      "voyage_004": 10771,
+      "voyage_005": 25170,
+      "voyage_006": 10770,
+      "voyage_007": 10771,
+      "voyage_008": 14341,
+      "voyage_009": 14371,
+      "voyage_010": 10770,
+      "voyage_011": 28771,
+      "voyage_012": 32371,
+      "voyage_013": 39571,
+      "voyage_014": 28771,
+      "voyage_015": 21571,
+      "voyage_016": 28771,
+      "voyage_017": 10771,
+      "voyage_018": 17671,
+      "voyage_019": 35972,
+      "voyage_020": 35971,
+      "voyage_021": 14371,
+      "voyage_022": 35882,
+      "voyage_023": 25171,
+      "voyage_024": 35972,
+      "voyage_025": 32372,
+      "voyage_026": 32371,
+      "voyage_027": 7170,
+      "voyage_028": 10770,
+      "voyage_029": 10770,
+      "voyage_030": 25171,
+      "voyage_031": 32371,
+      "voyage_032": 35971,
+      "voyage_033": 35971,
+      "voyage_034": 21571,
+      "voyage_035": 32372,
+      "voyage_036": 39571,
+      "voyage_037": 10770,
+      "voyage_038": 43143,
+      "voyage_039": 14371,
+      "voyage_040": 39571,
+      "voyage_041": 39211,
+      "voyage_042": 86372,
+      "voyage_043": 10770,
+      "voyage_044": 10771,
+      "voyage_045": 21572,
+      "voyage_046": 122376
+    },
+    "transition_count_by_voyage": {
+      "voyage_001": 10769,
+      "voyage_002": 7170,
+      "voyage_003": 14369,
+      "voyage_004": 10770,
+      "voyage_005": 25169,
+      "voyage_006": 10769,
+      "voyage_007": 10770,
+      "voyage_008": 14340,
+      "voyage_009": 14370,
+      "voyage_010": 10769,
+      "voyage_011": 28770,
+      "voyage_012": 32370,
+      "voyage_013": 39570,
+      "voyage_014": 28770,
+      "voyage_015": 21570,
+      "voyage_016": 28770,
+      "voyage_017": 10770,
+      "voyage_018": 17670,
+      "voyage_019": 35971,
+      "voyage_020": 35970,
+      "voyage_021": 14370,
+      "voyage_022": 35881,
+      "voyage_023": 25170,
+      "voyage_024": 35971,
+      "voyage_025": 32371,
+      "voyage_026": 32370,
+      "voyage_027": 7169,
+      "voyage_028": 10769,
+      "voyage_029": 10769,
+      "voyage_030": 25170,
+      "voyage_031": 32370,
+      "voyage_032": 35970,
+      "voyage_033": 35970,
+      "voyage_034": 21570,
+      "voyage_035": 32371,
+      "voyage_036": 39570,
+      "voyage_037": 10769,
+      "voyage_038": 43142,
+      "voyage_039": 14370,
+      "voyage_040": 39570,
+      "voyage_041": 39210,
+      "voyage_042": 86371,
+      "voyage_043": 10769,
+      "voyage_044": 10770,
+      "voyage_045": 21571,
+      "voyage_046": 122375
+    },
+    "total_train_transitions": 1236214,
+    "environment_steps_for_one_complete_train_pass": 1236214
+  },
+  "files": {
+    "coverage_csv": "outputs/dqn_mpc_mlp_10k_baseline/fixed_action_coverage.csv",
+    "coverage_csv_sha256": "24f2f68f11f75f18be6831a8dcb66cbcf64c97e9caadf19edf0d7cfdab7a868b",
+    "summary_json": "outputs/dqn_mpc_mlp_10k_baseline/fixed_action_coverage_summary.json"
+  }
+}
