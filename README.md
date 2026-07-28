@@ -1,4 +1,4 @@
-# 基于 LSTM、凸 QP-MPC 与 SineKAN-DQN 的燃料电池/锂电池混合动力船舶能量管理
+# 基于凸 QP-MPC 与 DQN 四权重选择的燃料电池/锂电池混合动力船舶能量管理
 
 ## Research objective
 
@@ -9,15 +9,15 @@
 ## Method overview
 
 ```text
-load data
-  -> LSTM multi-step forecasting
-  -> convex QP-MPC
-  -> OSQP solve
-  -> SineKAN-DQN weight selection
-  -> applied power and closed-loop SOC update
+fixed baseline:
+  offline spline future load -> convex QP-MPC -> OSQP -> applied power/SOC
+
+DQN development path:
+  11-D state -> MLP-DQN selects one complete four-weight tuple
+  -> persistent OSQP solver bank -> applied power/SOC
 ```
 
-目标控制接口中，DQN 只选择 MPC 的完整四权重组合 `q_h2`、`q_batt`、`q_soc`、`q_fc_var`，不直接输出燃料电池或电池功率。当前已实现 7 动作映射、11 维状态、固定评价奖励、7 个持久化 OSQP solver、单航段闭环环境和 MLP-DQN 训练/验证入口，但尚无完成并验收的正式 DQN 训练模型。固定 candidate_C 基准仍直接使用未来 `t+1..t+6` 的真实 1 s 样条负荷，不使用 LSTM 或 DQN。
+目标控制接口中，DQN 只选择 MPC 的完整四权重组合 `q_h2`、`q_batt`、`q_soc`、`q_fc_var`，不直接输出燃料电池或电池功率。当前以 MLP-DQN 作为首个训练基线，已实现 7 动作映射、11 维状态、固定评价奖励、7 个持久化 OSQP solver、单航段闭环环境和训练/验证入口，但尚无完成并验收的正式 DQN 长训练模型；KAN/SineKAN 尚未进入正式比较阶段。固定 candidate_C 基准仍直接使用未来 `t+1..t+6` 的真实 1 s 样条负荷，不使用 LSTM 或 DQN。
 
 ## Data lines
 
@@ -64,14 +64,14 @@ J = q_h2    * sum[k=0..5] m_H2(P_fc[k]) / m_H2(560 kW, 1 s)
 | 动作 | 名称 | `q_h2` | `q_batt` | `q_soc` | `q_fc_var` |
 | --- | --- | ---: | ---: | ---: | ---: |
 | A0 | candidate_C | 0.25 | 0.40 | 12 | 20 |
-| A1 | fast_fc_response | 0.25 | 0.60 | 12 | 5 |
-| A2 | soc_recovery_30 | 0.15 | 0.35 | 30 | 12 |
-| A3 | soc_recovery_40 | 0.15 | 0.35 | 40 | 12 |
-| A4 | soc_recovery_fast | 0.15 | 0.35 | 30 | 5 |
-| A5 | soc_recovery | 0.15 | 0.35 | 20 | 12 |
-| A6 | strong_soc_recovery | 0.10 | 0.30 | 40 | 5 |
+| A1 | hydrogen_economy | 0.60 | 0.15 | 4 | 2 |
+| A2 | balanced | 0.25 | 0.50 | 20 | 12 |
+| A3 | soc_maintenance | 0.20 | 0.45 | 28 | 18 |
+| A4 | strong_soc_recovery | 0.30 | 0.45 | 50 | 18 |
+| A5 | fast_fc_response | 0.15 | 0.80 | 12 | 1 |
+| A6 | fc_smoothing | 0.15 | 0.15 | 8 | 50 |
 
-旧 `fixed_action_coverage.*` 使用旧动作表；新 `fixed_action_coverage_v2.*` 使用上表。A2/A3/A4/A6 的编号语义已经改变，跨版本比较必须同时核对名称和四权重，不能只按 action ID 合并。
+`fixed_action_coverage.*`、`fixed_action_coverage_v2.*` 和 `fixed_action_coverage_v3.*` 分别对应三版动作表，跨版本比较必须同时核对名称与四权重，不能只按 action ID 合并。v2 在 413 组检查中完成 350 组，但 A6 在 52 个可覆盖航段中成为最佳固定动作 50 次，且正常 SOC 代表状态下 7 动作首步 FC 平均总跨度仅 `0.323 kW`，因此判定动作空间明显塌缩。v3 经初稿和唯一一次修正后完成 320/413 组；51 个可覆盖航段中 A5 最佳 37 次、A4 最佳 14 次，正常 SOC 首步平均总跨度提高到 `3.150 kW`。其单动作支配明显减弱，但全动作失败航段增至 8 个，A2/A3 仍局部近似，A6 发生 14 次 `maximum iterations reached`；这是一项动作空间诊断结果，不是正式 DQN 训练或论文最终结论。
 
 ## Repository structure
 
@@ -136,10 +136,10 @@ python -m unittest tests.test_dqn_mpc_weight_env
 - candidate_C 保存测试集 7/7 航段指标和 7 张正式功率/SOC 图；求解失败、primal infeasible 和 max-iter 均为 0。
 - 旧 A/B、17 组 one-factor、N=60 结果、smoke/临时产物和已废弃入口已清理。
 - 当前测试集为 `voyage_060` 至 `voyage_066`；`voyage_060` 不再按旧 BDM 掉零口径排除。
-- DQN-MPC 已打通 7 动作、11 维状态、固定评价奖励、持久化 solver bank、闭环环境和 MLP 训练/验证入口，但本轮没有训练 DQN。
-- 新动作表在 46 个训练航段和 13 个验证航段上完成 59×7=413 组固定动作检查：350 组完整运行，63 组在首次 `primal infeasible` 停止。
-- 9 个旧版全动作失败航段中，A6 救回 `voyage_011`，A3 救回 `voyage_024`；全动作失败航段由 9 个降至 7 个。
-- 在 52 个至少有一个动作完整运行的航段中，A6 按固定 candidate_C reward 成为最佳动作 50 次，A3 为 2 次，其他动作为 0 次。该结果说明当前动作空间仍高度偏向 A6，不能据此宣称 DQN 自适应策略已经成立。
+- DQN-MPC 已实现 11 维状态、7 个完整四权重动作、固定评价奖励、持久化 solver bank、闭环环境、MLP、经验回放、目标网络和训练/验证入口。已完成的 10,769 步运行仅为诊断训练，未作为正式训练结果；正式长训练尚未开始。
+- v2 在 46 个训练航段和 13 个验证航段上完成 350/413 组固定动作检查，并把旧全动作失败航段从 9 个降至 7 个，但 A6 占据 50/52 次最佳，因而继续进行 v3 重设计。
+- v3 已完整重测 59×7=413 组：320 组成功；A0-A6 成功数依次为 48、37、50、50、50、51、34，最佳次数依次为 0、0、0、0、14、37、0。
+- v3 不再存在接近 100% 的单动作最佳支配，动作首步区分度提高；但 `voyage_016`、`021`、`024`、`041`、`044`、`045`、`053`、`054` 仍为全动作失败，且 A2/A3 局部冗余、A6 有 14 次 max-iter，因此尚不足以宣称动作空间已经适合正式 DQN 长训练。
 
 ## Known limitations
 
@@ -147,7 +147,7 @@ python -m unittest tests.test_dqn_mpc_weight_env
 - candidate_C 是当前固定配置，不代表已证明全局最优；当前分支只在非测试困难航段上进行了有边界的动作表定向重设计，不是全局权重搜索。
 - LSTM 的 6 步预测尚未接入已验证的 `N=6` 时序执行路径。
 - OSQP benchmark 的求解失败路径只记录失败，尚未形成可部署的控制回退策略。
-- DQN-MPC 代码路径已经实现，但尚无完成并验收的正式训练模型；7 个固定动作仍有 7 个非测试航段全部失败，且 A6 在固定评价中占据 50/52 次最佳，动作区分度不足。
+- DQN-MPC 代码路径已经实现，但尚无完成并验收的正式训练模型；v3 仍有 8 个非测试航段全动作失败，总成功数较 v2 少 30 组，A2/A3 局部近似且 A6 存在 max-iter 数值失败。v3 的动作区分度优于 v2，但还不能视为正式长训练前的最终验收通过。
 - SineKAN-DQN 尚无目标环境下的最终训练结果，也没有与 MLP-DQN/KAN-DQN 的同预算、多随机种子公平对比。
 - 当前依赖清单仍不完整，部分保留 manifest 含旧绝对路径。
 
@@ -159,7 +159,8 @@ python -m unittest tests.test_dqn_mpc_weight_env
 - 固定 MPC 产物：`outputs/mpc_1s_n6_candidate_C/`。
 - candidate_C 配置记录生成时的源码内容、活动划分和当前 parquet 三类 SHA-256；实际测试航段为 `voyage_060` 至 `voyage_066`。
 - 旧动作表覆盖：`outputs/dqn_mpc_mlp_10k_baseline/fixed_action_coverage.csv` 与 `fixed_action_coverage_summary.json`。
-- 新动作表覆盖：`outputs/dqn_mpc_mlp_10k_baseline/fixed_action_coverage_v2.csv` 与 `fixed_action_coverage_v2_summary.json`。
+- v2 动作表覆盖：`outputs/dqn_mpc_mlp_10k_baseline/fixed_action_coverage_v2.csv` 与 `fixed_action_coverage_v2_summary.json`。
+- v3 动作表覆盖：`outputs/dqn_mpc_mlp_10k_baseline/fixed_action_coverage_v3.csv` 与 `fixed_action_coverage_v3_summary.json`；动作区分度、初稿、唯一一次修正和 v2/v3 比较见 `action_space_v3_analysis.json`。
 - 困难航段证据：同目录下 `hard_voyage_physical_feasibility.*`、`hard_voyage_dynamic_reference.*` 和 `hard_voyage_weight_redesign.*`。
 - 动作重设计和 59×7 覆盖仅使用 train/validation 航段，没有读取 test 轨迹；现有环境回归测试单独使用 `voyage_064` 验证 A0 与正式 candidate_C 链路的一致性。
 - 依赖未锁定、历史绝对路径和第三方许可证问题仍使“干净环境完全可复现”结论不成立。

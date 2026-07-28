@@ -32,14 +32,14 @@ class TestDqnMpcWeightActionTable(unittest.TestCase):
         self.assertEqual(action.as_tuple(), (0.25, 0.40, 12.0, 20.0))
         self.assertEqual(action.name, "candidate_C")
 
-    def test_targeted_soc_recovery_action_definitions(self) -> None:
+    def test_v3_action_definitions(self) -> None:
         expected = {
-            1: ((0.25, 0.60, 12.0, 5.0), "fast_fc_response"),
-            2: ((0.15, 0.35, 30.0, 12.0), "soc_recovery_30"),
-            3: ((0.15, 0.35, 40.0, 12.0), "soc_recovery_40"),
-            4: ((0.15, 0.35, 30.0, 5.0), "soc_recovery_fast"),
-            5: ((0.15, 0.35, 20.0, 12.0), "soc_recovery"),
-            6: ((0.10, 0.30, 40.0, 5.0), "strong_soc_recovery"),
+            1: ((0.60, 0.15, 4.0, 2.0), "hydrogen_economy"),
+            2: ((0.25, 0.50, 20.0, 12.0), "balanced"),
+            3: ((0.20, 0.45, 28.0, 18.0), "soc_maintenance"),
+            4: ((0.30, 0.45, 50.0, 18.0), "strong_soc_recovery"),
+            5: ((0.15, 0.80, 12.0, 1.0), "fast_fc_response"),
+            6: ((0.15, 0.15, 8.0, 50.0), "fc_smoothing"),
         }
 
         for action_id, (weights, name) in expected.items():
