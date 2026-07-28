@@ -1,0 +1,1028 @@
+{
+  "generated_at_utc": "2026-07-28T04:33:02.013369+00:00",
+  "experiment": "targeted A2/A3/A4/A6 SOC-recovery weight redesign on nine physically feasible hard voyages",
+  "scope": {
+    "target_voyages": [
+      "voyage_011",
+      "voyage_016",
+      "voyage_021",
+      "voyage_024",
+      "voyage_041",
+      "voyage_044",
+      "voyage_045",
+      "voyage_053",
+      "voyage_054"
+    ],
+    "train_voyages": [
+      "voyage_011",
+      "voyage_016",
+      "voyage_021",
+      "voyage_024",
+      "voyage_041",
+      "voyage_044",
+      "voyage_045"
+    ],
+    "validation_voyages": [
+      "voyage_053",
+      "voyage_054"
+    ],
+    "fixed_action_runs": 63,
+    "expected_fixed_action_runs": 63,
+    "loaded_voyages": [
+      "voyage_011",
+      "voyage_016",
+      "voyage_021",
+      "voyage_024",
+      "voyage_041",
+      "voyage_044",
+      "voyage_045",
+      "voyage_053",
+      "voyage_054"
+    ],
+    "loaded_test_voyages": [],
+    "test_trajectories_read": false,
+    "dqn_training_performed": false
+  },
+  "design_basis": {
+    "retained_actions": [
+      "A0",
+      "A1",
+      "A5"
+    ],
+    "redesigned_actions": [
+      "A2",
+      "A3",
+      "A4",
+      "A6"
+    ],
+    "A2": "A5 with q_soc increased from 20 to 30",
+    "A3": "A5 with q_soc increased from 20 to 40",
+    "A4": "A2 with q_fc_var reduced from 12 to 5",
+    "A6": "q_soc=40 and q_fc_var=5 with lower q_h2=0.10 and q_batt=0.30",
+    "fixed_reward_weights": {
+      "q_h2": 0.25,
+      "q_batt": 0.4,
+      "q_soc": 12.0,
+      "q_fc_var": 20.0
+    }
+  },
+  "action_table": [
+    {
+      "action_id": 0,
+      "name": "candidate_C",
+      "q_h2": 0.25,
+      "q_batt": 0.4,
+      "q_soc": 12.0,
+      "q_fc_var": 20.0
+    },
+    {
+      "action_id": 1,
+      "name": "fast_fc_response",
+      "q_h2": 0.25,
+      "q_batt": 0.6,
+      "q_soc": 12.0,
+      "q_fc_var": 5.0
+    },
+    {
+      "action_id": 2,
+      "name": "soc_recovery_30",
+      "q_h2": 0.15,
+      "q_batt": 0.35,
+      "q_soc": 30.0,
+      "q_fc_var": 12.0
+    },
+    {
+      "action_id": 3,
+      "name": "soc_recovery_40",
+      "q_h2": 0.15,
+      "q_batt": 0.35,
+      "q_soc": 40.0,
+      "q_fc_var": 12.0
+    },
+    {
+      "action_id": 4,
+      "name": "soc_recovery_fast",
+      "q_h2": 0.15,
+      "q_batt": 0.35,
+      "q_soc": 30.0,
+      "q_fc_var": 5.0
+    },
+    {
+      "action_id": 5,
+      "name": "soc_recovery",
+      "q_h2": 0.15,
+      "q_batt": 0.35,
+      "q_soc": 20.0,
+      "q_fc_var": 12.0
+    },
+    {
+      "action_id": 6,
+      "name": "strong_soc_recovery",
+      "q_h2": 0.1,
+      "q_batt": 0.3,
+      "q_soc": 40.0,
+      "q_fc_var": 5.0
+    }
+  ],
+  "counts": {
+    "completed_runs": 2,
+    "failed_runs": 61,
+    "rescued_voyage_count": 2,
+    "all_actions_failed_voyage_count": 7
+  },
+  "rescued_voyages": [
+    "voyage_011",
+    "voyage_024"
+  ],
+  "action_statistics": {
+    "A0": {
+      "name": "candidate_C",
+      "weights": {
+        "q_h2": 0.25,
+        "q_batt": 0.4,
+        "q_soc": 12.0,
+        "q_fc_var": 20.0
+      },
+      "completed_voyages": 0,
+      "failed_voyages": 9,
+      "completed_voyage_ids": [],
+      "failed_voyage_ids": [
+        "voyage_011",
+        "voyage_016",
+        "voyage_021",
+        "voyage_024",
+        "voyage_041",
+        "voyage_044",
+        "voyage_045",
+        "voyage_053",
+        "voyage_054"
+      ],
+      "mean_survival_steps": 6442.222222222223,
+      "median_survival_steps": 6899.0,
+      "mean_failure_soc": 0.2007897924558816,
+      "mean_partial_soc": 0.4559061943038649
+    },
+    "A1": {
+      "name": "fast_fc_response",
+      "weights": {
+        "q_h2": 0.25,
+        "q_batt": 0.6,
+        "q_soc": 12.0,
+        "q_fc_var": 5.0
+      },
+      "completed_voyages": 0,
+      "failed_voyages": 9,
+      "completed_voyage_ids": [],
+      "failed_voyage_ids": [
+        "voyage_011",
+        "voyage_016",
+        "voyage_021",
+        "voyage_024",
+        "voyage_041",
+        "voyage_044",
+        "voyage_045",
+        "voyage_053",
+        "voyage_054"
+      ],
+      "mean_survival_steps": 7073.444444444444,
+      "median_survival_steps": 7429.0,
+      "mean_failure_soc": 0.20080389971539908,
+      "mean_partial_soc": 0.4636183125809935
+    },
+    "A2": {
+      "name": "soc_recovery_30",
+      "weights": {
+        "q_h2": 0.15,
+        "q_batt": 0.35,
+        "q_soc": 30.0,
+        "q_fc_var": 12.0
+      },
+      "completed_voyages": 0,
+      "failed_voyages": 9,
+      "completed_voyage_ids": [],
+      "failed_voyage_ids": [
+        "voyage_011",
+        "voyage_016",
+        "voyage_021",
+        "voyage_024",
+        "voyage_041",
+        "voyage_044",
+        "voyage_045",
+        "voyage_053",
+        "voyage_054"
+      ],
+      "mean_survival_steps": 7177.111111111111,
+      "median_survival_steps": 7479.0,
+      "mean_failure_soc": 0.20078638812751984,
+      "mean_partial_soc": 0.46830794790823155
+    },
+    "A3": {
+      "name": "soc_recovery_40",
+      "weights": {
+        "q_h2": 0.15,
+        "q_batt": 0.35,
+        "q_soc": 40.0,
+        "q_fc_var": 12.0
+      },
+      "completed_voyages": 1,
+      "failed_voyages": 8,
+      "completed_voyage_ids": [
+        "voyage_024"
+      ],
+      "failed_voyage_ids": [
+        "voyage_011",
+        "voyage_016",
+        "voyage_021",
+        "voyage_041",
+        "voyage_044",
+        "voyage_045",
+        "voyage_053",
+        "voyage_054"
+      ],
+      "mean_survival_steps": 10032.777777777777,
+      "median_survival_steps": 7494.0,
+      "mean_failure_soc": 0.20086570854286312,
+      "mean_partial_soc": 0.47699893661353177
+    },
+    "A4": {
+      "name": "soc_recovery_fast",
+      "weights": {
+        "q_h2": 0.15,
+        "q_batt": 0.35,
+        "q_soc": 30.0,
+        "q_fc_var": 5.0
+      },
+      "completed_voyages": 0,
+      "failed_voyages": 9,
+      "completed_voyage_ids": [],
+      "failed_voyage_ids": [
+        "voyage_011",
+        "voyage_016",
+        "voyage_021",
+        "voyage_024",
+        "voyage_041",
+        "voyage_044",
+        "voyage_045",
+        "voyage_053",
+        "voyage_054"
+      ],
+      "mean_survival_steps": 7299.111111111111,
+      "median_survival_steps": 7468.0,
+      "mean_failure_soc": 0.20080318761003835,
+      "mean_partial_soc": 0.47127207477427213
+    },
+    "A5": {
+      "name": "soc_recovery",
+      "weights": {
+        "q_h2": 0.15,
+        "q_batt": 0.35,
+        "q_soc": 20.0,
+        "q_fc_var": 12.0
+      },
+      "completed_voyages": 0,
+      "failed_voyages": 9,
+      "completed_voyage_ids": [],
+      "failed_voyage_ids": [
+        "voyage_011",
+        "voyage_016",
+        "voyage_021",
+        "voyage_024",
+        "voyage_041",
+        "voyage_044",
+        "voyage_045",
+        "voyage_053",
+        "voyage_054"
+      ],
+      "mean_survival_steps": 7055.222222222223,
+      "median_survival_steps": 7478.0,
+      "mean_failure_soc": 0.2007949200229074,
+      "mean_partial_soc": 0.46547559919029396
+    },
+    "A6": {
+      "name": "strong_soc_recovery",
+      "weights": {
+        "q_h2": 0.1,
+        "q_batt": 0.3,
+        "q_soc": 40.0,
+        "q_fc_var": 5.0
+      },
+      "completed_voyages": 1,
+      "failed_voyages": 8,
+      "completed_voyage_ids": [
+        "voyage_011"
+      ],
+      "failed_voyage_ids": [
+        "voyage_016",
+        "voyage_021",
+        "voyage_024",
+        "voyage_041",
+        "voyage_044",
+        "voyage_045",
+        "voyage_053",
+        "voyage_054"
+      ],
+      "mean_survival_steps": 9838.222222222223,
+      "median_survival_steps": 8077.0,
+      "mean_failure_soc": 0.20078629022943872,
+      "mean_partial_soc": 0.4725188963648257
+    }
+  },
+  "per_voyage": {
+    "voyage_011": {
+      "split": "train",
+      "completed_action_count": 1,
+      "completed_actions": [
+        6
+      ],
+      "new_completed_actions": [
+        6
+      ],
+      "old_maximum_survival_steps": 6043,
+      "old_longest_actions": [
+        1
+      ],
+      "new_maximum_survival_steps": 28770,
+      "new_longest_actions": [
+        6
+      ],
+      "new_minus_old_maximum_survival_steps": 22727,
+      "isolated_comparisons": {
+        "A2_qsoc30_minus_A5_qsoc20_steps": 66,
+        "A3_qsoc40_minus_A2_qsoc30_steps": 46,
+        "A3_qsoc40_minus_A5_qsoc20_steps": 112,
+        "A4_fcvar5_minus_A2_fcvar12_steps": 138,
+        "A6_strong_minus_A3_qsoc40_fcvar12_steps": 22755
+      },
+      "failure_soc_by_action": {
+        "A0": 0.20085667856330805,
+        "A1": 0.20101956946078217,
+        "A2": 0.20089305688266618,
+        "A3": 0.2009845733880957,
+        "A4": 0.20087333525719556,
+        "A5": 0.20095200194448481
+      },
+      "partial_mean_soc_by_action": {
+        "A0": 0.48685774978051166,
+        "A1": 0.4863443624398628,
+        "A2": 0.4858887697206542,
+        "A3": 0.4862079920500026,
+        "A4": 0.4870749709760084,
+        "A5": 0.4856102703488781,
+        "A6": 0.4834677513100812
+      }
+    },
+    "voyage_016": {
+      "split": "train",
+      "completed_action_count": 0,
+      "completed_actions": [],
+      "new_completed_actions": [],
+      "old_maximum_survival_steps": 7141,
+      "old_longest_actions": [
+        5
+      ],
+      "new_maximum_survival_steps": 7445,
+      "new_longest_actions": [
+        3
+      ],
+      "new_minus_old_maximum_survival_steps": 304,
+      "isolated_comparisons": {
+        "A2_qsoc30_minus_A5_qsoc20_steps": 194,
+        "A3_qsoc40_minus_A2_qsoc30_steps": 110,
+        "A3_qsoc40_minus_A5_qsoc20_steps": 304,
+        "A4_fcvar5_minus_A2_fcvar12_steps": 50,
+        "A6_strong_minus_A3_qsoc40_fcvar12_steps": -65
+      },
+      "failure_soc_by_action": {
+        "A0": 0.20056466288284863,
+        "A1": 0.2006280820613162,
+        "A2": 0.20057506690468574,
+        "A3": 0.20058584184947625,
+        "A4": 0.2006109790923716,
+        "A5": 0.200608963557489,
+        "A6": 0.20052345643085243
+      },
+      "partial_mean_soc_by_action": {
+        "A0": 0.42647801748058184,
+        "A1": 0.45032737647933235,
+        "A2": 0.4584105620471496,
+        "A3": 0.4627040491268159,
+        "A4": 0.4626971765124503,
+        "A5": 0.4506726562263663,
+        "A6": 0.4635997848675879
+      }
+    },
+    "voyage_021": {
+      "split": "train",
+      "completed_action_count": 0,
+      "completed_actions": [],
+      "new_completed_actions": [],
+      "old_maximum_survival_steps": 7513,
+      "old_longest_actions": [
+        0
+      ],
+      "new_maximum_survival_steps": 7513,
+      "new_longest_actions": [
+        0
+      ],
+      "new_minus_old_maximum_survival_steps": 0,
+      "isolated_comparisons": {
+        "A2_qsoc30_minus_A5_qsoc20_steps": 1,
+        "A3_qsoc40_minus_A2_qsoc30_steps": 15,
+        "A3_qsoc40_minus_A5_qsoc20_steps": 16,
+        "A4_fcvar5_minus_A2_fcvar12_steps": -11,
+        "A6_strong_minus_A3_qsoc40_fcvar12_steps": -34
+      },
+      "failure_soc_by_action": {
+        "A0": 0.20123571129362458,
+        "A1": 0.2014075457732007,
+        "A2": 0.20136672999733365,
+        "A3": 0.20135182979178262,
+        "A4": 0.20128182490907612,
+        "A5": 0.20125291673761106,
+        "A6": 0.20129939661121662
+      },
+      "partial_mean_soc_by_action": {
+        "A0": 0.4948720584248786,
+        "A1": 0.504513175065871,
+        "A2": 0.5123852672888153,
+        "A3": 0.5134437135722721,
+        "A4": 0.5131483519434288,
+        "A5": 0.5105242184160754,
+        "A6": 0.5145858721313427
+      }
+    },
+    "voyage_024": {
+      "split": "train",
+      "completed_action_count": 1,
+      "completed_actions": [
+        3
+      ],
+      "new_completed_actions": [
+        3
+      ],
+      "old_maximum_survival_steps": 10273,
+      "old_longest_actions": [
+        5
+      ],
+      "new_maximum_survival_steps": 35971,
+      "new_longest_actions": [
+        3
+      ],
+      "new_minus_old_maximum_survival_steps": 25698,
+      "isolated_comparisons": {
+        "A2_qsoc30_minus_A5_qsoc20_steps": 444,
+        "A3_qsoc40_minus_A2_qsoc30_steps": 25254,
+        "A3_qsoc40_minus_A5_qsoc20_steps": 25698,
+        "A4_fcvar5_minus_A2_fcvar12_steps": 157,
+        "A6_strong_minus_A3_qsoc40_fcvar12_steps": -25132
+      },
+      "failure_soc_by_action": {
+        "A0": 0.20016293003599678,
+        "A1": 0.20023909808224674,
+        "A2": 0.2003827712304525,
+        "A4": 0.20006092161625003,
+        "A5": 0.20029409162783413,
+        "A6": 0.20016661668481858
+      },
+      "partial_mean_soc_by_action": {
+        "A0": 0.43780038403491306,
+        "A1": 0.43569465616167935,
+        "A2": 0.43874094725779494,
+        "A3": 0.503604365134576,
+        "A4": 0.4409946442028925,
+        "A5": 0.4345852472913934,
+        "A6": 0.44188762199163895
+      }
+    },
+    "voyage_041": {
+      "split": "train",
+      "completed_action_count": 0,
+      "completed_actions": [],
+      "new_completed_actions": [],
+      "old_maximum_survival_steps": 7790,
+      "old_longest_actions": [
+        1
+      ],
+      "new_maximum_survival_steps": 8077,
+      "new_longest_actions": [
+        6
+      ],
+      "new_minus_old_maximum_survival_steps": 287,
+      "isolated_comparisons": {
+        "A2_qsoc30_minus_A5_qsoc20_steps": 155,
+        "A3_qsoc40_minus_A2_qsoc30_steps": 78,
+        "A3_qsoc40_minus_A5_qsoc20_steps": 233,
+        "A4_fcvar5_minus_A2_fcvar12_steps": 235,
+        "A6_strong_minus_A3_qsoc40_fcvar12_steps": 208
+      },
+      "failure_soc_by_action": {
+        "A0": 0.2006582251725735,
+        "A1": 0.20042305802845276,
+        "A2": 0.20039072670300317,
+        "A3": 0.20052548830608866,
+        "A4": 0.20057939855415016,
+        "A5": 0.20047558886854844,
+        "A6": 0.20063906223079117
+      },
+      "partial_mean_soc_by_action": {
+        "A0": 0.4528642402681862,
+        "A1": 0.4498761191383853,
+        "A2": 0.45586629863945644,
+        "A3": 0.4573882425446034,
+        "A4": 0.45852679335399377,
+        "A5": 0.45386094094808843,
+        "A6": 0.460876732557481
+      }
+    },
+    "voyage_044": {
+      "split": "train",
+      "completed_action_count": 0,
+      "completed_actions": [],
+      "new_completed_actions": [],
+      "old_maximum_survival_steps": 4823,
+      "old_longest_actions": [
+        1
+      ],
+      "new_maximum_survival_steps": 4987,
+      "new_longest_actions": [
+        6
+      ],
+      "new_minus_old_maximum_survival_steps": 164,
+      "isolated_comparisons": {
+        "A2_qsoc30_minus_A5_qsoc20_steps": 81,
+        "A3_qsoc40_minus_A2_qsoc30_steps": 50,
+        "A3_qsoc40_minus_A5_qsoc20_steps": 131,
+        "A4_fcvar5_minus_A2_fcvar12_steps": 118,
+        "A6_strong_minus_A3_qsoc40_fcvar12_steps": 99
+      },
+      "failure_soc_by_action": {
+        "A0": 0.20113850479051562,
+        "A1": 0.20111233345700935,
+        "A2": 0.20098576135034263,
+        "A3": 0.20106630791855043,
+        "A4": 0.2011033187371178,
+        "A5": 0.2010634863173229,
+        "A6": 0.20108192467995833
+      },
+      "partial_mean_soc_by_action": {
+        "A0": 0.4827836979261614,
+        "A1": 0.4820707053053322,
+        "A2": 0.48307268158492955,
+        "A3": 0.4840270822469439,
+        "A4": 0.48512771692921425,
+        "A5": 0.48203593500492226,
+        "A6": 0.4862968313900832
+      }
+    },
+    "voyage_045": {
+      "split": "train",
+      "completed_action_count": 0,
+      "completed_actions": [],
+      "new_completed_actions": [],
+      "old_maximum_survival_steps": 2752,
+      "old_longest_actions": [
+        1
+      ],
+      "new_maximum_survival_steps": 2834,
+      "new_longest_actions": [
+        6
+      ],
+      "new_minus_old_maximum_survival_steps": 82,
+      "isolated_comparisons": {
+        "A2_qsoc30_minus_A5_qsoc20_steps": 54,
+        "A3_qsoc40_minus_A2_qsoc30_steps": 37,
+        "A3_qsoc40_minus_A5_qsoc20_steps": 91,
+        "A4_fcvar5_minus_A2_fcvar12_steps": 109,
+        "A6_strong_minus_A3_qsoc40_fcvar12_steps": 101
+      },
+      "failure_soc_by_action": {
+        "A0": 0.20137105473984543,
+        "A1": 0.2012466961902554,
+        "A2": 0.2013879853027328,
+        "A3": 0.20127435519476183,
+        "A4": 0.20140030942910508,
+        "A5": 0.2012636164178425,
+        "A6": 0.20129408843216517
+      },
+      "partial_mean_soc_by_action": {
+        "A0": 0.41940129503149554,
+        "A1": 0.4381029991164518,
+        "A2": 0.43437405397938955,
+        "A3": 0.43712631030378374,
+        "A4": 0.4428406221602238,
+        "A5": 0.4305124637664669,
+        "A6": 0.44572969458533124
+      }
+    },
+    "voyage_053": {
+      "split": "validation",
+      "completed_action_count": 0,
+      "completed_actions": [],
+      "new_completed_actions": [],
+      "old_maximum_survival_steps": 8337,
+      "old_longest_actions": [
+        5
+      ],
+      "new_maximum_survival_steps": 8397,
+      "new_longest_actions": [
+        6
+      ],
+      "new_minus_old_maximum_survival_steps": 60,
+      "isolated_comparisons": {
+        "A2_qsoc30_minus_A5_qsoc20_steps": -25,
+        "A3_qsoc40_minus_A2_qsoc30_steps": 1,
+        "A3_qsoc40_minus_A5_qsoc20_steps": -24,
+        "A4_fcvar5_minus_A2_fcvar12_steps": 35,
+        "A6_strong_minus_A3_qsoc40_fcvar12_steps": 84
+      },
+      "failure_soc_by_action": {
+        "A0": 0.20057068663968483,
+        "A1": 0.20063299755697106,
+        "A2": 0.20058932281709893,
+        "A3": 0.2005958355604639,
+        "A4": 0.20076160442847044,
+        "A5": 0.20071024818221506,
+        "A6": 0.20067336419718898
+      },
+      "partial_mean_soc_by_action": {
+        "A0": 0.43312801834516035,
+        "A1": 0.4531550631136271,
+        "A2": 0.4648893023491413,
+        "A3": 0.46600131170455145,
+        "A4": 0.46763273032419556,
+        "A5": 0.4625889260515422,
+        "A6": 0.4704933536568787
+      }
+    },
+    "voyage_054": {
+      "split": "validation",
+      "completed_action_count": 0,
+      "completed_actions": [],
+      "new_completed_actions": [],
+      "old_maximum_survival_steps": 9435,
+      "old_longest_actions": [
+        1
+      ],
+      "new_maximum_survival_steps": 9800,
+      "new_longest_actions": [
+        6
+      ],
+      "new_minus_old_maximum_survival_steps": 365,
+      "isolated_comparisons": {
+        "A2_qsoc30_minus_A5_qsoc20_steps": 127,
+        "A3_qsoc40_minus_A2_qsoc30_steps": 110,
+        "A3_qsoc40_minus_A5_qsoc20_steps": 237,
+        "A4_fcvar5_minus_A2_fcvar12_steps": 267,
+        "A6_strong_minus_A3_qsoc40_fcvar12_steps": 233
+      },
+      "failure_soc_by_action": {
+        "A0": 0.2005496779845371,
+        "A1": 0.20052571682835751,
+        "A2": 0.2005060719593628,
+        "A3": 0.2005414363336855,
+        "A4": 0.2005569964666084,
+        "A5": 0.20053336655281861,
+        "A6": 0.2006124125685183
+      },
+      "partial_mean_soc_by_action": {
+        "A0": 0.46897028744289615,
+        "A1": 0.4724803564083997,
+        "A2": 0.48114364830675377,
+        "A3": 0.482487362838237,
+        "A4": 0.48340566656604134,
+        "A5": 0.4788897346589131,
+        "A6": 0.4857324247930068
+      }
+    }
+  },
+  "aggregate_isolated_comparisons": {
+    "A2_qsoc30_minus_A5_qsoc20_steps": {
+      "per_voyage_steps": {
+        "voyage_011": 66,
+        "voyage_016": 194,
+        "voyage_021": 1,
+        "voyage_024": 444,
+        "voyage_041": 155,
+        "voyage_044": 81,
+        "voyage_045": 54,
+        "voyage_053": -25,
+        "voyage_054": 127
+      },
+      "mean_step_difference": 121.88888888888889,
+      "median_step_difference": 81.0,
+      "positive_voyage_count": 8,
+      "zero_voyage_count": 0,
+      "negative_voyage_count": 1
+    },
+    "A3_qsoc40_minus_A2_qsoc30_steps": {
+      "per_voyage_steps": {
+        "voyage_011": 46,
+        "voyage_016": 110,
+        "voyage_021": 15,
+        "voyage_024": 25254,
+        "voyage_041": 78,
+        "voyage_044": 50,
+        "voyage_045": 37,
+        "voyage_053": 1,
+        "voyage_054": 110
+      },
+      "mean_step_difference": 2855.6666666666665,
+      "median_step_difference": 50.0,
+      "positive_voyage_count": 9,
+      "zero_voyage_count": 0,
+      "negative_voyage_count": 0
+    },
+    "A3_qsoc40_minus_A5_qsoc20_steps": {
+      "per_voyage_steps": {
+        "voyage_011": 112,
+        "voyage_016": 304,
+        "voyage_021": 16,
+        "voyage_024": 25698,
+        "voyage_041": 233,
+        "voyage_044": 131,
+        "voyage_045": 91,
+        "voyage_053": -24,
+        "voyage_054": 237
+      },
+      "mean_step_difference": 2977.5555555555557,
+      "median_step_difference": 131.0,
+      "positive_voyage_count": 8,
+      "zero_voyage_count": 0,
+      "negative_voyage_count": 1
+    },
+    "A4_fcvar5_minus_A2_fcvar12_steps": {
+      "per_voyage_steps": {
+        "voyage_011": 138,
+        "voyage_016": 50,
+        "voyage_021": -11,
+        "voyage_024": 157,
+        "voyage_041": 235,
+        "voyage_044": 118,
+        "voyage_045": 109,
+        "voyage_053": 35,
+        "voyage_054": 267
+      },
+      "mean_step_difference": 122.0,
+      "median_step_difference": 118.0,
+      "positive_voyage_count": 8,
+      "zero_voyage_count": 0,
+      "negative_voyage_count": 1
+    },
+    "A6_strong_minus_A3_qsoc40_fcvar12_steps": {
+      "per_voyage_steps": {
+        "voyage_011": 22755,
+        "voyage_016": -65,
+        "voyage_021": -34,
+        "voyage_024": -25132,
+        "voyage_041": 208,
+        "voyage_044": 99,
+        "voyage_045": 101,
+        "voyage_053": 84,
+        "voyage_054": 233
+      },
+      "mean_step_difference": -194.55555555555554,
+      "median_step_difference": 99.0,
+      "positive_voyage_count": 6,
+      "zero_voyage_count": 0,
+      "negative_voyage_count": 3
+    }
+  },
+  "unchanged_A0_A1_A5_regression": {
+    "A0": [
+      {
+        "voyage_id": "voyage_011",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 5.551115123125783e-17
+      },
+      {
+        "voyage_id": "voyage_016",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 2.7755575615628914e-17
+      },
+      {
+        "voyage_id": "voyage_021",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 8.326672684688674e-17
+      },
+      {
+        "voyage_id": "voyage_024",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 8.326672684688674e-17
+      },
+      {
+        "voyage_id": "voyage_041",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 0.0
+      },
+      {
+        "voyage_id": "voyage_044",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 2.7755575615628914e-17
+      },
+      {
+        "voyage_id": "voyage_045",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 2.7755575615628914e-17
+      },
+      {
+        "voyage_id": "voyage_053",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 2.7755575615628914e-17
+      },
+      {
+        "voyage_id": "voyage_054",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 0.0
+      }
+    ],
+    "A1": [
+      {
+        "voyage_id": "voyage_011",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 8.326672684688674e-17
+      },
+      {
+        "voyage_id": "voyage_016",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 0.0
+      },
+      {
+        "voyage_id": "voyage_021",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 0.0
+      },
+      {
+        "voyage_id": "voyage_024",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 2.7755575615628914e-17
+      },
+      {
+        "voyage_id": "voyage_041",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 5.551115123125783e-17
+      },
+      {
+        "voyage_id": "voyage_044",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 5.551115123125783e-17
+      },
+      {
+        "voyage_id": "voyage_045",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 0.0
+      },
+      {
+        "voyage_id": "voyage_053",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 5.551115123125783e-17
+      },
+      {
+        "voyage_id": "voyage_054",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 2.7755575615628914e-17
+      }
+    ],
+    "A5": [
+      {
+        "voyage_id": "voyage_011",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 2.7755575615628914e-17
+      },
+      {
+        "voyage_id": "voyage_016",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 0.0
+      },
+      {
+        "voyage_id": "voyage_021",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 5.551115123125783e-17
+      },
+      {
+        "voyage_id": "voyage_024",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 2.7755575615628914e-17
+      },
+      {
+        "voyage_id": "voyage_041",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 2.7755575615628914e-17
+      },
+      {
+        "voyage_id": "voyage_044",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 0.0
+      },
+      {
+        "voyage_id": "voyage_045",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 0.0
+      },
+      {
+        "voyage_id": "voyage_053",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 5.551115123125783e-17
+      },
+      {
+        "voyage_id": "voyage_054",
+        "failure_decision_match": true,
+        "solver_status_match": true,
+        "failure_soc_absolute_difference": 2.7755575615628914e-17
+      }
+    ]
+  },
+  "full_59x7_coverage_gate": {
+    "condition": "at least one hard voyage completed by new A2/A3/A4/A6",
+    "condition_met": true,
+    "run_full_59x7": true
+  },
+  "data_access": {
+    "accessed_voyages": [
+      "voyage_011",
+      "voyage_016",
+      "voyage_021",
+      "voyage_024",
+      "voyage_041",
+      "voyage_044",
+      "voyage_045",
+      "voyage_053",
+      "voyage_054"
+    ],
+    "accessed_data_sha256": {
+      "voyage_011": "dae14b9e08382d878bee36a62890a282dde7bdbea5bafcabb0da75417b47bfa6",
+      "voyage_016": "146d79be343c925f2ae3231a2937577570f209f4be2762013a8ad925dbb8c378",
+      "voyage_021": "34e2ff467cb3239b74d9217663298088cb9d70ddb0f2de63963255b0fc07a7e2",
+      "voyage_024": "9f53905700f756b10d8c222f32a236b8575ea65d88fe64a228db43aa776d31d9",
+      "voyage_041": "9d235e9e2a46d60772acc538e31df0872a566815181e9e68b37e4926413d8499",
+      "voyage_044": "b15be85eb356868c8b87ab4981f4286288513388a259ac4e8ee834317d36d10e",
+      "voyage_045": "f13e3ffca151c738323cc64f84423fafff36b9810a1f47ab6b2a31f1afc4919d",
+      "voyage_053": "83efb7ecf1a971ca08676d12db6b3d389079c3295dc25afa01847f8cbfb851aa",
+      "voyage_054": "ca8dc652cfbd61d6d36984de65e6c2b228591df35d9d46a2269e399c0a77857c"
+    },
+    "test_trajectory_accessed": false
+  },
+  "formal_mpc_config": {
+    "horizon": 6,
+    "dt_seconds": 1.0,
+    "battery_capacity_kwh": 624.0,
+    "battery_charge_max_kw": 624.0,
+    "battery_discharge_max_kw": 1248.0,
+    "battery_power_ref_kw": 624.0,
+    "fuel_cell_min_kw": 0.0,
+    "fuel_cell_max_kw": 560.0,
+    "fuel_cell_ramp_rate_kw_per_s": 48.0,
+    "fuel_cell_ramp_kw": null,
+    "soc_min": 0.2,
+    "soc_max": 0.8,
+    "soc_band": 0.05,
+    "objective_variant": "n6_h2_batt_soc_fcvar_normalized_v1",
+    "q_h2": 0.25,
+    "q_fc_var": 20.0,
+    "q_soc": 12.0,
+    "q_batt": 0.4,
+    "q_ramp": 0.0,
+    "q_terminal_soc": 0.0
+  },
+  "source_hashes_before_and_after_equal": true,
+  "source_hashes_sha256": {
+    "src\\dqn\\utils\\action_mapper.py": "53d449aa987f7a0058ff39147276b58d2528027e09df352e7484cdbf49b21006",
+    "src\\dqn\\utils\\reward.py": "b274fed673582f0492415fb22c2ded370dd88468d6d28316332191816f1d8db9",
+    "src\\envs\\dqn_mpc_weight_env.py": "26589f43ac9cc86aa3aac4e22efe2d93968130eef8d860e50f639920d201c122",
+    "src\\main\\mpc_solvers\\dqn_mpc_solver_bank.py": "50a59f0d85f9724fe3fa6bae18f715626e2478bb9f0051abfa038c564e300127",
+    "outputs\\config\\voyage_split_total_load_721.json": "f114ae9c33c237d66621dd42de9265ad329487fd9d0148bbc66832ca30bec1e7",
+    "outputs\\dqn_mpc_mlp_10k_baseline\\fixed_action_coverage.csv": "24f2f68f11f75f18be6831a8dcb66cbcf64c97e9caadf19edf0d7cfdab7a868b",
+    "outputs\\dqn_mpc_mlp_10k_baseline\\fixed_action_coverage_summary.json": "0133f2397b90e5c748a4db41d9c11bace21c8d428ba7f1eb3576b1a10d4a1317",
+    "outputs\\dqn_mpc_mlp_10k_baseline\\hard_voyage_physical_feasibility_summary.json": "d962013d768435ba110da885776a865f8179f9f7362d9b796049ad9b2292341d",
+    "outputs\\dqn_mpc_mlp_10k_baseline\\hard_voyage_dynamic_reference_summary.json": "3478ae6d4df97b5e2e41dbaf85c09e08cbd77686fb9dbcfcb8745203326c5f12"
+  },
+  "output_files": {
+    "csv": "outputs/dqn_mpc_mlp_10k_baseline/hard_voyage_weight_redesign.csv",
+    "summary_json": "outputs/dqn_mpc_mlp_10k_baseline/hard_voyage_weight_redesign_summary.json"
+  }
+}

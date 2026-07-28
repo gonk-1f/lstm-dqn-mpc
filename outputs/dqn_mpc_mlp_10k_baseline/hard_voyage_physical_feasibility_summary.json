@@ -1,0 +1,2933 @@
+{
+  "generated_at_utc": "2026-07-27T15:44:21.727702+00:00",
+  "scope": {
+    "audited_voyages": [
+      "voyage_011",
+      "voyage_016",
+      "voyage_021",
+      "voyage_024",
+      "voyage_041",
+      "voyage_044",
+      "voyage_045",
+      "voyage_053",
+      "voyage_054"
+    ],
+    "count": 9,
+    "train_count": 7,
+    "validation_count": 2,
+    "test_trajectories_read": false
+  },
+  "method": {
+    "time_indexing": "load[0] initializes previous FC; LP execution uses load[1:]",
+    "initial_soc": 0.55,
+    "soc_bounds": [
+      0.2,
+      0.8
+    ],
+    "fuel_cell_bounds_kw": [
+      0.0,
+      560.0
+    ],
+    "fuel_cell_ramp_kw_per_step": 48.0,
+    "battery_bounds_kw": [
+      -624.0,
+      1248.0
+    ],
+    "battery_capacity_kwh": 624.0,
+    "dt_seconds": 1.0,
+    "objective": "maximize summed state of charge; used only to obtain an interpretable feasibility witness",
+    "primary_formulation": "energy-scaled state E=624*SOC for numerical conditioning",
+    "crosscheck_formulation": "direct SOC state with identical feasible set",
+    "classification_rule": "both equivalent LP formulations must agree; infeasible requires both status_code=2"
+  },
+  "counts": {
+    "PHYSICALLY_INFEASIBLE": 0,
+    "PHYSICALLY_FEASIBLE_BUT_NO_FIXED_ACTION_COMPLETES": 9
+  },
+  "voyages_by_classification": {
+    "PHYSICALLY_INFEASIBLE": [],
+    "PHYSICALLY_FEASIBLE_BUT_NO_FIXED_ACTION_COMPLETES": [
+      "voyage_011",
+      "voyage_016",
+      "voyage_021",
+      "voyage_024",
+      "voyage_041",
+      "voyage_044",
+      "voyage_045",
+      "voyage_053",
+      "voyage_054"
+    ]
+  },
+  "per_voyage": {
+    "voyage_011": {
+      "voyage_id": "voyage_011",
+      "split": "train",
+      "sample_count": 28771,
+      "execution_steps": 28770,
+      "physical_feasible": true,
+      "classification": "PHYSICALLY_FEASIBLE_BUT_NO_FIXED_ACTION_COMPLETES",
+      "primary_energy_scaled_lp": {
+        "state_formulation": "energy",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 20769,
+        "solve_seconds": 7.439528200076893,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.4816879172204085,
+          "minimum_soc_state_index": 6146,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 395.59569540217024,
+          "maximum_fc_step_change_kw": 48.00000000009277,
+          "maximum_power_balance_residual_kw": 2.4495960815329454e-10,
+          "maximum_soc_dynamic_residual": 6.55508633484736e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 9.276845958083868e-11
+        }
+      },
+      "direct_soc_crosscheck_lp": {
+        "state_formulation": "soc",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 20955,
+        "solve_seconds": 7.798590200021863,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.4816879172204076,
+          "minimum_soc_state_index": 6146,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 395.59569540217024,
+          "maximum_fc_step_change_kw": 48.00000000004499,
+          "maximum_power_balance_residual_kw": 2.0747847884194925e-10,
+          "maximum_soc_dynamic_residual": 6.625288425515796e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 4.4991566028329544e-11
+        }
+      },
+      "energy_explanation": {
+        "initial_usable_battery_energy_kwh": 218.40000000000003,
+        "high_load_deficit_kwh": 199.27183655649344,
+        "theoretical_fc_surplus_kwh": 2707.1001517438235,
+        "ramp_limited_recharge_opportunity_kwh": 2706.2690406327447
+      },
+      "fixed_action_failure_summary": {
+        "failure_soc_min": 0.20085667856330805,
+        "failure_soc_max": 0.20101956946078217,
+        "failure_soc_distance_above_lower_min": 0.0008566785633080387,
+        "failure_soc_distance_above_lower_max": 0.0010195694607821604,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000000000002,
+        "failure_decision_index_min": 5384,
+        "failure_decision_index_max": 6043,
+        "failure_decision_index_spread": 659
+      },
+      "fixed_action_failures": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 5651,
+          "first_failure_execution_index": 5652,
+          "failure_soc": 0.20085667856330805,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            937.2539949706749,
+            936.8179307112808,
+            936.3705945039583,
+            935.915237046907,
+            935.4551090383278,
+            934.9934611764209
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 6043,
+          "first_failure_execution_index": 6044,
+          "failure_soc": 0.20101956946078217,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            947.4333144973856,
+            947.1945947059592,
+            946.9409922249058,
+            946.6746731701544,
+            946.3978036576356,
+            946.1125498032791
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 5872,
+          "first_failure_execution_index": 5873,
+          "failure_soc": 0.20089905426655982,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            939.365872228598,
+            939.5093632697176,
+            939.6470347951764,
+            939.7784496710444,
+            939.9031707633908,
+            940.0207609382858
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 5776,
+          "first_failure_execution_index": 5777,
+          "failure_soc": 0.20090392110535557,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            949.9963749317155,
+            949.8611954478495,
+            949.7166646657464,
+            949.5620429337318,
+            949.3965906001306,
+            949.2195680132686
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 5384,
+          "first_failure_execution_index": 5385,
+          "failure_soc": 0.20097923099780327,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            928.8947026769126,
+            929.6319787026656,
+            930.370763275044,
+            931.1061169644676,
+            931.8331003413568,
+            932.5467739761318
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 5903,
+          "first_failure_execution_index": 5904,
+          "failure_soc": 0.20095200194448481,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            941.8998578114355,
+            942.018828495427,
+            942.1483412192424,
+            942.2891553572449,
+            942.4420302837968,
+            942.6077253732609
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 5528,
+          "first_failure_execution_index": 5529,
+          "failure_soc": 0.20091202033195701,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            922.4648650130576,
+            922.2925713043496,
+            922.1120954296408,
+            921.9251744248184,
+            921.7335453257692,
+            921.5389451683811
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_016": {
+      "voyage_id": "voyage_016",
+      "split": "train",
+      "sample_count": 28771,
+      "execution_steps": 28770,
+      "physical_feasible": true,
+      "classification": "PHYSICALLY_FEASIBLE_BUT_NO_FIXED_ACTION_COMPLETES",
+      "primary_energy_scaled_lp": {
+        "state_formulation": "energy",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 22517,
+        "solve_seconds": 4.914272799855098,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.3948702627808467,
+          "minimum_soc_state_index": 8015,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 341.3065626724524,
+          "maximum_fc_step_change_kw": 48.00000000009277,
+          "maximum_power_balance_residual_kw": 1.7884360659081722e-10,
+          "maximum_soc_dynamic_residual": 6.55508633484736e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 9.276845958083868e-11
+        }
+      },
+      "direct_soc_crosscheck_lp": {
+        "state_formulation": "soc",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 22655,
+        "solve_seconds": 4.9541002998594195,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.39487026278084675,
+          "minimum_soc_state_index": 8015,
+          "final_soc": 0.8,
+          "minimum_fc_kw": -0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 341.3065626724524,
+          "maximum_fc_step_change_kw": 48.00000000007947,
+          "maximum_power_balance_residual_kw": 2.0747847884194925e-10,
+          "maximum_soc_dynamic_residual": 5.51506540089064e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 1.1102230246251565e-16,
+          "ramp_residual_kw": 7.94670995674096e-11
+        }
+      },
+      "energy_explanation": {
+        "initial_usable_battery_energy_kwh": 218.40000000000003,
+        "high_load_deficit_kwh": 258.74981020409655,
+        "theoretical_fc_surplus_kwh": 2781.3054038320997,
+        "ramp_limited_recharge_opportunity_kwh": 2780.474292720984
+      },
+      "fixed_action_failure_summary": {
+        "failure_soc_min": 0.20056124909960865,
+        "failure_soc_max": 0.2006280820613162,
+        "failure_soc_distance_above_lower_min": 0.0005612490996086406,
+        "failure_soc_distance_above_lower_max": 0.0006280820613161764,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000000000002,
+        "failure_decision_index_min": 5804,
+        "failure_decision_index_max": 7141,
+        "failure_decision_index_spread": 1337
+      },
+      "fixed_action_failures": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 6390,
+          "first_failure_execution_index": 6391,
+          "failure_soc": 0.20056466288284863,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            806.9632741034629,
+            807.1351561625587,
+            807.2599009078804,
+            807.3417823335506,
+            807.3850744336941,
+            807.3940512024344
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 7092,
+          "first_failure_execution_index": 7093,
+          "failure_soc": 0.2006280820613162,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            809.3459060180854,
+            808.7847851193064,
+            808.1990948188029,
+            807.5907020632081,
+            806.961473799156,
+            806.3132769732797
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 6769,
+          "first_failure_execution_index": 6770,
+          "failure_soc": 0.20056124909960865,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            805.4988596412556,
+            805.5513435997282,
+            805.6074116109512,
+            805.66838653636,
+            805.7355912373891,
+            805.8103485754749
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 6610,
+          "first_failure_execution_index": 6611,
+          "failure_soc": 0.20056159965479003,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            801.4032641685211,
+            801.8574590226142,
+            802.3208442287652,
+            802.7903739682326,
+            803.263002422275,
+            803.7356837721508
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 5923,
+          "first_failure_execution_index": 5924,
+          "failure_soc": 0.20061912774083546,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            811.5763042797923,
+            811.5972856467735,
+            811.6041318477689,
+            811.599662125637,
+            811.5866957232358,
+            811.5680518834243
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 7141,
+          "first_failure_execution_index": 7142,
+          "failure_soc": 0.200608963557489,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            796.3937196895331,
+            797.6533835980633,
+            798.9941654332378,
+            800.4062312167374,
+            801.8797469702438,
+            803.4048787154383
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 5804,
+          "first_failure_execution_index": 5805,
+          "failure_soc": 0.20062490300042374,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            821.0480330118638,
+            821.5104869535837,
+            821.9601153125097,
+            822.3979232660033,
+            822.8249159914261,
+            823.2420986661391
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_021": {
+      "voyage_id": "voyage_021",
+      "split": "train",
+      "sample_count": 14371,
+      "execution_steps": 14370,
+      "physical_feasible": true,
+      "classification": "PHYSICALLY_FEASIBLE_BUT_NO_FIXED_ACTION_COMPLETES",
+      "primary_energy_scaled_lp": {
+        "state_formulation": "energy",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 8479,
+        "solve_seconds": 3.7623688001185656,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.3078194084273944,
+          "minimum_soc_state_index": 8177,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 623.9710430183709,
+          "maximum_fc_step_change_kw": 48.0,
+          "maximum_power_balance_residual_kw": 1.4006218407303095e-10,
+          "maximum_soc_dynamic_residual": 6.55508633484736e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 0.0
+        }
+      },
+      "direct_soc_crosscheck_lp": {
+        "state_formulation": "soc",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 8804,
+        "solve_seconds": 4.359918599948287,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.3078194084273928,
+          "minimum_soc_state_index": 8177,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 623.9710430183709,
+          "maximum_fc_step_change_kw": 48.0,
+          "maximum_power_balance_residual_kw": 2.0747847884194925e-10,
+          "maximum_soc_dynamic_residual": 6.625288425515796e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 0.0
+        }
+      },
+      "energy_explanation": {
+        "initial_usable_battery_energy_kwh": 218.40000000000003,
+        "high_load_deficit_kwh": 307.1206891413063,
+        "theoretical_fc_surplus_kwh": 1355.7797100674893,
+        "ramp_limited_recharge_opportunity_kwh": 1354.94859895641
+      },
+      "fixed_action_failure_summary": {
+        "failure_soc_min": 0.20123571129362458,
+        "failure_soc_max": 0.2014075457732007,
+        "failure_soc_distance_above_lower_min": 0.0012357112936245696,
+        "failure_soc_distance_above_lower_max": 0.0014075457732006802,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000000000002,
+        "failure_decision_index_min": 7036,
+        "failure_decision_index_max": 7513,
+        "failure_decision_index_spread": 477
+      },
+      "fixed_action_failures": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 7513,
+          "first_failure_execution_index": 7514,
+          "failure_soc": 0.20123571129362458,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1088.5338608200273,
+            1088.8063622822117,
+            1089.0817477866417,
+            1089.3591995292509,
+            1089.6378997059733,
+            1089.9170305127411
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 7429,
+          "first_failure_execution_index": 7430,
+          "failure_soc": 0.2014075457732007,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1092.151733191656,
+            1092.0795623785002,
+            1092.004625767727,
+            1091.9264981420692,
+            1091.844754284259,
+            1091.7589689770284
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 7431,
+          "first_failure_execution_index": 7432,
+          "failure_soc": 0.20124498699048965,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            1092.004625767727,
+            1091.9264981420692,
+            1091.844754284259,
+            1091.7589689770284,
+            1091.6687170031107,
+            1091.573573145237
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 7454,
+          "first_failure_execution_index": 7455,
+          "failure_soc": 0.20127152481699337,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            1088.8782016708274,
+            1088.6928939663846,
+            1088.5068220971243,
+            1088.3204446377513,
+            1088.1342201629682,
+            1087.94860724748
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 7461,
+          "first_failure_execution_index": 7462,
+          "failure_soc": 0.20126789431738568,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1087.5810503932032,
+            1087.4000236038223,
+            1087.2214426725525,
+            1087.0457661740966,
+            1086.8734526831593,
+            1086.704960774444
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 7478,
+          "first_failure_execution_index": 7479,
+          "failure_soc": 0.20125291673761106,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            1085.13279623031,
+            1085.048834811176,
+            1084.9733225185469,
+            1084.9065115597627,
+            1084.8486541421644,
+            1084.8000024730927
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 7036,
+          "first_failure_execution_index": 7037,
+          "failure_soc": 0.20126862828659092,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            1097.8207853168287,
+            1097.490803251854,
+            1097.1554469466764,
+            1096.8166177492683,
+            1096.4762170076033,
+            1096.136146069652
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_024": {
+      "voyage_id": "voyage_024",
+      "split": "train",
+      "sample_count": 35972,
+      "execution_steps": 35971,
+      "physical_feasible": true,
+      "classification": "PHYSICALLY_FEASIBLE_BUT_NO_FIXED_ACTION_COMPLETES",
+      "primary_energy_scaled_lp": {
+        "state_formulation": "energy",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 23224,
+        "solve_seconds": 5.837014199933037,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.4614505911783675,
+          "minimum_soc_state_index": 10990,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 337.9927273145456,
+          "maximum_fc_step_change_kw": 48.0,
+          "maximum_power_balance_residual_kw": 1.4006218407303095e-10,
+          "maximum_soc_dynamic_residual": 6.55508633484736e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 0.0
+        }
+      },
+      "direct_soc_crosscheck_lp": {
+        "state_formulation": "soc",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 23555,
+        "solve_seconds": 5.831743999850005,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.46145059117837073,
+          "minimum_soc_state_index": 10990,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 337.9927273145456,
+          "maximum_fc_step_change_kw": 48.00000000000006,
+          "maximum_power_balance_residual_kw": 2.0747847884194925e-10,
+          "maximum_soc_dynamic_residual": 6.625288425515796e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 5.684341886080802e-14
+        }
+      },
+      "energy_explanation": {
+        "initial_usable_battery_energy_kwh": 218.40000000000003,
+        "high_load_deficit_kwh": 273.2449423154393,
+        "theoretical_fc_surplus_kwh": 3322.0586940989383,
+        "ramp_limited_recharge_opportunity_kwh": 3321.2275829878895
+      },
+      "fixed_action_failure_summary": {
+        "failure_soc_min": 0.20016293003599678,
+        "failure_soc_max": 0.2007952267946149,
+        "failure_soc_distance_above_lower_min": 0.0001629300359967667,
+        "failure_soc_distance_above_lower_max": 0.0007952267946148839,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000010014027,
+        "failure_decision_index_min": 7465,
+        "failure_decision_index_max": 10273,
+        "failure_decision_index_spread": 2808
+      },
+      "fixed_action_failures": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 8462,
+          "first_failure_execution_index": 8463,
+          "failure_soc": 0.20016293003599678,
+          "failure_previous_fc_kw": 560.0000005217523,
+          "future_6_loads": [
+            633.6517133363691,
+            633.4026123540647,
+            633.1935965197439,
+            633.0242028416072,
+            632.8939683278553,
+            632.8024299866887
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 10188,
+          "first_failure_execution_index": 10189,
+          "failure_soc": 0.20023909808224674,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            654.7532059913888,
+            653.8280976099225,
+            652.892159822633,
+            651.9488843717297,
+            651.0017629994226,
+            650.0542874479203
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 9417,
+          "first_failure_execution_index": 9418,
+          "failure_soc": 0.20026238052512924,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            668.2484187242889,
+            668.4725333241893,
+            668.612333984909,
+            668.6634952355844,
+            668.6241260817667,
+            668.4983578596105
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 9022,
+          "first_failure_execution_index": 9023,
+          "failure_soc": 0.20019937094544835,
+          "failure_previous_fc_kw": 560.0000010014027,
+          "future_6_loads": [
+            651.074432629344,
+            650.8324943347812,
+            650.6514091591092,
+            650.5365029565685,
+            650.4931015813996,
+            650.5265308878438
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 7564,
+          "first_failure_execution_index": 7565,
+          "failure_soc": 0.20044283701842824,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            752.7628585043769,
+            751.1315354149419,
+            749.5222117462401,
+            747.9362238791023,
+            746.3749081943581,
+            744.8396010728379
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 10273,
+          "first_failure_execution_index": 10274,
+          "failure_soc": 0.20029409162783413,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            677.3570301702207,
+            676.9680793456212,
+            676.51835100298,
+            676.0103800366444,
+            675.4467013409624,
+            674.8298498102815
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 7465,
+          "first_failure_execution_index": 7466,
+          "failure_soc": 0.2007952267946149,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            858.5208586755083,
+            859.4536567400813,
+            860.2584733156832,
+            860.9252930557426,
+            861.4441006136886,
+            861.8049290497053
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_041": {
+      "voyage_id": "voyage_041",
+      "split": "train",
+      "sample_count": 39211,
+      "execution_steps": 39210,
+      "physical_feasible": true,
+      "classification": "PHYSICALLY_FEASIBLE_BUT_NO_FIXED_ACTION_COMPLETES",
+      "primary_energy_scaled_lp": {
+        "state_formulation": "energy",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 28034,
+        "solve_seconds": 6.742953199893236,
+        "initial_fc_kw": 0.0054999999999999,
+        "witness": {
+          "minimum_soc": 0.2894997043920812,
+          "minimum_soc_state_index": 10028,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 344.4618507288128,
+          "maximum_fc_step_change_kw": 48.00000000009271,
+          "maximum_power_balance_residual_kw": 9.22426579563762e-11,
+          "maximum_soc_dynamic_residual": 2.082752373344654e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 9.271161616197787e-11
+        }
+      },
+      "direct_soc_crosscheck_lp": {
+        "state_formulation": "soc",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 27797,
+        "solve_seconds": 7.043221799889579,
+        "initial_fc_kw": 0.0054999999999999,
+        "witness": {
+          "minimum_soc": 0.28949970439208017,
+          "minimum_soc_state_index": 10028,
+          "final_soc": 0.8,
+          "minimum_fc_kw": -0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 344.4618507288128,
+          "maximum_fc_step_change_kw": 48.000000000024784,
+          "maximum_power_balance_residual_kw": 2.759321660050773e-10,
+          "maximum_soc_dynamic_residual": 1.4147483098220226e-15,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 2.4783730623312294e-11
+        }
+      },
+      "energy_explanation": {
+        "initial_usable_battery_energy_kwh": 218.40000000000003,
+        "high_load_deficit_kwh": 329.4530212292318,
+        "theoretical_fc_surplus_kwh": 4260.6346598454265,
+        "ramp_limited_recharge_opportunity_kwh": 4259.803565539923
+      },
+      "fixed_action_failure_summary": {
+        "failure_soc_min": 0.20042305802845276,
+        "failure_soc_max": 0.20066014364120735,
+        "failure_soc_distance_above_lower_min": 0.0004230580284527441,
+        "failure_soc_distance_above_lower_max": 0.0006601436412073391,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000000000002,
+        "failure_decision_index_min": 6470,
+        "failure_decision_index_max": 7790,
+        "failure_decision_index_spread": 1320
+      },
+      "fixed_action_failures": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 6899,
+          "first_failure_execution_index": 6900,
+          "failure_soc": 0.2006582251725735,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            849.2191927818819,
+            848.693087941673,
+            848.0358381007062,
+            847.2575560688773,
+            846.3683546560812,
+            845.3783466722142
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 7790,
+          "first_failure_execution_index": 7791,
+          "failure_soc": 0.20042305802845276,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            739.3067428486688,
+            738.7858505678194,
+            738.3645514202359,
+            738.050748613386,
+            737.852345354738,
+            737.7772448517596
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 7399,
+          "first_failure_execution_index": 7400,
+          "failure_soc": 0.20056460098060222,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            796.7225385415861,
+            796.5764461853297,
+            796.3469835745314,
+            796.0275431065971,
+            795.6115171789327,
+            795.092298188943
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 7252,
+          "first_failure_execution_index": 7253,
+          "failure_soc": 0.2004780892163512,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            778.8541712170289,
+            771.2524039927907,
+            763.9653594803733,
+            757.053303280357,
+            750.5765009933223,
+            744.5952182198495
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 6533,
+          "first_failure_execution_index": 6534,
+          "failure_soc": 0.20066014364120735,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            834.9268829505745,
+            835.8368344017731,
+            836.6407409244515,
+            837.3300036926629,
+            837.89602388046,
+            838.3302026618973
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 7636,
+          "first_failure_execution_index": 7637,
+          "failure_soc": 0.20047558886854844,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            756.4239239587738,
+            757.2905968731623,
+            758.1189202494411,
+            758.9040131609952,
+            759.6409946812091,
+            760.3249838834673
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 6470,
+          "first_failure_execution_index": 6471,
+          "failure_soc": 0.20056354685278213,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            812.4084028791887,
+            812.0775677439569,
+            811.7242488974957,
+            811.3487535491938,
+            810.9513889084407,
+            810.5324621846255
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_044": {
+      "voyage_id": "voyage_044",
+      "split": "train",
+      "sample_count": 10771,
+      "execution_steps": 10770,
+      "physical_feasible": true,
+      "classification": "PHYSICALLY_FEASIBLE_BUT_NO_FIXED_ACTION_COMPLETES",
+      "primary_energy_scaled_lp": {
+        "state_formulation": "energy",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 3480,
+        "solve_seconds": 2.0953148999251425,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.20054722145091736,
+          "minimum_soc_state_index": 6715,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 552.3198995536964,
+          "maximum_fc_step_change_kw": 48.0,
+          "maximum_power_balance_residual_kw": 1.964508555829525e-10,
+          "maximum_soc_dynamic_residual": 1.7722097660904934e-15,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 0.0
+        }
+      },
+      "direct_soc_crosscheck_lp": {
+        "state_formulation": "soc",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 3469,
+        "solve_seconds": 1.9863377998117357,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.20054722145091552,
+          "minimum_soc_state_index": 6715,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 552.3198995536964,
+          "maximum_fc_step_change_kw": 48.0,
+          "maximum_power_balance_residual_kw": 8.753886504564434e-12,
+          "maximum_soc_dynamic_residual": 2.9792249396642934e-15,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 0.0
+        }
+      },
+      "energy_explanation": {
+        "initial_usable_battery_energy_kwh": 218.40000000000003,
+        "high_load_deficit_kwh": 389.76177105055723,
+        "theoretical_fc_surplus_kwh": 1012.9206358961416,
+        "ramp_limited_recharge_opportunity_kwh": 1012.0895247850617
+      },
+      "fixed_action_failure_summary": {
+        "failure_soc_min": 0.20098052793327376,
+        "failure_soc_max": 0.201155792544718,
+        "failure_soc_distance_above_lower_min": 0.0009805279332737449,
+        "failure_soc_distance_above_lower_max": 0.0011557925447179818,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000060472038,
+        "failure_decision_index_min": 4271,
+        "failure_decision_index_max": 4823,
+        "failure_decision_index_spread": 552
+      },
+      "fixed_action_failures": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 4479,
+          "first_failure_execution_index": 4480,
+          "failure_soc": 0.20113850479051562,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1002.704184890374,
+            1002.172894074758,
+            1001.639070860272,
+            1001.1039343921424,
+            1000.568703815596,
+            1000.034598275859
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 4823,
+          "first_failure_execution_index": 4824,
+          "failure_soc": 0.20111233345700935,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1007.0161119258504,
+            1007.248613120136,
+            1007.4560290169136,
+            1007.6355300750477,
+            1007.7842867534026,
+            1007.8994695108428
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 4656,
+          "first_failure_execution_index": 4657,
+          "failure_soc": 0.201155792544718,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            1006.8889355208172,
+            1007.2210538202446,
+            1007.5375607499082,
+            1007.8377907401208,
+            1008.1210782211969,
+            1008.3867576234484
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 4577,
+          "first_failure_execution_index": 4578,
+          "failure_soc": 0.20098052793327376,
+          "failure_previous_fc_kw": 560.0000060472038,
+          "future_6_loads": [
+            1003.8116751235452,
+            1003.301517345843,
+            1002.783841157586,
+            1002.2611327113816,
+            1001.7358781598364,
+            1001.210563655558
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 4271,
+          "first_failure_execution_index": 4272,
+          "failure_soc": 0.20103300141676034,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1014.4853047620662,
+            1014.4414488045608,
+            1014.40295433564,
+            1014.370636637007,
+            1014.3453109903646,
+            1014.3277926774164
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 4757,
+          "first_failure_execution_index": 4758,
+          "failure_soc": 0.2010634863173229,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            1010.0062294498248,
+            1010.2079942547516,
+            1010.3868355808892,
+            1010.5412624326636,
+            1010.669783814501,
+            1010.770908730828
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 4345,
+          "first_failure_execution_index": 4346,
+          "failure_soc": 0.20106202183882724,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            1020.6536192709287,
+            1020.5805445171588,
+            1020.520751117868,
+            1020.4756816359144,
+            1020.4467786341542,
+            1020.4348473288454
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_045": {
+      "voyage_id": "voyage_045",
+      "split": "train",
+      "sample_count": 21572,
+      "execution_steps": 21571,
+      "physical_feasible": true,
+      "classification": "PHYSICALLY_FEASIBLE_BUT_NO_FIXED_ACTION_COMPLETES",
+      "primary_energy_scaled_lp": {
+        "state_formulation": "energy",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 17948,
+        "solve_seconds": 6.7031481000594795,
+        "initial_fc_kw": 32.63292,
+        "witness": {
+          "minimum_soc": 0.290168632320526,
+          "minimum_soc_state_index": 3923,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -532.5576562089568,
+          "maximum_battery_kw": 588.658044387437,
+          "maximum_fc_step_change_kw": 48.000000000000014,
+          "maximum_power_balance_residual_kw": 5.684341886080802e-14,
+          "maximum_soc_dynamic_residual": 1.478851763270228e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 1.4210854715202004e-14
+        }
+      },
+      "direct_soc_crosscheck_lp": {
+        "state_formulation": "soc",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 18109,
+        "solve_seconds": 6.919266700046137,
+        "initial_fc_kw": 32.63292,
+        "witness": {
+          "minimum_soc": 0.29016863232052353,
+          "minimum_soc_state_index": 3923,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -532.5576562089568,
+          "maximum_battery_kw": 588.658044387437,
+          "maximum_fc_step_change_kw": 48.000000000000014,
+          "maximum_power_balance_residual_kw": 5.684341886080802e-14,
+          "maximum_soc_dynamic_residual": 1.5208645974540413e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 1.4210854715202004e-14
+        }
+      },
+      "energy_explanation": {
+        "initial_usable_battery_energy_kwh": 218.40000000000003,
+        "high_load_deficit_kwh": 262.8499638561878,
+        "theoretical_fc_surplus_kwh": 1657.2506278964686,
+        "ramp_limited_recharge_opportunity_kwh": 1656.519052674245
+      },
+      "fixed_action_failure_summary": {
+        "failure_soc_min": 0.20119137861977415,
+        "failure_soc_max": 0.20142944011313008,
+        "failure_soc_distance_above_lower_min": 0.0011913786197741416,
+        "failure_soc_distance_above_lower_max": 0.001429440113130065,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000085594484,
+        "failure_decision_index_min": 2212,
+        "failure_decision_index_max": 2752,
+        "failure_decision_index_spread": 540
+      },
+      "fixed_action_failures": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 2416,
+          "first_failure_execution_index": 2417,
+          "failure_soc": 0.20137105473984543,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1096.473288971603,
+            1096.9141463428566,
+            1097.3517923379911,
+            1097.7838991686829,
+            1098.2081390466085,
+            1098.622184183443
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 2752,
+          "first_failure_execution_index": 2753,
+          "failure_soc": 0.2012466961902554,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1091.2279568637778,
+            1091.5036454603087,
+            1091.784609901058,
+            1092.070408817394,
+            1092.360600840685,
+            1092.6547446022998
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 2597,
+          "first_failure_execution_index": 2598,
+          "failure_soc": 0.20119137861977415,
+          "failure_previous_fc_kw": 560.0000085594484,
+          "future_6_loads": [
+            1096.326963889624,
+            1096.3884527389894,
+            1096.4468056809849,
+            1096.5013733510857,
+            1096.5515063847654,
+            1096.5965554174995
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 2517,
+          "first_failure_execution_index": 2518,
+          "failure_soc": 0.20142944011313008,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            1099.640858606262,
+            1099.5458625516324,
+            1099.4548,
+            1099.3680308386506,
+            1099.2854087401183,
+            1099.2066608232492
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 2212,
+          "first_failure_execution_index": 2213,
+          "failure_soc": 0.2014147300625075,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1098.1898160955343,
+            1098.2570678333682,
+            1098.2966911651763,
+            1098.3061780414214,
+            1098.2830204125642,
+            1098.224710229067
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 2642,
+          "first_failure_execution_index": 2643,
+          "failure_soc": 0.2012636164178425,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            1093.771875567344,
+            1093.700655582443,
+            1093.6338376031572,
+            1093.5711963850613,
+            1093.5125066837284,
+            1093.4575432547329
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 2267,
+          "first_failure_execution_index": 2268,
+          "failure_soc": 0.2013322062764604,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            1085.3515249155753,
+            1085.5179287072197,
+            1085.695869990093,
+            1085.8841085603922,
+            1086.0814042143163,
+            1086.286516748064
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_053": {
+      "voyage_id": "voyage_053",
+      "split": "validation",
+      "sample_count": 28772,
+      "execution_steps": 28771,
+      "physical_feasible": true,
+      "classification": "PHYSICALLY_FEASIBLE_BUT_NO_FIXED_ACTION_COMPLETES",
+      "primary_energy_scaled_lp": {
+        "state_formulation": "energy",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 19828,
+        "solve_seconds": 4.613994600018486,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.42681941035849036,
+          "minimum_soc_state_index": 8640,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 300.81478731147934,
+          "maximum_fc_step_change_kw": 48.000000000047294,
+          "maximum_power_balance_residual_kw": 1.4637180356658064e-10,
+          "maximum_soc_dynamic_residual": 6.55508633484736e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 4.729372449219227e-11
+        }
+      },
+      "direct_soc_crosscheck_lp": {
+        "state_formulation": "soc",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 20017,
+        "solve_seconds": 4.286631300114095,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.42681941035849097,
+          "minimum_soc_state_index": 8640,
+          "final_soc": 0.8,
+          "minimum_fc_kw": -1.1304288537038892e-11,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 300.81478731147934,
+          "maximum_fc_step_change_kw": 48.00000000004144,
+          "maximum_power_balance_residual_kw": 2.395665887888754e-10,
+          "maximum_soc_dynamic_residual": 6.625288425515796e-16,
+          "fc_bound_residual_kw": 1.1304288537038892e-11,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 4.143885234952904e-11
+        }
+      },
+      "energy_explanation": {
+        "initial_usable_battery_energy_kwh": 218.40000000000003,
+        "high_load_deficit_kwh": 251.17616370050402,
+        "theoretical_fc_surplus_kwh": 2820.998838616704,
+        "ramp_limited_recharge_opportunity_kwh": 2820.167727505623
+      },
+      "fixed_action_failure_summary": {
+        "failure_soc_min": 0.20053379490663417,
+        "failure_soc_max": 0.20071367450702252,
+        "failure_soc_distance_above_lower_min": 0.0005337949066341607,
+        "failure_soc_distance_above_lower_max": 0.0007136745070225048,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000000000002,
+        "failure_decision_index_min": 6549,
+        "failure_decision_index_max": 8337,
+        "failure_decision_index_spread": 1788
+      },
+      "fixed_action_failures": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 7388,
+          "first_failure_execution_index": 7389,
+          "failure_soc": 0.20057068663968483,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            780.8455679636955,
+            781.0071205776488,
+            781.1446588146282,
+            781.2575593259926,
+            781.3451987631014,
+            781.4069537773141
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 8109,
+          "first_failure_execution_index": 8110,
+          "failure_soc": 0.20063299755697106,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            843.1307985106574,
+            842.522288691725,
+            841.8766154593286,
+            841.1988138541926,
+            840.4939189170418,
+            839.7669656886006
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 7926,
+          "first_failure_execution_index": 7927,
+          "failure_soc": 0.2006209215491883,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            804.4638309879106,
+            805.1473666634861,
+            805.9206593571633,
+            806.7758504709153,
+            807.7050814067148,
+            808.700493566535
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 7800,
+          "first_failure_execution_index": 7801,
+          "failure_soc": 0.20071367450702252,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            829.5616999999999,
+            830.1969277618771,
+            830.719206232085,
+            831.1327532834542,
+            831.4417867888162,
+            831.6505246210006
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 6848,
+          "first_failure_execution_index": 6849,
+          "failure_soc": 0.20053379490663417,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            784.820016385911,
+            784.7100061201629,
+            784.5613467323277,
+            784.3752109392766,
+            784.1527714578801,
+            783.8952010050104
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 8337,
+          "first_failure_execution_index": 8338,
+          "failure_soc": 0.20071024818221506,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            859.8605598007846,
+            860.4542373774639,
+            860.7763,
+            860.8147873114793,
+            860.5810299250957,
+            860.0921811965698
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 6549,
+          "first_failure_execution_index": 6550,
+          "failure_soc": 0.20056857351551444,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            790.1695645933446,
+            789.7744077040594,
+            789.3644104504493,
+            788.9398697118249,
+            788.5010823674969,
+            788.048345296776
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_054": {
+      "voyage_id": "voyage_054",
+      "split": "validation",
+      "sample_count": 28382,
+      "execution_steps": 28381,
+      "physical_feasible": true,
+      "classification": "PHYSICALLY_FEASIBLE_BUT_NO_FIXED_ACTION_COMPLETES",
+      "primary_energy_scaled_lp": {
+        "state_formulation": "energy",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 21180,
+        "solve_seconds": 5.611710299970582,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.20038947867300896,
+          "minimum_soc_state_index": 12488,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 283.5671549979521,
+          "maximum_fc_step_change_kw": 48.0,
+          "maximum_power_balance_residual_kw": 1.4006218407303095e-10,
+          "maximum_soc_dynamic_residual": 6.55508633484736e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 0.0
+        }
+      },
+      "direct_soc_crosscheck_lp": {
+        "state_formulation": "soc",
+        "success": true,
+        "status_code": 0,
+        "message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+        "iterations": 21322,
+        "solve_seconds": 5.990254999836907,
+        "initial_fc_kw": 0.0,
+        "witness": {
+          "minimum_soc": 0.2003894786730086,
+          "minimum_soc_state_index": 12488,
+          "final_soc": 0.8,
+          "minimum_fc_kw": 0.0,
+          "maximum_fc_kw": 560.0,
+          "minimum_battery_kw": -560.0,
+          "maximum_battery_kw": 283.5671549979521,
+          "maximum_fc_step_change_kw": 48.0,
+          "maximum_power_balance_residual_kw": 2.0747847884194925e-10,
+          "maximum_soc_dynamic_residual": 6.625288425515796e-16,
+          "fc_bound_residual_kw": 0.0,
+          "battery_bound_residual_kw": 0.0,
+          "soc_bound_residual": 0.0,
+          "ramp_residual_kw": 0.0
+        }
+      },
+      "energy_explanation": {
+        "initial_usable_battery_energy_kwh": 218.40000000000003,
+        "high_load_deficit_kwh": 374.4201784366491,
+        "theoretical_fc_surplus_kwh": 2403.2370708185767,
+        "ramp_limited_recharge_opportunity_kwh": 2402.4059597074684
+      },
+      "fixed_action_failure_summary": {
+        "failure_soc_min": 0.20050745344714732,
+        "failure_soc_max": 0.2005496779845371,
+        "failure_soc_distance_above_lower_min": 0.0005074534471473102,
+        "failure_soc_distance_above_lower_max": 0.0005496779845370892,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000045461321,
+        "failure_decision_index_min": 8144,
+        "failure_decision_index_max": 9435,
+        "failure_decision_index_spread": 1291
+      },
+      "fixed_action_failures": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 8782,
+          "first_failure_execution_index": 8783,
+          "failure_soc": 0.2005496779845371,
+          "failure_previous_fc_kw": 560.0000038628573,
+          "future_6_loads": [
+            806.5969602801382,
+            807.3688365388334,
+            808.0569352458137,
+            808.6535692203751,
+            809.1510512818131,
+            809.5416942494237
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 9435,
+          "first_failure_execution_index": 9436,
+          "failure_soc": 0.20052571682835751,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            776.8465034055673,
+            777.5295399952618,
+            778.228202159206,
+            778.9357111797395,
+            779.6452883392011,
+            780.3501549199301
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 9109,
+          "first_failure_execution_index": 9110,
+          "failure_soc": 0.20052774673969442,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            782.6207930477694,
+            783.5696457332529,
+            784.5609593565963,
+            785.5974722412709,
+            786.6819227107482,
+            787.8170490884995
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 8957,
+          "first_failure_execution_index": 8958,
+          "failure_soc": 0.20050745344714732,
+          "failure_previous_fc_kw": 560.0000045461321,
+          "future_6_loads": [
+            789.8938105676749,
+            790.3320885386332,
+            790.7677016430946,
+            791.1919674873404,
+            791.5962036776529,
+            791.971727820314
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 8420,
+          "first_failure_execution_index": 8421,
+          "failure_soc": 0.20051609761064626,
+          "failure_previous_fc_kw": 560.0000028756812,
+          "future_6_loads": [
+            795.2497314416468,
+            795.1249847626266,
+            795.0483544072334,
+            795.0247482177017,
+            795.0590740362658,
+            795.1562397051598
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 9330,
+          "first_failure_execution_index": 9331,
+          "failure_soc": 0.20053336655281861,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            787.5441241659022,
+            786.5744933501853,
+            785.6551534145957,
+            784.7881847716682,
+            783.9739732232534,
+            783.2129045712013
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 8144,
+          "first_failure_execution_index": 8145,
+          "failure_soc": 0.2005303204668721,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            782.7577722116382,
+            782.0280856899379,
+            781.3469290709174,
+            780.7200009688681,
+            780.1529999980797,
+            779.6516247728432
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    }
+  },
+  "fixed_action_failure_comparison": {
+    "voyage_011": {
+      "summary": {
+        "failure_soc_min": 0.20085667856330805,
+        "failure_soc_max": 0.20101956946078217,
+        "failure_soc_distance_above_lower_min": 0.0008566785633080387,
+        "failure_soc_distance_above_lower_max": 0.0010195694607821604,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000000000002,
+        "failure_decision_index_min": 5384,
+        "failure_decision_index_max": 6043,
+        "failure_decision_index_spread": 659
+      },
+      "per_action": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 5651,
+          "first_failure_execution_index": 5652,
+          "failure_soc": 0.20085667856330805,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            937.2539949706749,
+            936.8179307112808,
+            936.3705945039583,
+            935.915237046907,
+            935.4551090383278,
+            934.9934611764209
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 6043,
+          "first_failure_execution_index": 6044,
+          "failure_soc": 0.20101956946078217,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            947.4333144973856,
+            947.1945947059592,
+            946.9409922249058,
+            946.6746731701544,
+            946.3978036576356,
+            946.1125498032791
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 5872,
+          "first_failure_execution_index": 5873,
+          "failure_soc": 0.20089905426655982,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            939.365872228598,
+            939.5093632697176,
+            939.6470347951764,
+            939.7784496710444,
+            939.9031707633908,
+            940.0207609382858
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 5776,
+          "first_failure_execution_index": 5777,
+          "failure_soc": 0.20090392110535557,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            949.9963749317155,
+            949.8611954478495,
+            949.7166646657464,
+            949.5620429337318,
+            949.3965906001306,
+            949.2195680132686
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 5384,
+          "first_failure_execution_index": 5385,
+          "failure_soc": 0.20097923099780327,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            928.8947026769126,
+            929.6319787026656,
+            930.370763275044,
+            931.1061169644676,
+            931.8331003413568,
+            932.5467739761318
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 5903,
+          "first_failure_execution_index": 5904,
+          "failure_soc": 0.20095200194448481,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            941.8998578114355,
+            942.018828495427,
+            942.1483412192424,
+            942.2891553572449,
+            942.4420302837968,
+            942.6077253732609
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 5528,
+          "first_failure_execution_index": 5529,
+          "failure_soc": 0.20091202033195701,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            922.4648650130576,
+            922.2925713043496,
+            922.1120954296408,
+            921.9251744248184,
+            921.7335453257692,
+            921.5389451683811
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_016": {
+      "summary": {
+        "failure_soc_min": 0.20056124909960865,
+        "failure_soc_max": 0.2006280820613162,
+        "failure_soc_distance_above_lower_min": 0.0005612490996086406,
+        "failure_soc_distance_above_lower_max": 0.0006280820613161764,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000000000002,
+        "failure_decision_index_min": 5804,
+        "failure_decision_index_max": 7141,
+        "failure_decision_index_spread": 1337
+      },
+      "per_action": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 6390,
+          "first_failure_execution_index": 6391,
+          "failure_soc": 0.20056466288284863,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            806.9632741034629,
+            807.1351561625587,
+            807.2599009078804,
+            807.3417823335506,
+            807.3850744336941,
+            807.3940512024344
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 7092,
+          "first_failure_execution_index": 7093,
+          "failure_soc": 0.2006280820613162,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            809.3459060180854,
+            808.7847851193064,
+            808.1990948188029,
+            807.5907020632081,
+            806.961473799156,
+            806.3132769732797
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 6769,
+          "first_failure_execution_index": 6770,
+          "failure_soc": 0.20056124909960865,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            805.4988596412556,
+            805.5513435997282,
+            805.6074116109512,
+            805.66838653636,
+            805.7355912373891,
+            805.8103485754749
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 6610,
+          "first_failure_execution_index": 6611,
+          "failure_soc": 0.20056159965479003,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            801.4032641685211,
+            801.8574590226142,
+            802.3208442287652,
+            802.7903739682326,
+            803.263002422275,
+            803.7356837721508
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 5923,
+          "first_failure_execution_index": 5924,
+          "failure_soc": 0.20061912774083546,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            811.5763042797923,
+            811.5972856467735,
+            811.6041318477689,
+            811.599662125637,
+            811.5866957232358,
+            811.5680518834243
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 7141,
+          "first_failure_execution_index": 7142,
+          "failure_soc": 0.200608963557489,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            796.3937196895331,
+            797.6533835980633,
+            798.9941654332378,
+            800.4062312167374,
+            801.8797469702438,
+            803.4048787154383
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 5804,
+          "first_failure_execution_index": 5805,
+          "failure_soc": 0.20062490300042374,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            821.0480330118638,
+            821.5104869535837,
+            821.9601153125097,
+            822.3979232660033,
+            822.8249159914261,
+            823.2420986661391
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_021": {
+      "summary": {
+        "failure_soc_min": 0.20123571129362458,
+        "failure_soc_max": 0.2014075457732007,
+        "failure_soc_distance_above_lower_min": 0.0012357112936245696,
+        "failure_soc_distance_above_lower_max": 0.0014075457732006802,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000000000002,
+        "failure_decision_index_min": 7036,
+        "failure_decision_index_max": 7513,
+        "failure_decision_index_spread": 477
+      },
+      "per_action": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 7513,
+          "first_failure_execution_index": 7514,
+          "failure_soc": 0.20123571129362458,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1088.5338608200273,
+            1088.8063622822117,
+            1089.0817477866417,
+            1089.3591995292509,
+            1089.6378997059733,
+            1089.9170305127411
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 7429,
+          "first_failure_execution_index": 7430,
+          "failure_soc": 0.2014075457732007,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1092.151733191656,
+            1092.0795623785002,
+            1092.004625767727,
+            1091.9264981420692,
+            1091.844754284259,
+            1091.7589689770284
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 7431,
+          "first_failure_execution_index": 7432,
+          "failure_soc": 0.20124498699048965,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            1092.004625767727,
+            1091.9264981420692,
+            1091.844754284259,
+            1091.7589689770284,
+            1091.6687170031107,
+            1091.573573145237
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 7454,
+          "first_failure_execution_index": 7455,
+          "failure_soc": 0.20127152481699337,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            1088.8782016708274,
+            1088.6928939663846,
+            1088.5068220971243,
+            1088.3204446377513,
+            1088.1342201629682,
+            1087.94860724748
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 7461,
+          "first_failure_execution_index": 7462,
+          "failure_soc": 0.20126789431738568,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1087.5810503932032,
+            1087.4000236038223,
+            1087.2214426725525,
+            1087.0457661740966,
+            1086.8734526831593,
+            1086.704960774444
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 7478,
+          "first_failure_execution_index": 7479,
+          "failure_soc": 0.20125291673761106,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            1085.13279623031,
+            1085.048834811176,
+            1084.9733225185469,
+            1084.9065115597627,
+            1084.8486541421644,
+            1084.8000024730927
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 7036,
+          "first_failure_execution_index": 7037,
+          "failure_soc": 0.20126862828659092,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            1097.8207853168287,
+            1097.490803251854,
+            1097.1554469466764,
+            1096.8166177492683,
+            1096.4762170076033,
+            1096.136146069652
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_024": {
+      "summary": {
+        "failure_soc_min": 0.20016293003599678,
+        "failure_soc_max": 0.2007952267946149,
+        "failure_soc_distance_above_lower_min": 0.0001629300359967667,
+        "failure_soc_distance_above_lower_max": 0.0007952267946148839,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000010014027,
+        "failure_decision_index_min": 7465,
+        "failure_decision_index_max": 10273,
+        "failure_decision_index_spread": 2808
+      },
+      "per_action": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 8462,
+          "first_failure_execution_index": 8463,
+          "failure_soc": 0.20016293003599678,
+          "failure_previous_fc_kw": 560.0000005217523,
+          "future_6_loads": [
+            633.6517133363691,
+            633.4026123540647,
+            633.1935965197439,
+            633.0242028416072,
+            632.8939683278553,
+            632.8024299866887
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 10188,
+          "first_failure_execution_index": 10189,
+          "failure_soc": 0.20023909808224674,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            654.7532059913888,
+            653.8280976099225,
+            652.892159822633,
+            651.9488843717297,
+            651.0017629994226,
+            650.0542874479203
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 9417,
+          "first_failure_execution_index": 9418,
+          "failure_soc": 0.20026238052512924,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            668.2484187242889,
+            668.4725333241893,
+            668.612333984909,
+            668.6634952355844,
+            668.6241260817667,
+            668.4983578596105
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 9022,
+          "first_failure_execution_index": 9023,
+          "failure_soc": 0.20019937094544835,
+          "failure_previous_fc_kw": 560.0000010014027,
+          "future_6_loads": [
+            651.074432629344,
+            650.8324943347812,
+            650.6514091591092,
+            650.5365029565685,
+            650.4931015813996,
+            650.5265308878438
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 7564,
+          "first_failure_execution_index": 7565,
+          "failure_soc": 0.20044283701842824,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            752.7628585043769,
+            751.1315354149419,
+            749.5222117462401,
+            747.9362238791023,
+            746.3749081943581,
+            744.8396010728379
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 10273,
+          "first_failure_execution_index": 10274,
+          "failure_soc": 0.20029409162783413,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            677.3570301702207,
+            676.9680793456212,
+            676.51835100298,
+            676.0103800366444,
+            675.4467013409624,
+            674.8298498102815
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 7465,
+          "first_failure_execution_index": 7466,
+          "failure_soc": 0.2007952267946149,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            858.5208586755083,
+            859.4536567400813,
+            860.2584733156832,
+            860.9252930557426,
+            861.4441006136886,
+            861.8049290497053
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_041": {
+      "summary": {
+        "failure_soc_min": 0.20042305802845276,
+        "failure_soc_max": 0.20066014364120735,
+        "failure_soc_distance_above_lower_min": 0.0004230580284527441,
+        "failure_soc_distance_above_lower_max": 0.0006601436412073391,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000000000002,
+        "failure_decision_index_min": 6470,
+        "failure_decision_index_max": 7790,
+        "failure_decision_index_spread": 1320
+      },
+      "per_action": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 6899,
+          "first_failure_execution_index": 6900,
+          "failure_soc": 0.2006582251725735,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            849.2191927818819,
+            848.693087941673,
+            848.0358381007062,
+            847.2575560688773,
+            846.3683546560812,
+            845.3783466722142
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 7790,
+          "first_failure_execution_index": 7791,
+          "failure_soc": 0.20042305802845276,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            739.3067428486688,
+            738.7858505678194,
+            738.3645514202359,
+            738.050748613386,
+            737.852345354738,
+            737.7772448517596
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 7399,
+          "first_failure_execution_index": 7400,
+          "failure_soc": 0.20056460098060222,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            796.7225385415861,
+            796.5764461853297,
+            796.3469835745314,
+            796.0275431065971,
+            795.6115171789327,
+            795.092298188943
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 7252,
+          "first_failure_execution_index": 7253,
+          "failure_soc": 0.2004780892163512,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            778.8541712170289,
+            771.2524039927907,
+            763.9653594803733,
+            757.053303280357,
+            750.5765009933223,
+            744.5952182198495
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 6533,
+          "first_failure_execution_index": 6534,
+          "failure_soc": 0.20066014364120735,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            834.9268829505745,
+            835.8368344017731,
+            836.6407409244515,
+            837.3300036926629,
+            837.89602388046,
+            838.3302026618973
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 7636,
+          "first_failure_execution_index": 7637,
+          "failure_soc": 0.20047558886854844,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            756.4239239587738,
+            757.2905968731623,
+            758.1189202494411,
+            758.9040131609952,
+            759.6409946812091,
+            760.3249838834673
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 6470,
+          "first_failure_execution_index": 6471,
+          "failure_soc": 0.20056354685278213,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            812.4084028791887,
+            812.0775677439569,
+            811.7242488974957,
+            811.3487535491938,
+            810.9513889084407,
+            810.5324621846255
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_044": {
+      "summary": {
+        "failure_soc_min": 0.20098052793327376,
+        "failure_soc_max": 0.201155792544718,
+        "failure_soc_distance_above_lower_min": 0.0009805279332737449,
+        "failure_soc_distance_above_lower_max": 0.0011557925447179818,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000060472038,
+        "failure_decision_index_min": 4271,
+        "failure_decision_index_max": 4823,
+        "failure_decision_index_spread": 552
+      },
+      "per_action": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 4479,
+          "first_failure_execution_index": 4480,
+          "failure_soc": 0.20113850479051562,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1002.704184890374,
+            1002.172894074758,
+            1001.639070860272,
+            1001.1039343921424,
+            1000.568703815596,
+            1000.034598275859
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 4823,
+          "first_failure_execution_index": 4824,
+          "failure_soc": 0.20111233345700935,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1007.0161119258504,
+            1007.248613120136,
+            1007.4560290169136,
+            1007.6355300750477,
+            1007.7842867534026,
+            1007.8994695108428
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 4656,
+          "first_failure_execution_index": 4657,
+          "failure_soc": 0.201155792544718,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            1006.8889355208172,
+            1007.2210538202446,
+            1007.5375607499082,
+            1007.8377907401208,
+            1008.1210782211969,
+            1008.3867576234484
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 4577,
+          "first_failure_execution_index": 4578,
+          "failure_soc": 0.20098052793327376,
+          "failure_previous_fc_kw": 560.0000060472038,
+          "future_6_loads": [
+            1003.8116751235452,
+            1003.301517345843,
+            1002.783841157586,
+            1002.2611327113816,
+            1001.7358781598364,
+            1001.210563655558
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 4271,
+          "first_failure_execution_index": 4272,
+          "failure_soc": 0.20103300141676034,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1014.4853047620662,
+            1014.4414488045608,
+            1014.40295433564,
+            1014.370636637007,
+            1014.3453109903646,
+            1014.3277926774164
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 4757,
+          "first_failure_execution_index": 4758,
+          "failure_soc": 0.2010634863173229,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            1010.0062294498248,
+            1010.2079942547516,
+            1010.3868355808892,
+            1010.5412624326636,
+            1010.669783814501,
+            1010.770908730828
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 4345,
+          "first_failure_execution_index": 4346,
+          "failure_soc": 0.20106202183882724,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            1020.6536192709287,
+            1020.5805445171588,
+            1020.520751117868,
+            1020.4756816359144,
+            1020.4467786341542,
+            1020.4348473288454
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_045": {
+      "summary": {
+        "failure_soc_min": 0.20119137861977415,
+        "failure_soc_max": 0.20142944011313008,
+        "failure_soc_distance_above_lower_min": 0.0011913786197741416,
+        "failure_soc_distance_above_lower_max": 0.001429440113130065,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000085594484,
+        "failure_decision_index_min": 2212,
+        "failure_decision_index_max": 2752,
+        "failure_decision_index_spread": 540
+      },
+      "per_action": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 2416,
+          "first_failure_execution_index": 2417,
+          "failure_soc": 0.20137105473984543,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1096.473288971603,
+            1096.9141463428566,
+            1097.3517923379911,
+            1097.7838991686829,
+            1098.2081390466085,
+            1098.622184183443
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 2752,
+          "first_failure_execution_index": 2753,
+          "failure_soc": 0.2012466961902554,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1091.2279568637778,
+            1091.5036454603087,
+            1091.784609901058,
+            1092.070408817394,
+            1092.360600840685,
+            1092.6547446022998
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 2597,
+          "first_failure_execution_index": 2598,
+          "failure_soc": 0.20119137861977415,
+          "failure_previous_fc_kw": 560.0000085594484,
+          "future_6_loads": [
+            1096.326963889624,
+            1096.3884527389894,
+            1096.4468056809849,
+            1096.5013733510857,
+            1096.5515063847654,
+            1096.5965554174995
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 2517,
+          "first_failure_execution_index": 2518,
+          "failure_soc": 0.20142944011313008,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            1099.640858606262,
+            1099.5458625516324,
+            1099.4548,
+            1099.3680308386506,
+            1099.2854087401183,
+            1099.2066608232492
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 2212,
+          "first_failure_execution_index": 2213,
+          "failure_soc": 0.2014147300625075,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            1098.1898160955343,
+            1098.2570678333682,
+            1098.2966911651763,
+            1098.3061780414214,
+            1098.2830204125642,
+            1098.224710229067
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 2642,
+          "first_failure_execution_index": 2643,
+          "failure_soc": 0.2012636164178425,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            1093.771875567344,
+            1093.700655582443,
+            1093.6338376031572,
+            1093.5711963850613,
+            1093.5125066837284,
+            1093.4575432547329
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 2267,
+          "first_failure_execution_index": 2268,
+          "failure_soc": 0.2013322062764604,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            1085.3515249155753,
+            1085.5179287072197,
+            1085.695869990093,
+            1085.8841085603922,
+            1086.0814042143163,
+            1086.286516748064
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_053": {
+      "summary": {
+        "failure_soc_min": 0.20053379490663417,
+        "failure_soc_max": 0.20071367450702252,
+        "failure_soc_distance_above_lower_min": 0.0005337949066341607,
+        "failure_soc_distance_above_lower_max": 0.0007136745070225048,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000000000002,
+        "failure_decision_index_min": 6549,
+        "failure_decision_index_max": 8337,
+        "failure_decision_index_spread": 1788
+      },
+      "per_action": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 7388,
+          "first_failure_execution_index": 7389,
+          "failure_soc": 0.20057068663968483,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            780.8455679636955,
+            781.0071205776488,
+            781.1446588146282,
+            781.2575593259926,
+            781.3451987631014,
+            781.4069537773141
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 8109,
+          "first_failure_execution_index": 8110,
+          "failure_soc": 0.20063299755697106,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            843.1307985106574,
+            842.522288691725,
+            841.8766154593286,
+            841.1988138541926,
+            840.4939189170418,
+            839.7669656886006
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 7926,
+          "first_failure_execution_index": 7927,
+          "failure_soc": 0.2006209215491883,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            804.4638309879106,
+            805.1473666634861,
+            805.9206593571633,
+            806.7758504709153,
+            807.7050814067148,
+            808.700493566535
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 7800,
+          "first_failure_execution_index": 7801,
+          "failure_soc": 0.20071367450702252,
+          "failure_previous_fc_kw": 559.9999999999999,
+          "future_6_loads": [
+            829.5616999999999,
+            830.1969277618771,
+            830.719206232085,
+            831.1327532834542,
+            831.4417867888162,
+            831.6505246210006
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 6848,
+          "first_failure_execution_index": 6849,
+          "failure_soc": 0.20053379490663417,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            784.820016385911,
+            784.7100061201629,
+            784.5613467323277,
+            784.3752109392766,
+            784.1527714578801,
+            783.8952010050104
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 8337,
+          "first_failure_execution_index": 8338,
+          "failure_soc": 0.20071024818221506,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            859.8605598007846,
+            860.4542373774639,
+            860.7763,
+            860.8147873114793,
+            860.5810299250957,
+            860.0921811965698
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 6549,
+          "first_failure_execution_index": 6550,
+          "failure_soc": 0.20056857351551444,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            790.1695645933446,
+            789.7744077040594,
+            789.3644104504493,
+            788.9398697118249,
+            788.5010823674969,
+            788.048345296776
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    },
+    "voyage_054": {
+      "summary": {
+        "failure_soc_min": 0.20050745344714732,
+        "failure_soc_max": 0.2005496779845371,
+        "failure_soc_distance_above_lower_min": 0.0005074534471473102,
+        "failure_soc_distance_above_lower_max": 0.0005496779845370892,
+        "failure_previous_fc_min_kw": 559.9999999999998,
+        "failure_previous_fc_max_kw": 560.0000045461321,
+        "failure_decision_index_min": 8144,
+        "failure_decision_index_max": 9435,
+        "failure_decision_index_spread": 1291
+      },
+      "per_action": [
+        {
+          "action_id": 0,
+          "first_failure_decision_index": 8782,
+          "first_failure_execution_index": 8783,
+          "failure_soc": 0.2005496779845371,
+          "failure_previous_fc_kw": 560.0000038628573,
+          "future_6_loads": [
+            806.5969602801382,
+            807.3688365388334,
+            808.0569352458137,
+            808.6535692203751,
+            809.1510512818131,
+            809.5416942494237
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 1,
+          "first_failure_decision_index": 9435,
+          "first_failure_execution_index": 9436,
+          "failure_soc": 0.20052571682835751,
+          "failure_previous_fc_kw": 560.0,
+          "future_6_loads": [
+            776.8465034055673,
+            777.5295399952618,
+            778.228202159206,
+            778.9357111797395,
+            779.6452883392011,
+            780.3501549199301
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 2,
+          "first_failure_decision_index": 9109,
+          "first_failure_execution_index": 9110,
+          "failure_soc": 0.20052774673969442,
+          "failure_previous_fc_kw": 560.0000000000001,
+          "future_6_loads": [
+            782.6207930477694,
+            783.5696457332529,
+            784.5609593565963,
+            785.5974722412709,
+            786.6819227107482,
+            787.8170490884995
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 3,
+          "first_failure_decision_index": 8957,
+          "first_failure_execution_index": 8958,
+          "failure_soc": 0.20050745344714732,
+          "failure_previous_fc_kw": 560.0000045461321,
+          "future_6_loads": [
+            789.8938105676749,
+            790.3320885386332,
+            790.7677016430946,
+            791.1919674873404,
+            791.5962036776529,
+            791.971727820314
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 4,
+          "first_failure_decision_index": 8420,
+          "first_failure_execution_index": 8421,
+          "failure_soc": 0.20051609761064626,
+          "failure_previous_fc_kw": 560.0000028756812,
+          "future_6_loads": [
+            795.2497314416468,
+            795.1249847626266,
+            795.0483544072334,
+            795.0247482177017,
+            795.0590740362658,
+            795.1562397051598
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 5,
+          "first_failure_decision_index": 9330,
+          "first_failure_execution_index": 9331,
+          "failure_soc": 0.20053336655281861,
+          "failure_previous_fc_kw": 560.0000000000002,
+          "future_6_loads": [
+            787.5441241659022,
+            786.5744933501853,
+            785.6551534145957,
+            784.7881847716682,
+            783.9739732232534,
+            783.2129045712013
+          ],
+          "solver_status": "primal infeasible"
+        },
+        {
+          "action_id": 6,
+          "first_failure_decision_index": 8144,
+          "first_failure_execution_index": 8145,
+          "failure_soc": 0.2005303204668721,
+          "failure_previous_fc_kw": 559.9999999999998,
+          "future_6_loads": [
+            782.7577722116382,
+            782.0280856899379,
+            781.3469290709174,
+            780.7200009688681,
+            780.1529999980797,
+            779.6516247728432
+          ],
+          "solver_status": "primal infeasible"
+        }
+      ]
+    }
+  },
+  "data_access": {
+    "loaded_train_voyages": [
+      "voyage_011",
+      "voyage_016",
+      "voyage_021",
+      "voyage_024",
+      "voyage_041",
+      "voyage_044",
+      "voyage_045"
+    ],
+    "loaded_validation_voyages": [
+      "voyage_053",
+      "voyage_054"
+    ],
+    "loaded_test_voyages": [],
+    "test_trajectory_accessed": false
+  },
+  "source_hashes": {
+    "fixed_action_coverage_csv_sha256": "24f2f68f11f75f18be6831a8dcb66cbcf64c97e9caadf19edf0d7cfdab7a868b"
+  },
+  "output_files": {
+    "csv": "outputs/dqn_mpc_mlp_10k_baseline/hard_voyage_physical_feasibility.csv",
+    "summary_json": "outputs/dqn_mpc_mlp_10k_baseline/hard_voyage_physical_feasibility_summary.json"
+  }
+}
