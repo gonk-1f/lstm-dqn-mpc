@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "version": "v2",
+  "purpose": "minimal retained evidence for the collapsed seven-action library",
+  "source_commit": "7e3a967",
+  "scope": {
+    "train_voyages": 46,
+    "validation_voyages": 13,
+    "test_voyages_locked": 7,
+    "test_trajectories_accessed": false,
+    "voyage_action_pairs": 413
+  },
+  "action_table": [
+    {"action_id": 0, "name": "candidate_C", "weights": [0.25, 0.40, 12.0, 20.0]},
+    {"action_id": 1, "name": "fast_fc_response", "weights": [0.25, 0.60, 12.0, 5.0]},
+    {"action_id": 2, "name": "soc_recovery_30", "weights": [0.15, 0.35, 30.0, 12.0]},
+    {"action_id": 3, "name": "soc_recovery_40", "weights": [0.15, 0.35, 40.0, 12.0]},
+    {"action_id": 4, "name": "soc_recovery_fast", "weights": [0.15, 0.35, 30.0, 5.0]},
+    {"action_id": 5, "name": "soc_recovery", "weights": [0.15, 0.35, 20.0, 12.0]},
+    {"action_id": 6, "name": "strong_soc_recovery", "weights": [0.10, 0.30, 40.0, 5.0]}
+  ],
+  "run_accounting": {
+    "success": 350,
+    "primal_infeasible": 63,
+    "maximum_iterations_reached": 0,
+    "missing_pairs": 0,
+    "duplicate_pairs": 0
+  },
+  "per_action_success": {"A0": 48, "A1": 50, "A2": 50, "A3": 51, "A4": 50, "A5": 50, "A6": 51},
+  "best_fixed_action_counts": {"A0": 0, "A1": 0, "A2": 0, "A3": 2, "A4": 0, "A5": 0, "A6": 50},
+  "all_actions_failed_voyages": [
+    "voyage_016", "voyage_021", "voyage_041", "voyage_044",
+    "voyage_045", "voyage_053", "voyage_054"
+  ],
+  "diagnosis": {
+    "normal_soc_mean_first_step_spread_kw": 0.3232264510955158,
+    "dominant_action": "A6",
+    "dominant_best_fraction": 0.9615384615384616,
+    "conclusion": "rejected: numerically different weights produced a nearly collapsed control library"
+  },
+  "archived_source_sha256": {
+    "fixed_action_coverage_v2.csv": "55DBA945AA231BE0809B1C1AF027FE4E84D6F7E858022320FBAB605952D31E10",
+    "fixed_action_coverage_v2_summary.json": "C15EF11437F40F8BC08F5A0DF515CCFF5B3FA68720836CF2B7512B8FFCCBDEEC"
+  }
+}

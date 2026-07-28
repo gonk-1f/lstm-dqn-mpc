@@ -8,6 +8,23 @@ src/data_analysis/solcast/
 .idea/
 .codex_tmp/
 tmp/
+scratch/
+.scratch/
+debug/
+*.tmp
+*.bak
+
+# Temporary experiment artifacts. Formal summaries, final checkpoints, and
+# retained rollouts remain trackable.
+outputs/**/_debug/
+outputs/**/_scratch/
+outputs/**/_temporary/
+outputs/**/tmp/
+outputs/**/checkpoints/_temporary/
+outputs/**/*_debug.png
+outputs/**/*_tmp.png
+outputs/**/checkpoint_step_*.pt
+outputs/**/checkpoint_step_*.pth
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

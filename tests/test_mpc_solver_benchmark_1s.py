@@ -18,6 +18,34 @@ for path in (SRC, MAIN_ROOT):
 
 
 class TestMpcSolverBenchmark1s(unittest.TestCase):
+    def test_persistent_osqp_solve_preserves_non_solved_result_objects(self) -> None:
+        from mpc_solvers.osqp_runtime import _solve_with_persistent_osqp
+
+        class FakeSolver:
+            def __init__(self) -> None:
+                self.solve_kwargs = None
+
+            def update(self, **_: object) -> None:
+                pass
+
+            def solve(self, **kwargs: object) -> object:
+                self.solve_kwargs = kwargs
+                return object()
+
+        solver = FakeSolver()
+        result, solve_ms = _solve_with_persistent_osqp(
+            solver,
+            lower=np.asarray([0.0]),
+            upper=np.asarray([1.0]),
+        )
+
+        self.assertIsNotNone(result)
+        self.assertGreaterEqual(solve_ms, 0.0)
+        self.assertEqual(
+            solver.solve_kwargs,
+            {"raise_error": False},
+        )
+
     def test_ramp_rate_48kw_per_second_maps_to_48kw_per_1s_step(self) -> None:
         from mpc_solvers.mpc_qp_formulation import ramp_kw_per_step_from_rate
 

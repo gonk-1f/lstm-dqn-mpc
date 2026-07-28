@@ -17,6 +17,10 @@ if str(MAIN_ROOT) not in sys.path:
 
 
 from dqn.utils.reward import calculate_mpc_weight_reward
+from dqn.utils.action_mapper import (
+    DQN_MPC_WEIGHT_ACTIONS,
+    MPCWeightAction,
+)
 from dqn.utils.state_builder import (
     DQN_MPC_PREVIEW_STEPS,
     SOC_REFERENCE,
@@ -25,6 +29,55 @@ from dqn.utils.state_builder import (
 
 from mpc_solvers.dqn_mpc_solver_bank import MpcWeightSolverBank
 from mpc_solvers.mpc_qp_formulation import QpMpcConfig
+
+
+class MpcSolveFailure(RuntimeError):
+    """Structured, non-fallback MPC failure at one environment decision."""
+
+    def __init__(
+        self,
+        *,
+        action_id: int,
+        decision_index: int,
+        execution_index: int,
+        solver_status: str,
+        solve_ms: float,
+        current_soc: float,
+        previous_fc_kw: float,
+        future_load_kw: Sequence[float],
+        iterations: int | None,
+        primal_residual: float | None,
+        dual_residual: float | None,
+    ) -> None:
+        super().__init__(
+            "MPC solve failed: "
+            f"action_id={action_id}, "
+            f"decision_index={decision_index}, "
+            f"status={solver_status}"
+        )
+        self.action_id = int(action_id)
+        self.decision_index = int(decision_index)
+        self.execution_index = int(execution_index)
+        self.solver_status = str(solver_status)
+        self.solve_ms = float(solve_ms)
+        self.current_soc = float(current_soc)
+        self.previous_fc_kw = float(previous_fc_kw)
+        self.future_load_kw = tuple(
+            float(value) for value in future_load_kw
+        )
+        self.iterations = (
+            None if iterations is None else int(iterations)
+        )
+        self.primal_residual = (
+            None
+            if primal_residual is None
+            else float(primal_residual)
+        )
+        self.dual_residual = (
+            None
+            if dual_residual is None
+            else float(dual_residual)
+        )
 
 
 class DqnMpcWeightEnv:
@@ -65,6 +118,7 @@ class DqnMpcWeightEnv:
         loads_kw: Sequence[float] | np.ndarray,
         base_config: QpMpcConfig,
         initial_soc: float = SOC_REFERENCE,
+        actions: Sequence[MPCWeightAction] = DQN_MPC_WEIGHT_ACTIONS,
     ) -> None:
         loads = np.asarray(
             loads_kw,
@@ -114,9 +168,12 @@ class DqnMpcWeightEnv:
         self.loads_kw = loads
         self.base_config = base_config
         self.initial_soc = initial_soc_value
+        self.actions = tuple(actions)
 
-        # Seven persistent OSQP solvers are created once.
-        self.solver_bank = MpcWeightSolverBank(base_config)
+        self.solver_bank = MpcWeightSolverBank(
+            base_config,
+            actions=self.actions,
+        )
 
         self.decision_index = 0
         self.current_soc = initial_soc_value
@@ -234,6 +291,8 @@ class DqnMpcWeightEnv:
             raise RuntimeError(
                 "episode is finished; call reset() before step()"
             )
+        if type(action_id) is not int:
+            raise ValueError("action_id must be an integer")
 
         decision_index = int(self.decision_index)
         execution_index = decision_index + 1
@@ -252,7 +311,7 @@ class DqnMpcWeightEnv:
         )
 
         result, solve_ms = self.solver_bank.solve(
-            action_id=int(action_id),
+            action_id=action_id,
             load_forecast_kw=load_forecast_kw,
             current_soc=soc_before,
             prev_fc_kw=previous_fc_before,
@@ -265,11 +324,27 @@ class DqnMpcWeightEnv:
             not solver_status.lower().startswith("solved")
             or result.x is None
         ):
-            raise RuntimeError(
-                "MPC solve failed: "
-                f"action_id={action_id}, "
-                f"decision_index={decision_index}, "
-                f"status={solver_status}"
+            info = result.info
+            failure_status = solver_status
+            if (
+                solver_status.lower().startswith("solved")
+                and result.x is None
+            ):
+                failure_status = (
+                    f"{solver_status}; invalid solution vector is missing"
+                )
+            raise MpcSolveFailure(
+                action_id=action_id,
+                decision_index=decision_index,
+                execution_index=execution_index,
+                solver_status=failure_status,
+                solve_ms=solve_ms,
+                current_soc=soc_before,
+                previous_fc_kw=previous_fc_before,
+                future_load_kw=load_forecast_kw,
+                iterations=getattr(info, "iter", None),
+                primal_residual=getattr(info, "prim_res", None),
+                dual_residual=getattr(info, "dual_res", None),
             )
 
         solution = np.asarray(

@@ -87,6 +87,8 @@ def _solve_with_persistent_osqp(
         solver.update(l=lower, u=upper)
     else:
         solver.update(q=linear, l=lower, u=upper)
-    result = solver.solve()
+    # Preserve OSQP's status/result object for explicit failure handling.
+    # The library plans to change its default to raise on non-solved status.
+    result = solver.solve(raise_error=False)
     elapsed_ms = (time.perf_counter() - start) * 1000.0
     return result, float(elapsed_ms)

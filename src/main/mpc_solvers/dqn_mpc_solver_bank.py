@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 from scipy import sparse
@@ -9,7 +9,6 @@ from scipy import sparse
 from dqn.utils.action_mapper import (
     DQN_MPC_WEIGHT_ACTIONS,
     MPCWeightAction,
-    get_weight_action,
 )
 
 from .mpc_qp_formulation import (
@@ -58,11 +57,41 @@ class _SolverEntry:
 
 
 class MpcWeightSolverBank:
-    def __init__(self, base_config: QpMpcConfig) -> None:
+    def __init__(
+        self,
+        base_config: QpMpcConfig,
+        *,
+        actions: Sequence[MPCWeightAction] = DQN_MPC_WEIGHT_ACTIONS,
+    ) -> None:
         osqp_module, import_error = _try_import_osqp()
 
         if osqp_module is None:
             raise RuntimeError(f"Cannot import osqp: {import_error}")
+
+        resolved_actions = tuple(actions)
+        if not resolved_actions:
+            raise ValueError("solver bank requires at least one action")
+
+        action_ids = [action.action_id for action in resolved_actions]
+        if any(type(action_id) is not int or action_id < 0 for action_id in action_ids):
+            raise ValueError("action IDs must be non-negative integers")
+        if len(action_ids) != len(set(action_ids)):
+            raise ValueError("solver bank action IDs must be unique")
+
+        action_names = [str(action.name) for action in resolved_actions]
+        if any(not name for name in action_names):
+            raise ValueError("solver bank action names must be non-empty")
+        if len(action_names) != len(set(action_names)):
+            raise ValueError("solver bank action names must be unique")
+
+        weight_rows = np.asarray(
+            [action.as_tuple() for action in resolved_actions],
+            dtype=float,
+        )
+        if not np.all(np.isfinite(weight_rows)):
+            raise ValueError("solver bank action weights must be finite")
+        if np.any(weight_rows < 0.0):
+            raise ValueError("solver bank action weights must be non-negative")
 
         horizon = int(base_config.horizon)
 
@@ -78,7 +107,7 @@ class MpcWeightSolverBank:
         entries: dict[int, _SolverEntry] = {}
         common_physical_a: sparse.csc_matrix | None = None
 
-        for action in DQN_MPC_WEIGHT_ACTIONS:
+        for action in resolved_actions:
             config = replace(
                 base_config,
                 q_h2=action.q_h2,
@@ -123,6 +152,7 @@ class MpcWeightSolverBank:
             )
 
         self._entries = entries
+        self.actions = resolved_actions
 
     def solve(
         self,
@@ -132,8 +162,14 @@ class MpcWeightSolverBank:
         prev_fc_kw: float,
         soc_reference: float,
     ) -> tuple[Any, float]:
-        action = get_weight_action(action_id)
-        entry = self._entries[action.action_id]
+        if type(action_id) is not int:
+            raise ValueError("action_id must be an integer")
+        try:
+            entry = self._entries[action_id]
+        except KeyError as error:
+            raise IndexError(
+                f"action_id {action_id} is not present in this solver bank"
+            ) from error
 
         if not np.isclose(
             float(soc_reference),
