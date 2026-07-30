@@ -28,8 +28,18 @@ DQN_MPC_WEIGHT_ACTIONS: tuple[MPCWeightAction, ...] = (
 
 
 def get_weight_action(action_id: int) -> MPCWeightAction:
+    max_action_id = len(DQN_MPC_WEIGHT_ACTIONS) - 1
+
     if type(action_id) is not int:
-        raise ValueError(f"Invalid action_id {action_id!r}; expected an integer from 0 to 6.")
+        raise ValueError(
+            f"Invalid action_id {action_id!r}; "
+            f"expected an integer from 0 to {max_action_id}."
+        )
+
     if action_id < 0 or action_id >= len(DQN_MPC_WEIGHT_ACTIONS):
-        raise IndexError(f"Invalid action_id {action_id}; expected 0 to 6.")
+        raise IndexError(
+            f"Invalid action_id {action_id}; "
+            f"expected 0 to {max_action_id}."
+        )
+
     return DQN_MPC_WEIGHT_ACTIONS[action_id]

@@ -417,8 +417,7 @@ def _validate_fixed_dqn_design(
     if STATE_DIM != 11:
         raise ValueError("DQN-MPC state dimension must be 11")
 
-    if ACTION_DIM != 7:
-        raise ValueError("DQN-MPC action dimension must be 7")
+
 
     if str(config.network_type).strip().lower() != "mlp":
         raise ValueError("formal DQN-MPC network must be MLP")

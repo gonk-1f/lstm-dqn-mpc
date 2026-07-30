@@ -119,7 +119,7 @@ class TestDqnMpcMlpSmoke(unittest.TestCase):
         ]
         self.assertEqual(
             layer_dimensions,
-            [(11, 128), (128, 64), (64, 7)],
+            [(11, 128), (128, 64), (64, ACTION_DIM)],
         )
         self.assertEqual(q_values.shape, (1, ACTION_DIM))
         self.assertEqual(

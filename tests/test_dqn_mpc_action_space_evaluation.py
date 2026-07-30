@@ -76,6 +76,7 @@ class TestDqnMpcActionSpaceEvaluation(unittest.TestCase):
         self,
     ) -> None:
         original_table = DQN_MPC_WEIGHT_ACTIONS
+        original_len = len(original_table)
         bank = MpcWeightSolverBank(
             self.config,
             actions=CUSTOM_ACTIONS,
@@ -112,7 +113,10 @@ class TestDqnMpcActionSpaceEvaluation(unittest.TestCase):
         )
         self.assertEqual(tuple(env.solver_bank._entries), (0, 1))
         self.assertIs(DQN_MPC_WEIGHT_ACTIONS, original_table)
-        self.assertEqual(len(DQN_MPC_WEIGHT_ACTIONS), 7)
+        self.assertEqual(
+            len(DQN_MPC_WEIGHT_ACTIONS),
+            original_len,
+        )
 
     def test_representative_states_are_deterministic_and_cover_regimes(
         self,

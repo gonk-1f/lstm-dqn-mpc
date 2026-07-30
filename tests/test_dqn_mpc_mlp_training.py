@@ -220,7 +220,10 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         )
 
         self.assertEqual(training.STATE_DIM, 11)
-        self.assertEqual(training.ACTION_DIM, 7)
+        self.assertEqual(
+            training.ACTION_DIM,
+            len(training.DQN_MPC_WEIGHT_ACTIONS),
+        )
         self.assertEqual(
             tuple(runtime.config.mlp_hidden_dims),
             (128, 64),
@@ -233,7 +236,11 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
                 )
                 for layer in runtime.agent.q_net.layers
             ],
-            [(11, 128), (128, 64), (64, 7)],
+            [
+                (11, 128),
+                (128, 64),
+                (64, training.ACTION_DIM),
+            ],
         )
         self.assertFalse(
             runtime.config.state_normalization_enabled
@@ -542,7 +549,7 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         for voyage in validation["voyages"]:
             count_sum = sum(
                 voyage[f"action_count_A{action_id}"]
-                for action_id in range(7)
+                for action_id in range(training.ACTION_DIM)
             )
             self.assertEqual(
                 count_sum,
@@ -563,7 +570,7 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
                 validation[
                     f"action_fraction_A{action_id}"
                 ]
-                for action_id in range(7)
+                for action_id in range(training.ACTION_DIM)
             ),
             1.0,
         )

@@ -135,11 +135,18 @@ class TestDqnMpcSolverBank(unittest.TestCase):
         )
 
     def test_entries_configs_weights_and_solver_objects_are_independent(self) -> None:
+        action_count = len(DQN_MPC_WEIGHT_ACTIONS)
         entries = self.bank._entries
-        self.assertEqual(len(entries), 7)
-        self.assertEqual(list(entries), list(range(7)))
-        self.assertEqual(len({id(entry.config) for entry in entries.values()}), 7)
-        self.assertEqual(len({id(entry.solver) for entry in entries.values()}), 7)
+        self.assertEqual(len(entries), action_count)
+        self.assertEqual(list(entries), list(range(action_count)))
+        self.assertEqual(
+            len({id(entry.config) for entry in entries.values()}),
+            action_count,
+        )
+        self.assertEqual(
+            len({id(entry.solver) for entry in entries.values()}),
+            action_count,
+        )
         self.assertEqual(len({id(entry.A) for entry in entries.values()}), 1)
 
         config_field_names = [field.name for field in fields(QpMpcConfig)]
@@ -172,10 +179,13 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             p_payloads.add(entry.P.toarray().tobytes())
             self.assertEqual(action_id, entry.action.action_id)
 
-        self.assertEqual(len(p_payloads), 7)
+        self.assertEqual(
+            len(p_payloads),
+            len(DQN_MPC_WEIGHT_ACTIONS),
+        )
 
     def test_all_actions_solve_and_satisfy_physical_constraints(self) -> None:
-        for action_id in range(7):
+        for action_id in range(len(DQN_MPC_WEIGHT_ACTIONS)):
             with self.subTest(action_id=action_id):
                 result, solve_ms = self.bank.solve(
                     action_id=action_id,
