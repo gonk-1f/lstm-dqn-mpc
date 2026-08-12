@@ -22,7 +22,7 @@ class DQNTrainConfig:
     buffer_size: int = 100000
     epsilon_start: float = 1.0
     epsilon_min: float = 0.05
-    epsilon_decay: float = 0.99998
+    epsilon_decay: float = 0.99999813
     target_sync_interval: int = 500    # hard-sync target network every N steps
     device: str = "auto"
     log_window_steps: int = 1000

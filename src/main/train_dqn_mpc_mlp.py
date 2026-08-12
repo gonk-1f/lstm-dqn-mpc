@@ -1,8 +1,11 @@
+
 from __future__ import annotations
 
 import base64
 import io
 import json
+import time
+from collections import deque
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -788,6 +791,13 @@ def run_training_episode(
     episode_reward = 0.0
     episode_steps = 0
     solver_failure_count = 0
+    log_interval = int(
+        runtime.config.log_window_steps
+    )
+    recent_rewards = deque(
+        maxlen=max(1, log_interval)
+    )
+    episode_start_time = time.perf_counter()
     action_counts = np.zeros(
         ACTION_DIM,
         dtype=np.int64,
@@ -811,7 +821,7 @@ def run_training_episode(
             action_dim=ACTION_DIM,
             warmup=warmup,
         )
-        solver_failed = False
+
 
         try:
             next_state, reward, done, info = env.step(action)
@@ -826,7 +836,7 @@ def run_training_episode(
 
         except MpcSolveFailure as error:
             solver_failure_count += 1
-            solver_failed = True
+
 
             # The failed MPC decision was not executed, so the
             # environment remains at the pre-decision state.
@@ -859,6 +869,7 @@ def run_training_episode(
         runtime.global_step += 1
         episode_steps += 1
         episode_reward += float(reward)
+        recent_rewards.append(float(reward))
         action_counts[action] += 1
 
         if not warmup:
@@ -919,6 +930,18 @@ def run_training_episode(
 
             reward_mean = float(
                 episode_reward / episode_steps
+            )
+            recent_reward_mean = float(
+                np.mean(recent_rewards)
+            )
+
+            elapsed_s = (
+                    time.perf_counter()
+                    - episode_start_time
+            )
+
+            steps_per_s = float(
+                episode_steps / max(elapsed_s, 1.0e-12)
             )
 
             action_text = " ".join(
@@ -1234,15 +1257,33 @@ def validate_voyages(
             "validation requires at least one voyage"
         )
 
-    voyages = [
-        run_validation_episode(
+    voyages: list[dict[str, object]] = []
+
+    for index, voyage_id in enumerate(
+            ordered_voyages,
+            start=1,
+    ):
+        voyage = run_validation_episode(
             voyage_id=voyage_id,
             loads_kw=load_voyage(voyage_id),
             base_config=base_config,
             agent=agent,
         )
-        for voyage_id in ordered_voyages
-    ]
+
+        voyages.append(voyage)
+
+        print(
+            "[validation] "
+            f"{index}/{len(ordered_voyages)} "
+            f"voyage={voyage_id} "
+            f"completed={voyage['completed']} "
+            f"steps={voyage['episode_steps']} "
+            f"reward_mean="
+            f"{float(voyage['mean_reward_per_step']):.6f} "
+            f"solver_failures="
+            f"{voyage['solver_failure_count']}",
+            flush=True,
+        )
 
     total_reward = float(
         sum(
@@ -1496,6 +1537,8 @@ def write_baseline_outputs(
 
     validation_columns = [
         "voyage_id",
+        "completed",
+        "solver_failure_count",
         "episode_steps",
         "episode_reward",
         "mean_reward_per_step",
