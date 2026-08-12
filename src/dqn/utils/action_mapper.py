@@ -17,13 +17,38 @@ class MPCWeightAction:
 
 
 DQN_MPC_WEIGHT_ACTIONS: tuple[MPCWeightAction, ...] = (
-    MPCWeightAction(0, 0.25, 0.40, 12.0, 20.0, "candidate_C"),
-    MPCWeightAction(1, 0.60, 0.15, 4.0, 2.0, "hydrogen_economy"),
-    MPCWeightAction(2, 0.25, 0.50, 20.0, 12.0, "balanced"),
-    MPCWeightAction(3, 0.20, 0.45, 28.0, 18.0, "soc_maintenance"),
-    MPCWeightAction(4, 0.30, 0.45, 50.0, 18.0, "strong_soc_recovery"),
-    MPCWeightAction(5, 0.15, 0.80, 12.0, 1.0, "fast_fc_response"),
-    MPCWeightAction(6, 0.15, 0.15, 8.0, 50.0, "fc_smoothing"),
+    MPCWeightAction(
+        0,
+        0.25,
+        0.40,
+        12.0,
+        20.0,
+        "nominal",
+    ),
+    MPCWeightAction(
+        1,
+        0.40,
+        0.25,
+        8.0,
+        8.0,
+        "hydrogen_economy",
+    ),
+    MPCWeightAction(
+        2,
+        0.25,
+        0.45,
+        36.0,
+        15.0,
+        "soc_regulation",
+    ),
+    MPCWeightAction(
+        3,
+        0.15,
+        0.80,
+        12.0,
+        1.0,
+        "fast_fc_response",
+    ),
 )
 
 

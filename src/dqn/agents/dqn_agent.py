@@ -27,6 +27,7 @@ class DQNTrainConfig:
     device: str = "auto"
     log_window_steps: int = 1000
     grad_clip_norm: float = 10.0
+    solver_failure_reward: float = -620.0
     loss_type: str = "mse"
     network_type: str = "mlp"
     mlp_hidden_dims: tuple[int, ...] = (128, 64)

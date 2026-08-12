@@ -40,7 +40,7 @@ from run_mpc_1s_n6_four_objective_sensitivity import (  # noqa: E402
 
 SEED = 123
 STATE_DIM = 11
-ACTION_DIM = 7
+ACTION_DIM = len(DQN_MPC_WEIGHT_ACTIONS)
 
 
 def make_agent() -> DQNAgent:

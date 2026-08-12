@@ -37,6 +37,7 @@ from dqn.utils.state_builder import (  # noqa: E402
 )
 from envs.dqn_mpc_weight_env import (  # noqa: E402
     DqnMpcWeightEnv,
+    MpcSolveFailure,
 )
 from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
     QpMpcConfig,
@@ -786,6 +787,11 @@ def run_training_episode(
 
     episode_reward = 0.0
     episode_steps = 0
+    solver_failure_count = 0
+    action_counts = np.zeros(
+        ACTION_DIM,
+        dtype=np.int64,
+    )
     done = False
 
     while not done:
@@ -805,14 +811,43 @@ def run_training_episode(
             action_dim=ACTION_DIM,
             warmup=warmup,
         )
-        next_state, reward, done, info = env.step(action)
-        _validate_environment_step(
-            action=action,
-            reward=reward,
-            next_state=next_state,
-            info=info,
-            base_config=base_config,
-        )
+        solver_failed = False
+
+        try:
+            next_state, reward, done, info = env.step(action)
+
+            _validate_environment_step(
+                action=action,
+                reward=reward,
+                next_state=next_state,
+                info=info,
+                base_config=base_config,
+            )
+
+        except MpcSolveFailure as error:
+            solver_failure_count += 1
+            solver_failed = True
+
+            # The failed MPC decision was not executed, so the
+            # environment remains at the pre-decision state.
+            next_state = np.asarray(
+                state,
+                dtype=np.float32,
+            ).copy()
+
+            reward = float(
+                runtime.config.solver_failure_reward
+            )
+            done = True
+
+            info = {
+                "solver_status": str(error.solver_status),
+                "solver_failed": True,
+                "action_id": int(action),
+                "decision_index": int(
+                    error.decision_index
+                ),
+            }
 
         runtime.replay_buffer.push(
             state,
@@ -824,6 +859,7 @@ def run_training_episode(
         runtime.global_step += 1
         episode_steps += 1
         episode_reward += float(reward)
+        action_counts[action] += 1
 
         if not warmup:
             runtime.policy.step()
@@ -862,7 +898,48 @@ def run_training_episode(
             runtime.target_sync_steps.append(
                 int(runtime.global_step)
             )
+        log_interval = int(
+            runtime.config.log_window_steps
+        )
 
+        if (
+            log_interval > 0
+            and runtime.global_step % log_interval == 0
+        ):
+            recent_losses = runtime.losses[
+                -log_interval:
+            ]
+
+            if recent_losses:
+                loss_text = (
+                    f"{float(np.mean(recent_losses)):.6g}"
+                )
+            else:
+                loss_text = "NA"
+
+            reward_mean = float(
+                episode_reward / episode_steps
+            )
+
+            action_text = " ".join(
+                f"A{action_id}={int(action_counts[action_id])}"
+                for action_id in range(ACTION_DIM)
+            )
+
+            print(
+                "[train] "
+                f"step={runtime.global_step} "
+                f"voyage={voyage_id} "
+                f"epsilon={runtime.policy.epsilon:.6f} "
+                f"buffer={len(runtime.replay_buffer)} "
+                f"loss_mean={loss_text} "
+                f"reward_mean={reward_mean:.6f} "
+                f"{action_text} "
+                f"solver_failures={solver_failure_count}",
+                flush=True,
+            )
+
+        state = next_state
         state = next_state
 
     return {
@@ -872,6 +949,9 @@ def run_training_episode(
             episode_reward / episode_steps
         ),
         "episode_steps": int(episode_steps),
+        "solver_failure_count": int(
+            solver_failure_count
+        ),
         "final_soc": float(env.current_soc),
         "global_step": int(runtime.global_step),
     }
@@ -944,6 +1024,10 @@ def run_validation_episode(
 
     episode_reward = 0.0
     episode_steps = 0
+    solver_failure_count = 0
+    completed = True
+    failure_diagnostic: dict[str, object] | None = None
+
     action_counts = np.zeros(
         ACTION_DIM,
         dtype=np.int64,
@@ -962,12 +1046,11 @@ def run_validation_episode(
             next_state, reward, done, info = env.step(
                 action
             )
-        except RuntimeError as error:
-            if "MPC solve failed" not in str(error):
-                raise
 
+        except MpcSolveFailure as error:
             decision_index = int(env.decision_index)
             execution_index = decision_index + 1
+
             load_forecast_kw = env._future_window(
                 decision_index
             )
@@ -980,6 +1063,10 @@ def run_validation_episode(
                     if decision_index > 0
                     else decision_index
                 ]
+            )
+
+            failure_reward = float(
+                agent.config.solver_failure_reward
             )
 
             diagnostic: dict[str, object] = {
@@ -1009,19 +1096,42 @@ def run_validation_episode(
                         dtype=np.float64,
                     )
                 ],
-                "original_solver_status": (
-                    "primal infeasible"
-                    if "primal infeasible" in str(error)
-                    else str(error)
+                "solver_status": str(
+                    getattr(
+                        error,
+                        "solver_status",
+                        str(error),
+                    )
+                ),
+                "solver_failure_reward": (
+                    failure_reward
+                ),
+                "solve_ms": getattr(
+                    error,
+                    "solve_ms",
+                    None,
+                ),
+                "primal_residual": getattr(
+                    error,
+                    "primal_residual",
+                    None,
+                ),
+                "dual_residual": getattr(
+                    error,
+                    "dual_residual",
+                    None,
+                ),
+                "iterations": getattr(
+                    error,
+                    "iterations",
+                    None,
                 ),
                 "original_error": str(error),
-                "original_primal_residual": None,
-                "original_dual_residual": None,
-                "original_iterations": None,
                 "last_20_successful_steps": list(
                     recent_steps
                 ),
             }
+
             diagnostic[
                 "persistent_same_state_actions"
             ] = _persistent_same_state_diagnostics(
@@ -1031,9 +1141,16 @@ def run_validation_episode(
                 prev_fc_kw=float(env.previous_fc_kw),
             )
 
-            raise _ValidationMpcFailure(
-                diagnostic
-            ) from error
+            # The failed action counts as one terminal
+            # validation decision. No fallback action is used.
+            action_counts[action] += 1
+            episode_reward += failure_reward
+            episode_steps += 1
+            solver_failure_count += 1
+            completed = False
+            failure_diagnostic = diagnostic
+            done = True
+            break
 
         _validate_environment_step(
             action=action,
@@ -1079,11 +1196,16 @@ def run_validation_episode(
 
     result: dict[str, object] = {
         "voyage_id": str(voyage_id),
+        "completed": bool(completed),
         "episode_reward": float(episode_reward),
         "mean_reward_per_step": float(
             episode_reward / episode_steps
         ),
         "episode_steps": int(episode_steps),
+        "solver_failure_count": int(
+            solver_failure_count
+        ),
+        "failure_diagnostic": failure_diagnostic,
         "final_soc": float(env.current_soc),
     }
 

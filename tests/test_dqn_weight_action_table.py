@@ -29,20 +29,18 @@ class TestDqnMpcWeightActionTable(unittest.TestCase):
             len(DQN_MPC_WEIGHT_ACTIONS),
         )
 
-    def test_action_zero_is_candidate_c(self) -> None:
+    def test_action_zero_is_nominal(self) -> None:
         action = get_weight_action(0)
         self.assertEqual(action.action_id, 0)
         self.assertEqual(action.as_tuple(), (0.25, 0.40, 12.0, 20.0))
-        self.assertEqual(action.name, "candidate_C")
+        self.assertEqual(action.name, "nominal")
 
     def test_v3_action_definitions(self) -> None:
         expected = {
-            1: ((0.60, 0.15, 4.0, 2.0), "hydrogen_economy"),
-            2: ((0.25, 0.50, 20.0, 12.0), "balanced"),
-            3: ((0.20, 0.45, 28.0, 18.0), "soc_maintenance"),
-            4: ((0.30, 0.45, 50.0, 18.0), "strong_soc_recovery"),
-            5: ((0.15, 0.80, 12.0, 1.0), "fast_fc_response"),
-            6: ((0.15, 0.15, 8.0, 50.0), "fc_smoothing"),
+            0: ((0.25, 0.40, 12.0, 20.0), "nominal"),
+            1: ((0.40, 0.25, 8.0, 8.0), "hydrogen_economy"),
+            2: ((0.25, 0.45, 36.0, 15.0), "soc_regulation"),
+            3: ((0.15, 0.80, 12.0, 1.0), "fast_fc_response"),
         }
 
         for action_id, (weights, name) in expected.items():
