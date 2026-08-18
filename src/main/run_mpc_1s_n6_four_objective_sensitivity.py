@@ -122,7 +122,7 @@ def four_objective_config(case: SensitivityCase) -> QpMpcConfig:
         battery_discharge_max_kw=1248.0,
         battery_power_ref_kw=624.0,
         fuel_cell_min_kw=0.0,
-        fuel_cell_max_kw=560.0,
+        fuel_cell_max_kw=600.0,
         fuel_cell_ramp_rate_kw_per_s=48.0,
         fuel_cell_ramp_kw=None,
         soc_min=0.2,

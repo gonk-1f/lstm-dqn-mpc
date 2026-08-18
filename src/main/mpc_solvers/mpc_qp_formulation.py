@@ -36,7 +36,7 @@ class QpMpcConfig:
     battery_discharge_max_kw: float = 1248.0
     battery_power_ref_kw: float = 624.0
     fuel_cell_min_kw: float = 0.0
-    fuel_cell_max_kw: float = 560.0
+    fuel_cell_max_kw: float = 600.0
     fuel_cell_ramp_rate_kw_per_s: float = 48.0
     fuel_cell_ramp_kw: float | None = None
     soc_min: float = 0.2

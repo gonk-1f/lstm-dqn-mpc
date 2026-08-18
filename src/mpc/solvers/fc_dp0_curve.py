@@ -91,7 +91,7 @@ def _interp_curve(
 
 def h2_rate_gps_dp0(
     p_fc_total_kw: np.ndarray | float | Iterable[float],
-    p_rated_total_kw: float = 560.0,
+    p_rated_total_kw: float = 600.0,
 ) -> np.ndarray:
     p_sys, m_h2, _ = load_dp0_curve()
     _, shape, mapped_kw, scale = _map_to_curve(p_fc_total_kw, p_rated_total_kw=p_rated_total_kw)
@@ -100,7 +100,7 @@ def h2_rate_gps_dp0(
 
 def eta_dp0(
     p_fc_total_kw: np.ndarray | float | Iterable[float],
-    p_rated_total_kw: float = 560.0,
+    p_rated_total_kw: float = 600.0,
 ) -> np.ndarray:
     p_sys, _, eta_percent = load_dp0_curve()
     _, shape, mapped_kw, _ = _map_to_curve(p_fc_total_kw, p_rated_total_kw=p_rated_total_kw)
@@ -111,7 +111,7 @@ def h2_kg_step_dp0(
     p_fc_total_kw: np.ndarray | float | Iterable[float],
     *,
     dt_seconds: float = 30.0,
-    p_rated_total_kw: float = 560.0,
+    p_rated_total_kw: float = 600.0,
 ) -> np.ndarray:
     return h2_rate_gps_dp0(p_fc_total_kw, p_rated_total_kw=p_rated_total_kw) * float(dt_seconds) / 1000.0
 
@@ -126,7 +126,7 @@ def dp0_quadratic_coefficients() -> tuple[float, float]:
 
 def h2_rate_gps_dp0_quadratic(
     p_fc_total_kw: np.ndarray | float | Iterable[float],
-    p_rated_total_kw: float = 560.0,
+    p_rated_total_kw: float = 600.0,
 ) -> np.ndarray:
     a1, a2 = dp0_quadratic_coefficients()
     p_fc, shape = _as_1d(p_fc_total_kw)
@@ -141,6 +141,6 @@ def h2_kg_step_dp0_quadratic(
     p_fc_total_kw: np.ndarray | float | Iterable[float],
     *,
     dt_seconds: float = 30.0,
-    p_rated_total_kw: float = 560.0,
+    p_rated_total_kw: float = 600.0,
 ) -> np.ndarray:
     return h2_rate_gps_dp0_quadratic(p_fc_total_kw, p_rated_total_kw=p_rated_total_kw) * float(dt_seconds) / 1000.0

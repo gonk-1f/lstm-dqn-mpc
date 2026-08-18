@@ -17,7 +17,7 @@ REWARD_Q_BATT = 0.40
 REWARD_Q_SOC = 12.0
 REWARD_Q_FC_VAR = 20.0
 
-FUEL_CELL_MAX_KW = 560.0
+FUEL_CELL_MAX_KW = 600.0
 BATTERY_POWER_REF_KW = 624.0
 SOC_REFERENCE = 0.55
 SOC_BAND = 0.05
@@ -48,7 +48,7 @@ def calculate_mpc_weight_reward(
     where
 
         H2_norm
-            = m_H2(P_fc,t) / m_H2(560 kW)
+            = m_H2(P_fc,t) / m_H2(600 kW)
 
         Batt_power_sq_norm
             = (P_batt,t / 624 kW)^2
