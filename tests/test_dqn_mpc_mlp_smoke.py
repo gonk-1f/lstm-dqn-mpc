@@ -39,7 +39,7 @@ from run_mpc_1s_n6_four_objective_sensitivity import (  # noqa: E402
 
 
 SEED = 123
-STATE_DIM = 11
+STATE_DIM = 7
 ACTION_DIM = len(DQN_MPC_WEIGHT_ACTIONS)
 
 
@@ -119,7 +119,7 @@ class TestDqnMpcMlpSmoke(unittest.TestCase):
         ]
         self.assertEqual(
             layer_dimensions,
-            [(11, 128), (128, 64), (64, ACTION_DIM)],
+            [(7, 128), (128, 64), (64, ACTION_DIM)],
         )
         self.assertEqual(q_values.shape, (1, ACTION_DIM))
         self.assertEqual(

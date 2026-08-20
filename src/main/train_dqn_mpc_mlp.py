@@ -418,8 +418,8 @@ def build_formal_mpc_config() -> QpMpcConfig:
 def _validate_fixed_dqn_design(
     config: DQNTrainConfig,
 ) -> None:
-    if STATE_DIM != 11:
-        raise ValueError("DQN-MPC state dimension must be 11")
+    if STATE_DIM != 7:
+        raise ValueError("DQN-MPC state dimension must be 7")
 
 
 

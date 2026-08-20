@@ -23,7 +23,10 @@ from dqn.utils.action_mapper import (
     DQN_MPC_WEIGHT_ACTIONS,
     MPCWeightAction,
 )
-from dqn.utils.reward import calculate_mpc_weight_reward
+from dqn.utils.reward import (
+    LOAD_DELTA_RISE_REFERENCE_KW,
+    calculate_mpc_weight_reward,
+)
 from envs.dqn_mpc_weight_env import DqnMpcWeightEnv
 from mpc_solvers.dqn_mpc_solver_bank import MpcWeightSolverBank
 from mpc_solvers.mpc_qp_formulation import (
@@ -163,7 +166,7 @@ def build_representative_states(
                     decision_index,
                     current_load,
                     current_load - previous_load,
-                    _future_window(loads, decision_index, horizon),
+                    tuple(current_load for _ in range(horizon)),
                 )
             )
 
@@ -207,13 +210,25 @@ def build_representative_states(
     for load_index, load_regime in enumerate(load_regimes):
         for delta_index, delta_regime in enumerate(delta_regimes):
             load_target = float(load_targets[load_index])
-            delta_target = float(delta_targets[delta_index])
+            delta_target = (
+                LOAD_DELTA_RISE_REFERENCE_KW
+                if delta_regime == "rapidly_rising"
+                else float(delta_targets[delta_index])
+            )
             candidate = min(
                 (
                     item
                     for item in candidates
                     if (item[0], item[1], item[2])
                     not in selected_window_keys
+                    and (
+                        delta_regime != "rapidly_rising"
+                        or (
+                            item[0] == "train"
+                            and item[4]
+                            >= LOAD_DELTA_RISE_REFERENCE_KW
+                        )
+                    )
                 ),
                 key=lambda item: (
                     abs(item[3] - load_target) / load_scale
@@ -327,9 +342,13 @@ def evaluate_state_probes(
             actions=resolved_actions,
         )
         for action in resolved_actions:
+            causal_forecast_kw = tuple(
+                float(state.current_load_kw)
+                for _ in range(horizon)
+            )
             result, solve_ms = bank.solve(
                 action_id=action.action_id,
-                load_forecast_kw=state.future_load_kw,
+                load_forecast_kw=causal_forecast_kw,
                 current_soc=state.current_soc,
                 prev_fc_kw=state.previous_fc_kw,
                 soc_reference=0.55,
@@ -419,7 +438,7 @@ def evaluate_state_probes(
             soc_horizon = solution[2 * horizon :]
             p_fc_first = float(p_fc_horizon[0])
             p_batt_first = float(
-                state.future_load_kw[0] - p_fc_first
+                state.current_load_kw - p_fc_first
             )
             soc_next = float(
                 state.current_soc
@@ -433,6 +452,11 @@ def evaluate_state_probes(
                 p_batt_kw=p_batt_first,
                 next_soc=soc_next,
                 previous_fc_kw=state.previous_fc_kw,
+                soc_before=state.current_soc,
+                load_delta_kw=(
+                    float(state.current_load_kw)
+                    - float(state.previous_load_kw)
+                ),
             )
             row.update(
                 {

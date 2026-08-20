@@ -37,8 +37,8 @@ DQN_MPC_WEIGHT_ACTIONS: tuple[MPCWeightAction, ...] = (
         2,
         0.25,
         0.45,
-        36.0,
-        15.0,
+        200.0,
+        8.0,
         "soc_regulation",
     ),
     MPCWeightAction(

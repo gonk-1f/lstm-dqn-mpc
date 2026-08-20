@@ -219,7 +219,7 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
             self.make_config()
         )
 
-        self.assertEqual(training.STATE_DIM, 11)
+        self.assertEqual(training.STATE_DIM, 7)
         self.assertEqual(
             training.ACTION_DIM,
             len(training.DQN_MPC_WEIGHT_ACTIONS),
@@ -237,7 +237,7 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
                 for layer in runtime.agent.q_net.layers
             ],
             [
-                (11, 128),
+                (7, 128),
                 (128, 64),
                 (64, training.ACTION_DIM),
             ],
@@ -499,7 +499,7 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         runtime = training.create_training_runtime(config)
         base_config = training.build_formal_mpc_config()
 
-        dummy_state = np.zeros(11, dtype=np.float32)
+        dummy_state = np.zeros(7, dtype=np.float32)
         runtime.replay_buffer.push(
             dummy_state,
             0,

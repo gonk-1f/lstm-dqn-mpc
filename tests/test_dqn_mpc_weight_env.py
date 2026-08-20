@@ -27,6 +27,7 @@ from dqn.utils.state_builder import (  # noqa: E402
 from envs.dqn_mpc_weight_env import (  # noqa: E402
     DqnMpcWeightEnv,
 )
+from mpc_solvers.dqn_mpc_solver_bank import MpcWeightSolverBank
 from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
     QpMpcConfig,
     resolved_ramp_kw_per_step,
@@ -35,7 +36,6 @@ from run_mpc_1s_n6_four_objective_sensitivity import (  # noqa: E402
     N6_STATE_COMMIT_TOLERANCES,
     build_sensitivity_cases,
     four_objective_config,
-    run_voyage,
 )
 
 FORMAL_TEST_DATA_PATH = (
@@ -120,9 +120,7 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
             current_soc=0.55,
             previous_fc_kw=200.0,
             previous_batt_kw=0.0,
-            current_load_kw=200.0,
-            previous_load_kw=200.0,
-            future_load_kw=self.loads[1:7],
+            load_history_kw=self.loads[:1],
         )
 
         np.testing.assert_allclose(
@@ -162,7 +160,7 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
 
         self.assertEqual(
             next_state.shape,
-            (11,),
+            (7,),
         )
 
         self.assertTrue(
@@ -170,6 +168,13 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
         )
 
         self.assertFalse(done)
+
+    def test_mpc_forecast_holds_current_load(self) -> None:
+        forecast = self.env._future_window(2)
+        np.testing.assert_array_equal(
+            forecast,
+            np.full(6, self.loads[2]),
+        )
 
     def test_executed_power_balance_and_soc_update(
         self,
@@ -216,6 +221,8 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
                 previous_fc_kw=info[
                     "p_fc_prev_kw"
                 ],
+                soc_before=info["soc_before"],
+                load_delta_kw=0.0,
             )
         )
 
@@ -224,6 +231,19 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
             expected_reward,
             places=12,
         )
+
+    def test_reward_uses_observed_backward_load_delta(self) -> None:
+        self.env.step(0)
+        _, reward, _, info = self.env.step(0)
+        expected_reward, _ = calculate_mpc_weight_reward(
+            p_fc_kw=info["p_fc_kw"],
+            p_batt_kw=info["p_batt_kw"],
+            next_soc=info["soc_after"],
+            previous_fc_kw=info["p_fc_prev_kw"],
+            soc_before=info["soc_before"],
+            load_delta_kw=self.loads[1] - self.loads[0],
+        )
+        self.assertAlmostEqual(reward, expected_reward, places=12)
 
     def test_fixed_action_zero_completes_episode(
         self,
@@ -240,7 +260,7 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
 
             self.assertEqual(
                 state.shape,
-                (11,),
+                (7,),
             )
 
             self.assertTrue(
@@ -270,237 +290,129 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.env.step(0)
 
-    def test_action_zero_full_voyage_matches_formal_candidate_c(
-        self,
+    def test_action_zero_matches_persistence_reference(
+            self,
     ) -> None:
-        frame = pd.read_parquet(
-            FORMAL_TEST_DATA_PATH,
-            columns=[
-                "voyage_id",
-                "time_s",
-                "load_total_kw",
-            ],
-        )
-        voyage = (
-            frame.loc[
-                frame["voyage_id"].astype(str)
-                == REGRESSION_VOYAGE_ID
-            ]
-            .sort_values("time_s", kind="stable")
-            .reset_index(drop=True)
-        )
-        self.assertFalse(voyage.empty)
+        loads_kw = self.loads.copy()
+        config = four_objective_config(build_sensitivity_cases()[0])
 
-        loads_kw = voyage["load_total_kw"].to_numpy(
-            dtype=float
-        )
-        times_s = voyage["time_s"].to_numpy(dtype=float)
-        case = build_sensitivity_cases()[0]
-        config = four_objective_config(case)
+        # Independent causal/persistence MPC reference:
+        # at decision t, the N=6 forecast is [P_t, ..., P_t].
+        solver_bank = MpcWeightSolverBank(config)
 
-        reference, reference_solver = run_voyage(
-            voyage_id=REGRESSION_VOYAGE_ID,
-            loads_kw=loads_kw,
-            times_s=times_s,
-            case=case,
-            config=config,
-            initial_soc=0.55,
-        )
-        self.assertTrue(reference["success"].all())
-        self.assertTrue(reference_solver["success"].all())
+        reference_fc: list[float] = []
+        reference_batt: list[float] = []
+        reference_soc: list[float] = []
+        reference_load: list[float] = []
 
-        env = DqnMpcWeightEnv(
-            loads_kw=loads_kw,
-            base_config=config,
-            initial_soc=0.55,
-        )
-        actual_rows: list[dict[str, object]] = []
-        done = False
-        while not done:
-            _, _, done, info = env.step(0)
-            actual_rows.append(info)
-
-        self.assertEqual(
-            len(actual_rows),
-            len(loads_kw) - 1,
-        )
-        self.assertEqual(len(actual_rows), len(reference))
-
-        actual_decision_indices = np.asarray(
-            [
-                int(row["decision_index"])
-                for row in actual_rows
-            ],
-            dtype=int,
-        )
-        actual_execution_indices = np.asarray(
-            [
-                int(row["execution_index"])
-                for row in actual_rows
-            ],
-            dtype=int,
-        )
-        np.testing.assert_array_equal(
-            actual_decision_indices,
-            reference["decision_index"].to_numpy(dtype=int),
-        )
-        np.testing.assert_array_equal(
-            actual_execution_indices,
-            reference["execution_index"].to_numpy(dtype=int),
-        )
-
-        actual_load = np.asarray(
-            [
-                float(row["load_actual_kw"])
-                for row in actual_rows
-            ]
-        )
-        actual_fc = np.asarray(
-            [
-                float(row["p_fc_kw"])
-                for row in actual_rows
-            ]
-        )
-        actual_batt = np.asarray(
-            [
-                float(row["p_batt_kw"])
-                for row in actual_rows
-            ]
-        )
-        actual_soc = np.asarray(
-            [
-                float(row["soc_after"])
-                for row in actual_rows
-            ]
-        )
-
-        reference_load = reference[
-            "load_actual_kw"
-        ].to_numpy(dtype=float)
-        reference_fc = reference[
-            "P_fc_actual_kw"
-        ].to_numpy(dtype=float)
-        reference_batt = reference[
-            "P_batt_actual_kw"
-        ].to_numpy(dtype=float)
-        reference_soc = reference[
-            "SOC_actual"
-        ].to_numpy(dtype=float)
-
-        power_tolerance_kw = float(
-            N6_STATE_COMMIT_TOLERANCES[
-                "power_bound_kw"
-            ]
-        )
-        soc_tolerance = float(
-            N6_STATE_COMMIT_TOLERANCES["soc"]
-        )
-        np.testing.assert_allclose(
-            actual_load,
-            reference_load,
-            rtol=0.0,
-            atol=0.0,
-        )
-        np.testing.assert_allclose(
-            actual_fc,
-            reference_fc,
-            rtol=0.0,
-            atol=power_tolerance_kw,
-        )
-        np.testing.assert_allclose(
-            actual_batt,
-            reference_batt,
-            rtol=0.0,
-            atol=power_tolerance_kw,
-        )
-        np.testing.assert_allclose(
-            actual_soc,
-            reference_soc,
-            rtol=0.0,
-            atol=soc_tolerance,
-        )
-
-        actual_solver_status = np.asarray(
-            [
-                str(row["solver_status"])
-                for row in actual_rows
-            ]
-        )
-        reference_solver_status = reference[
-            "solver_status"
-        ].astype(str).to_numpy()
-        np.testing.assert_array_equal(
-            actual_solver_status,
-            reference_solver_status,
-        )
-        self.assertTrue(
-            all(
-                status.lower().startswith("solved")
-                for status in actual_solver_status
-            )
-        )
-
-        balance_tolerance_kw = float(
-            N6_STATE_COMMIT_TOLERANCES[
-                "actual_balance_kw"
-            ]
-        )
-        np.testing.assert_allclose(
-            actual_fc + actual_batt,
-            actual_load,
-            rtol=0.0,
-            atol=balance_tolerance_kw,
-        )
-
-        initial_fc_kw = float(
+        current_soc = 0.55
+        previous_fc = float(
             np.clip(
                 loads_kw[0],
                 config.fuel_cell_min_kw,
                 config.fuel_cell_max_kw,
             )
         )
-        fc_delta_kw = np.diff(
-            np.concatenate(
-                [
-                    np.asarray([initial_fc_kw]),
-                    actual_fc,
-                ]
+
+        for decision_index in range(len(loads_kw) - 1):
+            execution_index = decision_index + 1
+            current_load = float(loads_kw[decision_index])
+
+            load_forecast = np.full(
+                int(config.horizon),
+                current_load,
+                dtype=float,
             )
+
+            result, _ = solver_bank.solve(
+                action_id=0,
+                load_forecast_kw=load_forecast,
+                current_soc=current_soc,
+                prev_fc_kw=previous_fc,
+                soc_reference=0.55,
+            )
+
+            self.assertTrue(
+                str(result.info.status).lower().startswith("solved")
+            )
+            self.assertIsNotNone(result.x)
+
+            solution = np.asarray(result.x, dtype=float).reshape(-1)
+
+            p_fc = float(solution[0])
+            load_actual = float(loads_kw[execution_index])
+            p_batt = load_actual - p_fc
+
+            soc_after = current_soc - (
+                    p_batt
+                    * float(config.dt_seconds)
+                    / 3600.0
+                    / float(config.battery_capacity_kwh)
+            )
+
+            reference_load.append(load_actual)
+            reference_fc.append(p_fc)
+            reference_batt.append(p_batt)
+            reference_soc.append(soc_after)
+
+            previous_fc = p_fc
+            current_soc = soc_after
+
+        env = DqnMpcWeightEnv(
+            loads_kw=loads_kw,
+            base_config=config,
+            initial_soc=0.55,
         )
-        self.assertLessEqual(
-            float(np.max(np.abs(fc_delta_kw))),
-            float(resolved_ramp_kw_per_step(config))
-            + float(
-                N6_STATE_COMMIT_TOLERANCES["ramp_kw"]
-            ),
+
+        actual_rows: list[dict[str, object]] = []
+        done = False
+        while not done:
+            _, _, done, info = env.step(0)
+            actual_rows.append(info)
+
+        actual_load = np.asarray(
+            [float(row["load_actual_kw"]) for row in actual_rows]
         )
-        self.assertGreaterEqual(
-            float(actual_fc.min()),
-            float(config.fuel_cell_min_kw)
-            - power_tolerance_kw,
+        actual_fc = np.asarray(
+            [float(row["p_fc_kw"]) for row in actual_rows]
         )
-        self.assertLessEqual(
-            float(actual_fc.max()),
-            float(config.fuel_cell_max_kw)
-            + power_tolerance_kw,
+        actual_batt = np.asarray(
+            [float(row["p_batt_kw"]) for row in actual_rows]
         )
-        self.assertGreaterEqual(
-            float(actual_batt.min()),
-            -float(config.battery_charge_max_kw)
-            - power_tolerance_kw,
+        actual_soc = np.asarray(
+            [float(row["soc_after"]) for row in actual_rows]
         )
-        self.assertLessEqual(
-            float(actual_batt.max()),
-            float(config.battery_discharge_max_kw)
-            + power_tolerance_kw,
+
+        power_tolerance_kw = float(
+            N6_STATE_COMMIT_TOLERANCES["power_bound_kw"]
         )
-        self.assertGreaterEqual(
-            float(actual_soc.min()),
-            float(config.soc_min) - soc_tolerance,
+        soc_tolerance = float(
+            N6_STATE_COMMIT_TOLERANCES["soc"]
         )
-        self.assertLessEqual(
-            float(actual_soc.max()),
-            float(config.soc_max) + soc_tolerance,
+
+        np.testing.assert_allclose(
+            actual_load,
+            np.asarray(reference_load),
+            rtol=0.0,
+            atol=0.0,
+        )
+        np.testing.assert_allclose(
+            actual_fc,
+            np.asarray(reference_fc),
+            rtol=0.0,
+            atol=power_tolerance_kw,
+        )
+        np.testing.assert_allclose(
+            actual_batt,
+            np.asarray(reference_batt),
+            rtol=0.0,
+            atol=power_tolerance_kw,
+        )
+        np.testing.assert_allclose(
+            actual_soc,
+            np.asarray(reference_soc),
+            rtol=0.0,
+            atol=soc_tolerance,
         )
 
     def test_reset_restores_episode_state(

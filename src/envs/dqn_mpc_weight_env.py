@@ -188,60 +188,27 @@ class DqnMpcWeightEnv:
         decision_index: int,
     ) -> np.ndarray:
         """
-        Return t+1 ... t+6 load preview.
+        Return a causal t+1 ... t+6 persistence forecast.
 
-        Near the end of a voyage, repeat the final measured load
-        so that the MPC horizon remains exactly N=6, matching the
-        fixed-horizon Candidate C convention.
+        No future measured load is exposed to the MPC. Every horizon
+        point uses the measured current load P_load[t].
         """
 
         index = int(decision_index)
-        start = index + 1
-
-        preview = self.loads_kw[
-            start : start + DQN_MPC_PREVIEW_STEPS
-        ]
-
-        if preview.size == 0:
-            return np.full(
-                DQN_MPC_PREVIEW_STEPS,
-                float(self.loads_kw[-1]),
-                dtype=np.float64,
-            )
-
-        if preview.size < DQN_MPC_PREVIEW_STEPS:
-            preview = np.pad(
-                preview,
-                (
-                    0,
-                    DQN_MPC_PREVIEW_STEPS - preview.size,
-                ),
-                mode="edge",
-            )
-
-        return np.asarray(
-            preview,
+        return np.full(
+            DQN_MPC_PREVIEW_STEPS,
+            float(self.loads_kw[index]),
             dtype=np.float64,
         )
 
     def _build_state(self) -> np.ndarray:
         index = int(self.decision_index)
 
-        current_load_kw = float(self.loads_kw[index])
-
-        previous_load_kw = (
-            float(self.loads_kw[index - 1])
-            if index > 0
-            else current_load_kw
-        )
-
         return build_dqn_mpc_state(
             current_soc=self.current_soc,
             previous_fc_kw=self.previous_fc_kw,
             previous_batt_kw=self.previous_batt_kw,
-            current_load_kw=current_load_kw,
-            previous_load_kw=previous_load_kw,
-            future_load_kw=self._future_window(index),
+            load_history_kw=self.loads_kw[: index + 1],
         )
 
     def reset(self) -> np.ndarray:
@@ -304,6 +271,13 @@ class DqnMpcWeightEnv:
         load_actual_kw = float(
             self.loads_kw[execution_index]
         )
+        current_load_kw = float(self.loads_kw[decision_index])
+        previous_load_kw = (
+            float(self.loads_kw[decision_index - 1])
+            if decision_index > 0
+            else current_load_kw
+        )
+        load_delta_kw = current_load_kw - previous_load_kw
 
         soc_before = float(self.current_soc)
         previous_fc_before = float(
@@ -397,6 +371,8 @@ class DqnMpcWeightEnv:
                 p_batt_kw=p_batt_actual_kw,
                 next_soc=next_soc,
                 previous_fc_kw=previous_fc_before,
+                soc_before=soc_before,
+                load_delta_kw=load_delta_kw,
             )
         )
 

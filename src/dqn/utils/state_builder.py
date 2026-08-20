@@ -5,7 +5,7 @@ from typing import Sequence
 import numpy as np
 
 
-DQN_MPC_STATE_DIM = 11
+DQN_MPC_STATE_DIM = 7
 DQN_MPC_PREVIEW_STEPS = 6
 
 SOC_REFERENCE = 0.55
@@ -22,36 +22,22 @@ def build_dqn_mpc_state(
     current_soc: float,
     previous_fc_kw: float,
     previous_batt_kw: float,
-    current_load_kw: float,
-    previous_load_kw: float,
-    future_load_kw: Sequence[float] | np.ndarray,
+    load_history_kw: Sequence[float] | np.ndarray,
 ) -> np.ndarray:
-    """
-    Build the normalized 11-dimensional DQN state used for MPC
-    weight selection.
+    """Build the normalized causal 7-dimensional DQN-MPC state.
 
-    State order:
-        0: normalized current SOC
-        1: normalized previous fuel-cell power
-        2: normalized previous battery power
-        3: normalized current load
-        4: normalized current load change
-        5-10: normalized load preview for t+1 ... t+6
-
-    No clipping is applied. Values outside [-1, 1] or [0, 1]
-    remain available to the DQN because they carry physical
-    operating-point information.
+    ``load_history_kw`` contains current-voyage samples through time t.
+    State order: current SOC, previous FC, previous battery, current load,
+    backward load delta, latest 10 s mean load, latest 60 s mean load.
     """
 
-    preview = np.asarray(
-        future_load_kw,
+    history = np.asarray(
+        load_history_kw,
         dtype=np.float64,
     ).reshape(-1)
-
-    if preview.size != DQN_MPC_PREVIEW_STEPS:
+    if history.size == 0:
         raise ValueError(
-            "future_load_kw must contain exactly "
-            f"{DQN_MPC_PREVIEW_STEPS} values, got {preview.size}"
+            "load_history_kw must contain at least one value"
         )
 
     scalar_values = np.asarray(
@@ -59,8 +45,6 @@ def build_dqn_mpc_state(
             current_soc,
             previous_fc_kw,
             previous_batt_kw,
-            current_load_kw,
-            previous_load_kw,
         ],
         dtype=np.float64,
     )
@@ -68,25 +52,30 @@ def build_dqn_mpc_state(
     if not np.all(np.isfinite(scalar_values)):
         raise ValueError("state scalar inputs must all be finite")
 
-    if not np.all(np.isfinite(preview)):
-        raise ValueError("future_load_kw must contain only finite values")
+    if not np.all(np.isfinite(history)):
+        raise ValueError(
+            "load_history_kw must contain only finite values"
+        )
 
-    delta_load_kw = float(current_load_kw) - float(previous_load_kw)
+    current_load_kw = float(history[-1])
+    previous_load_kw = (
+        float(history[-2]) if history.size >= 2 else current_load_kw
+    )
+    delta_load_kw = current_load_kw - previous_load_kw
+    mean_load_10s_kw = float(np.mean(history[-10:]))
+    mean_load_60s_kw = float(np.mean(history[-60:]))
 
-    state = np.concatenate(
+    state = np.asarray(
         [
-            np.asarray(
-                [
-                    (float(current_soc) - SOC_REFERENCE) / SOC_SCALE,
-                    float(previous_fc_kw) / FUEL_CELL_POWER_SCALE_KW,
-                    float(previous_batt_kw) / BATTERY_POWER_SCALE_KW,
-                    float(current_load_kw) / LOAD_POWER_SCALE_KW,
-                    delta_load_kw / LOAD_DELTA_SCALE_KW,
-                ],
-                dtype=np.float64,
-            ),
-            preview / LOAD_POWER_SCALE_KW,
-        ]
+            (float(current_soc) - SOC_REFERENCE) / SOC_SCALE,
+            float(previous_fc_kw) / FUEL_CELL_POWER_SCALE_KW,
+            float(previous_batt_kw) / BATTERY_POWER_SCALE_KW,
+            current_load_kw / LOAD_POWER_SCALE_KW,
+            delta_load_kw / LOAD_DELTA_SCALE_KW,
+            mean_load_10s_kw / LOAD_POWER_SCALE_KW,
+            mean_load_60s_kw / LOAD_POWER_SCALE_KW,
+        ],
+        dtype=np.float64,
     )
 
     if state.shape != (DQN_MPC_STATE_DIM,):
