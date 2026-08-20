@@ -104,12 +104,12 @@ class TestDqnMpcReward(unittest.TestCase):
             places=12,
         )
 
-    def test_h2_at_560_kw_is_normalized_to_one(self) -> None:
+    def test_h2_at_600_kw_is_normalized_to_one(self) -> None:
         _, info = calculate_mpc_weight_reward(
-            p_fc_kw=560.0,
+            p_fc_kw=600.0,
             p_batt_kw=0.0,
             next_soc=SOC_REFERENCE,
-            previous_fc_kw=560.0,
+            previous_fc_kw=600.0,
         )
 
         self.assertAlmostEqual(
@@ -129,7 +129,7 @@ class TestDqnMpcReward(unittest.TestCase):
         )
 
         a1, a2 = dp0_quadratic_coefficients()
-        relative_power = p_fc_kw / 560.0
+        relative_power = p_fc_kw / 600.0
 
         expected = (
             a1 * relative_power

@@ -29,9 +29,9 @@ class TestFcDp0Curve(unittest.TestCase):
 
         df = pd.read_csv(self.data_path)
         ratios = np.array([0.0, 0.1, 0.5, 1.0])
-        p_total = 560.0 * ratios
+        p_total = 600.0 * ratios
         p_map = 100.0 * ratios
-        expected_h2 = 5.6 * np.interp(p_map, df["P_sys_kW"], df["mH2_g_s_Dp0"])
+        expected_h2 = 6.0 * np.interp(p_map, df["P_sys_kW"], df["mH2_g_s_Dp0"])
         expected_eta = np.interp(p_map, df["P_sys_kW"], df["eta_percent_Dp0"]) / 100.0
 
         np.testing.assert_allclose(h2_rate_gps_dp0(p_total), expected_h2, rtol=1e-10, atol=1e-12)
@@ -42,7 +42,7 @@ class TestFcDp0Curve(unittest.TestCase):
     def test_eta_rises_then_slowly_declines(self):
         from mpc.solvers.fc_dp0_curve import eta_dp0
 
-        eta = eta_dp0(np.array([0.0, 56.0, 280.0, 560.0]))
+        eta = eta_dp0(np.array([0.0, 60.0, 300.0, 600.0]))
 
         self.assertAlmostEqual(float(eta[0]), 0.0)
         self.assertGreater(float(eta[1]), 0.60)
@@ -54,8 +54,8 @@ class TestFcDp0Curve(unittest.TestCase):
 
         df = pd.read_csv(self.data_path)
         ratios = df["P_sys_kW"].to_numpy(dtype=float) / 100.0
-        exact = 5.6 * df["mH2_g_s_Dp0"].to_numpy(dtype=float)
-        approx = h2_rate_gps_dp0_quadratic(560.0 * ratios)
+        exact = 6.0 * df["mH2_g_s_Dp0"].to_numpy(dtype=float)
+        approx = h2_rate_gps_dp0_quadratic(600.0 * ratios)
         a1, a2 = dp0_quadratic_coefficients()
 
         self.assertGreater(a1, 0.0)

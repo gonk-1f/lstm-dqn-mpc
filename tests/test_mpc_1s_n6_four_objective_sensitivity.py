@@ -344,7 +344,7 @@ class TestSensitivityRunnerContract(unittest.TestCase):
             ),
             (624.0, 1248.0, 624.0),
         )
-        self.assertEqual((config.fuel_cell_min_kw, config.fuel_cell_max_kw), (0.0, 560.0))
+        self.assertEqual((config.fuel_cell_min_kw, config.fuel_cell_max_kw), (0.0, 600.0))
         self.assertEqual(config.fuel_cell_ramp_rate_kw_per_s, 48.0)
         self.assertIsNone(config.fuel_cell_ramp_kw)
         self.assertEqual((config.soc_min, config.soc_max, config.soc_band), (0.2, 0.8, 0.05))
@@ -420,7 +420,7 @@ class TestSensitivityRunnerContract(unittest.TestCase):
 
         np.testing.assert_array_equal(
             transform.variable_scale,
-            np.r_[np.full(6, 560.0), np.full(6, 624.0), np.full(7, 0.05)],
+            np.r_[np.full(6, 600.0), np.full(6, 624.0), np.full(7, 0.05)],
         )
         np.testing.assert_array_equal(
             transform.variable_offset,
@@ -738,7 +738,7 @@ class TestSensitivityRunnerContract(unittest.TestCase):
             ),
         )
         normalized_solution = np.zeros(19, dtype=float)
-        normalized_solution[0] = 110.0 / 560.0
+        normalized_solution[0] = 110.0 / 600.0
         solved_result = SimpleNamespace(
             x=normalized_solution,
             info=SimpleNamespace(

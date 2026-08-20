@@ -1,5 +1,0 @@
-# Codex-only project settings. These do not affect the microgrid runtime.
-model_reasoning_effort = "high"
-model_verbosity = "low"
-model_auto_compact_token_limit = 160000
-tool_output_token_limit = 6000
