@@ -162,3 +162,4 @@ outputs/spline_1s_diagnostics/data/cubic_spline_1s_natural_clipped.csv
 # Local DQN training and evaluation outputs
 outputs/dqn_mpc_mlp_causal_*/
 outputs/mpc_nominal_causal_test/
+outputs/dqn_mpc_fc_smoothing_floor8*/
