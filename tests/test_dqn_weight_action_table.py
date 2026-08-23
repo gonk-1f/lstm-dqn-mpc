@@ -40,7 +40,7 @@ class TestDqnMpcWeightActionTable(unittest.TestCase):
             0: ((0.25, 0.40, 12.0, 20.0), "nominal"),
             1: ((0.40, 0.25, 8.0, 8.0), "hydrogen_economy"),
             2: ((0.25, 0.45, 200.0, 8.0), "soc_regulation"),
-            3: ((0.15, 0.80, 12.0, 1.0), "fast_fc_response"),
+            3: ((0.15, 0.80, 12.0, 8.0), "fast_fc_response"),
         }
 
         for action_id, (weights, name) in expected.items():

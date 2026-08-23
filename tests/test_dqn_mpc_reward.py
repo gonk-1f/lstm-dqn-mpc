@@ -19,10 +19,13 @@ from dqn.utils.reward import (  # noqa: E402
     FC_VARIATION_REF_KW,
     REWARD_Q_BATT,
     REWARD_Q_FC_VAR,
+    REWARD_Q_FC_VAR_MIN,
     REWARD_Q_H2,
     REWARD_Q_SOC,
     SOC_BAND,
+    SOC_MIN,
     SOC_REFERENCE,
+    LOAD_DELTA_RISE_REFERENCE_KW,
     calculate_mpc_weight_reward,
 )
 
@@ -37,6 +40,82 @@ class TestDqnMpcReward(unittest.TestCase):
         self.assertEqual(REWARD_Q_BATT, 0.40)
         self.assertEqual(REWARD_Q_SOC, 12.0)
         self.assertEqual(REWARD_Q_FC_VAR, 20.0)
+        self.assertEqual(REWARD_Q_FC_VAR_MIN, 8.0)
+
+    def test_fc_variation_weight_is_20_without_gates(self) -> None:
+        _, info = calculate_mpc_weight_reward(
+            p_fc_kw=FC_VARIATION_REF_KW,
+            p_batt_kw=0.0,
+            next_soc=SOC_REFERENCE,
+            previous_fc_kw=0.0,
+            soc_before=SOC_REFERENCE,
+            load_delta_kw=0.0,
+        )
+
+        self.assertAlmostEqual(
+            info["fc_var_weight"],
+            REWARD_Q_FC_VAR,
+            places=12,
+        )
+
+    def test_fc_variation_weight_reaches_floor_for_rise_or_low_soc(self) -> None:
+        common_inputs = {
+            "p_fc_kw": FC_VARIATION_REF_KW,
+            "p_batt_kw": 0.0,
+            "next_soc": SOC_REFERENCE,
+            "previous_fc_kw": 0.0,
+        }
+        _, rise_info = calculate_mpc_weight_reward(
+            **common_inputs,
+            soc_before=SOC_REFERENCE,
+            load_delta_kw=LOAD_DELTA_RISE_REFERENCE_KW,
+        )
+        _, low_soc_info = calculate_mpc_weight_reward(
+            **common_inputs,
+            soc_before=SOC_MIN,
+            load_delta_kw=0.0,
+        )
+
+        self.assertAlmostEqual(
+            rise_info["g_rise"], 1.0, places=12
+        )
+        self.assertAlmostEqual(
+            rise_info["fc_var_weight"],
+            REWARD_Q_FC_VAR_MIN,
+            places=12,
+        )
+        self.assertAlmostEqual(
+            low_soc_info["g_low"], 1.0, places=12
+        )
+        self.assertAlmostEqual(
+            low_soc_info["fc_var_weight"],
+            REWARD_Q_FC_VAR_MIN,
+            places=12,
+        )
+
+    def test_fc_variation_weight_always_stays_within_configured_range(self) -> None:
+        for soc_before in (0.0, SOC_MIN, 0.35, SOC_REFERENCE, 0.9):
+            for load_delta_kw in (-10.0, 0.0, 1.0, LOAD_DELTA_RISE_REFERENCE_KW, 100.0):
+                _, info = calculate_mpc_weight_reward(
+                    p_fc_kw=FC_VARIATION_REF_KW,
+                    p_batt_kw=0.0,
+                    next_soc=SOC_REFERENCE,
+                    previous_fc_kw=0.0,
+                    soc_before=soc_before,
+                    load_delta_kw=load_delta_kw,
+                )
+                self.assertGreaterEqual(
+                    info["fc_var_weight"],
+                    REWARD_Q_FC_VAR_MIN,
+                )
+                self.assertLessEqual(
+                    info["fc_var_weight"],
+                    REWARD_Q_FC_VAR,
+                )
+                self.assertEqual(
+                    info["reward_weights"]["q_fc_var_min"],
+                    REWARD_Q_FC_VAR_MIN,
+                )
 
     def test_zero_objective_terms_give_zero_reward(self) -> None:
         reward, info = calculate_mpc_weight_reward(

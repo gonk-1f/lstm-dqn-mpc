@@ -46,7 +46,7 @@ DQN_MPC_WEIGHT_ACTIONS: tuple[MPCWeightAction, ...] = (
         0.15,
         0.80,
         12.0,
-        1.0,
+        8.0,
         "fast_fc_response",
     ),
 )

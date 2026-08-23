@@ -18,6 +18,7 @@ REWARD_Q_SOC = 12.0
 REWARD_Q_LOW_SOC_DISCHARGE = 360.0
 REWARD_Q_FAST_RISE_RESPONSE = 4.0
 REWARD_Q_FC_VAR = 20.0
+REWARD_Q_FC_VAR_MIN = 8.0
 
 FUEL_CELL_MAX_KW = 600.0
 BATTERY_POWER_REF_KW = 624.0
@@ -51,7 +52,7 @@ def calculate_mpc_weight_reward(
             + 12.0 * SOC_tracking_sq_norm
             + 360.0 * g_low * Low_SOC_discharge_sq_norm
             + 4.0 * g_rise * Fast_rise_response_sq_norm
-            + 20.0 * (1 - g_rise) * (1 - g_low) * FC_variation_sq_norm
+            + FC_var_weight * FC_variation_sq_norm
         ]
 
     where
@@ -79,6 +80,9 @@ def calculate_mpc_weight_reward(
 
         FC_variation_sq_norm
             = ((P_fc,t - P_fc,t-1) / 48 kW)^2
+
+        FC_var_weight
+            = 8.0 + (20.0 - 8.0) * (1 - g_rise) * (1 - g_low)
 
     This reward is a fixed evaluation criterion. The reward
     weights do not change when the DQN selects different MPC
@@ -190,12 +194,13 @@ def calculate_mpc_weight_reward(
         * g_rise
         * fast_rise_response_sq_norm
     )
-    weighted_fc_var = (
-        REWARD_Q_FC_VAR
+    fc_var_weight = (
+        REWARD_Q_FC_VAR_MIN
+        + (REWARD_Q_FC_VAR - REWARD_Q_FC_VAR_MIN)
         * (1.0 - g_rise)
         * (1.0 - g_low)
-        * fc_variation_sq_norm
     )
+    weighted_fc_var = fc_var_weight * fc_variation_sq_norm
 
     cost = (
         weighted_h2
@@ -227,6 +232,7 @@ def calculate_mpc_weight_reward(
         ),
         "g_low": float(g_low),
         "g_rise": float(g_rise),
+        "fc_var_weight": float(fc_var_weight),
         "weighted_h2": float(weighted_h2),
         "weighted_batt": float(weighted_batt),
         "weighted_soc": float(weighted_soc),
@@ -246,6 +252,7 @@ def calculate_mpc_weight_reward(
             "q_low_soc_discharge": REWARD_Q_LOW_SOC_DISCHARGE,
             "q_fast_rise_response": REWARD_Q_FAST_RISE_RESPONSE,
             "q_fc_var": REWARD_Q_FC_VAR,
+            "q_fc_var_min": REWARD_Q_FC_VAR_MIN,
         },
     }
 
