@@ -26,6 +26,7 @@ from dqn.utils.state_builder import (  # noqa: E402
 )
 from envs.dqn_mpc_weight_env import (  # noqa: E402
     DqnMpcWeightEnv,
+    validate_executed_battery_power_kw,
 )
 from mpc_solvers.dqn_mpc_solver_bank import MpcWeightSolverBank
 from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
@@ -175,6 +176,25 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
             forecast,
             np.full(6, self.loads[2]),
         )
+
+    def test_executed_battery_power_bounds_fail_fast(self) -> None:
+        validate_executed_battery_power_kw(
+            p_batt_kw=0.0,
+            charge_max_kw=624.0,
+            discharge_max_kw=1248.0,
+        )
+        with self.assertRaises(ValueError):
+            validate_executed_battery_power_kw(
+                p_batt_kw=1248.1,
+                charge_max_kw=624.0,
+                discharge_max_kw=1248.0,
+            )
+        with self.assertRaises(ValueError):
+            validate_executed_battery_power_kw(
+                p_batt_kw=-624.1,
+                charge_max_kw=624.0,
+                discharge_max_kw=1248.0,
+            )
 
     def test_executed_power_balance_and_soc_update(
         self,

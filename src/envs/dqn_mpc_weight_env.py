@@ -31,6 +31,23 @@ from mpc_solvers.dqn_mpc_solver_bank import MpcWeightSolverBank
 from mpc_solvers.mpc_qp_formulation import QpMpcConfig
 
 
+def validate_executed_battery_power_kw(
+    *,
+    p_batt_kw: float,
+    charge_max_kw: float,
+    discharge_max_kw: float,
+    tolerance_kw: float = 1.0e-6,
+) -> None:
+    lower_kw = -float(charge_max_kw)
+    upper_kw = float(discharge_max_kw)
+    value = float(p_batt_kw)
+    if value < lower_kw - tolerance_kw or value > upper_kw + tolerance_kw:
+        raise ValueError(
+            "executed battery power is outside physical bounds: "
+            f"{value} kW not in [{lower_kw}, {upper_kw}] kW"
+        )
+
+
 class MpcSolveFailure(RuntimeError):
     """Structured, non-fallback MPC failure at one environment decision."""
 
@@ -354,6 +371,11 @@ class DqnMpcWeightEnv:
         p_fc_actual_kw = p_fc_plan_kw
         p_batt_actual_kw = (
             load_actual_kw - p_fc_actual_kw
+        )
+        validate_executed_battery_power_kw(
+            p_batt_kw=p_batt_actual_kw,
+            charge_max_kw=self.base_config.battery_charge_max_kw,
+            discharge_max_kw=self.base_config.battery_discharge_max_kw,
         )
 
         next_soc = soc_before - (
