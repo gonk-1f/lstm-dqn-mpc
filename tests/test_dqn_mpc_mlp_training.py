@@ -37,6 +37,7 @@ REQUIRED_API = (
     "create_training_runtime",
     "run_training_episode",
     "train_to_budget",
+    "train_complete_voyage_rounds",
     "validate_voyages",
 )
 
@@ -485,6 +486,31 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
                 True,
             ],
         )
+
+    def test_complete_voyage_rounds_repeat_without_runtime_reset(self) -> None:
+        self.require_api()
+        runtime = training.create_training_runtime(self.make_config())
+        runtime_id = id(runtime)
+        calls: list[str] = []
+
+        def fake_episode(*, voyage_id, loads_kw, base_config, runtime):
+            self.assertEqual(id(runtime), runtime_id)
+            calls.append(voyage_id)
+            runtime.global_step += len(loads_kw) - 1
+            return {"voyage_id": voyage_id, "episode_steps": len(loads_kw) - 1}
+
+        loads = {"fixture_a": np.array([1.0, 2.0]), "fixture_b": np.array([3.0, 4.0])}
+        with patch.object(training, "run_training_episode", side_effect=fake_episode):
+            rounds = training.train_complete_voyage_rounds(
+                num_training_rounds=2,
+                voyage_ids=("fixture_a", "fixture_b"),
+                load_voyage=loads.__getitem__,
+                base_config=training.build_formal_mpc_config(),
+                runtime=runtime,
+            )
+
+        self.assertEqual(calls, ["fixture_a", "fixture_b", "fixture_a", "fixture_b"])
+        self.assertEqual([round_['completed_training_episodes'] for round_ in rounds], [2, 4])
 
     def test_validation_is_greedy_and_has_no_learning_side_effects(
         self,

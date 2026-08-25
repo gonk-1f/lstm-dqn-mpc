@@ -1023,6 +1023,47 @@ def train_to_budget(
     return episodes
 
 
+def train_complete_voyage_rounds(
+    *,
+    num_training_rounds: int,
+    voyage_ids: Sequence[str],
+    load_voyage: Callable[[str], np.ndarray],
+    base_config: QpMpcConfig,
+    runtime: TrainingRuntime,
+) -> list[dict[str, object]]:
+    """Run each ordered voyage as one complete episode per training round."""
+    if int(num_training_rounds) <= 0:
+        raise ValueError("num_training_rounds must be positive")
+    ordered_voyages = tuple(str(voyage_id) for voyage_id in voyage_ids)
+    if not ordered_voyages:
+        raise ValueError("training rounds require at least one voyage")
+
+    round_summaries: list[dict[str, object]] = []
+    completed_episodes = 0
+    for round_id in range(1, int(num_training_rounds) + 1):
+        episodes: list[dict[str, object]] = []
+        for voyage_id in ordered_voyages:
+            episode = run_training_episode(
+                voyage_id=voyage_id,
+                loads_kw=load_voyage(voyage_id),
+                base_config=base_config,
+                runtime=runtime,
+            )
+            episodes.append(episode)
+            completed_episodes += 1
+        round_summaries.append(
+            {
+                "round_id": round_id,
+                "episodes": episodes,
+                "completed_training_episodes": completed_episodes,
+                "global_step": int(runtime.global_step),
+                "epsilon": float(runtime.policy.epsilon),
+                "gradient_update_count": len(runtime.update_steps),
+            }
+        )
+    return round_summaries
+
+
 def run_validation_episode(
     *,
     voyage_id: str,
