@@ -35,7 +35,7 @@ from mpc.solvers.fc_dp0_curve import (  # noqa: E402
 
 
 class TestDqnMpcReward(unittest.TestCase):
-    def test_fixed_reward_weights_are_candidate_c(self) -> None:
+    def test_fixed_common_reward_weights_are_unchanged(self) -> None:
         self.assertEqual(REWARD_Q_H2, 0.25)
         self.assertEqual(REWARD_Q_BATT, 0.40)
         self.assertEqual(REWARD_Q_SOC, 12.0)

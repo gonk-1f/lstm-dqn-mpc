@@ -45,10 +45,9 @@ from envs.dqn_mpc_weight_env import (  # noqa: E402
 from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
     QpMpcConfig,
 )
-from run_mpc_1s_n6_four_objective_sensitivity import (  # noqa: E402
+from mpc_solvers.formal_config import (  # noqa: E402
     N6_STATE_COMMIT_TOLERANCES,
-    build_sensitivity_cases,
-    four_objective_config,
+    build_formal_mpc_config,
 )
 
 
@@ -65,10 +64,10 @@ DEFAULT_VOYAGE_DATA_DIR = (
     / "data"
     / "natural_clipped_by_voyage"
 )
-DEFAULT_BASELINE_OUTPUT_DIR = (
+DEFAULT_MLP_SINGLE_PASS_OUTPUT_DIR = (
     REPO_ROOT
     / "outputs"
-    / "dqn_mpc_mlp_10k_baseline"
+    / "dqn_mpc_mlp_causal_deficit_a2_single_pass"
 )
 
 ALLOWED_RUNTIME_SPLITS = ("train", "validation")
@@ -404,17 +403,6 @@ def load_voyage_loads(
     return loads_kw
 
 
-def build_formal_mpc_config() -> QpMpcConfig:
-    cases = build_sensitivity_cases()
-
-    if len(cases) != 1:
-        raise ValueError(
-            "formal Candidate C runner must expose one fixed case"
-        )
-
-    return four_objective_config(cases[0])
-
-
 def _validate_fixed_dqn_design(
     config: DQNTrainConfig,
 ) -> None:
@@ -423,10 +411,11 @@ def _validate_fixed_dqn_design(
 
 
 
-    if str(config.network_type).strip().lower() != "mlp":
-        raise ValueError("formal DQN-MPC network must be MLP")
+    network_type = str(config.network_type).strip().lower()
+    if network_type not in {"mlp", "kan"}:
+        raise ValueError("DQN-MPC network_type must be 'mlp' or 'kan'")
 
-    if tuple(config.mlp_hidden_dims) != (128, 64):
+    if network_type == "mlp" and tuple(config.mlp_hidden_dims) != (128, 64):
         raise ValueError(
             "formal MLP hidden dimensions must be (128, 64)"
         )
@@ -742,8 +731,17 @@ def _serialize_online_state_dict(
 
 def _write_failure_diagnostic(
     diagnostic: dict[str, object],
+    *,
+    network_type: str,
 ) -> Path:
-    directory = DEFAULT_BASELINE_OUTPUT_DIR
+    backend = str(network_type).strip().lower()
+    if backend not in {"mlp", "kan"}:
+        raise ValueError("network_type must be 'mlp' or 'kan'")
+    directory = (
+        REPO_ROOT
+        / "outputs"
+        / f"dqn_mpc_{backend}_causal_deficit_a2_single_pass_failure"
+    )
 
     if directory.exists():
         raise FileExistsError(
@@ -1477,7 +1475,8 @@ def train_dqn_mpc_mlp(
             },
         }
         diagnostic_path = _write_failure_diagnostic(
-            failure_diagnostic
+            failure_diagnostic,
+            network_type=resolved_config.network_type,
         )
         raise RuntimeError(
             "validation MPC failure diagnostic saved "
@@ -1552,9 +1551,7 @@ def write_baseline_outputs(
     *,
     runtime: TrainingRuntime,
     summary: dict[str, object],
-    output_dir: str | Path = (
-        DEFAULT_BASELINE_OUTPUT_DIR
-    ),
+    output_dir: str | Path,
 ) -> dict[str, Path]:
     directory = Path(output_dir)
 
@@ -1631,7 +1628,7 @@ def write_baseline_outputs(
         )
 
     directory.mkdir(parents=True, exist_ok=False)
-    model_path = directory / "model_final.pt"
+    model_path = directory / "model_single_pass.pt"
     validation_path = (
         directory / "validation_by_voyage.csv"
     )
@@ -1656,7 +1653,7 @@ def write_baseline_outputs(
     return {
         "training_summary": summary_path,
         "validation_by_voyage": validation_path,
-        "model_final": model_path,
+        "model_single_pass": model_path,
     }
 
 
@@ -1665,6 +1662,7 @@ def main() -> None:
     output_paths = write_baseline_outputs(
         runtime=runtime,
         summary=summary,
+        output_dir=DEFAULT_MLP_SINGLE_PASS_OUTPUT_DIR,
     )
     print(
         json.dumps(

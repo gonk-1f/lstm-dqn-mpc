@@ -1,2 +1,0 @@
-﻿candidate,metric_col,epochs_ran,max_epochs,patience,early_stop_triggered,best_epoch,epochs_after_best,best_value,last_value,last_minus_best,post_best_min_delta,train_loss_first,train_loss_last,train_loss_reduction_percent
-candidate_asym_weighted_huber_delta10,val_loss,13,30,5,True,6,7,0.0416227772584153,0.0423279017718485,0.0007051245134332002,0.0006843443916675976,0.1399556684474914,0.0304225522439735,78.26272234526361

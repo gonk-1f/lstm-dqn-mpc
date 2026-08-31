@@ -15,6 +15,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from mpc.solvers.fc_dp0_curve import h2_kg_step_dp0_quadratic
+from formal_paths import formal_checkpoint_path
 
 
 VOYAGE_IDS = tuple(f"voyage_{index:03d}" for index in range(60, 67))
@@ -22,12 +23,7 @@ SOC_REFERENCE = 0.55
 DT_SECONDS = 1.0
 FUEL_CELL_RATED_KW = 600.0
 
-DQN_OUTPUT_DIR = (
-    REPO_ROOT
-    / "outputs"
-    / "dqn_mpc_mlp_causal_1epoch_20260820"
-    / "formal_test"
-)
+DQN_OUTPUT_DIR = formal_checkpoint_path("mlp").parent / "formal_test"
 FIXED_A0_OUTPUT_DIR = REPO_ROOT / "outputs" / "mpc_nominal_causal_test"
 COMPARISON_OUTPUT_DIR = REPO_ROOT / "outputs" / "mpc_vs_dqn_comparison"
 PLOT_OUTPUT_DIR = COMPARISON_OUTPUT_DIR / "plots"

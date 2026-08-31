@@ -232,7 +232,7 @@ class DqnMpcWeightEnv:
         """
         Reset to the beginning of the current voyage.
 
-        Initial FC power follows the existing Candidate C runner:
+        Initial FC power follows the formal causal execution rule:
         clip the first load to the FC physical range.
 
         Initial battery power is the residual required by power
@@ -344,7 +344,7 @@ class DqnMpcWeightEnv:
         ).reshape(-1)
 
         horizon = int(self.base_config.horizon)
-        expected_size = 3 * horizon + 1
+        expected_size = 4 * horizon + 1
 
         if solution.size != expected_size:
             raise RuntimeError(
@@ -358,14 +358,14 @@ class DqnMpcWeightEnv:
             )
 
         # Physical decision-variable order:
-        # [P_fc[0:N], P_batt[0:N], SOC[0:N+1]]
+        # [P_fc[0:N], P_batt[0:N], SOC[0:N+1], SOC_deficit[0:N]]
         p_fc_plan_kw = float(solution[0])
         p_batt_plan_kw = float(solution[horizon])
         soc_predicted = float(
             solution[2 * horizon + 1]
         )
 
-        # Match the formal Candidate C execution rule:
+        # Match the formal causal execution rule:
         # FC follows the first MPC decision.
         # Battery closes the actual power balance.
         p_fc_actual_kw = p_fc_plan_kw

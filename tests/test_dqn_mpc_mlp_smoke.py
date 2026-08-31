@@ -32,10 +32,7 @@ from dqn.utils.action_mapper import (  # noqa: E402
 from envs.dqn_mpc_weight_env import (  # noqa: E402
     DqnMpcWeightEnv,
 )
-from run_mpc_1s_n6_four_objective_sensitivity import (  # noqa: E402
-    build_sensitivity_cases,
-    four_objective_config,
-)
+from mpc_solvers.formal_config import build_formal_mpc_config  # noqa: E402
 
 
 SEED = 123
@@ -161,9 +158,7 @@ class TestDqnMpcMlpSmoke(unittest.TestCase):
             dtype=np.float64,
         )
         loads_kw = 250.0 + 35.0 * np.sin(phase)
-        mpc_config = four_objective_config(
-            build_sensitivity_cases()[0]
-        )
+        mpc_config = build_formal_mpc_config()
         env = DqnMpcWeightEnv(
             loads_kw=loads_kw,
             base_config=mpc_config,

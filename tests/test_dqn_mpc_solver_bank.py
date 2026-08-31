@@ -19,6 +19,7 @@ from mpc_solvers.dqn_mpc_solver_bank import (  # noqa: E402
     MpcWeightSolverBank,
     _OSQP_SETTINGS,
 )
+from mpc_solvers.formal_config import build_formal_mpc_config  # noqa: E402
 from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
     QpMpcConfig,
     build_qp_problem,
@@ -30,39 +31,24 @@ from mpc_solvers.n6_qp_scaling import (  # noqa: E402
 )
 from mpc_solvers.osqp_runtime import _try_import_osqp  # noqa: E402
 
-WEIGHT_FIELDS = {"q_h2", "q_batt", "q_soc", "q_fc_var"}
+ACTION_CONFIG_FIELDS = {
+    "q_h2",
+    "q_batt",
+    "q_soc",
+    "q_fc_var",
+    "soc_penalty_mode",
+}
 POWER_TOLERANCE_KW = 0.1
 SOC_TOLERANCE = 2.0e-5
 
 
-def candidate_c_base_config() -> QpMpcConfig:
-    return QpMpcConfig(
-        horizon=6,
-        dt_seconds=1.0,
-        battery_capacity_kwh=624.0,
-        battery_charge_max_kw=624.0,
-        battery_discharge_max_kw=1248.0,
-        battery_power_ref_kw=624.0,
-        fuel_cell_min_kw=0.0,
-        fuel_cell_max_kw=560.0,
-        fuel_cell_ramp_rate_kw_per_s=48.0,
-        fuel_cell_ramp_kw=None,
-        soc_min=0.2,
-        soc_max=0.8,
-        soc_band=0.05,
-        objective_variant="n6_h2_batt_soc_fcvar_normalized_v1",
-        q_h2=0.25,
-        q_batt=0.40,
-        q_soc=12.0,
-        q_fc_var=20.0,
-        q_ramp=0.0,
-        q_terminal_soc=0.0,
-    )
+def formal_base_config() -> QpMpcConfig:
+    return build_formal_mpc_config()
 
 
 class TestDqnMpcSolverBank(unittest.TestCase):
     def setUp(self) -> None:
-        self.base_config = candidate_c_base_config()
+        self.base_config = formal_base_config()
         self.bank = MpcWeightSolverBank(self.base_config)
         self.load_forecast_kw = np.array([200.0, 215.0, 230.0, 245.0, 235.0, 225.0])
         self.current_soc = 0.55
@@ -82,10 +68,11 @@ class TestDqnMpcSolverBank(unittest.TestCase):
     def _assert_physical_constraints(self, config: QpMpcConfig, solution: np.ndarray) -> None:
         horizon = int(config.horizon)
         values = np.asarray(solution, dtype=float).reshape(-1)
-        self.assertEqual(len(values), 3 * horizon + 1)
+        self.assertEqual(len(values), 4 * horizon + 1)
         p_fc = values[:horizon]
         p_batt = values[horizon : 2 * horizon]
-        soc = values[2 * horizon :]
+        soc = values[2 * horizon : 3 * horizon + 1]
+        deficit = values[3 * horizon + 1 :]
 
         np.testing.assert_allclose(
             p_fc + p_batt,
@@ -125,6 +112,28 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             atol=SOC_TOLERANCE,
         )
 
+        if config.soc_penalty_mode == "deficit_only":
+            self.assertGreaterEqual(float(deficit.min()), -SOC_TOLERANCE)
+            self.assertTrue(
+                np.all(
+                    soc[1:] + deficit
+                    >= self.soc_reference - SOC_TOLERANCE
+                )
+            )
+            np.testing.assert_allclose(
+                deficit,
+                np.maximum(0.0, self.soc_reference - soc[1:]),
+                rtol=0.0,
+                atol=SOC_TOLERANCE,
+            )
+        else:
+            np.testing.assert_allclose(
+                deficit,
+                0.0,
+                rtol=0.0,
+                atol=SOC_TOLERANCE,
+            )
+
         ramp_limit = float(resolved_ramp_kw_per_step(config))
         self.assertLessEqual(
             abs(float(p_fc[0]) - self.prev_fc_kw),
@@ -162,8 +171,12 @@ class TestDqnMpcSolverBank(unittest.TestCase):
                 ),
                 action.as_tuple(),
             )
+            self.assertEqual(
+                entry.config.soc_penalty_mode,
+                action.soc_penalty_mode,
+            )
             for name in config_field_names:
-                if name not in WEIGHT_FIELDS:
+                if name not in ACTION_CONFIG_FIELDS:
                     self.assertEqual(getattr(entry.config, name), getattr(self.base_config, name))
 
     def test_each_action_has_its_own_weighted_p_and_common_a(self) -> None:
@@ -202,7 +215,7 @@ class TestDqnMpcSolverBank(unittest.TestCase):
                     np.asarray(result.x, dtype=float),
                 )
 
-    def test_action_zero_matches_direct_candidate_c_solve(self) -> None:
+    def test_action_zero_matches_direct_formal_solve(self) -> None:
         self.assertEqual(
             _OSQP_SETTINGS,
             {
@@ -216,7 +229,7 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             },
         )
 
-        # A0 必须保持为正式 Candidate C 权重。
+        # A0 必须保持正式 nominal 权重。
         action = DQN_MPC_WEIGHT_ACTIONS[0]
 
         self.assertEqual(
@@ -230,9 +243,10 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             q_batt=action.q_batt,
             q_soc=action.q_soc,
             q_fc_var=action.q_fc_var,
+            soc_penalty_mode=action.soc_penalty_mode,
         )
 
-        # 先构造与正式 Candidate C 相同的物理 QP。
+        # 先构造与正式 nominal action 相同的物理 QP。
         direct_problem = self._problem(direct_config)
 
         # 再走正式 N=6 MPC 使用的同一套仿射缩放链路。
@@ -249,7 +263,7 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             scaled_problem,
         )
 
-        direct_result = direct_solver.solve()
+        direct_result = direct_solver.solve(raise_error=False)
 
         self.assertTrue(
             str(direct_result.info.status).lower().startswith("solved")
@@ -296,14 +310,14 @@ class TestDqnMpcSolverBank(unittest.TestCase):
         )
 
         # 决策变量顺序：
-        # [P_fc(0:N), P_batt(0:N), SOC(0:N+1)]
+        # [P_fc(0:N), P_batt(0:N), SOC(0:N+1), SOC_deficit(0:N)]
         bank_p_fc = bank_physical_solution[:horizon]
         bank_p_batt = bank_physical_solution[horizon: 2 * horizon]
-        bank_soc = bank_physical_solution[2 * horizon:]
+        bank_soc = bank_physical_solution[2 * horizon: 3 * horizon + 1]
 
         direct_p_fc = direct_physical_solution[:horizon]
         direct_p_batt = direct_physical_solution[horizon: 2 * horizon]
-        direct_soc = direct_physical_solution[2 * horizon:]
+        direct_soc = direct_physical_solution[2 * horizon: 3 * horizon + 1]
 
         # 2. 第一时刻燃料电池功率。
         self.assertAlmostEqual(

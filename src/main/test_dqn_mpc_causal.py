@@ -18,16 +18,18 @@ from envs.dqn_mpc_weight_env import (
     DqnMpcWeightEnv,
     MpcSolveFailure,
 )
+from formal_paths import (
+    formal_checkpoint_path,
+    formal_output_dir,
+    require_formal_checkpoint,
+)
 import train_dqn_mpc_mlp as training
 
 
-MODEL_DIR = (
-    REPO_ROOT
-    / "outputs"
-    / "dqn_mpc_mlp_causal_1epoch_20260820"
-)
-
-MODEL_PATH = MODEL_DIR / "model_final.pt"
+NETWORK_TYPE = "mlp"
+MODEL_ROOT = formal_output_dir(NETWORK_TYPE)
+MODEL_PATH = formal_checkpoint_path(NETWORK_TYPE)
+MODEL_DIR = MODEL_PATH.parent
 
 TEST_OUTPUT_DIR = MODEL_DIR / "formal_test"
 TRACE_DIR = TEST_OUTPUT_DIR / "traces"
@@ -314,8 +316,7 @@ def plot_soc_trajectory(
 
     plt.close(fig)
 def main() -> None:
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(MODEL_PATH)
+    model_path = require_formal_checkpoint(NETWORK_TYPE)
     if TEST_OUTPUT_DIR.exists():
         raise FileExistsError(
             f"Formal test output already exists: "
@@ -339,10 +340,10 @@ def main() -> None:
     print("Test voyages:", split.test_voyages)
 
     runtime = training.create_training_runtime(
-        DQNTrainConfig()
+        DQNTrainConfig(network_type=NETWORK_TYPE)
     )
 
-    runtime.agent.load(MODEL_PATH)
+    runtime.agent.load(model_path)
     runtime.agent.q_net.eval()
 
     base_config = training.build_formal_mpc_config()
@@ -407,7 +408,7 @@ def main() -> None:
     completed = int(frame["completed"].sum())
 
     summary = {
-        "model_path": str(MODEL_PATH),
+        "model_path": str(model_path),
         "test_voyages": list(split.test_voyages),
         "completed_voyages": completed,
         "total_voyages": len(frame),

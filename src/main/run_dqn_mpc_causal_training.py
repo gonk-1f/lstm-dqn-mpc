@@ -13,19 +13,22 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from dqn.agents.dqn_agent import DQNTrainConfig
+from formal_paths import formal_output_dir
 import train_dqn_mpc_mlp as training
 import test_dqn_mpc_causal as validation_artifacts
 
 
 NUM_TRAINING_ROUNDS = 2
+NETWORK_TYPE = "mlp"
+FORMAL_OUTPUT_DIR = formal_output_dir(NETWORK_TYPE)
 
 
 def main() -> None:
-    config = DQNTrainConfig()
+    config = DQNTrainConfig(network_type=NETWORK_TYPE)
     split = training.load_voyage_split()
     runtime = training.create_training_runtime(config)
     base_config = training.build_formal_mpc_config()
-    output_dir = REPO_ROOT / "outputs" / "dqn_mpc_mlp_causal_formal_rounds"
+    output_dir = FORMAL_OUTPUT_DIR
     if output_dir.exists():
         raise FileExistsError(output_dir)
     output_dir.mkdir(parents=True)

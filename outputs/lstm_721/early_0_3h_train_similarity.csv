@@ -1,2 +1,0 @@
-﻿early_0_3h_points,train_windows,near_train_match_5kw_all3,near_train_match_5kw_all3_ratio,median_nearest_scaled_distance,p90_nearest_scaled_distance,criterion
-343,19952,343,1.0,0.0,0.0,"nearest train h1 by current_load,h1_load,h1_delta; near means all three within 5 kW"

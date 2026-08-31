@@ -1,2 +1,1 @@
-"""Parallel MPC solver prototypes for offline benchmark work."""
-
+"""Formal causal N=6 QP-MPC solver package."""

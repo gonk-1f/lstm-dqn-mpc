@@ -14,8 +14,7 @@ debug/
 *.tmp
 *.bak
 
-# Temporary experiment artifacts. Formal summaries, final checkpoints, and
-# retained rollouts remain trackable.
+# Temporary experiment artifacts.
 outputs/**/_debug/
 outputs/**/_scratch/
 outputs/**/_temporary/
@@ -159,7 +158,8 @@ dmypy.json
 .python_packages
 outputs/spline_1s_diagnostics/data/cubic_spline_1s_natural_clipped.csv
 
-# Local DQN training and evaluation outputs
-outputs/dqn_mpc_mlp_causal_*/
+# Local formal DQN training and evaluation outputs. MLP and KAN checkpoints
+# must stay in separate namespaces.
+outputs/dqn_mpc_mlp_causal_deficit_a2_formal_rounds/
+outputs/dqn_mpc_kan_causal_deficit_a2_formal_rounds/
 outputs/mpc_nominal_causal_test/
-outputs/dqn_mpc_fc_smoothing_floor8*/

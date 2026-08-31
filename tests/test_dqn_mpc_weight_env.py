@@ -33,47 +33,14 @@ from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
     QpMpcConfig,
     resolved_ramp_kw_per_step,
 )
-from run_mpc_1s_n6_four_objective_sensitivity import (  # noqa: E402
+from mpc_solvers.formal_config import (  # noqa: E402
     N6_STATE_COMMIT_TOLERANCES,
-    build_sensitivity_cases,
-    four_objective_config,
+    build_formal_mpc_config,
 )
 
-FORMAL_TEST_DATA_PATH = (
-    ROOT
-    / "outputs"
-    / "mpc_solver_benchmark_1s"
-    / "data"
-    / "test_voyages_spline_1s.parquet"
-)
-REGRESSION_VOYAGE_ID = "voyage_064"
 
-
-def candidate_c_config() -> QpMpcConfig:
-    return QpMpcConfig(
-        horizon=6,
-        dt_seconds=1.0,
-        battery_capacity_kwh=624.0,
-        battery_charge_max_kw=624.0,
-        battery_discharge_max_kw=1248.0,
-        battery_power_ref_kw=624.0,
-        fuel_cell_min_kw=0.0,
-        fuel_cell_max_kw=560.0,
-        fuel_cell_ramp_rate_kw_per_s=48.0,
-        fuel_cell_ramp_kw=None,
-        soc_min=0.2,
-        soc_max=0.8,
-        soc_band=0.05,
-        objective_variant=(
-            "n6_h2_batt_soc_fcvar_normalized_v1"
-        ),
-        q_h2=0.25,
-        q_batt=0.40,
-        q_soc=12.0,
-        q_fc_var=20.0,
-        q_ramp=0.0,
-        q_terminal_soc=0.0,
-    )
+def formal_mpc_config() -> QpMpcConfig:
+    return build_formal_mpc_config()
 
 
 class TestDqnMpcWeightEnv(unittest.TestCase):
@@ -94,7 +61,7 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
             dtype=float,
         )
 
-        self.config = candidate_c_config()
+        self.config = formal_mpc_config()
 
         self.env = DqnMpcWeightEnv(
             loads_kw=self.loads,
@@ -314,7 +281,7 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
             self,
     ) -> None:
         loads_kw = self.loads.copy()
-        config = four_objective_config(build_sensitivity_cases()[0])
+        config = build_formal_mpc_config()
 
         # Independent causal/persistence MPC reference:
         # at decision t, the N=6 forecast is [P_t, ..., P_t].

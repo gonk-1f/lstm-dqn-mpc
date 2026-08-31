@@ -70,8 +70,8 @@ def scale_n6_qp_problem(
             f"N=6 scaling requires horizon={N6_HORIZON}, got {horizon}"
         )
 
-    expected_variables = 3 * horizon + 1
-    expected_constraints = 6 * horizon + 2
+    expected_variables = 4 * horizon + 1
+    expected_constraints = 8 * horizon + 2
 
     if problem.P.shape != (expected_variables, expected_variables):
         raise ValueError("unexpected N=6 QP variable dimensions")
@@ -89,6 +89,7 @@ def scale_n6_qp_problem(
             np.full(horizon, fuel_cell_scale),
             np.full(horizon, battery_scale),
             np.full(horizon + 1, soc_scale),
+            np.full(horizon, soc_scale),
         ]
     )
 
@@ -96,6 +97,7 @@ def scale_n6_qp_problem(
         [
             np.zeros(2 * horizon),
             np.full(horizon + 1, FIXED_SOC_REFERENCE),
+            np.zeros(horizon),
         ]
     )
 
@@ -104,6 +106,8 @@ def scale_n6_qp_problem(
             np.full(horizon, 1.0 / fuel_cell_scale),
             np.full(horizon, 1.0 / battery_scale),
             np.full(horizon + 1, 1.0 / soc_scale),
+            np.full(horizon, 1.0 / soc_scale),
+            np.full(horizon, 1.0 / soc_scale),
             np.full(1 + horizon, 1.0 / soc_scale),
             np.full(horizon, 1.0 / fuel_cell_scale),
             np.full(horizon, 1.0 / ramp_scale),

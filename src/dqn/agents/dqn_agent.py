@@ -7,8 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from dqn.networks import KANNetworkConfig, KANV2NetworkConfig, build_q_network, describe_q_network_config
-from dqn.networks.sine_kan_qnet import SineKANNetworkConfig
+from dqn.networks import KANNetworkConfig, build_q_network, describe_q_network_config
 
 
 @dataclass
@@ -31,39 +30,22 @@ class DQNTrainConfig:
     loss_type: str = "mse"
     network_type: str = "mlp"
     mlp_hidden_dims: tuple[int, ...] = (128, 64)
-    kan_hidden_dims: tuple[int, ...] = (32,)
-    kan_grid: int = 4
-    kan_order: int = 3
-    kan_symbolic_enabled: bool = False
-    kan_bias_trainable: bool = False
-    kan_sp_trainable: bool = False
-    kan_sb_trainable: bool = False
     double_dqn: bool = False
-    kan_grid_update_enabled: bool = False
-    kan_grid_update_interval_steps: int = 0
-    kan_grid_update_until_step: int = 0
-    kan_grid_update_samples: int = 256
     kan_backend: str = "efficient_kan"
-    kan_v2_latent_dim: int = 12
-    kan_v2_width: int = 16
-    kan_v2_depth: int = 1
-    kan_v2_grid: int = 4
-    kan_v2_basis_min: float = -2.5
-    kan_v2_basis_max: float = 2.5
-    kan_v2_freeze_base_scale: bool = False
-    kan_v2_freeze_spline_scale: bool = True
-    kan_v2_freeze_spline_weight: bool = False
-    kan_v2_spline_init_scale: float = 0.02
-    kan_v2_dropout: float = 0.0
+    kan_latent_dim: int = 12
+    kan_width: int = 16
+    kan_depth: int = 1
+    kan_grid: int = 4
+    kan_basis_min: float = -2.5
+    kan_basis_max: float = 2.5
+    kan_freeze_base_scale: bool = False
+    kan_freeze_spline_scale: bool = True
+    kan_freeze_spline_weight: bool = False
+    kan_spline_init_scale: float = 0.02
+    kan_dropout: float = 0.0
     dueling_dqn: bool = False
     state_normalization_enabled: bool = False
     state_normalization_min_count: int = 32
-    # SineKAN
-    sine_kan_latent_dim: int = 12
-    sine_kan_width: int = 16
-    sine_kan_grid_size: int = 8
-    sine_kan_dropout: float = 0.0
-    sine_kan_dueling: bool = False
 
 
 def resolve_torch_device(device: str) -> str:
@@ -108,41 +90,21 @@ class DQNAgent:
     def __init__(self, state_dim: int, action_dim: int, config: DQNTrainConfig):
         self.config = config
         self.device_name = resolve_torch_device(config.device)
-        if str(config.network_type).strip().lower() == "kan" and self.device_name.startswith("cuda"):
-            # pykan 0.0.2 keeps some spline-layer device markers on CPU even
-            # after module.to("cuda"), so the KAN backend is kept on CPU.
-            self.device_name = "cpu"
         self.device = torch.device(self.device_name)
         self.kan_config = KANNetworkConfig(
-            hidden_dims=tuple(int(v) for v in config.kan_hidden_dims),
-            grid=int(config.kan_grid),
-            order=int(config.kan_order),
-            symbolic_enabled=bool(config.kan_symbolic_enabled),
-            bias_trainable=bool(config.kan_bias_trainable),
-            sp_trainable=bool(config.kan_sp_trainable),
-            sb_trainable=bool(config.kan_sb_trainable),
-        )
-        self.kan_v2_config = KANV2NetworkConfig(
             backend=str(config.kan_backend),
-            latent_dim=int(config.kan_v2_latent_dim),
-            width=int(config.kan_v2_width),
-            depth=int(config.kan_v2_depth),
-            grid=int(config.kan_v2_grid),
-            basis_min=float(config.kan_v2_basis_min),
-            basis_max=float(config.kan_v2_basis_max),
-            freeze_base_scale=bool(config.kan_v2_freeze_base_scale),
-            freeze_spline_scale=bool(config.kan_v2_freeze_spline_scale),
-            freeze_spline_weight=bool(config.kan_v2_freeze_spline_weight),
-            spline_init_scale=float(config.kan_v2_spline_init_scale),
-            dropout=float(config.kan_v2_dropout),
+            latent_dim=int(config.kan_latent_dim),
+            width=int(config.kan_width),
+            depth=int(config.kan_depth),
+            grid=int(config.kan_grid),
+            basis_min=float(config.kan_basis_min),
+            basis_max=float(config.kan_basis_max),
+            freeze_base_scale=bool(config.kan_freeze_base_scale),
+            freeze_spline_scale=bool(config.kan_freeze_spline_scale),
+            freeze_spline_weight=bool(config.kan_freeze_spline_weight),
+            spline_init_scale=float(config.kan_spline_init_scale),
+            dropout=float(config.kan_dropout),
             dueling=bool(config.dueling_dqn),
-        )
-        self.sine_kan_config = SineKANNetworkConfig(
-            latent_dim=int(config.sine_kan_latent_dim),
-            width=int(config.sine_kan_width),
-            grid_size=int(config.sine_kan_grid_size),
-            dropout=float(config.sine_kan_dropout),
-            dueling=bool(config.sine_kan_dueling),
         )
         self.q_net = build_q_network(
             state_dim,
@@ -150,8 +112,6 @@ class DQNAgent:
             network_type=config.network_type,
             mlp_hidden_dims=tuple(int(v) for v in config.mlp_hidden_dims),
             kan_config=self.kan_config,
-            kan_v2_config=self.kan_v2_config,
-            sine_kan_config=self.sine_kan_config,
             device_name=self.device_name,
         ).to(self.device)
         self.target_q_net = build_q_network(
@@ -160,8 +120,6 @@ class DQNAgent:
             network_type=config.network_type,
             mlp_hidden_dims=tuple(int(v) for v in config.mlp_hidden_dims),
             kan_config=self.kan_config,
-            kan_v2_config=self.kan_v2_config,
-            sine_kan_config=self.sine_kan_config,
             device_name=self.device_name,
         ).to(self.device)
         self.target_q_net.load_state_dict(self.q_net.state_dict())
@@ -178,8 +136,6 @@ class DQNAgent:
             network_type=config.network_type,
             mlp_hidden_dims=tuple(int(v) for v in config.mlp_hidden_dims),
             kan_config=self.kan_config,
-            kan_v2_config=self.kan_v2_config,
-            sine_kan_config=self.sine_kan_config,
         )
         self.network_info.update(
             {
@@ -269,15 +225,6 @@ class DQNAgent:
         self.q_net.set_input_normalization(mean_tensor, std_tensor)
         if hasattr(self.target_q_net, "set_input_normalization"):
             self.target_q_net.set_input_normalization(mean_tensor, std_tensor)
-        return True
-
-    def update_kan_grid_from_samples(self, states: np.ndarray, update_target: bool = True) -> bool:
-        if not hasattr(self.q_net, "update_grid_from_samples"):
-            return False
-        state_tensor = torch.tensor(states, dtype=self.tensor_dtype, device=self.device)
-        self.q_net.update_grid_from_samples(state_tensor)
-        if update_target and hasattr(self.target_q_net, "update_grid_from_samples"):
-            self.target_q_net.update_grid_from_samples(state_tensor)
         return True
 
     def save(self, model_path: str | Path) -> Path:

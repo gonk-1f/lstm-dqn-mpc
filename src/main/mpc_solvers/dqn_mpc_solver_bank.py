@@ -114,6 +114,7 @@ class MpcWeightSolverBank:
                 q_batt=action.q_batt,
                 q_soc=action.q_soc,
                 q_fc_var=action.q_fc_var,
+                soc_penalty_mode=action.soc_penalty_mode,
             )
 
             physical_problem = build_qp_problem(
