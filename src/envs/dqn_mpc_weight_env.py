@@ -288,13 +288,6 @@ class DqnMpcWeightEnv:
         load_actual_kw = float(
             self.loads_kw[execution_index]
         )
-        current_load_kw = float(self.loads_kw[decision_index])
-        previous_load_kw = (
-            float(self.loads_kw[decision_index - 1])
-            if decision_index > 0
-            else current_load_kw
-        )
-        load_delta_kw = current_load_kw - previous_load_kw
 
         soc_before = float(self.current_soc)
         previous_fc_before = float(
@@ -393,8 +386,6 @@ class DqnMpcWeightEnv:
                 p_batt_kw=p_batt_actual_kw,
                 next_soc=next_soc,
                 previous_fc_kw=previous_fc_before,
-                soc_before=soc_before,
-                load_delta_kw=load_delta_kw,
             )
         )
 

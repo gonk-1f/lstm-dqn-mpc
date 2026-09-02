@@ -208,8 +208,6 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
                 previous_fc_kw=info[
                     "p_fc_prev_kw"
                 ],
-                soc_before=info["soc_before"],
-                load_delta_kw=0.0,
             )
         )
 
@@ -219,7 +217,7 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
             places=12,
         )
 
-    def test_reward_uses_observed_backward_load_delta(self) -> None:
+    def test_reward_uses_only_executed_physical_values(self) -> None:
         self.env.step(0)
         _, reward, _, info = self.env.step(0)
         expected_reward, _ = calculate_mpc_weight_reward(
@@ -227,8 +225,6 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
             p_batt_kw=info["p_batt_kw"],
             next_soc=info["soc_after"],
             previous_fc_kw=info["p_fc_prev_kw"],
-            soc_before=info["soc_before"],
-            load_delta_kw=self.loads[1] - self.loads[0],
         )
         self.assertAlmostEqual(reward, expected_reward, places=12)
 

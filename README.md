@@ -102,16 +102,28 @@ J_soc,A2 = 200 * sum_k (d_k / 0.05)^2
 
 ## Common reward
 
-DQN 的 common reward 与 MPC 动作权重分离，所有动作使用同一评价函数。它包含固定的氢耗、电池功率、对称 SOC、低 SOC 放电、快速负荷上升响应和 FC 变化六项。A2 的 deficit-only 修改只发生在 MPC objective，未修改 reward 系数或 terminal failure reward。
+DQN 的 common reward 与 MPC 动作权重分离。MLP 和 KAN backend、A0～A3 所有动作均使用同一个固定四项评价函数：
 
 ```text
 r_t = -J_t
-J_t = 0.25 H_t + 0.40 B_t + 12 S_t
-    + 360 g_low D_t + 4 g_rise R_t + q_F,t F_t
-q_F,t = 8 + 12 (1 - g_rise) (1 - g_low)
+J_t = 0.25 H_t + 0.40 B_t
+    + Phi_SOC(SOC_t+1) + 20 F_t
 ```
 
-其中 `H_t` 为相对 600 kW 参考点的 Dp0 氢耗，`B_t=(P_batt/624)^2`，`S_t=((SOC_t+1-0.55)/0.05)^2`；`D_t`、`R_t` 与 `F_t` 分别为低 SOC 放电、快速升负荷响应不足和 FC 变化归一化项。求解失败的 terminal reward 仍为 `-620`。
+其中：
+
+- `H_t=m_H2(P_fc,t)/m_H2(600)`：normalized hydrogen consumption；
+- `B_t=(P_batt,t/624)^2`：normalized battery power penalty；
+- `F_t=((P_fc,t-P_fc,t-1)/48)^2`：fuel-cell power variation penalty；
+- `Phi_SOC`：SOC soft working-range penalty。
+
+```text
+Phi_SOC(SOC) = ((0.50 - SOC) / 0.05)^2,  SOC < 0.50
+               0,                       0.50 <= SOC <= 0.60
+               ((SOC - 0.60) / 0.05)^2, SOC > 0.60
+```
+
+reward 的 soft SOC range 为 `0.50～0.60`，MPC 的 hard SOC constraints 为 `0.20～0.80`。SOC 位于 soft range 内时不要求实时跟踪 `0.55`。`SOC_ref=0.55` 仍用于系统初始/参考 SOC 和 A2 deficit-only SOC recovery，但不构成 common reward 的逐步对称跟踪项。求解失败的 terminal reward 保持 `-620`。
 
 ## 正式入口
 
