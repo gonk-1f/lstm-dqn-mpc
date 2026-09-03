@@ -23,30 +23,21 @@ NETWORK_TYPE = "mlp"
 FORMAL_OUTPUT_DIR = formal_output_dir(NETWORK_TYPE)
 
 
-def main() -> None:
-    config = DQNTrainConfig(network_type=NETWORK_TYPE)
-    split = training.load_voyage_split()
-    runtime = training.create_training_runtime(config)
-    base_config = training.build_formal_mpc_config()
-    output_dir = FORMAL_OUTPUT_DIR
-    if output_dir.exists():
-        raise FileExistsError(output_dir)
-    output_dir.mkdir(parents=True)
+def run_round_boundary_training(
+    *,
+    split,
+    runtime,
+    base_config,
+    output_dir: Path,
+    load_train,
+    load_validation,
+    num_training_rounds: int = NUM_TRAINING_ROUNDS,
+) -> list[dict[str, object]]:
+    """Train, checkpoint, and validate at each round boundary."""
 
-    def load_train(voyage_id: str):
-        return training.load_voyage_loads("train", voyage_id, split=split)
-
-    def load_validation(voyage_id: str):
-        return training.load_voyage_loads("validation", voyage_id, split=split)
-
-    rounds = training.train_complete_voyage_rounds(
-        num_training_rounds=NUM_TRAINING_ROUNDS,
-        voyage_ids=split.train_voyages,
-        load_voyage=load_train,
-        base_config=base_config,
-        runtime=runtime,
-    )
-    for round_summary in rounds:
+    def save_and_validate_round(
+        round_summary: dict[str, object],
+    ) -> None:
         round_dir = output_dir / f"round_{round_summary['round_id']}"
         round_dir.mkdir()
         trace_dir = round_dir / "traces"
@@ -71,7 +62,63 @@ def main() -> None:
         pd.DataFrame(validation["voyages"]).to_csv(round_dir / "validation_by_voyage.csv", index=False)
         (round_dir / "validation_summary.json").write_text(json.dumps(validation, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         round_summary["validation"] = validation
-    (output_dir / "training_summary.json").write_text(json.dumps({"num_training_rounds": NUM_TRAINING_ROUNDS, "rounds": rounds, "test_voyages": []}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    rounds = training.train_complete_voyage_rounds(
+        num_training_rounds=num_training_rounds,
+        voyage_ids=split.train_voyages,
+        load_voyage=load_train,
+        base_config=base_config,
+        runtime=runtime,
+        on_round_complete=save_and_validate_round,
+    )
+    (output_dir / "training_summary.json").write_text(
+        json.dumps(
+            {
+                "num_training_rounds": num_training_rounds,
+                "rounds": rounds,
+                "test_voyages": [],
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return rounds
+
+
+def main() -> None:
+    config = DQNTrainConfig(network_type=NETWORK_TYPE)
+    split = training.load_voyage_split()
+    runtime = training.create_training_runtime(config)
+    base_config = training.build_formal_mpc_config()
+    output_dir = FORMAL_OUTPUT_DIR
+    if output_dir.exists():
+        raise FileExistsError(output_dir)
+    output_dir.mkdir(parents=True)
+
+    def load_train(voyage_id: str):
+        return training.load_voyage_loads(
+            "train",
+            voyage_id,
+            split=split,
+        )
+
+    def load_validation(voyage_id: str):
+        return training.load_voyage_loads(
+            "validation",
+            voyage_id,
+            split=split,
+        )
+
+    run_round_boundary_training(
+        split=split,
+        runtime=runtime,
+        base_config=base_config,
+        output_dir=output_dir,
+        load_train=load_train,
+        load_validation=load_validation,
+    )
 
 
 if __name__ == "__main__":

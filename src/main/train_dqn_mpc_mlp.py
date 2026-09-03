@@ -1028,6 +1028,9 @@ def train_complete_voyage_rounds(
     load_voyage: Callable[[str], np.ndarray],
     base_config: QpMpcConfig,
     runtime: TrainingRuntime,
+    on_round_complete: (
+        Callable[[dict[str, object]], None] | None
+    ) = None,
 ) -> list[dict[str, object]]:
     """Run each ordered voyage as one complete episode per training round."""
     if int(num_training_rounds) <= 0:
@@ -1049,16 +1052,17 @@ def train_complete_voyage_rounds(
             )
             episodes.append(episode)
             completed_episodes += 1
-        round_summaries.append(
-            {
-                "round_id": round_id,
-                "episodes": episodes,
-                "completed_training_episodes": completed_episodes,
-                "global_step": int(runtime.global_step),
-                "epsilon": float(runtime.policy.epsilon),
-                "gradient_update_count": len(runtime.update_steps),
-            }
-        )
+        round_summary: dict[str, object] = {
+            "round_id": round_id,
+            "episodes": episodes,
+            "completed_training_episodes": completed_episodes,
+            "global_step": int(runtime.global_step),
+            "epsilon": float(runtime.policy.epsilon),
+            "gradient_update_count": len(runtime.update_steps),
+        }
+        round_summaries.append(round_summary)
+        if on_round_complete is not None:
+            on_round_complete(round_summary)
     return round_summaries
 
 
