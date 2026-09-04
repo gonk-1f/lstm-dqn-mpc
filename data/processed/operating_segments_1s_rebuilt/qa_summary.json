@@ -9707,16 +9707,17 @@
   },
   "pchip_1s": {
     "count": 1197110,
-    "min_kw": -0.8901599999999945,
+    "min_kw": 0.0,
     "max_kw": 1103.8994,
     "mean_kw": 251.14866004667329,
-    "zero_count": 0,
-    "negative_count": 153,
+    "zero_count": 153,
+    "negative_count": 0,
     "under_1_kw_count": 15768,
     "segment_count": 209,
     "total_points": 1197110,
     "total_duration_s": 1196901,
-    "nonphysical_overshoot": false
+    "nonphysical_overshoot": false,
+    "under_minus_1_kw_count": 0
   },
   "external_charging": {
     "interval_count": 150,
@@ -9741,11 +9742,12 @@
   },
   "negative_load": {
     "interval_count": 9,
-    "point_count": 153,
+    "point_count": 0,
     "under_minus_1_point_count": 0,
     "remaining_substantive_interval_count": 0,
     "remaining_substantive_intervals": [],
-    "all_intervals_written": true
+    "all_intervals_written": true,
+    "residual_tolerance_point_count_before_clipping": 153
   },
   "segment_fragmentation": {
     "per_parent": {
@@ -10139,5 +10141,13 @@
       "validation": 298315
     },
     "parent_voyage_overlap_count": 0
+  },
+  "numerical_zero_clipping": {
+    "numerical_zero_clipped_points": 153,
+    "before_min_load_kw": -0.8901599999999945,
+    "after_min_load_kw": 0.0,
+    "before_zero_count": 0,
+    "after_zero_count": 153,
+    "approved_range_kw": "-1 < load_total_kw < 0"
   }
 }
