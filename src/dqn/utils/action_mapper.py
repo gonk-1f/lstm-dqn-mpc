@@ -11,7 +11,6 @@ class MPCWeightAction:
     q_soc: float
     q_fc_var: float
     name: str
-    soc_penalty_mode: str = "symmetric"
 
     def as_tuple(self) -> tuple[float, float, float, float]:
         return (self.q_h2, self.q_batt, self.q_soc, self.q_fc_var)
@@ -41,7 +40,6 @@ DQN_MPC_WEIGHT_ACTIONS: tuple[MPCWeightAction, ...] = (
         200.0,
         8.0,
         "soc_regulation",
-        "deficit_only",
     ),
     MPCWeightAction(
         3,

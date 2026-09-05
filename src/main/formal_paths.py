@@ -26,7 +26,7 @@ def formal_output_dir(
     return (
         Path(repo_root)
         / "outputs"
-        / f"dqn_mpc_{backend}_causal_deficit_a2_formal_rounds"
+        / f"dqn_mpc_{backend}_causal_soc_deadband_formal_rounds"
     )
 
 

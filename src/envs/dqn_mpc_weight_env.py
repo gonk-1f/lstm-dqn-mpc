@@ -351,7 +351,7 @@ class DqnMpcWeightEnv:
             )
 
         # Physical decision-variable order:
-        # [P_fc[0:N], P_batt[0:N], SOC[0:N+1], SOC_deficit[0:N]]
+        # [P_fc[0:N], P_batt[0:N], SOC[0:N+1], SOC_band_violation[0:N]]
         p_fc_plan_kw = float(solution[0])
         p_batt_plan_kw = float(solution[horizon])
         soc_predicted = float(

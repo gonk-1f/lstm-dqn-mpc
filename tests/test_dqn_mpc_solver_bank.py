@@ -36,7 +36,6 @@ ACTION_CONFIG_FIELDS = {
     "q_batt",
     "q_soc",
     "q_fc_var",
-    "soc_penalty_mode",
 }
 POWER_TOLERANCE_KW = 0.1
 SOC_TOLERANCE = 2.0e-5
@@ -72,7 +71,7 @@ class TestDqnMpcSolverBank(unittest.TestCase):
         p_fc = values[:horizon]
         p_batt = values[horizon : 2 * horizon]
         soc = values[2 * horizon : 3 * horizon + 1]
-        deficit = values[3 * horizon + 1 :]
+        violation = values[3 * horizon + 1 :]
 
         np.testing.assert_allclose(
             p_fc + p_batt,
@@ -112,27 +111,19 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             atol=SOC_TOLERANCE,
         )
 
-        if config.soc_penalty_mode == "deficit_only":
-            self.assertGreaterEqual(float(deficit.min()), -SOC_TOLERANCE)
-            self.assertTrue(
-                np.all(
-                    soc[1:] + deficit
-                    >= self.soc_reference - SOC_TOLERANCE
-                )
-            )
-            np.testing.assert_allclose(
-                deficit,
-                np.maximum(0.0, self.soc_reference - soc[1:]),
-                rtol=0.0,
-                atol=SOC_TOLERANCE,
-            )
-        else:
-            np.testing.assert_allclose(
-                deficit,
+        self.assertGreaterEqual(float(violation.min()), -SOC_TOLERANCE)
+        np.testing.assert_allclose(
+            violation,
+            np.maximum(
                 0.0,
-                rtol=0.0,
-                atol=SOC_TOLERANCE,
-            )
+                np.maximum(
+                    float(config.soc_soft_min) - soc[1:],
+                    soc[1:] - float(config.soc_soft_max),
+                ),
+            ),
+            rtol=0.0,
+            atol=SOC_TOLERANCE,
+        )
 
         ramp_limit = float(resolved_ramp_kw_per_step(config))
         self.assertLessEqual(
@@ -170,10 +161,6 @@ class TestDqnMpcSolverBank(unittest.TestCase):
                     entry.config.q_fc_var,
                 ),
                 action.as_tuple(),
-            )
-            self.assertEqual(
-                entry.config.soc_penalty_mode,
-                action.soc_penalty_mode,
             )
             for name in config_field_names:
                 if name not in ACTION_CONFIG_FIELDS:
@@ -243,7 +230,6 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             q_batt=action.q_batt,
             q_soc=action.q_soc,
             q_fc_var=action.q_fc_var,
-            soc_penalty_mode=action.soc_penalty_mode,
         )
 
         # 先构造与正式 nominal action 相同的物理 QP。
@@ -310,7 +296,7 @@ class TestDqnMpcSolverBank(unittest.TestCase):
         )
 
         # 决策变量顺序：
-        # [P_fc(0:N), P_batt(0:N), SOC(0:N+1), SOC_deficit(0:N)]
+        # [P_fc(0:N), P_batt(0:N), SOC(0:N+1), SOC_band_violation(0:N)]
         bank_p_fc = bank_physical_solution[:horizon]
         bank_p_batt = bank_physical_solution[horizon: 2 * horizon]
         bank_soc = bank_physical_solution[2 * horizon: 3 * horizon + 1]

@@ -5,7 +5,6 @@ from typing import Any
 
 import numpy as np
 
-from .formal_config import FIXED_SOC_REFERENCE
 from .mpc_qp_formulation import QpMpcConfig, resolved_ramp_kw_per_step
 
 
@@ -33,7 +32,7 @@ def _qp_bounds_for_step(
     if not np.all(np.isfinite(load)):
         raise ValueError("load_forecast_kw contains non-finite values")
 
-    n_constraints = 8 * horizon + 2
+    n_constraints = 9 * horizon + 2
     lower = np.empty(n_constraints, dtype=float)
     upper = np.empty(n_constraints, dtype=float)
     cursor = 0
@@ -50,18 +49,15 @@ def _qp_bounds_for_step(
     upper[cursor : cursor + horizon + 1] = float(config.soc_max)
     cursor += horizon + 1
 
-    deficit_mode = str(config.soc_penalty_mode) == "deficit_only"
     lower[cursor : cursor + horizon] = 0.0
-    upper[cursor : cursor + horizon] = (
-        max(FIXED_SOC_REFERENCE - float(config.soc_min), 0.0)
-        if deficit_mode
-        else 0.0
-    )
+    upper[cursor : cursor + horizon] = np.inf
     cursor += horizon
 
-    lower[cursor : cursor + horizon] = (
-        FIXED_SOC_REFERENCE if deficit_mode else -np.inf
-    )
+    lower[cursor : cursor + horizon] = float(config.soc_soft_min)
+    upper[cursor : cursor + horizon] = np.inf
+    cursor += horizon
+
+    lower[cursor : cursor + horizon] = -float(config.soc_soft_max)
     upper[cursor : cursor + horizon] = np.inf
     cursor += horizon
 

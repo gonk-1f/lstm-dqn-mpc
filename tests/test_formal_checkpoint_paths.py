@@ -39,11 +39,11 @@ class FormalCheckpointPathTests(unittest.TestCase):
             kan = formal_output_dir("kan", repo_root=root)
             self.assertEqual(
                 mlp.name,
-                "dqn_mpc_mlp_causal_deficit_a2_formal_rounds",
+                "dqn_mpc_mlp_causal_soc_deadband_formal_rounds",
             )
             self.assertEqual(
                 kan.name,
-                "dqn_mpc_kan_causal_deficit_a2_formal_rounds",
+                "dqn_mpc_kan_causal_soc_deadband_formal_rounds",
             )
             self.assertNotEqual(mlp, kan)
 

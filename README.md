@@ -68,24 +68,24 @@ KAN 只替换 Q-network；不修改 environment、reward、state builder、repla
 
 `MPCWeightAction.as_tuple()` 始终返回 `(q_h2, q_batt, q_soc, q_fcvar)`，动作 ID 和数量固定：
 
-| Action | 权重 | SOC penalty |
+| Action | 权重 |
 | --- | --- | --- |
-| A0 nominal | `(0.25, 0.40, 12, 20)` | symmetric |
-| A1 hydrogen economy | `(0.40, 0.25, 8, 8)` | symmetric |
-| A2 SOC recovery | `(0.25, 0.45, 200, 8)` | deficit-only |
-| A3 fast FC response | `(0.15, 0.80, 12, 8)` | symmetric |
+| A0 nominal | `(0.25, 0.40, 12, 20)` |
+| A1 hydrogen economy | `(0.40, 0.25, 8, 8)` |
+| A2 SOC recovery | `(0.25, 0.45, 200, 8)` |
+| A3 fast FC response | `(0.15, 0.80, 12, 8)` |
 
-A2 的 SOC 项为：
+四个动作使用完全相同的 MPC 目标函数与物理约束；DQN 只选择
+`(q_h2, q_batt, q_soc, q_fcvar)`。SOC 软工作区间统一为 `[0.50, 0.60]`：
 
 ```text
-d_k >= 0.55 - SOC_k
+d_k >= 0.50 - SOC_k
+d_k >= SOC_k - 0.60
 d_k >= 0
-J_soc,A2 = 200 * sum_k (d_k / 0.05)^2
+J_soc = q_soc * sum_k (d_k / 0.05)^2
 ```
 
-因此 `SOC < 0.55` 时 A2 推动恢复；`SOC >= 0.55` 时 A2 的 SOC 项为零，不会为了压回参考值主动制造反向能量搬移。A0、A1、A3 仍使用原对称 SOC 跟踪项。
-
-所有动作使用相同的 slack-QP 变量与稀疏约束结构。非 A2 动作把 deficit 变量固定为零。实现保持凸性并由 OSQP 求解，没有求解器外 clamp。
+因此区间内 SOC 代价为零；区间外按到最近边界的归一化平方距离惩罚。所有动作使用相同的 `SOC_band_violation` 辅助变量和稀疏约束结构。实现保持凸性并由 OSQP 求解，没有求解器外 clamp。
 
 ## 物理配置
 
@@ -123,7 +123,7 @@ Phi_SOC(SOC) = ((0.50 - SOC) / 0.05)^2,  SOC < 0.50
                ((SOC - 0.60) / 0.05)^2, SOC > 0.60
 ```
 
-reward 的 soft SOC range 为 `0.50～0.60`，MPC 的 hard SOC constraints 为 `0.20～0.80`。SOC 位于 soft range 内时不要求实时跟踪 `0.55`。`SOC_ref=0.55` 仍用于系统初始/参考 SOC 和 A2 deficit-only SOC recovery，但不构成 common reward 的逐步对称跟踪项。求解失败的 terminal reward 保持 `-620`。
+reward 与 MPC 的 soft SOC range 均为 `0.50～0.60`，MPC 的 hard SOC constraints 为 `0.20～0.80`。SOC 位于 soft range 内时不要求实时跟踪 `0.55`。`SOC_ref=0.55` 仍用于系统初始/参考 SOC，但不构成 MPC 或 common reward 的逐步跟踪项。求解失败的 terminal reward 保持 `-620`。
 
 ## 正式入口
 
@@ -148,13 +148,13 @@ python src/main/run_dqn_mpc_causal_training.py
 新 MLP 输出目录：
 
 ```text
-outputs/dqn_mpc_mlp_causal_deficit_a2_formal_rounds/
+outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds/
 ```
 
 未来 KAN 输出必须使用：
 
 ```text
-outputs/dqn_mpc_kan_causal_deficit_a2_formal_rounds/
+outputs/dqn_mpc_kan_causal_soc_deadband_formal_rounds/
 ```
 
 两种后端不得混用 checkpoint。独立 test 默认只接受新 MLP namespace 中的 `round_2/model_round2.pt`；文件不存在或路径属于另一后端时会明确报错，不会 fallback：
@@ -177,7 +177,7 @@ python src/main/compare_mpc_vs_dqn.py
 
 ## 自动化验证
 
-本仓库保留针对以下契约的 focused tests：causal 7 维状态、四动作映射、common reward、MLP/KAN factory 与 greedy action、replay/update、正式 split、validation 无学习副作用、QP 物理约束、A2 deficit-only 语义、统一 OSQP 结构及 checkpoint 隔离。
+本仓库保留针对以下契约的 focused tests：causal 7 维状态、四动作映射、common reward、MLP/KAN factory 与 greedy action、replay/update、正式 split、validation 无学习副作用、QP 物理约束、统一 SOC deadband 语义、统一 OSQP 结构及 checkpoint 隔离。
 
 ```powershell
 python -m unittest discover -s tests -p "test_*.py" -v

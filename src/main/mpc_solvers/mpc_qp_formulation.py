@@ -41,6 +41,8 @@ class QpMpcConfig:
     fuel_cell_ramp_kw: float | None = None
     soc_min: float = 0.2
     soc_max: float = 0.8
+    soc_soft_min: float = 0.50
+    soc_soft_max: float = 0.60
     soc_band: float = 0.05
     objective_variant: str = "simplified_normalized_literature_v1"
     q_h2: float = 1.0
@@ -49,7 +51,6 @@ class QpMpcConfig:
     q_batt: float = 0.05
     q_ramp: float = 0.0
     q_terminal_soc: float = 0.0
-    soc_penalty_mode: str = "symmetric"
 
 
 @dataclass(frozen=True)
@@ -133,16 +134,16 @@ def _add_normalized_soc_tracking_cost(
         linear[index] += -2.0 * weight * soc_reference / soc_band**2
 
 
-def _add_normalized_soc_deficit_cost(
+def _add_normalized_soc_deadband_cost(
     hessian: np.ndarray,
     *,
-    deficit0: int,
+    violation0: int,
     horizon: int,
     weight: float,
     soc_band: float,
 ) -> None:
     for k in range(horizon):
-        hessian[deficit0 + k, deficit0 + k] += 2.0 * weight / soc_band**2
+        hessian[violation0 + k, violation0 + k] += 2.0 * weight / soc_band**2
 
 
 def _add_normalized_fc_variation_cost(
@@ -182,6 +183,12 @@ def _validate_config(config: QpMpcConfig) -> None:
         raise ValueError("fuel_cell_max_kw must be greater than fuel_cell_min_kw")
     if float(config.soc_max) <= float(config.soc_min):
         raise ValueError("soc_max must be greater than soc_min")
+    if float(config.soc_soft_min) < float(config.soc_min):
+        raise ValueError("soc_soft_min must be within the physical SOC bounds")
+    if float(config.soc_soft_max) > float(config.soc_max):
+        raise ValueError("soc_soft_max must be within the physical SOC bounds")
+    if float(config.soc_soft_max) <= float(config.soc_soft_min):
+        raise ValueError("soc_soft_max must be greater than soc_soft_min")
     if float(config.soc_band) <= 0.0:
         raise ValueError("soc_band must be positive")
     for name in ("q_h2", "q_fc_var", "q_soc", "q_batt", "q_ramp", "q_terminal_soc"):
@@ -193,17 +200,6 @@ def _validate_config(config: QpMpcConfig) -> None:
         "legacy_raw_h2_soc_batt_ramp_terminal",
     }:
         raise ValueError(f"unsupported objective_variant: {config.objective_variant}")
-    if str(config.soc_penalty_mode) not in {"symmetric", "deficit_only"}:
-        raise ValueError(
-            f"unsupported soc_penalty_mode: {config.soc_penalty_mode}"
-        )
-    if (
-        str(config.soc_penalty_mode) == "deficit_only"
-        and str(config.objective_variant) != "n6_h2_batt_soc_fcvar_normalized_v1"
-    ):
-        raise ValueError(
-            "deficit_only SOC penalty requires the formal normalized N=6 objective"
-        )
 
 
 def build_qp_problem(
@@ -227,12 +223,12 @@ def build_qp_problem(
     n_fc = horizon
     n_batt = horizon
     n_soc = horizon + 1
-    n_deficit = horizon
+    n_violation = horizon
     fc0 = 0
     batt0 = n_fc
     soc0 = n_fc + n_batt
-    deficit0 = soc0 + n_soc
-    n_var = n_fc + n_batt + n_soc + n_deficit
+    violation0 = soc0 + n_soc
+    n_var = n_fc + n_batt + n_soc + n_violation
 
     hessian = np.zeros((n_var, n_var), dtype=float)
     linear = np.zeros(n_var, dtype=float)
@@ -244,15 +240,10 @@ def build_qp_problem(
         raise ValueError("h2 reference denominator must be positive")
     objective_terms: list[str]
     if objective_variant == "n6_h2_batt_soc_fcvar_normalized_v1":
-        soc_penalty_mode = str(config.soc_penalty_mode)
         objective_terms = [
             "H2_norm",
             "Batt_power_sq_norm",
-            (
-                "SOC_deficit_sq_norm"
-                if soc_penalty_mode == "deficit_only"
-                else "SOC_tracking_sq_norm"
-            ),
+            "SOC_deadband_sq_norm",
             "FC_variation_sq_norm",
         ]
         _add_normalized_h2_cost(
@@ -272,24 +263,13 @@ def build_qp_problem(
             weight=float(config.q_batt),
             reference_kw=float(config.battery_power_ref_kw),
         )
-        if soc_penalty_mode == "deficit_only":
-            _add_normalized_soc_deficit_cost(
-                hessian,
-                deficit0=deficit0,
-                horizon=horizon,
-                weight=float(config.q_soc),
-                soc_band=float(config.soc_band),
-            )
-        else:
-            _add_normalized_soc_tracking_cost(
-                hessian,
-                linear,
-                soc0=soc0,
-                horizon=horizon,
-                weight=float(config.q_soc),
-                soc_reference=float(soc_reference),
-                soc_band=float(config.soc_band),
-            )
+        _add_normalized_soc_deadband_cost(
+            hessian,
+            violation0=violation0,
+            horizon=horizon,
+            weight=float(config.q_soc),
+            soc_band=float(config.soc_band),
+        )
         _add_normalized_fc_variation_cost(
             hessian,
             linear,
@@ -378,18 +358,22 @@ def build_qp_problem(
     for k in range(horizon + 1):
         add_row({soc0 + k: 1.0}, config.soc_min, config.soc_max)
 
-    deficit_mode = str(config.soc_penalty_mode) == "deficit_only"
-    deficit_upper = max(float(soc_reference) - float(config.soc_min), 0.0)
     for k in range(horizon):
         add_row(
-            {deficit0 + k: 1.0},
+            {violation0 + k: 1.0},
             0.0,
-            deficit_upper if deficit_mode else 0.0,
+            np.inf,
         )
     for k in range(horizon):
         add_row(
-            {soc0 + k + 1: 1.0, deficit0 + k: 1.0},
-            float(soc_reference) if deficit_mode else -np.inf,
+            {soc0 + k + 1: 1.0, violation0 + k: 1.0},
+            float(config.soc_soft_min),
+            np.inf,
+        )
+    for k in range(horizon):
+        add_row(
+            {soc0 + k + 1: -1.0, violation0 + k: 1.0},
+            -float(config.soc_soft_max),
             np.inf,
         )
 
@@ -425,8 +409,8 @@ def build_qp_problem(
             data.append(float(value))
 
     # Keep every variable diagonal explicitly stored, including zero-cost
-    # SOC or deficit entries. This gives symmetric and deficit-only actions
-    # one OSQP P sparsity pattern without changing the numeric objective.
+    # SOC or band-violation entries. This gives every weight action one OSQP
+    # P sparsity pattern without changing the objective structure.
     p_row, p_col = np.nonzero(hessian)
     diagonal = np.arange(n_var, dtype=int)
     P = sparse.coo_matrix(
@@ -458,7 +442,7 @@ def build_qp_problem(
         "horizon": horizon,
         "dt_seconds": float(config.dt_seconds),
         "variable_order": (
-            "P_fc[0:N], P_batt[0:N], SOC[0:N+1], SOC_deficit[0:N]"
+            "P_fc[0:N], P_batt[0:N], SOC[0:N+1], SOC_band_violation[0:N]"
         ),
         "n_variables": int(n_var),
         "n_constraints": int(A.shape[0]),
@@ -479,13 +463,14 @@ def build_qp_problem(
         },
         "soc_cost_in_objective": bool(
             {
-                "SOC_tracking_sq_norm",
-                "SOC_deficit_sq_norm",
+                "SOC_deadband_sq_norm",
                 "SOC_norm",
                 "soc",
             }.intersection(objective_terms)
         ),
-        "soc_penalty_mode": str(config.soc_penalty_mode),
+        "soc_soft_min": float(config.soc_soft_min),
+        "soc_soft_max": float(config.soc_soft_max),
+        "soc_soft_scale": float(config.soc_band),
         "battery_power_ref_kw": float(config.battery_power_ref_kw),
         "fuel_cell_variation_ref_kw_per_step": float(
             ramp_kw
@@ -535,17 +520,11 @@ def build_qp_problem(
                         "sum(k=0..N-1) "
                         f"(P_batt[k] / {battery_power_reference} kW)^2"
                     ),
-                    (
-                        "SOC_deficit_sq_norm"
-                        if str(config.soc_penalty_mode) == "deficit_only"
-                        else "SOC_tracking_sq_norm"
-                    ): (
+                    "SOC_deadband_sq_norm": (
                         "sum(k=1..N) "
-                        + (
-                            f"(max(0, SOC_ref - SOC[k]) / {soc_band_reference})^2"
-                            if str(config.soc_penalty_mode) == "deficit_only"
-                            else f"((SOC[k] - SOC_ref) / {soc_band_reference})^2"
-                        )
+                        f"(max(0, {config.soc_soft_min} - SOC[k], "
+                        f"SOC[k] - {config.soc_soft_max}) / "
+                        f"{soc_band_reference})^2"
                     ),
                     "FC_variation_sq_norm": (
                         f"((P_fc[0] - P_fc_prev) / {fc_variation_reference} kW)^2 + "

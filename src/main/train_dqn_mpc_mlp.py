@@ -64,7 +64,7 @@ DEFAULT_SPLIT_MANIFEST = FORMAL_SPLIT_MANIFEST
 DEFAULT_MLP_SINGLE_PASS_OUTPUT_DIR = (
     REPO_ROOT
     / "outputs"
-    / "dqn_mpc_mlp_causal_deficit_a2_single_pass"
+    / "dqn_mpc_mlp_causal_soc_deadband_single_pass"
 )
 
 ALLOWED_RUNTIME_SPLITS = ("train", "validation")
@@ -462,7 +462,7 @@ def _write_failure_diagnostic(
     directory = (
         REPO_ROOT
         / "outputs"
-        / f"dqn_mpc_{backend}_causal_deficit_a2_single_pass_failure"
+        / f"dqn_mpc_{backend}_causal_soc_deadband_single_pass_failure"
     )
 
     if directory.exists():
