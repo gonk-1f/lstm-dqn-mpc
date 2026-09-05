@@ -506,29 +506,30 @@
     "under_1_kw_count": 14716
   },
   "cleaned_30s": {
-    "count": 37489,
+    "count": 37298,
     "min_kw": 0.0670469999999999,
     "max_kw": 1103.8994,
-    "mean_kw": 265.54247138171195,
+    "mean_kw": 266.75165992659123,
     "zero_count": 0,
     "negative_count": 0,
     "under_1_kw_count": 4,
-    "segment_count": 178,
-    "total_duration_s": 1119560
+    "under_minus_1_kw_count": 0,
+    "segment_count": 177,
+    "total_duration_s": 1113860
   },
   "pchip_1s": {
-    "count": 1119738,
+    "count": 1114037,
     "min_kw": 0.0670470000000023,
     "max_kw": 1103.8994,
-    "mean_kw": 266.3484718029429,
+    "mean_kw": 267.5610318868163,
     "zero_count": 0,
     "negative_count": 0,
     "under_1_kw_count": 38,
-    "segment_count": 178,
-    "total_points": 1119738,
-    "total_duration_s": 1119560,
-    "nonphysical_overshoot": false,
-    "under_minus_1_kw_count": 0
+    "under_minus_1_kw_count": 0,
+    "segment_count": 177,
+    "total_points": 1114037,
+    "total_duration_s": 1113860,
+    "nonphysical_overshoot": false
   },
   "external_charging": {
     "interval_count": 52,
@@ -574,14 +575,14 @@
   },
   "baseline_comparison": {
     "baseline_commit": "dc9af36d6705d24bd1fa2adde46cd3b07a301c15",
-    "delta_1s_points": -553,
-    "delta_duration_s": -540,
-    "delta_segment_count": -13,
+    "delta_1s_points": -6254,
+    "delta_duration_s": -6240,
+    "delta_segment_count": -14,
     "delta_shore_interval_count": 0,
     "delta_abnormal_interval_count": -74,
     "delta_pure_idle_removed_segment_count": 82,
     "delta_split_1s_points": {
-      "train": -491,
+      "train": -6192,
       "validation": -62,
       "test": 0
     }
@@ -636,7 +637,7 @@
       "6月28日08_00_6月28日15_00": 1,
       "6月30日05_00_6月30日11_00": 3,
       "6月4日08_00_6月4日12_00": 1,
-      "6月5日08_00_6月5日19_00": 3,
+      "6月5日08_00_6月5日19_00": 2,
       "6月6日10_00_6月6日21_00": 6,
       "6月7日00_00_6月7日24_00": 4,
       "7月10日08_00_7月10日18_00": 1,
@@ -836,18 +837,18 @@
       "test": 7
     },
     "segment_counts": {
-      "train": 145,
+      "train": 144,
       "validation": 23,
       "test": 10
     },
     "point_counts": {
       "test": 68921,
-      "train": 801950,
+      "train": 796249,
       "validation": 248867
     },
     "duration_s": {
       "test": 68911,
-      "train": 801805,
+      "train": 796105,
       "validation": 248844
     },
     "parent_voyage_overlap_count": 0
