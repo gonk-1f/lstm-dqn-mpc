@@ -1,151 +1,53 @@
-﻿parent_voyage,start_time,end_time,raw_points,duration_s,mean_fc_kw,mean_battery_kw,speed_min_kn,speed_max_kn,speed_unavailable_points,reason,min_load_kw,mean_load_kw,propulsion_positive_points
-3月26日14_00_3月26日16_00,2024-03-26T15:58:27,2024-03-26T15:59:57,4,90.0,0.0,-41.802487,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-3月27日07_00_3月27日11_00,2024-03-27T07:00:29,2024-03-27T07:30:29,61,1800.0,0.0,-0.08537485245901637,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-3月27日07_00_3月27日11_00,2024-03-27T10:54:29,2024-03-27T10:59:59,12,330.0,0.0,-87.269116,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-3月28日08_00_3月28日11_00,2024-03-28T08:00:01,2024-03-28T08:13:01,27,780.0,0.0,-0.08791999999999997,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-3月29日08_00_3月29日15_00,2024-03-29T08:00:04,2024-03-29T08:37:04,75,2220.0,0.0,-0.0799234533333333,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-3月29日08_00_3月29日15_00,2024-03-29T14:35:35,2024-03-29T14:59:35,49,1440.0,0.0,-102.65971681632654,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月2日14_00_4月2日17_00,2024-04-02T14:00:12,2024-04-02T14:21:13,43,1261.0,0.0,-0.06987497674418602,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月2日14_00_4月2日17_00,2024-04-02T16:22:43,2024-04-02T16:59:43,75,2220.0,0.0,-103.13878979999998,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月3日08_00_4月3日11_00,2024-04-03T08:00:14,2024-04-03T08:20:14,41,1200.0,0.0,-0.06988302439024387,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月3日08_00_4月3日11_00,2024-04-03T10:55:14,2024-04-03T10:59:44,10,270.0,0.0,-92.82921599999999,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月7日08_00_4月7日12_00,2024-04-07T08:00:24,2024-04-07T08:46:54,94,2790.0,0.0,-0.09295560638297867,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月8日08_00_4月8日12_00,2024-04-08T08:00:26,2024-04-08T08:38:26,77,2280.0,0.0,-0.07608212987012987,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月8日08_00_4月8日12_00,2024-04-08T11:40:26,2024-04-08T11:59:56,40,1170.0,0.0,-93.968478325,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月9日08_00_4月9日11_00,2024-04-09T08:00:28,2024-04-09T08:10:28,21,600.0,0.0,-0.11291590476190473,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月9日08_00_4月9日11_00,2024-04-09T10:36:28,2024-04-09T10:59:58,48,1410.0,0.0,-52.33831302083333,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月12日08_00_4月12日16_00,2024-04-12T08:00:03,2024-04-12T08:53:33,108,3210.0,0.0,-0.09186997222222221,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月12日08_00_4月12日16_00,2024-04-12T15:18:33,2024-04-12T15:59:33,83,2460.0,0.0,-108.05560185542167,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月15日08_00_4月15日17_00,2024-04-15T08:00:08,2024-04-15T08:10:38,22,630.0,0.0,-0.0630076818181818,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月15日08_00_4月15日17_00,2024-04-15T10:49:38,2024-04-15T13:37:38,337,10080.0,0.0,-106.71317189020773,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月15日08_00_4月15日17_00,2024-04-15T13:44:38,2024-04-15T14:36:08,104,3090.0,0.0,-105.65631375,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月15日08_00_4月15日17_00,2024-04-15T16:46:09,2024-04-15T16:59:39,28,810.0,0.0,-99.62249439285713,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月16日08_00_4月16日19_00,2024-04-16T08:00:10,2024-04-16T08:19:40,40,1170.0,0.0,-0.042661574999999965,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月16日08_00_4月16日19_00,2024-04-16T11:26:40,2024-04-16T12:54:40,177,5280.0,0.0,-105.2028766779661,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月16日08_00_4月16日19_00,2024-04-16T13:03:10,2024-04-16T14:21:40,158,4710.0,0.0,-106.44565917088607,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月16日08_00_4月16日19_00,2024-04-16T18:50:10,2024-04-16T18:59:40,20,570.0,0.0,-90.17856544999998,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月17日07_00_4月17日17_00,2024-04-17T09:00:11,2024-04-17T09:15:41,32,930.0,0.0,-109.62759396875,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月17日07_00_4月17日17_00,2024-04-17T09:37:11,2024-04-17T09:44:41,16,450.0,0.0,-91.2657445,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月17日07_00_4月17日17_00,2024-04-17T16:11:41,2024-04-17T16:59:41,97,2880.0,0.0,-106.29204785567009,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月18日12_00_4月18日18_00,2024-04-18T12:00:13,2024-04-18T12:11:43,24,690.0,0.0,-0.059743083333333315,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月18日12_00_4月18日18_00,2024-04-18T17:10:13,2024-04-18T17:58:43,98,2910.0,0.0,-104.24119879591836,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月21日08_00_4月21日16_00,2024-04-21T08:00:18,2024-04-21T08:18:18,37,1080.0,0.0,-0.05943954054054051,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月22日14_00_4月22日17_00,2024-04-22T16:54:50,2024-04-22T16:59:50,11,300.0,0.0,-87.32835409090909,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月24日07_00_4月24日17_00,2024-04-24T07:00:23,2024-04-24T07:22:53,46,1350.0,0.0,-0.03310797826086954,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月25日08_00_4月25日18_00,2024-04-25T08:00:26,2024-04-25T08:43:26,87,2580.0,0.0,-0.035507022988505714,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月25日08_00_4月25日18_00,2024-04-25T15:06:26,2024-04-25T15:31:56,52,1530.0,0.0,-106.66401782692309,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月25日08_00_4月25日18_00,2024-04-25T17:26:57,2024-04-25T17:59:57,67,1980.0,0.0,-108.00715113432835,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月28日08_00_4月28日12_00,2024-04-28T08:00:04,2024-04-28T08:46:04,93,2760.0,0.0,-0.03918951612903222,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月28日08_00_4月28日12_00,2024-04-28T11:42:35,2024-04-28T11:59:35,35,1020.0,0.0,-106.78921102857144,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月29日08_00_4月29日18_00,2024-04-29T17:29:38,2024-04-29T17:33:08,8,210.0,0.0,-30.50525625,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月29日08_00_4月29日18_00,2024-04-29T17:36:08,2024-04-29T17:56:38,42,1230.0,0.0,-86.57100045238094,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月29日08_00_4月29日18_00,2024-04-29T08:00:07,2024-04-29T08:17:37,36,1050.0,0.0,-0.013941666666666646,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.01578399999999997,-0.013941666666666646,0.0
-4月30日08_00_4月30日15_00,2024-04-30T08:00:10,2024-04-30T08:18:40,38,1110.0,0.0,-0.037102842105263115,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-4月30日08_00_4月30日15_00,2024-04-30T14:10:41,2024-04-30T14:59:41,99,2940.0,0.0,-106.12809327272727,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月7日08_00_5月7日18_00,2024-05-07T17:10:31,2024-05-07T17:59:31,99,2940.0,0.0,-107.74745440404041,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月7日08_00_5月7日18_00,2024-05-07T08:00:00,2024-05-07T08:50:00,101,3000.0,0.0,-0.014739089108910875,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.01655399999999998,-0.014739089108910875,0.0
-5月8日08_00_5月8日17_00,2024-05-08T16:20:35,2024-05-08T16:59:36,79,2341.0,0.0,-107.17896631645569,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月8日08_00_5月8日17_00,2024-05-08T08:00:04,2024-05-08T08:33:04,67,1980.0,0.0,-0.00324558208955221,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.0057489999999999555,-0.00324558208955221,0.0
-5月8日08_00_5月8日17_00,2024-05-08T08:34:04,2024-05-08T08:39:04,11,300.0,0.0,-0.0030321818181817894,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.004002999999999979,-0.0030321818181817894,0.0
-5月9日08_00_5月9日17_00,2024-05-09T11:08:38,2024-05-09T13:42:38,309,9240.0,0.0,-97.27736899029127,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月9日08_00_5月9日17_00,2024-05-09T16:11:08,2024-05-09T16:59:38,98,2910.0,0.0,-35.899770153061226,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月9日08_00_5月9日17_00,2024-05-09T08:00:07,2024-05-09T08:11:37,24,690.0,0.0,-0.005166958333333296,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.007249999999999965,-0.005166958333333296,0.0
-5月10日08_00_5月10日10_00,2024-05-10T09:23:12,2024-05-10T09:59:42,74,2190.0,0.0,-103.4310648783784,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月10日08_00_5月10日10_00,2024-05-10T08:00:11,2024-05-10T08:22:41,46,1350.0,0.0,-0.014144695652173899,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.01588199999999998,-0.014144695652173899,0.0
-5月11日08_00_5月11日11_00,2024-05-11T08:00:16,2024-05-11T08:22:46,46,1350.0,0.0,-0.015633130434782597,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.01634199999999999,-0.015633130434782597,0.0
-5月13日08_00_5月13日11_00,2024-05-13T08:07:20,2024-05-13T08:08:50,4,90.0,0.0,-0.029237999999999976,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月13日08_00_5月13日11_00,2024-05-13T08:09:50,2024-05-13T08:11:20,4,90.0,0.0,-0.029377999999999967,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月13日08_00_5月13日11_00,2024-05-13T08:12:20,2024-05-13T08:13:50,4,90.0,0.0,-0.028955749999999968,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月13日08_00_5月13日11_00,2024-05-13T08:27:20,2024-05-13T08:32:50,12,330.0,0.0,-0.02919074999999997,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月13日08_00_5月13日11_00,2024-05-13T08:35:50,2024-05-13T08:38:20,6,150.0,0.0,-0.029003666666666632,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月13日08_00_5月13日11_00,2024-05-13T08:40:50,2024-05-13T08:42:20,4,90.0,0.0,-0.029659499999999974,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月13日08_00_5月13日11_00,2024-05-13T08:47:50,2024-05-13T08:48:50,3,60.0,0.0,-0.02900433333333331,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月13日08_00_5月13日11_00,2024-05-13T10:24:21,2024-05-13T10:59:51,72,2130.0,0.0,-0.13049302777777777,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月13日08_00_5月13日11_00,2024-05-13T08:00:20,2024-05-13T08:06:50,14,390.0,0.0,-0.02749128571428569,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.029377999999999974,-0.02749128571428569,0.0
-5月13日08_00_5月13日11_00,2024-05-13T08:14:20,2024-05-13T08:26:50,26,750.0,0.0,-0.028167769230769194,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.03050199999999996,-0.028167769230769194,0.0
-5月13日08_00_5月13日11_00,2024-05-13T08:33:20,2024-05-13T08:35:20,5,120.0,0.0,-0.02791719999999997,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.028254999999999975,-0.02791719999999997,0.0
-5月13日08_00_5月13日11_00,2024-05-13T08:38:50,2024-05-13T08:40:20,4,90.0,0.0,-0.028394999999999972,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.028815999999999974,-0.028394999999999972,0.0
-5月13日08_00_5月13日11_00,2024-05-13T08:42:50,2024-05-13T08:47:20,10,270.0,0.0,-0.02791739999999997,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.02881699999999996,-0.02791739999999997,0.0
-5月13日08_00_5月13日11_00,2024-05-13T08:49:21,2024-05-13T08:50:50,4,89.0,0.0,-0.028113749999999965,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.028254999999999954,-0.028113749999999965,0.0
-5月14日12_00_5月14日19_00,2024-05-14T18:35:53,2024-05-14T18:59:53,49,1440.0,0.0,-0.08297795918367347,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月14日12_00_5月14日19_00,2024-05-14T12:00:23,2024-05-14T12:23:23,47,1380.0,0.0,-0.0124078723404255,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.014057999999999973,-0.0124078723404255,0.0
-5月15日08_00_5月15日17_00,2024-05-15T16:50:25,2024-05-15T16:59:55,20,570.0,0.0,-0.0626879,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月17日08_00_5月17日18_00,2024-05-17T11:39:58,2024-05-17T15:38:29,478,14311.0,0.0,-0.11307641004184099,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月17日08_00_5月17日18_00,2024-05-17T17:46:29,2024-05-17T17:59:59,28,810.0,0.0,-0.03750110714285715,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月20日08_00_5月20日18_00,2024-05-20T14:09:34,2024-05-20T14:41:34,65,1920.0,0.0,-107.59203416923079,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月20日08_00_5月20日18_00,2024-05-20T17:38:34,2024-05-20T17:59:34,43,1260.0,0.0,-89.71330583720932,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月20日08_00_5月20日18_00,2024-05-20T08:00:03,2024-05-20T08:21:03,43,1260.0,0.0,-0.010906186046511607,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.012369999999999978,-0.010906186046511607,0.0
-5月21日05_00_5月21日11_00,2024-05-21T10:40:35,2024-05-21T10:59:35,39,1140.0,0.0,-0.08975497435897434,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月27日08_00_5月27日19_00,2024-05-27T11:10:21,2024-05-27T15:28:51,518,15510.0,0.0,-0.12633789382239383,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月27日08_00_5月27日19_00,2024-05-27T15:38:21,2024-05-27T15:43:21,11,300.0,0.0,-21.63158727272727,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月27日08_00_5月27日19_00,2024-05-27T18:06:51,2024-05-27T18:59:51,107,3180.0,0.0,-0.06439230841121496,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月29日14_00_5月29日17_00,2024-05-29T16:35:57,2024-05-29T16:51:57,33,960.0,0.0,-0.09628678787878789,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-5月29日14_00_5月29日17_00,2024-05-29T16:52:57,2024-05-29T16:59:57,15,420.0,0.0,-0.10542273333333331,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月4日08_00_6月4日12_00,2024-06-04T11:21:42,2024-06-04T11:59:42,77,2280.0,0.0,-0.09736644155844158,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月5日08_00_6月5日19_00,2024-06-05T11:13:14,2024-06-05T12:19:45,134,3991.0,0.0,-0.10169614925373134,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月5日08_00_6月5日19_00,2024-06-05T12:21:15,2024-06-05T12:22:15,3,60.0,0.0,-0.118522,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月5日08_00_6月5日19_00,2024-06-05T18:05:45,2024-06-05T18:59:45,109,3240.0,0.0,-0.11017847706422018,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月5日08_00_6月5日19_00,2024-06-05T08:00:14,2024-06-05T08:08:14,17,480.0,0.0,-0.013074352941176448,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.014098999999999987,-0.013074352941176448,0.0
-6月6日10_00_6月6日21_00,2024-06-06T17:44:17,2024-06-06T19:14:17,181,5400.0,0.0,-0.08152987845303868,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月7日00_00_6月7日24_00,2024-06-07T00:00:18,2024-06-07T01:49:48,220,6570.0,0.0,-105.42762357272728,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月7日00_00_6月7日24_00,2024-06-07T01:59:48,2024-06-07T08:58:48,839,25140.0,0.0,-0.105482694874851,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月7日00_00_6月7日24_00,2024-06-07T11:41:18,2024-06-07T15:13:19,425,12721.0,0.0,-0.09056236235294118,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月7日00_00_6月7日24_00,2024-06-07T15:34:19,2024-06-07T23:59:50,1012,30331.0,0.0,-0.09277692687747037,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月11日08_00_6月11日11_00,2024-06-11T08:00:00,2024-06-11T08:11:00,23,660.0,0.0,-0.12093030434782605,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月11日08_00_6月11日11_00,2024-06-11T10:46:31,2024-06-11T10:59:31,27,780.0,0.0,-0.05179307407407408,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月12日14_00_6月12日17_00,2024-06-12T14:00:05,2024-06-12T14:30:05,61,1800.0,0.0,-0.10268019672131148,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月12日14_00_6月12日17_00,2024-06-12T16:41:36,2024-06-12T16:59:35,37,1079.0,0.0,-0.033824054054054045,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月12日14_00_6月12日17_00,2024-06-12T16:24:36,2024-06-12T16:41:05,34,989.0,0.0,-0.023959588235294118,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.029374,-0.023959588235294118,0.0
-6月13日08_00_6月13日14_00,2024-06-13T13:51:39,2024-06-13T13:59:39,17,480.0,0.0,-0.03572664705882352,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月14日08_00_6月15日18_00,2024-06-14T08:00:14,2024-06-14T09:03:44,127,3810.0,0.0,-0.08648544094488189,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月14日08_00_6月15日18_00,2024-06-14T17:31:46,2024-06-14T17:34:16,6,150.0,0.0,-0.030345833333333332,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月14日08_00_6月15日18_00,2024-06-14T17:35:16,2024-06-14T18:26:46,104,3090.0,0.0,-0.04090345192307692,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月14日08_00_6月15日18_00,2024-06-14T19:16:16,2024-06-14T19:37:16,43,1260.0,0.0,-70.49442274418605,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月14日08_00_6月15日18_00,2024-06-15T00:34:16,2024-06-15T09:17:18,1047,31382.0,0.0,-57.324033561604594,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月14日08_00_6月15日18_00,2024-06-15T09:34:48,2024-06-15T16:27:49,827,24781.0,0.0,-58.15970622370012,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月14日08_00_6月15日18_00,2024-06-15T16:55:49,2024-06-15T16:58:19,6,150.0,0.0,-57.08203183333333,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月14日08_00_6月15日18_00,2024-06-15T17:20:19,2024-06-15T17:59:49,80,2370.0,0.0,-0.033693175,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月14日08_00_6月15日18_00,2024-06-14T17:22:46,2024-06-14T17:31:16,18,510.0,0.0,-0.026873444444444443,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.028777,-0.026873444444444443,0.0
-6月14日08_00_6月15日18_00,2024-06-15T16:40:19,2024-06-15T16:49:19,19,540.0,0.0,-0.03435810526315786,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.20759199999999933,-0.03435810526315786,0.0
-6月14日08_00_6月15日18_00,2024-06-15T17:06:49,2024-06-15T17:19:49,27,780.0,0.0,-0.02675540740740741,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.028668000000000003,-0.02675540740740741,0.0
-6月17日09_00_6月17日16_00,2024-06-17T09:00:26,2024-06-17T09:25:26,51,1500.0,0.0,-0.10541874509803922,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月17日09_00_6月17日16_00,2024-06-17T15:17:56,2024-06-17T15:59:56,85,2520.0,0.0,-0.07058302352941177,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月20日08_00_6月20日16_00,2024-06-20T08:00:07,2024-06-20T09:09:37,140,4170.0,0.0,-0.09823778571428571,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月20日08_00_6月20日16_00,2024-06-20T14:51:08,2024-06-20T15:16:38,52,1530.0,0.0,-0.04531532692307692,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月20日08_00_6月20日16_00,2024-06-20T15:17:38,2024-06-20T15:59:38,85,2520.0,0.0,-0.07097610588235295,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月26日08_00_6月26日13_00,2024-06-26T08:00:28,2024-06-26T08:07:28,15,420.0,0.0,-0.10865873333333331,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月26日08_00_6月26日13_00,2024-06-26T12:26:58,2024-06-26T12:59:58,67,1980.0,0.0,-0.04899967164179104,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月28日08_00_6月28日15_00,2024-06-28T08:00:02,2024-06-28T08:52:03,105,3121.0,0.0,-0.1181014380952381,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月28日08_00_6月28日15_00,2024-06-28T14:19:33,2024-06-28T14:59:34,81,2401.0,0.0,-0.06082423456790124,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月30日05_00_6月30日11_00,2024-06-30T05:00:09,2024-06-30T05:19:39,40,1170.0,0.0,-0.10630880000000001,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-6月30日05_00_6月30日11_00,2024-06-30T10:35:40,2024-06-30T10:59:40,49,1440.0,0.0,-107.73008051020408,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月2日14_00_7月2日18_00,2024-07-02T14:00:18,2024-07-02T14:19:48,40,1170.0,0.0,-0.100959625,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月2日14_00_7月2日18_00,2024-07-02T17:36:20,2024-07-02T17:59:50,48,1410.0,0.0,-0.037815062499999996,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月3日08_00_7月3日16_00,2024-07-03T08:00:22,2024-07-03T08:22:22,45,1320.0,0.0,-0.09611968888888887,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月3日08_00_7月3日16_00,2024-07-03T15:10:53,2024-07-03T15:59:53,99,2940.0,0.0,-0.06431129292929293,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月9日08_00_7月9日16_00,2024-07-09T08:00:18,2024-07-09T08:17:48,36,1050.0,0.0,-0.06841258333333335,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月10日08_00_7月10日18_00,2024-07-10T08:00:23,2024-07-10T08:50:23,101,3000.0,0.0,-0.08004360396039605,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月10日08_00_7月10日18_00,2024-07-10T17:57:32,2024-07-10T17:59:32,5,120.0,0.0,-0.021578200000000006,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.022251000000000003,-0.021578200000000006,0.0
-7月11日06_00_7月12日10_00,2024-07-11T06:00:03,2024-07-11T06:11:03,23,660.0,0.0,-0.09114760869565217,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月11日06_00_7月12日10_00,2024-07-12T09:16:35,2024-07-12T09:59:35,87,2580.0,0.0,-0.10092347126436779,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月15日14_00_7月15日16_00,2024-07-15T14:00:13,2024-07-15T14:12:13,25,720.0,0.0,-0.09612979999999999,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月15日14_00_7月15日16_00,2024-07-15T15:51:43,2024-07-15T15:59:43,17,480.0,0.0,-0.03883217647058823,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月18日08_00_7月18日12_00,2024-07-18T08:00:20,2024-07-18T08:39:50,80,2370.0,0.0,-0.08666385,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月18日08_00_7月18日12_00,2024-07-18T11:03:20,2024-07-18T11:59:51,114,3391.0,0.0,-0.05615417543859649,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月19日07_00_7月19日09_00,2024-07-19T07:00:22,2024-07-19T07:28:22,57,1680.0,0.0,-0.06686249122807017,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月22日08_00_7月22日11_00,2024-07-22T08:00:28,2024-07-22T08:50:28,101,3000.0,0.0,-0.07690052475247525,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月23日12_00_7月23日15_00,2024-07-23T12:00:01,2024-07-23T12:16:01,33,960.0,0.0,-0.06019572727272727,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月23日12_00_7月23日15_00,2024-07-23T14:31:01,2024-07-23T14:48:01,35,1020.0,0.0,-0.030647428571428575,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月23日12_00_7月23日15_00,2024-07-23T14:49:01,2024-07-23T14:52:31,8,210.0,0.0,-0.0303325,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月23日12_00_7月23日15_00,2024-07-23T14:53:01,2024-07-23T14:59:31,14,390.0,0.0,-0.028549642857142864,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.030787000000000002,-0.028549642857142864,0.0
-7月24日14_00_7月24日17_00,2024-07-24T14:00:03,2024-07-24T14:06:33,14,390.0,0.0,-0.05458378571428572,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月25日08_00_7月25日17_00,2024-07-25T08:00:04,2024-07-25T08:17:04,35,1020.0,0.0,-0.053140599999999996,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月25日08_00_7月25日17_00,2024-07-25T16:49:05,2024-07-25T16:59:35,22,630.0,0.0,-0.038988318181818186,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月26日11_00_7月26日13_00,2024-07-26T11:00:07,2024-07-26T11:04:07,9,240.0,0.0,-0.054101111111111114,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月26日11_00_7月26日13_00,2024-07-26T12:18:37,2024-07-26T12:59:37,83,2460.0,0.0,-0.036353831325301206,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月29日14_00_7月29日17_00,2024-07-29T14:00:13,2024-07-29T14:20:43,42,1230.0,0.0,-0.07238085714285714,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月29日14_00_7月29日17_00,2024-07-29T16:37:43,2024-07-29T16:40:13,6,150.0,0.0,-0.030621333333333334,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月29日14_00_7月29日17_00,2024-07-29T16:41:13,2024-07-29T16:59:43,38,1110.0,0.0,-0.03504236842105263,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月29日14_00_7月29日17_00,2024-07-29T16:19:43,2024-07-29T16:37:13,36,1050.0,0.0,-0.02825844444444445,0.0,0.0,0,external_charging_or_shore_power: stationary continuous battery charging with negative FC_plus_battery balance,-0.031285,-0.02825844444444445,0.0
-7月31日08_00_7月31日11_00,2024-07-31T08:00:17,2024-07-31T08:24:47,50,1470.0,0.0,-0.0718983,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
-7月31日08_00_7月31日11_00,2024-07-31T10:32:47,2024-07-31T10:59:47,55,1620.0,0.0,-0.036577036363636364,0.0,0.0,0,external_charging_or_shore_power: stationary FC-idle battery charging,,,
+﻿parent_voyage,start_time,end_time,raw_points,duration_s,mean_fc_kw,mean_battery_kw,speed_min_kn,speed_max_kn,speed_unavailable_points,reason
+3月26日14_00_3月26日16_00,2024-03-26T15:58:27,2024-03-26T15:59:57,4,90.0,0.0,-41.802487,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+3月27日07_00_3月27日11_00,2024-03-27T10:54:29,2024-03-27T10:59:59,12,330.0,0.0,-87.269116,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+3月29日08_00_3月29日15_00,2024-03-29T14:35:35,2024-03-29T14:59:35,49,1440.0,0.0,-102.65971681632654,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月2日14_00_4月2日17_00,2024-04-02T16:22:43,2024-04-02T16:59:43,75,2220.0,0.0,-103.13878979999998,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月3日08_00_4月3日11_00,2024-04-03T10:55:14,2024-04-03T10:59:44,10,270.0,0.0,-92.82921599999999,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月8日08_00_4月8日12_00,2024-04-08T11:40:26,2024-04-08T11:59:56,40,1170.0,0.0,-93.968478325,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月9日08_00_4月9日11_00,2024-04-09T10:36:28,2024-04-09T10:59:58,48,1410.0,0.0,-52.33831302083333,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月12日08_00_4月12日16_00,2024-04-12T15:18:33,2024-04-12T15:59:33,83,2460.0,0.0,-108.05560185542167,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月15日08_00_4月15日17_00,2024-04-15T10:49:38,2024-04-15T13:37:38,337,10080.0,0.0,-106.71317189020773,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月15日08_00_4月15日17_00,2024-04-15T13:44:38,2024-04-15T14:36:08,104,3090.0,0.0,-105.65631375,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月15日08_00_4月15日17_00,2024-04-15T16:46:09,2024-04-15T16:59:39,28,810.0,0.0,-99.62249439285713,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月16日08_00_4月16日19_00,2024-04-16T11:27:10,2024-04-16T12:54:40,176,5250.0,0.0,-105.80042263068184,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月16日08_00_4月16日19_00,2024-04-16T13:03:10,2024-04-16T14:21:40,158,4710.0,0.0,-106.44565917088607,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月16日08_00_4月16日19_00,2024-04-16T18:50:40,2024-04-16T18:59:40,19,540.0,0.0,-94.92010531578947,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月17日07_00_4月17日17_00,2024-04-17T09:00:11,2024-04-17T09:15:41,32,930.0,0.0,-109.62759396875,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月17日07_00_4月17日17_00,2024-04-17T09:37:11,2024-04-17T09:44:41,16,450.0,0.0,-91.2657445,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月17日07_00_4月17日17_00,2024-04-17T16:12:11,2024-04-17T16:59:41,96,2850.0,0.0,-107.3975180625,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月18日12_00_4月18日18_00,2024-04-18T17:10:13,2024-04-18T17:58:43,98,2910.0,0.0,-104.24119879591836,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月22日14_00_4月22日17_00,2024-04-22T16:54:50,2024-04-22T16:59:50,11,300.0,0.0,-87.32835409090909,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月25日08_00_4月25日18_00,2024-04-25T15:06:26,2024-04-25T15:31:56,52,1530.0,0.0,-106.66401782692309,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月25日08_00_4月25日18_00,2024-04-25T17:26:57,2024-04-25T17:59:57,67,1980.0,0.0,-108.00715113432835,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月28日08_00_4月28日12_00,2024-04-28T11:42:35,2024-04-28T11:59:35,35,1020.0,0.0,-106.78921102857144,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月29日08_00_4月29日18_00,2024-04-29T17:29:38,2024-04-29T17:33:08,8,210.0,0.0,-30.50525625,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月29日08_00_4月29日18_00,2024-04-29T17:36:08,2024-04-29T17:56:38,42,1230.0,0.0,-86.57100045238094,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月30日08_00_4月30日15_00,2024-04-30T14:10:41,2024-04-30T14:59:41,99,2940.0,0.0,-106.12809327272727,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+5月7日08_00_5月7日18_00,2024-05-07T16:17:31,2024-05-07T16:19:01,4,90.0,129.25,-46.374534499999996,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+5月7日08_00_5月7日18_00,2024-05-07T17:10:31,2024-05-07T17:59:31,99,2940.0,0.0,-107.74745440404041,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+5月8日08_00_5月8日17_00,2024-05-08T16:20:35,2024-05-08T16:59:36,79,2341.0,0.0,-107.17896631645569,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+5月9日08_00_5月9日17_00,2024-05-09T11:08:38,2024-05-09T13:42:38,309,9240.0,0.0,-97.27736899029127,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+5月9日08_00_5月9日17_00,2024-05-09T16:11:08,2024-05-09T16:59:38,98,2910.0,0.0,-35.899770153061226,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+5月10日08_00_5月10日10_00,2024-05-10T09:23:12,2024-05-10T09:59:42,74,2190.0,0.0,-103.4310648783784,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+5月14日12_00_5月14日19_00,2024-05-14T12:40:23,2024-05-14T13:09:53,60,1770.0,72.26666666666667,-71.15597514999999,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+5月15日08_00_5月15日17_00,2024-05-15T08:55:24,2024-05-15T09:00:55,12,331.0,37.666666666666664,-6.728015083333333,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+5月20日08_00_5月20日18_00,2024-05-20T14:09:34,2024-05-20T14:41:34,65,1920.0,0.0,-107.59203416923079,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+5月20日08_00_5月20日18_00,2024-05-20T17:38:34,2024-05-20T17:59:34,43,1260.0,0.0,-89.71330583720932,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+5月27日08_00_5月27日19_00,2024-05-27T15:38:21,2024-05-27T16:18:51,83,2430.0,84.144578313253,-130.1596453012048,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月5日08_00_6月5日19_00,2024-06-05T16:08:45,2024-06-05T17:50:45,205,6120.0,102.99024390243902,-65.38389406829269,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月6日10_00_6月6日21_00,2024-06-06T19:37:17,2024-06-06T19:52:47,32,930.0,118.96875,-78.17786612500001,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月6日10_00_6月6日21_00,2024-06-06T20:10:47,2024-06-06T20:32:17,44,1290.0,94.13636363636364,-45.87354254545455,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月7日00_00_6月7日24_00,2024-06-07T00:00:18,2024-06-07T01:49:48,220,6570.0,0.0,-105.42762357272728,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月7日00_00_6月7日24_00,2024-06-07T15:21:19,2024-06-07T15:23:19,5,120.0,70.8,-28.5878898,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月12日14_00_6月12日17_00,2024-06-12T14:43:05,2024-06-12T14:46:05,7,180.0,93.57142857142857,-6.742671428571427,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月14日08_00_6月15日18_00,2024-06-14T19:16:16,2024-06-14T19:37:16,43,1260.0,0.0,-70.49442274418605,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月14日08_00_6月15日18_00,2024-06-15T00:34:16,2024-06-15T09:17:18,1047,31382.0,0.0,-57.324033561604594,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月14日08_00_6月15日18_00,2024-06-15T09:34:48,2024-06-15T16:27:49,827,24781.0,0.0,-58.15970622370012,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月14日08_00_6月15日18_00,2024-06-15T16:55:49,2024-06-15T16:58:19,6,150.0,0.0,-57.08203183333333,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月30日05_00_6月30日11_00,2024-06-30T10:35:40,2024-06-30T10:59:40,49,1440.0,0.0,-107.73008051020408,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+7月11日06_00_7月12日10_00,2024-07-11T18:24:34,2024-07-11T18:32:34,17,480.0,51.411764705882355,-7.580149352941178,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+7月11日06_00_7月12日10_00,2024-07-11T18:33:34,2024-07-11T20:05:04,184,5490.0,56.70108695652174,-16.667331570652173,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+7月11日06_00_7月12日10_00,2024-07-11T20:08:34,2024-07-11T21:42:34,189,5640.0,58.6931216931217,-18.07988606349206,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+7月11日06_00_7月12日10_00,2024-07-11T21:48:04,2024-07-12T08:12:35,1250,37471.0,47.892,-10.3746331008,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+7月25日08_00_7月25日17_00,2024-07-25T14:15:35,2024-07-25T14:38:05,46,1350.0,159.82608695652175,-69.13666036956522,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband

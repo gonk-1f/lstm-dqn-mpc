@@ -38,6 +38,7 @@ def zero_residual_numerical_negatives(root: Path = DATASET_ROOT) -> dict[str, in
         before_zero_count += int(values.eq(0.0).sum())
         numerical_zero_clipped_points += int(values.lt(0.0).sum())
 
+    after_values = pd.concat([values.mask(values.lt(0.0), 0.0) for _, _, values in frames], ignore_index=True)
     for path, frame, values in frames:
         if values.lt(0.0).any():
             frame["load_total_kw"] = values.mask(values.lt(0.0), 0.0)
@@ -46,9 +47,13 @@ def zero_residual_numerical_negatives(root: Path = DATASET_ROOT) -> dict[str, in
     qa_path = root / "qa_summary.json"
     qa = json.loads(qa_path.read_text(encoding="utf-8"))
     pchip = qa.setdefault("pchip_1s", {})
-    pchip["min_kw"] = 0.0 if numerical_zero_clipped_points else before_min
-    pchip["negative_count"] = 0
-    pchip["zero_count"] = before_zero_count + numerical_zero_clipped_points
+    pchip["count"] = int(len(after_values))
+    pchip["min_kw"] = float(after_values.min())
+    pchip["max_kw"] = float(after_values.max())
+    pchip["mean_kw"] = float(after_values.mean())
+    pchip["negative_count"] = int(after_values.lt(0.0).sum())
+    pchip["zero_count"] = int(after_values.eq(0.0).sum())
+    pchip["under_1_kw_count"] = int(after_values.lt(1.0).sum())
     pchip["under_minus_1_kw_count"] = 0
     qa["numerical_zero_clipping"] = {
         "numerical_zero_clipped_points": numerical_zero_clipped_points,

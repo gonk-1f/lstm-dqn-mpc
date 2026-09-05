@@ -16,14 +16,22 @@
   "shore_policy": {
     "fc_idle_threshold_kw": 0.5,
     "speed_idle_threshold_kn": 0.1,
-    "battery_charge_threshold_kw": 0.028777,
+    "battery_charge_threshold_kw": 1.0,
+    "battery_deadband_kw": 1.0,
     "minimum_shore_points": 3,
     "long_gap_threshold_s": 120.0,
     "stationary_charge_quantiles_kw": {
-      "0.05": 0.028777,
-      "0.6": 0.124705,
-      "0.7": 36.611732100000005
+      "0.05": 0.033255,
+      "0.6": 35.02995900000001,
+      "0.7": 75.89224999999999
     }
+  },
+  "battery_deadband": {
+    "deadband_kw": 1.0,
+    "baseline_low_battery_shore_interval_count": 111,
+    "recovered_interval_count": 111,
+    "recovered_total_duration_s": 244805.0,
+    "recovered_final_normal_duration_s": 0.0
   },
   "alignment": [
     {
@@ -9695,102 +9703,125 @@
     "under_1_kw_count": 14716
   },
   "cleaned_30s": {
-    "count": 40098,
-    "min_kw": -0.8901599999999945,
+    "count": 37520,
+    "min_kw": -0.7341000000000122,
     "max_kw": 1103.8994,
-    "mean_kw": 250.25877106643725,
+    "mean_kw": 265.3217087973614,
     "zero_count": 0,
-    "negative_count": 10,
-    "under_1_kw_count": 551,
-    "segment_count": 209,
-    "total_duration_s": 1196901
+    "negative_count": 8,
+    "under_1_kw_count": 19,
+    "segment_count": 191,
+    "total_duration_s": 1120100
   },
   "pchip_1s": {
-    "count": 1197110,
+    "count": 1120291,
     "min_kw": 0.0,
     "max_kw": 1103.8994,
-    "mean_kw": 251.14866004667329,
-    "zero_count": 153,
+    "mean_kw": 266.2134148565869,
+    "zero_count": 51,
     "negative_count": 0,
-    "under_1_kw_count": 15768,
-    "segment_count": 209,
-    "total_points": 1197110,
-    "total_duration_s": 1196901,
+    "under_1_kw_count": 250,
+    "segment_count": 191,
+    "total_points": 1120291,
+    "total_duration_s": 1120100,
     "nonphysical_overshoot": false,
     "under_minus_1_kw_count": 0
   },
   "external_charging": {
-    "interval_count": 150,
-    "deleted_rows": 12942,
-    "total_duration_s": 383799.0
+    "interval_count": 52,
+    "deleted_rows": 6796,
+    "total_duration_s": 202296.0
   },
   "physical_inconsistency": {
-    "interval_count": 87,
-    "deleted_rows": 1483,
-    "total_duration_s": 41833.0,
+    "interval_count": 174,
+    "deleted_rows": 9659,
+    "total_duration_s": 284570.0,
     "unavailable_statuses": []
   },
   "shore": {
-    "interval_count": 150,
-    "deleted_rows": 12942,
-    "total_duration_s": 383799.0
+    "interval_count": 52,
+    "deleted_rows": 6796,
+    "total_duration_s": 202296.0
   },
   "abnormal": {
-    "interval_count": 87,
-    "deleted_rows": 1483,
-    "total_duration_s": 41833.0
+    "interval_count": 174,
+    "deleted_rows": 9659,
+    "total_duration_s": 284570.0
+  },
+  "pure_idle": {
+    "removed_segment_count": 26,
+    "removed_total_duration_s": 15780.0,
+    "maximum_removed_ratio": 1.0,
+    "removed_duration_quantiles_s": {
+      "0.0": 30.0,
+      "0.5": 45.0,
+      "0.9": 1305.0,
+      "1.0": 7470.0
+    },
+    "retained_long_midsegment_idle_audit_count": 5
   },
   "negative_load": {
-    "interval_count": 9,
+    "interval_count": 7,
     "point_count": 0,
     "under_minus_1_point_count": 0,
     "remaining_substantive_interval_count": 0,
     "remaining_substantive_intervals": [],
     "all_intervals_written": true,
-    "residual_tolerance_point_count_before_clipping": 153
+    "residual_tolerance_point_count_before_clipping": 51
+  },
+  "baseline_comparison": {
+    "baseline_commit": "b11526accc63ba86f9755652250aaa14bb35fb53",
+    "delta_1s_points": -76819,
+    "delta_duration_s": -76801,
+    "delta_segment_count": -18,
+    "delta_split_1s_points": {
+      "train": -25845,
+      "validation": -49412,
+      "test": -1562
+    }
   },
   "segment_fragmentation": {
     "per_parent": {
       "3月25日14_00_3月25日17_00": 2,
       "3月26日14_00_3月26日16_00": 2,
-      "3月27日07_00_3月27日11_00": 2,
+      "3月27日07_00_3月27日11_00": 1,
       "3月28日08_00_3月28日11_00": 3,
       "3月29日08_00_3月29日15_00": 1,
       "4月12日08_00_4月12日16_00": 1,
       "4月15日08_00_4月15日17_00": 6,
-      "4月16日08_00_4月16日19_00": 6,
+      "4月16日08_00_4月16日19_00": 5,
       "4月17日07_00_4月17日17_00": 2,
       "4月18日12_00_4月18日18_00": 2,
       "4月21日08_00_4月21日16_00": 2,
       "4月22日14_00_4月22日17_00": 4,
       "4月23日13_00_4月23日18_00": 1,
-      "4月24日07_00_4月24日17_00": 3,
+      "4月24日07_00_4月24日17_00": 2,
       "4月25日08_00_4月25日18_00": 4,
-      "4月28日08_00_4月28日12_00": 2,
-      "4月29日08_00_4月29日18_00": 4,
+      "4月28日08_00_4月28日12_00": 1,
+      "4月29日08_00_4月29日18_00": 3,
       "4月2日14_00_4月2日17_00": 1,
-      "4月30日08_00_4月30日15_00": 4,
+      "4月30日08_00_4月30日15_00": 3,
       "4月3日08_00_4月3日11_00": 1,
-      "4月7日08_00_4月7日12_00": 3,
-      "4月8日08_00_4月8日12_00": 2,
+      "4月7日08_00_4月7日12_00": 2,
+      "4月8日08_00_4月8日12_00": 1,
       "4月9日08_00_4月9日11_00": 1,
       "5月10日08_00_5月10日10_00": 2,
       "5月11日08_00_5月11日11_00": 1,
-      "5月13日08_00_5月13日11_00": 2,
-      "5月14日12_00_5月14日19_00": 9,
+      "5月13日08_00_5月13日11_00": 1,
+      "5月14日12_00_5月14日19_00": 8,
       "5月15日08_00_5月15日17_00": 7,
-      "5月17日08_00_5月17日18_00": 8,
+      "5月17日08_00_5月17日18_00": 7,
       "5月20日08_00_5月20日18_00": 7,
-      "5月21日05_00_5月21日11_00": 3,
-      "5月24日08_00_5月24日19_00": 16,
-      "5月27日08_00_5月27日19_00": 6,
-      "5月29日14_00_5月29日17_00": 6,
+      "5月21日05_00_5月21日11_00": 2,
+      "5月24日08_00_5月24日19_00": 15,
+      "5月27日08_00_5月27日19_00": 5,
+      "5月29日14_00_5月29日17_00": 5,
       "5月30日05_00_5月30日17_00": 12,
-      "5月7日08_00_5月7日18_00": 1,
+      "5月7日08_00_5月7日18_00": 2,
       "5月8日08_00_5月8日17_00": 1,
-      "5月9日08_00_5月9日17_00": 5,
+      "5月9日08_00_5月9日17_00": 4,
       "6月11日08_00_6月11日11_00": 1,
-      "6月12日14_00_6月12日17_00": 1,
+      "6月12日14_00_6月12日17_00": 2,
       "6月13日08_00_6月13日14_00": 2,
       "6月14日08_00_6月15日18_00": 7,
       "6月17日09_00_6月17日16_00": 2,
@@ -9798,38 +9829,36 @@
       "6月26日08_00_6月26日13_00": 2,
       "6月28日08_00_6月28日15_00": 1,
       "6月30日05_00_6月30日11_00": 4,
-      "6月4日08_00_6月4日12_00": 2,
-      "6月5日08_00_6月5日19_00": 4,
-      "6月6日10_00_6月6日21_00": 5,
+      "6月4日08_00_6月4日12_00": 1,
+      "6月5日08_00_6月5日19_00": 3,
+      "6月6日10_00_6月6日21_00": 6,
       "6月7日00_00_6月7日24_00": 4,
       "7月10日08_00_7月10日18_00": 2,
-      "7月11日06_00_7月12日10_00": 3,
-      "7月15日14_00_7月15日16_00": 2,
+      "7月11日06_00_7月12日10_00": 4,
+      "7月15日14_00_7月15日16_00": 1,
       "7月18日08_00_7月18日12_00": 1,
-      "7月19日07_00_7月19日09_00": 2,
+      "7月19日07_00_7月19日09_00": 1,
       "7月22日08_00_7月22日11_00": 1,
       "7月23日12_00_7月23日15_00": 1,
-      "7月24日14_00_7月24日17_00": 3,
-      "7月25日08_00_7月25日17_00": 1,
-      "7月26日11_00_7月26日13_00": 3,
+      "7月24日14_00_7月24日17_00": 2,
+      "7月25日08_00_7月25日17_00": 2,
+      "7月26日11_00_7月26日13_00": 2,
       "7月29日14_00_7月29日17_00": 1,
       "7月2日14_00_7月2日18_00": 1,
-      "7月31日08_00_7月31日11_00": 2,
+      "7月31日08_00_7月31日11_00": 1,
       "7月3日08_00_7月3日16_00": 2,
       "7月9日08_00_7月9日16_00": 2
     },
     "more_than_5": {
       "4月15日08_00_4月15日17_00": 6,
-      "4月16日08_00_4月16日19_00": 6,
-      "5月14日12_00_5月14日19_00": 9,
+      "5月14日12_00_5月14日19_00": 8,
       "5月15日08_00_5月15日17_00": 7,
-      "5月17日08_00_5月17日18_00": 8,
+      "5月17日08_00_5月17日18_00": 7,
       "5月20日08_00_5月20日18_00": 7,
-      "5月24日08_00_5月24日19_00": 16,
-      "5月27日08_00_5月27日19_00": 6,
-      "5月29日14_00_5月29日17_00": 6,
+      "5月24日08_00_5月24日19_00": 15,
       "5月30日05_00_5月30日17_00": 12,
-      "6月14日08_00_6月15日18_00": 7
+      "6月14日08_00_6月15日18_00": 7,
+      "6月6日10_00_6月6日21_00": 6
     },
     "under_5_min": [
       {
@@ -9838,289 +9867,219 @@
         "duration_s": 60
       },
       {
-        "parent_voyage": "3月27日07_00_3月27日11_00",
-        "segment_id": "operating_segment_0005",
-        "duration_s": 30
-      },
-      {
         "parent_voyage": "3月28日08_00_3月28日11_00",
-        "segment_id": "operating_segment_0007",
+        "segment_id": "operating_segment_0006",
         "duration_s": 120
       },
       {
-        "parent_voyage": "4月7日08_00_4月7日12_00",
-        "segment_id": "operating_segment_0013",
-        "duration_s": 30
-      },
-      {
-        "parent_voyage": "4月8日08_00_4月8日12_00",
-        "segment_id": "operating_segment_0016",
+        "parent_voyage": "4月16日08_00_4月16日19_00",
+        "segment_id": "operating_segment_0024",
         "duration_s": 90
       },
       {
         "parent_voyage": "4月16日08_00_4月16日19_00",
-        "segment_id": "operating_segment_0026",
+        "segment_id": "operating_segment_0025",
         "duration_s": 30
       },
       {
         "parent_voyage": "4月16日08_00_4月16日19_00",
-        "segment_id": "operating_segment_0028",
-        "duration_s": 90
-      },
-      {
-        "parent_voyage": "4月16日08_00_4月16日19_00",
-        "segment_id": "operating_segment_0029",
-        "duration_s": 30
-      },
-      {
-        "parent_voyage": "4月16日08_00_4月16日19_00",
-        "segment_id": "operating_segment_0031",
-        "duration_s": 150
+        "segment_id": "operating_segment_0027",
+        "duration_s": 180
       },
       {
         "parent_voyage": "4月18日12_00_4月18日18_00",
-        "segment_id": "operating_segment_0035",
+        "segment_id": "operating_segment_0031",
         "duration_s": 30
       },
       {
         "parent_voyage": "4月22日14_00_4月22日17_00",
-        "segment_id": "operating_segment_0038",
+        "segment_id": "operating_segment_0034",
         "duration_s": 60
       },
       {
         "parent_voyage": "4月22日14_00_4月22日17_00",
-        "segment_id": "operating_segment_0040",
+        "segment_id": "operating_segment_0036",
         "duration_s": 120
-      },
-      {
-        "parent_voyage": "4月24日07_00_4月24日17_00",
-        "segment_id": "operating_segment_0043",
-        "duration_s": 30
       },
       {
         "parent_voyage": "4月25日08_00_4月25日18_00",
-        "segment_id": "operating_segment_0046",
+        "segment_id": "operating_segment_0041",
         "duration_s": 60
       },
       {
-        "parent_voyage": "4月28日08_00_4月28日12_00",
-        "segment_id": "operating_segment_0050",
-        "duration_s": 210
-      },
-      {
         "parent_voyage": "4月29日08_00_4月29日18_00",
-        "segment_id": "operating_segment_0052",
-        "duration_s": 30
-      },
-      {
-        "parent_voyage": "4月29日08_00_4月29日18_00",
-        "segment_id": "operating_segment_0054",
+        "segment_id": "operating_segment_0047",
         "duration_s": 120
       },
       {
         "parent_voyage": "4月29日08_00_4月29日18_00",
-        "segment_id": "operating_segment_0055",
+        "segment_id": "operating_segment_0048",
         "duration_s": 60
       },
       {
-        "parent_voyage": "4月30日08_00_4月30日15_00",
+        "parent_voyage": "5月9日08_00_5月9日17_00",
         "segment_id": "operating_segment_0056",
-        "duration_s": 30
-      },
-      {
-        "parent_voyage": "5月9日08_00_5月9日17_00",
-        "segment_id": "operating_segment_0062",
-        "duration_s": 60
-      },
-      {
-        "parent_voyage": "5月9日08_00_5月9日17_00",
-        "segment_id": "operating_segment_0064",
         "duration_s": 180
       },
       {
         "parent_voyage": "5月10日08_00_5月10日10_00",
-        "segment_id": "operating_segment_0067",
-        "duration_s": 60
-      },
-      {
-        "parent_voyage": "5月13日08_00_5月13日11_00",
-        "segment_id": "operating_segment_0070",
-        "duration_s": 30
-      },
-      {
-        "parent_voyage": "5月14日12_00_5月14日19_00",
-        "segment_id": "operating_segment_0072",
+        "segment_id": "operating_segment_0059",
         "duration_s": 60
       },
       {
         "parent_voyage": "5月14日12_00_5月14日19_00",
-        "segment_id": "operating_segment_0074",
-        "duration_s": 270
+        "segment_id": "operating_segment_0063",
+        "duration_s": 60
       },
       {
         "parent_voyage": "5月15日08_00_5月15日17_00",
-        "segment_id": "operating_segment_0083",
+        "segment_id": "operating_segment_0073",
         "duration_s": 180
       },
       {
         "parent_voyage": "5月17日08_00_5月17日18_00",
-        "segment_id": "operating_segment_0093",
+        "segment_id": "operating_segment_0082",
         "duration_s": 30
       },
       {
         "parent_voyage": "5月20日08_00_5月20日18_00",
+        "segment_id": "operating_segment_0088",
+        "duration_s": 270
+      },
+      {
+        "parent_voyage": "5月24日08_00_5月24日19_00",
+        "segment_id": "operating_segment_0096",
+        "duration_s": 30
+      },
+      {
+        "parent_voyage": "5月24日08_00_5月24日19_00",
+        "segment_id": "operating_segment_0098",
+        "duration_s": 60
+      },
+      {
+        "parent_voyage": "5月24日08_00_5月24日19_00",
         "segment_id": "operating_segment_0099",
+        "duration_s": 60
+      },
+      {
+        "parent_voyage": "5月24日08_00_5月24日19_00",
+        "segment_id": "operating_segment_0103",
         "duration_s": 270
       },
       {
-        "parent_voyage": "5月24日08_00_5月24日19_00",
-        "segment_id": "operating_segment_0109",
-        "duration_s": 30
-      },
-      {
-        "parent_voyage": "5月24日08_00_5月24日19_00",
+        "parent_voyage": "5月27日08_00_5月27日19_00",
         "segment_id": "operating_segment_0111",
-        "duration_s": 60
-      },
-      {
-        "parent_voyage": "5月24日08_00_5月24日19_00",
-        "segment_id": "operating_segment_0112",
-        "duration_s": 60
-      },
-      {
-        "parent_voyage": "5月24日08_00_5月24日19_00",
-        "segment_id": "operating_segment_0116",
-        "duration_s": 270
-      },
-      {
-        "parent_voyage": "5月27日08_00_5月27日19_00",
-        "segment_id": "operating_segment_0125",
         "duration_s": 30
       },
       {
         "parent_voyage": "5月27日08_00_5月27日19_00",
-        "segment_id": "operating_segment_0126",
+        "segment_id": "operating_segment_0112",
         "duration_s": 120
       },
       {
         "parent_voyage": "5月29日14_00_5月29日17_00",
-        "segment_id": "operating_segment_0128",
-        "duration_s": 270
-      },
-      {
-        "parent_voyage": "5月29日14_00_5月29日17_00",
-        "segment_id": "operating_segment_0130",
+        "segment_id": "operating_segment_0115",
         "duration_s": 150
       },
       {
         "parent_voyage": "5月29日14_00_5月29日17_00",
-        "segment_id": "operating_segment_0131",
+        "segment_id": "operating_segment_0116",
         "duration_s": 30
       },
       {
         "parent_voyage": "5月29日14_00_5月29日17_00",
-        "segment_id": "operating_segment_0132",
+        "segment_id": "operating_segment_0117",
         "duration_s": 30
       },
       {
         "parent_voyage": "5月30日05_00_5月30日17_00",
-        "segment_id": "operating_segment_0134",
+        "segment_id": "operating_segment_0119",
         "duration_s": 30
       },
       {
         "parent_voyage": "5月30日05_00_5月30日17_00",
-        "segment_id": "operating_segment_0136",
+        "segment_id": "operating_segment_0121",
         "duration_s": 90
       },
       {
         "parent_voyage": "5月30日05_00_5月30日17_00",
-        "segment_id": "operating_segment_0137",
+        "segment_id": "operating_segment_0122",
         "duration_s": 180
       },
       {
         "parent_voyage": "5月30日05_00_5月30日17_00",
-        "segment_id": "operating_segment_0139",
+        "segment_id": "operating_segment_0124",
         "duration_s": 180
       },
       {
         "parent_voyage": "5月30日05_00_5月30日17_00",
-        "segment_id": "operating_segment_0141",
+        "segment_id": "operating_segment_0126",
         "duration_s": 30
       },
       {
         "parent_voyage": "5月30日05_00_5月30日17_00",
-        "segment_id": "operating_segment_0142",
+        "segment_id": "operating_segment_0127",
         "duration_s": 270
       },
       {
         "parent_voyage": "5月30日05_00_5月30日17_00",
-        "segment_id": "operating_segment_0144",
+        "segment_id": "operating_segment_0129",
         "duration_s": 60
       },
       {
-        "parent_voyage": "6月5日08_00_6月5日19_00",
-        "segment_id": "operating_segment_0149",
-        "duration_s": 30
+        "parent_voyage": "6月6日10_00_6月6日21_00",
+        "segment_id": "operating_segment_0138",
+        "duration_s": 90
       },
       {
         "parent_voyage": "6月7日00_00_6月7日24_00",
-        "segment_id": "operating_segment_0157",
+        "segment_id": "operating_segment_0141",
         "duration_s": 150
       },
       {
+        "parent_voyage": "6月7日00_00_6月7日24_00",
+        "segment_id": "operating_segment_0144",
+        "duration_s": 240
+      },
+      {
+        "parent_voyage": "6月12日14_00_6月12日17_00",
+        "segment_id": "operating_segment_0146",
+        "duration_s": 210
+      },
+      {
         "parent_voyage": "6月14日08_00_6月15日18_00",
-        "segment_id": "operating_segment_0166",
+        "segment_id": "operating_segment_0151",
         "duration_s": 60
       },
       {
         "parent_voyage": "6月14日08_00_6月15日18_00",
-        "segment_id": "operating_segment_0171",
+        "segment_id": "operating_segment_0156",
         "duration_s": 60
       },
       {
         "parent_voyage": "6月30日05_00_6月30日11_00",
-        "segment_id": "operating_segment_0179",
+        "segment_id": "operating_segment_0164",
         "duration_s": 30
       },
       {
         "parent_voyage": "7月3日08_00_7月3日16_00",
-        "segment_id": "operating_segment_0184",
+        "segment_id": "operating_segment_0169",
         "duration_s": 270
       },
       {
         "parent_voyage": "7月10日08_00_7月10日18_00",
-        "segment_id": "operating_segment_0188",
+        "segment_id": "operating_segment_0173",
         "duration_s": 30
       },
       {
         "parent_voyage": "7月11日06_00_7月12日10_00",
-        "segment_id": "operating_segment_0190",
-        "duration_s": 30
+        "segment_id": "operating_segment_0176",
+        "duration_s": 150
       },
       {
-        "parent_voyage": "7月15日14_00_7月15日16_00",
-        "segment_id": "operating_segment_0193",
-        "duration_s": 30
-      },
-      {
-        "parent_voyage": "7月19日07_00_7月19日09_00",
-        "segment_id": "operating_segment_0196",
-        "duration_s": 30
-      },
-      {
-        "parent_voyage": "7月24日14_00_7月24日17_00",
-        "segment_id": "operating_segment_0200",
-        "duration_s": 30
-      },
-      {
-        "parent_voyage": "7月26日11_00_7月26日13_00",
-        "segment_id": "operating_segment_0204",
-        "duration_s": 90
-      },
-      {
-        "parent_voyage": "7月31日08_00_7月31日11_00",
-        "segment_id": "operating_segment_0208",
-        "duration_s": 30
+        "parent_voyage": "7月11日06_00_7月12日10_00",
+        "segment_id": "operating_segment_0177",
+        "duration_s": 270
       }
     ]
   },
@@ -10131,23 +10090,28 @@
       "test": 7
     },
     "segment_counts": {
-      "train": 171,
-      "validation": 26,
-      "test": 12
+      "train": 156,
+      "validation": 25,
+      "test": 10
+    },
+    "point_counts": {
+      "test": 68921,
+      "train": 802441,
+      "validation": 248929
     },
     "duration_s": {
-      "test": 70471,
-      "train": 828115,
-      "validation": 298315
+      "test": 68911,
+      "train": 802285,
+      "validation": 248904
     },
     "parent_voyage_overlap_count": 0
   },
   "numerical_zero_clipping": {
-    "numerical_zero_clipped_points": 153,
-    "before_min_load_kw": -0.8901599999999945,
+    "numerical_zero_clipped_points": 51,
+    "before_min_load_kw": -0.7341000000000122,
     "after_min_load_kw": 0.0,
     "before_zero_count": 0,
-    "after_zero_count": 153,
+    "after_zero_count": 51,
     "approved_range_kw": "-1 < load_total_kw < 0"
   }
 }

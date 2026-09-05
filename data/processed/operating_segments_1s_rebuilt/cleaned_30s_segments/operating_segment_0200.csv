@@ -1,3 +1,0 @@
-﻿timestamp,fc_total_kw,battery_total_kw,load_total_kw,speed_aligned_kn,speed_source,soc_mean_pct,propulsion_inverter_kw,parent_voyage,segment_id
-2024-07-24 14:07:03,0.0,0.6164249999999999,0.6164249999999999,0.0,linear,89.16666666666664,0.0,7月24日14_00_7月24日17_00,operating_segment_0200
-2024-07-24 14:07:33,0.0,-0.23455899999999985,-0.23455899999999985,0.0,linear,89.15833333333332,0.0,7月24日14_00_7月24日17_00,operating_segment_0200

@@ -26,9 +26,11 @@ from utils.rebuilt_operating_dataset import (  # noqa: E402
     pchip_to_one_second,
     select_shore_intervals,
     chronological_parent_splits,
+    battery_state,
 )
 from build_rebuilt_operating_segment_dataset import (  # noqa: E402
     _classify_negative_intervals,
+    _pure_idle_summary,
     _mark_abnormal,
     _nearest_offsets,
     _policies,
@@ -216,7 +218,88 @@ class TestRebuiltOperatingDataset(unittest.TestCase):
             }
         )
         policy = _shore_policy(frame, {"median_power_cadence_s": 30.0})
-        self.assertAlmostEqual(float(policy["battery_charge_threshold_kw"]), 0.01)
+        self.assertAlmostEqual(float(policy["battery_charge_threshold_kw"]), 1.0)
+
+    def test_battery_deadband_classifies_without_modifying_measured_power(self) -> None:
+        measured = pd.Series([-0.01, -0.8, -1.2, 0.8, 1.2])
+
+        state = battery_state(measured, deadband_kw=1.0)
+
+        self.assertEqual(state.tolist(), ["neutral", "neutral", "charging", "neutral", "discharging"])
+        self.assertEqual(measured.tolist(), [-0.01, -0.8, -1.2, 0.8, 1.2])
+
+    def test_subkilowatt_charging_is_not_shore_evidence(self) -> None:
+        frame = pd.DataFrame(
+            {
+                "timestamp": pd.date_range("2024-01-01", periods=3, freq="30s"),
+                "aligned": [True] * 3,
+                "fc_total_kw": [0.0] * 3,
+                "battery_total_kw": [-0.8] * 3,
+                "speed_aligned_kn": [0.0] * 3,
+            }
+        )
+        marked, intervals = select_shore_intervals(
+            frame, fc_idle_threshold_kw=0.1, speed_idle_threshold_kn=0.1,
+            battery_charge_threshold_kw=1.0, minimum_shore_points=3, long_gap_threshold_s=120.0,
+        )
+        self.assertFalse(marked["is_shore"].any())
+        self.assertTrue(intervals.empty)
+
+    def test_charging_beyond_deadband_is_shore_candidate(self) -> None:
+        frame = pd.DataFrame(
+            {
+                "timestamp": pd.date_range("2024-01-01", periods=3, freq="30s"),
+                "aligned": [True] * 3,
+                "fc_total_kw": [0.0] * 3,
+                "battery_total_kw": [-1.2] * 3,
+                "speed_aligned_kn": [0.0] * 3,
+            }
+        )
+        marked, intervals = select_shore_intervals(
+            frame, fc_idle_threshold_kw=0.1, speed_idle_threshold_kn=0.1,
+            battery_charge_threshold_kw=1.0, minimum_shore_points=3, long_gap_threshold_s=120.0,
+        )
+        self.assertTrue(marked["is_shore"].all())
+        self.assertEqual(len(intervals), 1)
+
+    def test_load_bearing_stationary_point_is_not_pure_idle(self) -> None:
+        segment = pd.DataFrame(
+            {
+                "timestamp": pd.date_range("2024-01-01", periods=3, freq="30s"),
+                "speed_aligned_kn": [0.0] * 3,
+                "propulsion_inverter_kw": [0.0] * 3,
+                "fc_total_kw": [0.0] * 3,
+                "load_total_kw": [50.0] * 3,
+            }
+        )
+        summary = _pure_idle_summary(segment)
+        self.assertEqual(summary["pure_idle_points"], 0)
+        self.assertFalse(summary["remove"])
+
+    def test_pure_idle_ratio_boundary_and_middle_idle_are_segment_level_only(self) -> None:
+        def segment(idle_points: int, total_points: int = 100) -> pd.DataFrame:
+            frame = pd.DataFrame(
+                {
+                    "timestamp": pd.date_range("2024-01-01", periods=total_points, freq="30s"),
+                    "speed_aligned_kn": [1.0] * total_points,
+                    "propulsion_inverter_kw": [10.0] * total_points,
+                    "fc_total_kw": [10.0] * total_points,
+                    "load_total_kw": [10.0] * total_points,
+                }
+            )
+            start = (total_points - idle_points) // 2
+            frame.loc[start:start + idle_points - 1, ["speed_aligned_kn", "propulsion_inverter_kw", "fc_total_kw", "load_total_kw"]] = 0.0
+            return frame
+
+        below = _pure_idle_summary(segment(49))
+        boundary = _pure_idle_summary(segment(50))
+        dominant = _pure_idle_summary(segment(80))
+
+        self.assertEqual(below["pure_idle_ratio"], 0.49)
+        self.assertFalse(below["remove"])
+        self.assertTrue(boundary["remove"])
+        self.assertTrue(dominant["remove"])
+        self.assertEqual(below["kept_point_count"], 100)
 
     def test_sustained_negative_load_is_external_when_stationary(self) -> None:
         frame = pd.DataFrame(

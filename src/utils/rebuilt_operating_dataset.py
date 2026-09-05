@@ -146,6 +146,22 @@ def find_contiguous_intervals(frame: pd.DataFrame, *, long_gap_threshold_s: floa
     return timestamps.diff().dt.total_seconds().gt(long_gap_threshold_s).cumsum().astype(int)
 
 
+def battery_state(values: pd.Series, *, deadband_kw: float) -> pd.Series:
+    """Classify measured battery power without changing its measured value."""
+    if deadband_kw < 0.0:
+        raise ValueError("battery deadband must be non-negative")
+    numeric = _numeric(values)
+    return pd.Series(
+        np.select(
+            [numeric.lt(-deadband_kw), numeric.gt(deadband_kw)],
+            ["charging", "discharging"],
+            default="neutral",
+        ),
+        index=values.index,
+        dtype="object",
+    )
+
+
 def align_ais_to_power(
     power: pd.DataFrame,
     ais: pd.DataFrame,
@@ -203,14 +219,13 @@ def select_shore_intervals(
     minimum_shore_points: int,
     long_gap_threshold_s: float,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Mark sustained, stationary FC-off battery charging intervals as shore power."""
+    """Mark sustained stationary battery charging as external charging evidence."""
     if minimum_shore_points < 2:
         raise ValueError("minimum_shore_points must be at least two")
     result = frame.sort_values("timestamp", kind="stable").reset_index(drop=True).copy()
     result["timestamp"] = pd.to_datetime(result["timestamp"], errors="coerce")
     candidate = (
         result["aligned"].astype(bool)
-        & pd.to_numeric(result["fc_total_kw"], errors="coerce").le(fc_idle_threshold_kw)
         & pd.to_numeric(result["battery_total_kw"], errors="coerce").lt(-battery_charge_threshold_kw)
     )
     interval = find_contiguous_intervals(result, long_gap_threshold_s=long_gap_threshold_s)

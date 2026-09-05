@@ -6,6 +6,8 @@ import json
 import math
 import re
 import shutil
+import subprocess
+from io import StringIO
 import sys
 from pathlib import Path
 
@@ -21,12 +23,14 @@ from utils.data_loader import discover_voyages  # noqa: E402
 from utils.rebuilt_operating_dataset import (  # noqa: E402
     align_ais_to_power, chronological_parent_splits, collapse_battery_records,
     collapse_fc_records, collapse_scalar_records, find_contiguous_intervals,
-    match_nearest_without_reuse, pchip_to_one_second, select_shore_intervals,
+    battery_state, match_nearest_without_reuse, pchip_to_one_second, select_shore_intervals,
 )
+from zero_residual_numerical_negative_loads import zero_residual_numerical_negatives  # noqa: E402
 
 RAW_ROOT = Path.home() / "OneDrive" / "Desktop" / "氢舟一号"
 OUTPUT_ROOT = REPO_ROOT / "data" / "processed" / "operating_segments_1s_rebuilt"
 LONG_GAP_THRESHOLD_S = 120.0
+BASELINE_COMMIT = "b11526accc63ba86f9755652250aaa14bb35fb53"
 
 
 def _sort_key(path: Path) -> tuple[int, int, int, str]:
@@ -183,12 +187,8 @@ def _shore_policy(raw: pd.DataFrame, timing: dict[str, object]) -> dict[str, obj
     positive_speed = valid.loc[valid.speed_aligned_kn.gt(0), "speed_aligned_kn"]
     fc_idle = float(positive_fc.min() / 2) if not positive_fc.empty else 0.0
     speed_idle = float(positive_speed.quantile(0.01)) if not positive_speed.empty else 0.0
-    stationary_charge = -valid.loc[(valid.fc_total_kw.le(fc_idle)) & (valid.speed_aligned_kn.le(speed_idle)) & valid.battery_total_kw.lt(0), "battery_total_kw"]
-    if len(stationary_charge) >= 10:
-        charge = float(stationary_charge.quantile(.05))
-    else:
-        charge = 1.0
-    return {"fc_idle_threshold_kw": fc_idle, "speed_idle_threshold_kn": speed_idle, "battery_charge_threshold_kw": charge, "minimum_shore_points": int(max(3, math.ceil(90.0 / float(timing["median_power_cadence_s"])))), "long_gap_threshold_s": LONG_GAP_THRESHOLD_S, "stationary_charge_quantiles_kw": stationary_charge.quantile([.05, .6, .7]).to_dict()}
+    stationary_charge = -valid.loc[(valid.speed_aligned_kn.le(speed_idle)) & valid.battery_total_kw.lt(0), "battery_total_kw"]
+    return {"fc_idle_threshold_kw": fc_idle, "speed_idle_threshold_kn": speed_idle, "battery_charge_threshold_kw": 1.0, "battery_deadband_kw": 1.0, "minimum_shore_points": int(max(3, math.ceil(90.0 / float(timing["median_power_cadence_s"])))), "long_gap_threshold_s": LONG_GAP_THRESHOLD_S, "stationary_charge_quantiles_kw": stationary_charge.quantile([.05, .6, .7]).to_dict()}
 
 
 def _mark_abnormal(frame: pd.DataFrame, shore_policy: dict[str, object]) -> tuple[pd.DataFrame, pd.DataFrame, str]:
@@ -221,6 +221,7 @@ def _classify_negative_intervals(
     frame: pd.DataFrame,
     *,
     speed_idle_threshold_kn: float,
+    battery_charging_threshold_kw: float = 1.0,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Remove sustained negative FC-plus-battery balances without clipping them.
 
@@ -252,7 +253,7 @@ def _classify_negative_intervals(
             continue
         known_speed = run["speed_aligned_kn"].dropna()
         stationary = not known_speed.empty and bool(known_speed.le(speed_idle_threshold_kn).all())
-        battery_charging = bool(run["battery_total_kw"].lt(0).all())
+        battery_charging = bool(run["battery_total_kw"].lt(-battery_charging_threshold_kw).all())
         propulsion_active = bool(run["propulsion_inverter_kw"].gt(0).any())
         shared = {
             "start_time": run["timestamp"].iloc[0].isoformat(),
@@ -275,6 +276,61 @@ def _classify_negative_intervals(
             result.loc[run.index, "is_physical_inconsistency"] = True
             physical_rows.append({**shared, "reason": "physical_inconsistency: sustained negative FC_plus_battery balance while moving, propelling, or without stationary evidence"})
     return result, pd.DataFrame(external_rows), pd.DataFrame(physical_rows)
+
+
+def _pure_idle_summary(segment: pd.DataFrame) -> dict[str, object]:
+    """Classify an already continuous candidate segment without cutting it apart."""
+    frame = segment.copy()
+    speed = pd.to_numeric(frame["speed_aligned_kn"], errors="coerce")
+    fc = pd.to_numeric(frame["fc_total_kw"], errors="coerce")
+    load = pd.to_numeric(frame["load_total_kw"], errors="coerce")
+    propulsion = pd.to_numeric(frame["propulsion_inverter_kw"], errors="coerce")
+    propulsion_available = bool(propulsion.notna().any())
+    pure_idle = speed.le(0.1) & fc.le(1.0) & load.between(0.0, 1.0, inclusive="both")
+    if propulsion_available:
+        pure_idle &= propulsion.abs().le(1.0)
+    pure_idle = pure_idle.fillna(False)
+    total_points = int(len(frame))
+    pure_points = int(pure_idle.sum())
+    ratio = pure_points / total_points if total_points else 0.0
+    duration_s = float((pd.Timestamp(frame.timestamp.iloc[-1]) - pd.Timestamp(frame.timestamp.iloc[0])).total_seconds()) if total_points >= 2 else 0.0
+    return {
+        "pure_idle_points": pure_points,
+        "total_valid_points": total_points,
+        "pure_idle_ratio": ratio,
+        "pure_idle_duration_s": duration_s * ratio,
+        "propulsion_unavailable": not propulsion_available,
+        "remove": ratio >= 0.50,
+        "kept_point_count": total_points if ratio < 0.50 else 0,
+    }
+
+
+def _longest_stationary_run_s(segment: pd.DataFrame) -> float:
+    frame = segment.sort_values("timestamp", kind="stable").reset_index(drop=True)
+    stationary = pd.to_numeric(frame["speed_aligned_kn"], errors="coerce").le(0.1)
+    interval = find_contiguous_intervals(frame, long_gap_threshold_s=LONG_GAP_THRESHOLD_S)
+    groups = (stationary.ne(stationary.shift(fill_value=False)) | interval.ne(interval.shift(fill_value=interval.iloc[0]))).cumsum()
+    durations = [float((run.timestamp.iloc[-1] - run.timestamp.iloc[0]).total_seconds()) for _, run in frame.loc[stationary].groupby(groups[stationary], sort=False)]
+    return max(durations, default=0.0)
+
+
+def _baseline_snapshot(output_root: Path) -> tuple[dict[str, object], pd.DataFrame]:
+    relative_root = output_root.resolve().relative_to(REPO_ROOT).as_posix()
+    def baseline_text(name: str) -> str:
+        result = subprocess.run(
+            ["git", "show", f"{BASELINE_COMMIT}:{relative_root}/{name}"],
+            cwd=REPO_ROOT, capture_output=True, check=False,
+        )
+        if result.returncode:
+            raise RuntimeError(f"cannot read required baseline {BASELINE_COMMIT}:{name}: {result.stderr.decode(errors='replace').strip()}")
+        return result.stdout.decode("utf-8-sig")
+    summary = json.loads(baseline_text("qa_summary.json"))
+    shore = pd.read_csv(StringIO(baseline_text("shore_intervals.csv")))
+    baseline_manifest = pd.read_csv(StringIO(baseline_text("split_manifest.csv")))
+    summary.setdefault("split", {})["point_counts"] = baseline_manifest.groupby("split")["num_1s_points"].sum().to_dict()
+    if shore.empty or "mean_battery_kw" not in shore:
+        return summary, pd.DataFrame()
+    return summary, shore.loc[pd.to_numeric(shore["mean_battery_kw"], errors="coerce").abs().lt(1.0)].copy()
 
 
 def _segments(frame: pd.DataFrame) -> list[pd.DataFrame]:
@@ -317,6 +373,7 @@ def _negative_rows(one_second: pd.DataFrame, cleaned: pd.DataFrame, parent: str,
 
 def build_dataset(raw_root: Path = RAW_ROOT, output_root: Path = OUTPUT_ROOT) -> dict[str, object]:
     raw_root, output_root = Path(raw_root), Path(output_root)
+    baseline_summary, baseline_low_shore = _baseline_snapshot(output_root)
     voyages=sorted(discover_voyages(raw_root),key=lambda voyage:_sort_key(voyage.root))
     cache, ais_frames=_build_cache(voyages); timing=_policies(cache,ais_frames)
     raw_by_parent={}; alignment=[]
@@ -329,17 +386,18 @@ def build_dataset(raw_root: Path = RAW_ROOT, output_root: Path = OUTPUT_ROOT) ->
     if staging.exists(): shutil.rmtree(staging)
     if output_root.exists():
         if output_root.resolve() != (REPO_ROOT/"data"/"processed"/"operating_segments_1s_rebuilt").resolve(): raise ValueError("unexpected output path")
-        shutil.rmtree(output_root)
     staging.mkdir(parents=True); raw_dir=staging/"raw_30s_total_load_by_voyage"; clean_dir=staging/"cleaned_30s_segments"; one_dir=staging/"operating_segments_1s"; raw_dir.mkdir(); clean_dir.mkdir(); one_dir.mkdir()
-    shore_rows=[]; physical_rows=[]; negative_rows=[]; manifest_rows=[]; exclusion_rows=[]; segment=0
+    shore_rows=[]; physical_rows=[]; negative_rows=[]; manifest_rows=[]; exclusion_rows=[]; pure_idle_rows=[]; retained_idle_rows=[]; kept_by_parent={}; marked_by_parent={}; segment=0; candidate_segment=0
     try:
         for voyage in voyages:
             parent=voyage.root.name
             marked,shore=select_shore_intervals(raw_by_parent[parent],**{key:shore_policy[key] for key in ("fc_idle_threshold_kw","speed_idle_threshold_kn","battery_charge_threshold_kw","minimum_shore_points","long_gap_threshold_s")})
             if not shore.empty:
-                shore["reason"] = "external_charging_or_shore_power: stationary FC-idle battery charging"
-            marked,external,physical=_classify_negative_intervals(marked,speed_idle_threshold_kn=float(shore_policy["speed_idle_threshold_kn"]))
+                shore["reason"] = "external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband"
+            marked,external,physical=_classify_negative_intervals(marked,speed_idle_threshold_kn=float(shore_policy["speed_idle_threshold_kn"]),battery_charging_threshold_kw=float(shore_policy["battery_deadband_kw"]))
             marked,abnormal,status=_mark_abnormal(marked,shore_policy)
+            marked["battery_state"] = battery_state(marked["battery_total_kw"], deadband_kw=float(shore_policy["battery_deadband_kw"]))
+            marked_by_parent[parent] = marked.copy()
             if not shore.empty: shore.insert(0,"parent_voyage",parent); shore_rows.extend(shore.to_dict("records"))
             if not external.empty: external.insert(0,"parent_voyage",parent); shore_rows.extend(external.to_dict("records"))
             if not physical.empty: physical.insert(0,"parent_voyage",parent); physical_rows.extend(physical.to_dict("records"))
@@ -348,11 +406,23 @@ def build_dataset(raw_root: Path = RAW_ROOT, output_root: Path = OUTPUT_ROOT) ->
                 abnormal["raw_points"] = abnormal["abnormal_rows"]
                 physical_rows.extend(abnormal.to_dict("records"))
             target=raw_dir/parent; target.mkdir()
-            raw_cols=["timestamp","fc_total_kw","battery_total_kw","load_total_kw","speed_aligned_kn","speed_source","soc_mean_pct","propulsion_inverter_kw","aligned","is_shore","is_external_charging","is_abnormal","is_physical_inconsistency","parent_voyage"]
+            raw_cols=["timestamp","fc_total_kw","battery_total_kw","load_total_kw","speed_aligned_kn","speed_source","soc_mean_pct","propulsion_inverter_kw","battery_state","aligned","is_shore","is_external_charging","is_abnormal","is_physical_inconsistency","parent_voyage"]
             marked[raw_cols].to_csv(target/"power_30s.csv",index=False,encoding="utf-8-sig")
             exclusion_rows.append({"parent_voyage":parent,"unaligned_rows":int((~marked.aligned).sum()),"shore_rows":int(marked.is_shore.sum()),"external_charging_rows":int(marked.is_external_charging.sum()),"physical_inconsistency_rows":int(marked.is_physical_inconsistency.sum()),"abnormal_rows":int(marked.is_abnormal.sum()),"abnormal_status":status})
+            kept_by_parent[parent] = []
             for cleaned in _segments(marked):
+                candidate_segment += 1
+                candidate_id = f"candidate_segment_{candidate_segment:04d}"
+                idle = _pure_idle_summary(cleaned)
+                duration_s = float((cleaned.timestamp.iloc[-1] - cleaned.timestamp.iloc[0]).total_seconds())
+                if bool(idle["remove"]):
+                    pure_idle_rows.append({"parent_voyage":parent,"segment_id":candidate_id,"start_time":cleaned.timestamp.iloc[0].isoformat(),"end_time":cleaned.timestamp.iloc[-1].isoformat(),"duration_s":duration_s,"pure_idle_duration_s":idle["pure_idle_duration_s"],"pure_idle_ratio":idle["pure_idle_ratio"],"mean_speed":float(pd.to_numeric(cleaned.speed_aligned_kn,errors="coerce").mean()),"mean_fc_kw":float(cleaned.fc_total_kw.mean()),"mean_load_kw":float(cleaned.load_total_kw.mean()),"propulsion_unavailable":idle["propulsion_unavailable"],"reason":"predominantly_pure_idle"})
+                    continue
                 segment+=1; identifier=f"operating_segment_{segment:04d}"; cleaned=cleaned[["timestamp","fc_total_kw","battery_total_kw","load_total_kw","speed_aligned_kn","speed_source","soc_mean_pct","propulsion_inverter_kw","parent_voyage"]].copy(); cleaned["segment_id"]=identifier
+                kept_by_parent[parent].append(cleaned[["timestamp"]].copy())
+                stationary_run_s = _longest_stationary_run_s(cleaned)
+                if duration_s > 3600.0 and stationary_run_s >= 600.0 and float(idle["pure_idle_ratio"]) < 0.50:
+                    retained_idle_rows.append({"parent_voyage":parent,"segment_id":identifier,"duration_s":duration_s,"longest_stationary_run_s":stationary_run_s,"pure_idle_ratio":idle["pure_idle_ratio"],"mean_load_kw":float(cleaned.load_total_kw.mean())})
                 cleaned.to_csv(clean_dir/f"{identifier}.csv",index=False,encoding="utf-8-sig")
                 one,qa=pchip_to_one_second(cleaned); one.to_csv(one_dir/f"{identifier}.csv",index=False,encoding="utf-8-sig"); negative_rows.extend(_negative_rows(one,cleaned,parent,identifier))
                 manifest_rows.append({"parent_voyage":parent,"segment_id":identifier,"start_time":cleaned.timestamp.iloc[0].isoformat(),"end_time":cleaned.timestamp.iloc[-1].isoformat(),"duration_s":int((cleaned.timestamp.iloc[-1]-cleaned.timestamp.iloc[0]).total_seconds()),"num_1s_points":len(one),"raw_min_kw":float(cleaned.load_total_kw.min()),"raw_max_kw":float(cleaned.load_total_kw.max()),"pchip_min_kw":qa["pchip_min_kw"],"pchip_max_kw":float(one.load_total_kw.max()),"raw_csv":f"cleaned_30s_segments/{identifier}.csv","one_second_csv":f"operating_segments_1s/{identifier}.csv"})
@@ -360,12 +430,31 @@ def build_dataset(raw_root: Path = RAW_ROOT, output_root: Path = OUTPUT_ROOT) ->
         if manifest.empty: raise RuntimeError("no operating segments")
         parents=sorted(manifest.parent_voyage.unique(),key=lambda name:_sort_key(raw_root/name)); splits=chronological_parent_splits(parents)
         manifest["split"]=np.select([manifest.parent_voyage.isin(splits["train"]),manifest.parent_voyage.isin(splits["validation"])],["train","validation"],default="test")
-        manifest.to_csv(staging/"split_manifest.csv",index=False,encoding="utf-8-sig"); pd.DataFrame(shore_rows).to_csv(staging/"shore_intervals.csv",index=False,encoding="utf-8-sig"); pd.DataFrame(physical_rows).to_csv(staging/"abnormal_intervals.csv",index=False,encoding="utf-8-sig"); pd.DataFrame(negative_rows).to_csv(staging/"negative_load_intervals.csv",index=False,encoding="utf-8-sig"); pd.DataFrame(exclusion_rows).to_csv(staging/"exclusion_qa.csv",index=False,encoding="utf-8-sig"); pd.json_normalize(alignment,sep=".").to_csv(staging/"alignment_qa_by_voyage.csv",index=False,encoding="utf-8-sig")
+        recovery_rows=[]
+        for _, baseline in baseline_low_shore.iterrows():
+            parent=str(baseline["parent_voyage"]); start=pd.Timestamp(baseline["start_time"]); end=pd.Timestamp(baseline["end_time"])
+            marked=marked_by_parent.get(parent,pd.DataFrame()); kept=pd.concat(kept_by_parent.get(parent,[]),ignore_index=True) if kept_by_parent.get(parent) else pd.DataFrame(columns=["timestamp"])
+            source=marked.loc[marked.timestamp.between(start,end)] if not marked.empty else pd.DataFrame()
+            entered=kept.loc[kept.timestamp.between(start,end)] if not kept.empty else pd.DataFrame()
+            recovered=not source.empty and not bool(source.is_external_charging.any())
+            entered_duration=float((entered.timestamp.iloc[-1]-entered.timestamp.iloc[0]).total_seconds()) if len(entered)>=2 else 0.0
+            recovery_rows.append({"parent_voyage":parent,"start_time":start.isoformat(),"end_time":end.isoformat(),"baseline_duration_s":float(baseline["duration_s"]),"baseline_mean_battery_kw":float(baseline["mean_battery_kw"]),"recovered_from_shore":recovered,"final_normal_points":int(len(entered)),"final_normal_duration_s":entered_duration})
+        recovery=pd.DataFrame(recovery_rows)
+        pure_columns=["parent_voyage","segment_id","start_time","end_time","duration_s","pure_idle_duration_s","pure_idle_ratio","mean_speed","mean_fc_kw","mean_load_kw","propulsion_unavailable","reason"]
+        audit_columns=["parent_voyage","segment_id","duration_s","longest_stationary_run_s","pure_idle_ratio","mean_load_kw"]
+        manifest.to_csv(staging/"split_manifest.csv",index=False,encoding="utf-8-sig"); pd.DataFrame(shore_rows).to_csv(staging/"shore_intervals.csv",index=False,encoding="utf-8-sig"); pd.DataFrame(physical_rows).to_csv(staging/"abnormal_intervals.csv",index=False,encoding="utf-8-sig"); pd.DataFrame(negative_rows).to_csv(staging/"negative_load_intervals.csv",index=False,encoding="utf-8-sig"); pd.DataFrame(exclusion_rows).to_csv(staging/"exclusion_qa.csv",index=False,encoding="utf-8-sig"); pd.json_normalize(alignment,sep=".").to_csv(staging/"alignment_qa_by_voyage.csv",index=False,encoding="utf-8-sig"); pd.DataFrame(pure_idle_rows,columns=pure_columns).to_csv(staging/"pure_idle_removed_segments.csv",index=False,encoding="utf-8-sig"); pd.DataFrame(retained_idle_rows,columns=audit_columns).sample(n=min(5,len(retained_idle_rows)),random_state=0).to_csv(staging/"retained_midsegment_idle_audit.csv",index=False,encoding="utf-8-sig"); recovery.to_csv(staging/"shore_deadband_recovery.csv",index=False,encoding="utf-8-sig")
         raw_values=pd.concat([value[["load_total_kw"]] for value in raw_by_parent.values()],ignore_index=True); clean_values=pd.concat([pd.read_csv(path,usecols=["load_total_kw"]) for path in clean_dir.glob("*.csv")],ignore_index=True); one_values=pd.concat([pd.read_csv(path,usecols=["load_total_kw"]) for path in one_dir.glob("*.csv")],ignore_index=True)
         counts=manifest.groupby("parent_voyage").segment_id.count()
         remaining_substantive=[row for row in negative_rows if row["min_load_kw"] < -1.0 and row["duration_s"] > 1]
-        summary={"raw_voyage_count":len(voyages),"raw_channel_count":len(voyages)*20,"raw_total_rows":int(sum(len(value) for value in raw_by_parent.values())),"timestamp_policy":timing,"shore_policy":shore_policy,"alignment":alignment,"raw_load":_stats(raw_values),"cleaned_30s":{**_stats(clean_values),"segment_count":len(manifest),"total_duration_s":int(manifest.duration_s.sum())},"pchip_1s":{**_stats(one_values),"segment_count":len(manifest),"total_points":len(one_values),"total_duration_s":int(len(one_values)-len(manifest)),"nonphysical_overshoot":False},"external_charging":{"interval_count":len(shore_rows),"deleted_rows":int(sum(row["raw_points"] for row in shore_rows)),"total_duration_s":float(sum(row["duration_s"] for row in shore_rows))},"physical_inconsistency":{"interval_count":len(physical_rows),"deleted_rows":int(sum(row["raw_points"] for row in physical_rows)),"total_duration_s":float(sum(row["duration_s"] for row in physical_rows)),"unavailable_statuses":sorted(set(row["abnormal_status"] for row in exclusion_rows if str(row["abnormal_status"]).startswith("unavailable")))},"shore":{"interval_count":len(shore_rows),"deleted_rows":int(sum(row["raw_points"] for row in shore_rows)),"total_duration_s":float(sum(row["duration_s"] for row in shore_rows))},"abnormal":{"interval_count":len(physical_rows),"deleted_rows":int(sum(row["raw_points"] for row in physical_rows)),"total_duration_s":float(sum(row["duration_s"] for row in physical_rows))},"negative_load":{"interval_count":len(negative_rows),"point_count":int(one_values.load_total_kw.lt(0).sum()),"under_minus_1_point_count":int(one_values.load_total_kw.lt(-1).sum()),"remaining_substantive_interval_count":len(remaining_substantive),"remaining_substantive_intervals":remaining_substantive,"all_intervals_written":True},"segment_fragmentation":{"per_parent":counts.to_dict(),"more_than_5":counts[counts.gt(5)].to_dict(),"under_5_min":manifest.loc[manifest.duration_s.lt(300),["parent_voyage","segment_id","duration_s"]].to_dict("records")},"split":{"parent_voyage_counts":{key:len(value) for key,value in splits.items()},"segment_counts":manifest.split.value_counts().to_dict(),"duration_s":manifest.groupby("split").duration_s.sum().to_dict(),"parent_voyage_overlap_count":0}}
-        (staging/"qa_summary.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2,default=float)+"\n",encoding="utf-8"); staging.replace(output_root); return summary
+        recovered = recovery.loc[recovery.recovered_from_shore] if not recovery.empty else recovery
+        baseline_pchip=baseline_summary.get("pchip_1s",{})
+        split_points=manifest.groupby("split").num_1s_points.sum().to_dict()
+        baseline_split_points=baseline_summary.get("split",{}).get("point_counts",{})
+        removed_durations=[float(row["duration_s"]) for row in pure_idle_rows]
+        summary={"raw_voyage_count":len(voyages),"raw_channel_count":len(voyages)*20,"raw_total_rows":int(sum(len(value) for value in raw_by_parent.values())),"timestamp_policy":timing,"shore_policy":shore_policy,"battery_deadband":{"deadband_kw":1.0,"baseline_low_battery_shore_interval_count":int(len(baseline_low_shore)),"recovered_interval_count":int(len(recovered)),"recovered_total_duration_s":float(recovered.baseline_duration_s.sum()) if not recovered.empty else 0.0,"recovered_final_normal_duration_s":float(recovered.final_normal_duration_s.sum()) if not recovered.empty else 0.0},"alignment":alignment,"raw_load":_stats(raw_values),"cleaned_30s":{**_stats(clean_values),"segment_count":len(manifest),"total_duration_s":int(manifest.duration_s.sum())},"pchip_1s":{**_stats(one_values),"segment_count":len(manifest),"total_points":len(one_values),"total_duration_s":int(len(one_values)-len(manifest)),"nonphysical_overshoot":False},"external_charging":{"interval_count":len(shore_rows),"deleted_rows":int(sum(row["raw_points"] for row in shore_rows)),"total_duration_s":float(sum(row["duration_s"] for row in shore_rows))},"physical_inconsistency":{"interval_count":len(physical_rows),"deleted_rows":int(sum(row["raw_points"] for row in physical_rows)),"total_duration_s":float(sum(row["duration_s"] for row in physical_rows)),"unavailable_statuses":sorted(set(row["abnormal_status"] for row in exclusion_rows if str(row["abnormal_status"]).startswith("unavailable")))},"shore":{"interval_count":len(shore_rows),"deleted_rows":int(sum(row["raw_points"] for row in shore_rows)),"total_duration_s":float(sum(row["duration_s"] for row in shore_rows))},"abnormal":{"interval_count":len(physical_rows),"deleted_rows":int(sum(row["raw_points"] for row in physical_rows)),"total_duration_s":float(sum(row["duration_s"] for row in physical_rows))},"pure_idle":{"removed_segment_count":len(pure_idle_rows),"removed_total_duration_s":float(sum(removed_durations)),"maximum_removed_ratio":float(max((row["pure_idle_ratio"] for row in pure_idle_rows),default=0.0)),"removed_duration_quantiles_s":pd.Series(removed_durations,dtype=float).quantile([0,.5,.9,1]).to_dict(),"retained_long_midsegment_idle_audit_count":min(5,len(retained_idle_rows))},"negative_load":{"interval_count":len(negative_rows),"point_count":int(one_values.load_total_kw.lt(0).sum()),"under_minus_1_point_count":int(one_values.load_total_kw.lt(-1).sum()),"remaining_substantive_interval_count":len(remaining_substantive),"remaining_substantive_intervals":remaining_substantive,"all_intervals_written":True},"baseline_comparison":{"baseline_commit":"b11526accc63ba86f9755652250aaa14bb35fb53","delta_1s_points":int(len(one_values)-int(baseline_pchip.get("total_points",0))),"delta_duration_s":int((len(one_values)-len(manifest))-int(baseline_pchip.get("total_duration_s",0))),"delta_segment_count":int(len(manifest)-int(baseline_summary.get("cleaned_30s",{}).get("segment_count",0))),"delta_split_1s_points":{key:int(split_points.get(key,0)-int(baseline_split_points.get(key,0))) for key in ("train","validation","test")}},"segment_fragmentation":{"per_parent":counts.to_dict(),"more_than_5":counts[counts.gt(5)].to_dict(),"under_5_min":manifest.loc[manifest.duration_s.lt(300),["parent_voyage","segment_id","duration_s"]].to_dict("records")},"split":{"parent_voyage_counts":{key:len(value) for key,value in splits.items()},"segment_counts":manifest.split.value_counts().to_dict(),"point_counts":split_points,"duration_s":manifest.groupby("split").duration_s.sum().to_dict(),"parent_voyage_overlap_count":0}}
+        (staging/"qa_summary.json").write_text(json.dumps(summary,ensure_ascii=False,indent=2,default=float)+"\n",encoding="utf-8"); zero_residual_numerical_negatives(staging)
+        if output_root.exists(): shutil.rmtree(output_root)
+        staging.replace(output_root); return json.loads((output_root/"qa_summary.json").read_text(encoding="utf-8"))
     except Exception:
         shutil.rmtree(staging,ignore_errors=True); raise
 
