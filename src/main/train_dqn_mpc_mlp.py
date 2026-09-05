@@ -49,21 +49,18 @@ from mpc_solvers.formal_config import (  # noqa: E402
     N6_STATE_COMMIT_TOLERANCES,
     build_formal_mpc_config,
 )
+from utils.formal_operating_dataset import (  # noqa: E402
+    DEFAULT_OPERATING_DATASET_ROOT as FORMAL_OPERATING_DATASET_ROOT,
+    DEFAULT_SPLIT_MANIFEST as FORMAL_SPLIT_MANIFEST,
+    LOAD_COLUMN,
+    OperatingSegmentSplit,
+    load_formal_operating_split,
+    load_operating_segment_loads as _load_operating_segment_loads,
+)
 
 
-DEFAULT_SPLIT_JSON = (
-    REPO_ROOT
-    / "outputs"
-    / "config"
-    / "voyage_split_total_load_721.json"
-)
-DEFAULT_VOYAGE_DATA_DIR = (
-    REPO_ROOT
-    / "outputs"
-    / "spline_1s_diagnostics"
-    / "data"
-    / "natural_clipped_by_voyage"
-)
+DEFAULT_OPERATING_DATASET_ROOT = FORMAL_OPERATING_DATASET_ROOT
+DEFAULT_SPLIT_MANIFEST = FORMAL_SPLIT_MANIFEST
 DEFAULT_MLP_SINGLE_PASS_OUTPUT_DIR = (
     REPO_ROOT
     / "outputs"
@@ -74,24 +71,10 @@ ALLOWED_RUNTIME_SPLITS = ("train", "validation")
 EXPECTED_SPLIT_COUNTS = (46, 13, 7)
 STATE_DIM = DQN_MPC_STATE_DIM
 ACTION_DIM = len(DQN_MPC_WEIGHT_ACTIONS)
-FORMAL_DATA_DIRECTORY = (
-    DEFAULT_VOYAGE_DATA_DIR
-    .relative_to(REPO_ROOT)
-    .as_posix()
-)
-FORMAL_TARGET_LOAD = "load_total_kw"
+FORMAL_DATA_DIRECTORY = DEFAULT_OPERATING_DATASET_ROOT.relative_to(REPO_ROOT).as_posix()
+FORMAL_TARGET_LOAD = LOAD_COLUMN
 FORMAL_SAMPLE_INTERVAL_SECONDS = 1.0
-
-
-@dataclass(frozen=True)
-class VoyageSplit:
-    train_voyages: tuple[str, ...]
-    validation_voyages: tuple[str, ...]
-    test_voyages: tuple[str, ...]
-    excluded_voyages: tuple[str, ...]
-    formal_1s_directory: str
-    target_load: str
-    sample_interval_seconds: float
+VoyageSplit = OperatingSegmentSplit
 
 
 @dataclass
@@ -119,289 +102,28 @@ class _ValidationMpcFailure(RuntimeError):
         self.diagnostic = diagnostic
 
 
-def _tuple_of_unique_strings(
-    payload: dict[str, object],
-    key: str,
-) -> tuple[str, ...]:
-    values = payload.get(key)
-
-    if not isinstance(values, list):
-        raise ValueError(
-            f"active split is missing list: {key}"
-        )
-
-    result = tuple(str(value) for value in values)
-
-    if len(result) != len(set(result)):
-        raise ValueError(
-            f"active split contains duplicate values: {key}"
-        )
-
-    return result
-
-
 def load_voyage_split(
-    split_path: str | Path = DEFAULT_SPLIT_JSON,
+    split_path: str | Path = DEFAULT_SPLIT_MANIFEST,
 ) -> VoyageSplit:
-    path = Path(split_path)
-    payload = json.loads(path.read_text(encoding="utf-8"))
-
-    train = _tuple_of_unique_strings(
-        payload,
-        "train_voyages",
-    )
-    validation = _tuple_of_unique_strings(
-        payload,
-        "validation_voyages",
-    )
-    test = _tuple_of_unique_strings(
-        payload,
-        "test_voyages",
-    )
-    excluded = _tuple_of_unique_strings(
-        payload,
-        "excluded_voyages",
-    )
-    formal_1s_directory = str(
-        payload.get("formal_1s_directory", "")
-    ).replace("\\", "/")
-    target_load = str(payload.get("target_load", ""))
-
-    try:
-        sample_interval_seconds = float(
-            payload["sample_interval_seconds"]
-        )
-    except (KeyError, TypeError, ValueError) as error:
-        raise ValueError(
-            "active split must define sample_interval_seconds"
-        ) from error
-
-    if formal_1s_directory != FORMAL_DATA_DIRECTORY:
-        raise ValueError(
-            "active split formal_1s_directory changed: "
-            f"{formal_1s_directory!r}"
-        )
-
-    if target_load != FORMAL_TARGET_LOAD:
-        raise ValueError(
-            "active split target_load changed: "
-            f"{target_load!r}"
-        )
-
-    if not np.isclose(
-        sample_interval_seconds,
-        FORMAL_SAMPLE_INTERVAL_SECONDS,
-        rtol=0.0,
-        atol=1.0e-12,
-    ):
-        raise ValueError(
-            "active split sample interval must remain 1 s"
-        )
-
-    counts = (len(train), len(validation), len(test))
-    if counts != EXPECTED_SPLIT_COUNTS:
-        raise ValueError(
-            "formal split must remain 46/13/7, "
-            f"got {counts}"
-        )
-
-    train_set = set(train)
-    validation_set = set(validation)
-    test_set = set(test)
-
-    if (
-        train_set.intersection(validation_set)
-        or train_set.intersection(test_set)
-        or validation_set.intersection(test_set)
-    ):
-        raise ValueError(
-            "train, validation, and test voyages must be disjoint"
-        )
-
-    all_voyages = train_set | validation_set | test_set
-    if len(all_voyages) != sum(EXPECTED_SPLIT_COUNTS):
-        raise ValueError(
-            "formal split must contain 66 unique voyages"
-        )
-
-    if excluded:
-        raise ValueError(
-            "formal split currently requires excluded_voyages=[]"
-        )
-
-    for alias, expected in (
-        ("train", train),
-        ("validation", validation),
-        ("test", test),
-    ):
-        if alias in payload:
-            alias_values = tuple(
-                str(value)
-                for value in payload[alias]
-            )
-            if alias_values != expected:
-                raise ValueError(
-                    f"split alias does not match {alias}_voyages"
-                )
-
-    return VoyageSplit(
-        train_voyages=train,
-        validation_voyages=validation,
-        test_voyages=test,
-        excluded_voyages=excluded,
-        formal_1s_directory=formal_1s_directory,
-        target_load=target_load,
-        sample_interval_seconds=(
-            sample_interval_seconds
-        ),
-    )
+    path = Path(split_path).resolve()
+    if path.name != "split_manifest.csv":
+        raise ValueError("formal DQN-MPC requires split_manifest.csv")
+    return load_formal_operating_split(path.parent)
 
 
-def _allowed_voyages(
+def load_operating_segment_loads(
     split_name: str,
-    split: VoyageSplit,
-) -> tuple[str, ...]:
-    name = str(split_name).strip().lower()
-
-    if name not in ALLOWED_RUNTIME_SPLITS:
-        raise ValueError(
-            "DQN-MPC training loader only permits train or "
-            f"validation; {name!r} data access is prohibited"
-        )
-
-    if name == "train":
-        return split.train_voyages
-
-    return split.validation_voyages
-
-
-def load_voyage_loads(
-    split_name: str,
-    voyage_id: str,
+    segment_id: str,
     *,
     split: VoyageSplit,
-    data_dir: str | Path = DEFAULT_VOYAGE_DATA_DIR,
+    allow_test: bool = False,
 ) -> np.ndarray:
-    allowed_voyages = _allowed_voyages(
+    return _load_operating_segment_loads(
         split_name,
-        split,
+        segment_id,
+        split=split,
+        allow_test=allow_test,
     )
-    voyage = str(voyage_id)
-
-    if voyage not in allowed_voyages:
-        raise ValueError(
-            f"{voyage} does not belong to {split_name}"
-        )
-
-    root = Path(data_dir).resolve()
-    manifest_path = root / "manifest.csv"
-    manifest = pd.read_csv(
-        manifest_path,
-        usecols=[
-            "voyage_id",
-            "split",
-            "output_csv",
-        ],
-    )
-    rows = manifest.loc[
-        manifest["voyage_id"].astype(str) == voyage
-    ]
-
-    if len(rows) != 1:
-        raise ValueError(
-            f"manifest must contain exactly one row for {voyage}"
-        )
-
-    manifest_split = str(
-        rows.iloc[0]["split"]
-    ).strip().lower()
-    expected_split = str(split_name).strip().lower()
-
-    if manifest_split != expected_split:
-        raise ValueError(
-            f"manifest split mismatch for {voyage}: "
-            f"{manifest_split!r} != {expected_split!r}"
-        )
-
-    raw_path = Path(str(rows.iloc[0]["output_csv"]))
-    voyage_path = (
-        raw_path
-        if raw_path.is_absolute()
-        else REPO_ROOT / raw_path
-    ).resolve()
-
-    try:
-        voyage_path.relative_to(root)
-    except ValueError as error:
-        raise ValueError(
-            f"manifest path escapes formal data directory: "
-            f"{voyage_path}"
-        ) from error
-
-    frame = pd.read_csv(
-        voyage_path,
-        usecols=[
-            "voyage_id",
-            "split",
-            "time_s",
-            split.target_load,
-        ],
-    )
-
-    if len(frame) < 2:
-        raise ValueError(
-            f"{voyage} must contain at least two 1 s samples"
-        )
-
-    file_voyages = set(
-        frame["voyage_id"].astype(str).unique()
-    )
-    if file_voyages != {voyage}:
-        raise ValueError(
-            f"{voyage_path} contains unexpected voyage IDs"
-        )
-
-    file_splits = set(
-        frame["split"]
-        .astype(str)
-        .str.strip()
-        .str.lower()
-        .unique()
-    )
-    if file_splits != {expected_split}:
-        raise ValueError(
-            f"{voyage_path} contains unexpected split labels"
-        )
-
-    time_s = pd.to_numeric(
-        frame["time_s"],
-        errors="coerce",
-    ).to_numpy(dtype=np.float64)
-    loads_kw = pd.to_numeric(
-        frame[split.target_load],
-        errors="coerce",
-    ).to_numpy(dtype=np.float64)
-
-    if (
-        not np.all(np.isfinite(time_s))
-        or not np.all(np.isfinite(loads_kw))
-    ):
-        raise ValueError(
-            f"{voyage_path} contains non-finite time or load"
-        )
-
-    if not np.allclose(
-        np.diff(time_s),
-        split.sample_interval_seconds,
-        rtol=0.0,
-        atol=1.0e-9,
-    ):
-        raise ValueError(
-            f"{voyage_path} is not a continuous 1 s voyage"
-        )
-
-    return loads_kw
-
 
 def _validate_fixed_dqn_design(
     config: DQNTrainConfig,
@@ -1375,8 +1097,7 @@ def validate_voyages(
 def train_dqn_mpc_mlp(
     *,
     config: DQNTrainConfig | None = None,
-    split_path: str | Path = DEFAULT_SPLIT_JSON,
-    data_dir: str | Path = DEFAULT_VOYAGE_DATA_DIR,
+    split_path: str | Path = DEFAULT_SPLIT_MANIFEST,
 ) -> tuple[TrainingRuntime, dict[str, object]]:
     resolved_config = config or DQNTrainConfig()
     _validate_fixed_dqn_design(resolved_config)
@@ -1396,11 +1117,10 @@ def train_dqn_mpc_mlp(
     def load_train_voyage(
         voyage_id: str,
     ) -> np.ndarray:
-        loads = load_voyage_loads(
+        loads = load_operating_segment_loads(
             "train",
             voyage_id,
             split=split,
-            data_dir=data_dir,
         )
         loaded_train_voyages.append(str(voyage_id))
         return loads
@@ -1408,11 +1128,10 @@ def train_dqn_mpc_mlp(
     def load_validation_voyage(
         voyage_id: str,
     ) -> np.ndarray:
-        loads = load_voyage_loads(
+        loads = load_operating_segment_loads(
             "validation",
             voyage_id,
             split=split,
-            data_dir=data_dir,
         )
         loaded_validation_voyages.append(
             str(voyage_id)
@@ -1420,7 +1139,7 @@ def train_dqn_mpc_mlp(
         return loads
 
     train_episodes = train_to_budget(
-        voyage_ids=split.train_voyages,
+        voyage_ids=split.train_segments,
         load_voyage=load_train_voyage,
         base_config=base_config,
         runtime=runtime,
@@ -1431,7 +1150,7 @@ def train_dqn_mpc_mlp(
 
     try:
         validation = validate_voyages(
-            voyage_ids=split.validation_voyages,
+            voyage_ids=split.validation_segments,
             load_voyage=load_validation_voyage,
             base_config=base_config,
             agent=runtime.agent,
@@ -1508,11 +1227,11 @@ def train_dqn_mpc_mlp(
         "warmup_steps": int(
             resolved_config.warmup_steps
         ),
-        "train_voyage_count": len(split.train_voyages),
+        "train_voyage_count": len(split.train_segments),
         "validation_voyage_count": len(
-            split.validation_voyages
+            split.validation_segments
         ),
-        "test_voyage_count": len(split.test_voyages),
+        "test_voyage_count": len(split.test_segments),
         "training_episodes": train_episodes,
         "global_step": int(runtime.global_step),
         "gradient_update_count": len(

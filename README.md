@@ -4,23 +4,23 @@
 
 ## 数据来源与划分
 
-原始航段位于 `total_load_excels/`。正式 1 s 负荷数据位于：
+原始约30 s设备 CSV 位于桌面“氢舟一号”（只读）。正式 1 s 负荷数据位于：
 
 ```text
-outputs/spline_1s_diagnostics/data/natural_clipped_by_voyage/
+data/processed/operating_segments_1s_rebuilt/
 ```
 
-1 s 数据由每条航段的 30 s 设备通道离线做 natural cubic spline 重构，并对建模负荷列做非负裁剪。该变换使用区间两端节点，因此只用于离线论文实验；不能被描述为在线可获得的预测信号。通道构造与审计细节见 `docs/CLUSTER_BASED_TOTAL_LOAD_REBUILD.md`。
+先在原始层审核20路正式通道、排除无效与外部充电、提取混合动力 operating segment；再于每段统一30 s参考节点先求 `P_fc_total + P_batt_total`，对总负荷使用 PCHIP 重构到1 s。正式列仅为 `timestamp`、`time_s`、`load_total_kw`；不对设备通道分别插值，也不对负荷无条件裁剪。
 
-固定按航段划分，不跨航段采样：
+segment 继承 parent voyage 划分，不跨 parent 泄漏：
 
-| Split | Voyage | 数量 |
+| Split | Parent voyage | 当前 segment 数量 |
 | --- | --- | ---: |
-| Train | `voyage_001`–`voyage_046` | 46 |
-| Validation | `voyage_047`–`voyage_059` | 13 |
-| Test | `voyage_060`–`voyage_066` | 7 |
+| Train | 46 parent voyages | 144 |
+| Validation | 13 parent voyages | 23 |
+| Test | 7 parent voyages | 10 |
 
-权威划分文件为 `outputs/config/voyage_split_total_load_721.json`。训练与 validation 不读取 test 航段。
+权威划分文件为 `data/processed/operating_segments_1s_rebuilt/split_manifest.csv`。最终数据共 66 个 parent voyages、177 个 segments、1,114,037 条 1 s 样本；训练与 validation 不读取 test segment，每段为独立 episode，初始 SOC 固定0.55。旧 natural cubic spline 数据已废弃。
 
 ## 控制结构
 
@@ -136,8 +136,7 @@ python -m pip install -r requirements.txt
 构建/核验数据：
 
 ```powershell
-python src/main/build_total_load_dataset_721.py
-python src/main/build_spline_1s_diagnostics.py
+python src/main/build_rebuilt_operating_segment_dataset.py
 ```
 
 正式 MLP 训练与 validation（两轮完整 train voyages）：

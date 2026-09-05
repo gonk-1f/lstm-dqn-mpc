@@ -47,7 +47,7 @@ def run_round_boundary_training(
         runtime.agent.save(round_dir / f"model_round{round_summary['round_id']}.pt")
         validation_artifacts.PLOT_DIR = plot_dir
         validation_voyages = []
-        for voyage_id in split.validation_voyages:
+        for voyage_id in split.validation_segments:
             result, trace = validation_artifacts.run_test_episode(
                 voyage_id=voyage_id,
                 loads_kw=load_validation(voyage_id),
@@ -65,7 +65,7 @@ def run_round_boundary_training(
 
     rounds = training.train_complete_voyage_rounds(
         num_training_rounds=num_training_rounds,
-        voyage_ids=split.train_voyages,
+        voyage_ids=split.train_segments,
         load_voyage=load_train,
         base_config=base_config,
         runtime=runtime,
@@ -98,14 +98,14 @@ def main() -> None:
     output_dir.mkdir(parents=True)
 
     def load_train(voyage_id: str):
-        return training.load_voyage_loads(
+        return training.load_operating_segment_loads(
             "train",
             voyage_id,
             split=split,
         )
 
     def load_validation(voyage_id: str):
-        return training.load_voyage_loads(
+        return training.load_operating_segment_loads(
             "validation",
             voyage_id,
             split=split,

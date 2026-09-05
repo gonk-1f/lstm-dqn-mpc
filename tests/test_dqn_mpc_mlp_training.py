@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import sys
-import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
@@ -27,12 +26,12 @@ from dqn.agents.dqn_agent import DQNTrainConfig  # noqa: E402
 
 SEED = 321
 REQUIRED_API = (
-    "DEFAULT_SPLIT_JSON",
-    "DEFAULT_VOYAGE_DATA_DIR",
+    "DEFAULT_OPERATING_DATASET_ROOT",
+    "DEFAULT_SPLIT_MANIFEST",
     "VoyageSplit",
     "TrainingRuntime",
     "load_voyage_split",
-    "load_voyage_loads",
+    "load_operating_segment_loads",
     "build_formal_mpc_config",
     "create_training_runtime",
     "run_training_episode",
@@ -97,120 +96,50 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         config = DQNTrainConfig(device="cpu")
         return replace(config, **changes)
 
-    def test_formal_split_is_46_13_7_and_disjoint(
+    def test_formal_split_is_segment_based_and_disjoint(
         self,
     ) -> None:
         self.require_api()
-        split = training.load_voyage_split(
-            training.DEFAULT_SPLIT_JSON
-        )
+        split = training.load_voyage_split(training.DEFAULT_SPLIT_MANIFEST)
 
-        self.assertEqual(len(split.train_voyages), 46)
-        self.assertEqual(len(split.validation_voyages), 13)
-        self.assertEqual(len(split.test_voyages), 7)
-        self.assertEqual(split.excluded_voyages, ())
-        self.assertEqual(
-            split.formal_1s_directory,
-            (
-                "outputs/spline_1s_diagnostics/data/"
-                "natural_clipped_by_voyage"
-            ),
-        )
-        self.assertEqual(split.target_load, "load_total_kw")
-        self.assertEqual(
-            split.sample_interval_seconds,
-            1.0,
-        )
+        self.assertEqual(len(split.train_segments), 144)
+        self.assertEqual(len(split.validation_segments), 23)
+        self.assertEqual(len(split.test_segments), 10)
+        self.assertEqual(len(split.train_parents), 46)
+        self.assertEqual(len(split.validation_parents), 13)
+        self.assertEqual(len(split.test_parents), 7)
 
-        train = set(split.train_voyages)
-        validation = set(split.validation_voyages)
-        test = set(split.test_voyages)
+        train = set(split.train_segments)
+        validation = set(split.validation_segments)
+        test = set(split.test_segments)
         self.assertFalse(train & validation)
         self.assertFalse(train & test)
         self.assertFalse(validation & test)
-        self.assertEqual(len(train | validation | test), 66)
-
-        self.assertEqual(
-            split.train_voyages,
-            tuple(
-                f"voyage_{index:03d}"
-                for index in range(1, 47)
-            ),
-        )
-        self.assertEqual(
-            split.validation_voyages,
-            tuple(
-                f"voyage_{index:03d}"
-                for index in range(47, 60)
-            ),
-        )
-        self.assertEqual(
-            split.test_voyages,
-            tuple(
-                f"voyage_{index:03d}"
-                for index in range(60, 67)
-            ),
+        self.assertEqual(len(train | validation | test), 177)
+        self.assertTrue(
+            all(identifier.startswith("operating_segment_") for identifier in train | validation | test)
         )
 
     def test_loader_reads_train_and_rejects_test_before_io(
         self,
     ) -> None:
         self.require_api()
-        split = training.load_voyage_split(
-            training.DEFAULT_SPLIT_JSON
-        )
+        split = training.load_voyage_split(training.DEFAULT_SPLIT_MANIFEST)
 
-        with tempfile.TemporaryDirectory() as tmp:
-            data_dir = Path(tmp)
-
-            with self.assertRaisesRegex(
-                ValueError,
+        with self.assertRaisesRegex(ValueError, "test"):
+            training.load_operating_segment_loads(
                 "test",
-            ):
-                training.load_voyage_loads(
-                    "test",
-                    "voyage_060",
-                    split=split,
-                    data_dir=data_dir,
-                )
-
-            voyage_path = (
-                data_dir / "voyage_001__fixture.csv"
-            )
-            pd.DataFrame(
-                {
-                    "voyage_id": ["voyage_001"] * 3,
-                    "split": ["train"] * 3,
-                    "time_s": [0.0, 1.0, 2.0],
-                    "load_total_kw": [
-                        210.0,
-                        215.0,
-                        220.0,
-                    ],
-                }
-            ).to_csv(voyage_path, index=False)
-            pd.DataFrame(
-                {
-                    "voyage_id": ["voyage_001"],
-                    "split": ["train"],
-                    "output_csv": [str(voyage_path)],
-                }
-            ).to_csv(
-                data_dir / "manifest.csv",
-                index=False,
-            )
-
-            loads = training.load_voyage_loads(
-                "train",
-                "voyage_001",
+                split.test_segments[0],
                 split=split,
-                data_dir=data_dir,
             )
 
-        np.testing.assert_array_equal(
-            loads,
-            np.asarray([210.0, 215.0, 220.0]),
+        loads = training.load_operating_segment_loads(
+            "train",
+            split.train_segments[0],
+            split=split,
         )
+        self.assertGreaterEqual(float(loads.min()), 0.0)
+        self.assertGreaterEqual(len(loads), 2)
 
     def test_runtime_locks_formal_mlp_design_and_sync_interval(
         self,

@@ -39,70 +39,9 @@ def load_test_voyage(
     *,
     split,
 ) -> np.ndarray:
-    voyage_id = str(voyage_id)
-
-    if voyage_id not in split.test_voyages:
-        raise ValueError(
-            f"{voyage_id} is not a test voyage"
-        )
-
-    root = training.DEFAULT_VOYAGE_DATA_DIR.resolve()
-
-    manifest = pd.read_csv(
-        root / "manifest.csv"
+    return training.load_operating_segment_loads(
+        "test", str(voyage_id), split=split, allow_test=True
     )
-
-    rows = manifest.loc[
-        manifest["voyage_id"].astype(str)
-        == voyage_id
-    ]
-
-    if len(rows) != 1:
-        raise ValueError(
-            f"Expected one manifest row for {voyage_id}"
-        )
-
-    row = rows.iloc[0]
-
-    if str(row["split"]).strip().lower() != "test":
-        raise ValueError(
-            f"{voyage_id} is not labelled test"
-        )
-
-    raw_path = Path(str(row["output_csv"]))
-
-    voyage_path = (
-        raw_path
-        if raw_path.is_absolute()
-        else REPO_ROOT / raw_path
-    ).resolve()
-
-    frame = pd.read_csv(
-        voyage_path,
-        usecols=[
-            "voyage_id",
-            "split",
-            "time_s",
-            split.target_load,
-        ],
-    )
-
-    frame = frame.sort_values(
-        "time_s",
-        kind="stable",
-    ).reset_index(drop=True)
-
-    loads_kw = pd.to_numeric(
-        frame[split.target_load],
-        errors="raise",
-    ).to_numpy(dtype=np.float64)
-
-    if len(loads_kw) < 2:
-        raise ValueError(
-            f"{voyage_id} contains too few samples"
-        )
-
-    return loads_kw
 
 
 def run_test_episode(
@@ -329,7 +268,7 @@ def main() -> None:
 
     split = training.load_voyage_split()
 
-    print("Test voyages:", split.test_voyages)
+    print("Test segments:", split.test_segments)
 
 
 
@@ -338,7 +277,7 @@ def main() -> None:
     results = []
 
     for index, voyage_id in enumerate(
-        split.test_voyages,
+        split.test_segments,
         start=1,
     ):
         loads_kw = load_test_voyage(
@@ -375,8 +314,8 @@ def main() -> None:
         )
 
         print(
-            f"[test] {index}/{len(split.test_voyages)} "
-            f"voyage={voyage_id} "
+            f"[test] {index}/{len(split.test_segments)} "
+            f"segment={voyage_id} "
             f"completed={result['completed']} "
             f"steps={result['episode_steps']} "
             f"min_soc={result['min_soc']:.6f} "
@@ -397,7 +336,7 @@ def main() -> None:
         "controller": "fixed_A0_nominal_MPC",
         "action_id": 0,
         "action_weights": [0.25, 0.40, 12.0, 20.0],
-        "test_voyages": list(split.test_voyages),
+        "test_segments": list(split.test_segments),
         "completed_voyages": completed,
         "total_voyages": len(frame),
         "success_rate": (

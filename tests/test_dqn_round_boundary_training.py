@@ -140,6 +140,8 @@ class RoundBoundaryTrainingTests(unittest.TestCase):
                 split = SimpleNamespace(
                     train_voyages=("voyage_001",),
                     validation_voyages=("voyage_047",),
+                    train_segments=("voyage_001",),
+                    validation_segments=("voyage_047",),
                 )
                 loads = {
                     "voyage_001": np.asarray([200.0, 205.0]),
