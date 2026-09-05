@@ -30,6 +30,7 @@ from utils.rebuilt_operating_dataset import (  # noqa: E402
 )
 from build_rebuilt_operating_segment_dataset import (  # noqa: E402
     _classify_negative_intervals,
+    _zero_small_stationary_load_drift,
     _pure_idle_summary,
     _mark_abnormal,
     _nearest_offsets,
@@ -40,6 +41,53 @@ from build_rebuilt_operating_segment_dataset import (  # noqa: E402
 
 
 class TestRebuiltOperatingDataset(unittest.TestCase):
+    def test_stationary_subkilowatt_fc_battery_zero_drift_is_zeroed_without_touching_measurements(self) -> None:
+        frame = pd.DataFrame(
+            {
+                "timestamp": pd.date_range("2024-01-01", periods=3, freq="30s"),
+                "fc_total_kw": [0.0, 0.8, 0.0],
+                "battery_total_kw": [-0.2, -0.9, -0.8],
+                "load_total_kw": [-0.2, -0.1, -0.8],
+                "speed_aligned_kn": [0.0, 0.1, 0.0],
+                "propulsion_inverter_kw": [0.0, 1.0, 0.0],
+                "aligned": [True] * 3,
+            }
+        )
+
+        zeroed, audit = _zero_small_stationary_load_drift(frame)
+        marked, external, physical = _classify_negative_intervals(zeroed, speed_idle_threshold_kn=0.1)
+
+        self.assertEqual(zeroed["load_total_kw"].tolist(), [0.0, 0.0, 0.0])
+        self.assertEqual(zeroed["battery_total_kw"].tolist(), [-0.2, -0.9, -0.8])
+        self.assertEqual(zeroed["fc_total_kw"].tolist(), [0.0, 0.8, 0.0])
+        self.assertTrue(zeroed["is_load_zero_drift"].all())
+        self.assertEqual(audit["point_count"], 3)
+        self.assertFalse(marked["is_external_charging"].any())
+        self.assertFalse(marked["is_physical_inconsistency"].any())
+        self.assertTrue(external.empty)
+        self.assertTrue(physical.empty)
+
+    def test_substantial_negative_balance_is_not_zeroed(self) -> None:
+        frame = pd.DataFrame(
+            {
+                "timestamp": pd.date_range("2024-01-01", periods=3, freq="30s"),
+                "fc_total_kw": [0.0] * 3,
+                "battery_total_kw": [-5.0] * 3,
+                "load_total_kw": [-5.0] * 3,
+                "speed_aligned_kn": [2.0] * 3,
+                "propulsion_inverter_kw": [10.0] * 3,
+                "aligned": [True] * 3,
+            }
+        )
+
+        zeroed, audit = _zero_small_stationary_load_drift(frame)
+        marked, _, physical = _classify_negative_intervals(zeroed, speed_idle_threshold_kn=0.1)
+
+        self.assertEqual(zeroed["load_total_kw"].tolist(), [-5.0, -5.0, -5.0])
+        self.assertEqual(audit["point_count"], 0)
+        self.assertTrue(marked["is_physical_inconsistency"].all())
+        self.assertEqual(len(physical), 1)
+
     def test_battery_timestamp_collapsing_deduplicates_or_averages_power(self) -> None:
         timestamp = pd.Timestamp("2024-05-10 08:00:11")
         raw = pd.DataFrame(
@@ -301,6 +349,22 @@ class TestRebuiltOperatingDataset(unittest.TestCase):
         self.assertTrue(dominant["remove"])
         self.assertEqual(below["kept_point_count"], 100)
 
+    def test_pure_idle_ratio_uses_timestamp_duration_not_row_count(self) -> None:
+        segment = pd.DataFrame(
+            {
+                "timestamp": pd.to_datetime(["2024-01-01 00:00:00", "2024-01-01 00:00:30", "2024-01-01 00:01:30", "2024-01-01 00:02:30"]),
+                "speed_aligned_kn": [0.0, 1.0, 1.0, 1.0],
+                "propulsion_inverter_kw": [0.0, 10.0, 10.0, 10.0],
+                "fc_total_kw": [0.0, 10.0, 10.0, 10.0],
+                "load_total_kw": [0.0, 10.0, 10.0, 10.0],
+            }
+        )
+
+        summary = _pure_idle_summary(segment)
+
+        self.assertAlmostEqual(float(summary["pure_idle_ratio"]), 30.0 / 210.0)
+        self.assertFalse(summary["remove"])
+
     def test_sustained_negative_load_is_external_when_stationary(self) -> None:
         frame = pd.DataFrame(
             {
@@ -337,7 +401,7 @@ class TestRebuiltOperatingDataset(unittest.TestCase):
         self.assertTrue(external.empty)
         self.assertEqual(len(physical), 1)
 
-    def test_short_subkilowatt_negative_is_retained_as_tolerance(self) -> None:
+    def test_unresolved_subkilowatt_negative_is_physical_inconsistency(self) -> None:
         frame = pd.DataFrame(
             {
                 "timestamp": pd.date_range("2024-01-01", periods=2, freq="30s"),
@@ -352,9 +416,9 @@ class TestRebuiltOperatingDataset(unittest.TestCase):
         )
         marked, external, physical = _classify_negative_intervals(frame, speed_idle_threshold_kn=0.1)
         self.assertFalse(marked["is_external_charging"].any())
-        self.assertFalse(marked["is_physical_inconsistency"].any())
+        self.assertTrue(marked["is_physical_inconsistency"].all())
         self.assertTrue(external.empty)
-        self.assertTrue(physical.empty)
+        self.assertEqual(len(physical), 1)
 
     def test_classified_negative_rows_form_segment_boundaries(self) -> None:
         frame = pd.DataFrame(

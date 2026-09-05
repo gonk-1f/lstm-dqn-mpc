@@ -1,12 +1,12 @@
 ﻿parent_voyage,start_time,end_time,raw_points,duration_s,mean_fc_kw,mean_battery_kw,speed_min_kn,speed_max_kn,speed_unavailable_points,reason
-3月26日14_00_3月26日16_00,2024-03-26T15:58:27,2024-03-26T15:59:57,4,90.0,0.0,-41.802487,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+3月26日14_00_3月26日16_00,2024-03-26T15:58:27,2024-03-26T15:59:57,4,90.0,0.0,-41.802487000000006,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 3月27日07_00_3月27日11_00,2024-03-27T10:54:29,2024-03-27T10:59:59,12,330.0,0.0,-87.269116,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 3月29日08_00_3月29日15_00,2024-03-29T14:35:35,2024-03-29T14:59:35,49,1440.0,0.0,-102.65971681632654,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月2日14_00_4月2日17_00,2024-04-02T16:22:43,2024-04-02T16:59:43,75,2220.0,0.0,-103.13878979999998,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月3日08_00_4月3日11_00,2024-04-03T10:55:14,2024-04-03T10:59:44,10,270.0,0.0,-92.82921599999999,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月8日08_00_4月8日12_00,2024-04-08T11:40:26,2024-04-08T11:59:56,40,1170.0,0.0,-93.968478325,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月9日08_00_4月9日11_00,2024-04-09T10:36:28,2024-04-09T10:59:58,48,1410.0,0.0,-52.33831302083333,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
-4月12日08_00_4月12日16_00,2024-04-12T15:18:33,2024-04-12T15:59:33,83,2460.0,0.0,-108.05560185542167,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月12日08_00_4月12日16_00,2024-04-12T15:18:33,2024-04-12T15:59:33,83,2460.0,0.0,-108.0556018554217,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月15日08_00_4月15日17_00,2024-04-15T10:49:38,2024-04-15T13:37:38,337,10080.0,0.0,-106.71317189020773,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月15日08_00_4月15日17_00,2024-04-15T13:44:38,2024-04-15T14:36:08,104,3090.0,0.0,-105.65631375,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月15日08_00_4月15日17_00,2024-04-15T16:46:09,2024-04-15T16:59:39,28,810.0,0.0,-99.62249439285713,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
@@ -15,12 +15,12 @@
 4月16日08_00_4月16日19_00,2024-04-16T18:50:40,2024-04-16T18:59:40,19,540.0,0.0,-94.92010531578947,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月17日07_00_4月17日17_00,2024-04-17T09:00:11,2024-04-17T09:15:41,32,930.0,0.0,-109.62759396875,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月17日07_00_4月17日17_00,2024-04-17T09:37:11,2024-04-17T09:44:41,16,450.0,0.0,-91.2657445,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
-4月17日07_00_4月17日17_00,2024-04-17T16:12:11,2024-04-17T16:59:41,96,2850.0,0.0,-107.3975180625,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月17日07_00_4月17日17_00,2024-04-17T16:12:11,2024-04-17T16:59:41,96,2850.0,0.0,-107.39751806249997,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月18日12_00_4月18日18_00,2024-04-18T17:10:13,2024-04-18T17:58:43,98,2910.0,0.0,-104.24119879591836,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月22日14_00_4月22日17_00,2024-04-22T16:54:50,2024-04-22T16:59:50,11,300.0,0.0,-87.32835409090909,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月25日08_00_4月25日18_00,2024-04-25T15:06:26,2024-04-25T15:31:56,52,1530.0,0.0,-106.66401782692309,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
-4月25日08_00_4月25日18_00,2024-04-25T17:26:57,2024-04-25T17:59:57,67,1980.0,0.0,-108.00715113432835,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
-4月28日08_00_4月28日12_00,2024-04-28T11:42:35,2024-04-28T11:59:35,35,1020.0,0.0,-106.78921102857144,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月25日08_00_4月25日18_00,2024-04-25T17:26:57,2024-04-25T17:59:57,67,1980.0,0.0,-108.00715113432837,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+4月28日08_00_4月28日12_00,2024-04-28T11:42:35,2024-04-28T11:59:35,35,1020.0,0.0,-106.78921102857143,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月29日08_00_4月29日18_00,2024-04-29T17:29:38,2024-04-29T17:33:08,8,210.0,0.0,-30.50525625,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月29日08_00_4月29日18_00,2024-04-29T17:36:08,2024-04-29T17:56:38,42,1230.0,0.0,-86.57100045238094,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 4月30日08_00_4月30日15_00,2024-04-30T14:10:41,2024-04-30T14:59:41,99,2940.0,0.0,-106.12809327272727,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
@@ -38,7 +38,7 @@
 6月5日08_00_6月5日19_00,2024-06-05T16:08:45,2024-06-05T17:50:45,205,6120.0,102.99024390243902,-65.38389406829269,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 6月6日10_00_6月6日21_00,2024-06-06T19:37:17,2024-06-06T19:52:47,32,930.0,118.96875,-78.17786612500001,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 6月6日10_00_6月6日21_00,2024-06-06T20:10:47,2024-06-06T20:32:17,44,1290.0,94.13636363636364,-45.87354254545455,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
-6月7日00_00_6月7日24_00,2024-06-07T00:00:18,2024-06-07T01:49:48,220,6570.0,0.0,-105.42762357272728,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+6月7日00_00_6月7日24_00,2024-06-07T00:00:18,2024-06-07T01:49:48,220,6570.0,0.0,-105.42762357272727,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 6月7日00_00_6月7日24_00,2024-06-07T15:21:19,2024-06-07T15:23:19,5,120.0,70.8,-28.5878898,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 6月12日14_00_6月12日17_00,2024-06-12T14:43:05,2024-06-12T14:46:05,7,180.0,93.57142857142857,-6.742671428571427,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 6月14日08_00_6月15日18_00,2024-06-14T19:16:16,2024-06-14T19:37:16,43,1260.0,0.0,-70.49442274418605,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
@@ -46,7 +46,7 @@
 6月14日08_00_6月15日18_00,2024-06-15T09:34:48,2024-06-15T16:27:49,827,24781.0,0.0,-58.15970622370012,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 6月14日08_00_6月15日18_00,2024-06-15T16:55:49,2024-06-15T16:58:19,6,150.0,0.0,-57.08203183333333,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 6月30日05_00_6月30日11_00,2024-06-30T10:35:40,2024-06-30T10:59:40,49,1440.0,0.0,-107.73008051020408,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
-7月11日06_00_7月12日10_00,2024-07-11T18:24:34,2024-07-11T18:32:34,17,480.0,51.411764705882355,-7.580149352941178,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
+7月11日06_00_7月12日10_00,2024-07-11T18:24:34,2024-07-11T18:32:34,17,480.0,51.411764705882355,-7.580149352941176,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 7月11日06_00_7月12日10_00,2024-07-11T18:33:34,2024-07-11T20:05:04,184,5490.0,56.70108695652174,-16.667331570652173,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 7月11日06_00_7月12日10_00,2024-07-11T20:08:34,2024-07-11T21:42:34,189,5640.0,58.6931216931217,-18.07988606349206,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband
 7月11日06_00_7月12日10_00,2024-07-11T21:48:04,2024-07-12T08:12:35,1250,37471.0,47.892,-10.3746331008,0.0,0.0,0,external_charging_or_shore_power: stationary battery charging beyond 1 kW deadband

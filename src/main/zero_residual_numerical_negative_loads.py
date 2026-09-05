@@ -13,7 +13,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DATASET_ROOT = REPO_ROOT / "data" / "processed" / "operating_segments_1s_rebuilt"
 
 
-def zero_residual_numerical_negatives(root: Path = DATASET_ROOT) -> dict[str, int | float]:
+def zero_residual_numerical_negatives(
+    root: Path = DATASET_ROOT,
+    *,
+    require_nonnegative_sources: bool = False,
+) -> dict[str, int | float]:
     """Set values in (-1, 0) to zero after a full-dataset precondition scan."""
     root = Path(root)
     paths = sorted((root / "operating_segments_1s").glob("*.csv"))
@@ -33,6 +37,13 @@ def zero_residual_numerical_negatives(root: Path = DATASET_ROOT) -> dict[str, in
             raise ValueError(f"non-finite final 1 s load: {path}")
         if values.le(-1.0).any():
             raise ValueError(f"negative load outside the approved (-1, 0) numerical tolerance: {path}")
+        if require_nonnegative_sources and values.lt(0.0).any():
+            source = root / "cleaned_30s_segments" / path.name
+            if not source.exists():
+                raise ValueError(f"missing cleaned source for residual numerical negative: {path.name}")
+            source_values = pd.to_numeric(pd.read_csv(source, usecols=["load_total_kw"])["load_total_kw"], errors="raise")
+            if source_values.lt(0.0).any():
+                raise ValueError(f"residual numerical negative source is negative: {source}")
         frames.append((path, frame, values))
         before_min = min(before_min, float(values.min()))
         before_zero_count += int(values.eq(0.0).sum())

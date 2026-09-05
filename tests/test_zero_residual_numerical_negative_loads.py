@@ -48,3 +48,12 @@ class TestZeroResidualNumericalNegativeLoads(unittest.TestCase):
 
         values = pd.read_csv(root / "operating_segments_1s" / "segment.csv")["load_total_kw"].tolist()
         self.assertEqual(values, [-1.0, 0.0])
+
+    def test_requires_nonnegative_cleaned_source_when_requested(self) -> None:
+        root = self._dataset([-0.5, 0.0])
+        cleaned = root / "cleaned_30s_segments"
+        cleaned.mkdir()
+        pd.DataFrame({"timestamp": pd.date_range("2024-01-01", periods=2, freq="30s"), "load_total_kw": [-0.1, 0.0]}).to_csv(cleaned / "segment.csv", index=False)
+
+        with self.assertRaisesRegex(ValueError, "source is negative"):
+            zero_residual_numerical_negatives(root, require_nonnegative_sources=True)
