@@ -146,10 +146,14 @@ class DQNAgent:
         )
 
     def greedy_action(self, state: np.ndarray) -> int:
+        return int(np.argmax(self.q_values(state)))
+
+    def q_values(self, state: np.ndarray) -> np.ndarray:
+        """Return finite online-network Q values for one evaluation state."""
         with torch.no_grad():
             state_tensor = torch.tensor(state, dtype=self.tensor_dtype, device=self.device).unsqueeze(0)
-            action = self.q_net(state_tensor).argmax(dim=1).item()
-        return int(action)
+            values = self.q_net(state_tensor).squeeze(0).detach().cpu().numpy()
+        return np.asarray(values, dtype=np.float64)
 
     def bellman_target(self, rewards: torch.Tensor, dones: torch.Tensor, next_states: torch.Tensor) -> torch.Tensor:
         """Compute the one-step Bellman target:

@@ -316,7 +316,7 @@ def _loss_statistics(
             "training loss contains NaN or Inf"
         )
 
-    return {
+    result = {
         "count": int(values.size),
         "mean": float(np.mean(values)),
         "median": float(np.median(values)),
@@ -327,6 +327,7 @@ def _loss_statistics(
             np.mean(values[-1000:])
         ),
     }
+    return result
 
 
 def _snapshot_online_parameters(
@@ -522,6 +523,7 @@ def run_training_episode(
         ACTION_DIM,
         dtype=np.int64,
     )
+    min_soc = float(env.current_soc)
     done = False
 
     while not done:
@@ -591,6 +593,7 @@ def run_training_episode(
         episode_reward += float(reward)
         recent_rewards.append(float(reward))
         action_counts[action] += 1
+        min_soc = min(min_soc, float(env.current_soc))
 
         if not warmup:
             runtime.policy.step()
@@ -695,9 +698,13 @@ def run_training_episode(
         "solver_failure_count": int(
             solver_failure_count
         ),
+        "min_soc": float(min_soc),
         "final_soc": float(env.current_soc),
         "global_step": int(runtime.global_step),
     }
+    for action_id in range(ACTION_DIM):
+        result[f"action_count_A{action_id}"] = int(action_counts[action_id])
+    return result
 
 
 def train_to_budget(
@@ -764,6 +771,10 @@ def train_complete_voyage_rounds(
     round_summaries: list[dict[str, object]] = []
     completed_episodes = 0
     for round_id in range(1, int(num_training_rounds) + 1):
+        runtime_losses = getattr(runtime, "losses", [])
+        runtime_updates = getattr(runtime, "update_steps", [])
+        loss_start = len(runtime_losses)
+        update_start = len(runtime_updates)
         episodes: list[dict[str, object]] = []
         for voyage_id in ordered_voyages:
             episode = run_training_episode(
@@ -774,13 +785,43 @@ def train_complete_voyage_rounds(
             )
             episodes.append(episode)
             completed_episodes += 1
+        training_action_counts = {
+            f"A{action_id}": int(
+                sum(
+                    int(episode.get(f"action_count_A{action_id}", 0))
+                    for episode in episodes
+                )
+            )
+            for action_id in range(ACTION_DIM)
+        }
+        round_q_diagnostics = (
+            _validate_latest_q_diagnostics(runtime.agent)
+            if (
+                len(runtime_updates) > update_start
+                and hasattr(runtime.agent, "latest_update_diagnostics")
+            )
+            else None
+        )
         round_summary: dict[str, object] = {
             "round_id": round_id,
             "episodes": episodes,
             "completed_training_episodes": completed_episodes,
             "global_step": int(runtime.global_step),
             "epsilon": float(runtime.policy.epsilon),
-            "gradient_update_count": len(runtime.update_steps),
+            "gradient_update_count": len(runtime_updates),
+            "gradient_update_count_this_round": len(runtime_updates) - update_start,
+            "loss_statistics": _loss_statistics(runtime_losses[loss_start:]),
+            "q_value_diagnostics": round_q_diagnostics,
+            "training_solver_failure_count": int(
+                sum(int(episode.get("solver_failure_count", 0)) for episode in episodes)
+            ),
+            "training_action_counts": training_action_counts,
+            "training_min_soc": float(min(float(episode.get("min_soc", 0.55)) for episode in episodes)),
+            "training_final_soc": {
+                "mean": float(np.mean([float(episode.get("final_soc", 0.55)) for episode in episodes])),
+                "min": float(np.min([float(episode.get("final_soc", 0.55)) for episode in episodes])),
+                "max": float(np.max([float(episode.get("final_soc", 0.55)) for episode in episodes])),
+            },
         }
         round_summaries.append(round_summary)
         if on_round_complete is not None:

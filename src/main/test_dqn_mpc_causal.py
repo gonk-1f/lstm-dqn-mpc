@@ -81,7 +81,20 @@ def run_test_episode(
     done = False
 
     while not done:
+        decision_index = int(env.decision_index)
+        current_load_kw = float(env.loads_kw[decision_index])
+        previous_load_kw = float(
+            env.loads_kw[decision_index - 1]
+            if decision_index > 0
+            else current_load_kw
+        )
+        q_values = np.asarray(agent.q_values(state), dtype=np.float64)
+        if q_values.shape != (training.ACTION_DIM,) or not np.all(np.isfinite(q_values)):
+            raise RuntimeError("validation Q values must be finite with one entry per action")
         action = agent.greedy_action(state)
+        if action != int(np.argmax(q_values)):
+            raise RuntimeError("greedy validation action disagrees with online Q argmax")
+        q_ranked = np.sort(q_values)
 
         try:
             next_state, reward, done, info = env.step(
@@ -116,12 +129,22 @@ def run_test_episode(
             {
                 "decision_index": int(info["decision_index"]),
                 "execution_index": int(info["execution_index"]),
+                "current_load_kw": current_load_kw,
+                "previous_load_kw": previous_load_kw,
+                "load_delta_kw": current_load_kw - previous_load_kw,
                 "load_kw": float(info["load_actual_kw"]),
                 "p_fc_kw": float(info["p_fc_kw"]),
                 "p_batt_kw": float(info["p_batt_kw"]),
                 "soc_before": float(info["soc_before"]),
                 "soc_after": float(info["soc_after"]),
                 "action_id": int(action),
+                **{
+                    f"q_A{action_id}": float(q_values[action_id])
+                    for action_id in range(training.ACTION_DIM)
+                },
+                "q_best": float(q_ranked[-1]),
+                "q_second": float(q_ranked[-2]),
+                "q_gap": float(q_ranked[-1] - q_ranked[-2]),
                 "reward": float(reward),
                 "solver_status": str(info["solver_status"]),
             }

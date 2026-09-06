@@ -441,6 +441,45 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.assertEqual(calls, ["fixture_a", "fixture_b", "fixture_a", "fixture_b"])
         self.assertEqual([round_['completed_training_episodes'] for round_ in rounds], [2, 4])
 
+    def test_round_summary_aggregates_training_stability_metrics(self) -> None:
+        runtime = training.create_training_runtime(self.make_config())
+        runtime.agent.latest_update_diagnostics = {
+            "q_value_mean": 1.0,
+            "q_value_std": 0.2,
+            "target_q_mean": 0.8,
+            "target_q_std": 0.1,
+        }
+
+        def fake_episode(*, voyage_id, loads_kw, base_config, runtime):
+            runtime.global_step += 2
+            runtime.losses.extend([0.5, 0.25])
+            runtime.update_steps.extend([runtime.global_step - 1, runtime.global_step])
+            return {
+                "voyage_id": voyage_id,
+                "episode_steps": 2,
+                "solver_failure_count": 0,
+                "min_soc": 0.49,
+                "final_soc": 0.51,
+                "action_count_A0": 1,
+                "action_count_A1": 1,
+                "action_count_A2": 0,
+                "action_count_A3": 0,
+            }
+
+        with patch.object(training, "run_training_episode", side_effect=fake_episode):
+            summary = training.train_complete_voyage_rounds(
+                num_training_rounds=1,
+                voyage_ids=("fixture",),
+                load_voyage=lambda _: np.asarray([1.0, 2.0, 3.0]),
+                base_config=training.build_formal_mpc_config(),
+                runtime=runtime,
+            )[0]
+
+        self.assertEqual(summary["training_action_counts"], {"A0": 1, "A1": 1, "A2": 0, "A3": 0})
+        self.assertEqual(summary["training_solver_failure_count"], 0)
+        self.assertEqual(summary["loss_statistics"]["median"], 0.375)
+        self.assertEqual(summary["q_value_diagnostics"]["q_value_mean"], 1.0)
+
     def test_validation_is_greedy_and_has_no_learning_side_effects(
         self,
     ) -> None:
