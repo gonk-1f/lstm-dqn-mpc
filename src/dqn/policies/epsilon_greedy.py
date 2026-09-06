@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+from typing import Callable
 
 
 class EpsilonGreedyPolicy:
@@ -9,10 +10,11 @@ class EpsilonGreedyPolicy:
         self.epsilon_min = float(epsilon_min)
         self.epsilon_decay = float(epsilon_decay)
 
-    def select_action(self, greedy_action: int, action_dim: int, warmup: bool = False) -> int:
+    def select_action(self, greedy_action: int | Callable[[], int], action_dim: int, warmup: bool = False) -> int:
+        """Draw exploration first, retaining the original NumPy RNG sequence."""
         if warmup or np.random.rand() < self.epsilon:
             return int(np.random.randint(action_dim))
-        return int(greedy_action)
+        return int(greedy_action() if callable(greedy_action) else greedy_action)
 
     def step(self) -> float:
         self.epsilon = max(self.epsilon * self.epsilon_decay, self.epsilon_min)

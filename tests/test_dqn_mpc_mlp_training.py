@@ -479,7 +479,9 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
 
         def fake_episode(*, voyage_id, loads_kw, base_config, runtime):
             runtime.global_step += 2
-            runtime.losses.extend([0.5, 0.25])
+            runtime.record_loss(torch.tensor(0.5))
+            runtime.record_loss(torch.tensor(0.25))
+            runtime.flush_loss_metrics()
             runtime.update_steps.extend([runtime.global_step - 1, runtime.global_step])
             return {
                 "voyage_id": voyage_id,

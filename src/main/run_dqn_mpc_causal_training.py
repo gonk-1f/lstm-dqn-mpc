@@ -17,6 +17,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from dqn.agents.dqn_agent import DQNTrainConfig
 from formal_paths import formal_output_dir
+from utils.physical_config import FUEL_CELL_RAMP_KW_PER_S
 import train_dqn_mpc_mlp as training
 import test_dqn_mpc_causal as validation_artifacts
 
@@ -25,7 +26,14 @@ NUM_TRAINING_ROUNDS = 2
 NETWORK_TYPE = "mlp"
 FORMAL_OUTPUT_DIR = formal_output_dir(NETWORK_TYPE)
 Q_GAP_NEAR_ZERO_ATOL = 1.0e-6
-RAPID_LOAD_DELTA_KW = 48.0
+RAPID_LOAD_DELTA_KW = FUEL_CELL_RAMP_KW_PER_S
+
+
+def resume_round_id(runtime, completed_round: int) -> int:
+    progress = getattr(runtime, 'round_progress', {})
+    if progress.get('round_finalization_pending', False):
+        return int(progress['current_round'])
+    return training.next_round_id(completed_round)
 
 
 def _action_fractions(frame: pd.DataFrame) -> dict[str, float]:
@@ -54,9 +62,9 @@ def summarize_validation_traces(traces: list[pd.DataFrame]) -> dict[str, object]
     delta = pd.to_numeric(combined["load_delta_kw"], errors="raise")
     regimes = {
         "soc": {
-            "soc_lt_0_50": _action_fractions(combined.loc[soc < 0.50]),
-            "soc_0_50_to_0_60": _action_fractions(combined.loc[(soc >= 0.50) & (soc <= 0.60)]),
-            "soc_gt_0_60": _action_fractions(combined.loc[soc > 0.60]),
+            "soc_lt_0_50": _action_fractions(combined.loc[soc < training.SOC_SOFT_MIN]),
+            "soc_0_50_to_0_60": _action_fractions(combined.loc[(soc >= training.SOC_SOFT_MIN) & (soc <= training.SOC_SOFT_MAX)]),
+            "soc_gt_0_60": _action_fractions(combined.loc[soc > training.SOC_SOFT_MAX]),
         },
         "transition": {
             "rapid_rise": _action_fractions(combined.loc[delta >= RAPID_LOAD_DELTA_KW]),
@@ -105,17 +113,27 @@ def run_round_boundary_training(
     first_round_id: int = 1,
     training_metadata: dict[str, object] | None = None,
 ) -> list[dict[str, object]]:
-    """Train, checkpoint, and validate at each round boundary."""
+    """Checkpoint every segment; save/evaluate immediately at round boundaries."""
+    progress = getattr(runtime, 'round_progress', {})
+    pending_round = int(progress['current_round']) if progress.get('round_finalization_pending') else None
+
+    def save_segment(progress: dict[str, object]) -> None:
+        training.save_training_state(
+            runtime=runtime, path=output_dir / 'training_state_latest.pt',
+            completed_round=int(progress['completed_round']), metadata=training_metadata,
+        )
 
     def save_and_validate_round(
         round_summary: dict[str, object],
     ) -> None:
         round_dir = output_dir / f"round_{round_summary['round_id']}"
-        round_dir.mkdir()
+        # Only an explicitly resumed, unfinished round may reuse its artifacts.
+        finishing_pending_round = pending_round == int(round_summary['round_id'])
+        round_dir.mkdir(exist_ok=finishing_pending_round)
         trace_dir = round_dir / "traces"
         plot_dir = round_dir / "plots"
-        trace_dir.mkdir()
-        plot_dir.mkdir()
+        trace_dir.mkdir(exist_ok=finishing_pending_round)
+        plot_dir.mkdir(exist_ok=finishing_pending_round)
         runtime.agent.save(round_dir / f"model_round{round_summary['round_id']}.pt")
         state_path = training.save_training_state(
             runtime=runtime,
@@ -143,7 +161,11 @@ def run_round_boundary_training(
             validation_artifacts.plot_power_allocation(voyage_id, trace)
             validation_artifacts.plot_soc_trajectory(voyage_id, trace)
             validation_voyages.append(result)
-            validation_traces.append(trace)
+            # Full per-second artifacts are on disk. Keep only columns needed
+            # for exact validation quantiles/regime counts, never full traces.
+            diagnostic_columns = ['action_id', 'q_gap', 'soc_before', 'load_delta_kw', 'current_load_kw']
+            validation_traces.append(trace.loc[:, trace.columns.intersection(diagnostic_columns)].copy())
+            del trace
         validation = {
             "voyages": validation_voyages,
             "q_value_diagnostics": summarize_validation_traces(validation_traces),
@@ -151,6 +173,12 @@ def run_round_boundary_training(
         pd.DataFrame(validation["voyages"]).to_csv(round_dir / "validation_by_voyage.csv", index=False)
         (round_dir / "validation_summary.json").write_text(json.dumps(validation, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         round_summary["validation"] = validation
+        runtime.round_progress['round_finalization_pending'] = False
+        training.save_training_state(
+            runtime=runtime, path=state_path,
+            completed_round=int(round_summary['round_id']), metadata=training_metadata,
+        )
+        save_segment(runtime.round_progress)
 
     rounds = training.train_complete_voyage_rounds(
         num_training_rounds=num_training_rounds,
@@ -163,6 +191,7 @@ def run_round_boundary_training(
         base_config=base_config,
         runtime=runtime,
         on_round_complete=save_and_validate_round,
+        on_segment_complete=save_segment,
         first_round_id=first_round_id,
     )
     (output_dir / "training_summary.json").write_text(
@@ -185,13 +214,13 @@ def run_round_boundary_training(
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
-        description="Formal causal DQN-MPC training with round-resume state",
+        description="Formal causal DQN-MPC training with segment-boundary resume",
     )
     parser.add_argument(
         "--resume-training-state",
         type=Path,
         default=None,
-        help="atomic training_state_roundX.pt produced at a completed round boundary",
+        help="atomic training_state_latest.pt or training_state_roundX.pt; resumes at the next segment",
     )
     args = parser.parse_args(argv)
     split = training.load_voyage_split()
@@ -205,21 +234,26 @@ def main(argv: list[str] | None = None) -> None:
             stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_dir = output_dir.with_name(f"{output_dir.name}_{stamp}")
     else:
-        runtime, completed_round, _ = training.load_training_state(
+        runtime, completed_round, saved_metadata = training.load_training_state(
             args.resume_training_state,
         )
         if runtime.config.network_type != NETWORK_TYPE:
             raise ValueError("resume checkpoint network type does not match formal entrypoint")
-        first_round_id = training.next_round_id(completed_round)
+        if runtime.config != DQNTrainConfig(network_type=NETWORK_TYPE):
+            raise ValueError('resume checkpoint training configuration differs from the formal configuration')
+        first_round_id = resume_round_id(runtime, completed_round)
         if first_round_id > NUM_TRAINING_ROUNDS:
             raise ValueError("resume checkpoint already completed all formal rounds")
-        output_dir = args.resume_training_state.resolve().parent.parent
+        state_parent = args.resume_training_state.resolve().parent
+        output_dir = state_parent.parent if state_parent.name.startswith('round_') else state_parent
     base_config = training.build_formal_mpc_config()
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
-    if (output_dir / f"round_{first_round_id}").exists():
+    if (output_dir / f"round_{first_round_id}").exists() and not runtime.round_progress.get('round_finalization_pending'):
         raise FileExistsError(output_dir / f"round_{first_round_id}")
     metadata = training.formal_training_metadata(runtime.config, split)
+    if args.resume_training_state is not None and saved_metadata != metadata:
+        raise ValueError('resume checkpoint formal metadata differs from the current configuration/data split')
 
     def load_train(voyage_id: str):
         return training.load_operating_segment_loads(

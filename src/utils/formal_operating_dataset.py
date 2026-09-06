@@ -28,6 +28,8 @@ EXPECTED_SPLIT_POINT_COUNTS = {
 # These files remain part of the frozen dataset.  They are excluded only from
 # ordinary controller learning/checkpoint selection because the documented
 # device limits make them infeasible from the formal initial SOC of 0.55.
+# Evidence: independent ideal energy feasibility audit, NOT DQN control failure.
+# Segment 0158 remains in normal validation; no files or manifest rows are removed.
 PHYSICAL_INFEASIBLE_STRESS_CASES: dict[str, dict[str, str]] = {
     "operating_segment_0137": {
         "split": "train",
@@ -196,9 +198,12 @@ def load_operating_segment_loads(
     path = _path_within(split.dataset_root, str(row.iloc[0]["one_second_csv"]))
     if not path.is_file():
         raise FileNotFoundError(f"formal segment is missing: {path}")
-    frame = pd.read_csv(path, usecols=["timestamp", "time_s", LOAD_COLUMN])
-    loads = pd.to_numeric(frame[LOAD_COLUMN], errors="coerce").to_numpy(dtype=np.float64)
-    time_s = pd.to_numeric(frame["time_s"], errors="coerce").to_numpy(dtype=np.float64)
+    frame = pd.read_csv(path, usecols=["timestamp", "time_s", LOAD_COLUMN],
+                        dtype={"time_s": np.float64, LOAD_COLUMN: np.float64})
+    # Own the sole returned array so it cannot retain the DataFrame's numerical
+    # block (which also contains time_s). Preserve the existing float64 precision.
+    loads = frame[LOAD_COLUMN].to_numpy(dtype=np.float64, copy=True)
+    time_s = frame["time_s"].to_numpy(dtype=np.float64, copy=False)
     timestamps = pd.to_datetime(frame["timestamp"], errors="coerce")
     if len(loads) < 2 or not np.isfinite(loads).all() or bool((loads < 0.0).any()):
         raise ValueError(f"formal segment has invalid loads: {identifier}")
@@ -209,6 +214,7 @@ def load_operating_segment_loads(
         or not np.allclose(np.diff(time_s), 1.0, rtol=0.0, atol=1.0e-12)
     ):
         raise ValueError(f"formal segment is not a strictly one-second grid: {identifier}")
+    del frame, time_s, timestamps
     return loads
 
 

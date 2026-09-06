@@ -28,7 +28,8 @@ from dqn.utils.state_builder import (
 )
 
 from mpc_solvers.dqn_mpc_solver_bank import MpcWeightSolverBank
-from mpc_solvers.mpc_qp_formulation import QpMpcConfig
+from mpc_solvers.mpc_qp_formulation import QpMpcConfig, resolved_ramp_kw_per_step
+from mpc_solvers.formal_config import N6_STATE_COMMIT_TOLERANCES
 
 
 def validate_executed_battery_power_kw(
@@ -97,6 +98,37 @@ class MpcSolveFailure(RuntimeError):
         )
 
 
+class ExecutedStepFailure(MpcSolveFailure, ValueError):
+    """Solved forecast, but actual first-step execution violates hard bounds."""
+
+
+def validate_executed_step(
+    *, p_fc_kw: float, p_batt_kw: float, next_soc: float,
+    load_kw: float, previous_fc_kw: float, config: QpMpcConfig,
+) -> None:
+    """Shared actual-execution checks; no forecast-error constraint is added.
+
+    Uses existing physical bounds/ramp and existing commit tolerances. The
+    battery residual retains its original strict 1e-6 kW execution tolerance.
+    A persistence forecast error is not itself a physical violation.
+    """
+    if not np.isfinite([p_fc_kw, p_batt_kw, next_soc, load_kw, previous_fc_kw]).all():
+        raise ValueError('executed physical values contain NaN or Inf')
+    tolerance = N6_STATE_COMMIT_TOLERANCES
+    if not (config.fuel_cell_min_kw - tolerance['power_bound_kw'] <= p_fc_kw
+            <= config.fuel_cell_max_kw + tolerance['power_bound_kw']):
+        raise ValueError('executed fuel cell power is outside physical bounds')
+    validate_executed_battery_power_kw(p_batt_kw=p_batt_kw,
+        charge_max_kw=config.battery_charge_max_kw,
+        discharge_max_kw=config.battery_discharge_max_kw)
+    if not config.soc_min - tolerance['soc'] <= next_soc <= config.soc_max + tolerance['soc']:
+        raise ValueError('executed SOC is outside physical bounds')
+    if abs(p_fc_kw + p_batt_kw - load_kw) > tolerance['actual_balance_kw']:
+        raise ValueError('executed power balance violates tolerance')
+    if abs(p_fc_kw - previous_fc_kw) > resolved_ramp_kw_per_step(config) + tolerance['ramp_kw']:
+        raise ValueError('executed fuel cell ramp is outside physical bounds')
+
+
 class DqnMpcWeightEnv:
     """
     Single-voyage environment for DQN-based MPC weight selection.
@@ -109,12 +141,12 @@ class DqnMpcWeightEnv:
             current load P_load[t]
             previous executed FC/battery power
             current SOC
-            future load preview P_load[t+1 : t+7]
+            backward load delta and recent 10/60 s load means
 
         action a_t selects one MPC four-weight tuple.
 
-        MPC optimizes the next six execution samples:
-            t+1, ..., t+6
+        MPC uses current-load persistence for t+1, ..., t+6.
+        No future measured loads enter the state or forecast.
 
         Only the first MPC control is executed at:
             t+1
@@ -225,7 +257,9 @@ class DqnMpcWeightEnv:
             current_soc=self.current_soc,
             previous_fc_kw=self.previous_fc_kw,
             previous_batt_kw=self.previous_batt_kw,
-            load_history_kw=self.loads_kw[: index + 1],
+            # All loads were checked once at construction. Only these last
+            # 60 samples participate in the causal state (constant work).
+            load_history_kw=self.loads_kw[max(0, index - 59): index + 1],
         )
 
     def reset(self) -> np.ndarray:
@@ -365,12 +399,6 @@ class DqnMpcWeightEnv:
         p_batt_actual_kw = (
             load_actual_kw - p_fc_actual_kw
         )
-        validate_executed_battery_power_kw(
-            p_batt_kw=p_batt_actual_kw,
-            charge_max_kw=self.base_config.battery_charge_max_kw,
-            discharge_max_kw=self.base_config.battery_discharge_max_kw,
-        )
-
         next_soc = soc_before - (
             p_batt_actual_kw
             * float(self.base_config.dt_seconds)
@@ -379,6 +407,24 @@ class DqnMpcWeightEnv:
                 self.base_config.battery_capacity_kwh
             )
         )
+
+        try:
+            validate_executed_step(p_fc_kw=p_fc_actual_kw, p_batt_kw=p_batt_actual_kw,
+                next_soc=next_soc, load_kw=load_actual_kw,
+                previous_fc_kw=previous_fc_before, config=self.base_config)
+        except ValueError as error:
+            # Reject before committing state. Both training and every greedy
+            # evaluation path receive the same terminal failure, without fallback.
+            raise ExecutedStepFailure(
+                action_id=action_id, decision_index=decision_index,
+                execution_index=execution_index,
+                solver_status=f'execution constraint failed: {error}',
+                solve_ms=solve_ms, current_soc=soc_before,
+                previous_fc_kw=previous_fc_before, future_load_kw=load_forecast_kw,
+                iterations=getattr(result.info, 'iter', None),
+                primal_residual=getattr(result.info, 'prim_res', None),
+                dual_residual=getattr(result.info, 'dual_res', None),
+            ) from error
 
         reward, reward_info = (
             calculate_mpc_weight_reward(

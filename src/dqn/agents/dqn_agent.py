@@ -128,7 +128,7 @@ class DQNAgent:
         self.discount = config.gamma
         self.action_dim = action_dim
         self.tensor_dtype = next(self.q_net.parameters()).dtype
-        self.latest_update_diagnostics: dict[str, float] = {}
+        self.latest_update_diagnostics: dict[str, float | torch.Tensor] = {}
         self._state_norm_count = 0
         self._state_norm_mean: np.ndarray | None = None
         self._state_norm_m2: np.ndarray | None = None
@@ -146,13 +146,25 @@ class DQNAgent:
         )
 
     def greedy_action(self, state: np.ndarray) -> int:
-        return int(np.argmax(self.q_values(state)))
+        with torch.no_grad():
+            values = self._online_q_tensor(state)
+            # One scalar transfer provides both argmax and the finite guard.
+            action = int(torch.where(torch.isfinite(values).all(),
+                values.argmax(), values.new_tensor(-1, dtype=torch.long)).item())
+        if action < 0:
+            raise RuntimeError('online Q values contain NaN or Inf')
+        return action
+
+    def _online_q_tensor(self, state: np.ndarray) -> torch.Tensor:
+        state_tensor = torch.as_tensor(state, dtype=self.tensor_dtype, device=self.device).unsqueeze(0)
+        return self.q_net(state_tensor).squeeze(0)
 
     def q_values(self, state: np.ndarray) -> np.ndarray:
         """Return finite online-network Q values for one evaluation state."""
         with torch.no_grad():
-            state_tensor = torch.tensor(state, dtype=self.tensor_dtype, device=self.device).unsqueeze(0)
-            values = self.q_net(state_tensor).squeeze(0).detach().cpu().numpy()
+            values = self._online_q_tensor(state).detach().cpu().numpy()
+        if not np.isfinite(values).all():
+            raise RuntimeError('online Q values contain NaN or Inf')
         return np.asarray(values, dtype=np.float64)
 
     def bellman_target(self, rewards: torch.Tensor, dones: torch.Tensor, next_states: torch.Tensor) -> torch.Tensor:
@@ -179,23 +191,29 @@ class DQNAgent:
         target = self.bellman_target(rewards, dones, next_states)
         with torch.no_grad():
             self.latest_update_diagnostics = {
-                "q_value_mean": float(q_values.detach().mean().item()),
-                "q_value_std": float(q_values.detach().std(unbiased=False).item()),
-                "target_q_mean": float(target.detach().mean().item()),
-                "target_q_std": float(target.detach().std(unbiased=False).item()),
+                "q_value_mean": q_values.detach().mean(),
+                "q_value_std": q_values.detach().std(unbiased=False),
+                "target_q_mean": target.detach().mean(),
+                "target_q_std": target.detach().std(unbiased=False),
             }
+            self._update_values_finite = torch.isfinite(q_values).all() & torch.isfinite(target).all()
         if self.config.loss_type.lower() == "mse":
             return F.mse_loss(q_values, target)
         return F.smooth_l1_loss(q_values, target)
 
-    def update(self, batch) -> float:
+    def update(self, batch, *, defer_diagnostics: bool = False) -> float | torch.Tensor:
         loss = self.compute_loss(batch)
+        # Immediate safety guard reuses the two Bellman forwards. Diagnostic
+        # means/std and loss logging stay on device until a log/segment boundary.
+        if not bool((self._update_values_finite & torch.isfinite(loss)).item()):
+            raise RuntimeError('DQN loss/Q/target contains NaN or Inf')
         self.optimizer.zero_grad()
         loss.backward()
         if self.config.grad_clip_norm > 0:
-            torch.nn.utils.clip_grad_norm_(self.q_net.parameters(), self.config.grad_clip_norm)
+            torch.nn.utils.clip_grad_norm_(self.q_net.parameters(), self.config.grad_clip_norm,
+                                          error_if_nonfinite=True)
         self.optimizer.step()
-        return float(loss.item())
+        return loss.detach() if defer_diagnostics else float(loss.item())
 
     def sync_target_network(self) -> None:
         self.target_q_net.load_state_dict(self.q_net.state_dict())

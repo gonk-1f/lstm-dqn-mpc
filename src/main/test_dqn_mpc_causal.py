@@ -59,7 +59,7 @@ def run_test_episode(
     env = DqnMpcWeightEnv(
         loads_kw=loads_kw,
         base_config=base_config,
-        initial_soc=0.55,
+        initial_soc=training.SOC_REFERENCE,
     )
 
     state = env.reset()
@@ -91,9 +91,7 @@ def run_test_episode(
         q_values = np.asarray(agent.q_values(state), dtype=np.float64)
         if q_values.shape != (training.ACTION_DIM,) or not np.all(np.isfinite(q_values)):
             raise RuntimeError("validation Q values must be finite with one entry per action")
-        action = agent.greedy_action(state)
-        if action != int(np.argmax(q_values)):
-            raise RuntimeError("greedy validation action disagrees with online Q argmax")
+        action = int(np.argmax(q_values))
         q_ranked = np.sort(q_values)
 
         try:

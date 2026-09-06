@@ -5,6 +5,11 @@ from typing import Any
 import numpy as np
 
 from mpc.solvers.fc_dp0_curve import h2_kg_step_dp0_quadratic
+from utils.physical_config import (
+    FUEL_CELL_MAX_KW, BATTERY_POWER_REF_KW, SOC_REFERENCE,
+    SOC_SOFT_MIN, SOC_SOFT_MAX, SOC_SOFT_SCALE, DT_SECONDS,
+    FUEL_CELL_RAMP_KW_PER_S as FC_VARIATION_REF_KW,
+)
 
 
 # Fixed common-reward weights. These evaluate every MPC action with
@@ -14,14 +19,6 @@ REWARD_Q_BATT = 0.40
 REWARD_Q_SOC = 12.0
 REWARD_Q_FC_VAR = 20.0
 
-FUEL_CELL_MAX_KW = 600.0
-BATTERY_POWER_REF_KW = 624.0
-SOC_REFERENCE = 0.55
-SOC_SOFT_MIN = 0.50
-SOC_SOFT_MAX = 0.60
-SOC_SOFT_SCALE = 0.05
-FC_VARIATION_REF_KW = 48.0
-DT_SECONDS = 1.0
 
 
 def soc_soft_working_range_penalty(next_soc: float) -> float:
@@ -59,7 +56,7 @@ def calculate_mpc_weight_reward(
     B_t = (P_batt,t / 624)^2, and
     F_t = ((P_fc,t - P_fc,t-1) / 48)^2. Phi_SOC is zero throughout
     the closed soft working range [0.50, 0.60] and grows quadratically
-    with distance outside it, normalized by 0.05. Its coefficient is 1.0.
+    with distance outside it, normalized by 0.05. Its reward coefficient is 12.0.
     """
 
     values = np.asarray(

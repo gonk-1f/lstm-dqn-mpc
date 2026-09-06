@@ -13,9 +13,7 @@ from .mpc_qp_formulation import (
 )
 
 
-OBJECTIVE_VARIANT = "n6_h2_batt_soc_fcvar_normalized_v1"
-N6_HORIZON = 6
-FIXED_SOC_REFERENCE = 0.55
+from .formal_config import OBJECTIVE_VARIANT, N6_HORIZON, FIXED_SOC_REFERENCE
 
 N6_OSQP_SETTINGS: dict[str, Any] = {
     "verbose": False,

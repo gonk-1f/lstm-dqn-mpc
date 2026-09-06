@@ -210,13 +210,19 @@ class RoundBoundaryTrainingTests(unittest.TestCase):
                     events,
                     [
                         f"{network_type}:train:1:step=0:epsilon=1.0:replay=0",
+                        f"{network_type}:state:1:1",
                         f"{network_type}:save:1",
                         f"{network_type}:state:1:1",
                         f"{network_type}:validate:1",
+                        f"{network_type}:state:1:1",
+                        f"{network_type}:state:1:1",
                         f"{network_type}:train:2:step=1:epsilon=0.9:replay=1",
+                        f"{network_type}:state:2:2",
                         f"{network_type}:save:2",
                         f"{network_type}:state:2:2",
                         f"{network_type}:validate:2",
+                        f"{network_type}:state:2:2",
+                        f"{network_type}:state:2:2",
                     ],
                 )
                 self.assertFalse(

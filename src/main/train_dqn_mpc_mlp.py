@@ -7,7 +7,6 @@ import json
 import os
 import random
 import time
-from collections import deque
 import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -30,6 +29,7 @@ from dqn.agents.dqn_agent import (  # noqa: E402
     DQNTrainConfig,
 )
 from dqn.memory.replay_buffer import ReplayBuffer  # noqa: E402
+from dqn.utils.training_metrics import LossAccumulator  # noqa: E402
 from dqn.policies.epsilon_greedy import (  # noqa: E402
     EpsilonGreedyPolicy,
 )
@@ -56,7 +56,6 @@ from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
     QpMpcConfig,
 )
 from mpc_solvers.formal_config import (  # noqa: E402
-    N6_STATE_COMMIT_TOLERANCES,
     SOC_SOFT_MAX as MPC_SOC_SOFT_MAX,
     SOC_SOFT_MIN as MPC_SOC_SOFT_MIN,
     build_formal_mpc_config,
@@ -82,14 +81,13 @@ DEFAULT_MLP_SINGLE_PASS_OUTPUT_DIR = (
 )
 
 ALLOWED_RUNTIME_SPLITS = ("train", "validation")
-EXPECTED_SPLIT_COUNTS = (46, 13, 7)
 STATE_DIM = DQN_MPC_STATE_DIM
 ACTION_DIM = len(DQN_MPC_WEIGHT_ACTIONS)
 FORMAL_DATA_DIRECTORY = DEFAULT_OPERATING_DATASET_ROOT.relative_to(REPO_ROOT).as_posix()
 FORMAL_TARGET_LOAD = LOAD_COLUMN
 FORMAL_SAMPLE_INTERVAL_SECONDS = 1.0
 SAVE_REPLAY_BUFFER = True
-TRAINING_STATE_FORMAT_VERSION = 1
+TRAINING_STATE_FORMAT_VERSION = 2
 VoyageSplit = OperatingSegmentSplit
 
 
@@ -107,6 +105,24 @@ class TrainingRuntime:
     )
     gradient_update_count: int = 0
     target_sync_count: int = 0
+    loss_accumulator: LossAccumulator = field(default_factory=LossAccumulator)
+    round_loss_accumulator: LossAccumulator = field(default_factory=LossAccumulator)
+    pending_losses: list[torch.Tensor] = field(default_factory=list)
+    round_progress: dict[str, object] = field(default_factory=dict)
+
+    def record_loss(self, loss: torch.Tensor) -> None:
+        self.pending_losses.append(loss.detach())
+        if len(self.pending_losses) >= 1000:
+            self.flush_loss_metrics()
+
+    def flush_loss_metrics(self) -> None:
+        if not self.pending_losses:
+            return
+        values = torch.stack(self.pending_losses).cpu().numpy()
+        self.loss_accumulator.add(values)
+        self.round_loss_accumulator.add(values)
+        self.losses = list(self.loss_accumulator.recent)
+        self.pending_losses.clear()
 
 
 class _ValidationMpcFailure(RuntimeError):
@@ -190,6 +206,7 @@ def formal_training_metadata(
         "gamma": float(config.gamma),
         "random_seed": int(config.seed),
         "training_config": asdict(config),
+        "mpc_config": asdict(build_formal_mpc_config()),
         "common_reward": {
             "q_h2": float(REWARD_Q_H2),
             "q_batt": float(REWARD_Q_BATT),
@@ -259,12 +276,20 @@ def save_training_state(
 
     if int(completed_round) < 0:
         raise ValueError("completed_round must be nonnegative")
+    runtime.flush_loss_metrics()
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_suffix(destination.suffix + ".tmp")
     payload: dict[str, object] = {
         "format_version": TRAINING_STATE_FORMAT_VERSION,
         "completed_round": int(completed_round),
+        "round_progress": runtime.round_progress,
+        "loss_accumulator": runtime.loss_accumulator.state_dict(),
+        "round_loss_accumulator": runtime.round_loss_accumulator.state_dict(),
+        "latest_update_diagnostics": (
+            _validate_latest_q_diagnostics(runtime.agent)
+            if runtime.agent.latest_update_diagnostics else {}
+        ),
         "online_q_network_state_dict": _cpu_state_dict(runtime.agent.q_net),
         "target_q_network_state_dict": _cpu_state_dict(runtime.agent.target_q_net),
         "optimizer_state_dict": runtime.agent.optimizer.state_dict(),
@@ -318,7 +343,8 @@ def load_training_state(
     missing = required.difference(payload)
     if missing:
         raise ValueError(f"training state checkpoint is missing keys: {sorted(missing)}")
-    if int(payload["format_version"]) != TRAINING_STATE_FORMAT_VERSION:
+    # Version 1 round-boundary states are used by existing checkpoints/tests.
+    if int(payload["format_version"]) not in (1, TRAINING_STATE_FORMAT_VERSION):
         raise ValueError("unsupported training state checkpoint format")
     config_data = payload["training_config"]
     if not isinstance(config_data, dict):
@@ -332,6 +358,14 @@ def load_training_state(
     runtime.global_step = int(payload["global_step"])
     runtime.gradient_update_count = int(payload["gradient_update_count"])
     runtime.target_sync_count = int(payload["target_sync_count"])
+    if int(payload['format_version']) >= 2:
+        runtime.round_progress = dict(payload['round_progress'])
+        runtime.loss_accumulator.load_state_dict(payload['loss_accumulator'])
+        runtime.round_loss_accumulator.load_state_dict(payload['round_loss_accumulator'])
+        runtime.losses = list(runtime.loss_accumulator.recent)
+        runtime.agent.latest_update_diagnostics = dict(payload.get('latest_update_diagnostics', {}))
+    if not bool(payload['replay_buffer_saved']) and runtime.global_step:
+        raise ValueError('cannot resume training without the replay buffer')
     if bool(payload["replay_buffer_saved"]):
         replay_state = payload.get("replay_buffer")
         if not isinstance(replay_state, dict):
@@ -447,7 +481,6 @@ def _validate_environment_step(
     reward: float,
     next_state: np.ndarray,
     info: dict[str, object],
-    base_config: QpMpcConfig,
 ) -> None:
     if not 0 <= int(action) < ACTION_DIM:
         raise RuntimeError(
@@ -472,44 +505,8 @@ def _validate_environment_step(
             f"MPC solve failed: status={solver_status!r}"
         )
 
-    soc_after = _require_finite_scalar(
-        info.get("soc_after"),
-        "SOC",
-    )
-    soc_tolerance = float(
-        N6_STATE_COMMIT_TOLERANCES["soc"]
-    )
-    if (
-        soc_after < float(base_config.soc_min) - soc_tolerance
-        or soc_after
-        > float(base_config.soc_max) + soc_tolerance
-    ):
-        raise RuntimeError(
-            "SOC crossed MPC hard bounds: "
-            f"{soc_after} not in "
-            f"[{base_config.soc_min}, {base_config.soc_max}]"
-        )
-
-
-def _validate_online_q_values(
-    *,
-    agent: DQNAgent,
-    state: np.ndarray,
-    context: str,
-) -> None:
-    state_tensor = torch.as_tensor(
-        np.asarray(state, dtype=np.float32),
-        dtype=agent.tensor_dtype,
-        device=agent.device,
-    ).reshape(1, -1)
-
-    with torch.no_grad():
-        q_values = agent.q_net(state_tensor)
-
-    if not bool(torch.isfinite(q_values).all().item()):
-        raise RuntimeError(
-            f"{context} online Q values contain NaN or Inf"
-        )
+    # Physical execution is checked once inside the shared environment, before
+    # state commit, for training and both validation entrypoints alike.
 
 
 def _validate_latest_q_diagnostics(
@@ -524,15 +521,13 @@ def _validate_latest_q_diagnostics(
     diagnostics = agent.latest_update_diagnostics
     result: dict[str, float] = {}
 
-    for key in required:
-        if key not in diagnostics:
-            raise RuntimeError(
-                f"missing DQN update diagnostic: {key}"
-            )
-        result[key] = _require_finite_scalar(
-            diagnostics[key],
-            key,
-        )
+    if any(key not in diagnostics for key in required):
+        raise RuntimeError('missing DQN update diagnostic')
+    values = [diagnostics[key] for key in required]
+    if isinstance(values[0], torch.Tensor):
+        values = torch.stack(values).detach().cpu().numpy()
+    for key, value in zip(required, values):
+        result[key] = _require_finite_scalar(value, key)
 
     return result
 
@@ -739,7 +734,7 @@ def run_training_episode(
     env = DqnMpcWeightEnv(
         loads_kw=loads_kw,
         base_config=base_config,
-        initial_soc=0.55,
+        initial_soc=SOC_REFERENCE,
     )
     state = env.reset()
     if not np.all(
@@ -757,9 +752,6 @@ def run_training_episode(
     log_interval = int(
         runtime.config.log_window_steps
     )
-    recent_rewards = deque(
-        maxlen=max(1, log_interval)
-    )
     episode_start_time = time.perf_counter()
     action_counts = np.zeros(
         ACTION_DIM,
@@ -774,14 +766,8 @@ def run_training_episode(
             step_before
             < int(runtime.config.warmup_steps)
         )
-        _validate_online_q_values(
-            agent=runtime.agent,
-            state=state,
-            context="training",
-        )
-        greedy_action = runtime.agent.greedy_action(state)
         action = runtime.policy.select_action(
-            greedy_action=greedy_action,
+            greedy_action=lambda: runtime.agent.greedy_action(state),
             action_dim=ACTION_DIM,
             warmup=warmup,
         )
@@ -795,7 +781,6 @@ def run_training_episode(
                 reward=reward,
                 next_state=next_state,
                 info=info,
-                base_config=base_config,
             )
 
         except MpcSolveFailure as error:
@@ -833,7 +818,6 @@ def run_training_episode(
         runtime.global_step += 1
         episode_steps += 1
         episode_reward += float(reward)
-        recent_rewards.append(float(reward))
         action_counts[action] += 1
         min_soc = min(min_soc, float(env.current_soc))
 
@@ -847,20 +831,12 @@ def run_training_episode(
                 batch = runtime.replay_buffer.sample(
                     runtime.config.batch_size
                 )
-                loss = runtime.agent.update(batch)
-                _require_finite_scalar(loss, "training loss")
-                _validate_latest_q_diagnostics(
-                    runtime.agent
-                )
-                _validate_online_q_values(
-                    agent=runtime.agent,
-                    state=next_state,
-                    context="post-update",
-                )
-                runtime.losses.append(float(loss))
+                loss = runtime.agent.update(batch, defer_diagnostics=True)
+                runtime.record_loss(loss)
                 runtime.update_steps.append(
                     int(runtime.global_step)
                 )
+                del runtime.update_steps[:-1000]
                 runtime.gradient_update_count += 1
 
         sync_interval = int(
@@ -875,6 +851,7 @@ def run_training_episode(
             runtime.target_sync_steps.append(
                 int(runtime.global_step)
             )
+            del runtime.target_sync_steps[:-1000]
             runtime.target_sync_count += 1
         log_interval = int(
             runtime.config.log_window_steps
@@ -884,6 +861,9 @@ def run_training_episode(
             log_interval > 0
             and runtime.global_step % log_interval == 0
         ):
+            runtime.flush_loss_metrics()
+            if runtime.agent.latest_update_diagnostics:
+                _validate_latest_q_diagnostics(runtime.agent)
             recent_losses = runtime.losses[
                 -log_interval:
             ]
@@ -897,9 +877,6 @@ def run_training_episode(
 
             reward_mean = float(
                 episode_reward / episode_steps
-            )
-            recent_reward_mean = float(
-                np.mean(recent_rewards)
             )
 
             elapsed_s = (
@@ -919,19 +896,22 @@ def run_training_episode(
             print(
                 "[train] "
                 f"step={runtime.global_step} "
+                f"round={runtime.round_progress.get('current_round', 1)} "
+                f"segment={int(runtime.round_progress.get('completed_segment_count', 0)) + 1} "
                 f"voyage={voyage_id} "
                 f"epsilon={runtime.policy.epsilon:.6f} "
                 f"buffer={len(runtime.replay_buffer)} "
                 f"loss_mean={loss_text} "
                 f"reward_mean={reward_mean:.6f} "
+                f"steps/s={steps_per_s:.2f} "
                 f"{action_text} "
                 f"solver_failures={solver_failure_count}",
                 flush=True,
             )
 
         state = next_state
-        state = next_state
 
+    runtime.flush_loss_metrics()
     result = {
         "voyage_id": str(voyage_id),
         "episode_reward": float(episode_reward),
@@ -1005,6 +985,7 @@ def train_complete_voyage_rounds(
     on_round_complete: (
         Callable[[dict[str, object]], None] | None
     ) = None,
+    on_segment_complete: Callable[[dict[str, object]], None] | None = None,
 ) -> list[dict[str, object]]:
     """Run each ordered voyage as one complete episode per training round."""
     if int(num_training_rounds) <= 0:
@@ -1016,14 +997,31 @@ def train_complete_voyage_rounds(
         raise ValueError("training rounds require at least one voyage")
 
     round_summaries: list[dict[str, object]] = []
-    completed_episodes = 0
+    progress = getattr(runtime, 'round_progress', {})
+    if progress and tuple(progress['train_segment_order']) != ordered_voyages:
+        raise ValueError('resume train segment order does not match current split')
+    completed_episodes = (int(first_round_id) - 1) * len(ordered_voyages)
     for round_id in range(int(first_round_id), int(num_training_rounds) + 1):
-        runtime_losses = getattr(runtime, "losses", [])
-        runtime_updates = getattr(runtime, "update_steps", [])
-        loss_start = len(runtime_losses)
         update_start = _runtime_update_count(runtime)
-        episodes: list[dict[str, object]] = []
-        for voyage_id in ordered_voyages:
+        progress = getattr(runtime, 'round_progress', {})
+        if progress and int(progress['current_round']) == round_id:
+            episodes = list(progress['episodes'])
+            if progress['completed_segment_ids'] != list(ordered_voyages[:len(episodes)]):
+                raise ValueError('resume completed segment prefix is inconsistent')
+            update_start = int(progress['round_start_update_count'])
+        else:
+            episodes = []
+            runtime.round_loss_accumulator = LossAccumulator()
+        completed_episodes += len(episodes)
+        runtime.round_progress = {
+            'current_round': round_id, 'completed_round': round_id - 1,
+            'completed_segment_count': len(episodes),
+            'completed_segment_ids': list(ordered_voyages[:len(episodes)]),
+            'train_segment_order': list(ordered_voyages),
+            'round_start_update_count': update_start, 'episodes': episodes,
+            'round_finalization_pending': bool(on_round_complete and len(episodes) == len(ordered_voyages)),
+        }
+        for voyage_id in ordered_voyages[len(episodes):]:
             episode = run_training_episode(
                 voyage_id=voyage_id,
                 loads_kw=load_voyage(voyage_id),
@@ -1032,6 +1030,14 @@ def train_complete_voyage_rounds(
             )
             episodes.append(episode)
             completed_episodes += 1
+            runtime.round_progress.update(
+                completed_segment_count=len(episodes),
+                completed_segment_ids=list(ordered_voyages[:len(episodes)]),
+                completed_round=round_id if len(episodes) == len(ordered_voyages) else round_id - 1,
+                round_finalization_pending=bool(on_round_complete and len(episodes) == len(ordered_voyages)),
+            )
+            if on_segment_complete is not None:
+                on_segment_complete(dict(runtime.round_progress))
         training_action_counts = {
             f"A{action_id}": int(
                 sum(
@@ -1057,7 +1063,7 @@ def train_complete_voyage_rounds(
             "epsilon": float(runtime.policy.epsilon),
             "gradient_update_count": _runtime_update_count(runtime),
             "gradient_update_count_this_round": _runtime_update_count(runtime) - update_start,
-            "loss_statistics": _loss_statistics(runtime_losses[loss_start:]),
+            "loss_statistics": runtime.round_loss_accumulator.summary(),
             "q_value_diagnostics": round_q_diagnostics,
             "training_solver_failure_count": int(
                 sum(int(episode.get("solver_failure_count", 0)) for episode in episodes)
@@ -1086,7 +1092,7 @@ def run_validation_episode(
     env = DqnMpcWeightEnv(
         loads_kw=loads_kw,
         base_config=base_config,
-        initial_soc=0.55,
+        initial_soc=SOC_REFERENCE,
     )
     state = env.reset()
     if not np.all(
@@ -1112,11 +1118,6 @@ def run_validation_episode(
     done = False
 
     while not done:
-        _validate_online_q_values(
-            agent=agent,
-            state=state,
-            context="validation",
-        )
         action = agent.greedy_action(state)
         try:
             next_state, reward, done, info = env.step(
@@ -1233,7 +1234,6 @@ def run_validation_episode(
             reward=reward,
             next_state=next_state,
             info=info,
-            base_config=base_config,
         )
         action_counts[action] += 1
         episode_reward += float(reward)
@@ -1490,7 +1490,7 @@ def train_dqn_mpc_mlp(
             "validation MPC failure diagnostic saved "
             f"to {diagnostic_path}"
         ) from failure
-    loss_statistics = _loss_statistics(runtime.losses)
+    loss_statistics = runtime.loss_accumulator.summary()
     final_q_diagnostics = (
         _validate_latest_q_diagnostics(runtime.agent)
     )
