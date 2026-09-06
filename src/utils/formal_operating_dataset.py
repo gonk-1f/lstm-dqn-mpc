@@ -25,6 +25,20 @@ EXPECTED_SPLIT_POINT_COUNTS = {
     "test": 68_921,
 }
 
+# These files remain part of the frozen dataset.  They are excluded only from
+# ordinary controller learning/checkpoint selection because the documented
+# device limits make them infeasible from the formal initial SOC of 0.55.
+PHYSICAL_INFEASIBLE_STRESS_CASES: dict[str, dict[str, str]] = {
+    "operating_segment_0137": {
+        "split": "train",
+        "reason": "energy_capacity_infeasible",
+    },
+    "operating_segment_0160": {
+        "split": "validation",
+        "reason": "energy_capacity_infeasible",
+    },
+}
+
 
 @dataclass(frozen=True)
 class OperatingSegmentSplit:
@@ -38,6 +52,46 @@ class OperatingSegmentSplit:
     test_parents: tuple[str, ...]
     manifest: pd.DataFrame
     dataset_root: Path
+
+    @property
+    def effective_train_segments(self) -> tuple[str, ...]:
+        return _effective_segments(self.train_segments, split_name="train")
+
+    @property
+    def effective_validation_segments(self) -> tuple[str, ...]:
+        return _effective_segments(
+            self.validation_segments,
+            split_name="validation",
+        )
+
+
+def _effective_segments(
+    segment_ids: tuple[str, ...],
+    *,
+    split_name: str,
+) -> tuple[str, ...]:
+    return tuple(
+        identifier
+        for identifier in segment_ids
+        if PHYSICAL_INFEASIBLE_STRESS_CASES.get(identifier, {}).get("split")
+        != split_name
+    )
+
+
+def effective_segments_for_split(
+    split: OperatingSegmentSplit,
+    split_name: str,
+) -> tuple[str, ...]:
+    """Return normal-use segments while retaining explicit stress access."""
+
+    name = str(split_name).strip().lower()
+    if name == "train":
+        return split.effective_train_segments
+    if name == "validation":
+        return split.effective_validation_segments
+    if name == "test":
+        return split.test_segments
+    raise ValueError(f"unknown split name: {split_name!r}")
 
 
 @dataclass(frozen=True)

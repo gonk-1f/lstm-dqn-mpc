@@ -11,6 +11,7 @@ from mpc.solvers.fc_dp0_curve import h2_kg_step_dp0_quadratic
 # the same criterion and do not change the A0-A3 MPC objectives.
 REWARD_Q_H2 = 0.25
 REWARD_Q_BATT = 0.40
+REWARD_Q_SOC = 12.0
 REWARD_Q_FC_VAR = 20.0
 
 FUEL_CELL_MAX_KW = 600.0
@@ -50,7 +51,7 @@ def calculate_mpc_weight_reward(
         r_t = -(
             0.25 * H_t
             + 0.40 * B_t
-            + Phi_SOC(SOC_t+1)
+            + 12.0 * Phi_SOC(SOC_t+1)
             + 20.0 * F_t
         )
 
@@ -107,7 +108,7 @@ def calculate_mpc_weight_reward(
 
     weighted_h2 = REWARD_Q_H2 * h2_norm
     weighted_batt = REWARD_Q_BATT * battery_power_sq_norm
-    weighted_soc = phi_soc
+    weighted_soc = REWARD_Q_SOC * phi_soc
     weighted_fc_var = REWARD_Q_FC_VAR * fc_variation_sq_norm
     cost = (
         weighted_h2

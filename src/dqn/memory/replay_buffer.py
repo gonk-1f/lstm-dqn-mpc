@@ -51,6 +51,60 @@ class ReplayBuffer:
     def __len__(self) -> int:
         return min(self.size, self.max_size)
 
+    @property
+    def write_position(self) -> int:
+        """Return the next circular write index for checkpoint diagnostics."""
+
+        return int(self.size % self.max_size)
+
+    def state_dict(self) -> dict[str, object]:
+        """Serialize the complete replay state required for exact resume."""
+
+        return {
+            "max_size": int(self.max_size),
+            "size": int(self.size),
+            "write_position": int(self.write_position),
+            "states": np.asarray(self.states, dtype=np.float32),
+            "actions": np.asarray(self.actions, dtype=np.int64),
+            "rewards": np.asarray(self.rewards, dtype=np.float32),
+            "dones": np.asarray(self.dones, dtype=np.bool_),
+            "next_states": np.asarray(self.next_states, dtype=np.float32),
+        }
+
+    def load_state_dict(self, state: dict[str, object]) -> None:
+        """Restore a replay state after validating capacity and circular order."""
+
+        required = {
+            "max_size", "size", "write_position", "states", "actions",
+            "rewards", "dones", "next_states",
+        }
+        missing = required.difference(state)
+        if missing:
+            raise ValueError(f"replay checkpoint is missing keys: {sorted(missing)}")
+        if int(state["max_size"]) != int(self.max_size):
+            raise ValueError("replay checkpoint buffer capacity does not match config")
+        size = int(state["size"])
+        if size < 0:
+            raise ValueError("replay checkpoint size must be nonnegative")
+        length = min(size, self.max_size)
+        arrays = {
+            "states": np.asarray(state["states"], dtype=np.float32),
+            "actions": np.asarray(state["actions"], dtype=np.int64),
+            "rewards": np.asarray(state["rewards"], dtype=np.float32),
+            "dones": np.asarray(state["dones"], dtype=np.bool_),
+            "next_states": np.asarray(state["next_states"], dtype=np.float32),
+        }
+        if any(len(values) != length for values in arrays.values()):
+            raise ValueError("replay checkpoint arrays do not match stored size")
+        if int(state["write_position"]) != size % self.max_size:
+            raise ValueError("replay checkpoint write position is inconsistent")
+        self.size = size
+        self.states = [np.asarray(value, dtype=np.float32).copy() for value in arrays["states"]]
+        self.actions = [int(value) for value in arrays["actions"]]
+        self.rewards = [float(value) for value in arrays["rewards"]]
+        self.dones = [bool(value) for value in arrays["dones"]]
+        self.next_states = [np.asarray(value, dtype=np.float32).copy() for value in arrays["next_states"]]
+
     def sample(self, batch_size: int):
         total = len(self)
         indices = np.random.randint(total, size=batch_size)

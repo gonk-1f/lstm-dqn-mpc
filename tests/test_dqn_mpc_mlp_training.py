@@ -120,6 +120,29 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
             all(identifier.startswith("operating_segment_") for identifier in train | validation | test)
         )
 
+    def test_effective_training_and_validation_exclude_only_physical_stress_cases(
+        self,
+    ) -> None:
+        split = training.load_voyage_split(training.DEFAULT_SPLIT_MANIFEST)
+
+        self.assertEqual(len(split.effective_train_segments), 143)
+        self.assertEqual(len(split.effective_validation_segments), 22)
+        self.assertNotIn("operating_segment_0137", split.effective_train_segments)
+        self.assertNotIn("operating_segment_0160", split.effective_validation_segments)
+        self.assertIn("operating_segment_0158", split.effective_validation_segments)
+        self.assertIn("operating_segment_0137", split.train_segments)
+        self.assertIn("operating_segment_0160", split.validation_segments)
+
+        statistics = training.effective_split_statistics(split)
+        self.assertEqual(statistics["train"], {"segment_count": 143, "point_count": 790758})
+        self.assertEqual(statistics["validation"], {"segment_count": 22, "point_count": 228048})
+
+    def test_formal_configuration_uses_long_horizon_gamma(self) -> None:
+        runtime = training.create_training_runtime(self.make_config())
+
+        self.assertEqual(runtime.config.gamma, 0.9995)
+        self.assertEqual(runtime.agent.discount, 0.9995)
+
     def test_loader_reads_train_and_rejects_test_before_io(
         self,
     ) -> None:
@@ -225,6 +248,10 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
 
         self.assertEqual(first["episode_steps"], 4)
         self.assertEqual(second["episode_steps"], 3)
+        self.assertEqual(
+            sum(first[f"action_count_A{action_id}"] for action_id in range(4)),
+            first["episode_steps"],
+        )
         self.assertEqual(runtime.global_step, 7)
         self.assertEqual(len(runtime.replay_buffer), 7)
         self.assertEqual(

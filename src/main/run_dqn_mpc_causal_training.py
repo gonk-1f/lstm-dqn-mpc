@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import argparse
+from datetime import datetime
 import json
 from pathlib import Path
 import sys
@@ -100,6 +102,8 @@ def run_round_boundary_training(
     load_train,
     load_validation,
     num_training_rounds: int = NUM_TRAINING_ROUNDS,
+    first_round_id: int = 1,
+    training_metadata: dict[str, object] | None = None,
 ) -> list[dict[str, object]]:
     """Train, checkpoint, and validate at each round boundary."""
 
@@ -113,10 +117,22 @@ def run_round_boundary_training(
         trace_dir.mkdir()
         plot_dir.mkdir()
         runtime.agent.save(round_dir / f"model_round{round_summary['round_id']}.pt")
+        state_path = training.save_training_state(
+            runtime=runtime,
+            path=round_dir / f"training_state_round{round_summary['round_id']}.pt",
+            completed_round=int(round_summary["round_id"]),
+            metadata=training_metadata,
+        )
+        round_summary["training_state_path"] = str(state_path)
         validation_artifacts.PLOT_DIR = plot_dir
         validation_voyages = []
         validation_traces = []
-        for voyage_id in split.validation_segments:
+        validation_segments = getattr(
+            split,
+            "effective_validation_segments",
+            split.validation_segments,
+        )
+        for voyage_id in validation_segments:
             result, trace = validation_artifacts.run_test_episode(
                 voyage_id=voyage_id,
                 loads_kw=load_validation(voyage_id),
@@ -138,17 +154,24 @@ def run_round_boundary_training(
 
     rounds = training.train_complete_voyage_rounds(
         num_training_rounds=num_training_rounds,
-        voyage_ids=split.train_segments,
+        voyage_ids=getattr(
+            split,
+            "effective_train_segments",
+            split.train_segments,
+        ),
         load_voyage=load_train,
         base_config=base_config,
         runtime=runtime,
         on_round_complete=save_and_validate_round,
+        first_round_id=first_round_id,
     )
     (output_dir / "training_summary.json").write_text(
         json.dumps(
             {
                 "num_training_rounds": num_training_rounds,
+                "first_round_id": first_round_id,
                 "rounds": rounds,
+                "formal_configuration": training_metadata,
                 "test_voyages": [],
             },
             ensure_ascii=False,
@@ -160,15 +183,43 @@ def run_round_boundary_training(
     return rounds
 
 
-def main() -> None:
-    config = DQNTrainConfig(network_type=NETWORK_TYPE)
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(
+        description="Formal causal DQN-MPC training with round-resume state",
+    )
+    parser.add_argument(
+        "--resume-training-state",
+        type=Path,
+        default=None,
+        help="atomic training_state_roundX.pt produced at a completed round boundary",
+    )
+    args = parser.parse_args(argv)
     split = training.load_voyage_split()
-    runtime = training.create_training_runtime(config)
+    if args.resume_training_state is None:
+        config = DQNTrainConfig(network_type=NETWORK_TYPE)
+        training.seed_training_rngs(config)
+        runtime = training.create_training_runtime(config)
+        first_round_id = 1
+        output_dir = FORMAL_OUTPUT_DIR
+        if output_dir.exists():
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_dir = output_dir.with_name(f"{output_dir.name}_{stamp}")
+    else:
+        runtime, completed_round, _ = training.load_training_state(
+            args.resume_training_state,
+        )
+        if runtime.config.network_type != NETWORK_TYPE:
+            raise ValueError("resume checkpoint network type does not match formal entrypoint")
+        first_round_id = training.next_round_id(completed_round)
+        if first_round_id > NUM_TRAINING_ROUNDS:
+            raise ValueError("resume checkpoint already completed all formal rounds")
+        output_dir = args.resume_training_state.resolve().parent.parent
     base_config = training.build_formal_mpc_config()
-    output_dir = FORMAL_OUTPUT_DIR
-    if output_dir.exists():
-        raise FileExistsError(output_dir)
-    output_dir.mkdir(parents=True)
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+    if (output_dir / f"round_{first_round_id}").exists():
+        raise FileExistsError(output_dir / f"round_{first_round_id}")
+    metadata = training.formal_training_metadata(runtime.config, split)
 
     def load_train(voyage_id: str):
         return training.load_operating_segment_loads(
@@ -191,6 +242,8 @@ def main() -> None:
         output_dir=output_dir,
         load_train=load_train,
         load_validation=load_validation,
+        first_round_id=first_round_id,
+        training_metadata=metadata,
     )
 
 

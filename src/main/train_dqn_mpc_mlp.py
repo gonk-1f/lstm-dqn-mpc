@@ -4,10 +4,12 @@ from __future__ import annotations
 import base64
 import io
 import json
+import os
+import random
 import time
 from collections import deque
 import sys
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Callable, Sequence
 
@@ -34,6 +36,14 @@ from dqn.policies.epsilon_greedy import (  # noqa: E402
 from dqn.utils.action_mapper import (  # noqa: E402
     DQN_MPC_WEIGHT_ACTIONS,
 )
+from dqn.utils.reward import (  # noqa: E402
+    REWARD_Q_BATT,
+    REWARD_Q_FC_VAR,
+    REWARD_Q_H2,
+    REWARD_Q_SOC,
+    SOC_SOFT_MAX,
+    SOC_SOFT_MIN,
+)
 from dqn.utils.state_builder import (  # noqa: E402
     DQN_MPC_STATE_DIM,
     SOC_REFERENCE,
@@ -47,6 +57,8 @@ from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
 )
 from mpc_solvers.formal_config import (  # noqa: E402
     N6_STATE_COMMIT_TOLERANCES,
+    SOC_SOFT_MAX as MPC_SOC_SOFT_MAX,
+    SOC_SOFT_MIN as MPC_SOC_SOFT_MIN,
     build_formal_mpc_config,
 )
 from utils.formal_operating_dataset import (  # noqa: E402
@@ -54,6 +66,8 @@ from utils.formal_operating_dataset import (  # noqa: E402
     DEFAULT_SPLIT_MANIFEST as FORMAL_SPLIT_MANIFEST,
     LOAD_COLUMN,
     OperatingSegmentSplit,
+    PHYSICAL_INFEASIBLE_STRESS_CASES,
+    effective_segments_for_split,
     load_formal_operating_split,
     load_operating_segment_loads as _load_operating_segment_loads,
 )
@@ -74,6 +88,8 @@ ACTION_DIM = len(DQN_MPC_WEIGHT_ACTIONS)
 FORMAL_DATA_DIRECTORY = DEFAULT_OPERATING_DATASET_ROOT.relative_to(REPO_ROOT).as_posix()
 FORMAL_TARGET_LOAD = LOAD_COLUMN
 FORMAL_SAMPLE_INTERVAL_SECONDS = 1.0
+SAVE_REPLAY_BUFFER = True
+TRAINING_STATE_FORMAT_VERSION = 1
 VoyageSplit = OperatingSegmentSplit
 
 
@@ -89,6 +105,8 @@ class TrainingRuntime:
     target_sync_steps: list[int] = field(
         default_factory=list
     )
+    gradient_update_count: int = 0
+    target_sync_count: int = 0
 
 
 class _ValidationMpcFailure(RuntimeError):
@@ -124,6 +142,219 @@ def load_operating_segment_loads(
         split=split,
         allow_test=allow_test,
     )
+
+
+def effective_split_statistics(
+    split: VoyageSplit,
+) -> dict[str, dict[str, int]]:
+    """Scan normal-use train/validation segments without altering the manifest."""
+
+    result: dict[str, dict[str, int]] = {}
+    for split_name in ("train", "validation"):
+        identifiers = effective_segments_for_split(split, split_name)
+        point_count = sum(
+            int(
+                load_operating_segment_loads(
+                    split_name,
+                    segment_id,
+                    split=split,
+                ).size
+            )
+            for segment_id in identifiers
+        )
+        result[split_name] = {
+            "segment_count": int(len(identifiers)),
+            "point_count": int(point_count),
+        }
+    return result
+
+
+def estimate_full_replay_bytes(config: DQNTrainConfig) -> int:
+    """Estimate dense replay payload bytes for the fixed seven-state DQN."""
+
+    capacity = int(config.buffer_size)
+    state_bytes = 2 * capacity * STATE_DIM * np.dtype(np.float32).itemsize
+    action_bytes = capacity * np.dtype(np.int64).itemsize
+    reward_bytes = capacity * np.dtype(np.float32).itemsize
+    done_bytes = capacity * np.dtype(np.bool_).itemsize
+    return int(state_bytes + action_bytes + reward_bytes + done_bytes)
+
+
+def formal_training_metadata(
+    config: DQNTrainConfig,
+    split: VoyageSplit,
+) -> dict[str, object]:
+    """Return self-describing metadata for formal summaries/checkpoints."""
+
+    return {
+        "gamma": float(config.gamma),
+        "random_seed": int(config.seed),
+        "training_config": asdict(config),
+        "common_reward": {
+            "q_h2": float(REWARD_Q_H2),
+            "q_batt": float(REWARD_Q_BATT),
+            "q_soc": float(REWARD_Q_SOC),
+            "q_fcvar": float(REWARD_Q_FC_VAR),
+            "soc_deadband": [float(SOC_SOFT_MIN), float(SOC_SOFT_MAX)],
+        },
+        "mpc_soc_deadband": [
+            float(MPC_SOC_SOFT_MIN),
+            float(MPC_SOC_SOFT_MAX),
+        ],
+        "actions": [
+            {
+                "action_id": int(action.action_id),
+                "name": str(action.name),
+                "weights": list(action.as_tuple()),
+            }
+            for action in DQN_MPC_WEIGHT_ACTIONS
+        ],
+        "physical_infeasible_stress_cases": PHYSICAL_INFEASIBLE_STRESS_CASES,
+        "effective_split_statistics": effective_split_statistics(split),
+        "save_replay_buffer": bool(SAVE_REPLAY_BUFFER),
+        "estimated_full_replay_bytes": estimate_full_replay_bytes(config),
+    }
+
+
+def _cpu_state_dict(module: torch.nn.Module) -> dict[str, torch.Tensor]:
+    return {
+        str(key): value.detach().cpu().clone()
+        for key, value in module.state_dict().items()
+    }
+
+
+def _move_optimizer_state_to_device(
+    optimizer: torch.optim.Optimizer,
+    device: torch.device,
+) -> None:
+    for state in optimizer.state.values():
+        for key, value in state.items():
+            if isinstance(value, torch.Tensor):
+                state[key] = value.to(device)
+
+
+def _runtime_update_count(runtime: TrainingRuntime) -> int:
+    return max(
+        int(getattr(runtime, "gradient_update_count", 0)),
+        int(len(runtime.update_steps)),
+    )
+
+
+def _runtime_target_sync_count(runtime: TrainingRuntime) -> int:
+    return max(
+        int(getattr(runtime, "target_sync_count", 0)),
+        int(len(runtime.target_sync_steps)),
+    )
+
+
+def save_training_state(
+    *,
+    runtime: TrainingRuntime,
+    path: str | Path,
+    completed_round: int,
+    metadata: dict[str, object] | None = None,
+    save_replay_buffer: bool = SAVE_REPLAY_BUFFER,
+) -> Path:
+    """Atomically save all state needed to continue formal training exactly."""
+
+    if int(completed_round) < 0:
+        raise ValueError("completed_round must be nonnegative")
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.with_suffix(destination.suffix + ".tmp")
+    payload: dict[str, object] = {
+        "format_version": TRAINING_STATE_FORMAT_VERSION,
+        "completed_round": int(completed_round),
+        "online_q_network_state_dict": _cpu_state_dict(runtime.agent.q_net),
+        "target_q_network_state_dict": _cpu_state_dict(runtime.agent.target_q_net),
+        "optimizer_state_dict": runtime.agent.optimizer.state_dict(),
+        "epsilon": float(runtime.policy.epsilon),
+        "global_step": int(runtime.global_step),
+        "gradient_update_count": _runtime_update_count(runtime),
+        "target_sync_count": _runtime_target_sync_count(runtime),
+        "random_seed": int(runtime.config.seed),
+        "training_config": asdict(runtime.config),
+        "training_metadata": dict(metadata or {"gamma": float(runtime.config.gamma)}),
+        "python_rng_state": random.getstate(),
+        "numpy_rng_state": np.random.get_state(),
+        "torch_cpu_rng_state": torch.get_rng_state(),
+        "torch_cuda_rng_state_all": (
+            torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
+        ),
+        "replay_buffer_saved": bool(save_replay_buffer),
+    }
+    if save_replay_buffer:
+        payload["replay_buffer"] = runtime.replay_buffer.state_dict()
+
+    temporary.unlink(missing_ok=True)
+    try:
+        with temporary.open("wb") as handle:
+            torch.save(payload, handle)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, destination)
+    except Exception:
+        temporary.unlink(missing_ok=True)
+        raise
+    return destination
+
+
+def load_training_state(
+    path: str | Path,
+) -> tuple[TrainingRuntime, int, dict[str, object]]:
+    """Restore a complete formal training runtime from an atomic checkpoint."""
+
+    payload = torch.load(Path(path), map_location="cpu", weights_only=False)
+    if not isinstance(payload, dict):
+        raise ValueError("training state checkpoint must contain a dictionary")
+    required = {
+        "format_version", "completed_round", "online_q_network_state_dict",
+        "target_q_network_state_dict", "optimizer_state_dict", "epsilon",
+        "global_step", "gradient_update_count", "target_sync_count",
+        "training_config", "training_metadata", "python_rng_state",
+        "numpy_rng_state", "torch_cpu_rng_state", "torch_cuda_rng_state_all",
+        "replay_buffer_saved",
+    }
+    missing = required.difference(payload)
+    if missing:
+        raise ValueError(f"training state checkpoint is missing keys: {sorted(missing)}")
+    if int(payload["format_version"]) != TRAINING_STATE_FORMAT_VERSION:
+        raise ValueError("unsupported training state checkpoint format")
+    config_data = payload["training_config"]
+    if not isinstance(config_data, dict):
+        raise ValueError("training state configuration must be a dictionary")
+    runtime = create_training_runtime(DQNTrainConfig(**config_data))
+    runtime.agent.q_net.load_state_dict(payload["online_q_network_state_dict"])
+    runtime.agent.target_q_net.load_state_dict(payload["target_q_network_state_dict"])
+    runtime.agent.optimizer.load_state_dict(payload["optimizer_state_dict"])
+    _move_optimizer_state_to_device(runtime.agent.optimizer, runtime.agent.device)
+    runtime.policy.epsilon = float(payload["epsilon"])
+    runtime.global_step = int(payload["global_step"])
+    runtime.gradient_update_count = int(payload["gradient_update_count"])
+    runtime.target_sync_count = int(payload["target_sync_count"])
+    if bool(payload["replay_buffer_saved"]):
+        replay_state = payload.get("replay_buffer")
+        if not isinstance(replay_state, dict):
+            raise ValueError("training state declares replay buffer but omits it")
+        runtime.replay_buffer.load_state_dict(replay_state)
+    random.setstate(payload["python_rng_state"])
+    np.random.set_state(payload["numpy_rng_state"])
+    torch.set_rng_state(payload["torch_cpu_rng_state"])
+    cuda_rng = payload["torch_cuda_rng_state_all"]
+    if cuda_rng is not None and torch.cuda.is_available():
+        torch.cuda.set_rng_state_all(cuda_rng)
+    metadata = payload["training_metadata"]
+    if not isinstance(metadata, dict):
+        raise ValueError("training state metadata must be a dictionary")
+    return runtime, int(payload["completed_round"]), metadata
+
+
+def next_round_id(completed_round: int) -> int:
+    """Return the first not-yet-completed formal round after resume."""
+
+    if int(completed_round) < 0:
+        raise ValueError("completed_round must be nonnegative")
+    return int(completed_round) + 1
 
 def _validate_fixed_dqn_design(
     config: DQNTrainConfig,
@@ -183,6 +414,17 @@ def create_training_runtime(
         policy=policy,
         config=resolved,
     )
+
+
+def seed_training_rngs(config: DQNTrainConfig) -> None:
+    """Seed every RNG captured by a formal resumable training state."""
+
+    seed = int(config.seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 
 def _require_finite_scalar(
@@ -619,6 +861,7 @@ def run_training_episode(
                 runtime.update_steps.append(
                     int(runtime.global_step)
                 )
+                runtime.gradient_update_count += 1
 
         sync_interval = int(
             runtime.config.target_sync_interval
@@ -632,6 +875,7 @@ def run_training_episode(
             runtime.target_sync_steps.append(
                 int(runtime.global_step)
             )
+            runtime.target_sync_count += 1
         log_interval = int(
             runtime.config.log_window_steps
         )
@@ -688,7 +932,7 @@ def run_training_episode(
         state = next_state
         state = next_state
 
-    return {
+    result = {
         "voyage_id": str(voyage_id),
         "episode_reward": float(episode_reward),
         "mean_reward_per_step": float(
@@ -757,6 +1001,7 @@ def train_complete_voyage_rounds(
     load_voyage: Callable[[str], np.ndarray],
     base_config: QpMpcConfig,
     runtime: TrainingRuntime,
+    first_round_id: int = 1,
     on_round_complete: (
         Callable[[dict[str, object]], None] | None
     ) = None,
@@ -764,17 +1009,19 @@ def train_complete_voyage_rounds(
     """Run each ordered voyage as one complete episode per training round."""
     if int(num_training_rounds) <= 0:
         raise ValueError("num_training_rounds must be positive")
+    if int(first_round_id) <= 0:
+        raise ValueError("first_round_id must be positive")
     ordered_voyages = tuple(str(voyage_id) for voyage_id in voyage_ids)
     if not ordered_voyages:
         raise ValueError("training rounds require at least one voyage")
 
     round_summaries: list[dict[str, object]] = []
     completed_episodes = 0
-    for round_id in range(1, int(num_training_rounds) + 1):
+    for round_id in range(int(first_round_id), int(num_training_rounds) + 1):
         runtime_losses = getattr(runtime, "losses", [])
         runtime_updates = getattr(runtime, "update_steps", [])
         loss_start = len(runtime_losses)
-        update_start = len(runtime_updates)
+        update_start = _runtime_update_count(runtime)
         episodes: list[dict[str, object]] = []
         for voyage_id in ordered_voyages:
             episode = run_training_episode(
@@ -797,7 +1044,7 @@ def train_complete_voyage_rounds(
         round_q_diagnostics = (
             _validate_latest_q_diagnostics(runtime.agent)
             if (
-                len(runtime_updates) > update_start
+                _runtime_update_count(runtime) > update_start
                 and hasattr(runtime.agent, "latest_update_diagnostics")
             )
             else None
@@ -808,8 +1055,8 @@ def train_complete_voyage_rounds(
             "completed_training_episodes": completed_episodes,
             "global_step": int(runtime.global_step),
             "epsilon": float(runtime.policy.epsilon),
-            "gradient_update_count": len(runtime_updates),
-            "gradient_update_count_this_round": len(runtime_updates) - update_start,
+            "gradient_update_count": _runtime_update_count(runtime),
+            "gradient_update_count_this_round": _runtime_update_count(runtime) - update_start,
             "loss_statistics": _loss_statistics(runtime_losses[loss_start:]),
             "q_value_diagnostics": round_q_diagnostics,
             "training_solver_failure_count": int(
@@ -1143,8 +1390,7 @@ def train_dqn_mpc_mlp(
     resolved_config = config or DQNTrainConfig()
     _validate_fixed_dqn_design(resolved_config)
 
-    np.random.seed(int(resolved_config.seed))
-    torch.manual_seed(int(resolved_config.seed))
+    seed_training_rngs(resolved_config)
 
     split = load_voyage_split(split_path)
     runtime = create_training_runtime(resolved_config)
@@ -1180,7 +1426,7 @@ def train_dqn_mpc_mlp(
         return loads
 
     train_episodes = train_to_budget(
-        voyage_ids=split.train_segments,
+        voyage_ids=split.effective_train_segments,
         load_voyage=load_train_voyage,
         base_config=base_config,
         runtime=runtime,
@@ -1191,7 +1437,7 @@ def train_dqn_mpc_mlp(
 
     try:
         validation = validate_voyages(
-            voyage_ids=split.validation_segments,
+            voyage_ids=split.effective_validation_segments,
             load_voyage=load_validation_voyage,
             base_config=base_config,
             agent=runtime.agent,
@@ -1210,9 +1456,7 @@ def train_dqn_mpc_mlp(
                     str(episode["voyage_id"])
                     for episode in train_episodes
                 ],
-                "gradient_update_count": len(
-                    runtime.update_steps
-                ),
+                "gradient_update_count": _runtime_update_count(runtime),
                 "target_sync_steps": list(
                     runtime.target_sync_steps
                 ),
@@ -1268,16 +1512,14 @@ def train_dqn_mpc_mlp(
         "warmup_steps": int(
             resolved_config.warmup_steps
         ),
-        "train_voyage_count": len(split.train_segments),
+        "train_voyage_count": len(split.effective_train_segments),
         "validation_voyage_count": len(
-            split.validation_segments
+            split.effective_validation_segments
         ),
         "test_voyage_count": len(split.test_segments),
         "training_episodes": train_episodes,
         "global_step": int(runtime.global_step),
-        "gradient_update_count": len(
-            runtime.update_steps
-        ),
+        "gradient_update_count": _runtime_update_count(runtime),
         "target_sync_steps": list(
             runtime.target_sync_steps
         ),
@@ -1305,6 +1547,10 @@ def train_dqn_mpc_mlp(
             ),
             "test_voyages": [],
         },
+        "formal_configuration": formal_training_metadata(
+            resolved_config,
+            split,
+        ),
         "validation": validation,
     }
 

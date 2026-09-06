@@ -20,6 +20,13 @@ segment 继承 parent voyage 划分，不跨 parent 泄漏：
 | Validation | 13 parent voyages | 23 |
 | Test | 7 parent voyages | 10 |
 
+冻结的 `split_manifest.csv` 保持上述原始划分不变。普通 DQN 训练与
+checkpoint-selection 会从有效列表中排除两个已审计的物理不可行 stress case：
+`operating_segment_0137`（train）和 `operating_segment_0160`（validation）。
+它们的 CSV 仍保留，可用于显式 stress-case 分析；`operating_segment_0158`
+继续属于普通 validation。有效列表为 143 train segments / 790,758 点和
+22 validation segments / 228,048 点。
+
 权威划分文件为 `data/processed/operating_segments_1s_rebuilt/split_manifest.csv`。最终数据共 66 个 parent voyages、177 个 segments、1,114,037 条 1 s 样本；训练与 validation 不读取 test segment，每段为独立 episode，初始 SOC 固定0.55。旧 natural cubic spline 数据已废弃。
 
 ## 控制结构
@@ -107,7 +114,7 @@ DQN 的 common reward 与 MPC 动作权重分离。MLP 和 KAN backend、A0～A3
 ```text
 r_t = -J_t
 J_t = 0.25 H_t + 0.40 B_t
-    + Phi_SOC(SOC_t+1) + 20 F_t
+    + 12.0 Phi_SOC(SOC_t+1) + 20 F_t
 ```
 
 其中：
@@ -124,6 +131,9 @@ Phi_SOC(SOC) = ((0.50 - SOC) / 0.05)^2,  SOC < 0.50
 ```
 
 reward 与 MPC 的 soft SOC range 均为 `0.50～0.60`，MPC 的 hard SOC constraints 为 `0.20～0.80`。SOC 位于 soft range 内时不要求实时跟踪 `0.55`。`SOC_ref=0.55` 仍用于系统初始/参考 SOC，但不构成 MPC 或 common reward 的逐步跟踪项。求解失败的 terminal reward 保持 `-620`。
+
+正式 DQN discount factor 为 `gamma=0.9995`，Bellman target 保持标准形式
+`r + gamma * (1-done) * max Q_target(next_state)`。
 
 ## 正式入口
 
@@ -143,6 +153,16 @@ python src/main/build_rebuilt_operating_segment_dataset.py
 
 ```powershell
 python src/main/run_dqn_mpc_causal_training.py
+```
+
+每轮同时写入纯推理 `model_roundX.pt` 与原子保存的
+`training_state_roundX.pt`。后者包含 online/target network、optimizer、
+epsilon、global step、update count、完整 replay buffer 及 Python/NumPy/PyTorch
+RNG 状态，可在关机后继续下一轮：
+
+```powershell
+python src/main/run_dqn_mpc_causal_training.py `
+  --resume-training-state outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds/round_1/training_state_round1.pt
 ```
 
 新 MLP 输出目录：

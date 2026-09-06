@@ -13,7 +13,7 @@ from dqn.networks import KANNetworkConfig, build_q_network, describe_q_network_c
 @dataclass
 class DQNTrainConfig:
     seed: int = 42
-    discount: float = 0.99
+    gamma: float = 0.9995
     lr: float = 5e-4
     batch_size: int = 64
     max_steps: int = 10000
@@ -125,7 +125,7 @@ class DQNAgent:
         self.target_q_net.load_state_dict(self.q_net.state_dict())
         trainable_parameters = [param for param in self.q_net.parameters() if param.requires_grad]
         self.optimizer = torch.optim.Adam(trainable_parameters, lr=config.lr)
-        self.discount = config.discount
+        self.discount = config.gamma
         self.action_dim = action_dim
         self.tensor_dtype = next(self.q_net.parameters()).dtype
         self.latest_update_diagnostics: dict[str, float] = {}

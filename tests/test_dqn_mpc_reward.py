@@ -48,8 +48,8 @@ class TestDqnMpcReward(unittest.TestCase):
     def test_fixed_common_reward_weights_match_final_formula(self) -> None:
         self.assertEqual(reward_module.REWARD_Q_H2, 0.25)
         self.assertEqual(reward_module.REWARD_Q_BATT, 0.40)
+        self.assertEqual(reward_module.REWARD_Q_SOC, 12.0)
         self.assertEqual(reward_module.REWARD_Q_FC_VAR, 20.0)
-        self.assertFalse(hasattr(reward_module, "REWARD_Q_SOC"))
 
     def test_soc_soft_penalty_matches_required_scale(self) -> None:
         penalty = getattr(
@@ -196,13 +196,13 @@ class TestDqnMpcReward(unittest.TestCase):
         expected_cost = (
             0.25 * info["h2_norm"]
             + 0.40 * info["battery_power_sq_norm"]
-            + info["phi_soc"]
+            + 12.0 * info["phi_soc"]
             + 20.0 * info["fc_variation_sq_norm"]
         )
         self.assertAlmostEqual(
             info["total_cost"], expected_cost, places=12
         )
-        self.assertEqual(info["weighted_soc"], info["phi_soc"])
+        self.assertEqual(info["weighted_soc"], 12.0 * info["phi_soc"])
         self.assertAlmostEqual(reward, -expected_cost, places=12)
 
     def test_diagnostics_contain_only_final_reward_terms(

@@ -137,6 +137,13 @@ class RoundBoundaryTrainingTests(unittest.TestCase):
                         ),
                     )
 
+                def fake_save_training_state(*, runtime, path, completed_round, metadata=None):
+                    events.append(
+                        f"{network_type}:state:{completed_round}:"
+                        f"{int(runtime.agent.weight.item())}"
+                    )
+                    return Path(path)
+
                 split = SimpleNamespace(
                     train_voyages=("voyage_001",),
                     validation_voyages=("voyage_047",),
@@ -170,6 +177,11 @@ class RoundBoundaryTrainingTests(unittest.TestCase):
                             formal_training.validation_artifacts,
                             "plot_soc_trajectory",
                         ),
+                        patch.object(
+                            training,
+                            "save_training_state",
+                            side_effect=fake_save_training_state,
+                        ),
                     ):
                         rounds = (
                             formal_training.run_round_boundary_training(
@@ -199,9 +211,11 @@ class RoundBoundaryTrainingTests(unittest.TestCase):
                     [
                         f"{network_type}:train:1:step=0:epsilon=1.0:replay=0",
                         f"{network_type}:save:1",
+                        f"{network_type}:state:1:1",
                         f"{network_type}:validate:1",
                         f"{network_type}:train:2:step=1:epsilon=0.9:replay=1",
                         f"{network_type}:save:2",
+                        f"{network_type}:state:2:2",
                         f"{network_type}:validate:2",
                     ],
                 )
