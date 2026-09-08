@@ -1,0 +1,441 @@
+{
+  "voyages": [
+    {
+      "voyage_id": "operating_segment_0146",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 3300,
+      "episode_reward": -1236.5891063588197,
+      "mean_reward_per_step": -0.37472397162388477,
+      "min_soc": 0.46263670022362974,
+      "final_soc": 0.4901348635956547,
+      "action_count_A0": 765,
+      "action_count_A1": 336,
+      "action_count_A2": 106,
+      "action_count_A3": 2093
+    },
+    {
+      "voyage_id": "operating_segment_0147",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 16980,
+      "episode_reward": -5650.907581146526,
+      "mean_reward_per_step": -0.3327978551911971,
+      "min_soc": 0.4575704225699929,
+      "final_soc": 0.49203023893947645,
+      "action_count_A0": 5783,
+      "action_count_A1": 2903,
+      "action_count_A2": 104,
+      "action_count_A3": 8190
+    },
+    {
+      "voyage_id": "operating_segment_0148",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 1560,
+      "episode_reward": -659.6782459950967,
+      "mean_reward_per_step": -0.4228706705096774,
+      "min_soc": 0.46173182007045677,
+      "final_soc": 0.4618354039920604,
+      "action_count_A0": 598,
+      "action_count_A1": 53,
+      "action_count_A2": 78,
+      "action_count_A3": 831
+    },
+    {
+      "voyage_id": "operating_segment_0149",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 18091,
+      "episode_reward": -35403.11502520961,
+      "mean_reward_per_step": -1.956946273020265,
+      "min_soc": 0.2806362678423311,
+      "final_soc": 0.495766121176851,
+      "action_count_A0": 3633,
+      "action_count_A1": 5704,
+      "action_count_A2": 197,
+      "action_count_A3": 8557
+    },
+    {
+      "voyage_id": "operating_segment_0150",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 9390,
+      "episode_reward": -3232.67418533391,
+      "mean_reward_per_step": -0.3442677513667636,
+      "min_soc": 0.4626678706710853,
+      "final_soc": 0.4966881298178368,
+      "action_count_A0": 1146,
+      "action_count_A1": 2159,
+      "action_count_A2": 45,
+      "action_count_A3": 6040
+    },
+    {
+      "voyage_id": "operating_segment_0151",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 4740,
+      "episode_reward": -1844.515207771467,
+      "mean_reward_per_step": -0.38913822948765125,
+      "min_soc": 0.46182139025246527,
+      "final_soc": 0.5173091512413447,
+      "action_count_A0": 703,
+      "action_count_A1": 1024,
+      "action_count_A2": 51,
+      "action_count_A3": 2962
+    },
+    {
+      "voyage_id": "operating_segment_0152",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 18840,
+      "episode_reward": -25083.837667528434,
+      "mean_reward_per_step": -1.3314138889346303,
+      "min_soc": 0.3858477415613625,
+      "final_soc": 0.4932360376336833,
+      "action_count_A0": 4360,
+      "action_count_A1": 5776,
+      "action_count_A2": 161,
+      "action_count_A3": 8543
+    },
+    {
+      "voyage_id": "operating_segment_0153",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 2490,
+      "episode_reward": -988.4229608863927,
+      "mean_reward_per_step": -0.3969570124041738,
+      "min_soc": 0.46116133221727434,
+      "final_soc": 0.47654604994538136,
+      "action_count_A0": 853,
+      "action_count_A1": 97,
+      "action_count_A2": 45,
+      "action_count_A3": 1495
+    },
+    {
+      "voyage_id": "operating_segment_0154",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 12672,
+      "episode_reward": -5877.231917850862,
+      "mean_reward_per_step": -0.46379671068898853,
+      "min_soc": 0.4479550654947741,
+      "final_soc": 0.4794465529311914,
+      "action_count_A0": 3363,
+      "action_count_A1": 2133,
+      "action_count_A2": 200,
+      "action_count_A3": 6976
+    },
+    {
+      "voyage_id": "operating_segment_0155",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 2879,
+      "episode_reward": -540.9516986547873,
+      "mean_reward_per_step": -0.1878956924816906,
+      "min_soc": 0.46490598592802485,
+      "final_soc": 0.4785816649812884,
+      "action_count_A0": 912,
+      "action_count_A1": 1133,
+      "action_count_A2": 22,
+      "action_count_A3": 812
+    },
+    {
+      "voyage_id": "operating_segment_0156",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 10862,
+      "episode_reward": -3078.4097069440113,
+      "mean_reward_per_step": -0.2834109470580014,
+      "min_soc": 0.46584612897076305,
+      "final_soc": 0.48436356906422134,
+      "action_count_A0": 5849,
+      "action_count_A1": 584,
+      "action_count_A2": 60,
+      "action_count_A3": 4369
+    },
+    {
+      "voyage_id": "operating_segment_0157",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 270,
+      "episode_reward": -10.359821461959896,
+      "mean_reward_per_step": -0.03836970911836999,
+      "min_soc": 0.5428286581978976,
+      "final_soc": 0.5428286581978976,
+      "action_count_A0": 200,
+      "action_count_A1": 1,
+      "action_count_A2": 69,
+      "action_count_A3": 0
+    },
+    {
+      "voyage_id": "operating_segment_0158",
+      "completed": false,
+      "solver_failure_count": 1,
+      "failure_index": 6368,
+      "episode_steps": 6369,
+      "episode_reward": -48030.53084577473,
+      "mean_reward_per_step": -7.541298609793489,
+      "min_soc": 0.20056634394339917,
+      "final_soc": 0.20056634394339917,
+      "action_count_A0": 308,
+      "action_count_A1": 3517,
+      "action_count_A2": 13,
+      "action_count_A3": 2531
+    },
+    {
+      "voyage_id": "operating_segment_0159",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 5521,
+      "episode_reward": -2507.257353989116,
+      "mean_reward_per_step": -0.4541310186540692,
+      "min_soc": 0.41838165210285627,
+      "final_soc": 0.41838165210285627,
+      "action_count_A0": 4234,
+      "action_count_A1": 449,
+      "action_count_A2": 111,
+      "action_count_A3": 727
+    },
+    {
+      "voyage_id": "operating_segment_0160",
+      "completed": false,
+      "solver_failure_count": 1,
+      "failure_index": 3951,
+      "episode_steps": 3952,
+      "episode_reward": -44525.862864516705,
+      "mean_reward_per_step": -11.266665704584186,
+      "min_soc": 0.20046685880070603,
+      "final_soc": 0.20046685880070603,
+      "action_count_A0": 52,
+      "action_count_A1": 3341,
+      "action_count_A2": 37,
+      "action_count_A3": 522
+    },
+    {
+      "voyage_id": "operating_segment_0161",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 31989,
+      "episode_reward": -15290.420843501477,
+      "mean_reward_per_step": -0.47798996040831154,
+      "min_soc": 0.4119093727953886,
+      "final_soc": 0.525375067421894,
+      "action_count_A0": 13243,
+      "action_count_A1": 4367,
+      "action_count_A2": 419,
+      "action_count_A3": 13960
+    },
+    {
+      "voyage_id": "operating_segment_0162",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 43531,
+      "episode_reward": -21493.390152021213,
+      "mean_reward_per_step": -0.49374905589169127,
+      "min_soc": 0.39202444197162173,
+      "final_soc": 0.47917442190594006,
+      "action_count_A0": 28284,
+      "action_count_A1": 4531,
+      "action_count_A2": 1509,
+      "action_count_A3": 9207
+    },
+    {
+      "voyage_id": "operating_segment_0163",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 150,
+      "episode_reward": -3.475935191425822,
+      "mean_reward_per_step": -0.023172901276172147,
+      "min_soc": 0.5493287218848321,
+      "final_soc": 0.5493287218848321,
+      "action_count_A0": 150,
+      "action_count_A1": 0,
+      "action_count_A2": 0,
+      "action_count_A3": 0
+    },
+    {
+      "voyage_id": "operating_segment_0164",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 270,
+      "episode_reward": -1.841579436996303,
+      "mean_reward_per_step": -0.006820664581467789,
+      "min_soc": 0.5480819972167537,
+      "final_soc": 0.5480819972167537,
+      "action_count_A0": 270,
+      "action_count_A1": 0,
+      "action_count_A2": 0,
+      "action_count_A3": 0
+    },
+    {
+      "voyage_id": "operating_segment_0165",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 3060,
+      "episode_reward": -770.5496992454198,
+      "mean_reward_per_step": -0.25181362720438555,
+      "min_soc": 0.4616612057183399,
+      "final_soc": 0.5078614769082765,
+      "action_count_A0": 919,
+      "action_count_A1": 723,
+      "action_count_A2": 69,
+      "action_count_A3": 1349
+    },
+    {
+      "voyage_id": "operating_segment_0166",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 5190,
+      "episode_reward": -12225.854440548908,
+      "mean_reward_per_step": -2.3556559615701174,
+      "min_soc": 0.35528690817756636,
+      "final_soc": 0.5059542546589231,
+      "action_count_A0": 507,
+      "action_count_A1": 2404,
+      "action_count_A2": 624,
+      "action_count_A3": 1655
+    },
+    {
+      "voyage_id": "operating_segment_0167",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 7800,
+      "episode_reward": -2996.091303582644,
+      "mean_reward_per_step": -0.38411426969008255,
+      "min_soc": 0.45311949495122317,
+      "final_soc": 0.502579032413617,
+      "action_count_A0": 1526,
+      "action_count_A1": 2427,
+      "action_count_A2": 154,
+      "action_count_A3": 3693
+    },
+    {
+      "voyage_id": "operating_segment_0168",
+      "completed": true,
+      "solver_failure_count": 0,
+      "failure_index": null,
+      "episode_steps": 5070,
+      "episode_reward": -2523.195287486338,
+      "mean_reward_per_step": -0.49767165433655586,
+      "min_soc": 0.4297176725768315,
+      "final_soc": 0.4977906349516486,
+      "action_count_A0": 2033,
+      "action_count_A1": 1358,
+      "action_count_A2": 93,
+      "action_count_A3": 1586
+    }
+  ],
+  "q_value_diagnostics": {
+    "available": true,
+    "action_counts": {
+      "A0": 79691,
+      "A1": 45018,
+      "A2": 4167,
+      "A3": 86098
+    },
+    "action_fractions": {
+      "A0": 0.3707006428684399,
+      "A1": 0.20941137067738425,
+      "A2": 0.0193837394289542,
+      "A3": 0.40050424702522164
+    },
+    "dominant_action_share": 0.40050424702522164,
+    "q_gap": {
+      "mean": 0.04350068355910506,
+      "median": 0.015960693359375,
+      "p10": 0.001648850739002228,
+      "p90": 0.054776763916015714,
+      "near_zero_atol": 1e-06,
+      "near_zero_count": 55,
+      "near_zero_fraction": 0.0002558448928707658
+    },
+    "load_tertiles_kw": {
+      "low_high_boundary": 92.0333121110123,
+      "medium_high_boundary": 423.81827463846656
+    },
+    "rapid_load_delta_kw": 48.0,
+    "regime_action_fractions": {
+      "soc": {
+        "soc_lt_0_50": {
+          "A0": 0.32624474993495495,
+          "A1": 0.2007847884841051,
+          "A2": 0.019678119905910337,
+          "A3": 0.4532923416750296
+        },
+        "soc_0_50_to_0_60": {
+          "A0": 0.6849453890327666,
+          "A1": 0.2703899710993507,
+          "A2": 0.017302856284952896,
+          "A3": 0.02736178358292985
+        },
+        "soc_gt_0_60": {
+          "A0": 0.0,
+          "A1": 0.0,
+          "A2": 0.0,
+          "A3": 0.0
+        }
+      },
+      "transition": {
+        "rapid_rise": {
+          "A0": 0.0,
+          "A1": 0.0,
+          "A2": 0.0,
+          "A3": 0.0
+        },
+        "rapid_fall": {
+          "A0": 0.0,
+          "A1": 0.0,
+          "A2": 0.0,
+          "A3": 0.0
+        },
+        "stable": {
+          "A0": 0.3707006428684399,
+          "A1": 0.20941137067738425,
+          "A2": 0.0193837394289542,
+          "A3": 0.40050424702522164
+        }
+      },
+      "load": {
+        "low": {
+          "A0": 0.8533171453292026,
+          "A1": 0.0814563621647269,
+          "A2": 0.0015908900611236708,
+          "A3": 0.06363560244494683
+        },
+        "medium": {
+          "A0": 0.24929526361327417,
+          "A1": 0.21775656591029613,
+          "A2": 0.022495743671327697,
+          "A3": 0.510452426805102
+        },
+        "high": {
+          "A0": 0.009489519662842949,
+          "A1": 0.3290211839571297,
+          "A2": 0.034064584554411234,
+          "A3": 0.6274247118256161
+        }
+      }
+    }
+  }
+}
