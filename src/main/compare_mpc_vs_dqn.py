@@ -16,9 +16,9 @@ if str(SRC_ROOT) not in sys.path:
 
 from mpc.solvers.fc_dp0_curve import h2_kg_step_dp0_quadratic
 from formal_paths import formal_checkpoint_path
+from utils.formal_operating_dataset import load_formal_operating_split
 
 
-VOYAGE_IDS = tuple(f"voyage_{index:03d}" for index in range(60, 67))
 SOC_REFERENCE = 0.55
 DT_SECONDS = 1.0
 FUEL_CELL_RATED_KW = 600.0
@@ -42,6 +42,12 @@ SUMMARY_COLUMNS = (
     "solver_failure_count",
     "episode_steps",
 )
+
+
+def formal_test_voyage_ids() -> tuple[str, ...]:
+    return load_formal_operating_split().test_segments
+
+
 METRIC_COLUMNS = (
     "voyage_id",
     "controller",
@@ -303,7 +309,7 @@ def main() -> None:
     PLOT_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     metric_rows: list[dict[str, object]] = []
-    for voyage_id in VOYAGE_IDS:
+    for voyage_id in formal_test_voyage_ids():
         if voyage_id not in fixed_a0_summary.index:
             raise ValueError(f"Missing Fixed_A0 summary row for {voyage_id}")
         if voyage_id not in dqn_summary.index:

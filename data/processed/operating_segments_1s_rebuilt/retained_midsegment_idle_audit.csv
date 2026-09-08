@@ -1,6 +1,0 @@
-﻿parent_voyage,segment_id,duration_s,longest_stationary_run_s,pure_idle_ratio,mean_load_kw
-6月5日08_00_6月5日19_00,operating_segment_0122,10290.0,690.0,0.0,312.23696654069767
-4月16日08_00_4月16日19_00,operating_segment_0021,10770.0,1530.0,0.0,270.3598767972222
-5月21日05_00_5月21日11_00,operating_segment_0085,9780.0,2310.0,0.0,179.39288808256882
-6月5日08_00_6月5日19_00,operating_segment_0123,5700.0,5700.0,0.0,29.415171136125657
-6月7日00_00_6月7日24_00,operating_segment_0133,7080.0,1290.0,0.0,158.73717813502105

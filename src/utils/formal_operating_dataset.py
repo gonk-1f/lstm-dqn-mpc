@@ -11,35 +11,25 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OPERATING_DATASET_ROOT = (
-    REPO_ROOT / "data" / "processed" / "operating_segments_1s_rebuilt"
+    REPO_ROOT / "data" / "processed" / "operating_dataset_final"
 )
-DEFAULT_SPLIT_MANIFEST = DEFAULT_OPERATING_DATASET_ROOT / "split_manifest.csv"
+DEFAULT_SPLIT_MANIFEST = (
+    DEFAULT_OPERATING_DATASET_ROOT / "metadata" / "sample_manifest.csv"
+)
 LOAD_COLUMN = "load_total_kw"
 SPLIT_NAMES = ("train", "validation", "test")
-EXPECTED_PARENT_VOYAGE_COUNT = 66
-EXPECTED_SEGMENT_COUNT = 177
-EXPECTED_POINT_COUNT = 1_114_037
+EXPECTED_PARENT_VOYAGE_COUNT = 33
+EXPECTED_SEGMENT_COUNT = 34
+EXPECTED_POINT_COUNT = 208_418
 EXPECTED_SPLIT_POINT_COUNTS = {
-    "train": 796_249,
-    "validation": 248_867,
-    "test": 68_921,
+    "train": 123_294,
+    "validation": 37_866,
+    "test": 47_258,
 }
 
-# These files remain part of the frozen dataset.  They are excluded only from
-# ordinary controller learning/checkpoint selection because the documented
-# device limits make them infeasible from the formal initial SOC of 0.55.
-# Evidence: independent ideal energy feasibility audit, NOT DQN control failure.
-# Segment 0158 remains in normal validation; no files or manifest rows are removed.
-PHYSICAL_INFEASIBLE_STRESS_CASES: dict[str, dict[str, str]] = {
-    "operating_segment_0137": {
-        "split": "train",
-        "reason": "energy_capacity_infeasible",
-    },
-    "operating_segment_0160": {
-        "split": "validation",
-        "reason": "energy_capacity_infeasible",
-    },
-}
+# The final dataset admits only independently feasible formal samples. Any
+# rejected physical stress case remains outside the train/validation/test manifest.
+PHYSICAL_INFEASIBLE_STRESS_CASES: dict[str, dict[str, str]] = {}
 
 
 @dataclass(frozen=True)
@@ -124,15 +114,31 @@ def _path_within(root: Path, relative_path: str) -> Path:
     return path
 
 
+def _read_split_manifest(root: Path) -> pd.DataFrame:
+    final_path = root / "metadata" / "sample_manifest.csv"
+    if not final_path.is_file():
+        raise FileNotFoundError(f"formal split manifest is missing: {final_path}")
+    manifest = pd.read_csv(final_path)
+    final_required = {"parent", "sample_id", "relative_path", "split"}
+    missing = final_required.difference(manifest.columns)
+    if missing:
+        raise ValueError(f"formal sample manifest is missing columns: {sorted(missing)}")
+    manifest = manifest.loc[manifest["split"].isin(SPLIT_NAMES)].copy()
+    manifest = manifest.rename(columns={
+        "parent": "parent_voyage",
+        "sample_id": "segment_id",
+        "relative_path": "one_second_csv",
+        "point_count_1s": "num_1s_points",
+    })
+    return manifest
+
+
 def load_formal_operating_split(
     dataset_root: str | Path = DEFAULT_OPERATING_DATASET_ROOT,
 ) -> OperatingSegmentSplit:
     """Load the one authoritative CSV split without any legacy fallback."""
     root = _resolve_dataset_root(dataset_root)
-    manifest_path = root / "split_manifest.csv"
-    if not manifest_path.is_file():
-        raise FileNotFoundError(f"formal split manifest is missing: {manifest_path}")
-    manifest = pd.read_csv(manifest_path)
+    manifest = _read_split_manifest(root)
     required = {"parent_voyage", "segment_id", "one_second_csv", "split"}
     missing = required.difference(manifest.columns)
     if missing:
@@ -256,8 +262,11 @@ def audit_formal_operating_dataset(
         point_count += len(loads)
         negative_count += int((loads < 0.0).sum())
         split_points[str(row.split)] += len(loads)
-    final_directory = root / "operating_segments_1s"
-    actual_paths = {path.resolve() for path in final_directory.glob("*.csv")}
+    actual_paths = {
+        path.resolve()
+        for directory in [root / name for name in SPLIT_NAMES]
+        for path in directory.glob("*.csv")
+    }
     parent_split_counts = split.manifest.groupby("parent_voyage")["split"].nunique()
     return FormalDatasetAudit(
         parent_voyage_count=int(split.manifest["parent_voyage"].nunique()),

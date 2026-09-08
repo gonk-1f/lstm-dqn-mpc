@@ -102,11 +102,11 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.require_api()
         split = training.load_voyage_split(training.DEFAULT_SPLIT_MANIFEST)
 
-        self.assertEqual(len(split.train_segments), 144)
-        self.assertEqual(len(split.validation_segments), 23)
-        self.assertEqual(len(split.test_segments), 10)
-        self.assertEqual(len(split.train_parents), 46)
-        self.assertEqual(len(split.validation_parents), 13)
+        self.assertEqual(len(split.train_segments), 20)
+        self.assertEqual(len(split.validation_segments), 6)
+        self.assertEqual(len(split.test_segments), 8)
+        self.assertEqual(len(split.train_parents), 20)
+        self.assertEqual(len(split.validation_parents), 6)
         self.assertEqual(len(split.test_parents), 7)
 
         train = set(split.train_segments)
@@ -115,9 +115,9 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.assertFalse(train & validation)
         self.assertFalse(train & test)
         self.assertFalse(validation & test)
-        self.assertEqual(len(train | validation | test), 177)
+        self.assertEqual(len(train | validation | test), 34)
         self.assertTrue(
-            all(identifier.startswith("operating_segment_") for identifier in train | validation | test)
+            all(identifier.startswith(("train_parent_", "validation_parent_", "test_parent_")) for identifier in train | validation | test)
         )
 
     def test_effective_training_and_validation_exclude_only_physical_stress_cases(
@@ -125,17 +125,13 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
     ) -> None:
         split = training.load_voyage_split(training.DEFAULT_SPLIT_MANIFEST)
 
-        self.assertEqual(len(split.effective_train_segments), 143)
-        self.assertEqual(len(split.effective_validation_segments), 22)
-        self.assertNotIn("operating_segment_0137", split.effective_train_segments)
-        self.assertNotIn("operating_segment_0160", split.effective_validation_segments)
-        self.assertIn("operating_segment_0158", split.effective_validation_segments)
-        self.assertIn("operating_segment_0137", split.train_segments)
-        self.assertIn("operating_segment_0160", split.validation_segments)
+        self.assertEqual(split.effective_train_segments, split.train_segments)
+        self.assertEqual(split.effective_validation_segments, split.validation_segments)
+        self.assertEqual(training.PHYSICAL_INFEASIBLE_STRESS_CASES, {})
 
         statistics = training.effective_split_statistics(split)
-        self.assertEqual(statistics["train"], {"segment_count": 143, "point_count": 790758})
-        self.assertEqual(statistics["validation"], {"segment_count": 22, "point_count": 228048})
+        self.assertEqual(statistics["train"], {"segment_count": 20, "point_count": 123294})
+        self.assertEqual(statistics["validation"], {"segment_count": 6, "point_count": 37866})
 
     def test_formal_configuration_uses_long_horizon_gamma(self) -> None:
         runtime = training.create_training_runtime(self.make_config())

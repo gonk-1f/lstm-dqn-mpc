@@ -140,9 +140,13 @@ def load_voyage_split(
     split_path: str | Path = DEFAULT_SPLIT_MANIFEST,
 ) -> VoyageSplit:
     path = Path(split_path).resolve()
-    if path.name != "split_manifest.csv":
-        raise ValueError("formal DQN-MPC requires split_manifest.csv")
-    return load_formal_operating_split(path.parent)
+    if path.name == "sample_manifest.csv" and path.parent.name == "metadata":
+        dataset_root = path.parent.parent
+    else:
+        raise ValueError(
+            "formal DQN-MPC requires metadata/sample_manifest.csv"
+        )
+    return load_formal_operating_split(dataset_root)
 
 
 def load_operating_segment_loads(

@@ -7,27 +7,29 @@
 原始约30 s设备 CSV 位于桌面“氢舟一号”（只读）。正式 1 s 负荷数据位于：
 
 ```text
-data/processed/operating_segments_1s_rebuilt/
+data/processed/operating_dataset_final/
 ```
 
-先在原始层审核20路正式通道、排除无效与外部充电、提取混合动力 operating segment；再于每段统一30 s参考节点先求 `P_fc_total + P_batt_total`，对总负荷使用 PCHIP 重构到1 s。正式列仅为 `timestamp`、`time_s`、`load_total_kw`；不对设备通道分别插值，也不对负荷无条件裁剪。
+先在原始层审核 8 路 FC 与 12 个 battery cluster，按
+`P_batt_cluster=-U*I/1000` 重构电池功率，再计算
+`P_load=P_fc_total+P_batt_total`。排除外部充电、异常和物理不可行区间后，
+只对已接受航段的总负荷使用 PCHIP 重构到 1 s，不跨缺口插值。
+`total_load_excels/` 的电池量来自 BDM，不属于正式数据链路。
 
 segment 继承 parent voyage 划分，不跨 parent 泄漏：
 
 | Split | Parent voyage | 当前 segment 数量 |
 | --- | --- | ---: |
-| Train | 46 parent voyages | 144 |
-| Validation | 13 parent voyages | 23 |
-| Test | 7 parent voyages | 10 |
+| Train | 20 used parents | 20 |
+| Validation | 6 used parents | 6 |
+| Test | 7 used parents | 8 |
 
-冻结的 `split_manifest.csv` 保持上述原始划分不变。普通 DQN 训练与
-checkpoint-selection 会从有效列表中排除两个已审计的物理不可行 stress case：
-`operating_segment_0137`（train）和 `operating_segment_0160`（validation）。
-它们的 CSV 仍保留，可用于显式 stress-case 分析；`operating_segment_0158`
-继续属于普通 validation。有效列表为 143 train segments / 790,758 点和
-22 validation segments / 228,048 点。
-
-权威划分文件为 `data/processed/operating_segments_1s_rebuilt/split_manifest.csv`。最终数据共 66 个 parent voyages、177 个 segments、1,114,037 条 1 s 样本；训练与 validation 不读取 test segment，每段为独立 episode，初始 SOC 固定0.55。旧 natural cubic spline 数据已废弃。
+冻结的 parent 角色仍为 46/13/7；通过正式语义和物理筛选后，共使用 33 个
+parent，形成 34 条正式样本和 208,418 个 1 s 点。权威样本清单为
+`data/processed/operating_dataset_final/metadata/sample_manifest.csv`，parent
+角色清单为 `metadata/parent_split_manifest.csv`。所有正式样本均已通过独立
+物理可行性审计；训练和 validation 不读取 Test，每条样本作为独立 episode，
+控制仿真初始 SOC 为 0.55。
 
 ## 控制结构
 
@@ -146,7 +148,9 @@ python -m pip install -r requirements.txt
 构建/核验数据：
 
 ```powershell
-python src/main/build_rebuilt_operating_segment_dataset.py
+python -X utf8 -B src/main/build_final_operating_dataset.py `
+  --raw-root "C:/Users/20883/OneDrive/Desktop/氢舟一号" `
+  --output-root data/processed/operating_dataset_final_repeat
 ```
 
 正式 MLP 训练与 validation（两轮完整 train voyages）：
