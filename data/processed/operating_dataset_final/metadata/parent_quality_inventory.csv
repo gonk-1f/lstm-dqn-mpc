@@ -1,0 +1,67 @@
+﻿parent,chronological_index,original_chronological_split,feasible_natural_voyages,infeasible_natural_voyages,unknown_feasibility_natural_voyages,natural_duration_s,mean_load_kw,above600_deficit_energy_kwh,delta_abs_p95_kw_per_s,final_split,selection_reason
+3月25日14_00_3月25日17_00,1,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+3月26日14_00_3月26日16_00,2,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+3月27日07_00_3月27日11_00,3,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+3月28日08_00_3月28日11_00,4,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+3月29日08_00_3月29日15_00,5,train,1,0,0,7140,325.230154588,0,1.85576009657,validation,validation: remaining independent parent with complete feasible natural operation
+4月2日14_00_4月2日17_00,6,train,1,0,0,6660,314.088339172,0,4.07842235946,validation,validation: remaining independent parent with complete feasible natural operation
+4月3日08_00_4月3日11_00,7,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月7日08_00_4月7日12_00,8,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月8日08_00_4月8日12_00,9,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月9日08_00_4月9日11_00,10,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月12日08_00_4月12日16_00,11,train,1,0,0,1200,131.679455047,0.0292066319314,8.22060729445,test,test raw-feature representative order 4; complete natural and independently feasible
+4月15日08_00_4月15日17_00,12,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月16日08_00_4月16日19_00,13,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月17日07_00_4月17日17_00,14,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月18日12_00_4月18日18_00,15,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月21日08_00_4月21日16_00,16,train,1,0,0,7620,289.494775233,4.14284945042,2.52397957254,validation,validation: remaining independent parent with complete feasible natural operation
+4月22日14_00_4月22日17_00,17,train,1,0,0,8820,253.75657924,1.9563465529,2.51339551997,test,test raw-feature representative order 3; complete natural and independently feasible
+4月23日13_00_4月23日18_00,18,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月24日07_00_4月24日17_00,19,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月25日08_00_4月25日18_00,20,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月28日08_00_4月28日12_00,21,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+4月29日08_00_4月29日18_00,22,train,1,0,0,8220,462.347759565,32.2818451051,2.17393454888,validation,validation: remaining independent parent with complete feasible natural operation
+4月30日08_00_4月30日15_00,23,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月7日08_00_5月7日18_00,24,train,1,0,0,810,66.2085239601,0,1.69470251619,test,test raw-feature representative order 6; complete natural and independently feasible
+5月8日08_00_5月8日17_00,25,train,1,0,0,6960,336.56125776,3.67006448415,1.99980884717,test,test raw-feature representative order 7; complete natural and independently feasible
+5月9日08_00_5月9日17_00,26,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月10日08_00_5月10日10_00,27,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月11日08_00_5月11日11_00,28,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月13日08_00_5月13日11_00,29,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月14日12_00_5月14日19_00,30,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月15日08_00_5月15日17_00,31,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月17日08_00_5月17日18_00,32,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月20日08_00_5月20日18_00,33,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月21日05_00_5月21日11_00,34,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月24日08_00_5月24日19_00,35,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月27日08_00_5月27日19_00,36,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月29日14_00_5月29日17_00,37,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+5月30日05_00_5月30日17_00,38,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+6月4日08_00_6月4日12_00,39,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+6月5日08_00_6月5日19_00,40,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+6月6日10_00_6月6日21_00,41,train,2,0,0,14940,466.593528714,263.309200378,2.24512319241,test,test raw-feature representative order 2; complete natural and independently feasible
+6月7日00_00_6月7日24_00,42,train,1,0,0,7410,159.387769784,0,1.40433418346,validation,validation: remaining independent parent with complete feasible natural operation
+6月11日08_00_6月11日11_00,43,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+6月12日14_00_6月12日17_00,44,train,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+6月13日08_00_6月13日14_00,45,train,1,0,0,7860,285.866687005,0,1.2028392788,test,test raw-feature representative order 5; complete natural and independently feasible
+6月14日08_00_6月15日18_00,46,train,1,0,0,810,40.1948068458,0,2.14140106709,validation,validation: remaining independent parent with complete feasible natural operation
+6月17日09_00_6月17日16_00,47,validation,0,0,0,0,0,0,0,validation,validation: original chronological validation parent retained as supplementary quality-screened operation
+6月20日08_00_6月20日16_00,48,validation,0,0,0,0,0,0,0,validation,validation: original chronological validation parent retained as supplementary quality-screened operation
+6月26日08_00_6月26日13_00,49,validation,0,0,0,0,0,0,0,validation,validation: original chronological validation parent retained as supplementary quality-screened operation
+6月28日08_00_6月28日15_00,50,validation,0,0,0,0,0,0,0,validation,validation: original chronological validation parent retained as supplementary quality-screened operation
+6月30日05_00_6月30日11_00,51,validation,0,0,0,0,0,0,0,validation,validation: original chronological validation parent retained as supplementary quality-screened operation
+7月2日14_00_7月2日18_00,52,validation,0,0,0,0,0,0,0,validation,validation: original chronological validation parent retained as supplementary quality-screened operation
+7月3日08_00_7月3日16_00,53,validation,0,0,0,0,0,0,0,validation,validation: original chronological validation parent retained as supplementary quality-screened operation
+7月9日08_00_7月9日16_00,54,validation,1,0,0,6660,307.887454305,0,2.16918582222,test,test raw-feature representative order 1; complete natural and independently feasible
+7月10日08_00_7月10日18_00,55,validation,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+7月11日06_00_7月12日10_00,56,validation,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+7月15日14_00_7月15日16_00,57,validation,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+7月18日08_00_7月18日12_00,58,validation,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+7月19日07_00_7月19日09_00,59,validation,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+7月22日08_00_7月22日11_00,60,test,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+7月23日12_00_7月23日15_00,61,test,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+7月24日14_00_7月24日17_00,62,test,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+7月25日08_00_7月25日17_00,63,test,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+7月26日11_00_7月26日13_00,64,test,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+7月29日14_00_7月29日17_00,65,test,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening
+7月31日08_00_7月31日11_00,66,test,0,0,0,0,0,0,0,train,training: remaining independent parent; normal operating fragments retained only after semantic and physical screening

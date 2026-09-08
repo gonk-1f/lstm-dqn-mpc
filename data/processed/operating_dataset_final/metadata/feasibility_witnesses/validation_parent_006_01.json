@@ -1,0 +1,47 @@
+{
+  "constraints": {
+    "battery_capacity_kwh": 624.0,
+    "battery_kw": [
+      -624.0,
+      1248.0
+    ],
+    "battery_model": "lossless",
+    "fc_kw": [
+      0.0,
+      600.0
+    ],
+    "fc_ramp_kw_per_s": 48.0,
+    "soc": [
+      0.2,
+      0.8
+    ],
+    "terminal_soc_target": null
+  },
+  "executed_step_count": 6660,
+  "feasible": true,
+  "final_soc": 0.5499999999999997,
+  "initialization": {
+    "dt_seconds": 1.0,
+    "first_executed_load_index": 1,
+    "initial_soc": 0.55,
+    "previous_fc_kw": 36.46695
+  },
+  "max_soc": 0.6050177320160967,
+  "method": "O(n) ramp-envelope convex allocation with independently checked physical witness",
+  "min_soc": 0.47017886200003184,
+  "sample_count": 6661,
+  "solver_message": null,
+  "solver_status": null,
+  "status": "feasible",
+  "witness_validation": {
+    "battery_bound_max_violation_kw": 0.0,
+    "fc_bound_max_violation_kw": 0.0,
+    "fc_ramp_max_violation_kw": 0.0,
+    "power_balance_max_abs_kw": 2.842170943040401e-14,
+    "power_tolerance_kw": 1e-06,
+    "soc_bound_max_violation": 0.0,
+    "soc_dynamics_max_abs": 1.092198163507585e-16,
+    "soc_tolerance": 1e-09,
+    "valid": true
+  }
+}

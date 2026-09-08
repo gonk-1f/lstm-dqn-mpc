@@ -1,0 +1,22 @@
+{
+  "checks_include": [
+    "parent role consistency",
+    "no overlapping source ownership",
+    "all formal source states eligible",
+    "finite nonnegative load",
+    "1 s grid",
+    "source gaps",
+    "observed endpoints",
+    "full source ledger",
+    "strict Test candidate boundary audit",
+    "prohibited 8-FC plus BDM source absence",
+    "serialized test power/SOC/ramp witnesses"
+  ],
+  "errors": [],
+  "formal_reference_points_checked": 6980,
+  "formal_samples_checked": 34,
+  "passed": true,
+  "reference_points_checked": 54817,
+  "samples_checked": 34,
+  "test_witnesses_independently_recomputed": 8
+}

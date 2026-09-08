@@ -1,0 +1,179 @@
+﻿legacy_segment_id,parent,new_sample_id,new_split,use,overlap_start,overlap_end
+operating_segment_0001,3月25日14_00_3月25日17_00,,excluded,post-selection provenance only,,
+operating_segment_0002,3月25日14_00_3月25日17_00,train_parent_001_01,train,"post-selection provenance only, not selection input",2024-03-25 14:35:25,2024-03-25 16:50:26
+operating_segment_0003,3月26日14_00_3月26日16_00,,excluded,post-selection provenance only,,
+operating_segment_0004,3月27日07_00_3月27日11_00,,excluded,post-selection provenance only,,
+operating_segment_0005,3月28日08_00_3月28日11_00,,excluded,post-selection provenance only,,
+operating_segment_0006,3月28日08_00_3月28日11_00,,excluded,post-selection provenance only,,
+operating_segment_0007,3月29日08_00_3月29日15_00,validation_parent_005_01,validation,"post-selection provenance only, not selection input",2024-03-29 12:31:05,2024-03-29 14:30:05
+operating_segment_0008,4月2日14_00_4月2日17_00,validation_parent_006_01,validation,"post-selection provenance only, not selection input",2024-04-02 14:28:13,2024-04-02 16:19:13
+operating_segment_0009,4月3日08_00_4月3日11_00,,excluded,post-selection provenance only,,
+operating_segment_0010,4月7日08_00_4月7日12_00,,excluded,post-selection provenance only,,
+operating_segment_0011,4月7日08_00_4月7日12_00,,excluded,post-selection provenance only,,
+operating_segment_0012,4月8日08_00_4月8日12_00,train_parent_009_01,train,"post-selection provenance only, not selection input",2024-04-08 08:50:56,2024-04-08 11:33:56
+operating_segment_0013,4月9日08_00_4月9日11_00,train_parent_010_01,train,"post-selection provenance only, not selection input",2024-04-09 08:16:58,2024-04-09 10:30:28
+operating_segment_0014,4月12日08_00_4月12日16_00,test_parent_011_01,test,"post-selection provenance only, not selection input",2024-04-12 12:02:03,2024-04-12 12:22:03
+operating_segment_0015,4月15日08_00_4月15日17_00,,excluded,post-selection provenance only,,
+operating_segment_0016,4月15日08_00_4月15日17_00,,excluded,post-selection provenance only,,
+operating_segment_0017,4月15日08_00_4月15日17_00,,excluded,post-selection provenance only,,
+operating_segment_0018,4月15日08_00_4月15日17_00,,excluded,post-selection provenance only,,
+operating_segment_0019,4月15日08_00_4月15日17_00,,excluded,post-selection provenance only,,
+operating_segment_0020,4月15日08_00_4月15日17_00,train_parent_012_01,train,"post-selection provenance only, not selection input",2024-04-15 15:15:08,2024-04-15 16:36:39
+operating_segment_0021,4月16日08_00_4月16日19_00,train_parent_013_01,train,"post-selection provenance only, not selection input",2024-04-16 08:26:40,2024-04-16 11:26:10
+operating_segment_0022,4月16日08_00_4月16日19_00,,excluded,post-selection provenance only,,
+operating_segment_0023,4月16日08_00_4月16日19_00,,excluded,post-selection provenance only,,
+operating_segment_0024,4月16日08_00_4月16日19_00,,excluded,post-selection provenance only,,
+operating_segment_0025,4月16日08_00_4月16日19_00,,excluded,post-selection provenance only,,
+operating_segment_0026,4月17日07_00_4月17日17_00,,excluded,post-selection provenance only,,
+operating_segment_0027,4月17日07_00_4月17日17_00,,excluded,post-selection provenance only,,
+operating_segment_0028,4月18日12_00_4月18日18_00,train_parent_015_01,train,"post-selection provenance only, not selection input",2024-04-18 15:09:43,2024-04-18 17:03:43
+operating_segment_0029,4月18日12_00_4月18日18_00,,excluded,post-selection provenance only,,
+operating_segment_0030,4月21日08_00_4月21日16_00,,excluded,post-selection provenance only,,
+operating_segment_0031,4月21日08_00_4月21日16_00,validation_parent_016_01,validation,"post-selection provenance only, not selection input",2024-04-21 13:07:18,2024-04-21 15:14:18
+operating_segment_0032,4月22日14_00_4月22日17_00,,excluded,post-selection provenance only,,
+operating_segment_0033,4月22日14_00_4月22日17_00,,excluded,post-selection provenance only,,
+operating_segment_0034,4月22日14_00_4月22日17_00,test_parent_017_01,test,"post-selection provenance only, not selection input",2024-04-22 14:22:50,2024-04-22 16:45:50
+operating_segment_0035,4月23日13_00_4月23日18_00,,excluded,post-selection provenance only,,
+operating_segment_0036,4月24日07_00_4月24日17_00,,excluded,post-selection provenance only,,
+operating_segment_0037,4月25日08_00_4月25日18_00,,excluded,post-selection provenance only,,
+operating_segment_0038,4月25日08_00_4月25日18_00,train_parent_020_01,train,"post-selection provenance only, not selection input",2024-04-25 14:47:56,2024-04-25 14:58:26
+operating_segment_0039,4月25日08_00_4月25日18_00,,excluded,post-selection provenance only,,
+operating_segment_0040,4月28日08_00_4月28日12_00,,excluded,post-selection provenance only,,
+operating_segment_0041,4月29日08_00_4月29日18_00,validation_parent_022_01,validation,"post-selection provenance only, not selection input",2024-04-29 08:27:07,2024-04-29 10:44:07
+operating_segment_0042,4月29日08_00_4月29日18_00,,excluded,post-selection provenance only,,
+operating_segment_0043,4月29日08_00_4月29日18_00,,excluded,post-selection provenance only,,
+operating_segment_0044,4月30日08_00_4月30日15_00,,excluded,post-selection provenance only,,
+operating_segment_0045,4月30日08_00_4月30日15_00,,excluded,post-selection provenance only,,
+operating_segment_0046,4月30日08_00_4月30日15_00,,excluded,post-selection provenance only,,
+operating_segment_0047,5月7日08_00_5月7日18_00,,excluded,post-selection provenance only,,
+operating_segment_0048,5月7日08_00_5月7日18_00,test_parent_024_01,test,"post-selection provenance only, not selection input",2024-05-07 16:50:01,2024-05-07 17:03:31
+operating_segment_0049,5月8日08_00_5月8日17_00,test_parent_025_01,test,"post-selection provenance only, not selection input",2024-05-08 14:11:05,2024-05-08 16:07:05
+operating_segment_0050,5月9日08_00_5月9日17_00,,excluded,post-selection provenance only,,
+operating_segment_0051,5月9日08_00_5月9日17_00,,excluded,post-selection provenance only,,
+operating_segment_0052,5月9日08_00_5月9日17_00,,excluded,post-selection provenance only,,
+operating_segment_0053,5月9日08_00_5月9日17_00,,excluded,post-selection provenance only,,
+operating_segment_0054,5月10日08_00_5月10日10_00,train_parent_027_01,train,"post-selection provenance only, not selection input",2024-05-10 08:30:41,2024-05-10 09:19:11
+operating_segment_0055,5月11日08_00_5月11日11_00,,excluded,post-selection provenance only,,
+operating_segment_0056,5月13日08_00_5月13日11_00,train_parent_029_01,train,"post-selection provenance only, not selection input",2024-05-13 08:57:50,2024-05-13 10:16:21
+operating_segment_0057,5月14日12_00_5月14日19_00,,excluded,post-selection provenance only,,
+operating_segment_0058,5月14日12_00_5月14日19_00,,excluded,post-selection provenance only,,
+operating_segment_0059,5月14日12_00_5月14日19_00,,excluded,post-selection provenance only,,
+operating_segment_0060,5月14日12_00_5月14日19_00,,excluded,post-selection provenance only,,
+operating_segment_0061,5月14日12_00_5月14日19_00,train_parent_030_01,train,"post-selection provenance only, not selection input",2024-05-14 16:42:23,2024-05-14 17:07:54
+operating_segment_0062,5月14日12_00_5月14日19_00,train_parent_030_01,train,"post-selection provenance only, not selection input",2024-05-14 17:08:53,2024-05-14 18:06:23
+operating_segment_0063,5月14日12_00_5月14日19_00,train_parent_030_01,train,"post-selection provenance only, not selection input",2024-05-14 18:07:23,2024-05-14 18:29:23
+operating_segment_0064,5月15日08_00_5月15日17_00,train_parent_031_01,train,"post-selection provenance only, not selection input",2024-05-15 08:21:24,2024-05-15 08:32:54
+operating_segment_0065,5月15日08_00_5月15日17_00,,excluded,post-selection provenance only,,
+operating_segment_0066,5月15日08_00_5月15日17_00,,excluded,post-selection provenance only,,
+operating_segment_0067,5月15日08_00_5月15日17_00,,excluded,post-selection provenance only,,
+operating_segment_0068,5月15日08_00_5月15日17_00,,excluded,post-selection provenance only,,
+operating_segment_0069,5月15日08_00_5月15日17_00,,excluded,post-selection provenance only,,
+operating_segment_0070,5月15日08_00_5月15日17_00,,excluded,post-selection provenance only,,
+operating_segment_0071,5月17日08_00_5月17日18_00,,excluded,post-selection provenance only,,
+operating_segment_0072,5月17日08_00_5月17日18_00,,excluded,post-selection provenance only,,
+operating_segment_0073,5月17日08_00_5月17日18_00,,excluded,post-selection provenance only,,
+operating_segment_0074,5月17日08_00_5月17日18_00,,excluded,post-selection provenance only,,
+operating_segment_0075,5月17日08_00_5月17日18_00,,excluded,post-selection provenance only,,
+operating_segment_0076,5月17日08_00_5月17日18_00,,excluded,post-selection provenance only,,
+operating_segment_0077,5月20日08_00_5月20日18_00,,excluded,post-selection provenance only,,
+operating_segment_0078,5月20日08_00_5月20日18_00,,excluded,post-selection provenance only,,
+operating_segment_0079,5月20日08_00_5月20日18_00,,excluded,post-selection provenance only,,
+operating_segment_0080,5月20日08_00_5月20日18_00,,excluded,post-selection provenance only,,
+operating_segment_0081,5月20日08_00_5月20日18_00,,excluded,post-selection provenance only,,
+operating_segment_0082,5月20日08_00_5月20日18_00,,excluded,post-selection provenance only,,
+operating_segment_0083,5月20日08_00_5月20日18_00,,excluded,post-selection provenance only,,
+operating_segment_0084,5月21日05_00_5月21日11_00,,excluded,post-selection provenance only,,
+operating_segment_0085,5月21日05_00_5月21日11_00,,excluded,post-selection provenance only,,
+operating_segment_0086,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0087,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0088,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0089,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0090,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0091,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0092,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0093,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0094,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0095,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0096,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0097,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0098,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0099,5月24日08_00_5月24日19_00,,excluded,post-selection provenance only,,
+operating_segment_0100,5月27日08_00_5月27日19_00,train_parent_036_01,train,"post-selection provenance only, not selection input",2024-05-27 08:18:50,2024-05-27 10:37:51
+operating_segment_0101,5月27日08_00_5月27日19_00,train_parent_036_01,train,"post-selection provenance only, not selection input",2024-05-27 10:38:51,2024-05-27 11:04:21
+operating_segment_0102,5月27日08_00_5月27日19_00,,excluded,post-selection provenance only,,
+operating_segment_0103,5月27日08_00_5月27日19_00,,excluded,post-selection provenance only,,
+operating_segment_0104,5月29日14_00_5月29日17_00,,excluded,post-selection provenance only,,
+operating_segment_0105,5月29日14_00_5月29日17_00,,excluded,post-selection provenance only,,
+operating_segment_0106,5月29日14_00_5月29日17_00,,excluded,post-selection provenance only,,
+operating_segment_0107,5月29日14_00_5月29日17_00,,excluded,post-selection provenance only,,
+operating_segment_0108,5月29日14_00_5月29日17_00,,excluded,post-selection provenance only,,
+operating_segment_0109,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0110,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0111,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0112,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0113,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0114,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0115,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0116,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0117,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0118,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0119,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0120,5月30日05_00_5月30日17_00,,excluded,post-selection provenance only,,
+operating_segment_0121,6月4日08_00_6月4日12_00,,excluded,post-selection provenance only,,
+operating_segment_0122,6月5日08_00_6月5日19_00,,excluded,post-selection provenance only,,
+operating_segment_0124,6月5日08_00_6月5日19_00,,excluded,post-selection provenance only,,
+operating_segment_0125,6月6日10_00_6月6日21_00,test_parent_041_01,test,"post-selection provenance only, not selection input",2024-06-06 11:00:47,2024-06-06 13:12:17
+operating_segment_0125,6月6日10_00_6月6日21_00,test_parent_041_02,test,"post-selection provenance only, not selection input",2024-06-06 15:38:17,2024-06-06 17:35:47
+operating_segment_0126,6月6日10_00_6月6日21_00,,excluded,post-selection provenance only,,
+operating_segment_0127,6月6日10_00_6月6日21_00,,excluded,post-selection provenance only,,
+operating_segment_0128,6月6日10_00_6月6日21_00,,excluded,post-selection provenance only,,
+operating_segment_0129,6月6日10_00_6月6日21_00,,excluded,post-selection provenance only,,
+operating_segment_0130,6月6日10_00_6月6日21_00,,excluded,post-selection provenance only,,
+operating_segment_0131,6月7日00_00_6月7日24_00,,excluded,post-selection provenance only,,
+operating_segment_0132,6月7日00_00_6月7日24_00,validation_parent_042_01,validation,"post-selection provenance only, not selection input",2024-06-07 09:11:48,2024-06-07 09:35:48
+operating_segment_0133,6月7日00_00_6月7日24_00,validation_parent_042_01,validation,"post-selection provenance only, not selection input",2024-06-07 09:36:48,2024-06-07 11:15:18
+operating_segment_0134,6月7日00_00_6月7日24_00,,excluded,post-selection provenance only,,
+operating_segment_0135,6月11日08_00_6月11日11_00,,excluded,post-selection provenance only,,
+operating_segment_0136,6月12日14_00_6月12日17_00,,excluded,post-selection provenance only,,
+operating_segment_0137,6月12日14_00_6月12日17_00,,excluded,post-selection provenance only,,
+operating_segment_0138,6月13日08_00_6月13日14_00,,excluded,post-selection provenance only,,
+operating_segment_0139,6月13日08_00_6月13日14_00,test_parent_045_01,test,"post-selection provenance only, not selection input",2024-06-13 11:32:39,2024-06-13 13:41:09
+operating_segment_0140,6月14日08_00_6月15日18_00,,excluded,post-selection provenance only,,
+operating_segment_0141,6月14日08_00_6月15日18_00,,excluded,post-selection provenance only,,
+operating_segment_0142,6月14日08_00_6月15日18_00,validation_parent_046_01,validation,"post-selection provenance only, not selection input",2024-06-15 00:12:16,2024-06-15 00:25:46
+operating_segment_0143,6月14日08_00_6月15日18_00,,excluded,post-selection provenance only,,
+operating_segment_0144,6月14日08_00_6月15日18_00,,excluded,post-selection provenance only,,
+operating_segment_0145,6月14日08_00_6月15日18_00,,excluded,post-selection provenance only,,
+operating_segment_0146,6月17日09_00_6月17日16_00,,excluded,post-selection provenance only,,
+operating_segment_0147,6月17日09_00_6月17日16_00,,excluded,post-selection provenance only,,
+operating_segment_0148,6月20日08_00_6月20日16_00,,excluded,post-selection provenance only,,
+operating_segment_0149,6月20日08_00_6月20日16_00,,excluded,post-selection provenance only,,
+operating_segment_0150,6月26日08_00_6月26日13_00,,excluded,post-selection provenance only,,
+operating_segment_0151,6月26日08_00_6月26日13_00,,excluded,post-selection provenance only,,
+operating_segment_0152,6月28日08_00_6月28日15_00,,excluded,post-selection provenance only,,
+operating_segment_0153,6月30日05_00_6月30日11_00,,excluded,post-selection provenance only,,
+operating_segment_0154,6月30日05_00_6月30日11_00,,excluded,post-selection provenance only,,
+operating_segment_0155,6月30日05_00_6月30日11_00,,excluded,post-selection provenance only,,
+operating_segment_0156,7月2日14_00_7月2日18_00,,excluded,post-selection provenance only,,
+operating_segment_0157,7月3日08_00_7月3日16_00,,excluded,post-selection provenance only,,
+operating_segment_0158,7月3日08_00_7月3日16_00,,excluded,post-selection provenance only,,
+operating_segment_0159,7月9日08_00_7月9日16_00,,excluded,post-selection provenance only,,
+operating_segment_0160,7月9日08_00_7月9日16_00,test_parent_054_01,test,"post-selection provenance only, not selection input",2024-07-09 14:02:20,2024-07-09 15:48:50
+operating_segment_0161,7月10日08_00_7月10日18_00,,excluded,post-selection provenance only,,
+operating_segment_0162,7月11日06_00_7月12日10_00,train_parent_056_01,train,"post-selection provenance only, not selection input",2024-07-11 12:35:03,2024-07-11 13:40:03
+operating_segment_0163,7月11日06_00_7月12日10_00,,excluded,post-selection provenance only,,
+operating_segment_0164,7月11日06_00_7月12日10_00,,excluded,post-selection provenance only,,
+operating_segment_0165,7月11日06_00_7月12日10_00,,excluded,post-selection provenance only,,
+operating_segment_0166,7月15日14_00_7月15日16_00,train_parent_057_01,train,"post-selection provenance only, not selection input",2024-07-15 14:19:13,2024-07-15 15:44:43
+operating_segment_0167,7月18日08_00_7月18日12_00,train_parent_058_01,train,"post-selection provenance only, not selection input",2024-07-18 08:46:50,2024-07-18 10:56:20
+operating_segment_0168,7月19日07_00_7月19日09_00,train_parent_059_01,train,"post-selection provenance only, not selection input",2024-07-19 07:35:22,2024-07-19 08:59:52
+operating_segment_0169,7月22日08_00_7月22日11_00,train_parent_060_01,train,"post-selection provenance only, not selection input",2024-07-22 08:56:58,2024-07-22 10:57:58
+operating_segment_0170,7月23日12_00_7月23日15_00,train_parent_061_01,train,"post-selection provenance only, not selection input",2024-07-23 12:24:01,2024-07-23 14:22:01
+operating_segment_0171,7月24日14_00_7月24日17_00,,excluded,post-selection provenance only,,
+operating_segment_0172,7月24日14_00_7月24日17_00,,excluded,post-selection provenance only,,
+operating_segment_0173,7月25日08_00_7月25日17_00,,excluded,post-selection provenance only,,
+operating_segment_0174,7月25日08_00_7月25日17_00,,excluded,post-selection provenance only,,
+operating_segment_0175,7月26日11_00_7月26日13_00,,excluded,post-selection provenance only,,
+operating_segment_0176,7月26日11_00_7月26日13_00,,excluded,post-selection provenance only,,
+operating_segment_0177,7月29日14_00_7月29日17_00,train_parent_065_01,train,"post-selection provenance only, not selection input",2024-07-29 14:27:13,2024-07-29 16:12:13
+operating_segment_0178,7月31日08_00_7月31日11_00,train_parent_066_01,train,"post-selection provenance only, not selection input",2024-07-31 08:35:17,2024-07-31 10:25:47

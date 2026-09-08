@@ -1,0 +1,12 @@
+﻿parent,start_time,end_time,duration_s,point_count,sailing_before,sailing_after,mean_load_kw,mean_fc_kw,has_excluded_supply,retained_formal_points,retained_formal_support_s,sample_ids,stop_kind
+4月8日08_00_4月8日12_00,2024-04-08 10:06:26,2024-04-08 10:09:26,210,7,True,True,152.794317143,0,False,7,210,train_parent_009_01,short_operational_stop
+4月8日08_00_4月8日12_00,2024-04-08 10:17:56,2024-04-08 10:22:56,330,11,True,True,99.7152752727,0,False,11,330,train_parent_009_01,short_operational_stop
+4月9日08_00_4月9日11_00,2024-04-09 09:32:58,2024-04-09 09:36:28,240,8,True,True,88.25080125,0,False,8,240,train_parent_010_01,short_operational_stop
+4月16日08_00_4月16日19_00,2024-04-16 08:32:40,2024-04-16 09:05:10,1980,66,True,True,73.4636610606,0,False,66,1980,train_parent_013_01,short_operational_stop
+4月16日08_00_4月16日19_00,2024-04-16 11:00:40,2024-04-16 11:18:40,1110,37,True,True,47.1717259459,0,False,37,1110,train_parent_013_01,short_operational_stop
+5月27日08_00_5月27日19_00,2024-05-27 08:41:50,2024-05-27 08:42:50,90,3,True,True,210.8288,0,False,3,90,train_parent_036_01,short_operational_stop
+5月27日08_00_5月27日19_00,2024-05-27 09:50:21,2024-05-27 10:01:21,690,23,True,True,55.8387612174,0,False,23,690,train_parent_036_01,short_operational_stop
+7月18日08_00_7月18日12_00,2024-07-18 10:03:20,2024-07-18 10:08:50,360,12,True,True,79.3117263333,0,False,12,360,train_parent_058_01,short_operational_stop
+7月18日08_00_7月18日12_00,2024-07-18 10:15:20,2024-07-18 10:17:50,180,6,True,True,169.249143333,0,False,6,180,train_parent_058_01,short_operational_stop
+7月19日07_00_7月19日09_00,2024-07-19 07:45:22,2024-07-19 08:05:52,1260,42,True,True,74.2946580952,0,False,42,1260,train_parent_059_01,short_operational_stop
+7月31日08_00_7月31日11_00,2024-07-31 09:34:47,2024-07-31 09:37:17,180,6,True,True,134.2687875,0,False,6,180,train_parent_066_01,short_operational_stop

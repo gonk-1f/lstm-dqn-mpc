@@ -1,0 +1,3301 @@
+{
+  "alignment": {
+    "beyond_legacy_1s_channel_records": 326,
+    "beyond_legacy_1s_power_reference_points": 27,
+    "formal_repaired_power_reference_points": 5449,
+    "repaired_channel_records": 307668,
+    "repaired_power_channel_records": 234006,
+    "unique_repaired_power_reference_points": 39429
+  },
+  "all_automated_checks_passed": true,
+  "charging_class_summary": {
+    "ambiguous_external_supply": {
+      "interval_count": 121,
+      "support_duration_s": 156675.0
+    },
+    "confirmed_shore": {
+      "interval_count": 40,
+      "support_duration_s": 142294.0
+    },
+    "onboard_fc_charging": {
+      "interval_count": 174,
+      "support_duration_s": 51062.0
+    }
+  },
+  "checks": {
+    "all_formal_samples_physically_feasible": true,
+    "all_three_formal_roles_nonempty": true,
+    "every_sample_grid_and_load_checked": true,
+    "formal_source_search_excludes_total_load_excels": true,
+    "independent_serialized_artifacts_pass": true,
+    "no_controller_or_historical_outcome_used": true,
+    "original_source_hashes_unchanged": true,
+    "parent_leakage_free": true,
+    "selection_precedes_PCHIP": true,
+    "source_point_accounting_complete": true,
+    "test_all_complete_natural": true,
+    "test_all_physically_feasible": true,
+    "test_all_shore_free": true,
+    "test_boundary_audit_matches_frozen_manifest": true
+  },
+  "coverage": {
+    "test": {
+      "above600_deficit_energy_kwh": 268.96481804651137,
+      "above600_duration_s": 6423,
+      "above600_load_energy_kwh": 1339.4648180465115,
+      "assigned_parent_count": 7,
+      "delta_abs_max_kw_per_s": 26.992351396792344,
+      "delta_abs_mean_kw_per_s": 0.6004609773968255,
+      "delta_abs_p95_kw_per_s": 2.266945311507767,
+      "delta_abs_p99_kw_per_s": 8.308297323122671,
+      "duration_hours": 13.125,
+      "duration_quantiles_s": {
+        "0.0": 810.0,
+        "0.25": 5295.0,
+        "0.5": 7005.0,
+        "0.75": 7867.5,
+        "1.0": 8820.0
+      },
+      "duration_s": 47250,
+      "high_load_duration_s": 9278,
+      "load_max_kw": 901.9051,
+      "load_mean_kw": 339.906741966145,
+      "load_median_kw": 339.1875152838785,
+      "load_p90_kw": 715.981126830599,
+      "load_p95_kw": 789.2760721767312,
+      "load_p99_kw": 821.1443989884614,
+      "low_load_duration_s": 10010,
+      "medium_load_duration_s": 27962,
+      "onboard_charging_duration_s": 2700.0,
+      "onboard_charging_interval_count": 7,
+      "parent_sample_distribution": {
+        "4月12日08_00_4月12日16_00": 1,
+        "4月22日14_00_4月22日17_00": 1,
+        "5月7日08_00_5月7日18_00": 1,
+        "5月8日08_00_5月8日17_00": 1,
+        "6月13日08_00_6月13日14_00": 1,
+        "6月6日10_00_6月6日21_00": 2,
+        "7月9日08_00_7月9日16_00": 1
+      },
+      "sailing_duration_s": 43051.0,
+      "sample_count": 8,
+      "short_stop_count": 0,
+      "stationary_duration_s": 4199.0,
+      "used_parent_count": 7
+    },
+    "train": {
+      "above600_deficit_energy_kwh": 147.7999908153305,
+      "above600_duration_s": 6284,
+      "above600_load_energy_kwh": 1195.1333241486639,
+      "assigned_parent_count": 46,
+      "delta_abs_max_kw_per_s": 29.88705418962968,
+      "delta_abs_mean_kw_per_s": 0.7200632394016581,
+      "delta_abs_p95_kw_per_s": 3.189268111456958,
+      "delta_abs_p99_kw_per_s": 8.159831425185189,
+      "duration_hours": 34.242777777777775,
+      "duration_quantiles_s": {
+        "0.0": 630.0,
+        "0.25": 4846.0,
+        "0.5": 6525.0,
+        "0.75": 7852.5,
+        "1.0": 10770.0
+      },
+      "duration_s": 123274,
+      "high_load_duration_s": 22052,
+      "load_max_kw": 810.528,
+      "load_mean_kw": 281.23915091934686,
+      "load_median_kw": 278.145195837037,
+      "load_p90_kw": 487.9031691886467,
+      "load_p95_kw": 605.1608068384742,
+      "load_p99_kw": 730.567367629926,
+      "low_load_duration_s": 38665,
+      "medium_load_duration_s": 62557,
+      "onboard_charging_duration_s": 1110.0,
+      "onboard_charging_interval_count": 3,
+      "parent_sample_distribution": {
+        "3月25日14_00_3月25日17_00": 1,
+        "4月15日08_00_4月15日17_00": 1,
+        "4月16日08_00_4月16日19_00": 1,
+        "4月18日12_00_4月18日18_00": 1,
+        "4月25日08_00_4月25日18_00": 1,
+        "4月8日08_00_4月8日12_00": 1,
+        "4月9日08_00_4月9日11_00": 1,
+        "5月10日08_00_5月10日10_00": 1,
+        "5月13日08_00_5月13日11_00": 1,
+        "5月14日12_00_5月14日19_00": 1,
+        "5月15日08_00_5月15日17_00": 1,
+        "5月27日08_00_5月27日19_00": 1,
+        "7月11日06_00_7月12日10_00": 1,
+        "7月15日14_00_7月15日16_00": 1,
+        "7月18日08_00_7月18日12_00": 1,
+        "7月19日07_00_7月19日09_00": 1,
+        "7月22日08_00_7月22日11_00": 1,
+        "7月23日12_00_7月23日15_00": 1,
+        "7月29日14_00_7月29日17_00": 1,
+        "7月31日08_00_7月31日11_00": 1
+      },
+      "sailing_duration_s": 110856.0,
+      "sample_count": 20,
+      "short_stop_count": 11,
+      "stationary_duration_s": 12418.0,
+      "used_parent_count": 20
+    },
+    "validation": {
+      "above600_deficit_energy_kwh": 36.424694555510776,
+      "above600_duration_s": 3284,
+      "above600_load_energy_kwh": 583.758027888844,
+      "assigned_parent_count": 13,
+      "delta_abs_max_kw_per_s": 19.13672953535513,
+      "delta_abs_mean_kw_per_s": 0.5563581454833598,
+      "delta_abs_p95_kw_per_s": 2.4325817138377714,
+      "delta_abs_p99_kw_per_s": 7.067164755663369,
+      "duration_hours": 10.516666666666667,
+      "duration_quantiles_s": {
+        "0.0": 810.0,
+        "0.25": 6780.0,
+        "0.5": 7275.0,
+        "0.75": 7567.5,
+        "1.0": 8220.0
+      },
+      "duration_s": 37860,
+      "high_load_duration_s": 9964,
+      "load_max_kw": 742.0863999999999,
+      "load_mean_kw": 307.2911141358283,
+      "load_median_kw": 330.47537370725826,
+      "load_p90_kw": 550.6917983313508,
+      "load_p95_kw": 625.9983082854603,
+      "load_p99_kw": 698.4079355483152,
+      "low_load_duration_s": 10742,
+      "medium_load_duration_s": 17154,
+      "onboard_charging_duration_s": 4564.0,
+      "onboard_charging_interval_count": 13,
+      "parent_sample_distribution": {
+        "3月29日08_00_3月29日15_00": 1,
+        "4月21日08_00_4月21日16_00": 1,
+        "4月29日08_00_4月29日18_00": 1,
+        "4月2日14_00_4月2日17_00": 1,
+        "6月14日08_00_6月15日18_00": 1,
+        "6月7日00_00_6月7日24_00": 1
+      },
+      "sailing_duration_s": 35100.0,
+      "sample_count": 6,
+      "short_stop_count": 0,
+      "stationary_duration_s": 2760.0,
+      "used_parent_count": 6
+    }
+  },
+  "exclusion_reason_fraction_of_source": {
+    "ambiguous_external_supply": 0.09529890362478793,
+    "confirmed_shore": 0.08652425342503238,
+    "insufficient_continuous_operation_duration": 0.004323476293850448,
+    "invalid_power_alignment": 0.004341718809858256,
+    "long_stop_dwell_core": 0.12184176441614827,
+    "physical_inconsistency_negative_balance": 0.004268748745827024,
+    "quality_cut_without_natural_transition": 0.36488680518817157,
+    "stationary_only_without_sailing_task": 0.19056132221756025,
+    "unexplained_source_load_inconsistency": 0.0006202455442654651
+  },
+  "exclusion_reason_points": {
+    "ambiguous_external_supply": 5224,
+    "confirmed_shore": 4743,
+    "insufficient_continuous_operation_duration": 237,
+    "invalid_power_alignment": 238,
+    "long_stop_dwell_core": 6679,
+    "physical_inconsistency_negative_balance": 234,
+    "quality_cut_without_natural_transition": 20002,
+    "stationary_only_without_sailing_task": 10446,
+    "unexplained_source_load_inconsistency": 34
+  },
+  "formal_source_point_count": 6980,
+  "legacy_boundary_case_summary": [
+    {
+      "A_end_time": "2024-06-20 09:42:37",
+      "B_start_time": "2024-06-20 09:43:37",
+      "interior_all_power_aligned": true,
+      "interior_disposition_reasons": "quality_cut_without_natural_transition",
+      "interior_max_load_kw": 542.7206,
+      "interior_max_speed_kn": 8.9,
+      "interior_min_load_kw": 542.7206,
+      "interior_min_speed_kn": 8.9,
+      "interior_reference_points": 1,
+      "interior_state_classes": "normal_operation",
+      "legacy_A": "operating_segment_0148",
+      "legacy_B": "operating_segment_0149",
+      "old_elapsed_cut_s": 60.0,
+      "parent": "6月20日08_00_6月20日16_00",
+      "restored_in_formal_sample": false,
+      "same_new_sample_ids": ""
+    },
+    {
+      "A_end_time": "2024-06-30 06:08:40",
+      "B_start_time": "2024-06-30 06:09:40",
+      "interior_all_power_aligned": true,
+      "interior_disposition_reasons": "quality_cut_without_natural_transition",
+      "interior_max_load_kw": 504.2894,
+      "interior_max_speed_kn": 8.5,
+      "interior_min_load_kw": 504.2894,
+      "interior_min_speed_kn": 8.5,
+      "interior_reference_points": 1,
+      "interior_state_classes": "normal_operation",
+      "legacy_A": "operating_segment_0153",
+      "legacy_B": "operating_segment_0154",
+      "old_elapsed_cut_s": 60.0,
+      "parent": "6月30日05_00_6月30日11_00",
+      "restored_in_formal_sample": false,
+      "same_new_sample_ids": ""
+    },
+    {
+      "A_end_time": "2024-06-30 09:40:52",
+      "B_start_time": "2024-06-30 09:41:41",
+      "interior_all_power_aligned": true,
+      "interior_disposition_reasons": "quality_cut_without_natural_transition",
+      "interior_max_load_kw": 354.272464,
+      "interior_max_speed_kn": 10.785,
+      "interior_min_load_kw": 354.272464,
+      "interior_min_speed_kn": 10.785,
+      "interior_reference_points": 1,
+      "interior_state_classes": "normal_operation",
+      "legacy_A": "operating_segment_0154",
+      "legacy_B": "operating_segment_0155",
+      "old_elapsed_cut_s": 49.0,
+      "parent": "6月30日05_00_6月30日11_00",
+      "restored_in_formal_sample": false,
+      "same_new_sample_ids": ""
+    },
+    {
+      "A_end_time": "2024-07-03 08:33:22",
+      "B_start_time": "2024-07-03 08:34:22",
+      "interior_all_power_aligned": true,
+      "interior_disposition_reasons": "quality_cut_without_natural_transition",
+      "interior_max_load_kw": 230.2192,
+      "interior_max_speed_kn": 7.0,
+      "interior_min_load_kw": 230.2192,
+      "interior_min_speed_kn": 7.0,
+      "interior_reference_points": 1,
+      "interior_state_classes": "normal_operation",
+      "legacy_A": "operating_segment_0157",
+      "legacy_B": "operating_segment_0158",
+      "old_elapsed_cut_s": 60.0,
+      "parent": "7月3日08_00_7月3日16_00",
+      "restored_in_formal_sample": false,
+      "same_new_sample_ids": ""
+    },
+    {
+      "A_end_time": "2024-07-09 09:57:49",
+      "B_start_time": "2024-07-09 10:01:52",
+      "interior_all_power_aligned": true,
+      "interior_disposition_reasons": "quality_cut_without_natural_transition",
+      "interior_max_load_kw": 814.4591,
+      "interior_max_speed_kn": 9.82222222222,
+      "interior_min_load_kw": 770.4358,
+      "interior_min_speed_kn": 9.37777777778,
+      "interior_reference_points": 7,
+      "interior_state_classes": "normal_operation",
+      "legacy_A": "operating_segment_0159",
+      "legacy_B": "operating_segment_0160",
+      "old_elapsed_cut_s": 243.0,
+      "parent": "7月9日08_00_7月9日16_00",
+      "restored_in_formal_sample": false,
+      "same_new_sample_ids": ""
+    }
+  ],
+  "legacy_reference": {
+    "path": "data\\processed\\operating_segments_1s_rebuilt\\split_manifest.csv",
+    "sha256": "f83a872206b1be78dc29e354f97dc423f9e72f4c3d8acc54377863e45905eff5",
+    "use": "post-selection provenance only"
+  },
+  "limitations": [
+    "No direct shore connection or independently verified whole-load/service meter; stationary FC-on charging conservatively ambiguous.",
+    "Complete natural tasks include short low-speed harbor maneuvers when observed departure/sailing/arrival criteria hold; inspect duration and maximum speed rather than assuming all are long route voyages.",
+    "No outcome-based test choice; old model weights that trained on reassigned test parents cannot be used as an uncontaminated new-split benchmark.",
+    "AIS stationary duration has no asserted natural bimodal boundary; empirical/context policy is explicit and may exclude useful uncertain records.",
+    "Feasibility establishes existence in the specified lossless model; not a controller score and not an obligation to recover terminal SOC to 0.55.",
+    "Measured SOC continuity QA does not establish calibration or replay initial SOC.",
+    "Parent file edges are not automatically voyages; validation final SOC means fragment final SOC.",
+    "Old train/evaluation data defaults remain unchanged until a separately authorized integration; this builder does not run them."
+  ],
+  "pchip_floating_negative_zeroed": 0,
+  "policy": {
+    "ais_gap_limit_s": 40.0,
+    "ais_nearest_limit_s": 20.0,
+    "alignment_alias_cap_s": 5.0,
+    "alignment_tolerance_s": 5.0,
+    "basis": "Original telemetry only; unique nearest offsets; 1/6 cadence alias cap; 1.5 cadence rejects a missing full power cycle; stopped status FC q99 and half positive resolution.",
+    "battery_deadband_kw": 1.0,
+    "bracketed_stationary_interval_count": 108,
+    "bracketed_stop_duration_quantiles_s": {
+      "0": 90.0,
+      "0.25": 351.75,
+      "0.5": 1365.0,
+      "0.75": 4080.0,
+      "0.9": 5831.999999999999,
+      "0.95": 8485.499999999993,
+      "0.99": 12068.39999999998,
+      "1": 16170.0
+    },
+    "charging_certainty_limit": "No independent shore-connected sensor or verified service-load meter. Stationary FC-on charging remains ambiguous. Onboard charging can be confirmed operationally while sustained sailing; no stationary FC-on interval is restored by energy balance alone.",
+    "charging_min_duration_s": 90.0,
+    "energy_duration_convention": "1 s values[1:] right-endpoint sum; first point initializes FC; raw interval support last-first+30 s; missing clock intervals reported separately",
+    "engineering_basis": {
+      "battery_deadband_kw": "1 kW existing aggregate meter deadband, <0.2% of rated FC; not an external-supply proof",
+      "charging_min_duration_s": "3 measured cycles avoids single transient source labels",
+      "minimum_sailing_s": "6 measured cycles of sustained task evidence",
+      "minimum_sample_s": "20 measured cycles (10 min at 30 s), to reject isolated residual fragments",
+      "stationary_speed_kn": "0.1 kn AIS resolution/near-static deadband; not a load threshold",
+      "sustained_sailing_speed_kn": "1 kn = ten AIS resolution increments; excludes near-static drift from positive sailing/source evidence"
+    },
+    "fc_min_positive_resolution_kw": 1.0,
+    "fc_noise_per_channel_kw": 3.0,
+    "fc_noise_total_kw": 24.0,
+    "fc_stopped_abs_q99_kw": 3.0,
+    "fc_stopped_observations": 3003,
+    "formal_test_candidate_source": "original raw telemetry aligned as 8 measured FC channels plus 12 measured battery cluster voltage/current channels only",
+    "load_bins_basis": "descriptive only: one third and two thirds of 600 kW FC rating, never selection thresholds",
+    "load_bins_kw": [
+      0,
+      200,
+      400,
+      600
+    ],
+    "load_definition": "sum of 8 measured FC powers minus sum(V*I/1000) of 12 battery clusters; no independent full-load meter",
+    "measured_battery_charge_limit_kw": -624.0,
+    "measured_battery_discharge_limit_kw": 1248.0,
+    "measured_fc_limit_kw": 600.0,
+    "measured_power_limit_basis": "specified installed system ratings; FC tolerance is observed aggregate shutdown noise, battery tolerance is 1 kW meter deadband; severe measured violations excluded before net-load feasibility",
+    "micro_cluster_count": 1093542,
+    "minimum_sailing_s": 180.0,
+    "minimum_sample_s": 600.0,
+    "offset_count": 1093546,
+    "offset_histogram_s": {
+      "0.0": 859530,
+      "1.0": 233842,
+      "2.0": 122,
+      "3.0": 30,
+      "4.0": 12,
+      "5.0": 6,
+      "8.0": 4
+    },
+    "offset_quantiles_s": {
+      "0": 0.0,
+      "0.95": 1.0,
+      "0.99": 1.0,
+      "0.999": 1.0,
+      "0.9999": 2.0,
+      "1": 8.0
+    },
+    "operational_pause_intervals": [
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1740.0,
+        "end_time": "2024-03-25 14:28:55",
+        "parent": "3月25日14_00_3月25日17_00",
+        "start_time": "2024-03-25 14:00:25"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 300.0,
+        "end_time": "2024-03-25 14:39:55",
+        "parent": "3月25日14_00_3月25日17_00",
+        "start_time": "2024-03-25 14:35:25"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 900.0,
+        "end_time": "2024-03-25 16:59:56",
+        "parent": "3月25日14_00_3月25日17_00",
+        "start_time": "2024-03-25 16:45:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 90.0,
+        "end_time": "2024-03-26 14:01:27",
+        "parent": "3月26日14_00_3月26日16_00",
+        "start_time": "2024-03-26 14:00:27"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 180.0,
+        "end_time": "2024-03-26 14:09:57",
+        "parent": "3月26日14_00_3月26日16_00",
+        "start_time": "2024-03-26 14:07:27"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 210.0,
+        "end_time": "2024-03-26 14:40:57",
+        "parent": "3月26日14_00_3月26日16_00",
+        "start_time": "2024-03-26 14:37:57"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 180.0,
+        "end_time": "2024-03-26 15:12:57",
+        "parent": "3月26日14_00_3月26日16_00",
+        "start_time": "2024-03-26 15:10:27"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 630.0,
+        "end_time": "2024-03-26 15:59:57",
+        "parent": "3月26日14_00_3月26日16_00",
+        "start_time": "2024-03-26 15:49:57"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1890.0,
+        "end_time": "2024-03-27 07:31:29",
+        "parent": "3月27日07_00_3月27日11_00",
+        "start_time": "2024-03-27 07:00:29"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 690.0,
+        "end_time": "2024-03-27 07:47:59",
+        "parent": "3月27日07_00_3月27日11_00",
+        "start_time": "2024-03-27 07:36:59"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 3330.0,
+        "end_time": "2024-03-27 09:38:29",
+        "parent": "3月27日07_00_3月27日11_00",
+        "start_time": "2024-03-27 08:43:29"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 540.0,
+        "end_time": "2024-03-27 10:28:29",
+        "parent": "3月27日07_00_3月27日11_00",
+        "start_time": "2024-03-27 10:19:59"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 930.0,
+        "end_time": "2024-03-27 10:59:59",
+        "parent": "3月27日07_00_3月27日11_00",
+        "start_time": "2024-03-27 10:44:59"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 960.0,
+        "end_time": "2024-03-28 08:15:31",
+        "parent": "3月28日08_00_3月28日11_00",
+        "start_time": "2024-03-28 08:00:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 240.0,
+        "end_time": "2024-03-28 08:25:31",
+        "parent": "3月28日08_00_3月28日11_00",
+        "start_time": "2024-03-28 08:22:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 180.0,
+        "end_time": "2024-03-28 08:44:01",
+        "parent": "3月28日08_00_3月28日11_00",
+        "start_time": "2024-03-28 08:41:31"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 180.0,
+        "end_time": "2024-03-28 09:15:31",
+        "parent": "3月28日08_00_3月28日11_00",
+        "start_time": "2024-03-28 09:13:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 450.0,
+        "end_time": "2024-03-28 09:44:01",
+        "parent": "3月28日08_00_3月28日11_00",
+        "start_time": "2024-03-28 09:37:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 480.0,
+        "end_time": "2024-03-28 10:32:01",
+        "parent": "3月28日08_00_3月28日11_00",
+        "start_time": "2024-03-28 10:24:31"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 570.0,
+        "end_time": "2024-03-28 10:59:31",
+        "parent": "3月28日08_00_3月28日11_00",
+        "start_time": "2024-03-28 10:50:31"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2280.0,
+        "end_time": "2024-03-29 08:37:34",
+        "parent": "3月29日08_00_3月29日15_00",
+        "start_time": "2024-03-29 08:00:04"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 660.0,
+        "end_time": "2024-03-29 08:54:34",
+        "parent": "3月29日08_00_3月29日15_00",
+        "start_time": "2024-03-29 08:44:04"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 6811.0,
+        "end_time": "2024-03-29 12:36:05",
+        "parent": "3月29日08_00_3月29日15_00",
+        "start_time": "2024-03-29 10:43:04"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2100.0,
+        "end_time": "2024-03-29 14:59:35",
+        "parent": "3月29日08_00_3月29日15_00",
+        "start_time": "2024-03-29 14:25:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1320.0,
+        "end_time": "2024-04-02 14:21:42",
+        "parent": "4月2日14_00_4月2日17_00",
+        "start_time": "2024-04-02 14:00:12"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 360.0,
+        "end_time": "2024-04-02 14:33:13",
+        "parent": "4月2日14_00_4月2日17_00",
+        "start_time": "2024-04-02 14:27:43"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2760.0,
+        "end_time": "2024-04-02 16:59:43",
+        "parent": "4月2日14_00_4月2日17_00",
+        "start_time": "2024-04-02 16:14:13"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1260.0,
+        "end_time": "2024-04-03 08:20:44",
+        "parent": "4月3日08_00_4月3日11_00",
+        "start_time": "2024-04-03 08:00:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 180.0,
+        "end_time": "2024-04-03 08:29:14",
+        "parent": "4月3日08_00_4月3日11_00",
+        "start_time": "2024-04-03 08:26:44"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 180.0,
+        "end_time": "2024-04-03 08:48:14",
+        "parent": "4月3日08_00_4月3日11_00",
+        "start_time": "2024-04-03 08:45:44"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 120.0,
+        "end_time": "2024-04-03 09:16:44",
+        "parent": "4月3日08_00_4月3日11_00",
+        "start_time": "2024-04-03 09:15:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 210.0,
+        "end_time": "2024-04-03 09:24:44",
+        "parent": "4月3日08_00_4月3日11_00",
+        "start_time": "2024-04-03 09:21:44"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 360.0,
+        "end_time": "2024-04-03 09:50:44",
+        "parent": "4月3日08_00_4月3日11_00",
+        "start_time": "2024-04-03 09:45:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 90.0,
+        "end_time": "2024-04-03 10:33:14",
+        "parent": "4月3日08_00_4月3日11_00",
+        "start_time": "2024-04-03 10:32:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 630.0,
+        "end_time": "2024-04-03 10:59:44",
+        "parent": "4月3日08_00_4月3日11_00",
+        "start_time": "2024-04-03 10:49:44"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2880.0,
+        "end_time": "2024-04-07 08:47:54",
+        "parent": "4月7日08_00_4月7日12_00",
+        "start_time": "2024-04-07 08:00:24"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 240.0,
+        "end_time": "2024-04-07 08:57:24",
+        "parent": "4月7日08_00_4月7日12_00",
+        "start_time": "2024-04-07 08:53:54"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 210.0,
+        "end_time": "2024-04-07 10:12:24",
+        "parent": "4月7日08_00_4月7日12_00",
+        "start_time": "2024-04-07 10:09:24"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 360.0,
+        "end_time": "2024-04-07 10:24:54",
+        "parent": "4月7日08_00_4月7日12_00",
+        "start_time": "2024-04-07 10:19:24"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 450.0,
+        "end_time": "2024-04-07 10:40:24",
+        "parent": "4月7日08_00_4月7日12_00",
+        "start_time": "2024-04-07 10:33:24"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 510.0,
+        "end_time": "2024-04-07 10:53:24",
+        "parent": "4月7日08_00_4月7日12_00",
+        "start_time": "2024-04-07 10:45:24"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 270.0,
+        "end_time": "2024-04-07 11:06:24",
+        "parent": "4月7日08_00_4月7日12_00",
+        "start_time": "2024-04-07 11:02:24"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 180.0,
+        "end_time": "2024-04-07 11:17:54",
+        "parent": "4月7日08_00_4月7日12_00",
+        "start_time": "2024-04-07 11:15:24"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 390.0,
+        "end_time": "2024-04-07 11:59:24",
+        "parent": "4月7日08_00_4月7日12_00",
+        "start_time": "2024-04-07 11:53:24"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2430.0,
+        "end_time": "2024-04-08 08:40:26",
+        "parent": "4月8日08_00_4月8日12_00",
+        "start_time": "2024-04-08 08:00:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 630.0,
+        "end_time": "2024-04-08 08:55:56",
+        "parent": "4月8日08_00_4月8日12_00",
+        "start_time": "2024-04-08 08:45:56"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 210.0,
+        "end_time": "2024-04-08 10:09:26",
+        "parent": "4月8日08_00_4月8日12_00",
+        "start_time": "2024-04-08 10:06:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 330.0,
+        "end_time": "2024-04-08 10:22:56",
+        "parent": "4月8日08_00_4月8日12_00",
+        "start_time": "2024-04-08 10:17:56"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 360.0,
+        "end_time": "2024-04-08 10:38:26",
+        "parent": "4月8日08_00_4月8日12_00",
+        "start_time": "2024-04-08 10:32:56"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 90.0,
+        "end_time": "2024-04-08 11:33:56",
+        "parent": "4月8日08_00_4月8日12_00",
+        "start_time": "2024-04-08 11:32:56"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1200.0,
+        "end_time": "2024-04-08 11:59:56",
+        "parent": "4月8日08_00_4月8日12_00",
+        "start_time": "2024-04-08 11:40:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 660.0,
+        "end_time": "2024-04-09 08:10:58",
+        "parent": "4月9日08_00_4月9日11_00",
+        "start_time": "2024-04-09 08:00:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 120.0,
+        "end_time": "2024-04-09 08:18:28",
+        "parent": "4月9日08_00_4月9日11_00",
+        "start_time": "2024-04-09 08:16:58"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 120.0,
+        "end_time": "2024-04-09 09:04:58",
+        "parent": "4月9日08_00_4月9日11_00",
+        "start_time": "2024-04-09 09:03:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 240.0,
+        "end_time": "2024-04-09 09:36:28",
+        "parent": "4月9日08_00_4月9日11_00",
+        "start_time": "2024-04-09 09:32:58"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2010.0,
+        "end_time": "2024-04-09 10:59:58",
+        "parent": "4月9日08_00_4月9日11_00",
+        "start_time": "2024-04-09 10:26:58"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3270.0,
+        "end_time": "2024-04-12 08:54:03",
+        "parent": "4月12日08_00_4月12日16_00",
+        "start_time": "2024-04-12 08:00:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 240.0,
+        "end_time": "2024-04-12 09:03:33",
+        "parent": "4月12日08_00_4月12日16_00",
+        "start_time": "2024-04-12 09:00:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4320.0,
+        "end_time": "2024-04-12 12:07:03",
+        "parent": "4月12日08_00_4月12日16_00",
+        "start_time": "2024-04-12 10:55:33"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 3481.0,
+        "end_time": "2024-04-12 13:14:34",
+        "parent": "4月12日08_00_4月12日16_00",
+        "start_time": "2024-04-12 12:17:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 359.0,
+        "end_time": "2024-04-12 15:04:33",
+        "parent": "4月12日08_00_4月12日16_00",
+        "start_time": "2024-04-12 14:59:04"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 270.0,
+        "end_time": "2024-04-12 15:12:33",
+        "parent": "4月12日08_00_4月12日16_00",
+        "start_time": "2024-04-12 15:08:33"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2490.0,
+        "end_time": "2024-04-12 15:59:33",
+        "parent": "4月12日08_00_4月12日16_00",
+        "start_time": "2024-04-12 15:18:33"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 690.0,
+        "end_time": "2024-04-15 08:11:08",
+        "parent": "4月15日08_00_4月15日17_00",
+        "start_time": "2024-04-15 08:00:08"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 90.0,
+        "end_time": "2024-04-15 08:18:38",
+        "parent": "4月15日08_00_4月15日17_00",
+        "start_time": "2024-04-15 08:17:38"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 180.0,
+        "end_time": "2024-04-15 08:37:08",
+        "parent": "4月15日08_00_4月15日17_00",
+        "start_time": "2024-04-15 08:34:38"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 90.0,
+        "end_time": "2024-04-15 09:15:38",
+        "parent": "4月15日08_00_4月15日17_00",
+        "start_time": "2024-04-15 09:14:38"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 420.0,
+        "end_time": "2024-04-15 09:47:08",
+        "parent": "4月15日08_00_4月15日17_00",
+        "start_time": "2024-04-15 09:40:38"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 10500.0,
+        "end_time": "2024-04-15 13:38:08",
+        "parent": "4月15日08_00_4月15日17_00",
+        "start_time": "2024-04-15 10:43:38"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3150.0,
+        "end_time": "2024-04-15 14:36:38",
+        "parent": "4月15日08_00_4月15日17_00",
+        "start_time": "2024-04-15 13:44:38"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2280.0,
+        "end_time": "2024-04-15 15:20:08",
+        "parent": "4月15日08_00_4月15日17_00",
+        "start_time": "2024-04-15 14:42:38"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1710.0,
+        "end_time": "2024-04-15 16:59:39",
+        "parent": "4月15日08_00_4月15日17_00",
+        "start_time": "2024-04-15 16:31:39"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1260.0,
+        "end_time": "2024-04-16 08:20:40",
+        "parent": "4月16日08_00_4月16日19_00",
+        "start_time": "2024-04-16 08:00:10"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 120.0,
+        "end_time": "2024-04-16 08:28:10",
+        "parent": "4月16日08_00_4月16日19_00",
+        "start_time": "2024-04-16 08:26:40"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1980.0,
+        "end_time": "2024-04-16 09:05:10",
+        "parent": "4月16日08_00_4月16日19_00",
+        "start_time": "2024-04-16 08:32:40"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1110.0,
+        "end_time": "2024-04-16 11:18:40",
+        "parent": "4月16日08_00_4月16日19_00",
+        "start_time": "2024-04-16 11:00:40"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 5670.0,
+        "end_time": "2024-04-16 12:56:40",
+        "parent": "4月16日08_00_4月16日19_00",
+        "start_time": "2024-04-16 11:22:40"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 4800.0,
+        "end_time": "2024-04-16 14:22:40",
+        "parent": "4月16日08_00_4月16日19_00",
+        "start_time": "2024-04-16 13:03:10"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 2400.0,
+        "end_time": "2024-04-16 15:12:10",
+        "parent": "4月16日08_00_4月16日19_00",
+        "start_time": "2024-04-16 14:32:40"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 660.0,
+        "end_time": "2024-04-16 17:08:10",
+        "parent": "4月16日08_00_4月16日19_00",
+        "start_time": "2024-04-16 16:57:40"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1170.0,
+        "end_time": "2024-04-16 18:59:40",
+        "parent": "4月16日08_00_4月16日19_00",
+        "start_time": "2024-04-16 18:40:40"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2730.0,
+        "end_time": "2024-04-17 09:45:11",
+        "parent": "4月17日07_00_4月17日17_00",
+        "start_time": "2024-04-17 09:00:11"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 120.0,
+        "end_time": "2024-04-17 09:53:11",
+        "parent": "4月17日07_00_4月17日17_00",
+        "start_time": "2024-04-17 09:51:41"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 7770.0,
+        "end_time": "2024-04-17 14:05:11",
+        "parent": "4月17日07_00_4月17日17_00",
+        "start_time": "2024-04-17 11:56:11"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3360.0,
+        "end_time": "2024-04-17 16:59:41",
+        "parent": "4月17日07_00_4月17日17_00",
+        "start_time": "2024-04-17 16:04:11"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 750.0,
+        "end_time": "2024-04-18 12:12:13",
+        "parent": "4月18日12_00_4月18日18_00",
+        "start_time": "2024-04-18 12:00:13"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 30.0,
+        "end_time": "2024-04-18 12:18:43",
+        "parent": "4月18日12_00_4月18日18_00",
+        "start_time": "2024-04-18 12:18:43"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 2970.0,
+        "end_time": "2024-04-18 13:11:43",
+        "parent": "4月18日12_00_4月18日18_00",
+        "start_time": "2024-04-18 12:22:43"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 510.0,
+        "end_time": "2024-04-18 15:10:13",
+        "parent": "4月18日12_00_4月18日18_00",
+        "start_time": "2024-04-18 15:02:13"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3330.0,
+        "end_time": "2024-04-18 17:59:43",
+        "parent": "4月18日12_00_4月18日18_00",
+        "start_time": "2024-04-18 17:04:43"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1140.0,
+        "end_time": "2024-04-21 08:18:48",
+        "parent": "4月21日08_00_4月21日16_00",
+        "start_time": "2024-04-21 08:00:18"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 300.0,
+        "end_time": "2024-04-21 08:29:18",
+        "parent": "4月21日08_00_4月21日16_00",
+        "start_time": "2024-04-21 08:24:48"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 840.0,
+        "end_time": "2024-04-21 10:33:18",
+        "parent": "4月21日08_00_4月21日16_00",
+        "start_time": "2024-04-21 10:19:48"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 9180.0,
+        "end_time": "2024-04-21 13:12:18",
+        "parent": "4月21日08_00_4月21日16_00",
+        "start_time": "2024-04-21 10:39:48"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3060.0,
+        "end_time": "2024-04-21 15:59:48",
+        "parent": "4月21日08_00_4月21日16_00",
+        "start_time": "2024-04-21 15:09:18"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 90.0,
+        "end_time": "2024-04-22 14:01:20",
+        "parent": "4月22日14_00_4月22日17_00",
+        "start_time": "2024-04-22 14:00:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1200.0,
+        "end_time": "2024-04-22 14:27:20",
+        "parent": "4月22日14_00_4月22日17_00",
+        "start_time": "2024-04-22 14:07:50"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 960.0,
+        "end_time": "2024-04-22 16:59:50",
+        "parent": "4月22日14_00_4月22日17_00",
+        "start_time": "2024-04-22 16:44:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 120.0,
+        "end_time": "2024-04-23 13:06:52",
+        "parent": "4月23日13_00_4月23日18_00",
+        "start_time": "2024-04-23 13:05:22"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 2970.0,
+        "end_time": "2024-04-23 14:00:22",
+        "parent": "4月23日13_00_4月23日18_00",
+        "start_time": "2024-04-23 13:11:22"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 780.0,
+        "end_time": "2024-04-23 16:00:22",
+        "parent": "4月23日13_00_4月23日18_00",
+        "start_time": "2024-04-23 15:47:52"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 240.0,
+        "end_time": "2024-04-23 17:59:52",
+        "parent": "4月23日13_00_4月23日18_00",
+        "start_time": "2024-04-23 17:56:22"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1440.0,
+        "end_time": "2024-04-24 07:23:53",
+        "parent": "4月24日07_00_4月24日17_00",
+        "start_time": "2024-04-24 07:00:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 630.0,
+        "end_time": "2024-04-24 07:40:23",
+        "parent": "4月24日07_00_4月24日17_00",
+        "start_time": "2024-04-24 07:30:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4080.0,
+        "end_time": "2024-04-24 08:52:23",
+        "parent": "4月24日07_00_4月24日17_00",
+        "start_time": "2024-04-24 07:44:53"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1801.0,
+        "end_time": "2024-04-24 11:47:54",
+        "parent": "4月24日07_00_4月24日17_00",
+        "start_time": "2024-04-24 11:18:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1920.0,
+        "end_time": "2024-04-24 12:35:24",
+        "parent": "4月24日07_00_4月24日17_00",
+        "start_time": "2024-04-24 12:03:54"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4830.0,
+        "end_time": "2024-04-24 14:22:54",
+        "parent": "4月24日07_00_4月24日17_00",
+        "start_time": "2024-04-24 13:02:54"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2370.0,
+        "end_time": "2024-04-24 16:59:54",
+        "parent": "4月24日07_00_4月24日17_00",
+        "start_time": "2024-04-24 16:20:54"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2700.0,
+        "end_time": "2024-04-25 08:44:56",
+        "parent": "4月25日08_00_4月25日18_00",
+        "start_time": "2024-04-25 08:00:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1320.0,
+        "end_time": "2024-04-25 09:12:56",
+        "parent": "4月25日08_00_4月25日18_00",
+        "start_time": "2024-04-25 08:51:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1588.0,
+        "end_time": "2024-04-25 10:30:26",
+        "parent": "4月25日08_00_4月25日18_00",
+        "start_time": "2024-04-25 10:04:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4080.0,
+        "end_time": "2024-04-25 13:07:26",
+        "parent": "4月25日08_00_4月25日18_00",
+        "start_time": "2024-04-25 11:59:56"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 210.0,
+        "end_time": "2024-04-25 14:48:56",
+        "parent": "4月25日08_00_4月25日18_00",
+        "start_time": "2024-04-25 14:45:56"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 420.0,
+        "end_time": "2024-04-25 14:59:56",
+        "parent": "4月25日08_00_4月25日18_00",
+        "start_time": "2024-04-25 14:53:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1590.0,
+        "end_time": "2024-04-25 15:32:26",
+        "parent": "4月25日08_00_4月25日18_00",
+        "start_time": "2024-04-25 15:06:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 30.0,
+        "end_time": "2024-04-25 15:38:56",
+        "parent": "4月25日08_00_4月25日18_00",
+        "start_time": "2024-04-25 15:38:56"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2490.0,
+        "end_time": "2024-04-25 17:20:27",
+        "parent": "4月25日08_00_4月25日18_00",
+        "start_time": "2024-04-25 16:39:27"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2010.0,
+        "end_time": "2024-04-25 17:59:57",
+        "parent": "4月25日08_00_4月25日18_00",
+        "start_time": "2024-04-25 17:26:57"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3030.0,
+        "end_time": "2024-04-28 08:50:04",
+        "parent": "4月28日08_00_4月28日12_00",
+        "start_time": "2024-04-28 08:00:04"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 30.0,
+        "end_time": "2024-04-28 08:56:34",
+        "parent": "4月28日08_00_4月28日12_00",
+        "start_time": "2024-04-28 08:56:34"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 390.0,
+        "end_time": "2024-04-28 11:36:05",
+        "parent": "4月28日08_00_4月28日12_00",
+        "start_time": "2024-04-28 11:30:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1050.0,
+        "end_time": "2024-04-28 11:59:35",
+        "parent": "4月28日08_00_4月28日12_00",
+        "start_time": "2024-04-28 11:42:35"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1140.0,
+        "end_time": "2024-04-29 08:18:37",
+        "parent": "4月29日08_00_4月29日18_00",
+        "start_time": "2024-04-29 08:00:07"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 450.0,
+        "end_time": "2024-04-29 08:32:07",
+        "parent": "4月29日08_00_4月29日18_00",
+        "start_time": "2024-04-29 08:25:07"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 11701.0,
+        "end_time": "2024-04-29 13:53:38",
+        "parent": "4月29日08_00_4月29日18_00",
+        "start_time": "2024-04-29 10:39:07"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 390.0,
+        "end_time": "2024-04-29 14:00:38",
+        "parent": "4月29日08_00_4月29日18_00",
+        "start_time": "2024-04-29 13:54:38"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4680.0,
+        "end_time": "2024-04-29 15:29:08",
+        "parent": "4月29日08_00_4月29日18_00",
+        "start_time": "2024-04-29 14:11:38"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 300.0,
+        "end_time": "2024-04-29 17:20:08",
+        "parent": "4月29日08_00_4月29日18_00",
+        "start_time": "2024-04-29 17:15:38"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2070.0,
+        "end_time": "2024-04-29 17:58:08",
+        "parent": "4月29日08_00_4月29日18_00",
+        "start_time": "2024-04-29 17:24:08"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1200.0,
+        "end_time": "2024-04-30 08:19:40",
+        "parent": "4月30日08_00_4月30日15_00",
+        "start_time": "2024-04-30 08:00:10"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1290.0,
+        "end_time": "2024-04-30 08:48:40",
+        "parent": "4月30日08_00_4月30日15_00",
+        "start_time": "2024-04-30 08:27:40"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4950.0,
+        "end_time": "2024-04-30 12:13:40",
+        "parent": "4月30日08_00_4月30日15_00",
+        "start_time": "2024-04-30 10:51:40"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 300.0,
+        "end_time": "2024-04-30 12:28:40",
+        "parent": "4月30日08_00_4月30日15_00",
+        "start_time": "2024-04-30 12:24:10"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3330.0,
+        "end_time": "2024-04-30 14:59:41",
+        "parent": "4月30日08_00_4月30日15_00",
+        "start_time": "2024-04-30 14:04:41"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3060.0,
+        "end_time": "2024-05-07 08:50:30",
+        "parent": "5月7日08_00_5月7日18_00",
+        "start_time": "2024-05-07 08:00:00"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 60.0,
+        "end_time": "2024-05-07 08:58:30",
+        "parent": "5月7日08_00_5月7日18_00",
+        "start_time": "2024-05-07 08:58:00"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 180.0,
+        "end_time": "2024-05-07 09:43:00",
+        "parent": "5月7日08_00_5月7日18_00",
+        "start_time": "2024-05-07 09:40:30"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 930.0,
+        "end_time": "2024-05-07 11:32:01",
+        "parent": "5月7日08_00_5月7日18_00",
+        "start_time": "2024-05-07 11:17:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 2220.0,
+        "end_time": "2024-05-07 12:15:31",
+        "parent": "5月7日08_00_5月7日18_00",
+        "start_time": "2024-05-07 11:39:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 120.0,
+        "end_time": "2024-05-07 12:28:01",
+        "parent": "5月7日08_00_5月7日18_00",
+        "start_time": "2024-05-07 12:26:31"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 6240.0,
+        "end_time": "2024-05-07 14:16:01",
+        "parent": "5月7日08_00_5月7日18_00",
+        "start_time": "2024-05-07 12:32:31"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 2490.0,
+        "end_time": "2024-05-07 16:55:01",
+        "parent": "5月7日08_00_5月7日18_00",
+        "start_time": "2024-05-07 16:14:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 360.0,
+        "end_time": "2024-05-07 17:04:01",
+        "parent": "5月7日08_00_5月7日18_00",
+        "start_time": "2024-05-07 16:58:31"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2970.0,
+        "end_time": "2024-05-07 17:59:31",
+        "parent": "5月7日08_00_5月7日18_00",
+        "start_time": "2024-05-07 17:10:31"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2400.0,
+        "end_time": "2024-05-08 08:39:34",
+        "parent": "5月8日08_00_5月8日17_00",
+        "start_time": "2024-05-08 08:00:04"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 660.0,
+        "end_time": "2024-05-08 08:57:04",
+        "parent": "5月8日08_00_5月8日17_00",
+        "start_time": "2024-05-08 08:46:34"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 2130.0,
+        "end_time": "2024-05-08 11:55:05",
+        "parent": "5月8日08_00_5月8日17_00",
+        "start_time": "2024-05-08 11:20:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 7920.0,
+        "end_time": "2024-05-08 14:16:05",
+        "parent": "5月8日08_00_5月8日17_00",
+        "start_time": "2024-05-08 12:04:35"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 600.0,
+        "end_time": "2024-05-08 16:11:35",
+        "parent": "5月8日08_00_5月8日17_00",
+        "start_time": "2024-05-08 16:02:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2371.0,
+        "end_time": "2024-05-08 16:59:36",
+        "parent": "5月8日08_00_5月8日17_00",
+        "start_time": "2024-05-08 16:20:35"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 841.0,
+        "end_time": "2024-05-09 08:13:38",
+        "parent": "5月9日08_00_5月9日17_00",
+        "start_time": "2024-05-09 08:00:07"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 301.0,
+        "end_time": "2024-05-09 08:25:08",
+        "parent": "5月9日08_00_5月9日17_00",
+        "start_time": "2024-05-09 08:20:37"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 210.0,
+        "end_time": "2024-05-09 08:47:07",
+        "parent": "5月9日08_00_5月9日17_00",
+        "start_time": "2024-05-09 08:44:07"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 330.0,
+        "end_time": "2024-05-09 09:31:08",
+        "parent": "5月9日08_00_5月9日17_00",
+        "start_time": "2024-05-09 09:26:08"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 630.0,
+        "end_time": "2024-05-09 10:05:08",
+        "parent": "5月9日08_00_5月9日17_00",
+        "start_time": "2024-05-09 09:55:08"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 13230.0,
+        "end_time": "2024-05-09 14:43:38",
+        "parent": "5月9日08_00_5月9日17_00",
+        "start_time": "2024-05-09 11:03:38"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3480.0,
+        "end_time": "2024-05-09 16:59:38",
+        "parent": "5月9日08_00_5月9日17_00",
+        "start_time": "2024-05-09 16:02:08"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1470.0,
+        "end_time": "2024-05-10 08:24:11",
+        "parent": "5月10日08_00_5月10日10_00",
+        "start_time": "2024-05-10 08:00:11"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 120.0,
+        "end_time": "2024-05-10 08:32:11",
+        "parent": "5月10日08_00_5月10日10_00",
+        "start_time": "2024-05-10 08:30:41"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2761.0,
+        "end_time": "2024-05-10 09:59:42",
+        "parent": "5月10日08_00_5月10日10_00",
+        "start_time": "2024-05-10 09:14:11"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1380.0,
+        "end_time": "2024-05-11 08:22:46",
+        "parent": "5月11日08_00_5月11日11_00",
+        "start_time": "2024-05-11 08:00:16"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1260.0,
+        "end_time": "2024-05-11 08:50:16",
+        "parent": "5月11日08_00_5月11日11_00",
+        "start_time": "2024-05-11 08:29:46"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2340.0,
+        "end_time": "2024-05-11 10:59:46",
+        "parent": "5月11日08_00_5月11日11_00",
+        "start_time": "2024-05-11 10:21:16"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3120.0,
+        "end_time": "2024-05-13 08:51:50",
+        "parent": "5月13日08_00_5月13日11_00",
+        "start_time": "2024-05-13 08:00:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 270.0,
+        "end_time": "2024-05-13 09:01:50",
+        "parent": "5月13日08_00_5月13日11_00",
+        "start_time": "2024-05-13 08:57:50"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 210.0,
+        "end_time": "2024-05-13 10:16:21",
+        "parent": "5月13日08_00_5月13日11_00",
+        "start_time": "2024-05-13 10:13:21"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2160.0,
+        "end_time": "2024-05-13 10:59:51",
+        "parent": "5月13日08_00_5月13日11_00",
+        "start_time": "2024-05-13 10:24:21"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1500.0,
+        "end_time": "2024-05-14 12:24:53",
+        "parent": "5月14日12_00_5月14日19_00",
+        "start_time": "2024-05-14 12:00:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2370.0,
+        "end_time": "2024-05-14 13:10:53",
+        "parent": "5月14日12_00_5月14日19_00",
+        "start_time": "2024-05-14 12:31:53"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 360.0,
+        "end_time": "2024-05-14 15:17:23",
+        "parent": "5月14日12_00_5月14日19_00",
+        "start_time": "2024-05-14 15:11:53"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4830.0,
+        "end_time": "2024-05-14 16:47:23",
+        "parent": "5月14日12_00_5月14日19_00",
+        "start_time": "2024-05-14 15:27:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 360.0,
+        "end_time": "2024-05-14 18:29:53",
+        "parent": "5月14日12_00_5月14日19_00",
+        "start_time": "2024-05-14 18:24:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1470.0,
+        "end_time": "2024-05-14 18:59:53",
+        "parent": "5月14日12_00_5月14日19_00",
+        "start_time": "2024-05-14 18:35:53"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 900.0,
+        "end_time": "2024-05-15 08:14:54",
+        "parent": "5月15日08_00_5月15日17_00",
+        "start_time": "2024-05-15 08:00:24"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 210.0,
+        "end_time": "2024-05-15 08:24:24",
+        "parent": "5月15日08_00_5月15日17_00",
+        "start_time": "2024-05-15 08:21:24"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 2129.0,
+        "end_time": "2024-05-15 09:02:54",
+        "parent": "5月15日08_00_5月15日17_00",
+        "start_time": "2024-05-15 08:27:55"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1980.0,
+        "end_time": "2024-05-15 11:55:25",
+        "parent": "5月15日08_00_5月15日17_00",
+        "start_time": "2024-05-15 11:22:55"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1740.0,
+        "end_time": "2024-05-15 12:35:25",
+        "parent": "5月15日08_00_5月15日17_00",
+        "start_time": "2024-05-15 12:06:55"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 3630.0,
+        "end_time": "2024-05-15 13:57:25",
+        "parent": "5月15日08_00_5月15日17_00",
+        "start_time": "2024-05-15 12:57:25"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1470.0,
+        "end_time": "2024-05-15 14:32:25",
+        "parent": "5月15日08_00_5月15日17_00",
+        "start_time": "2024-05-15 14:08:25"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 480.0,
+        "end_time": "2024-05-15 16:34:55",
+        "parent": "5月15日08_00_5月15日17_00",
+        "start_time": "2024-05-15 16:27:25"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 300.0,
+        "end_time": "2024-05-15 16:43:25",
+        "parent": "5月15日08_00_5月15日17_00",
+        "start_time": "2024-05-15 16:38:55"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 600.0,
+        "end_time": "2024-05-15 16:59:55",
+        "parent": "5月15日08_00_5月15日17_00",
+        "start_time": "2024-05-15 16:50:25"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 630.0,
+        "end_time": "2024-05-17 08:10:28",
+        "parent": "5月17日08_00_5月17日18_00",
+        "start_time": "2024-05-17 08:00:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1170.0,
+        "end_time": "2024-05-17 08:35:28",
+        "parent": "5月17日08_00_5月17日18_00",
+        "start_time": "2024-05-17 08:16:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 720.0,
+        "end_time": "2024-05-17 11:07:58",
+        "parent": "5月17日08_00_5月17日18_00",
+        "start_time": "2024-05-17 10:56:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1110.0,
+        "end_time": "2024-05-17 11:33:28",
+        "parent": "5月17日08_00_5月17日18_00",
+        "start_time": "2024-05-17 11:15:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 14401.0,
+        "end_time": "2024-05-17 15:39:29",
+        "parent": "5月17日08_00_5月17日18_00",
+        "start_time": "2024-05-17 11:39:58"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2490.0,
+        "end_time": "2024-05-17 17:39:59",
+        "parent": "5月17日08_00_5月17日18_00",
+        "start_time": "2024-05-17 16:58:59"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 840.0,
+        "end_time": "2024-05-17 17:59:59",
+        "parent": "5月17日08_00_5月17日18_00",
+        "start_time": "2024-05-17 17:46:29"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1320.0,
+        "end_time": "2024-05-20 08:21:33",
+        "parent": "5月20日08_00_5月20日18_00",
+        "start_time": "2024-05-20 08:00:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 30.0,
+        "end_time": "2024-05-20 08:29:33",
+        "parent": "5月20日08_00_5月20日18_00",
+        "start_time": "2024-05-20 08:29:33"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4860.0,
+        "end_time": "2024-05-20 11:52:33",
+        "parent": "5月20日08_00_5月20日18_00",
+        "start_time": "2024-05-20 10:32:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 690.0,
+        "end_time": "2024-05-20 13:59:34",
+        "parent": "5月20日08_00_5月20日18_00",
+        "start_time": "2024-05-20 13:48:34"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 4140.0,
+        "end_time": "2024-05-20 15:18:04",
+        "parent": "5月20日08_00_5月20日18_00",
+        "start_time": "2024-05-20 14:09:34"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 120.0,
+        "end_time": "2024-05-20 15:26:04",
+        "parent": "5月20日08_00_5月20日18_00",
+        "start_time": "2024-05-20 15:24:34"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1740.0,
+        "end_time": "2024-05-20 17:31:34",
+        "parent": "5月20日08_00_5月20日18_00",
+        "start_time": "2024-05-20 17:03:04"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1290.0,
+        "end_time": "2024-05-20 17:59:34",
+        "parent": "5月20日08_00_5月20日18_00",
+        "start_time": "2024-05-20 17:38:34"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1770.0,
+        "end_time": "2024-05-21 05:29:05",
+        "parent": "5月21日05_00_5月21日11_00",
+        "start_time": "2024-05-21 05:00:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 510.0,
+        "end_time": "2024-05-21 05:44:05",
+        "parent": "5月21日05_00_5月21日11_00",
+        "start_time": "2024-05-21 05:36:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 2670.0,
+        "end_time": "2024-05-21 08:31:35",
+        "parent": "5月21日05_00_5月21日11_00",
+        "start_time": "2024-05-21 07:47:35"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 240.0,
+        "end_time": "2024-05-21 10:27:05",
+        "parent": "5月21日05_00_5月21日11_00",
+        "start_time": "2024-05-21 10:23:35"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 240.0,
+        "end_time": "2024-05-21 10:34:35",
+        "parent": "5月21日05_00_5月21日11_00",
+        "start_time": "2024-05-21 10:31:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1170.0,
+        "end_time": "2024-05-21 10:59:35",
+        "parent": "5月21日05_00_5月21日11_00",
+        "start_time": "2024-05-21 10:40:35"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 510.0,
+        "end_time": "2024-05-24 08:08:12",
+        "parent": "5月24日08_00_5月24日19_00",
+        "start_time": "2024-05-24 08:00:12"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 390.0,
+        "end_time": "2024-05-24 08:20:12",
+        "parent": "5月24日08_00_5月24日19_00",
+        "start_time": "2024-05-24 08:14:12"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1560.0,
+        "end_time": "2024-05-24 08:49:12",
+        "parent": "5月24日08_00_5月24日19_00",
+        "start_time": "2024-05-24 08:23:42"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4770.0,
+        "end_time": "2024-05-24 12:37:43",
+        "parent": "5月24日08_00_5月24日19_00",
+        "start_time": "2024-05-24 11:18:43"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 6000.0,
+        "end_time": "2024-05-24 14:44:13",
+        "parent": "5月24日08_00_5月24日19_00",
+        "start_time": "2024-05-24 13:04:43"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 6660.0,
+        "end_time": "2024-05-24 18:29:13",
+        "parent": "5月24日08_00_5月24日19_00",
+        "start_time": "2024-05-24 16:38:43"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1500.0,
+        "end_time": "2024-05-24 18:59:43",
+        "parent": "5月24日08_00_5月24日19_00",
+        "start_time": "2024-05-24 18:35:13"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 750.0,
+        "end_time": "2024-05-27 08:12:20",
+        "parent": "5月27日08_00_5月27日19_00",
+        "start_time": "2024-05-27 08:00:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 330.0,
+        "end_time": "2024-05-27 08:23:50",
+        "parent": "5月27日08_00_5月27日19_00",
+        "start_time": "2024-05-27 08:18:50"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 90.0,
+        "end_time": "2024-05-27 08:42:50",
+        "parent": "5月27日08_00_5月27日19_00",
+        "start_time": "2024-05-27 08:41:50"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 90.0,
+        "end_time": "2024-05-27 09:24:51",
+        "parent": "5月27日08_00_5月27日19_00",
+        "start_time": "2024-05-27 09:23:51"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 690.0,
+        "end_time": "2024-05-27 10:01:21",
+        "parent": "5月27日08_00_5月27日19_00",
+        "start_time": "2024-05-27 09:50:21"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 300.0,
+        "end_time": "2024-05-27 11:04:21",
+        "parent": "5月27日08_00_5月27日19_00",
+        "start_time": "2024-05-27 10:59:51"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 15600.0,
+        "end_time": "2024-05-27 15:29:51",
+        "parent": "5月27日08_00_5月27日19_00",
+        "start_time": "2024-05-27 11:10:21"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3870.0,
+        "end_time": "2024-05-27 16:39:51",
+        "parent": "5月27日08_00_5月27日19_00",
+        "start_time": "2024-05-27 15:35:51"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 450.0,
+        "end_time": "2024-05-27 18:00:51",
+        "parent": "5月27日08_00_5月27日19_00",
+        "start_time": "2024-05-27 17:53:51"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3210.0,
+        "end_time": "2024-05-27 18:59:51",
+        "parent": "5月27日08_00_5月27日19_00",
+        "start_time": "2024-05-27 18:06:51"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 330.0,
+        "end_time": "2024-05-29 14:05:26",
+        "parent": "5月29日14_00_5月29日17_00",
+        "start_time": "2024-05-29 14:00:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 750.0,
+        "end_time": "2024-05-29 14:26:56",
+        "parent": "5月29日14_00_5月29日17_00",
+        "start_time": "2024-05-29 14:14:56"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 570.0,
+        "end_time": "2024-05-29 16:29:27",
+        "parent": "5月29日14_00_5月29日17_00",
+        "start_time": "2024-05-29 16:20:27"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1470.0,
+        "end_time": "2024-05-29 16:59:57",
+        "parent": "5月29日14_00_5月29日17_00",
+        "start_time": "2024-05-29 16:35:57"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1110.0,
+        "end_time": "2024-05-30 05:18:28",
+        "parent": "5月30日05_00_5月30日17_00",
+        "start_time": "2024-05-30 05:00:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 510.0,
+        "end_time": "2024-05-30 05:32:28",
+        "parent": "5月30日05_00_5月30日17_00",
+        "start_time": "2024-05-30 05:24:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 390.0,
+        "end_time": "2024-05-30 07:08:28",
+        "parent": "5月30日05_00_5月30日17_00",
+        "start_time": "2024-05-30 07:02:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 2550.0,
+        "end_time": "2024-05-30 07:55:59",
+        "parent": "5月30日05_00_5月30日17_00",
+        "start_time": "2024-05-30 07:13:59"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 2160.0,
+        "end_time": "2024-05-30 10:45:59",
+        "parent": "5月30日05_00_5月30日17_00",
+        "start_time": "2024-05-30 10:10:29"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 2580.0,
+        "end_time": "2024-05-30 11:37:59",
+        "parent": "5月30日05_00_5月30日17_00",
+        "start_time": "2024-05-30 10:55:29"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 450.0,
+        "end_time": "2024-05-30 12:09:29",
+        "parent": "5月30日05_00_5月30日17_00",
+        "start_time": "2024-05-30 12:02:29"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 5760.0,
+        "end_time": "2024-05-30 13:55:59",
+        "parent": "5月30日05_00_5月30日17_00",
+        "start_time": "2024-05-30 12:20:29"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 690.0,
+        "end_time": "2024-05-30 15:58:30",
+        "parent": "5月30日05_00_5月30日17_00",
+        "start_time": "2024-05-30 15:47:30"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3270.0,
+        "end_time": "2024-05-30 16:59:30",
+        "parent": "5月30日05_00_5月30日17_00",
+        "start_time": "2024-05-30 16:05:30"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2280.0,
+        "end_time": "2024-06-04 08:37:42",
+        "parent": "6月4日08_00_6月4日12_00",
+        "start_time": "2024-06-04 08:00:12"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 810.0,
+        "end_time": "2024-06-04 08:56:42",
+        "parent": "6月4日08_00_6月4日12_00",
+        "start_time": "2024-06-04 08:43:42"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 360.0,
+        "end_time": "2024-06-04 10:01:12",
+        "parent": "6月4日08_00_6月4日12_00",
+        "start_time": "2024-06-04 09:55:42"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 960.0,
+        "end_time": "2024-06-04 11:15:42",
+        "parent": "6月4日08_00_6月4日12_00",
+        "start_time": "2024-06-04 11:00:12"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2310.0,
+        "end_time": "2024-06-04 11:59:42",
+        "parent": "6月4日08_00_6月4日12_00",
+        "start_time": "2024-06-04 11:21:42"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 540.0,
+        "end_time": "2024-06-05 08:08:44",
+        "parent": "6月5日08_00_6月5日19_00",
+        "start_time": "2024-06-05 08:00:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 750.0,
+        "end_time": "2024-06-05 08:26:44",
+        "parent": "6月5日08_00_6月5日19_00",
+        "start_time": "2024-06-05 08:14:44"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 240.0,
+        "end_time": "2024-06-05 08:46:44",
+        "parent": "6月5日08_00_6月5日19_00",
+        "start_time": "2024-06-05 08:43:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 270.0,
+        "end_time": "2024-06-05 09:23:14",
+        "parent": "6月5日08_00_6月5日19_00",
+        "start_time": "2024-06-05 09:19:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 120.0,
+        "end_time": "2024-06-05 09:31:44",
+        "parent": "6月5日08_00_6月5日19_00",
+        "start_time": "2024-06-05 09:30:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 900.0,
+        "end_time": "2024-06-05 10:09:44",
+        "parent": "6月5日08_00_6月5日19_00",
+        "start_time": "2024-06-05 09:55:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 330.0,
+        "end_time": "2024-06-05 11:06:14",
+        "parent": "6月5日08_00_6月5日19_00",
+        "start_time": "2024-06-05 11:01:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 11671.0,
+        "end_time": "2024-06-05 14:27:15",
+        "parent": "6月5日08_00_6月5日19_00",
+        "start_time": "2024-06-05 11:13:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 12390.0,
+        "end_time": "2024-06-05 17:59:15",
+        "parent": "6月5日08_00_6月5日19_00",
+        "start_time": "2024-06-05 14:33:15"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3270.0,
+        "end_time": "2024-06-05 18:59:45",
+        "parent": "6月5日08_00_6月5日19_00",
+        "start_time": "2024-06-05 18:05:45"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 570.0,
+        "end_time": "2024-06-06 10:09:16",
+        "parent": "6月6日10_00_6月6日21_00",
+        "start_time": "2024-06-06 10:00:16"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3001.0,
+        "end_time": "2024-06-06 11:05:47",
+        "parent": "6月6日10_00_6月6日21_00",
+        "start_time": "2024-06-06 10:16:16"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 9390.0,
+        "end_time": "2024-06-06 15:43:17",
+        "parent": "6月6日10_00_6月6日21_00",
+        "start_time": "2024-06-06 13:07:17"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 480.0,
+        "end_time": "2024-06-06 17:38:17",
+        "parent": "6月6日10_00_6月6日21_00",
+        "start_time": "2024-06-06 17:30:47"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 5430.0,
+        "end_time": "2024-06-06 19:14:17",
+        "parent": "6月6日10_00_6月6日21_00",
+        "start_time": "2024-06-06 17:44:17"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2370.0,
+        "end_time": "2024-06-06 20:01:47",
+        "parent": "6月6日10_00_6月6日21_00",
+        "start_time": "2024-06-06 19:22:47"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1920.0,
+        "end_time": "2024-06-06 20:40:17",
+        "parent": "6月6日10_00_6月6日21_00",
+        "start_time": "2024-06-06 20:08:47"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 390.0,
+        "end_time": "2024-06-06 20:53:47",
+        "parent": "6月6日10_00_6月6日21_00",
+        "start_time": "2024-06-06 20:47:47"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 6780.0,
+        "end_time": "2024-06-07 01:52:48",
+        "parent": "6月7日00_00_6月7日24_00",
+        "start_time": "2024-06-07 00:00:18"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 25200.0,
+        "end_time": "2024-06-07 08:59:18",
+        "parent": "6月7日00_00_6月7日24_00",
+        "start_time": "2024-06-07 01:59:48"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 720.0,
+        "end_time": "2024-06-07 09:16:48",
+        "parent": "6月7日00_00_6月7日24_00",
+        "start_time": "2024-06-07 09:05:18"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1500.0,
+        "end_time": "2024-06-07 11:34:48",
+        "parent": "6月7日00_00_6月7日24_00",
+        "start_time": "2024-06-07 11:10:18"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 12781.0,
+        "end_time": "2024-06-07 15:13:49",
+        "parent": "6月7日00_00_6月7日24_00",
+        "start_time": "2024-06-07 11:41:18"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 450.0,
+        "end_time": "2024-06-07 15:27:49",
+        "parent": "6月7日00_00_6月7日24_00",
+        "start_time": "2024-06-07 15:20:49"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 30361.0,
+        "end_time": "2024-06-07 23:59:50",
+        "parent": "6月7日00_00_6月7日24_00",
+        "start_time": "2024-06-07 15:34:19"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 720.0,
+        "end_time": "2024-06-11 08:11:30",
+        "parent": "6月11日08_00_6月11日11_00",
+        "start_time": "2024-06-11 08:00:00"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 180.0,
+        "end_time": "2024-06-11 08:21:00",
+        "parent": "6月11日08_00_6月11日11_00",
+        "start_time": "2024-06-11 08:18:30"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 152.0,
+        "end_time": "2024-06-11 08:40:32",
+        "parent": "6月11日08_00_6月11日11_00",
+        "start_time": "2024-06-11 08:38:30"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 120.0,
+        "end_time": "2024-06-11 09:16:30",
+        "parent": "6月11日08_00_6月11日11_00",
+        "start_time": "2024-06-11 09:15:00"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 300.0,
+        "end_time": "2024-06-11 09:46:01",
+        "parent": "6月11日08_00_6月11日11_00",
+        "start_time": "2024-06-11 09:41:31"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 300.0,
+        "end_time": "2024-06-11 10:39:31",
+        "parent": "6月11日08_00_6月11日11_00",
+        "start_time": "2024-06-11 10:35:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 810.0,
+        "end_time": "2024-06-11 10:59:31",
+        "parent": "6月11日08_00_6月11日11_00",
+        "start_time": "2024-06-11 10:46:31"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1860.0,
+        "end_time": "2024-06-12 14:30:35",
+        "parent": "6月12日14_00_6月12日17_00",
+        "start_time": "2024-06-12 14:00:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 540.0,
+        "end_time": "2024-06-12 14:47:35",
+        "parent": "6月12日14_00_6月12日17_00",
+        "start_time": "2024-06-12 14:39:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 600.0,
+        "end_time": "2024-06-12 16:18:05",
+        "parent": "6月12日14_00_6月12日17_00",
+        "start_time": "2024-06-12 16:08:35"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2129.0,
+        "end_time": "2024-06-12 16:59:35",
+        "parent": "6月12日14_00_6月12日17_00",
+        "start_time": "2024-06-12 16:24:36"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 540.0,
+        "end_time": "2024-06-13 08:08:38",
+        "parent": "6月13日08_00_6月13日14_00",
+        "start_time": "2024-06-13 08:00:08"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 5521.0,
+        "end_time": "2024-06-13 11:37:39",
+        "parent": "6月13日08_00_6月13日14_00",
+        "start_time": "2024-06-13 10:06:08"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 420.0,
+        "end_time": "2024-06-13 13:45:09",
+        "parent": "6月13日08_00_6月13日14_00",
+        "start_time": "2024-06-13 13:38:39"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 510.0,
+        "end_time": "2024-06-13 13:59:39",
+        "parent": "6月13日08_00_6月13日14_00",
+        "start_time": "2024-06-13 13:51:39"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1080.0,
+        "end_time": "2024-06-14 08:17:44",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-14 08:00:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2760.0,
+        "end_time": "2024-06-14 09:04:14",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-14 08:18:44"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 300.0,
+        "end_time": "2024-06-14 09:15:44",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-14 09:11:14"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 18811.0,
+        "end_time": "2024-06-14 17:15:46",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-14 12:02:45"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3960.0,
+        "end_time": "2024-06-14 18:28:16",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-14 17:22:46"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3840.0,
+        "end_time": "2024-06-14 19:37:46",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-14 18:34:16"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 16170.0,
+        "end_time": "2024-06-15 00:17:16",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-14 19:48:16"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 450.0,
+        "end_time": "2024-06-15 00:27:46",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-15 00:20:46"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 32072.0,
+        "end_time": "2024-06-15 09:28:18",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-15 00:34:16"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 25171.0,
+        "end_time": "2024-06-15 16:33:49",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-15 09:34:48"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 630.0,
+        "end_time": "2024-06-15 16:49:49",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-15 16:39:49"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 270.0,
+        "end_time": "2024-06-15 16:59:49",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-15 16:55:49"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3210.0,
+        "end_time": "2024-06-15 17:59:49",
+        "parent": "6月14日08_00_6月15日18_00",
+        "start_time": "2024-06-15 17:06:49"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1560.0,
+        "end_time": "2024-06-17 09:25:56",
+        "parent": "6月17日09_00_6月17日16_00",
+        "start_time": "2024-06-17 09:00:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 300.0,
+        "end_time": "2024-06-17 09:36:56",
+        "parent": "6月17日09_00_6月17日16_00",
+        "start_time": "2024-06-17 09:32:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4830.0,
+        "end_time": "2024-06-17 13:14:26",
+        "parent": "6月17日09_00_6月17日16_00",
+        "start_time": "2024-06-17 11:54:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 660.0,
+        "end_time": "2024-06-17 15:11:26",
+        "parent": "6月17日09_00_6月17日16_00",
+        "start_time": "2024-06-17 15:00:56"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2580.0,
+        "end_time": "2024-06-17 15:59:56",
+        "parent": "6月17日09_00_6月17日16_00",
+        "start_time": "2024-06-17 15:17:26"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 4230.0,
+        "end_time": "2024-06-20 09:10:07",
+        "parent": "6月20日08_00_6月20日16_00",
+        "start_time": "2024-06-20 08:00:07"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 60.0,
+        "end_time": "2024-06-20 09:17:07",
+        "parent": "6月20日08_00_6月20日16_00",
+        "start_time": "2024-06-20 09:16:37"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4710.0,
+        "end_time": "2024-06-20 12:43:08",
+        "parent": "6月20日08_00_6月20日16_00",
+        "start_time": "2024-06-20 11:25:08"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 300.0,
+        "end_time": "2024-06-20 12:58:38",
+        "parent": "6月20日08_00_6月20日16_00",
+        "start_time": "2024-06-20 12:54:08"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 330.0,
+        "end_time": "2024-06-20 14:45:08",
+        "parent": "6月20日08_00_6月20日16_00",
+        "start_time": "2024-06-20 14:40:08"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 4140.0,
+        "end_time": "2024-06-20 15:59:38",
+        "parent": "6月20日08_00_6月20日16_00",
+        "start_time": "2024-06-20 14:51:08"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 480.0,
+        "end_time": "2024-06-26 08:07:58",
+        "parent": "6月26日08_00_6月26日13_00",
+        "start_time": "2024-06-26 08:00:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 30.0,
+        "end_time": "2024-06-26 08:31:28",
+        "parent": "6月26日08_00_6月26日13_00",
+        "start_time": "2024-06-26 08:31:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 390.0,
+        "end_time": "2024-06-26 09:14:28",
+        "parent": "6月26日08_00_6月26日13_00",
+        "start_time": "2024-06-26 09:08:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 510.0,
+        "end_time": "2024-06-26 09:49:58",
+        "parent": "6月26日08_00_6月26日13_00",
+        "start_time": "2024-06-26 09:41:58"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 90.0,
+        "end_time": "2024-06-26 10:32:58",
+        "parent": "6月26日08_00_6月26日13_00",
+        "start_time": "2024-06-26 10:31:58"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 150.0,
+        "end_time": "2024-06-26 10:51:28",
+        "parent": "6月26日08_00_6月26日13_00",
+        "start_time": "2024-06-26 10:49:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 90.0,
+        "end_time": "2024-06-26 11:02:58",
+        "parent": "6月26日08_00_6月26日13_00",
+        "start_time": "2024-06-26 11:01:58"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 300.0,
+        "end_time": "2024-06-26 12:20:58",
+        "parent": "6月26日08_00_6月26日13_00",
+        "start_time": "2024-06-26 12:16:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2010.0,
+        "end_time": "2024-06-26 12:59:58",
+        "parent": "6月26日08_00_6月26日13_00",
+        "start_time": "2024-06-26 12:26:58"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3151.0,
+        "end_time": "2024-06-28 08:52:03",
+        "parent": "6月28日08_00_6月28日15_00",
+        "start_time": "2024-06-28 08:00:02"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 90.0,
+        "end_time": "2024-06-28 09:00:33",
+        "parent": "6月28日08_00_6月28日15_00",
+        "start_time": "2024-06-28 08:59:33"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4410.0,
+        "end_time": "2024-06-28 12:15:03",
+        "parent": "6月28日08_00_6月28日15_00",
+        "start_time": "2024-06-28 11:02:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 150.0,
+        "end_time": "2024-06-28 14:13:33",
+        "parent": "6月28日08_00_6月28日15_00",
+        "start_time": "2024-06-28 14:11:33"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2431.0,
+        "end_time": "2024-06-28 14:59:34",
+        "parent": "6月28日08_00_6月28日15_00",
+        "start_time": "2024-06-28 14:19:33"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1260.0,
+        "end_time": "2024-06-30 05:20:39",
+        "parent": "6月30日05_00_6月30日11_00",
+        "start_time": "2024-06-30 05:00:09"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 630.0,
+        "end_time": "2024-06-30 05:37:10",
+        "parent": "6月30日05_00_6月30日11_00",
+        "start_time": "2024-06-30 05:27:10"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 3420.0,
+        "end_time": "2024-06-30 08:34:40",
+        "parent": "6月30日05_00_6月30日11_00",
+        "start_time": "2024-06-30 07:38:10"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 330.0,
+        "end_time": "2024-06-30 10:22:40",
+        "parent": "6月30日05_00_6月30日11_00",
+        "start_time": "2024-06-30 10:17:40"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 240.0,
+        "end_time": "2024-06-30 10:29:40",
+        "parent": "6月30日05_00_6月30日11_00",
+        "start_time": "2024-06-30 10:26:10"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1470.0,
+        "end_time": "2024-06-30 10:59:40",
+        "parent": "6月30日05_00_6月30日11_00",
+        "start_time": "2024-06-30 10:35:40"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1230.0,
+        "end_time": "2024-07-02 14:20:18",
+        "parent": "7月2日14_00_7月2日18_00",
+        "start_time": "2024-07-02 14:00:18"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 750.0,
+        "end_time": "2024-07-02 14:39:48",
+        "parent": "7月2日14_00_7月2日18_00",
+        "start_time": "2024-07-02 14:27:48"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 4951.0,
+        "end_time": "2024-07-02 17:28:50",
+        "parent": "7月2日14_00_7月2日18_00",
+        "start_time": "2024-07-02 16:06:49"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1440.0,
+        "end_time": "2024-07-02 17:59:50",
+        "parent": "7月2日14_00_7月2日18_00",
+        "start_time": "2024-07-02 17:36:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1350.0,
+        "end_time": "2024-07-03 08:22:22",
+        "parent": "7月3日08_00_7月3日16_00",
+        "start_time": "2024-07-03 08:00:22"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 90.0,
+        "end_time": "2024-07-03 08:29:52",
+        "parent": "7月3日08_00_7月3日16_00",
+        "start_time": "2024-07-03 08:28:52"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 9181.0,
+        "end_time": "2024-07-03 13:01:53",
+        "parent": "7月3日08_00_7月3日16_00",
+        "start_time": "2024-07-03 10:29:22"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 480.0,
+        "end_time": "2024-07-03 15:03:53",
+        "parent": "7月3日08_00_7月3日16_00",
+        "start_time": "2024-07-03 14:56:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2970.0,
+        "end_time": "2024-07-03 15:59:53",
+        "parent": "7月3日08_00_7月3日16_00",
+        "start_time": "2024-07-03 15:10:53"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1110.0,
+        "end_time": "2024-07-09 08:18:18",
+        "parent": "7月9日08_00_7月9日16_00",
+        "start_time": "2024-07-09 08:00:18"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 240.0,
+        "end_time": "2024-07-09 08:27:48",
+        "parent": "7月9日08_00_7月9日16_00",
+        "start_time": "2024-07-09 08:24:18"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 3870.0,
+        "end_time": "2024-07-09 09:36:48",
+        "parent": "7月9日08_00_7月9日16_00",
+        "start_time": "2024-07-09 08:32:48"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 3870.0,
+        "end_time": "2024-07-09 12:39:19",
+        "parent": "7月9日08_00_7月9日16_00",
+        "start_time": "2024-07-09 11:35:19"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4650.0,
+        "end_time": "2024-07-09 14:07:20",
+        "parent": "7月9日08_00_7月9日16_00",
+        "start_time": "2024-07-09 12:50:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 270.0,
+        "end_time": "2024-07-09 15:53:20",
+        "parent": "7月9日08_00_7月9日16_00",
+        "start_time": "2024-07-09 15:49:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3090.0,
+        "end_time": "2024-07-10 08:51:23",
+        "parent": "7月10日08_00_7月10日18_00",
+        "start_time": "2024-07-10 08:00:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 360.0,
+        "end_time": "2024-07-10 09:03:23",
+        "parent": "7月10日08_00_7月10日18_00",
+        "start_time": "2024-07-10 08:57:53"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 4950.0,
+        "end_time": "2024-07-10 13:02:53",
+        "parent": "7月10日08_00_7月10日18_00",
+        "start_time": "2024-07-10 11:40:53"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 5370.0,
+        "end_time": "2024-07-10 14:44:23",
+        "parent": "7月10日08_00_7月10日18_00",
+        "start_time": "2024-07-10 13:15:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 60.0,
+        "end_time": "2024-07-10 14:53:53",
+        "parent": "7月10日08_00_7月10日18_00",
+        "start_time": "2024-07-10 14:53:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 510.0,
+        "end_time": "2024-07-10 15:07:23",
+        "parent": "7月10日08_00_7月10日18_00",
+        "start_time": "2024-07-10 14:59:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1050.0,
+        "end_time": "2024-07-10 15:40:23",
+        "parent": "7月10日08_00_7月10日18_00",
+        "start_time": "2024-07-10 15:23:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1590.0,
+        "end_time": "2024-07-10 16:22:23",
+        "parent": "7月10日08_00_7月10日18_00",
+        "start_time": "2024-07-10 15:56:23"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 121.0,
+        "end_time": "2024-07-10 16:25:02",
+        "parent": "7月10日08_00_7月10日18_00",
+        "start_time": "2024-07-10 16:23:31"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 240.0,
+        "end_time": "2024-07-10 17:51:02",
+        "parent": "7月10日08_00_7月10日18_00",
+        "start_time": "2024-07-10 17:47:32"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 150.0,
+        "end_time": "2024-07-10 17:59:32",
+        "parent": "7月10日08_00_7月10日18_00",
+        "start_time": "2024-07-10 17:57:32"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 750.0,
+        "end_time": "2024-07-11 06:12:03",
+        "parent": "7月11日06_00_7月12日10_00",
+        "start_time": "2024-07-11 06:00:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 120.0,
+        "end_time": "2024-07-11 06:19:33",
+        "parent": "7月11日06_00_7月12日10_00",
+        "start_time": "2024-07-11 06:18:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 690.0,
+        "end_time": "2024-07-11 09:04:03",
+        "parent": "7月11日06_00_7月12日10_00",
+        "start_time": "2024-07-11 08:53:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 12270.0,
+        "end_time": "2024-07-11 12:40:03",
+        "parent": "7月11日06_00_7月12日10_00",
+        "start_time": "2024-07-11 09:16:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 67112.0,
+        "end_time": "2024-07-12 08:13:05",
+        "parent": "7月11日06_00_7月12日10_00",
+        "start_time": "2024-07-11 13:35:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 150.0,
+        "end_time": "2024-07-12 09:10:35",
+        "parent": "7月11日06_00_7月12日10_00",
+        "start_time": "2024-07-12 09:08:35"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2610.0,
+        "end_time": "2024-07-12 09:59:35",
+        "parent": "7月11日06_00_7月12日10_00",
+        "start_time": "2024-07-12 09:16:35"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 810.0,
+        "end_time": "2024-07-15 14:13:13",
+        "parent": "7月15日14_00_7月15日16_00",
+        "start_time": "2024-07-15 14:00:13"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 300.0,
+        "end_time": "2024-07-15 14:23:43",
+        "parent": "7月15日14_00_7月15日16_00",
+        "start_time": "2024-07-15 14:19:13"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 390.0,
+        "end_time": "2024-07-15 15:45:43",
+        "parent": "7月15日14_00_7月15日16_00",
+        "start_time": "2024-07-15 15:39:43"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 510.0,
+        "end_time": "2024-07-15 15:59:43",
+        "parent": "7月15日14_00_7月15日16_00",
+        "start_time": "2024-07-15 15:51:43"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2400.0,
+        "end_time": "2024-07-18 08:39:50",
+        "parent": "7月18日08_00_7月18日12_00",
+        "start_time": "2024-07-18 08:00:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 360.0,
+        "end_time": "2024-07-18 08:51:50",
+        "parent": "7月18日08_00_7月18日12_00",
+        "start_time": "2024-07-18 08:46:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 360.0,
+        "end_time": "2024-07-18 10:08:50",
+        "parent": "7月18日08_00_7月18日12_00",
+        "start_time": "2024-07-18 10:03:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 180.0,
+        "end_time": "2024-07-18 10:17:50",
+        "parent": "7月18日08_00_7月18日12_00",
+        "start_time": "2024-07-18 10:15:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 330.0,
+        "end_time": "2024-07-18 10:56:20",
+        "parent": "7月18日08_00_7月18日12_00",
+        "start_time": "2024-07-18 10:51:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3421.0,
+        "end_time": "2024-07-18 11:59:51",
+        "parent": "7月18日08_00_7月18日12_00",
+        "start_time": "2024-07-18 11:03:20"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1770.0,
+        "end_time": "2024-07-19 07:29:22",
+        "parent": "7月19日07_00_7月19日09_00",
+        "start_time": "2024-07-19 07:00:22"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 330.0,
+        "end_time": "2024-07-19 07:40:22",
+        "parent": "7月19日07_00_7月19日09_00",
+        "start_time": "2024-07-19 07:35:22"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1260.0,
+        "end_time": "2024-07-19 08:05:52",
+        "parent": "7月19日07_00_7月19日09_00",
+        "start_time": "2024-07-19 07:45:22"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 300.0,
+        "end_time": "2024-07-19 08:59:52",
+        "parent": "7月19日07_00_7月19日09_00",
+        "start_time": "2024-07-19 08:55:22"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 3030.0,
+        "end_time": "2024-07-22 08:50:28",
+        "parent": "7月22日08_00_7月22日11_00",
+        "start_time": "2024-07-22 08:00:28"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 120.0,
+        "end_time": "2024-07-22 08:58:28",
+        "parent": "7月22日08_00_7月22日11_00",
+        "start_time": "2024-07-22 08:56:58"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 269.0,
+        "end_time": "2024-07-22 10:57:58",
+        "parent": "7月22日08_00_7月22日11_00",
+        "start_time": "2024-07-22 10:53:59"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1020.0,
+        "end_time": "2024-07-23 12:16:31",
+        "parent": "7月23日12_00_7月23日15_00",
+        "start_time": "2024-07-23 12:00:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 210.0,
+        "end_time": "2024-07-23 12:27:01",
+        "parent": "7月23日12_00_7月23日15_00",
+        "start_time": "2024-07-23 12:24:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 30.0,
+        "end_time": "2024-07-23 12:30:31",
+        "parent": "7月23日12_00_7月23日15_00",
+        "start_time": "2024-07-23 12:30:31"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 510.0,
+        "end_time": "2024-07-23 14:25:01",
+        "parent": "7月23日12_00_7月23日15_00",
+        "start_time": "2024-07-23 14:17:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1740.0,
+        "end_time": "2024-07-23 14:59:31",
+        "parent": "7月23日12_00_7月23日15_00",
+        "start_time": "2024-07-23 14:31:01"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 480.0,
+        "end_time": "2024-07-24 14:07:33",
+        "parent": "7月24日14_00_7月24日17_00",
+        "start_time": "2024-07-24 14:00:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1290.0,
+        "end_time": "2024-07-24 14:37:03",
+        "parent": "7月24日14_00_7月24日17_00",
+        "start_time": "2024-07-24 14:16:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 90.0,
+        "end_time": "2024-07-24 16:16:03",
+        "parent": "7月24日14_00_7月24日17_00",
+        "start_time": "2024-07-24 16:15:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 690.0,
+        "end_time": "2024-07-24 16:58:03",
+        "parent": "7月24日14_00_7月24日17_00",
+        "start_time": "2024-07-24 16:47:03"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1050.0,
+        "end_time": "2024-07-25 08:17:04",
+        "parent": "7月25日08_00_7月25日17_00",
+        "start_time": "2024-07-25 08:00:04"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 240.0,
+        "end_time": "2024-07-25 08:28:34",
+        "parent": "7月25日08_00_7月25日17_00",
+        "start_time": "2024-07-25 08:25:04"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 8790.0,
+        "end_time": "2024-07-25 14:02:05",
+        "parent": "7月25日08_00_7月25日17_00",
+        "start_time": "2024-07-25 11:36:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 1860.0,
+        "end_time": "2024-07-25 14:42:35",
+        "parent": "7月25日08_00_7月25日17_00",
+        "start_time": "2024-07-25 14:12:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 780.0,
+        "end_time": "2024-07-25 16:01:05",
+        "parent": "7月25日08_00_7月25日17_00",
+        "start_time": "2024-07-25 15:48:35"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 390.0,
+        "end_time": "2024-07-25 16:42:35",
+        "parent": "7月25日08_00_7月25日17_00",
+        "start_time": "2024-07-25 16:36:35"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 660.0,
+        "end_time": "2024-07-25 16:59:35",
+        "parent": "7月25日08_00_7月25日17_00",
+        "start_time": "2024-07-25 16:49:05"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 390.0,
+        "end_time": "2024-07-26 11:06:07",
+        "parent": "7月26日11_00_7月26日13_00",
+        "start_time": "2024-07-26 11:00:07"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 360.0,
+        "end_time": "2024-07-26 12:12:07",
+        "parent": "7月26日11_00_7月26日13_00",
+        "start_time": "2024-07-26 12:06:37"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2490.0,
+        "end_time": "2024-07-26 12:59:37",
+        "parent": "7月26日11_00_7月26日13_00",
+        "start_time": "2024-07-26 12:18:37"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1260.0,
+        "end_time": "2024-07-29 14:20:43",
+        "parent": "7月29日14_00_7月29日17_00",
+        "start_time": "2024-07-29 14:00:13"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 270.0,
+        "end_time": "2024-07-29 14:31:13",
+        "parent": "7月29日14_00_7月29日17_00",
+        "start_time": "2024-07-29 14:27:13"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 120.0,
+        "end_time": "2024-07-29 16:12:13",
+        "parent": "7月29日14_00_7月29日17_00",
+        "start_time": "2024-07-29 16:10:43"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 2430.0,
+        "end_time": "2024-07-29 16:59:43",
+        "parent": "7月29日14_00_7月29日17_00",
+        "start_time": "2024-07-29 16:19:43"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1560.0,
+        "end_time": "2024-07-31 08:25:47",
+        "parent": "7月31日08_00_7月31日11_00",
+        "start_time": "2024-07-31 08:00:17"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 510.0,
+        "end_time": "2024-07-31 08:40:17",
+        "parent": "7月31日08_00_7月31日11_00",
+        "start_time": "2024-07-31 08:32:17"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 180.0,
+        "end_time": "2024-07-31 09:37:17",
+        "parent": "7月31日08_00_7月31日11_00",
+        "start_time": "2024-07-31 09:34:47"
+      },
+      {
+        "bracketed_by_sustained_sailing": true,
+        "duration_s": 60.0,
+        "end_time": "2024-07-31 09:44:17",
+        "parent": "7月31日08_00_7月31日11_00",
+        "start_time": "2024-07-31 09:43:47"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 210.0,
+        "end_time": "2024-07-31 10:25:47",
+        "parent": "7月31日08_00_7月31日11_00",
+        "start_time": "2024-07-31 10:22:47"
+      },
+      {
+        "bracketed_by_sustained_sailing": false,
+        "duration_s": 1650.0,
+        "end_time": "2024-07-31 10:59:47",
+        "parent": "7月31日08_00_7月31日11_00",
+        "start_time": "2024-07-31 10:32:47"
+      }
+    ],
+    "parent_split": {
+      "algorithm": "deterministic median-feature seed, maximum feasible overload-energy seed, then farthest-point coverage in equal-weight percentile ranks; chronological tie-break",
+      "basis": "redesigned because original test parents supplied fewer than five complete feasible voyages; seven test parents selected by frozen raw-feature rank coverage, remaining natural parents prioritized for validation, then original validation chronology; remaining parents train",
+      "features": [
+        "natural duration",
+        "mean load",
+        "above600 deficit energy",
+        "absolute load change p95"
+      ],
+      "freeze_rule": "rebuilding unchanged raw inputs regenerates the same parent list; do not reselect after controller outcomes; previous weights trained on reassigned parents cannot provide an uncontaminated benchmark",
+      "original_test_feasible_natural_voyage_count": 0,
+      "selection_inputs": "raw telemetry quality, AIS natural boundaries, load features and independent existence feasibility only; no historical training or controller scores",
+      "stable_low10_definition": "at least three consecutive observed 30 s boundary points with 0 <= load < 10 kW; preference only, never a trimming or load-editing rule",
+      "survey_natural_voyage_count": 14,
+      "test_boundary_preference": "prefer complete candidates with stable observed start and end load below 10 kW only when quality is no lower; zero qualifying alternatives found, so all eight existing representative Test voyages are retained"
+    },
+    "positive_aligned_speed_q01_kn": 0.1,
+    "power_cadence_s": 30.0,
+    "power_gap_limit_s": 45.0,
+    "prohibited_test_candidate_source": "total_load_excels/ is permanently prohibited from formal Test candidate search because it is 8 FC + BDM, not 8 FC + 12 battery clusters",
+    "short_stop_max_s": 5850.0,
+    "soc_continuity_rule": "all 12 clusters available and adjacent arithmetic-mean jump <=2C*elapsed_hours*100 +2 percentage points; no calibration claim",
+    "stationary_duration_quantiles_s": {
+      "0": 30.0,
+      "0.25": 240.0,
+      "0.5": 750.0,
+      "0.75": 2430.0,
+      "0.9": 4410.1,
+      "0.95": 7721.999999999962,
+      "0.99": 25171.29,
+      "1": 66362.0
+    },
+    "stationary_interval_count": 400,
+    "stationary_speed_kn": 0.1,
+    "stop_basis": "No bimodality asserted. Pause means absence of >=1kn sailing sustained for six measured cycles; isolated AIS jitter cannot restart a task. Bracketed-pause empirical p90 requires sustained sailing on both sides and actual stationary evidence. Terminal dwell retains empirical median pause duration bounded to 2-10 cycles; all thresholds frozen before selection.",
+    "sustained_sailing_speed_kn": 1.0,
+    "terminal_settle_s": 300.0,
+    "test_selection": "all complete natural, quality accepted, independently feasible voyages in held-out parents; no outcome input or count quota",
+    "tiny_pchip_negative_epsilon_kw": 1e-09,
+    "tolerance_basis": "Entire observed micro-offset cluster within cadence/6; do not discard rare 2-3 s offsets by percentile truncation",
+    "version": "final-operating-v1",
+    "zero_drift_kw": 1.0
+  },
+  "raw_parent_count": 66,
+  "raw_zero_drift_corrections": 8427,
+  "source_reference_point_count": 54817,
+  "source_unobserved_gap_duration_s": 49753.0,
+  "stop_summary": {
+    "long_or_terminal_interval_count": 286,
+    "long_or_terminal_retained_support_s": 17250.0,
+    "long_or_terminal_support_s": 736191.0,
+    "short_retained_count": 11,
+    "short_retained_support_s": 6630.0
+  },
+  "test_candidate_boundary_summary": {
+    "decision": "retain all eight existing Test candidates because no equally qualified complete voyage has a stable observed boundary below 10 kW",
+    "nonzero_boundary_reason": "onboard auxiliary load under vessel-side independent supply",
+    "replaced_existing_test_count": 0,
+    "selected_test_count": 8,
+    "stable_exactly_one_boundary_below_10kw_count": 0,
+    "stable_neither_boundary_below_10kw_count": 14,
+    "stable_start_and_end_below_10kw_count": 0,
+    "strict_complete_natural_candidate_count": 14
+  },
+  "test_ids": [
+    "test_parent_011_01",
+    "test_parent_017_01",
+    "test_parent_024_01",
+    "test_parent_025_01",
+    "test_parent_041_01",
+    "test_parent_041_02",
+    "test_parent_045_01",
+    "test_parent_054_01"
+  ],
+  "test_parent_list_frozen": [
+    "4月12日08_00_4月12日16_00",
+    "4月22日14_00_4月22日17_00",
+    "5月7日08_00_5月7日18_00",
+    "5月8日08_00_5月8日17_00",
+    "6月13日08_00_6月13日14_00",
+    "6月6日10_00_6月6日21_00",
+    "7月9日08_00_7月9日16_00"
+  ],
+  "unused_fraction_denominator": "all left-FC1 reference records; time gaps have no measured points and are reported separately; stress not formal",
+  "unused_source_point_fraction": 0.8726672382655016
+}
