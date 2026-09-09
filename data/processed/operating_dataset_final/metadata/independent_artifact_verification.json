@@ -13,10 +13,10 @@
     "serialized test power/SOC/ramp witnesses"
   ],
   "errors": [],
-  "formal_reference_points_checked": 20336,
-  "formal_samples_checked": 124,
+  "formal_reference_points_checked": 24669,
+  "formal_samples_checked": 145,
   "passed": true,
   "reference_points_checked": 54817,
-  "samples_checked": 125,
+  "samples_checked": 146,
   "test_witnesses_independently_recomputed": 8
 }

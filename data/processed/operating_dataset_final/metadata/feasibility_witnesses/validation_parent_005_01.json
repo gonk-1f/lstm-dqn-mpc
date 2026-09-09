@@ -17,19 +17,19 @@
     ],
     "terminal_soc_target": null
   },
-  "executed_step_count": 7140,
+  "executed_step_count": 6781,
   "feasible": true,
-  "final_soc": 0.5500000000000029,
+  "final_soc": 0.5499999999999994,
   "initialization": {
     "dt_seconds": 1.0,
     "first_executed_load_index": 1,
     "initial_soc": 0.55,
-    "previous_fc_kw": 34.956429
+    "previous_fc_kw": 48.846700000000006
   },
-  "max_soc": 0.5904092585319478,
+  "max_soc": 0.6638230666745408,
   "method": "O(n) ramp-envelope convex allocation with independently checked physical witness",
-  "min_soc": 0.44538793454052406,
-  "sample_count": 7141,
+  "min_soc": 0.4976869980207817,
+  "sample_count": 6782,
   "solver_message": null,
   "solver_status": null,
   "status": "feasible",
@@ -40,7 +40,7 @@
     "power_balance_max_abs_kw": 2.842170943040401e-14,
     "power_tolerance_kw": 1e-06,
     "soc_bound_max_violation": 0.0,
-    "soc_dynamics_max_abs": 1.1629762365801544e-16,
+    "soc_dynamics_max_abs": 1.2371255007827958e-16,
     "soc_tolerance": 1e-09,
     "valid": true
   }

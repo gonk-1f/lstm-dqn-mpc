@@ -103,10 +103,10 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         split = training.load_voyage_split(training.DEFAULT_SPLIT_MANIFEST)
 
         self.assertEqual(len(split.train_segments), 110)
-        self.assertEqual(len(split.validation_segments), 6)
+        self.assertEqual(len(split.validation_segments), 27)
         self.assertEqual(len(split.test_segments), 8)
         self.assertEqual(len(split.train_parents), 45)
-        self.assertEqual(len(split.validation_parents), 6)
+        self.assertEqual(len(split.validation_parents), 13)
         self.assertEqual(len(split.test_parents), 7)
 
         train = set(split.train_segments)
@@ -115,7 +115,7 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.assertFalse(train & validation)
         self.assertFalse(train & test)
         self.assertFalse(validation & test)
-        self.assertEqual(len(train | validation | test), 124)
+        self.assertEqual(len(train | validation | test), 145)
         self.assertTrue(
             all(identifier.startswith(("train_parent_", "validation_parent_", "test_parent_")) for identifier in train | validation | test)
         )
@@ -131,7 +131,7 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
 
         statistics = training.effective_split_statistics(split)
         self.assertEqual(statistics["train"], {"segment_count": 110, "point_count": 521376})
-        self.assertEqual(statistics["validation"], {"segment_count": 6, "point_count": 37866})
+        self.assertEqual(statistics["validation"], {"segment_count": 27, "point_count": 167251})
 
     def test_formal_configuration_uses_long_horizon_gamma(self) -> None:
         runtime = training.create_training_runtime(self.make_config())

@@ -2,7 +2,7 @@
   "alignment": {
     "beyond_legacy_1s_channel_records": 326,
     "beyond_legacy_1s_power_reference_points": 27,
-    "formal_repaired_power_reference_points": 14453,
+    "formal_repaired_power_reference_points": 17537,
     "repaired_channel_records": 307668,
     "repaired_power_channel_records": 234006,
     "unique_repaired_power_reference_points": 39429
@@ -166,47 +166,54 @@
       "used_parent_count": 45
     },
     "validation": {
-      "above600_deficit_energy_kwh": 36.424694555510776,
-      "above600_duration_s": 3284,
-      "above600_load_energy_kwh": 583.758027888844,
+      "above600_deficit_energy_kwh": 705.7183819383379,
+      "above600_duration_s": 27092,
+      "above600_load_energy_kwh": 5221.051715271672,
       "assigned_parent_count": 13,
-      "delta_abs_max_kw_per_s": 19.13672953535513,
-      "delta_abs_mean_kw_per_s": 0.5563581454833598,
-      "delta_abs_p95_kw_per_s": 2.4325817138377714,
-      "delta_abs_p99_kw_per_s": 7.067164755663369,
-      "duration_hours": 10.516666666666667,
+      "delta_abs_max_kw_per_s": 31.5066737931852,
+      "delta_abs_mean_kw_per_s": 0.6239765427450606,
+      "delta_abs_p95_kw_per_s": 2.531027800013955,
+      "delta_abs_p99_kw_per_s": 8.031604049665875,
+      "duration_hours": 46.45111111111111,
       "duration_quantiles_s": {
-        "0.0": 810.0,
-        "0.25": 6780.0,
-        "0.5": 7275.0,
-        "0.75": 7567.5,
-        "1.0": 8220.0
+        "0.0": 600.0,
+        "0.25": 3600.0,
+        "0.5": 7140.0,
+        "0.75": 7470.0,
+        "1.0": 20010.0
       },
-      "duration_s": 37860,
-      "high_load_duration_s": 9964,
-      "load_max_kw": 742.0863999999999,
-      "load_mean_kw": 307.2911141358283,
-      "load_median_kw": 330.47537370725826,
-      "load_p90_kw": 550.6917983313508,
-      "load_p95_kw": 625.9983082854603,
-      "load_p99_kw": 698.4079355483152,
-      "low_load_duration_s": 10742,
-      "medium_load_duration_s": 17154,
-      "onboard_charging_duration_s": 4564.0,
-      "onboard_charging_interval_count": 13,
+      "duration_s": 167224,
+      "high_load_duration_s": 72850,
+      "load_max_kw": 1031.7937,
+      "load_mean_kw": 379.3263118223579,
+      "load_median_kw": 366.9335544495696,
+      "load_p90_kw": 640.0268154527756,
+      "load_p95_kw": 759.6307158319657,
+      "load_p99_kw": 817.243300875463,
+      "low_load_duration_s": 31978,
+      "medium_load_duration_s": 62396,
+      "onboard_charging_duration_s": 13985.0,
+      "onboard_charging_interval_count": 40,
       "parent_sample_distribution": {
-        "3月29日08_00_3月29日15_00": 1,
-        "4月21日08_00_4月21日16_00": 1,
-        "4月29日08_00_4月29日18_00": 1,
+        "3月29日08_00_3月29日15_00": 2,
+        "4月21日08_00_4月21日16_00": 2,
+        "4月29日08_00_4月29日18_00": 3,
         "4月2日14_00_4月2日17_00": 1,
-        "6月14日08_00_6月15日18_00": 1,
-        "6月7日00_00_6月7日24_00": 1
+        "6月14日08_00_6月15日18_00": 2,
+        "6月17日09_00_6月17日16_00": 1,
+        "6月20日08_00_6月20日16_00": 2,
+        "6月26日08_00_6月26日13_00": 6,
+        "6月28日08_00_6月28日15_00": 2,
+        "6月30日05_00_6月30日11_00": 2,
+        "6月7日00_00_6月7日24_00": 1,
+        "7月2日14_00_7月2日18_00": 1,
+        "7月3日08_00_7月3日16_00": 2
       },
-      "sailing_duration_s": 35100.0,
-      "sample_count": 6,
-      "short_stop_count": 0,
-      "stationary_duration_s": 2760.0,
-      "used_parent_count": 6
+      "sailing_duration_s": 155104.0,
+      "sample_count": 27,
+      "short_stop_count": 4,
+      "stationary_duration_s": 12120.0,
+      "used_parent_count": 13
     }
   },
   "exclusion_reason_fraction_of_source": {
@@ -217,7 +224,7 @@
     "long_stop_dwell_core": 0.12184176441614827,
     "physical_inconsistency_negative_balance": 0.004268748745827024,
     "physical_infeasible_stress_case": 0.0029917726252804786,
-    "quality_cut_without_natural_transition": 0.11824798876261014,
+    "quality_cut_without_natural_transition": 0.039203166900778956,
     "stationary_only_without_sailing_task": 0.19056132221756025,
     "unexplained_source_load_inconsistency": 0.0006202455442654651
   },
@@ -229,17 +236,17 @@
     "long_stop_dwell_core": 6679,
     "physical_inconsistency_negative_balance": 234,
     "physical_infeasible_stress_case": 164,
-    "quality_cut_without_natural_transition": 6482,
+    "quality_cut_without_natural_transition": 2149,
     "stationary_only_without_sailing_task": 10446,
     "unexplained_source_load_inconsistency": 34
   },
-  "formal_source_point_count": 20336,
+  "formal_source_point_count": 24669,
   "legacy_boundary_case_summary": [
     {
       "A_end_time": "2024-06-20 09:42:37",
       "B_start_time": "2024-06-20 09:43:37",
       "interior_all_power_aligned": true,
-      "interior_disposition_reasons": "quality_cut_without_natural_transition",
+      "interior_disposition_reasons": "accepted_validation",
       "interior_max_load_kw": 542.7206,
       "interior_max_speed_kn": 8.9,
       "interior_min_load_kw": 542.7206,
@@ -250,14 +257,14 @@
       "legacy_B": "operating_segment_0149",
       "old_elapsed_cut_s": 60.0,
       "parent": "6月20日08_00_6月20日16_00",
-      "restored_in_formal_sample": false,
-      "same_new_sample_ids": ""
+      "restored_in_formal_sample": true,
+      "same_new_sample_ids": "validation_parent_048_01"
     },
     {
       "A_end_time": "2024-06-30 06:08:40",
       "B_start_time": "2024-06-30 06:09:40",
       "interior_all_power_aligned": true,
-      "interior_disposition_reasons": "quality_cut_without_natural_transition",
+      "interior_disposition_reasons": "accepted_validation",
       "interior_max_load_kw": 504.2894,
       "interior_max_speed_kn": 8.5,
       "interior_min_load_kw": 504.2894,
@@ -268,14 +275,14 @@
       "legacy_B": "operating_segment_0154",
       "old_elapsed_cut_s": 60.0,
       "parent": "6月30日05_00_6月30日11_00",
-      "restored_in_formal_sample": false,
-      "same_new_sample_ids": ""
+      "restored_in_formal_sample": true,
+      "same_new_sample_ids": "validation_parent_051_01"
     },
     {
       "A_end_time": "2024-06-30 09:40:52",
       "B_start_time": "2024-06-30 09:41:41",
       "interior_all_power_aligned": true,
-      "interior_disposition_reasons": "quality_cut_without_natural_transition",
+      "interior_disposition_reasons": "accepted_validation",
       "interior_max_load_kw": 354.272464,
       "interior_max_speed_kn": 10.785,
       "interior_min_load_kw": 354.272464,
@@ -286,14 +293,14 @@
       "legacy_B": "operating_segment_0155",
       "old_elapsed_cut_s": 49.0,
       "parent": "6月30日05_00_6月30日11_00",
-      "restored_in_formal_sample": false,
-      "same_new_sample_ids": ""
+      "restored_in_formal_sample": true,
+      "same_new_sample_ids": "validation_parent_051_02"
     },
     {
       "A_end_time": "2024-07-03 08:33:22",
       "B_start_time": "2024-07-03 08:34:22",
       "interior_all_power_aligned": true,
-      "interior_disposition_reasons": "quality_cut_without_natural_transition",
+      "interior_disposition_reasons": "accepted_validation",
       "interior_max_load_kw": 230.2192,
       "interior_max_speed_kn": 7.0,
       "interior_min_load_kw": 230.2192,
@@ -304,8 +311,8 @@
       "legacy_B": "operating_segment_0158",
       "old_elapsed_cut_s": 60.0,
       "parent": "7月3日08_00_7月3日16_00",
-      "restored_in_formal_sample": false,
-      "same_new_sample_ids": ""
+      "restored_in_formal_sample": true,
+      "same_new_sample_ids": "validation_parent_053_01"
     },
     {
       "A_end_time": "2024-07-09 09:57:49",
@@ -3289,10 +3296,10 @@
   "source_unobserved_gap_duration_s": 49753.0,
   "stop_summary": {
     "long_or_terminal_interval_count": 286,
-    "long_or_terminal_retained_support_s": 33450.0,
+    "long_or_terminal_retained_support_s": 38160.0,
     "long_or_terminal_support_s": 736191.0,
-    "short_retained_count": 23,
-    "short_retained_support_s": 24573.0
+    "short_retained_count": 27,
+    "short_retained_support_s": 30333.0
   },
   "test_candidate_boundary_summary": {
     "decision": "retain all eight existing Test candidates because no equally qualified complete voyage has a stable observed boundary below 10 kW",
@@ -3324,5 +3331,5 @@
     "7月9日08_00_7月9日16_00"
   ],
   "unused_fraction_denominator": "all left-FC1 reference records; time gaps have no measured points and are reported separately; stress not formal",
-  "unused_source_point_fraction": 0.6290201944652206
+  "unused_source_point_fraction": 0.5499753726033895
 }
