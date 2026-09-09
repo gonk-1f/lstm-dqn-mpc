@@ -1,0 +1,47 @@
+{
+  "constraints": {
+    "battery_capacity_kwh": 624.0,
+    "battery_kw": [
+      -624.0,
+      1248.0
+    ],
+    "battery_model": "lossless",
+    "fc_kw": [
+      0.0,
+      600.0
+    ],
+    "fc_ramp_kw_per_s": 48.0,
+    "soc": [
+      0.2,
+      0.8
+    ],
+    "terminal_soc_target": null
+  },
+  "executed_step_count": 16681,
+  "feasible": true,
+  "final_soc": 0.7999791691512452,
+  "initialization": {
+    "dt_seconds": 1.0,
+    "first_executed_load_index": 1,
+    "initial_soc": 0.55,
+    "previous_fc_kw": 56.19465
+  },
+  "max_soc": 0.800000000000004,
+  "method": "full sparse linear feasibility problem (SciPy HiGHS); independently checked physical witness",
+  "min_soc": 0.55,
+  "sample_count": 16682,
+  "solver_message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+  "solver_status": 0,
+  "status": "feasible",
+  "witness_validation": {
+    "battery_bound_max_violation_kw": 0.0,
+    "fc_bound_max_violation_kw": 0.0,
+    "fc_ramp_max_violation_kw": 1.397211235598661e-10,
+    "power_balance_max_abs_kw": 5.684341886080802e-14,
+    "power_tolerance_kw": 1e-06,
+    "soc_bound_max_violation": 3.9968028886505635e-15,
+    "soc_dynamics_max_abs": 1.743973075760824e-16,
+    "soc_tolerance": 1e-09,
+    "valid": true
+  }
+}

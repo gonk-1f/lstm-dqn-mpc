@@ -1,0 +1,37 @@
+{
+  "constraints": {
+    "battery_capacity_kwh": 624.0,
+    "battery_kw": [
+      -624.0,
+      1248.0
+    ],
+    "battery_model": "lossless",
+    "fc_kw": [
+      0.0,
+      600.0
+    ],
+    "fc_ramp_kw_per_s": 48.0,
+    "soc": [
+      0.2,
+      0.8
+    ],
+    "terminal_soc_target": null
+  },
+  "executed_step_count": 4890,
+  "feasible": false,
+  "final_soc": null,
+  "initialization": {
+    "dt_seconds": 1.0,
+    "first_executed_load_index": 1,
+    "initial_soc": 0.55,
+    "previous_fc_kw": 123.82338999999999
+  },
+  "max_soc": null,
+  "method": "full sparse linear feasibility problem (SciPy HiGHS); independently checked physical witness",
+  "min_soc": null,
+  "sample_count": 4891,
+  "solver_message": "The problem is infeasible. (HiGHS Status 8: model_status is Infeasible; primal_status is None)",
+  "solver_status": 2,
+  "status": "infeasible",
+  "witness_validation": null
+}

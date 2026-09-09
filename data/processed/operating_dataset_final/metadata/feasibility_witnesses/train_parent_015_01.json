@@ -17,30 +17,30 @@
     ],
     "terminal_soc_target": null
   },
-  "executed_step_count": 7200,
+  "executed_step_count": 9780,
   "feasible": true,
-  "final_soc": 0.5500000000000004,
+  "final_soc": 0.7977339754490691,
   "initialization": {
     "dt_seconds": 1.0,
     "first_executed_load_index": 1,
     "initial_soc": 0.55,
-    "previous_fc_kw": 179.95493999999997
+    "previous_fc_kw": 135.7862
   },
-  "max_soc": 0.5903725540496313,
-  "method": "O(n) ramp-envelope convex allocation with independently checked physical witness",
-  "min_soc": 0.4889817979969286,
-  "sample_count": 7201,
-  "solver_message": null,
-  "solver_status": null,
+  "max_soc": 0.8000000000000018,
+  "method": "full sparse linear feasibility problem (SciPy HiGHS); independently checked physical witness",
+  "min_soc": 0.55,
+  "sample_count": 9781,
+  "solver_message": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+  "solver_status": 0,
   "status": "feasible",
   "witness_validation": {
     "battery_bound_max_violation_kw": 0.0,
     "fc_bound_max_violation_kw": 0.0,
-    "fc_ramp_max_violation_kw": 0.0,
-    "power_balance_max_abs_kw": 2.842170943040401e-14,
+    "fc_ramp_max_violation_kw": 1.1368683772161603e-13,
+    "power_balance_max_abs_kw": 5.684341886080802e-14,
     "power_tolerance_kw": 1e-06,
-    "soc_bound_max_violation": 0.0,
-    "soc_dynamics_max_abs": 1.1366504525794907e-16,
+    "soc_bound_max_violation": 1.7763568394002505e-15,
+    "soc_dynamics_max_abs": 1.6559086484215705e-16,
     "soc_tolerance": 1e-09,
     "valid": true
   }

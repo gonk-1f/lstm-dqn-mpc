@@ -102,10 +102,10 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.require_api()
         split = training.load_voyage_split(training.DEFAULT_SPLIT_MANIFEST)
 
-        self.assertEqual(len(split.train_segments), 20)
+        self.assertEqual(len(split.train_segments), 110)
         self.assertEqual(len(split.validation_segments), 6)
         self.assertEqual(len(split.test_segments), 8)
-        self.assertEqual(len(split.train_parents), 20)
+        self.assertEqual(len(split.train_parents), 45)
         self.assertEqual(len(split.validation_parents), 6)
         self.assertEqual(len(split.test_parents), 7)
 
@@ -115,7 +115,7 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.assertFalse(train & validation)
         self.assertFalse(train & test)
         self.assertFalse(validation & test)
-        self.assertEqual(len(train | validation | test), 34)
+        self.assertEqual(len(train | validation | test), 124)
         self.assertTrue(
             all(identifier.startswith(("train_parent_", "validation_parent_", "test_parent_")) for identifier in train | validation | test)
         )
@@ -130,7 +130,7 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.assertEqual(training.PHYSICAL_INFEASIBLE_STRESS_CASES, {})
 
         statistics = training.effective_split_statistics(split)
-        self.assertEqual(statistics["train"], {"segment_count": 20, "point_count": 123294})
+        self.assertEqual(statistics["train"], {"segment_count": 110, "point_count": 521376})
         self.assertEqual(statistics["validation"], {"segment_count": 6, "point_count": 37866})
 
     def test_formal_configuration_uses_long_horizon_gamma(self) -> None:

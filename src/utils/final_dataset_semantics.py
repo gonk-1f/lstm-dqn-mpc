@@ -180,7 +180,7 @@ def select_samples(frame, role, policy):
             natural=natural_start and natural_end and sustained and not test_quality_cut
             if duration<policy['minimum_sample_s'] or not sustained:
                 reason='insufficient_continuous_operation_duration'
-            elif quality_cut or (role=='validation' and test_quality_cut):reason='quality_cut_without_natural_transition'
+            elif role!='train' and (quality_cut or (role=='validation' and test_quality_cut)):reason='quality_cut_without_natural_transition'
             elif role=='test' and not natural:reason='test_incomplete_natural_voyage'
             else:reason=None
             if reason:

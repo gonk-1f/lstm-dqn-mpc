@@ -76,6 +76,21 @@ class SemanticsTests(unittest.TestCase):
         samples,exclusions=select_samples(d,'test',POLICY)
         self.assertEqual(samples,[])
 
+    def test_train_keeps_separate_valid_blocks_beside_quality_cut(self):
+        d=frame([5.]*25)
+        d.loc[12,'aligned']=False
+        d,_=classify_states(d,POLICY)
+
+        train_samples,train_reasons=select_samples(d,'train',POLICY)
+        validation_samples,_=select_samples(d,'validation',POLICY)
+        test_samples,_=select_samples(d,'test',POLICY)
+
+        self.assertEqual([len(sample['frame']) for sample in train_samples],[12,12])
+        self.assertEqual(train_reasons.iloc[12],'invalid_power_alignment')
+        self.assertLess(train_samples[0]['frame'].timestamp.iloc[-1],train_samples[1]['frame'].timestamp.iloc[0])
+        self.assertEqual(validation_samples,[])
+        self.assertEqual(test_samples,[])
+
     def test_long_true_gap_never_bridged(self):
         d=frame([0.]*5+[5.]*30+[0.]*5)
         d.loc[20:,'timestamp']+=pd.Timedelta(minutes=5)
