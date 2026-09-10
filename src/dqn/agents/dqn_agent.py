@@ -27,7 +27,7 @@ class DQNTrainConfig:
     log_window_steps: int = 1000
     grad_clip_norm: float = 10.0
     solver_failure_reward: float = -620.0
-    loss_type: str = "mse"
+    loss_type: str = "huber"
     network_type: str = "mlp"
     mlp_hidden_dims: tuple[int, ...] = (128, 64)
     double_dqn: bool = False
@@ -199,7 +199,7 @@ class DQNAgent:
             self._update_values_finite = torch.isfinite(q_values).all() & torch.isfinite(target).all()
         if self.config.loss_type.lower() == "mse":
             return F.mse_loss(q_values, target)
-        return F.smooth_l1_loss(q_values, target)
+        return F.smooth_l1_loss(q_values, target, beta=1.0)
 
     def update(self, batch, *, defer_diagnostics: bool = False) -> float | torch.Tensor:
         loss = self.compute_loss(batch)

@@ -139,6 +139,34 @@ class TestDqnMpcMlpSmoke(unittest.TestCase):
         self.assertGreaterEqual(action, 0)
         self.assertLess(action, ACTION_DIM)
 
+    def test_default_td_loss_is_standard_huber_beta_one(self) -> None:
+        agent = make_agent()
+        with torch.no_grad():
+            for parameter in agent.q_net.parameters():
+                parameter.zero_()
+
+        batch = (
+            np.zeros((2, STATE_DIM), dtype=np.float32),
+            np.array([0, 1], dtype=np.int64),
+            np.array([0.5, 2.0], dtype=np.float32),
+            np.ones(2, dtype=np.float32),
+            np.zeros((2, STATE_DIM), dtype=np.float32),
+        )
+
+        actual = agent.compute_loss(batch)
+        expected = torch.nn.functional.smooth_l1_loss(
+            torch.zeros(2, dtype=agent.tensor_dtype, device=agent.device),
+            torch.tensor(
+                [0.5, 2.0],
+                dtype=agent.tensor_dtype,
+                device=agent.device,
+            ),
+            beta=1.0,
+        )
+
+        torch.testing.assert_close(actual, expected)
+        self.assertEqual(agent.config.loss_type, "huber")
+
     def test_environment_replay_update_and_target_sync(
         self,
     ) -> None:

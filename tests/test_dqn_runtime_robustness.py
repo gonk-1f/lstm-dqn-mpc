@@ -358,7 +358,11 @@ class RuntimeRobustnessTests(unittest.TestCase):
         q = reference.agent.q_net(torch.tensor(states)).gather(1, torch.tensor(actions)[:, None]).squeeze(1)
         target = torch.tensor(rewards) + 0.9995 * reference.agent.target_q_net(
             torch.tensor(next_states)).detach().max(1).values * (1 - torch.tensor(dones))
-        loss = torch.nn.functional.mse_loss(q, target)
+        loss = torch.nn.functional.smooth_l1_loss(
+            q,
+            target,
+            beta=1.0,
+        )
         reference.agent.optimizer.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(reference.agent.q_net.parameters(), 10.)
