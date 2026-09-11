@@ -36,14 +36,6 @@ from dqn.policies.epsilon_greedy import (  # noqa: E402
 from dqn.utils.action_mapper import (  # noqa: E402
     DQN_MPC_WEIGHT_ACTIONS,
 )
-from dqn.utils.reward import (  # noqa: E402
-    REWARD_Q_BATT,
-    REWARD_Q_FC_VAR,
-    REWARD_Q_H2,
-    REWARD_Q_SOC,
-    SOC_SOFT_MAX,
-    SOC_SOFT_MIN,
-)
 from dqn.utils.state_builder import (  # noqa: E402
     DQN_MPC_STATE_DIM,
     SOC_REFERENCE,
@@ -56,8 +48,8 @@ from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
     QpMpcConfig,
 )
 from mpc_solvers.formal_config import (  # noqa: E402
-    SOC_SOFT_MAX as MPC_SOC_SOFT_MAX,
-    SOC_SOFT_MIN as MPC_SOC_SOFT_MIN,
+    SOC_SOFT_MAX,
+    SOC_SOFT_MIN,
     build_formal_mpc_config,
 )
 from utils.formal_operating_dataset import (  # noqa: E402
@@ -211,16 +203,19 @@ def formal_training_metadata(
         "random_seed": int(config.seed),
         "training_config": asdict(config),
         "mpc_config": asdict(build_formal_mpc_config()),
-        "common_reward": {
-            "q_h2": float(REWARD_Q_H2),
-            "q_batt": float(REWARD_Q_BATT),
-            "q_soc": float(REWARD_Q_SOC),
-            "q_fcvar": float(REWARD_Q_FC_VAR),
-            "soc_deadband": [float(SOC_SOFT_MIN), float(SOC_SOFT_MAX)],
+        "reward": {
+            "source": "selected_action_complete_n6_mpc_objective",
+            "objective_normalization": "raw_mpc_objective / sum(action_weights)",
+            "success_formula": "1 / (1 + normalized_objective)",
+            "solver_failure_reward": float(config.solver_failure_reward),
+            "action_weight_sums": {
+                f"A{action.action_id}": float(sum(action.as_tuple()))
+                for action in DQN_MPC_WEIGHT_ACTIONS
+            },
         },
         "mpc_soc_deadband": [
-            float(MPC_SOC_SOFT_MIN),
-            float(MPC_SOC_SOFT_MAX),
+            float(SOC_SOFT_MIN),
+            float(SOC_SOFT_MAX),
         ],
         "actions": [
             {

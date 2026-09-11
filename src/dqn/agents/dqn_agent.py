@@ -13,12 +13,12 @@ from dqn.networks import KANNetworkConfig, build_q_network, describe_q_network_c
 @dataclass
 class DQNTrainConfig:
     seed: int = 42
-    gamma: float = 0.9995
+    gamma: float = 0.99
     lr: float = 5e-4
     batch_size: int = 64
     max_steps: int = 10000
     warmup_steps: int = 5000
-    buffer_size: int = 100000
+    buffer_size: int = 300000
     epsilon_start: float = 1.0
     epsilon_min: float = 0.05
     epsilon_decay: float = 0.99999813
@@ -27,7 +27,7 @@ class DQNTrainConfig:
     log_window_steps: int = 1000
     grad_clip_norm: float = 10.0
     solver_failure_reward: float = -620.0
-    loss_type: str = "huber"
+    loss_type: str = "mse"
     network_type: str = "mlp"
     mlp_hidden_dims: tuple[int, ...] = (128, 64)
     double_dqn: bool = False

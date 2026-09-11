@@ -73,16 +73,18 @@ DQNTrainConfig(network_type="kan")  # 自包含 Torch KAN
 
 KAN 只替换 Q-network；不修改 environment、reward、state builder、replay buffer、action mapping、MPC solver 或训练循环。当前 KAN 不依赖外部 pykan 或独立 SineKAN 工程。
 
+正式 DQN 训练配置使用 MSE TD loss、`gamma=0.99`、`batch_size=64`、replay buffer 容量 `300000` 和 `seed=42`。
+
 ## 四个 MPC 动作
 
 `MPCWeightAction.as_tuple()` 始终返回 `(q_h2, q_batt, q_soc, q_fcvar)`，动作 ID 和数量固定：
 
 | Action | 权重 |
 | --- | --- | --- |
-| A0 nominal | `(0.25, 0.40, 12, 20)` |
+| A0 balanced | `(0.20, 0.50, 40, 16)` |
 | A1 hydrogen economy | `(0.40, 0.25, 8, 8)` |
-| A2 SOC recovery | `(0.25, 0.45, 200, 8)` |
-| A3 fast FC response | `(0.15, 0.80, 12, 8)` |
+| A2 FC smoothing | `(0.25, 0.50, 30, 40)` |
+| A3 SOC protection | `(0.15, 0.80, 120, 8)` |
 
 四个动作使用完全相同的 MPC 目标函数与物理约束；DQN 只选择
 `(q_h2, q_batt, q_soc, q_fcvar)`。SOC 软工作区间统一为 `[0.50, 0.60]`：
@@ -109,32 +111,20 @@ J_soc = q_soc * sum_k (d_k / 0.05)^2
 | SOC 初值/参考值 | 0.55 |
 | SOC hard bounds | 0.20–0.80 |
 
-## Common reward
+## DQN reward
 
-DQN 的 common reward 与 MPC 动作权重分离。MLP 和 KAN backend、A0～A3 所有动作均使用同一个固定四项评价函数：
-
-```text
-r_t = -J_t
-J_t = 0.25 H_t + 0.40 B_t
-    + 12.0 Phi_SOC(SOC_t+1) + 20 F_t
-```
-
-其中：
-
-- `H_t=m_H2(P_fc,t)/m_H2(600)`：normalized hydrogen consumption；
-- `B_t=(P_batt,t/624)^2`：normalized battery power penalty；
-- `F_t=((P_fc,t-P_fc,t-1)/48)^2`：fuel-cell power variation penalty；
-- `Phi_SOC`：SOC soft working-range penalty。
+DQN 奖励直接来自所选动作在同一次 MPC 求解中的完整 `N=6` 最优目标值。MPC 仍使用该动作的原始四项权重求解；仅在生成奖励时用权重和统一数值尺度：
 
 ```text
-Phi_SOC(SOC) = ((0.50 - SOC) / 0.05)^2,  SOC < 0.50
-               0,                       0.50 <= SOC <= 0.60
-               ((SOC - 0.60) / 0.05)^2, SOC > 0.60
+J_bar = J_MPC* / (q_h2 + q_batt + q_soc + q_fcvar)
+r_t = 1 / (1 + J_bar)
 ```
 
-reward 与 MPC 的 soft SOC range 均为 `0.50～0.60`，MPC 的 hard SOC constraints 为 `0.20～0.80`。SOC 位于 soft range 内时不要求实时跟踪 `0.55`。`SOC_ref=0.55` 仍用于系统初始/参考 SOC，但不构成 MPC 或 common reward 的逐步跟踪项。求解失败的 terminal reward 保持 `-620`。
+四个动作的权重和依次为 `56.70 / 16.65 / 70.75 / 128.95`。完整目标包含原有归一化的 horizon hydrogen、battery power、SOC deadband 和 FC variation 四项。奖励计算直接复用本次求解的物理解，不重复求解 MPC，也不使用额外的固定公共评价权重。成功奖励满足 `0 < r_t <= 1`；求解失败的 terminal reward 保持 `-620`。
 
-正式 DQN discount factor 为 `gamma=0.9995`，Bellman target 保持标准形式
+MPC 的 soft SOC range 仍为 `0.50～0.60`，hard SOC constraints 仍为 `0.20～0.80`。`SOC_ref=0.55` 继续用于系统初始/参考 SOC，不构成额外终端目标项。
+
+正式 DQN discount factor 为 `gamma=0.99`，Bellman target 保持标准形式
 `r + gamma * (1-done) * max Q_target(next_state)`。
 
 ## 正式入口
@@ -187,7 +177,7 @@ outputs/dqn_mpc_kan_causal_soc_deadband_formal_rounds/
 python src/main/test_dqn_mpc_causal.py
 ```
 
-Fixed A0 基线入口：
+Fixed A0 balanced 基线入口：
 
 ```powershell
 python src/main/test_mpc_nominal_causal.py
@@ -201,7 +191,7 @@ python src/main/compare_mpc_vs_dqn.py
 
 ## 自动化验证
 
-本仓库保留针对以下契约的 focused tests：causal 7 维状态、四动作映射、common reward、MLP/KAN factory 与 greedy action、replay/update、正式 split、validation 无学习副作用、QP 物理约束、统一 SOC deadband 语义、统一 OSQP 结构及 checkpoint 隔离。
+本仓库保留针对以下契约的 focused tests：causal 7 维状态、四动作映射、所选动作 MPC objective reward、MLP/KAN factory 与 greedy action、replay/update、正式 split、validation 无学习副作用、QP 物理约束、统一 SOC deadband 语义、统一 OSQP 结构及 checkpoint 隔离。
 
 ```powershell
 python -m unittest discover -s tests -p "test_*.py" -v

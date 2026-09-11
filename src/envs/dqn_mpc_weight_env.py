@@ -218,6 +218,9 @@ class DqnMpcWeightEnv:
         self.base_config = base_config
         self.initial_soc = initial_soc_value
         self.actions = tuple(actions)
+        self._actions_by_id = {
+            int(action.action_id): action for action in self.actions
+        }
 
         self.solver_bank = MpcWeightSolverBank(
             base_config,
@@ -428,10 +431,8 @@ class DqnMpcWeightEnv:
 
         reward, reward_info = (
             calculate_mpc_weight_reward(
-                p_fc_kw=p_fc_actual_kw,
-                p_batt_kw=p_batt_actual_kw,
-                next_soc=next_soc,
-                previous_fc_kw=previous_fc_before,
+                raw_mpc_objective=float(result.raw_mpc_objective),
+                action_weights=self._actions_by_id[action_id].as_tuple(),
             )
         )
 
@@ -475,6 +476,12 @@ class DqnMpcWeightEnv:
             ),
             "solver_status": solver_status,
             "solve_ms": float(solve_ms),
+            "raw_mpc_objective": float(result.raw_mpc_objective),
+            "weight_sum": float(reward_info["weight_sum"]),
+            "normalized_objective": float(
+                reward_info["normalized_objective"]
+            ),
+            "mpc_objective_terms": dict(result.mpc_objective_terms),
             "reward_terms": reward_info,
         }
 

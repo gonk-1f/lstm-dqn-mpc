@@ -45,7 +45,8 @@ class RuntimeRobustnessTests(unittest.TestCase):
         self.assertEqual(config.fuel_cell_ramp_rate_kw_per_s, 48.)
         self.assertEqual((config.soc_min, config.soc_max), (0.2, 0.8))
         self.assertEqual((config.soc_soft_min, config.soc_soft_max), (0.5, 0.6))
-        self.assertEqual(reward.FUEL_CELL_MAX_KW, state_builder.FUEL_CELL_POWER_SCALE_KW)
+        self.assertEqual(physical.FUEL_CELL_MAX_KW, state_builder.FUEL_CELL_POWER_SCALE_KW)
+        self.assertFalse(hasattr(reward, 'FUEL_CELL_MAX_KW'))
 
     def test_loader_keeps_only_owned_float64_loads_and_uses_three_typed_columns(self):
         import pandas as pd
@@ -356,13 +357,9 @@ class RuntimeRobustnessTests(unittest.TestCase):
                  np.full((2, 7), 0.5, np.float32))
         states, actions, rewards, dones, next_states = batch
         q = reference.agent.q_net(torch.tensor(states)).gather(1, torch.tensor(actions)[:, None]).squeeze(1)
-        target = torch.tensor(rewards) + 0.9995 * reference.agent.target_q_net(
+        target = torch.tensor(rewards) + 0.99 * reference.agent.target_q_net(
             torch.tensor(next_states)).detach().max(1).values * (1 - torch.tensor(dones))
-        loss = torch.nn.functional.smooth_l1_loss(
-            q,
-            target,
-            beta=1.0,
-        )
+        loss = torch.nn.functional.mse_loss(q, target)
         reference.agent.optimizer.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(reference.agent.q_net.parameters(), 10.)

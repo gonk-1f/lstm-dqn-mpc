@@ -14,6 +14,7 @@ from dqn.utils.action_mapper import (
 from .mpc_qp_formulation import (
     QpMpcConfig,
     build_qp_problem,
+    evaluate_mpc_objective,
 )
 
 from .n6_qp_scaling import (
@@ -225,5 +226,16 @@ class MpcWeightSolverBank:
             result.x_scaled = scaled_solution
             result.x_physical = physical_solution
             result.x = physical_solution
+
+            if str(result.info.status).lower().startswith("solved"):
+                objective_terms = evaluate_mpc_objective(
+                    physical_solution,
+                    config=entry.config,
+                    previous_fc_kw=float(prev_fc_kw),
+                )
+                result.mpc_objective_terms = objective_terms
+                result.raw_mpc_objective = objective_terms[
+                    "raw_mpc_objective"
+                ]
 
         return result, float(solve_ms)

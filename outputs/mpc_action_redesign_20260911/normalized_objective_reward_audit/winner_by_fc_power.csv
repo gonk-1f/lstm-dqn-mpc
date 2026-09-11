@@ -1,0 +1,5 @@
+fc_power_regime,winner_action_id,winner_count,state_count,winner_share
+medium_150_450,2,328,574,0.5714285714285714
+medium_150_450,3,246,574,0.42857142857142855
+near_saturation_ge590,2,152,266,0.5714285714285714
+near_saturation_ge590,3,114,266,0.42857142857142855

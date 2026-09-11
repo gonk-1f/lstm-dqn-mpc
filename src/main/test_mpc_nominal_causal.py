@@ -333,9 +333,9 @@ def main() -> None:
     completed = int(frame["completed"].sum())
 
     summary = {
-        "controller": "fixed_A0_nominal_MPC",
+        "controller": "fixed_A0_balanced_MPC",
         "action_id": 0,
-        "action_weights": [0.25, 0.40, 12.0, 20.0],
+        "action_weights": [0.20, 0.50, 40.0, 16.0],
         "test_segments": list(split.test_segments),
         "completed_voyages": completed,
         "total_voyages": len(frame),

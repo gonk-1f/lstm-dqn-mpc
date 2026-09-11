@@ -19,11 +19,11 @@ class MPCWeightAction:
 DQN_MPC_WEIGHT_ACTIONS: tuple[MPCWeightAction, ...] = (
     MPCWeightAction(
         0,
-        0.25,
-        0.40,
-        12.0,
-        20.0,
-        "nominal",
+        0.20,
+        0.50,
+        40.0,
+        16.0,
+        "balanced",
     ),
     MPCWeightAction(
         1,
@@ -36,18 +36,18 @@ DQN_MPC_WEIGHT_ACTIONS: tuple[MPCWeightAction, ...] = (
     MPCWeightAction(
         2,
         0.25,
-        0.45,
-        200.0,
-        8.0,
-        "soc_regulation",
+        0.50,
+        30.0,
+        40.0,
+        "fc_smoothing",
     ),
     MPCWeightAction(
         3,
         0.15,
         0.80,
-        12.0,
+        120.0,
         8.0,
-        "fast_fc_response",
+        "soc_protection",
     ),
 )
 

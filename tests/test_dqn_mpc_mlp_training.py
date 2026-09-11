@@ -133,11 +133,11 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.assertEqual(statistics["train"], {"segment_count": 110, "point_count": 521376})
         self.assertEqual(statistics["validation"], {"segment_count": 27, "point_count": 167251})
 
-    def test_formal_configuration_uses_long_horizon_gamma(self) -> None:
+    def test_formal_configuration_uses_gamma_0_99(self) -> None:
         runtime = training.create_training_runtime(self.make_config())
 
-        self.assertEqual(runtime.config.gamma, 0.9995)
-        self.assertEqual(runtime.agent.discount, 0.9995)
+        self.assertEqual(runtime.config.gamma, 0.99)
+        self.assertEqual(runtime.agent.discount, 0.99)
 
     def test_loader_reads_train_and_rejects_test_before_io(
         self,

@@ -1,0 +1,431 @@
+{
+  "only_formal_configuration_difference_is_loss": true,
+  "gradient_clip_frequency": {
+    "available": false,
+    "reason": "clip_grad_norm return value is not recorded by the current runtime"
+  },
+  "runs": {
+    "mse": {
+      "loss_type": "mse",
+      "global_step": 515755,
+      "completed_training_episodes": 110,
+      "training_solver_failures": 1,
+      "training_action_counts": {
+        "A0": 123039,
+        "A1": 110170,
+        "A2": 158692,
+        "A3": 123854
+      },
+      "training_end_q": {
+        "q_value_mean": -1740.6104736328125,
+        "q_value_std": 6877.25048828125,
+        "target_q_mean": -1749.6090087890625,
+        "target_q_std": 6896.0205078125
+      },
+      "loss_statistics": {
+        "count": 510755,
+        "mean": 41201.860894699144,
+        "min": 0.0009360523545183241,
+        "max": 482102144.0,
+        "median": 1288.6716918945312,
+        "median_scope": "recent_1000",
+        "last": 594.38037109375,
+        "recent_1000_mean": 5083.127161392212
+      },
+      "recent_1000_loss_quantiles": {
+        "p50": 1288.6716918945312,
+        "p90": 6845.413330078129,
+        "p99": 71114.56179687497,
+        "max": 527604.8125
+      },
+      "validation": {
+        "segments": 27,
+        "completed": 25,
+        "solver_failures": 2,
+        "executed_steps": 166258,
+        "mean_reward_per_step_weighted": -8.994206939078678,
+        "mean_min_soc": 0.4550895846805908,
+        "worst_min_soc": 0.20046852338257815,
+        "mean_final_soc": 0.4899388094642557,
+        "segments_min_soc_below_0_50": 23,
+        "h2_kg_per_h": 19.230812128969188,
+        "battery_throughput_kwh_per_h": 79.87845011820464,
+        "fc_tv_kw_per_h": 852.4343469795274,
+        "action_counts": {
+          "A0": 31960,
+          "A1": 1583,
+          "A2": 112495,
+          "A3": 20218
+        },
+        "action_fractions": {
+          "A0": 0.19223366374747378,
+          "A1": 0.009521460879607353,
+          "A2": 0.6766372341449332,
+          "A3": 0.12160764122798576
+        },
+        "q_all": {
+          "mean": -3680.2607638757772,
+          "std": 16439.830857731667,
+          "min": -151632.265625,
+          "max": 787.4089965820312
+        },
+        "q_gap": {
+          "mean": 3.5325238182412977,
+          "median": 0.914154052734375,
+          "p10": 0.20713043212890625,
+          "p90": 3.7206497192382812,
+          "near_zero_atol": 1e-06,
+          "near_zero_count": 0,
+          "near_zero_fraction": 0.0
+        }
+      },
+      "formal_configuration": {
+        "gamma": 0.9995,
+        "random_seed": 42,
+        "training_config": {
+          "seed": 42,
+          "gamma": 0.9995,
+          "lr": 0.0005,
+          "batch_size": 64,
+          "max_steps": 10000,
+          "warmup_steps": 5000,
+          "buffer_size": 100000,
+          "epsilon_start": 1.0,
+          "epsilon_min": 0.05,
+          "epsilon_decay": 0.99999813,
+          "target_sync_interval": 500,
+          "device": "auto",
+          "log_window_steps": 1000,
+          "grad_clip_norm": 10.0,
+          "solver_failure_reward": -620.0,
+          "loss_type": "mse",
+          "network_type": "mlp",
+          "mlp_hidden_dims": [
+            128,
+            64
+          ],
+          "double_dqn": false,
+          "kan_backend": "efficient_kan",
+          "kan_latent_dim": 12,
+          "kan_width": 16,
+          "kan_depth": 1,
+          "kan_grid": 4,
+          "kan_basis_min": -2.5,
+          "kan_basis_max": 2.5,
+          "kan_freeze_base_scale": false,
+          "kan_freeze_spline_scale": true,
+          "kan_freeze_spline_weight": false,
+          "kan_spline_init_scale": 0.02,
+          "kan_dropout": 0.0,
+          "dueling_dqn": false,
+          "state_normalization_enabled": false,
+          "state_normalization_min_count": 32
+        },
+        "mpc_config": {
+          "horizon": 6,
+          "dt_seconds": 1.0,
+          "battery_capacity_kwh": 624.0,
+          "battery_charge_max_kw": 624.0,
+          "battery_discharge_max_kw": 1248.0,
+          "battery_power_ref_kw": 624.0,
+          "fuel_cell_min_kw": 0.0,
+          "fuel_cell_max_kw": 600.0,
+          "fuel_cell_ramp_rate_kw_per_s": 48.0,
+          "fuel_cell_ramp_kw": null,
+          "soc_min": 0.2,
+          "soc_max": 0.8,
+          "soc_soft_min": 0.5,
+          "soc_soft_max": 0.6,
+          "soc_band": 0.05,
+          "objective_variant": "n6_h2_batt_soc_fcvar_normalized_v1",
+          "q_h2": 0.25,
+          "q_fc_var": 20.0,
+          "q_soc": 12.0,
+          "q_batt": 0.4,
+          "q_ramp": 0.0,
+          "q_terminal_soc": 0.0
+        },
+        "common_reward": {
+          "q_h2": 0.25,
+          "q_batt": 0.4,
+          "q_soc": 12.0,
+          "q_fcvar": 20.0,
+          "soc_deadband": [
+            0.5,
+            0.6
+          ]
+        },
+        "mpc_soc_deadband": [
+          0.5,
+          0.6
+        ],
+        "actions": [
+          {
+            "action_id": 0,
+            "name": "nominal",
+            "weights": [
+              0.25,
+              0.4,
+              12.0,
+              20.0
+            ]
+          },
+          {
+            "action_id": 1,
+            "name": "hydrogen_economy",
+            "weights": [
+              0.4,
+              0.25,
+              8.0,
+              8.0
+            ]
+          },
+          {
+            "action_id": 2,
+            "name": "soc_regulation",
+            "weights": [
+              0.25,
+              0.45,
+              80.0,
+              8.0
+            ]
+          },
+          {
+            "action_id": 3,
+            "name": "fast_fc_response",
+            "weights": [
+              0.15,
+              0.8,
+              12.0,
+              8.0
+            ]
+          }
+        ],
+        "physical_infeasible_stress_cases": {},
+        "effective_split_statistics": {
+          "train": {
+            "segment_count": 110,
+            "point_count": 521376
+          },
+          "validation": {
+            "segment_count": 27,
+            "point_count": 167251
+          }
+        },
+        "save_replay_buffer": true,
+        "estimated_full_replay_bytes": 6900000
+      }
+    },
+    "huber": {
+      "loss_type": "huber",
+      "global_step": 515769,
+      "completed_training_episodes": 110,
+      "training_solver_failures": 1,
+      "training_action_counts": {
+        "A0": 113316,
+        "A1": 102107,
+        "A2": 173125,
+        "A3": 127221
+      },
+      "training_end_q": {
+        "q_value_mean": -2000.6044921875,
+        "q_value_std": 7420.287109375,
+        "target_q_mean": -1996.8182373046875,
+        "target_q_std": 7434.41259765625
+      },
+      "loss_statistics": {
+        "count": 510769,
+        "mean": 8.46537884036729,
+        "min": 0.0005798856727778912,
+        "max": 3003.1103515625,
+        "median": 9.709812641143799,
+        "median_scope": "recent_1000",
+        "last": 12.05594253540039,
+        "recent_1000_mean": 11.598762573957444
+      },
+      "recent_1000_loss_quantiles": {
+        "p50": 9.709812641143799,
+        "p90": 18.47746868133545,
+        "p99": 47.79299308776855,
+        "max": 77.32809448242188
+      },
+      "validation": {
+        "segments": 27,
+        "completed": 25,
+        "solver_failures": 2,
+        "executed_steps": 166154,
+        "mean_reward_per_step_weighted": -9.725802012484113,
+        "mean_min_soc": 0.45201838886121104,
+        "worst_min_soc": 0.20045172658531943,
+        "mean_final_soc": 0.4822074567221943,
+        "segments_min_soc_below_0_50": 23,
+        "h2_kg_per_h": 19.107642735452618,
+        "battery_throughput_kwh_per_h": 65.49306491658442,
+        "fc_tv_kw_per_h": 939.6473413649813,
+        "action_counts": {
+          "A0": 2136,
+          "A1": 42242,
+          "A2": 40616,
+          "A3": 81158
+        },
+        "action_fractions": {
+          "A0": 0.012855698396648851,
+          "A1": 0.2542370841157494,
+          "A2": 0.24445086426886226,
+          "A3": 0.4884563532187395
+        },
+        "q_all": {
+          "mean": -4486.793358626746,
+          "std": 17227.722598490196,
+          "min": -154431.984375,
+          "max": 541.0452270507812
+        },
+        "q_gap": {
+          "mean": 0.524295247245681,
+          "median": 0.14713668823242188,
+          "p10": 0.014396858215332035,
+          "p90": 1.2421875,
+          "near_zero_atol": 1e-06,
+          "near_zero_count": 18,
+          "near_zero_fraction": 0.00010833453705041167
+        }
+      },
+      "formal_configuration": {
+        "gamma": 0.9995,
+        "random_seed": 42,
+        "training_config": {
+          "seed": 42,
+          "gamma": 0.9995,
+          "lr": 0.0005,
+          "batch_size": 64,
+          "max_steps": 10000,
+          "warmup_steps": 5000,
+          "buffer_size": 100000,
+          "epsilon_start": 1.0,
+          "epsilon_min": 0.05,
+          "epsilon_decay": 0.99999813,
+          "target_sync_interval": 500,
+          "device": "auto",
+          "log_window_steps": 1000,
+          "grad_clip_norm": 10.0,
+          "solver_failure_reward": -620.0,
+          "loss_type": "huber",
+          "network_type": "mlp",
+          "mlp_hidden_dims": [
+            128,
+            64
+          ],
+          "double_dqn": false,
+          "kan_backend": "efficient_kan",
+          "kan_latent_dim": 12,
+          "kan_width": 16,
+          "kan_depth": 1,
+          "kan_grid": 4,
+          "kan_basis_min": -2.5,
+          "kan_basis_max": 2.5,
+          "kan_freeze_base_scale": false,
+          "kan_freeze_spline_scale": true,
+          "kan_freeze_spline_weight": false,
+          "kan_spline_init_scale": 0.02,
+          "kan_dropout": 0.0,
+          "dueling_dqn": false,
+          "state_normalization_enabled": false,
+          "state_normalization_min_count": 32
+        },
+        "mpc_config": {
+          "horizon": 6,
+          "dt_seconds": 1.0,
+          "battery_capacity_kwh": 624.0,
+          "battery_charge_max_kw": 624.0,
+          "battery_discharge_max_kw": 1248.0,
+          "battery_power_ref_kw": 624.0,
+          "fuel_cell_min_kw": 0.0,
+          "fuel_cell_max_kw": 600.0,
+          "fuel_cell_ramp_rate_kw_per_s": 48.0,
+          "fuel_cell_ramp_kw": null,
+          "soc_min": 0.2,
+          "soc_max": 0.8,
+          "soc_soft_min": 0.5,
+          "soc_soft_max": 0.6,
+          "soc_band": 0.05,
+          "objective_variant": "n6_h2_batt_soc_fcvar_normalized_v1",
+          "q_h2": 0.25,
+          "q_fc_var": 20.0,
+          "q_soc": 12.0,
+          "q_batt": 0.4,
+          "q_ramp": 0.0,
+          "q_terminal_soc": 0.0
+        },
+        "common_reward": {
+          "q_h2": 0.25,
+          "q_batt": 0.4,
+          "q_soc": 12.0,
+          "q_fcvar": 20.0,
+          "soc_deadband": [
+            0.5,
+            0.6
+          ]
+        },
+        "mpc_soc_deadband": [
+          0.5,
+          0.6
+        ],
+        "actions": [
+          {
+            "action_id": 0,
+            "name": "nominal",
+            "weights": [
+              0.25,
+              0.4,
+              12.0,
+              20.0
+            ]
+          },
+          {
+            "action_id": 1,
+            "name": "hydrogen_economy",
+            "weights": [
+              0.4,
+              0.25,
+              8.0,
+              8.0
+            ]
+          },
+          {
+            "action_id": 2,
+            "name": "soc_regulation",
+            "weights": [
+              0.25,
+              0.45,
+              80.0,
+              8.0
+            ]
+          },
+          {
+            "action_id": 3,
+            "name": "fast_fc_response",
+            "weights": [
+              0.15,
+              0.8,
+              12.0,
+              8.0
+            ]
+          }
+        ],
+        "physical_infeasible_stress_cases": {},
+        "effective_split_statistics": {
+          "train": {
+            "segment_count": 110,
+            "point_count": 521376
+          },
+          "validation": {
+            "segment_count": 27,
+            "point_count": 167251
+          }
+        },
+        "save_replay_buffer": true,
+        "estimated_full_replay_bytes": 6900000
+      }
+    }
+  }
+}

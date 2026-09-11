@@ -1,0 +1,252 @@
+[
+  {
+    "candidate": "B0",
+    "family": "baseline_nominal",
+    "weights": [
+      0.25,
+      0.4,
+      12,
+      20
+    ]
+  },
+  {
+    "candidate": "B1",
+    "family": "balanced",
+    "weights": [
+      0.25,
+      0.45,
+      30,
+      20
+    ]
+  },
+  {
+    "candidate": "B2",
+    "family": "balanced",
+    "weights": [
+      0.25,
+      0.5,
+      50,
+      20
+    ]
+  },
+  {
+    "candidate": "B3",
+    "family": "balanced",
+    "weights": [
+      0.3,
+      0.45,
+      30,
+      16
+    ]
+  },
+  {
+    "candidate": "B4",
+    "family": "balanced",
+    "weights": [
+      0.2,
+      0.5,
+      40,
+      16
+    ]
+  },
+  {
+    "candidate": "B5",
+    "family": "balanced",
+    "weights": [
+      0.3,
+      0.55,
+      50,
+      24
+    ]
+  },
+  {
+    "candidate": "E0",
+    "family": "baseline_economy",
+    "weights": [
+      0.4,
+      0.25,
+      8,
+      8
+    ]
+  },
+  {
+    "candidate": "E1",
+    "family": "economy",
+    "weights": [
+      0.5,
+      0.25,
+      12,
+      12
+    ]
+  },
+  {
+    "candidate": "E2",
+    "family": "economy",
+    "weights": [
+      0.4,
+      0.35,
+      20,
+      12
+    ]
+  },
+  {
+    "candidate": "E3",
+    "family": "economy",
+    "weights": [
+      0.35,
+      0.3,
+      30,
+      16
+    ]
+  },
+  {
+    "candidate": "E4",
+    "family": "economy",
+    "weights": [
+      0.5,
+      0.35,
+      30,
+      20
+    ]
+  },
+  {
+    "candidate": "E5",
+    "family": "economy",
+    "weights": [
+      0.35,
+      0.4,
+      40,
+      20
+    ]
+  },
+  {
+    "candidate": "S0",
+    "family": "smooth",
+    "weights": [
+      0.25,
+      0.4,
+      20,
+      30
+    ]
+  },
+  {
+    "candidate": "S1",
+    "family": "smooth",
+    "weights": [
+      0.25,
+      0.5,
+      30,
+      40
+    ]
+  },
+  {
+    "candidate": "S2",
+    "family": "smooth",
+    "weights": [
+      0.2,
+      0.55,
+      50,
+      30
+    ]
+  },
+  {
+    "candidate": "S3",
+    "family": "smooth",
+    "weights": [
+      0.3,
+      0.4,
+      30,
+      40
+    ]
+  },
+  {
+    "candidate": "S4",
+    "family": "smooth",
+    "weights": [
+      0.35,
+      0.5,
+      50,
+      40
+    ]
+  },
+  {
+    "candidate": "S5",
+    "family": "smooth",
+    "weights": [
+      0.2,
+      0.65,
+      60,
+      30
+    ]
+  },
+  {
+    "candidate": "R0",
+    "family": "baseline_soc",
+    "weights": [
+      0.25,
+      0.45,
+      80,
+      8
+    ]
+  },
+  {
+    "candidate": "R1",
+    "family": "soc",
+    "weights": [
+      0.2,
+      0.55,
+      80,
+      12
+    ]
+  },
+  {
+    "candidate": "R2",
+    "family": "soc",
+    "weights": [
+      0.15,
+      0.65,
+      80,
+      12
+    ]
+  },
+  {
+    "candidate": "R3",
+    "family": "soc",
+    "weights": [
+      0.2,
+      0.65,
+      120,
+      12
+    ]
+  },
+  {
+    "candidate": "R4",
+    "family": "soc",
+    "weights": [
+      0.15,
+      0.8,
+      120,
+      8
+    ]
+  },
+  {
+    "candidate": "R5",
+    "family": "soc",
+    "weights": [
+      0.25,
+      0.6,
+      120,
+      16
+    ]
+  },
+  {
+    "candidate": "F0",
+    "family": "baseline_fast",
+    "weights": [
+      0.15,
+      0.8,
+      12,
+      8
+    ]
+  }
+]

@@ -323,10 +323,10 @@ def _probe_states(*, anchors: list[dict[str, Any]], config: Any) -> pd.DataFrame
                     p_batt = solution[horizon : 2 * horizon]
                     soc_plan = solution[2 * horizon : 3 * horizon + 1]
                     reward, reward_info = calculate_mpc_weight_reward(
-                        p_fc_kw=float(p_fc[0]),
-                        p_batt_kw=float(p_batt[0]),
-                        next_soc=float(soc_plan[1]),
-                        previous_fc_kw=float(anchor["previous_fc_kw"]),
+                        raw_mpc_objective=float(result.raw_mpc_objective),
+                        action_weights=DQN_MPC_WEIGHT_ACTIONS[
+                            action_id
+                        ].as_tuple(),
                     )
                     row.update(
                         {
@@ -336,8 +336,11 @@ def _probe_states(*, anchors: list[dict[str, Any]], config: Any) -> pd.DataFrame
                             "p_fc_trajectory_kw": json.dumps(p_fc.tolist()),
                             "p_batt_trajectory_kw": json.dumps(p_batt.tolist()),
                             "soc_trajectory": json.dumps(soc_plan.tolist()),
-                            "common_reward": float(reward),
-                            "common_cost": float(reward_info["total_cost"]),
+                            "normalized_objective_reward": float(reward),
+                            "action_weight_sum": float(reward_info["weight_sum"]),
+                            "normalized_objective": float(
+                                reward_info["normalized_objective"]
+                            ),
                             **_objective_components(solution, config, action_id, float(anchor["previous_fc_kw"])),
                         }
                     )
@@ -348,17 +351,20 @@ def _probe_states(*, anchors: list[dict[str, Any]], config: Any) -> pd.DataFrame
         solved = subset.loc[subset["solved"]]
         if solved.empty:
             continue
-        ranked = solved.sort_values(["common_cost", "action_id"])
+        ranked = solved.sort_values(
+            ["normalized_objective_reward", "action_id"],
+            ascending=[False, True],
+        )
         best = ranked.iloc[0]
-        second_cost = float(ranked.iloc[1]["common_cost"]) if len(ranked) > 1 else float("nan")
-        gap = second_cost - float(best["common_cost"])
-        relative_gap = gap / max(abs(float(best["common_cost"])), 1.0e-8)
+        second_reward = float(ranked.iloc[1]["normalized_objective_reward"]) if len(ranked) > 1 else float("nan")
+        gap = float(best["normalized_objective_reward"]) - second_reward
+        relative_gap = gap / max(abs(float(best["normalized_objective_reward"])), 1.0e-8)
         frame.loc[indexes, "winner_action_id"] = int(best["action_id"])
         frame.loc[indexes, "winner_action_name"] = str(best["action_name"])
-        frame.loc[indexes, "best_common_reward"] = -float(best["common_cost"])
-        frame.loc[indexes, "second_best_common_reward"] = -second_cost
-        frame.loc[indexes, "absolute_common_cost_gap"] = gap
-        frame.loc[indexes, "relative_common_cost_gap"] = relative_gap
+        frame.loc[indexes, "best_reward"] = float(best["normalized_objective_reward"])
+        frame.loc[indexes, "second_best_reward"] = second_reward
+        frame.loc[indexes, "absolute_reward_gap"] = gap
+        frame.loc[indexes, "relative_reward_gap"] = relative_gap
         frame.loc[indexes, "near_tie_le_1pct"] = bool(relative_gap <= 0.01)
         frame.loc[indexes, "near_tie_le_5pct"] = bool(relative_gap <= 0.05)
     return frame
@@ -421,7 +427,8 @@ def _regime_summary(probes: pd.DataFrame) -> pd.DataFrame:
                 "mean_p_fc0_kw": float(group["p_fc0_kw"].mean()),
                 "mean_p_batt0_kw": float(group["p_batt0_kw"].mean()),
                 "mean_soc1": float(group["soc1"].mean()),
-                "mean_common_cost": float(group["common_cost"].mean()),
+                "mean_normalized_objective": float(group["normalized_objective"].mean()),
+                "mean_reward": float(group["normalized_objective_reward"].mean()),
                 "mean_soc_deadband_component": float(group["soc_deadband_objective_component"].mean()),
                 "winner_count": int(group["winner_action_id"].eq(action_id).sum()),
             }
@@ -586,8 +593,9 @@ def _fixed_rollout_summary(segment_summary: pd.DataFrame, split: Any, config: An
 
 
 def _semantic_conclusions(probes: pd.DataFrame, pairwise: pd.DataFrame, rollouts: pd.DataFrame) -> tuple[dict[str, Any], str, list[str]]:
-    solved = probes.loc[probes["solved"]]
-    pivot = solved.pivot(index="state_id", columns="action_id", values=["p_fc0_kw", "p_batt0_kw", "soc1", "soc_deadband_objective_component"])
+    solved = probes.loc[probes["solved"]].copy()
+    solved["fc_move_abs_kw"] = (solved["p_fc0_kw"] - solved["previous_fc_kw"]).abs()
+    pivot = solved.pivot(index="state_id", columns="action_id", values=["p_fc0_kw", "p_batt0_kw", "soc1", "fc_move_abs_kw", "soc_deadband_objective_component"])
     normal = solved.loc[solved["soc_regime"].eq("inside_soft_range"), "state_id"].unique()
     low_soc = solved.loc[solved["soc_regime"].eq("below_soft_range"), "state_id"].unique()
     rapid = solved.loc[(solved["transition_regime"].eq("rapid_rise")) & (solved["current_load_kw"] - solved["previous_fc_kw"] > 48.0), "state_id"].unique()
@@ -601,11 +609,10 @@ def _semantic_conclusions(probes: pd.DataFrame, pairwise: pd.DataFrame, rollouts
 
     a1_fc = _median_delta("p_fc0_kw", 1, 0, normal)
     a1_batt = _median_delta("p_batt0_kw", 1, 0, normal)
-    a2_fc = _median_delta("p_fc0_kw", 2, 0, low_soc)
-    a2_batt = _median_delta("p_batt0_kw", 2, 0, low_soc)
-    a2_soc = _median_delta("soc1", 2, 0, low_soc)
-    a3_fc = _median_delta("p_fc0_kw", 3, 0, rapid)
-    a3_batt = _median_delta("p_batt0_kw", 3, 0, rapid)
+    a2_move = _median_delta("fc_move_abs_kw", 2, 0, normal)
+    a3_fc = _median_delta("p_fc0_kw", 3, 0, low_soc)
+    a3_batt = _median_delta("p_batt0_kw", 3, 0, low_soc)
+    a3_soc = _median_delta("soc1", 3, 0, low_soc)
     inside = solved.loc[solved["soc_regime"].eq("inside_soft_range")]
     initial_deadband_max = float(max(soc_deadband_violation(value) for value in inside["soc"]))
     future_soc_component_max = float(inside["soc_deadband_objective_component"].max())
@@ -616,12 +623,10 @@ def _semantic_conclusions(probes: pd.DataFrame, pairwise: pd.DataFrame, rollouts
             "median_delta_p_batt0_vs_a0_kw": a1_batt,
             "expected_direction_observed": bool(a1_fc is not None and a1_fc < 0.0 and a1_batt is not None and a1_batt > 0.0),
         },
-        "a2_soc_recovery": {
-            "low_soc_state_count": int(len(low_soc)),
-            "median_delta_p_fc0_vs_a0_kw": a2_fc,
-            "median_delta_p_batt0_vs_a0_kw": a2_batt,
-            "median_delta_soc1_vs_a0": a2_soc,
-            "expected_direction_observed": bool(a2_fc is not None and a2_fc > 0.0 and a2_batt is not None and a2_batt < 0.0 and a2_soc is not None and a2_soc > 0.0),
+        "a2_fc_smoothing": {
+            "normal_soc_state_count": int(len(normal)),
+            "median_delta_abs_fc_move_vs_a0_kw": a2_move,
+            "expected_direction_observed": bool(a2_move is not None and a2_move < 0.0),
         },
         "a2_inside_deadband": {
             "inside_soc_state_count": int(len(inside) / len(ACTION_IDS)),
@@ -630,11 +635,12 @@ def _semantic_conclusions(probes: pd.DataFrame, pairwise: pd.DataFrame, rollouts
             "max_future_soc_deadband_component": future_soc_component_max,
             "note": "A nonzero future component only means the persistence-plan SOC exits the band; the formal objective has no 0.55 tracking term.",
         },
-        "a3_fast_fc_response": {
-            "rapid_rise_gap_state_count": int(len(rapid)),
+        "a3_soc_protection": {
+            "low_soc_state_count": int(len(low_soc)),
             "median_delta_p_fc0_vs_a0_kw": a3_fc,
             "median_delta_p_batt0_vs_a0_kw": a3_batt,
-            "expected_direction_observed": bool(a3_fc is not None and a3_fc > 0.0 and a3_batt is not None and a3_batt < 0.0),
+            "median_delta_soc1_vs_a0": a3_soc,
+            "expected_direction_observed": bool(a3_fc is not None and a3_fc > 0.0 and a3_batt is not None and a3_batt < 0.0 and a3_soc is not None and a3_soc > 0.0),
         },
         "fixed_action_rollouts_differ": bool(rollouts.groupby("action_id")["hydrogen_kg"].mean().nunique() > 1),
     }
@@ -646,15 +652,15 @@ def _semantic_conclusions(probes: pd.DataFrame, pairwise: pd.DataFrame, rollouts
         reasons.append(f"potentially redundant pairs: {', '.join(redundant)}")
     if not semantics["a1_hydrogen_economy"]["expected_direction_observed"]:
         reasons.append("A1 did not show the expected hydrogen-economy first-step direction in normal-SOC probes")
-    if not semantics["a2_soc_recovery"]["expected_direction_observed"]:
-        reasons.append("A2 did not show the expected low-SOC recovery first-step direction")
-    if len(rapid) and not semantics["a3_fast_fc_response"]["expected_direction_observed"]:
-        reasons.append("A3 did not show the expected rapid-rise FC response")
+    if not semantics["a2_fc_smoothing"]["expected_direction_observed"]:
+        reasons.append("A2 did not show the expected lower first-step FC movement")
+    if not semantics["a3_soc_protection"]["expected_direction_observed"]:
+        reasons.append("A3 did not show the expected low-SOC protection direction")
     near_tie_share = float(solved.drop_duplicates("state_id")["near_tie_le_1pct"].mean())
     if dominant_share > 0.90:
-        reasons.append("common-reward winner share exceeds 90%; inspect near-tie rates before interpreting dominance")
+        reasons.append("normalized-objective reward winner share exceeds 90%; inspect near-tie rates before interpreting dominance")
     if near_tie_share > 0.90:
-        reasons.append("more than 90% of common-reward comparisons are within 1%; winner concentration is not strong evidence of an absolute action advantage")
+        reasons.append("more than 90% of normalized-objective reward comparisons are within 1%; winner concentration is not strong evidence of an absolute action advantage")
     verdict = "FAIL" if redundant or any("did not show" in reason for reason in reasons) else "WARNING" if reasons else "PASS"
     return semantics, verdict, reasons
 

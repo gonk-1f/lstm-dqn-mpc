@@ -1,130 +1,62 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 
-from mpc.solvers.fc_dp0_curve import h2_kg_step_dp0_quadratic
-from utils.physical_config import (
-    FUEL_CELL_MAX_KW, BATTERY_POWER_REF_KW, SOC_REFERENCE,
-    SOC_SOFT_MIN, SOC_SOFT_MAX, SOC_SOFT_SCALE, DT_SECONDS,
-    FUEL_CELL_RAMP_KW_PER_S as FC_VARIATION_REF_KW,
-)
+
+def _validated_action_weights(
+    action_weights: Sequence[float],
+) -> np.ndarray:
+    weights = np.asarray(action_weights, dtype=np.float64).reshape(-1)
+    if weights.size != 4:
+        raise ValueError("action_weights must contain exactly four values")
+    if not np.all(np.isfinite(weights)):
+        raise ValueError("action_weights must be finite")
+    if np.any(weights < 0.0):
+        raise ValueError("action_weights must be non-negative")
+    if float(weights.sum()) <= 0.0:
+        raise ValueError("action weight sum must be positive")
+    return weights
 
 
-# Fixed common-reward weights. These evaluate every MPC action with
-# the same criterion and do not change the A0-A3 MPC objectives.
-REWARD_Q_H2 = 0.25
-REWARD_Q_BATT = 0.40
-REWARD_Q_SOC = 12.0
-REWARD_Q_FC_VAR = 20.0
+def mpc_action_weight_sum(action_weights: Sequence[float]) -> float:
+    """Return the positive sum of one selected MPC action's weights."""
 
-
-
-def soc_soft_working_range_penalty(next_soc: float) -> float:
-    """Return the squared distance outside the closed SOC soft range."""
-
-    soc = float(next_soc)
-    if not np.isfinite(soc):
-        raise ValueError("next_soc must be finite")
-    if soc < SOC_SOFT_MIN:
-        return float(((SOC_SOFT_MIN - soc) / SOC_SOFT_SCALE) ** 2)
-    if soc > SOC_SOFT_MAX:
-        return float(((soc - SOC_SOFT_MAX) / SOC_SOFT_SCALE) ** 2)
-    return 0.0
+    return float(_validated_action_weights(action_weights).sum())
 
 
 def calculate_mpc_weight_reward(
     *,
-    p_fc_kw: float,
-    p_batt_kw: float,
-    next_soc: float,
-    previous_fc_kw: float,
+    raw_mpc_objective: float,
+    action_weights: Sequence[float],
 ) -> tuple[float, dict[str, Any]]:
-    """Calculate the four-term common reward for DQN-MPC actions.
+    """Map the selected action's complete N-step MPC objective to reward.
 
-    The fixed evaluation criterion shared by MLP and KAN is
+    The MPC itself is solved with the original action weights. Only the
+    returned objective value is normalized for the DQN reward:
 
-        r_t = -(
-            0.25 * H_t
-            + 0.40 * B_t
-            + 12.0 * Phi_SOC(SOC_t+1)
-            + 20.0 * F_t
-        )
-
-    where H_t is Dp0 hydrogen consumption normalized at 600 kW,
-    B_t = (P_batt,t / 624)^2, and
-    F_t = ((P_fc,t - P_fc,t-1) / 48)^2. Phi_SOC is zero throughout
-    the closed soft working range [0.50, 0.60] and grows quadratically
-    with distance outside it, normalized by 0.05. Its reward coefficient is 12.0.
+        normalized_objective = raw_mpc_objective / sum(action_weights)
+        reward = 1 / (1 + normalized_objective)
     """
 
-    values = np.asarray(
-        [p_fc_kw, p_batt_kw, next_soc, previous_fc_kw],
-        dtype=np.float64,
-    )
-    if not np.all(np.isfinite(values)):
-        raise ValueError("reward inputs must all be finite")
+    objective = float(raw_mpc_objective)
+    if not np.isfinite(objective):
+        raise ValueError("raw_mpc_objective must be finite")
+    if objective < 0.0:
+        raise ValueError("raw_mpc_objective must be non-negative")
 
-    p_fc = float(p_fc_kw)
-    p_batt = float(p_batt_kw)
-    soc_next = float(next_soc)
-    p_fc_previous = float(previous_fc_kw)
+    weight_sum = mpc_action_weight_sum(action_weights)
+    normalized_objective = objective / weight_sum
+    reward = 1.0 / (1.0 + normalized_objective)
 
-    h2_kg_step = float(
-        np.asarray(
-            h2_kg_step_dp0_quadratic(
-                p_fc,
-                dt_seconds=DT_SECONDS,
-                p_rated_total_kw=FUEL_CELL_MAX_KW,
-            )
-        )
-    )
-    h2_reference_kg_step = float(
-        np.asarray(
-            h2_kg_step_dp0_quadratic(
-                FUEL_CELL_MAX_KW,
-                dt_seconds=DT_SECONDS,
-                p_rated_total_kw=FUEL_CELL_MAX_KW,
-            )
-        )
-    )
-    if h2_reference_kg_step <= 0.0:
-        raise RuntimeError(
-            "hydrogen normalization reference must be positive"
-        )
-
-    h2_norm = h2_kg_step / h2_reference_kg_step
-    battery_power_sq_norm = (
-        p_batt / BATTERY_POWER_REF_KW
-    ) ** 2
-    phi_soc = soc_soft_working_range_penalty(soc_next)
-    fc_variation_sq_norm = (
-        (p_fc - p_fc_previous) / FC_VARIATION_REF_KW
-    ) ** 2
-
-    weighted_h2 = REWARD_Q_H2 * h2_norm
-    weighted_batt = REWARD_Q_BATT * battery_power_sq_norm
-    weighted_soc = REWARD_Q_SOC * phi_soc
-    weighted_fc_var = REWARD_Q_FC_VAR * fc_variation_sq_norm
-    cost = (
-        weighted_h2
-        + weighted_batt
-        + weighted_soc
-        + weighted_fc_var
-    )
-    reward = -float(cost)
+    if not np.isfinite(reward) or not 0.0 < reward <= 1.0:
+        raise RuntimeError("normalized MPC-objective reward is invalid")
 
     info: dict[str, Any] = {
-        "h2_norm": float(h2_norm),
-        "battery_power_sq_norm": float(battery_power_sq_norm),
-        "phi_soc": float(phi_soc),
-        "fc_variation_sq_norm": float(fc_variation_sq_norm),
-        "weighted_h2": float(weighted_h2),
-        "weighted_batt": float(weighted_batt),
-        "weighted_soc": float(weighted_soc),
-        "weighted_fc_var": float(weighted_fc_var),
-        "total_cost": float(cost),
+        "raw_mpc_objective": objective,
+        "weight_sum": weight_sum,
+        "normalized_objective": float(normalized_objective),
         "total_reward": float(reward),
     }
-    return reward, info
+    return float(reward), info

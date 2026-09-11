@@ -82,7 +82,7 @@ class MpcSocDeadbandTests(unittest.TestCase):
         )
         self.assertEqual(
             DQN_MPC_WEIGHT_ACTIONS[2].as_tuple(),
-            (0.25, 0.45, 200.0, 8.0),
+            (0.25, 0.50, 30.0, 40.0),
         )
 
     def test_all_actions_share_convex_deadband_qp_and_solve(self) -> None:

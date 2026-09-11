@@ -195,19 +195,15 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
             places=10,
         )
 
-    def test_reward_matches_fixed_reward_function(
+    def test_reward_matches_selected_action_mpc_objective(
         self,
     ) -> None:
         _, reward, _, info = self.env.step(0)
 
         expected_reward, _ = (
             calculate_mpc_weight_reward(
-                p_fc_kw=info["p_fc_kw"],
-                p_batt_kw=info["p_batt_kw"],
-                next_soc=info["soc_after"],
-                previous_fc_kw=info[
-                    "p_fc_prev_kw"
-                ],
+                raw_mpc_objective=info["raw_mpc_objective"],
+                action_weights=self.env.actions[0].as_tuple(),
             )
         )
 
@@ -217,16 +213,29 @@ class TestDqnMpcWeightEnv(unittest.TestCase):
             places=12,
         )
 
-    def test_reward_uses_only_executed_physical_values(self) -> None:
-        self.env.step(0)
-        _, reward, _, info = self.env.step(0)
-        expected_reward, _ = calculate_mpc_weight_reward(
-            p_fc_kw=info["p_fc_kw"],
-            p_batt_kw=info["p_batt_kw"],
-            next_soc=info["soc_after"],
-            previous_fc_kw=info["p_fc_prev_kw"],
+    def test_reward_uses_full_horizon_objective_from_same_solve(self) -> None:
+        _, reward, _, info = self.env.step(2)
+        terms = info["mpc_objective_terms"]
+        action = self.env.actions[2]
+        expected_raw = (
+            action.q_h2 * terms["h2_norm"]
+            + action.q_batt * terms["battery_power_sq_norm"]
+            + action.q_soc * terms["soc_deadband_sq_norm"]
+            + action.q_fc_var * terms["fc_variation_sq_norm"]
         )
-        self.assertAlmostEqual(reward, expected_reward, places=12)
+        self.assertAlmostEqual(
+            info["raw_mpc_objective"], expected_raw, places=10
+        )
+        self.assertAlmostEqual(
+            info["normalized_objective"],
+            expected_raw / sum(action.as_tuple()),
+            places=10,
+        )
+        self.assertAlmostEqual(
+            reward,
+            1.0 / (1.0 + info["normalized_objective"]),
+            places=12,
+        )
 
     def test_fixed_action_zero_completes_episode(
         self,

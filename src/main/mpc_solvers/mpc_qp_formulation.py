@@ -95,6 +95,88 @@ def h2_quadratic_kg_step_coefficients(config: QpMpcConfig) -> tuple[float, float
     return float(quad), float(linear), float(a1), float(a2)
 
 
+def evaluate_mpc_objective(
+    solution: np.ndarray | list[float],
+    *,
+    config: QpMpcConfig,
+    previous_fc_kw: float,
+) -> dict[str, float]:
+    """Evaluate the complete physical N-step objective of one MPC solution.
+
+    This reconstructs the four documented normalized objective terms from the
+    physical solution. It includes the constant part of the first FC variation
+    square, which OSQP may omit after expanding the quadratic because that
+    constant cannot affect the optimizer.
+    """
+
+    _validate_config(config)
+    horizon = int(config.horizon)
+    values = np.asarray(solution, dtype=np.float64).reshape(-1)
+    expected_size = 4 * horizon + 1
+    if values.size != expected_size:
+        raise ValueError(
+            "solution must contain exactly "
+            f"{expected_size} physical decision values"
+        )
+    if not np.all(np.isfinite(values)) or not np.isfinite(previous_fc_kw):
+        raise ValueError("objective inputs must be finite")
+
+    p_fc = values[:horizon]
+    p_batt = values[horizon : 2 * horizon]
+    soc = values[2 * horizon : 3 * horizon + 1]
+
+    h2_quad, h2_linear, _, _ = h2_quadratic_kg_step_coefficients(config)
+    h2_reference = (
+        h2_quad * float(config.fuel_cell_max_kw) ** 2
+        + h2_linear * float(config.fuel_cell_max_kw)
+    )
+    if h2_reference <= 0.0:
+        raise ValueError("h2 reference denominator must be positive")
+
+    h2_norm = float(
+        np.sum(h2_quad * p_fc**2 + h2_linear * p_fc) / h2_reference
+    )
+    battery_norm = float(
+        np.sum((p_batt / float(config.battery_power_ref_kw)) ** 2)
+    )
+    violation = np.maximum(
+        0.0,
+        np.maximum(
+            float(config.soc_soft_min) - soc[1:],
+            soc[1:] - float(config.soc_soft_max),
+        ),
+    )
+    soc_norm = float(np.sum((violation / float(config.soc_band)) ** 2))
+    fc_delta = np.concatenate(
+        ([p_fc[0] - float(previous_fc_kw)], np.diff(p_fc))
+    )
+    fc_variation_norm = float(
+        np.sum((fc_delta / resolved_ramp_kw_per_step(config)) ** 2)
+    )
+
+    weighted_h2 = float(config.q_h2) * h2_norm
+    weighted_batt = float(config.q_batt) * battery_norm
+    weighted_soc = float(config.q_soc) * soc_norm
+    weighted_fc_var = float(config.q_fc_var) * fc_variation_norm
+    raw_objective = weighted_h2 + weighted_batt + weighted_soc + weighted_fc_var
+
+    if raw_objective < -1.0e-12:
+        raise RuntimeError("complete MPC objective must be non-negative")
+    raw_objective = max(0.0, float(raw_objective))
+
+    return {
+        "h2_norm": h2_norm,
+        "battery_power_sq_norm": battery_norm,
+        "soc_deadband_sq_norm": soc_norm,
+        "fc_variation_sq_norm": fc_variation_norm,
+        "weighted_h2": weighted_h2,
+        "weighted_batt": weighted_batt,
+        "weighted_soc": weighted_soc,
+        "weighted_fc_var": weighted_fc_var,
+        "raw_mpc_objective": raw_objective,
+    }
+
+
 def _add_normalized_h2_cost(
     hessian: np.ndarray,
     linear: np.ndarray,

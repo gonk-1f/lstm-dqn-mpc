@@ -23,6 +23,7 @@ from mpc_solvers.formal_config import build_formal_mpc_config  # noqa: E402
 from mpc_solvers.mpc_qp_formulation import (  # noqa: E402
     QpMpcConfig,
     build_qp_problem,
+    evaluate_mpc_objective,
     resolved_ramp_kw_per_step,
 )
 from mpc_solvers.n6_qp_scaling import (  # noqa: E402
@@ -202,6 +203,81 @@ class TestDqnMpcSolverBank(unittest.TestCase):
                     np.asarray(result.x, dtype=float),
                 )
 
+    def test_solver_exposes_complete_same_solve_mpc_objective(self) -> None:
+        for action in DQN_MPC_WEIGHT_ACTIONS:
+            with self.subTest(action_id=action.action_id):
+                result, _ = self.bank.solve(
+                    action_id=action.action_id,
+                    load_forecast_kw=self.load_forecast_kw,
+                    current_soc=self.current_soc,
+                    prev_fc_kw=self.prev_fc_kw,
+                    soc_reference=self.soc_reference,
+                )
+                expected = evaluate_mpc_objective(
+                    np.asarray(result.x, dtype=float),
+                    config=self.bank._entries[action.action_id].config,
+                    previous_fc_kw=self.prev_fc_kw,
+                )
+                self.assertAlmostEqual(
+                    result.raw_mpc_objective,
+                    expected["raw_mpc_objective"],
+                    places=10,
+                )
+                self.assertEqual(result.mpc_objective_terms, expected)
+
+    def test_raw_divided_by_weight_sum_equals_normalized_weight_objective(self) -> None:
+        action = DQN_MPC_WEIGHT_ACTIONS[2]
+        result, _ = self.bank.solve(
+            action_id=action.action_id,
+            load_forecast_kw=self.load_forecast_kw,
+            current_soc=self.current_soc,
+            prev_fc_kw=self.prev_fc_kw,
+            soc_reference=self.soc_reference,
+        )
+        terms = result.mpc_objective_terms
+        components = np.asarray(
+            [
+                terms["h2_norm"],
+                terms["battery_power_sq_norm"],
+                terms["soc_deadband_sq_norm"],
+                terms["fc_variation_sq_norm"],
+            ],
+            dtype=float,
+        )
+        weights = np.asarray(action.as_tuple(), dtype=float)
+        normalized_from_raw = result.raw_mpc_objective / weights.sum()
+        normalized_from_weights = float(np.dot(weights / weights.sum(), components))
+        self.assertAlmostEqual(
+            normalized_from_raw,
+            normalized_from_weights,
+            places=12,
+        )
+
+    def test_complete_objective_restores_qp_omitted_fc_constant(self) -> None:
+        action = DQN_MPC_WEIGHT_ACTIONS[2]
+        result, _ = self.bank.solve(
+            action_id=action.action_id,
+            load_forecast_kw=self.load_forecast_kw,
+            current_soc=self.current_soc,
+            prev_fc_kw=self.prev_fc_kw,
+            soc_reference=self.soc_reference,
+        )
+        config = self.bank._entries[action.action_id].config
+        problem = self._problem(config)
+        solution = np.asarray(result.x, dtype=float)
+        qp_value_without_constant = float(
+            0.5 * solution @ problem.P @ solution + problem.q @ solution
+        )
+        omitted_fc_constant = float(
+            config.q_fc_var
+            * (self.prev_fc_kw / resolved_ramp_kw_per_step(config)) ** 2
+        )
+        self.assertAlmostEqual(
+            result.raw_mpc_objective,
+            qp_value_without_constant + omitted_fc_constant,
+            places=9,
+        )
+
     def test_action_zero_matches_direct_formal_solve(self) -> None:
         self.assertEqual(
             _OSQP_SETTINGS,
@@ -216,12 +292,12 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             },
         )
 
-        # A0 必须保持正式 nominal 权重。
+        # A0 必须保持正式 balanced 权重。
         action = DQN_MPC_WEIGHT_ACTIONS[0]
 
         self.assertEqual(
             action.as_tuple(),
-            (0.25, 0.40, 12.0, 20.0),
+            (0.20, 0.50, 40.0, 16.0),
         )
 
         direct_config = replace(
@@ -232,7 +308,7 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             q_fc_var=action.q_fc_var,
         )
 
-        # 先构造与正式 nominal action 相同的物理 QP。
+        # 先构造与正式 balanced action 相同的物理 QP。
         direct_problem = self._problem(direct_config)
 
         # 再走正式 N=6 MPC 使用的同一套仿射缩放链路。

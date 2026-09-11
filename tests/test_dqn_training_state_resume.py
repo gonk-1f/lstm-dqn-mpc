@@ -72,8 +72,8 @@ class TrainingStateResumeTests(unittest.TestCase):
 
         self.assertEqual(completed_round, 1)
         self.assertEqual(training.next_round_id(completed_round), 2)
-        self.assertEqual(metadata["gamma"], 0.9995)
-        self.assertEqual(payload["training_config"]["gamma"], 0.9995)
+        self.assertEqual(metadata["gamma"], 0.99)
+        self.assertEqual(payload["training_config"]["gamma"], 0.99)
         self.assertTrue(payload["replay_buffer_saved"])
         self.assertTrue(
             {

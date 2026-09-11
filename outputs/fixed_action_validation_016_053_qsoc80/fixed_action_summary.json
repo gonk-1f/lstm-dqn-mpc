@@ -1,0 +1,239 @@
+{
+  "configuration": {
+    "horizon": 6,
+    "dt_seconds": 1.0,
+    "initial_soc": 0.55,
+    "soc_bounds": [
+      0.2,
+      0.8
+    ],
+    "fuel_cell_bounds_kw": [
+      0.0,
+      600.0
+    ],
+    "battery_bounds_kw": [
+      -624.0,
+      1248.0
+    ],
+    "actions": [
+      {
+        "action_id": 0,
+        "name": "nominal",
+        "weights": [
+          0.25,
+          0.4,
+          12.0,
+          20.0
+        ]
+      },
+      {
+        "action_id": 1,
+        "name": "hydrogen_economy",
+        "weights": [
+          0.4,
+          0.25,
+          8.0,
+          8.0
+        ]
+      },
+      {
+        "action_id": 2,
+        "name": "soc_regulation",
+        "weights": [
+          0.25,
+          0.45,
+          80.0,
+          8.0
+        ]
+      },
+      {
+        "action_id": 3,
+        "name": "fast_fc_response",
+        "weights": [
+          0.15,
+          0.8,
+          12.0,
+          8.0
+        ]
+      }
+    ]
+  },
+  "rows": [
+    {
+      "segment_id": "validation_parent_016_01",
+      "action_id": 0,
+      "action_name": "nominal",
+      "q_h2": 0.25,
+      "q_batt": 0.4,
+      "q_soc": 12.0,
+      "q_fcvar": 20.0,
+      "completed": false,
+      "failure_step": 4952.0,
+      "failure_status": "primal infeasible",
+      "successful_steps": 4952,
+      "segment_available_steps": 6870,
+      "min_soc": 0.20051706883754356,
+      "final_soc": 0.20051706883754356,
+      "mean_fc_kw": 428.8248485281964,
+      "fc_ge_590_fraction": 0.6027867528271406,
+      "battery_net_discharge_kwh": 218.0773490453737,
+      "battery_throughput_kwh": 219.48238964825697,
+      "h2_total_kg": 33.206810959022185,
+      "h2_kg_per_h": 24.14065417053309
+    },
+    {
+      "segment_id": "validation_parent_016_01",
+      "action_id": 1,
+      "action_name": "hydrogen_economy",
+      "q_h2": 0.4,
+      "q_batt": 0.25,
+      "q_soc": 8.0,
+      "q_fcvar": 8.0,
+      "completed": false,
+      "failure_step": 4848.0,
+      "failure_status": "primal infeasible",
+      "successful_steps": 4848,
+      "segment_available_steps": 6870,
+      "min_soc": 0.20046974396756323,
+      "final_soc": 0.20046974396756323,
+      "mean_fc_kw": 420.7275703120311,
+      "fc_ge_590_fraction": 0.6101485148514851,
+      "battery_net_discharge_kwh": 218.10687976424154,
+      "battery_throughput_kwh": 219.0733975727348,
+      "h2_total_kg": 31.96068276515126,
+      "h2_kg_per_h": 23.733180271151927
+    },
+    {
+      "segment_id": "validation_parent_016_01",
+      "action_id": 2,
+      "action_name": "soc_regulation",
+      "q_h2": 0.25,
+      "q_batt": 0.45,
+      "q_soc": 80.0,
+      "q_fcvar": 8.0,
+      "completed": false,
+      "failure_step": 6284.0,
+      "failure_status": "primal infeasible",
+      "successful_steps": 6284,
+      "segment_available_steps": 6870,
+      "min_soc": 0.20053806809991412,
+      "final_soc": 0.20053806809991412,
+      "mean_fc_kw": 508.28606898570683,
+      "fc_ge_590_fraction": 0.73026734563972,
+      "battery_net_discharge_kwh": 218.0642455056546,
+      "battery_throughput_kwh": 253.85334937889246,
+      "h2_total_kg": 50.20085336788494,
+      "h2_kg_per_h": 28.75924126740703
+    },
+    {
+      "segment_id": "validation_parent_016_01",
+      "action_id": 3,
+      "action_name": "fast_fc_response",
+      "q_h2": 0.15,
+      "q_batt": 0.8,
+      "q_soc": 12.0,
+      "q_fcvar": 8.0,
+      "completed": false,
+      "failure_step": 5998.0,
+      "failure_status": "primal infeasible",
+      "successful_steps": 5998,
+      "segment_available_steps": 6870,
+      "min_soc": 0.2004858360847665,
+      "final_soc": 0.2004858360847665,
+      "mean_fc_kw": 494.13518694391513,
+      "fc_ge_590_fraction": 0.7060686895631877,
+      "battery_net_discharge_kwh": 218.09683828310628,
+      "battery_throughput_kwh": 222.93897892855915,
+      "h2_total_kg": 46.401546419168056,
+      "h2_kg_per_h": 27.850211255252585
+    },
+    {
+      "segment_id": "validation_parent_053_01",
+      "action_id": 0,
+      "action_name": "nominal",
+      "q_h2": 0.25,
+      "q_batt": 0.4,
+      "q_soc": 12.0,
+      "q_fcvar": 20.0,
+      "completed": false,
+      "failure_step": 5763.0,
+      "failure_status": "primal infeasible",
+      "successful_steps": 5763,
+      "segment_available_steps": 7200,
+      "min_soc": 0.20040164629103488,
+      "final_soc": 0.20040164629103488,
+      "mean_fc_kw": 466.0445863390815,
+      "fc_ge_590_fraction": 0.6267568974492452,
+      "battery_net_discharge_kwh": 218.1493727143949,
+      "battery_throughput_kwh": 227.13026836641137,
+      "h2_total_kg": 41.90683413205038,
+      "h2_kg_per_h": 26.178136886236572
+    },
+    {
+      "segment_id": "validation_parent_053_01",
+      "action_id": 1,
+      "action_name": "hydrogen_economy",
+      "q_h2": 0.4,
+      "q_batt": 0.25,
+      "q_soc": 8.0,
+      "q_fcvar": 8.0,
+      "completed": false,
+      "failure_step": 5562.0,
+      "failure_status": "primal infeasible",
+      "successful_steps": 5562,
+      "segment_available_steps": 7200,
+      "min_soc": 0.2005035852425327,
+      "final_soc": 0.2005035852425327,
+      "mean_fc_kw": 454.8537683368,
+      "fc_ge_590_fraction": 0.6467098166127292,
+      "battery_net_discharge_kwh": 218.08576280865927,
+      "battery_throughput_kwh": 234.75046585073366,
+      "h2_total_kg": 39.63765592231544,
+      "h2_kg_per_h": 25.655440726417762
+    },
+    {
+      "segment_id": "validation_parent_053_01",
+      "action_id": 2,
+      "action_name": "soc_regulation",
+      "q_h2": 0.25,
+      "q_batt": 0.45,
+      "q_soc": 80.0,
+      "q_fcvar": 8.0,
+      "completed": true,
+      "failure_step": NaN,
+      "failure_status": NaN,
+      "successful_steps": 7200,
+      "segment_available_steps": 7200,
+      "min_soc": 0.20487517019894078,
+      "final_soc": 0.25596837940138667,
+      "mean_fc_kw": 522.3883743814574,
+      "fc_ge_590_fraction": 0.6851388888888889,
+      "battery_net_discharge_kwh": 183.47573125353483,
+      "battery_throughput_kwh": 296.75488720096325,
+      "h2_total_kg": 58.96280906880433,
+      "h2_kg_per_h": 29.481404534402166
+    },
+    {
+      "segment_id": "validation_parent_053_01",
+      "action_id": 3,
+      "action_name": "fast_fc_response",
+      "q_h2": 0.15,
+      "q_batt": 0.8,
+      "q_soc": 12.0,
+      "q_fcvar": 8.0,
+      "completed": false,
+      "failure_step": 6727.0,
+      "failure_status": "primal infeasible",
+      "successful_steps": 6727,
+      "segment_available_steps": 7200,
+      "min_soc": 0.20054855934785362,
+      "final_soc": 0.20054855934785362,
+      "mean_fc_kw": 509.1377671451067,
+      "fc_ge_590_fraction": 0.6472424557752341,
+      "battery_net_discharge_kwh": 218.05769896693928,
+      "battery_throughput_kwh": 238.84479579461276,
+      "h2_total_kg": 53.4834863659817,
+      "h2_kg_per_h": 28.622053057460104
+    }
+  ]
+}
