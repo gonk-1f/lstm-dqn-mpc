@@ -222,10 +222,17 @@ def main(argv: list[str] | None = None) -> None:
         default=None,
         help="atomic training_state_latest.pt or training_state_roundX.pt; resumes at the next segment",
     )
+    parser.add_argument('--terminal-failure-penalty', type=float, default=None,
+                        help='positive cost from a completed Train-only reward/Q/TD calibration')
+    parser.add_argument('--failure-penalty-calibration', default=None,
+                        help='identifier/path of the completed Train-only calibration evidence')
     args = parser.parse_args(argv)
+    config = DQNTrainConfig(network_type=NETWORK_TYPE,
+        terminal_failure_penalty=args.terminal_failure_penalty,
+        failure_penalty_calibration=args.failure_penalty_calibration)
+    training.require_calibrated_failure_penalty(config)
     split = training.load_voyage_split()
     if args.resume_training_state is None:
-        config = DQNTrainConfig(network_type=NETWORK_TYPE)
         training.seed_training_rngs(config)
         runtime = training.create_training_runtime(config)
         first_round_id = 1
@@ -239,7 +246,7 @@ def main(argv: list[str] | None = None) -> None:
         )
         if runtime.config.network_type != NETWORK_TYPE:
             raise ValueError("resume checkpoint network type does not match formal entrypoint")
-        if runtime.config != DQNTrainConfig(network_type=NETWORK_TYPE):
+        if runtime.config != config:
             raise ValueError('resume checkpoint training configuration differs from the formal configuration')
         first_round_id = resume_round_id(runtime, completed_round)
         if first_round_id > NUM_TRAINING_ROUNDS:

@@ -1,0 +1,9 @@
+{
+  "states_verified": 1440,
+  "omission_control_rows_verified": 5760,
+  "protected_files_unchanged": 80,
+  "signed_delta_identity_passed": true,
+  "bounded_A_cancellation_check_passed": true,
+  "new_solves": 0,
+  "dqn_trained": false
+}

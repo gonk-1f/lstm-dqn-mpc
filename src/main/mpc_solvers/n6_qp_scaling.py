@@ -79,7 +79,7 @@ def scale_n6_qp_problem(
 
     fuel_cell_scale = float(config.fuel_cell_max_kw)
     battery_scale = float(config.battery_power_ref_kw)
-    soc_scale = float(config.soc_band)
+    soc_scale = float(config.soc_scale)
     ramp_scale = max(float(resolved_ramp_kw_per_step(config)), 1.0)
 
     variable_scale = np.concatenate(

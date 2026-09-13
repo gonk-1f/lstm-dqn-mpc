@@ -1,0 +1,22 @@
+{
+  "reads": [
+    "outputs\\ideal_reference_84_train_20260912\\closed_loop_summary.csv",
+    "outputs\\ideal_reference_84_train_20260912\\state_physical_results.npz",
+    "outputs\\ideal_reference_84_train_20260912\\states.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_fluctuating_greedy_reference_reward.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_fluctuating_max_first_fc_grid_diagnostic.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_high_feasible_reserve_greedy_reference_reward.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_high_feasible_reserve_max_first_fc_grid_diagnostic.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_high_thin_reserve_greedy_reference_reward.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_high_thin_reserve_max_first_fc_grid_diagnostic.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_ordinary_low_soc_greedy_reference_reward.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_ordinary_low_soc_max_first_fc_grid_diagnostic.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_rapid_rise_greedy_reference_reward.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_rapid_rise_max_first_fc_grid_diagnostic.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_sustained_feasible_reserve_greedy_reference_reward.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_sustained_feasible_reserve_max_first_fc_grid_diagnostic.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_sustained_thin_reserve_greedy_reference_reward.csv",
+    "outputs\\ideal_reference_84_train_20260912\\trace_sustained_thin_reserve_max_first_fc_grid_diagnostic.csv"
+  ],
+  "source_script_sha256": "541ed537a3ed8988ed26a25c9aa262400a31d9fe93ec66bb81f1ccc58425a7cf"
+}

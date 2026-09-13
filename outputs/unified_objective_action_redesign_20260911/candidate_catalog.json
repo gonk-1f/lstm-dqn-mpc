@@ -1,0 +1,298 @@
+[
+  {
+    "action_id": 0,
+    "q_h2": 0.25,
+    "q_batt": 0.25,
+    "q_soc": 0.25,
+    "q_fc_var": 0.25,
+    "name": "B0_balanced_equal"
+  },
+  {
+    "action_id": 1,
+    "q_h2": 0.2,
+    "q_batt": 0.3,
+    "q_soc": 0.35,
+    "q_fc_var": 0.15,
+    "name": "B1_balanced_soc"
+  },
+  {
+    "action_id": 2,
+    "q_h2": 0.2,
+    "q_batt": 0.25,
+    "q_soc": 0.4,
+    "q_fc_var": 0.15,
+    "name": "B2_balanced_soc_high"
+  },
+  {
+    "action_id": 3,
+    "q_h2": 0.25,
+    "q_batt": 0.3,
+    "q_soc": 0.3,
+    "q_fc_var": 0.15,
+    "name": "B3_balanced_batt"
+  },
+  {
+    "action_id": 4,
+    "q_h2": 0.5,
+    "q_batt": 0.25,
+    "q_soc": 0.15,
+    "q_fc_var": 0.1,
+    "name": "E0_h2_economy"
+  },
+  {
+    "action_id": 5,
+    "q_h2": 0.45,
+    "q_batt": 0.3,
+    "q_soc": 0.15,
+    "q_fc_var": 0.1,
+    "name": "E1_h2_economy_batt"
+  },
+  {
+    "action_id": 6,
+    "q_h2": 0.5,
+    "q_batt": 0.2,
+    "q_soc": 0.2,
+    "q_fc_var": 0.1,
+    "name": "E2_h2_economy_soc"
+  },
+  {
+    "action_id": 7,
+    "q_h2": 0.4,
+    "q_batt": 0.3,
+    "q_soc": 0.2,
+    "q_fc_var": 0.1,
+    "name": "E3_h2_economy_moderate"
+  },
+  {
+    "action_id": 8,
+    "q_h2": 0.15,
+    "q_batt": 0.2,
+    "q_soc": 0.15,
+    "q_fc_var": 0.5,
+    "name": "F0_fc_smoothing"
+  },
+  {
+    "action_id": 9,
+    "q_h2": 0.15,
+    "q_batt": 0.25,
+    "q_soc": 0.15,
+    "q_fc_var": 0.45,
+    "name": "F1_fc_smoothing_batt"
+  },
+  {
+    "action_id": 10,
+    "q_h2": 0.15,
+    "q_batt": 0.2,
+    "q_soc": 0.2,
+    "q_fc_var": 0.45,
+    "name": "F2_fc_smoothing_soc"
+  },
+  {
+    "action_id": 11,
+    "q_h2": 0.2,
+    "q_batt": 0.2,
+    "q_soc": 0.15,
+    "q_fc_var": 0.45,
+    "name": "F3_fc_smoothing_h2"
+  },
+  {
+    "action_id": 12,
+    "q_h2": 0.1,
+    "q_batt": 0.2,
+    "q_soc": 0.6,
+    "q_fc_var": 0.1,
+    "name": "S0_soc_protection"
+  },
+  {
+    "action_id": 13,
+    "q_h2": 0.1,
+    "q_batt": 0.25,
+    "q_soc": 0.55,
+    "q_fc_var": 0.1,
+    "name": "S1_soc_protection_batt"
+  },
+  {
+    "action_id": 14,
+    "q_h2": 0.15,
+    "q_batt": 0.2,
+    "q_soc": 0.55,
+    "q_fc_var": 0.1,
+    "name": "S2_soc_protection_h2"
+  },
+  {
+    "action_id": 15,
+    "q_h2": 0.1,
+    "q_batt": 0.2,
+    "q_soc": 0.55,
+    "q_fc_var": 0.15,
+    "name": "S3_soc_protection_smooth"
+  },
+  {
+    "action_id": 16,
+    "q_h2": 0.05,
+    "q_batt": 0.15,
+    "q_soc": 0.75,
+    "q_fc_var": 0.05,
+    "name": "S4_soc_protection_strong"
+  },
+  {
+    "action_id": 17,
+    "q_h2": 0.05,
+    "q_batt": 0.2,
+    "q_soc": 0.7,
+    "q_fc_var": 0.05,
+    "name": "S5_soc_protection_batt_strong"
+  },
+  {
+    "action_id": 18,
+    "q_h2": 0.05,
+    "q_batt": 0.15,
+    "q_soc": 0.7,
+    "q_fc_var": 0.1,
+    "name": "S6_soc_protection_smooth_strong"
+  },
+  {
+    "action_id": 19,
+    "q_h2": 0.1,
+    "q_batt": 0.15,
+    "q_soc": 0.7,
+    "q_fc_var": 0.05,
+    "name": "S7_soc_protection_h2_strong"
+  },
+  {
+    "action_id": 20,
+    "q_h2": 0.15,
+    "q_batt": 0.2,
+    "q_soc": 0.5,
+    "q_fc_var": 0.15,
+    "name": "B4_balanced_safe"
+  },
+  {
+    "action_id": 21,
+    "q_h2": 0.15,
+    "q_batt": 0.25,
+    "q_soc": 0.45,
+    "q_fc_var": 0.15,
+    "name": "B5_balanced_batt_safe"
+  },
+  {
+    "action_id": 22,
+    "q_h2": 0.25,
+    "q_batt": 0.15,
+    "q_soc": 0.5,
+    "q_fc_var": 0.1,
+    "name": "E4_h2_economy_safe"
+  },
+  {
+    "action_id": 23,
+    "q_h2": 0.3,
+    "q_batt": 0.15,
+    "q_soc": 0.45,
+    "q_fc_var": 0.1,
+    "name": "E5_h2_economy_safe_high"
+  },
+  {
+    "action_id": 24,
+    "q_h2": 0.25,
+    "q_batt": 0.2,
+    "q_soc": 0.45,
+    "q_fc_var": 0.1,
+    "name": "E6_h2_economy_safe_batt"
+  },
+  {
+    "action_id": 25,
+    "q_h2": 0.1,
+    "q_batt": 0.15,
+    "q_soc": 0.45,
+    "q_fc_var": 0.3,
+    "name": "F4_fc_smoothing_safe"
+  },
+  {
+    "action_id": 26,
+    "q_h2": 0.1,
+    "q_batt": 0.15,
+    "q_soc": 0.5,
+    "q_fc_var": 0.25,
+    "name": "F5_fc_smoothing_safe_soc"
+  },
+  {
+    "action_id": 27,
+    "q_h2": 0.1,
+    "q_batt": 0.2,
+    "q_soc": 0.4,
+    "q_fc_var": 0.3,
+    "name": "F6_fc_smoothing_safe_batt"
+  },
+  {
+    "action_id": 28,
+    "q_h2": 0.2,
+    "q_batt": 0.1,
+    "q_soc": 0.65,
+    "q_fc_var": 0.05,
+    "name": "E7_h2_economy_protected"
+  },
+  {
+    "action_id": 29,
+    "q_h2": 0.2,
+    "q_batt": 0.15,
+    "q_soc": 0.6,
+    "q_fc_var": 0.05,
+    "name": "E8_h2_economy_protected_batt"
+  },
+  {
+    "action_id": 30,
+    "q_h2": 0.15,
+    "q_batt": 0.15,
+    "q_soc": 0.65,
+    "q_fc_var": 0.05,
+    "name": "E9_h2_economy_moderate_protected"
+  },
+  {
+    "action_id": 31,
+    "q_h2": 0.05,
+    "q_batt": 0.1,
+    "q_soc": 0.6,
+    "q_fc_var": 0.25,
+    "name": "F7_fc_smoothing_protected"
+  },
+  {
+    "action_id": 32,
+    "q_h2": 0.05,
+    "q_batt": 0.15,
+    "q_soc": 0.6,
+    "q_fc_var": 0.2,
+    "name": "F8_fc_smoothing_protected_batt"
+  },
+  {
+    "action_id": 33,
+    "q_h2": 0.05,
+    "q_batt": 0.1,
+    "q_soc": 0.65,
+    "q_fc_var": 0.2,
+    "name": "F9_fc_smoothing_protected_soc"
+  },
+  {
+    "action_id": 34,
+    "q_h2": 0.1,
+    "q_batt": 0.15,
+    "q_soc": 0.7,
+    "q_fc_var": 0.05,
+    "name": "E10_h2_economy_feasible"
+  },
+  {
+    "action_id": 35,
+    "q_h2": 0.15,
+    "q_batt": 0.1,
+    "q_soc": 0.7,
+    "q_fc_var": 0.05,
+    "name": "E11_h2_economy_feasible_high"
+  },
+  {
+    "action_id": 36,
+    "q_h2": 0.1,
+    "q_batt": 0.1,
+    "q_soc": 0.75,
+    "q_fc_var": 0.05,
+    "name": "E12_h2_economy_feasible_soc"
+  }
+]

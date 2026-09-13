@@ -1,4 +1,0 @@
-soc_regime,winner_action_id,winner_count,state_count,winner_share
-above_soft_range,2,240,240,1.0
-below_soft_range,2,240,240,1.0
-inside_soft_range,3,360,360,1.0

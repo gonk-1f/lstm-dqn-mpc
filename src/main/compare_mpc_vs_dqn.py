@@ -24,7 +24,7 @@ DT_SECONDS = 1.0
 FUEL_CELL_RATED_KW = 600.0
 
 DQN_OUTPUT_DIR = formal_checkpoint_path("mlp").parent / "formal_test"
-FIXED_A0_OUTPUT_DIR = REPO_ROOT / "outputs" / "mpc_nominal_causal_test"
+FIXED_A0_OUTPUT_DIR = REPO_ROOT / "outputs" / "mpc_fixed_grid_a0_executed_reward_v1_test"
 COMPARISON_OUTPUT_DIR = REPO_ROOT / "outputs" / "mpc_vs_dqn_comparison"
 PLOT_OUTPUT_DIR = COMPARISON_OUTPUT_DIR / "plots"
 

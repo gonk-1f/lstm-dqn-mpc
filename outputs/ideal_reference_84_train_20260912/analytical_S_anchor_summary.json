@@ -1,0 +1,16 @@
+{
+  "eligible_states": 28,
+  "baseline_S_failures": 14,
+  "scoring_comparisons": 14,
+  "max_reward_shift": {
+    "count": 14,
+    "min": 0.0,
+    "p01": 0.0,
+    "p50": 0.0015052006459759792,
+    "p99": 0.014963093335446088,
+    "max": 0.015710408336046533,
+    "mean": 0.003662859451697531
+  },
+  "winner_changes": 1,
+  "analytic_fact": "SOC=.55 and |load-prev_fc|<=48 allow constant FC=load, so S*=0 and B*=0."
+}

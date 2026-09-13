@@ -1,0 +1,56 @@
+{
+  "states": 1440,
+  "actions_per_state": 84,
+  "std_ddof": 0,
+  "ranking": "ascending C; exact ties by ascending action ID",
+  "identity_residual": {
+    "count": 1440,
+    "undefined_count": 0,
+    "mean": -4.1182179559741875e-17,
+    "min": -1.253424447567042e-14,
+    "p01": -6.401407182110574e-15,
+    "p50": -1.5211017666792725e-17,
+    "p99": 6.3814231676673175e-15,
+    "max": 1.0647299014676648e-14
+  },
+  "max_absolute_identity_residual": 1.253424447567042e-14,
+  "undefined_A_states": 0,
+  "C_gap": {
+    "count": 1440,
+    "undefined_count": 0,
+    "mean": 4.281040514118988e-05,
+    "min": 7.452058525814209e-09,
+    "p01": 3.324020616313206e-08,
+    "p50": 2.3102342444403234e-05,
+    "p99": 0.0002463971974847509,
+    "max": 0.0002912606394289696
+  },
+  "formula_unchanged": true,
+  "soc_scale": 0.05,
+  "new_solves": 0,
+  "dqn_trained": false,
+  "top2_A_mean": {
+    "H": 0.45333813405010964,
+    "B": 0.11687756527903712,
+    "S": 0.031710967087673264,
+    "F": 0.39807333358317976
+  },
+  "largest_R_counts": {
+    "F": 1437,
+    "B": 3
+  },
+  "largest_sigma_counts": {
+    "F": 1440
+  },
+  "largest_A_counts": {
+    "H": 881,
+    "F": 507,
+    "B": 49,
+    "S": 3
+  },
+  "load_range_kw": [
+    150.321992777,
+    687.866368
+  ],
+  "grouping_note": "All 1440 included; five-SOC tables use matched_soc 120 pairs to avoid duplicate weighting at SOC .45/.55."
+}

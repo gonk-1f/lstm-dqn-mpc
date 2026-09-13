@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from dqn.utils.action_mapper import control_semantics, require_control_semantics
+
 from utils.common_types import DQNTransition
 
 
@@ -24,6 +26,8 @@ class ReplayBuffer:
     rewards: list[float] = field(default_factory=list)
     dones: list[bool] = field(default_factory=list)
     next_states: list[np.ndarray] = field(default_factory=list)
+    terminal_failure_penalty: float | None = None
+    failure_penalty_calibration: str | None = None
 
     def push(self, state, action, reward, done, next_state) -> None:
         transition = DQNTransition(
@@ -61,6 +65,11 @@ class ReplayBuffer:
         """Serialize the complete replay state required for exact resume."""
 
         return {
+            "control_semantics": control_semantics(),
+            "failure_policy": {
+                "terminal_failure_penalty": self.terminal_failure_penalty,
+                "failure_penalty_calibration": self.failure_penalty_calibration,
+            },
             "max_size": int(self.max_size),
             "size": int(self.size),
             "write_position": int(self.write_position),
@@ -74,6 +83,13 @@ class ReplayBuffer:
     def load_state_dict(self, state: dict[str, object]) -> None:
         """Restore a replay state after validating capacity and circular order."""
 
+        require_control_semantics(state.get("control_semantics"))
+        expected_policy = {
+            "terminal_failure_penalty": self.terminal_failure_penalty,
+            "failure_penalty_calibration": self.failure_penalty_calibration,
+        }
+        if state.get("failure_policy") != expected_policy:
+            raise ValueError('incompatible replay failure policy')
         required = {
             "max_size", "size", "write_position", "states", "actions",
             "rewards", "dones", "next_states",

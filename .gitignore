@@ -163,3 +163,22 @@ outputs/spline_1s_diagnostics/data/cubic_spline_1s_natural_clipped.csv
 outputs/dqn_mpc_mlp_causal_deficit_a2_formal_rounds/
 outputs/dqn_mpc_kan_causal_deficit_a2_formal_rounds/
 outputs/mpc_nominal_causal_test/
+
+# Executed-reward models and large local historical diagnostic caches.
+outputs/dqn_mpc_*_executed_reward_84_v1_*/
+outputs/mpc_fixed_grid_a0_executed_reward_v1_test/
+outputs/fixed_physical_l2_84_train_20260912/*.csv
+outputs/fixed_physical_l2_84_train_20260912/*.npz
+outputs/fixed_physical_l2_84_train_20260912/*.log
+outputs/ideal_reference_84_train_20260912/*.csv
+outputs/ideal_reference_84_train_20260912/*.npz
+outputs/ideal_reference_84_train_20260912/*.log
+outputs/rms_l2_84_train_20260912/*.csv
+outputs/rms_l2_84_train_20260912/*.npz
+outputs/rms_l2_84_train_20260912/*.log
+outputs/rms_marginals_84_train_20260912/*.csv
+outputs/rms_marginals_84_train_20260912/*.npz
+outputs/rms_marginals_84_train_20260912/*.log
+outputs/unified_objective_action_redesign_20260911/*.csv
+outputs/unified_objective_action_redesign_20260911/*.npz
+outputs/unified_objective_action_redesign_20260911/*.log

@@ -1,0 +1,13 @@
+{
+  "reads": [
+    "outputs\\fixed_physical_l2_84_train_20260912\\action_scores.csv",
+    "outputs\\fixed_physical_l2_84_train_20260912\\rescored_old_policy_traces.csv",
+    "outputs\\fixed_physical_l2_84_train_20260912\\stability_solve_log.csv",
+    "outputs\\fixed_physical_l2_84_train_20260912\\window_supplement_results.npz",
+    "outputs\\fixed_physical_l2_84_train_20260912\\window_supplement_solve_log.csv",
+    "outputs\\fixed_physical_l2_84_train_20260912\\window_supplement_summary.csv",
+    "outputs\\ideal_reference_84_train_20260912\\state_physical_results.npz",
+    "outputs\\ideal_reference_84_train_20260912\\states.csv"
+  ],
+  "source_script_sha256": "172a07994c850993df7873e1fc43cb51181e74ef0d04d24c2db74df8d8585130"
+}

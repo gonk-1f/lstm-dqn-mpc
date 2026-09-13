@@ -17,6 +17,7 @@ from dqn.agents.dqn_agent import DQNTrainConfig
 from envs.dqn_mpc_weight_env import (
     DqnMpcWeightEnv,
     MpcSolveFailure,
+    terminal_failure_reward,
 )
 from formal_paths import (
     formal_checkpoint_path,
@@ -99,14 +100,12 @@ def run_test_episode(
                 action
             )
 
-        except MpcSolveFailure:
+        except MpcSolveFailure as error:
             completed = False
             solver_failure_count = 1
             failure_index = int(env.decision_index)
 
-            reward = float(
-                agent.config.solver_failure_reward
-            )
+            reward = terminal_failure_reward(error, agent.config)
 
             action_counts[action] += 1
             episode_reward += reward
@@ -277,6 +276,13 @@ def plot_soc_trajectory(
     plt.close(fig)
 def main() -> None:
     model_path = require_formal_checkpoint(NETWORK_TYPE)
+    runtime = training.create_training_runtime(
+        DQNTrainConfig(network_type=NETWORK_TYPE)
+    )
+
+    runtime.agent.load(model_path)
+    runtime.agent.q_net.eval()
+    training.require_calibrated_failure_penalty(runtime.config)
     if TEST_OUTPUT_DIR.exists():
         raise FileExistsError(
             f"Formal test output already exists: "
@@ -299,12 +305,6 @@ def main() -> None:
 
     print("Test segments:", split.test_segments)
 
-    runtime = training.create_training_runtime(
-        DQNTrainConfig(network_type=NETWORK_TYPE)
-    )
-
-    runtime.agent.load(model_path)
-    runtime.agent.q_net.eval()
 
     base_config = training.build_formal_mpc_config()
 

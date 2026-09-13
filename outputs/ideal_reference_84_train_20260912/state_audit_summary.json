@@ -1,0 +1,301 @@
+{
+  "state_count": 1440,
+  "frozen_states": 840,
+  "matched_states": 600,
+  "matched_pairs": 120,
+  "primary_solves": 126720,
+  "repeat_anchor_solves": 11520,
+  "failed_primary_solves": 14,
+  "failed_anchor_repeats": {
+    "reverse": 7,
+    "tight": 79
+  },
+  "state_failure_classes": {
+    "none": 1426,
+    "numerical_failure": 14
+  },
+  "spans": {
+    "H": {
+      "count": 1426,
+      "min": 1.6007161954324527,
+      "p01": 1.6148654037291243,
+      "p50": 1.8403897884119225,
+      "p99": 3.3761275448703603,
+      "max": 3.376304809617997,
+      "mean": 2.454523491078119
+    },
+    "B": {
+      "count": 1426,
+      "min": 0.22803178981264924,
+      "p01": 0.22819200546890564,
+      "p50": 0.8667293232634974,
+      "p99": 3.8012903047419933,
+      "max": 3.9098818278581153,
+      "mean": 0.9826030452630362
+    },
+    "S": {
+      "count": 1426,
+      "min": 3.865611625080127e-05,
+      "p01": 4.2886834449651754e-05,
+      "p50": 0.09618099184167583,
+      "p99": 0.6293503814335679,
+      "max": 0.6333234437043984,
+      "mean": 0.1717738162532468
+    },
+    "F": {
+      "count": 1426,
+      "min": 5.0917944980882535,
+      "p01": 5.101854414100862,
+      "p50": 6.0,
+      "p99": 6.000169638031692,
+      "max": 6.000309287153629,
+      "mean": 5.957620238398864
+    }
+  },
+  "error_to_span": {
+    "H": {
+      "count": 1426,
+      "min": 0.0,
+      "p01": 6.672346290747525e-12,
+      "p50": 2.6770973857417623e-06,
+      "p99": 0.012087399185330604,
+      "max": 0.061240159159336505,
+      "mean": 0.00039994813746679176
+    },
+    "B": {
+      "count": 1426,
+      "min": 5.256813503066581e-12,
+      "p01": 9.186657314285563e-12,
+      "p50": 1.2440556596693287e-06,
+      "p99": 3.473269148882338e-05,
+      "max": 6.465798245554289e-05,
+      "mean": 6.308917671140077e-06
+    },
+    "S": {
+      "count": 1426,
+      "min": 1.7392651484339677e-07,
+      "p01": 4.3186089015878305e-07,
+      "p50": 0.0009333007996181061,
+      "p99": 0.020406301248990663,
+      "max": 0.023273874169741186,
+      "mean": 0.004429979006836192
+    },
+    "F": {
+      "count": 1426,
+      "min": 0.0,
+      "p01": 5.871228763924954e-27,
+      "p50": 6.898865175455816e-06,
+      "p99": 4.9133522401846504e-05,
+      "max": 0.1434381114301784,
+      "mean": 0.0003751092742680162
+    }
+  },
+  "successful_reward": {
+    "count": 119784,
+    "min": 0.37940479265412663,
+    "p01": 0.40154945421264976,
+    "p50": 0.5515277454784648,
+    "p99": 0.6468641274497594,
+    "max": 0.6730482081103494,
+    "mean": 0.537585529008118
+  },
+  "reward_by_cohort": {
+    "frozen840": {
+      "count": 69972,
+      "min": 0.37940479265412663,
+      "p01": 0.3954545101119288,
+      "p50": 0.5392029442602033,
+      "p99": 0.6492084043099934,
+      "max": 0.6730482081103494,
+      "mean": 0.5279190953082593
+    },
+    "matched_soc": {
+      "count": 49812,
+      "min": 0.3811629027874455,
+      "p01": 0.41779226380844164,
+      "p50": 0.5635581260754665,
+      "p99": 0.6408630046160778,
+      "max": 0.6730431249710993,
+      "mean": 0.5511641787079193
+    }
+  },
+  "reward_gaps": {
+    "count": 1426,
+    "min": 1.3318853686605792e-08,
+    "p01": 3.991215740101195e-06,
+    "p50": 0.00022677230471496168,
+    "p99": 0.0037805350530237813,
+    "max": 0.004472658554199316,
+    "mean": 0.0005654918382531467
+  },
+  "pareto_counts": {
+    "count": 1426,
+    "min": 81.0,
+    "p01": 82.0,
+    "p50": 84.0,
+    "p99": 84.0,
+    "max": 84.0,
+    "mean": 83.77769985974754
+  },
+  "pair_rms_lt_1kw": {
+    "count": 1426,
+    "min": 0.006310958118187034,
+    "p01": 0.010900745840504877,
+    "p50": 0.021514629948364887,
+    "p99": 0.08168387837062537,
+    "max": 0.09351692484222604,
+    "mean": 0.02445285047221545
+  },
+  "near_numerical_gap_states": 460,
+  "small_span_states": 3,
+  "negative_hat_states": 0,
+  "above_one_states": 0,
+  "reverse_winner_changes": 24,
+  "tight_winner_changes": 13,
+  "soc_groups": [
+    {
+      "cohort": "frozen840",
+      "soc": 0.45,
+      "states": 120,
+      "valid": 120,
+      "winner_reward_median": 0.5815732492169221,
+      "winner_qS_median": 0.3,
+      "winner_qS_mean": 0.3658333333333333,
+      "winner_fc_mean": 413.38583728058245,
+      "grid_max_fc_mean": 423.3036731068766,
+      "winner_batt_mean": 9.422391003550937
+    },
+    {
+      "cohort": "frozen840",
+      "soc": 0.49,
+      "states": 120,
+      "valid": 120,
+      "winner_reward_median": 0.5814336851247015,
+      "winner_qS_median": 0.3,
+      "winner_qS_mean": 0.3241666666666666,
+      "winner_fc_mean": 413.5507847636532,
+      "grid_max_fc_mean": 423.24366561040927,
+      "winner_batt_mean": 9.25744352048015
+    },
+    {
+      "cohort": "frozen840",
+      "soc": 0.5,
+      "states": 120,
+      "valid": 120,
+      "winner_reward_median": 0.5814720227272003,
+      "winner_qS_median": 0.3,
+      "winner_qS_mean": 0.31666666666666665,
+      "winner_fc_mean": 413.50366937850146,
+      "grid_max_fc_mean": 423.22866373629245,
+      "winner_batt_mean": 9.304558905631927
+    },
+    {
+      "cohort": "frozen840",
+      "soc": 0.55,
+      "states": 120,
+      "valid": 113,
+      "winner_reward_median": 0.623103624761069,
+      "winner_qS_median": 0.1,
+      "winner_qS_mean": 0.20088495575221244,
+      "winner_fc_mean": 401.0060862862366,
+      "grid_max_fc_mean": 433.57249859182537,
+      "winner_batt_mean": 31.231874047276644
+    },
+    {
+      "cohort": "frozen840",
+      "soc": 0.6,
+      "states": 120,
+      "valid": 120,
+      "winner_reward_median": 0.6133656942408559,
+      "winner_qS_median": 0.3,
+      "winner_qS_mean": 0.2766666666666666,
+      "winner_fc_mean": 380.9162774684688,
+      "grid_max_fc_mean": 423.05855384598254,
+      "winner_batt_mean": 41.89195081566454
+    },
+    {
+      "cohort": "frozen840",
+      "soc": 0.61,
+      "states": 120,
+      "valid": 120,
+      "winner_reward_median": 0.6132069430872742,
+      "winner_qS_median": 0.3,
+      "winner_qS_mean": 0.2783333333333333,
+      "winner_fc_mean": 380.9181404599613,
+      "grid_max_fc_mean": 423.0380326765525,
+      "winner_batt_mean": 41.890087824172035
+    },
+    {
+      "cohort": "frozen840",
+      "soc": 0.65,
+      "states": 120,
+      "valid": 120,
+      "winner_reward_median": 0.6135103704318909,
+      "winner_qS_median": 0.3,
+      "winner_qS_mean": 0.3058333333333333,
+      "winner_fc_mean": 380.56003271668106,
+      "grid_max_fc_mean": 422.95250523406867,
+      "winner_batt_mean": 42.248195567452285
+    },
+    {
+      "cohort": "matched_soc",
+      "soc": 0.22,
+      "states": 120,
+      "valid": 120,
+      "winner_reward_median": 0.5820838811436144,
+      "winner_qS_median": 0.6,
+      "winner_qS_mean": 0.5908333333333334,
+      "winner_fc_mean": 417.0895062725107,
+      "grid_max_fc_mean": 427.164533006569,
+      "winner_batt_mean": 5.718722011622669
+    },
+    {
+      "cohort": "matched_soc",
+      "soc": 0.25,
+      "states": 120,
+      "valid": 120,
+      "winner_reward_median": 0.5820295445518845,
+      "winner_qS_median": 0.6,
+      "winner_qS_mean": 0.6041666666666665,
+      "winner_fc_mean": 416.58204892219095,
+      "grid_max_fc_mean": 426.1797537037164,
+      "winner_batt_mean": 6.226179361942361
+    },
+    {
+      "cohort": "matched_soc",
+      "soc": 0.35,
+      "states": 120,
+      "valid": 120,
+      "winner_reward_median": 0.5819058072151357,
+      "winner_qS_median": 0.6,
+      "winner_qS_mean": 0.5458333333333333,
+      "winner_fc_mean": 414.1904559194643,
+      "grid_max_fc_mean": 423.7648211428897,
+      "winner_batt_mean": 8.617772364669017
+    },
+    {
+      "cohort": "matched_soc",
+      "soc": 0.45,
+      "states": 120,
+      "valid": 120,
+      "winner_reward_median": 0.5815731979949741,
+      "winner_qS_median": 0.3,
+      "winner_qS_mean": 0.3658333333333333,
+      "winner_fc_mean": 413.3858372805824,
+      "grid_max_fc_mean": 423.30367310687666,
+      "winner_batt_mean": 9.422391003550937
+    },
+    {
+      "cohort": "matched_soc",
+      "soc": 0.55,
+      "states": 120,
+      "valid": 113,
+      "winner_reward_median": 0.6227071033364966,
+      "winner_qS_median": 0.1,
+      "winner_qS_mean": 0.19911504424778764,
+      "winner_fc_mean": 401.0478087969104,
+      "grid_max_fc_mean": 433.59769502955714,
+      "winner_batt_mean": 31.217815607744487
+    }
+  ]
+}

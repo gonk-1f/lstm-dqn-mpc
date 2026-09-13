@@ -1,0 +1,10 @@
+{
+  "inputs": {
+    "outputs\\ideal_reference_84_train_20260912\\states.csv": "20b269f093af7312c923476d9ac04d2df3fd19e252395810a4ac9dbeab44450e",
+    "outputs\\ideal_reference_84_train_20260912\\state_physical_results.npz": "d85876af3a2177ce170c2fe96020b30aacac1f82de4b7aac2296d12a5a0a1589"
+  },
+  "script_sha256": "f19fbd89d9a04288b60ea94af7822700be2c206965e698f03213fa4a8358d536",
+  "new_mpc_solves": 0,
+  "validation_test_reads": false,
+  "formula_or_scale_changes": false
+}

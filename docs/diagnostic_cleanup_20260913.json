@@ -1,0 +1,278 @@
+{
+  "phase": "dry-run-before-delete",
+  "legacy_git_commit": "adbd5526d107faeaca62a1d00c03d209b4829fdc",
+  "entries": [
+    {
+      "path": "outputs/action_space/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds_20260907_092051/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/dqn_mpc_mlp_causal_soc_reference_v2_formal_rounds/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [
+        "README.md"
+      ],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/dqn_mpc_mlp_qsoc80_huber_round1/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/dqn_mpc_mlp_qsoc80_loss_ablation_comparison/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_gamma0999_round1/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_gamma099_round1/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_round1/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/dqn_mpc_mlp_qsoc80_mse_round1/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/fixed_action_validation_016_053_qsoc80/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/fixed_physical_l2_84_train_20260912/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [
+        "src\\main\\audit_fixed_physical_l2_84_train.py",
+        "src\\main\\audit_rms_l2_84_train.py"
+      ],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/ideal_reference_84_train_20260912/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [
+        "src\\main\\audit_ideal_reference_84_train.py",
+        "src\\main\\audit_rms_l2_84_train.py",
+        "src\\main\\audit_rms_marginals_84_train.py"
+      ],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/mpc_action_redesign_20260911/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [
+        "src\\main\\calibrate_unified_mpc_actions_train.py"
+      ],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/rms_l2_84_train_20260912/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [
+        "src\\main\\audit_rms_l2_84_train.py"
+      ],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/rms_marginals_84_train_20260912/",
+      "decision": "KEEP",
+      "reason": "Latest Train-only SOC marginal conclusion; keep inputs/provenance",
+      "references": [
+        "src\\main\\audit_rms_marginals_84_train.py"
+      ],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/unified_objective_action_redesign_20260911/",
+      "decision": "KEEP",
+      "reason": "Historical baseline or audit dependency; no evidence supports deleting unique results",
+      "references": [
+        "src\\main\\audit_ideal_reference_84_train.py",
+        "src\\main\\calibrate_unified_mpc_actions_train.py"
+      ],
+      "reproduction_value": true
+    },
+    {
+      "path": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/action_distribution.csv",
+      "decision": "DELETE",
+      "reason": "Superseded by unified objective and latest 84-action audits; conclusion preserved in adjacent summary.json; original state_probe.csv retained",
+      "references": [],
+      "reproduction_value": false,
+      "sha256": "8009f5a519f517a2cfed37da439ca3c3dfc651f473f10124f457c9197fb77e07",
+      "bytes": 3222
+    },
+    {
+      "path": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/per_state_action.csv",
+      "decision": "DELETE",
+      "reason": "Superseded by unified objective and latest 84-action audits; conclusion preserved in adjacent summary.json; original state_probe.csv retained",
+      "references": [],
+      "reproduction_value": false,
+      "sha256": "613ca9373ae7d8dd9e412c7f7138feb35308899ff27359501d71b66ea60556e8",
+      "bytes": 1564528
+    },
+    {
+      "path": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/state_winners_and_reward_gap.csv",
+      "decision": "DELETE",
+      "reason": "Superseded by unified objective and latest 84-action audits; conclusion preserved in adjacent summary.json; original state_probe.csv retained",
+      "references": [],
+      "reproduction_value": false,
+      "sha256": "8e4bc947a3f31e32784fd2483169b71e4415440b6a304e3bf30faad9c98d6f17",
+      "bytes": 118389
+    },
+    {
+      "path": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/winner_by_fc_power.csv",
+      "decision": "DELETE",
+      "reason": "Superseded by unified objective and latest 84-action audits; conclusion preserved in adjacent summary.json; original state_probe.csv retained",
+      "references": [],
+      "reproduction_value": false,
+      "sha256": "87902c35e4611fc03d0e0d2eb505a0c15a6e80aeca5fdba93a7f4c7e6a77aee9",
+      "bytes": 268
+    },
+    {
+      "path": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/winner_by_load.csv",
+      "decision": "DELETE",
+      "reason": "Superseded by unified objective and latest 84-action audits; conclusion preserved in adjacent summary.json; original state_probe.csv retained",
+      "references": [],
+      "reproduction_value": false,
+      "sha256": "c3dec12c917358b3a179a90ed707ac57f144ba09868f5e1efb6c48f440457a53",
+      "bytes": 313
+    },
+    {
+      "path": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/winner_by_load_transition.csv",
+      "decision": "DELETE",
+      "reason": "Superseded by unified objective and latest 84-action audits; conclusion preserved in adjacent summary.json; original state_probe.csv retained",
+      "references": [],
+      "reproduction_value": false,
+      "sha256": "b126e4f9e337b7a20019b9a1f7d30e3d9e057e17887cabb8fd61ef5fad0526df",
+      "bytes": 315
+    },
+    {
+      "path": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/winner_by_soc.csv",
+      "decision": "KEEP",
+      "reason": "Superseded by unified objective and latest 84-action audits; conclusion preserved in adjacent summary.json; original state_probe.csv retained",
+      "references": [
+        "src\\main\\audit_ideal_reference_84_train.py"
+      ],
+      "reproduction_value": false,
+      "sha256": "b5d2cdfbc81dc1dcc0e2fd3301e3bbd7ef77925a430eebd9906a813601573c0e",
+      "bytes": 198
+    },
+    {
+      "path": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/winner_by_soc_regime.csv",
+      "decision": "DELETE",
+      "reason": "Superseded by unified objective and latest 84-action audits; conclusion preserved in adjacent summary.json; original state_probe.csv retained",
+      "references": [],
+      "reproduction_value": false,
+      "sha256": "41336256a12b09c0d284520f60829998ee310b7d025460e48adc3b28f5a6426f",
+      "bytes": 164
+    },
+    {
+      "path": "src/main/audit_fixed_physical_l2_84_train.py",
+      "decision": "KEEP",
+      "reason": "Retained audit reproducibility or dataset construction dependency",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "src/main/audit_ideal_reference_84_train.py",
+      "decision": "KEEP",
+      "reason": "Retained audit reproducibility or dataset construction dependency",
+      "references": [
+        "src\\main\\audit_fixed_physical_l2_84_train.py",
+        "tests\\test_ideal_reference_84_audit.py"
+      ],
+      "reproduction_value": true
+    },
+    {
+      "path": "src/main/audit_rms_l2_84_train.py",
+      "decision": "KEEP",
+      "reason": "Retained audit reproducibility or dataset construction dependency",
+      "references": [
+        "src\\dqn\\utils\\legacy_reward.py"
+      ],
+      "reproduction_value": true
+    },
+    {
+      "path": "src/main/audit_rms_marginals_84_train.py",
+      "decision": "KEEP",
+      "reason": "Retained audit reproducibility or dataset construction dependency",
+      "references": [],
+      "reproduction_value": true
+    },
+    {
+      "path": "src/main/build_spline_1s_diagnostics.py",
+      "decision": "KEEP",
+      "reason": "Retained audit reproducibility or dataset construction dependency",
+      "references": [
+        "src\\main\\build_total_load_dataset_721.py",
+        "tests\\test_spline_1s_diagnostics.py"
+      ],
+      "reproduction_value": true
+    },
+    {
+      "path": "src/main/calibrate_unified_mpc_actions_train.py",
+      "decision": "KEEP",
+      "reason": "Retained audit reproducibility or dataset construction dependency",
+      "references": [
+        "tests\\test_unified_objective_calibration.py"
+      ],
+      "reproduction_value": true
+    },
+    {
+      "path": "data/ (all raw/processed/fuel_cell/manifests and referenced files)",
+      "decision": "KEEP",
+      "reason": "Protected formal data; no payload read or deletion",
+      "references": [
+        "formal data loaders and dataset tests"
+      ],
+      "reproduction_value": true
+    }
+  ]
+}

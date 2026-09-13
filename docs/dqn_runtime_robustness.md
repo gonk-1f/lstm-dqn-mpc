@@ -1,9 +1,11 @@
 # Formal training runtime: engineering changes
 
-The algorithm is unchanged: causal seven-state DQN chooses the four existing
-MPC weight tuples. Gamma stays 0.9995; reward, deadband, horizon, device values,
-dataset and split membership are unchanged. Physical constants now come from
-`src/utils/physical_config.py`.
+Current formal method: causal seven-state DQN selects 84 integer-composition
+MPC weight tuples; gamma=0.99, Ts=T_sw=1 s, N=6. Reward scores the actual
+executed first step; see README for the complete formula. The previous
+four-action/deadband checkpoints are historical only. Physical constants
+remain in `src/utils/physical_config.py`. Numerical failures abort without replay;
+physical execution violations use an explicitly calibrated terminal penalty.
 
 ## Resume
 
@@ -58,7 +60,7 @@ or conclusively eliminated by a short synthetic test.
 
 `validate_executed_step` checks actual FC/battery/SOC, power balance and existing
 FC ramp bounds in the environment before committing state. Training and both
-greedy evaluation paths receive the same terminal execution failure with -620;
+greedy evaluation paths use the same explicitly calibrated physical-failure penalty;
 there is no fallback or new forecast-error constraint.
 
 Warmup/random action selection has zero action-Q forwards. A greedy decision
@@ -66,7 +68,7 @@ has one. Each ordinary Bellman update retains one online and one target forward.
 Finite Q/target/loss and gradient checks remain; mandatory scalar safety/action
 synchronization is not misrepresented as removable logging overhead. Q diagnostic
 means/std are transferred only at reporting/checkpoint boundaries. Validation
-retains the required four-Q trace using its single evaluation forward.
+retains the required 84-Q trace using its single evaluation forward.
 
 The state hot path passes only the last 60 samples to the unchanged state builder.
 This has constant bounded work and matches the full-history state exactly, without

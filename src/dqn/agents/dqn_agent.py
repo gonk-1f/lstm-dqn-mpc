@@ -7,6 +7,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from dqn.utils.action_mapper import control_semantics, require_control_semantics
+
 from dqn.networks import KANNetworkConfig, build_q_network, describe_q_network_config
 
 
@@ -26,7 +28,8 @@ class DQNTrainConfig:
     device: str = "auto"
     log_window_steps: int = 1000
     grad_clip_norm: float = 10.0
-    solver_failure_reward: float = -620.0
+    terminal_failure_penalty: float | None = None
+    failure_penalty_calibration: str | None = None
     loss_type: str = "mse"
     network_type: str = "mlp"
     mlp_hidden_dims: tuple[int, ...] = (128, 64)
@@ -46,6 +49,16 @@ class DQNTrainConfig:
     dueling_dqn: bool = False
     state_normalization_enabled: bool = False
     state_normalization_min_count: int = 32
+
+
+def require_calibrated_failure_penalty(config: DQNTrainConfig) -> None:
+    """Penalty is a positive cost; record Train-only calibration evidence."""
+    value = config.terminal_failure_penalty
+    if value is None or not isinstance(config.failure_penalty_calibration, str) or not config.failure_penalty_calibration.strip():
+        raise ValueError('terminal_failure_penalty is uncalibrated; formal training blocked '
+                         'until Train-only reward/Q/TD calibration is recorded')
+    if not np.isfinite(value) or value <= 0:
+        raise ValueError('terminal_failure_penalty must be finite and positive after calibration')
 
 
 def resolve_torch_device(device: str) -> str:
@@ -89,6 +102,8 @@ class DQNAgent:
 
     def __init__(self, state_dim: int, action_dim: int, config: DQNTrainConfig):
         self.config = config
+        self.action_dim = int(action_dim)
+        self.state_dim = int(state_dim)
         self.device_name = resolve_torch_device(config.device)
         self.device = torch.device(self.device_name)
         self.kan_config = KANNetworkConfig(
@@ -252,7 +267,17 @@ class DQNAgent:
     def save(self, model_path: str | Path) -> Path:
         path = Path(model_path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        torch.save(self.q_net.state_dict(), path)
+        payload = {
+            'format_version': 1, 'state_dim': self.state_dim, 'action_dim': self.action_dim,
+            'network_type': self.config.network_type,
+            'q_network_state_dict': self.q_net.state_dict(),
+            'control_semantics': control_semantics() if self.action_dim == 84 else None,
+            'failure_policy': {
+                'terminal_failure_penalty': self.config.terminal_failure_penalty,
+                'failure_penalty_calibration': self.config.failure_penalty_calibration,
+            },
+        }
+        torch.save(payload, path)
         return path
 
     def input_normalization_stats(self) -> dict[str, object] | None:
@@ -267,11 +292,33 @@ class DQNAgent:
         }
 
     def load(self, model_path: str | Path) -> None:
-        state_dict = torch.load(model_path, map_location=self.device)
+        payload = torch.load(model_path, map_location=self.device, weights_only=True)
+        if self.action_dim == 84:
+            require_control_semantics(payload.get('control_semantics') if isinstance(payload, dict) else None)
+            policy = payload.get('failure_policy')
+            if not isinstance(policy, dict) or set(policy) != {
+                'terminal_failure_penalty', 'failure_penalty_calibration'
+            }:
+                raise ValueError('incompatible checkpoint failure policy metadata')
+            penalty = policy['terminal_failure_penalty']
+            calibration = policy['failure_penalty_calibration']
+            if penalty is not None or calibration is not None:
+                require_calibrated_failure_penalty(DQNTrainConfig(
+                    terminal_failure_penalty=penalty, failure_penalty_calibration=calibration))
+        if isinstance(payload, dict) and 'q_network_state_dict' in payload:
+            if (payload.get('action_dim') != self.action_dim or payload.get('state_dim') != self.state_dim
+                    or payload.get('network_type') != self.config.network_type):
+                raise ValueError('incompatible checkpoint network dimensions/backend')
+            state_dict = payload['q_network_state_dict']
+        else:
+            state_dict = payload
         if isinstance(state_dict, dict):
             state_dict = _remap_legacy_mlp_state_dict_keys(state_dict)
         self.q_net.load_state_dict(state_dict)
         self.target_q_net.load_state_dict(self.q_net.state_dict())
+        if self.action_dim == 84:
+            self.config.terminal_failure_penalty = penalty
+            self.config.failure_penalty_calibration = calibration
         if bool(self.config.state_normalization_enabled) and hasattr(self.q_net, "set_input_normalization"):
             mean = getattr(self.q_net, "input_norm_mean", None)
             std = getattr(self.q_net, "input_norm_std", None)

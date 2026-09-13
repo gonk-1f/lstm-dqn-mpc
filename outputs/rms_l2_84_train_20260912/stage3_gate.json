@@ -1,0 +1,7 @@
+{
+  "soc_scale": 0.05,
+  "persistent_high_S_share_in_old_low_soc_traces": true,
+  "H_B_F_control_influence_suppressed": false,
+  "scale_sensitivity_triggered": false,
+  "reason": "High score contribution alone does not establish control dominance. At SOC .22, omitting H or F changes all 120 first FC controls by >0.1 kW; omitting B changes 119. New SOC responsiveness is weaker than old, so enlarging the denominator is not supported here."
+}

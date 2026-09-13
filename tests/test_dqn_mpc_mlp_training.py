@@ -129,9 +129,13 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.assertEqual(split.effective_validation_segments, split.validation_segments)
         self.assertEqual(training.PHYSICAL_INFEASIBLE_STRESS_CASES, {})
 
-        statistics = training.effective_split_statistics(split)
-        self.assertEqual(statistics["train"], {"segment_count": 110, "point_count": 521376})
-        self.assertEqual(statistics["validation"], {"segment_count": 27, "point_count": 167251})
+        # Test aggregation with synthetic payloads; never scan held-out real data.
+        with patch.object(training, 'load_operating_segment_loads',
+                          return_value=np.asarray([200., 201.])) as load:
+            statistics = training.effective_split_statistics(split)
+        self.assertEqual(statistics['train'], {'segment_count': 110, 'point_count': 220})
+        self.assertEqual(statistics['validation'], {'segment_count': 27, 'point_count': 54})
+        self.assertEqual(load.call_count, 137)
 
     def test_formal_configuration_uses_gamma_0_99(self) -> None:
         runtime = training.create_training_runtime(self.make_config())
@@ -245,7 +249,7 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.assertEqual(first["episode_steps"], 4)
         self.assertEqual(second["episode_steps"], 3)
         self.assertEqual(
-            sum(first[f"action_count_A{action_id}"] for action_id in range(4)),
+            sum(first[f"action_count_A{action_id}"] for action_id in range(training.ACTION_DIM)),
             first["episode_steps"],
         )
         self.assertEqual(runtime.global_step, 7)
@@ -500,7 +504,7 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
                 runtime=runtime,
             )[0]
 
-        self.assertEqual(summary["training_action_counts"], {"A0": 1, "A1": 1, "A2": 0, "A3": 0})
+        self.assertEqual(summary["training_action_counts"], {f"A{i}": int(i < 2) for i in range(84)})
         self.assertEqual(summary["training_solver_failure_count"], 0)
         self.assertEqual(summary["loss_statistics"]["median"], 0.375)
         self.assertEqual(summary["q_value_diagnostics"]["q_value_mean"], 1.0)

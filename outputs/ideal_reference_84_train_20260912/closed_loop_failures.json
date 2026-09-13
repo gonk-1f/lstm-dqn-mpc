@@ -1,0 +1,176 @@
+[
+  {
+    "window": "low_recharge",
+    "policy": "greedy_reference_reward",
+    "step": 0,
+    "soc": 0.22,
+    "load": 6.26456,
+    "prev_fc": 6.26456,
+    "failure_class": "numerical_failure",
+    "solver_failures": [
+      {
+        "action_id": 84,
+        "valid": false,
+        "status": "RuntimeError: complete MPC objective must be non-negative",
+        "call_ms": 0.3907999998773448
+      }
+    ]
+  },
+  {
+    "window": "low_recharge",
+    "policy": "max_first_fc_grid_diagnostic",
+    "step": 0,
+    "soc": 0.22,
+    "load": 6.26456,
+    "prev_fc": 6.26456,
+    "failure_class": "numerical_failure",
+    "solver_failures": [
+      {
+        "action_id": 84,
+        "valid": false,
+        "status": "RuntimeError: complete MPC objective must be non-negative",
+        "call_ms": 0.35490000300342217
+      }
+    ]
+  },
+  {
+    "window": "high_thin_reserve",
+    "policy": "greedy_reference_reward",
+    "step": 237,
+    "soc": 0.20092109049622697,
+    "load": 681.53946499,
+    "prev_fc": 487.132435397557,
+    "failure_class": "numerical_failure",
+    "solver_failures": [
+      {
+        "action_id": 84,
+        "valid": false,
+        "status": "maximum iterations reached",
+        "solve_ms": 16.059399997175205,
+        "iterations": 20000,
+        "primal_residual": 8.188844715384391e-05,
+        "dual_residual": 7.662618402625464e-07,
+        "call_ms": 16.155600002093706
+      }
+    ]
+  },
+  {
+    "window": "high_thin_reserve",
+    "policy": "max_first_fc_grid_diagnostic",
+    "step": 578,
+    "soc": 0.20067172805434327,
+    "load": 696.087702193,
+    "prev_fc": 600.0000000000006,
+    "failure_class": "numerical_failure",
+    "solver_failures": [
+      {
+        "action_id": 84,
+        "valid": false,
+        "status": "maximum iterations reached",
+        "solve_ms": 13.318299999809824,
+        "iterations": 20000,
+        "primal_residual": 0.00043059835664038815,
+        "dual_residual": 8.33876012585112e-06,
+        "call_ms": 13.397899994743057
+      }
+    ]
+  },
+  {
+    "window": "sustained_feasible_reserve",
+    "policy": "greedy_reference_reward",
+    "step": 560,
+    "soc": 0.20194962837134767,
+    "load": 1098.22947037,
+    "prev_fc": 512.8790649828665,
+    "failure_class": "numerical_failure",
+    "solver_failures": [
+      {
+        "action_id": 84,
+        "valid": false,
+        "status": "maximum iterations reached",
+        "solve_ms": 13.327799999387935,
+        "iterations": 20000,
+        "primal_residual": 1.8115623649173074e-05,
+        "dual_residual": 5.8994060477681e-06,
+        "call_ms": 13.411800005997065
+      }
+    ]
+  },
+  {
+    "window": "sustained_thin_reserve",
+    "policy": "greedy_reference_reward",
+    "step": 70,
+    "soc": 0.20177333630367406,
+    "load": 1102.78287236,
+    "prev_fc": 512.4759901294018,
+    "failure_class": "numerical_failure",
+    "solver_failures": [
+      {
+        "action_id": 84,
+        "valid": false,
+        "status": "maximum iterations reached",
+        "solve_ms": 13.332800001080614,
+        "iterations": 20000,
+        "primal_residual": 5.765806706747867e-06,
+        "dual_residual": 3.1229780725314633e-07,
+        "call_ms": 13.409600003797095
+      },
+      {
+        "action_id": 81,
+        "valid": false,
+        "status": "solved inaccurate; physical residual check failed",
+        "solve_ms": 12.672099997871555,
+        "iterations": 20000,
+        "primal_residual": 0.0007549770823791491,
+        "dual_residual": 0.00048801547163155755,
+        "balance_kw": 5.293327376421075e-07,
+        "soc_residual": 2.642260458485257e-07,
+        "bound_violation_kw": 0.0,
+        "soc_violation": 3.774885411900186e-05,
+        "ramp_violation_kw": 0.0,
+        "call_ms": 13.086400002066512
+      },
+      {
+        "action_id": 83,
+        "valid": false,
+        "status": "maximum iterations reached",
+        "solve_ms": 12.01289999880828,
+        "iterations": 20000,
+        "primal_residual": 0.002091059909886006,
+        "dual_residual": 0.0005838465706440063,
+        "call_ms": 12.108499999158084
+      }
+    ]
+  },
+  {
+    "window": "sustained_thin_reserve",
+    "policy": "max_first_fc_grid_diagnostic",
+    "step": 82,
+    "soc": 0.20165569460997604,
+    "load": 1103.16064387,
+    "prev_fc": 600.0000000000006,
+    "failure_class": "numerical_failure",
+    "solver_failures": [
+      {
+        "action_id": 84,
+        "valid": false,
+        "status": "maximum iterations reached",
+        "solve_ms": 13.267000002088025,
+        "iterations": 20000,
+        "primal_residual": 0.00011391653666503743,
+        "dual_residual": 3.0727006247585074e-06,
+        "call_ms": 13.355299997783732
+      },
+      {
+        "action_id": 83,
+        "valid": false,
+        "status": "maximum iterations reached",
+        "solve_ms": 13.509299998986535,
+        "iterations": 20000,
+        "primal_residual": 0.0005957981527284772,
+        "dual_residual": 0.0006547672556756272,
+        "call_ms": 13.598200006526895
+      }
+    ]
+  }
+]

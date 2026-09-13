@@ -32,7 +32,7 @@ class ValidationQDiagnosticsTests(unittest.TestCase):
             for parameter in runtime.agent.q_net.parameters():
                 parameter.zero_()
             runtime.agent.q_net.layers[-1].bias.copy_(
-                torch.tensor([0.1, 0.2, 0.3, 0.4])
+                torch.tensor([0.1, 0.2, 0.3, 0.4] + [0.] * 80)
             )
         return runtime.agent
 
@@ -63,7 +63,7 @@ class ValidationQDiagnosticsTests(unittest.TestCase):
             }
         )
         summary = formal_training.summarize_validation_traces([trace])
-        self.assertEqual(summary["action_counts"], {"A0": 1, "A1": 1, "A2": 1, "A3": 1})
+        self.assertEqual(summary["action_counts"], {f"A{i}": int(i < 4) for i in range(84)})
         self.assertAlmostEqual(summary["q_gap"]["median"], 0.10000005)
         self.assertEqual(summary["q_gap"]["near_zero_count"], 2)
         self.assertEqual(summary["regime_action_fractions"]["soc"]["soc_lt_0_50"]["A0"], 1.0)

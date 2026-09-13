@@ -53,11 +53,11 @@ def _qp_bounds_for_step(
     upper[cursor : cursor + horizon] = np.inf
     cursor += horizon
 
-    lower[cursor : cursor + horizon] = float(config.soc_soft_min)
+    lower[cursor : cursor + horizon] = float(config.soc_reference)
     upper[cursor : cursor + horizon] = np.inf
     cursor += horizon
 
-    lower[cursor : cursor + horizon] = -float(config.soc_soft_max)
+    lower[cursor : cursor + horizon] = -float(config.soc_reference)
     upper[cursor : cursor + horizon] = np.inf
     cursor += horizon
 

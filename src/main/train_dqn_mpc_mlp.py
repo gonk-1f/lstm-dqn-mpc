@@ -33,6 +33,10 @@ from dqn.utils.training_metrics import LossAccumulator  # noqa: E402
 from dqn.policies.epsilon_greedy import (  # noqa: E402
     EpsilonGreedyPolicy,
 )
+from dqn.utils.action_mapper import control_semantics, require_control_semantics
+from dqn.agents.dqn_agent import require_calibrated_failure_penalty
+from envs.dqn_mpc_weight_env import terminal_failure_reward, failure_kind
+
 from dqn.utils.action_mapper import (  # noqa: E402
     DQN_MPC_WEIGHT_ACTIONS,
 )
@@ -69,7 +73,7 @@ DEFAULT_SPLIT_MANIFEST = FORMAL_SPLIT_MANIFEST
 DEFAULT_MLP_SINGLE_PASS_OUTPUT_DIR = (
     REPO_ROOT
     / "outputs"
-    / "dqn_mpc_mlp_causal_soc_deadband_single_pass"
+    / "dqn_mpc_mlp_executed_reward_84_v1_single_pass"
 )
 
 ALLOWED_RUNTIME_SPLITS = ("train", "validation")
@@ -199,24 +203,24 @@ def formal_training_metadata(
     """Return self-describing metadata for formal summaries/checkpoints."""
 
     return {
+        "control_semantics": control_semantics(),
         "gamma": float(config.gamma),
         "random_seed": int(config.seed),
         "training_config": asdict(config),
         "mpc_config": asdict(build_formal_mpc_config()),
         "reward": {
-            "source": "selected_action_complete_n6_mpc_objective",
-            "objective_normalization": "raw_mpc_objective / sum(action_weights)",
-            "success_formula": "1 / (1 + normalized_objective)",
-            "solver_failure_reward": float(config.solver_failure_reward),
+            "source": "executed_closed_loop_reward",
+            "objective_normalization": "executed step: H2 rate at 600 kW, battery 624 kW, SOC (.55,.05), FC delta 48 kW",
+            "success_formula": "-(h + 0.5*b**2 + 0.5*s**2 + 0.5*f**2)",
+            "terminal_failure_penalty": config.terminal_failure_penalty,
+            "calibration": config.failure_penalty_calibration,
             "action_weight_sums": {
                 f"A{action.action_id}": float(sum(action.as_tuple()))
                 for action in DQN_MPC_WEIGHT_ACTIONS
             },
         },
-        "mpc_soc_deadband": [
-            float(SOC_SOFT_MIN),
-            float(SOC_SOFT_MAX),
-        ],
+        "mpc_soc_reference": float(build_formal_mpc_config().soc_reference),
+        "mpc_soc_scale": float(build_formal_mpc_config().soc_scale),
         "actions": [
             {
                 "action_id": int(action.action_id),
@@ -281,6 +285,7 @@ def save_training_state(
     temporary = destination.with_suffix(destination.suffix + ".tmp")
     payload: dict[str, object] = {
         "format_version": TRAINING_STATE_FORMAT_VERSION,
+        "control_semantics": control_semantics(),
         "completed_round": int(completed_round),
         "round_progress": runtime.round_progress,
         "loss_accumulator": runtime.loss_accumulator.state_dict(),
@@ -331,6 +336,7 @@ def load_training_state(
     payload = torch.load(Path(path), map_location="cpu", weights_only=False)
     if not isinstance(payload, dict):
         raise ValueError("training state checkpoint must contain a dictionary")
+    require_control_semantics(payload.get("control_semantics"))
     required = {
         "format_version", "completed_round", "online_q_network_state_dict",
         "target_q_network_state_dict", "optimizer_state_dict", "epsilon",
@@ -434,7 +440,9 @@ def create_training_runtime(
         action_dim=ACTION_DIM,
         config=resolved,
     )
-    replay_buffer = ReplayBuffer(resolved.buffer_size)
+    replay_buffer = ReplayBuffer(resolved.buffer_size,
+        terminal_failure_penalty=resolved.terminal_failure_penalty,
+        failure_penalty_calibration=resolved.failure_penalty_calibration)
     policy = EpsilonGreedyPolicy(
         resolved.epsilon_start,
         resolved.epsilon_min,
@@ -699,7 +707,7 @@ def _write_failure_diagnostic(
     directory = (
         REPO_ROOT
         / "outputs"
-        / f"dqn_mpc_{backend}_causal_soc_deadband_single_pass_failure"
+        / f"dqn_mpc_{backend}_executed_reward_84_v1_single_pass_failure"
     )
 
     if directory.exists():
@@ -793,14 +801,13 @@ def run_training_episode(
                 dtype=np.float32,
             ).copy()
 
-            reward = float(
-                runtime.config.solver_failure_reward
-            )
+            reward = terminal_failure_reward(error, runtime.config)
             done = True
 
             info = {
                 "solver_status": str(error.solver_status),
                 "solver_failed": True,
+                "failure_kind": failure_kind(error),
                 "action_id": int(action),
                 "decision_index": int(
                     error.decision_index
@@ -1141,9 +1148,7 @@ def run_validation_episode(
                 ]
             )
 
-            failure_reward = float(
-                agent.config.solver_failure_reward
-            )
+            failure_reward = terminal_failure_reward(error, agent.config)
 
             diagnostic: dict[str, object] = {
                 "voyage_id": str(voyage_id),
@@ -1179,7 +1184,7 @@ def run_validation_episode(
                         str(error),
                     )
                 ),
-                "solver_failure_reward": (
+                "terminal_failure_reward": (
                     failure_reward
                 ),
                 "solve_ms": getattr(
@@ -1203,6 +1208,7 @@ def run_validation_episode(
                     None,
                 ),
                 "original_error": str(error),
+                "failure_kind": failure_kind(error),
                 "last_20_successful_steps": list(
                     recent_steps
                 ),
@@ -1387,6 +1393,7 @@ def train_dqn_mpc_mlp(
     split_path: str | Path = DEFAULT_SPLIT_MANIFEST,
 ) -> tuple[TrainingRuntime, dict[str, object]]:
     resolved_config = config or DQNTrainConfig()
+    require_calibrated_failure_penalty(resolved_config)
     _validate_fixed_dqn_design(resolved_config)
 
     seed_training_rngs(resolved_config)

@@ -1,0 +1,18 @@
+{
+  "paired_groups": 120,
+  "valid_reward_count": 119784,
+  "primary_grid_failure_count": 0,
+  "low_SOC_reward_increases_045_to022": 120,
+  "low_SOC_qS_increases_045_to022": 84,
+  "low_SOC_qS_decreases_045_to022": 13,
+  "median_fc_increase_045_to022": 3.2994425006695565,
+  "winner_count": 39,
+  "reverse_comparisons": 1422,
+  "tight_comparisons": 1361,
+  "max_reverse_reward_shift": 0.0157104102604753,
+  "max_tight_reward_shift": 0.0072182139101192,
+  "closed_loop_total_solves": 610192,
+  "max_saved_reward_recompute_error": 5.551115123125783e-17,
+  "formal_source_hashes_unchanged": true,
+  "no_failure_penalty_assigned": true
+}

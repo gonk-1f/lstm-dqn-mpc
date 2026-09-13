@@ -1,0 +1,8 @@
+{
+  "reads": [
+    "outputs\\ideal_reference_84_train_20260912\\anchor_repetitions.npz",
+    "outputs\\ideal_reference_84_train_20260912\\state_physical_results.npz",
+    "outputs\\ideal_reference_84_train_20260912\\states.csv"
+  ],
+  "source_script_sha256": "132e579b52144cfe506251164f86c7b5e588e604c939bcd53129717ac96bd8b1"
+}

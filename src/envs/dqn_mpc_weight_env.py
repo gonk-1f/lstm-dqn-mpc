@@ -16,7 +16,7 @@ if str(MAIN_ROOT) not in sys.path:
     sys.path.insert(0, str(MAIN_ROOT))
 
 
-from dqn.utils.reward import calculate_mpc_weight_reward
+from dqn.utils.reward import calculate_executed_reward
 from dqn.utils.action_mapper import (
     DQN_MPC_WEIGHT_ACTIONS,
     MPCWeightAction,
@@ -100,6 +100,23 @@ class MpcSolveFailure(RuntimeError):
 
 class ExecutedStepFailure(MpcSolveFailure, ValueError):
     """Solved forecast, but actual first-step execution violates hard bounds."""
+
+
+def failure_kind(error: MpcSolveFailure) -> str:
+    if isinstance(error, ExecutedStepFailure):
+        return 'physical_execution_violation'
+    if 'primal infeasible' in error.solver_status.lower():
+        return 'forecast_qp_infeasible'
+    return 'numerical_solver_failure'
+
+
+def terminal_failure_reward(error: MpcSolveFailure, config) -> float:
+    """Solver failure alone does not establish action-caused physical failure."""
+    if not isinstance(error, ExecutedStepFailure):
+        raise error
+    from dqn.agents.dqn_agent import require_calibrated_failure_penalty
+    require_calibrated_failure_penalty(config)
+    return -float(config.terminal_failure_penalty)
 
 
 def validate_executed_step(
@@ -430,9 +447,9 @@ class DqnMpcWeightEnv:
             ) from error
 
         reward, reward_info = (
-            calculate_mpc_weight_reward(
-                raw_mpc_objective=float(result.raw_mpc_objective),
-                action_weights=self._actions_by_id[action_id].as_tuple(),
+            calculate_executed_reward(
+                p_fc_kw=p_fc_actual_kw, p_batt_kw=p_batt_actual_kw,
+                soc_after=next_soc, p_fc_prev_kw=previous_fc_before,
             )
         )
 
@@ -477,10 +494,6 @@ class DqnMpcWeightEnv:
             "solver_status": solver_status,
             "solve_ms": float(solve_ms),
             "raw_mpc_objective": float(result.raw_mpc_objective),
-            "weight_sum": float(reward_info["weight_sum"]),
-            "normalized_objective": float(
-                reward_info["normalized_objective"]
-            ),
             "mpc_objective_terms": dict(result.mpc_objective_terms),
             "reward_terms": reward_info,
         }

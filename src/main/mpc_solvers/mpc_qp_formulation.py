@@ -18,7 +18,7 @@ from utils.physical_config import (  # noqa: E402
     DT_SECONDS, BATTERY_CAPACITY_KWH, BATTERY_CHARGE_MAX_KW,
     BATTERY_DISCHARGE_MAX_KW, BATTERY_POWER_REF_KW, FUEL_CELL_MIN_KW,
     FUEL_CELL_MAX_KW, FUEL_CELL_RAMP_KW_PER_S, SOC_MIN, SOC_MAX,
-    SOC_SOFT_MIN, SOC_SOFT_MAX, SOC_SOFT_SCALE,
+    SOC_REFERENCE, SOC_SOFT_SCALE,
 )
 
 
@@ -47,10 +47,9 @@ class QpMpcConfig:
     fuel_cell_ramp_kw: float | None = None
     soc_min: float = SOC_MIN
     soc_max: float = SOC_MAX
-    soc_soft_min: float = SOC_SOFT_MIN
-    soc_soft_max: float = SOC_SOFT_MAX
-    soc_band: float = SOC_SOFT_SCALE
-    objective_variant: str = "n6_h2_batt_soc_fcvar_normalized_v1"
+    soc_reference: float = SOC_REFERENCE
+    soc_scale: float = SOC_SOFT_SCALE
+    objective_variant: str = "n6_h2_batt_socref_fcvar_normalized_v2"
     q_h2: float = 1.0
     q_fc_var: float = 0.0
     q_soc: float = 1.0
@@ -139,14 +138,8 @@ def evaluate_mpc_objective(
     battery_norm = float(
         np.sum((p_batt / float(config.battery_power_ref_kw)) ** 2)
     )
-    violation = np.maximum(
-        0.0,
-        np.maximum(
-            float(config.soc_soft_min) - soc[1:],
-            soc[1:] - float(config.soc_soft_max),
-        ),
-    )
-    soc_norm = float(np.sum((violation / float(config.soc_band)) ** 2))
+    soc_deviation = soc[1:] - float(config.soc_reference)
+    soc_norm = float(np.sum((soc_deviation / float(config.soc_scale)) ** 2))
     fc_delta = np.concatenate(
         ([p_fc[0] - float(previous_fc_kw)], np.diff(p_fc))
     )
@@ -167,7 +160,7 @@ def evaluate_mpc_objective(
     return {
         "h2_norm": h2_norm,
         "battery_power_sq_norm": battery_norm,
-        "soc_deadband_sq_norm": soc_norm,
+        "soc_reference_sq_norm": soc_norm,
         "fc_variation_sq_norm": fc_variation_norm,
         "weighted_h2": weighted_h2,
         "weighted_batt": weighted_batt,
@@ -206,16 +199,16 @@ def _add_normalized_battery_power_cost(
         hessian[batt0 + k, batt0 + k] += 2.0 * weight / reference_kw**2
 
 
-def _add_normalized_soc_deadband_cost(
+def _add_normalized_soc_reference_cost(
     hessian: np.ndarray,
     *,
-    violation0: int,
+    deviation0: int,
     horizon: int,
     weight: float,
-    soc_band: float,
+    soc_scale: float,
 ) -> None:
     for k in range(horizon):
-        hessian[violation0 + k, violation0 + k] += 2.0 * weight / soc_band**2
+        hessian[deviation0 + k, deviation0 + k] += 2.0 * weight / soc_scale**2
 
 
 def _add_normalized_fc_variation_cost(
@@ -255,18 +248,14 @@ def _validate_config(config: QpMpcConfig) -> None:
         raise ValueError("fuel_cell_max_kw must be greater than fuel_cell_min_kw")
     if float(config.soc_max) <= float(config.soc_min):
         raise ValueError("soc_max must be greater than soc_min")
-    if float(config.soc_soft_min) < float(config.soc_min):
-        raise ValueError("soc_soft_min must be within the physical SOC bounds")
-    if float(config.soc_soft_max) > float(config.soc_max):
-        raise ValueError("soc_soft_max must be within the physical SOC bounds")
-    if float(config.soc_soft_max) <= float(config.soc_soft_min):
-        raise ValueError("soc_soft_max must be greater than soc_soft_min")
-    if float(config.soc_band) <= 0.0:
-        raise ValueError("soc_band must be positive")
+    if not float(config.soc_min) <= float(config.soc_reference) <= float(config.soc_max):
+        raise ValueError("soc_reference must be within the physical SOC bounds")
+    if float(config.soc_scale) <= 0.0:
+        raise ValueError("soc_scale must be positive")
     for name in ("q_h2", "q_fc_var", "q_soc", "q_batt", "q_ramp", "q_terminal_soc"):
         if float(getattr(config, name)) < 0.0:
             raise ValueError(f"{name} must be nonnegative")
-    if str(config.objective_variant) != "n6_h2_batt_soc_fcvar_normalized_v1":
+    if str(config.objective_variant) != "n6_h2_batt_socref_fcvar_normalized_v2":
         raise ValueError(f"unsupported objective_variant: {config.objective_variant}")
 
 
@@ -287,16 +276,18 @@ def build_qp_problem(
         raise ValueError(f"load_forecast_kw must contain exactly {horizon} points")
     if not np.all(np.isfinite(load)):
         raise ValueError("load_forecast_kw contains non-finite values")
+    if not np.isclose(float(soc_reference), float(config.soc_reference), rtol=0.0, atol=1.0e-12):
+        raise ValueError("soc_reference must match the common configured SOC reference")
 
     n_fc = horizon
     n_batt = horizon
     n_soc = horizon + 1
-    n_violation = horizon
+    n_deviation = horizon
     fc0 = 0
     batt0 = n_fc
     soc0 = n_fc + n_batt
-    violation0 = soc0 + n_soc
-    n_var = n_fc + n_batt + n_soc + n_violation
+    deviation0 = soc0 + n_soc
+    n_var = n_fc + n_batt + n_soc + n_deviation
 
     hessian = np.zeros((n_var, n_var), dtype=float)
     linear = np.zeros(n_var, dtype=float)
@@ -310,7 +301,7 @@ def build_qp_problem(
     objective_terms = [
         "H2_norm",
         "Batt_power_sq_norm",
-        "SOC_deadband_sq_norm",
+        "SOC_reference_sq_norm",
         "FC_variation_sq_norm",
     ]
     _add_normalized_h2_cost(
@@ -330,12 +321,12 @@ def build_qp_problem(
         weight=float(config.q_batt),
         reference_kw=float(config.battery_power_ref_kw),
     )
-    _add_normalized_soc_deadband_cost(
+    _add_normalized_soc_reference_cost(
         hessian,
-        violation0=violation0,
+        deviation0=deviation0,
         horizon=horizon,
         weight=float(config.q_soc),
-        soc_band=float(config.soc_band),
+        soc_scale=float(config.soc_scale),
     )
     _add_normalized_fc_variation_cost(
         hessian,
@@ -365,20 +356,20 @@ def build_qp_problem(
 
     for k in range(horizon):
         add_row(
-            {violation0 + k: 1.0},
+            {deviation0 + k: 1.0},
             0.0,
             np.inf,
         )
     for k in range(horizon):
         add_row(
-            {soc0 + k + 1: 1.0, violation0 + k: 1.0},
-            float(config.soc_soft_min),
+            {soc0 + k + 1: 1.0, deviation0 + k: 1.0},
+            float(config.soc_reference),
             np.inf,
         )
     for k in range(horizon):
         add_row(
-            {soc0 + k + 1: -1.0, violation0 + k: 1.0},
-            -float(config.soc_soft_max),
+            {soc0 + k + 1: -1.0, deviation0 + k: 1.0},
+            -float(config.soc_reference),
             np.inf,
         )
 
@@ -414,7 +405,7 @@ def build_qp_problem(
             data.append(float(value))
 
     # Keep every variable diagonal explicitly stored, including zero-cost
-    # SOC or band-violation entries. This gives every weight action one OSQP
+    # SOC or absolute-deviation entries. This gives every weight action one OSQP
     # P sparsity pattern without changing the objective structure.
     p_row, p_col = np.nonzero(hessian)
     diagonal = np.arange(n_var, dtype=int)
@@ -441,13 +432,13 @@ def build_qp_problem(
     fuel_cell_max_reference = str(float(config.fuel_cell_max_kw)).removesuffix(".0")
     dt_reference = str(float(config.dt_seconds)).removesuffix(".0")
     battery_power_reference = str(float(config.battery_power_ref_kw)).removesuffix(".0")
-    soc_band_reference = str(float(config.soc_band)).removesuffix(".0")
+    soc_scale_reference = str(float(config.soc_scale)).removesuffix(".0")
     fc_variation_reference = str(float(ramp_kw)).removesuffix(".0")
     metadata = {
         "horizon": horizon,
         "dt_seconds": float(config.dt_seconds),
         "variable_order": (
-            "P_fc[0:N], P_batt[0:N], SOC[0:N+1], SOC_band_violation[0:N]"
+            "P_fc[0:N], P_batt[0:N], SOC[0:N+1], SOC_reference_deviation[0:N]"
         ),
         "n_variables": int(n_var),
         "n_constraints": int(A.shape[0]),
@@ -464,17 +455,15 @@ def build_qp_problem(
         "objective_uses_term_normalization": True,
         "soc_cost_in_objective": bool(
             {
-                "SOC_deadband_sq_norm",
+                "SOC_reference_sq_norm",
                 "SOC_norm",
                 "soc",
             }.intersection(objective_terms)
         ),
-        "soc_soft_min": float(config.soc_soft_min),
-        "soc_soft_max": float(config.soc_soft_max),
-        "soc_soft_scale": float(config.soc_band),
+        "soc_reference": float(config.soc_reference),
+        "soc_scale": float(config.soc_scale),
         "battery_power_ref_kw": float(config.battery_power_ref_kw),
         "fuel_cell_variation_ref_kw_per_step": float(ramp_kw),
-        "soc_band": float(config.soc_band),
         "h2_reference_kg_per_step": h2_reference,
         "h2_curve_csv": str(CURVE_CSV_PATH),
         "dp0_forced_origin_a1": float(dp0_a1),
@@ -496,7 +485,7 @@ def build_qp_problem(
             "q_batt": float(config.q_batt),
             "q_soc": float(config.q_soc),
             "q_fc_var": float(config.q_fc_var),
-            "soc_reference": float(soc_reference),
+            "soc_reference": float(config.soc_reference),
             "objective_term_descriptions": {
                 "H2_norm": (
                     "sum(k=0..N-1) m_H2(P_fc[k]) / "
@@ -506,11 +495,10 @@ def build_qp_problem(
                     "sum(k=0..N-1) "
                     f"(P_batt[k] / {battery_power_reference} kW)^2"
                 ),
-                "SOC_deadband_sq_norm": (
+                "SOC_reference_sq_norm": (
                     "sum(k=1..N) "
-                    f"(max(0, {config.soc_soft_min} - SOC[k], "
-                    f"SOC[k] - {config.soc_soft_max}) / "
-                    f"{soc_band_reference})^2"
+                    f"((SOC[k] - {config.soc_reference}) / "
+                    f"{soc_scale_reference})^2"
                 ),
                 "FC_variation_sq_norm": (
                     f"((P_fc[0] - P_fc_prev) / {fc_variation_reference} kW)^2 + "

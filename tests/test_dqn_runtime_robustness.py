@@ -44,7 +44,8 @@ class RuntimeRobustnessTests(unittest.TestCase):
         self.assertEqual(config.battery_capacity_kwh, 624.)
         self.assertEqual(config.fuel_cell_ramp_rate_kw_per_s, 48.)
         self.assertEqual((config.soc_min, config.soc_max), (0.2, 0.8))
-        self.assertEqual((config.soc_soft_min, config.soc_soft_max), (0.5, 0.6))
+        self.assertEqual(config.soc_reference, 0.55)
+        self.assertEqual(config.soc_scale, 0.05)
         self.assertEqual(physical.FUEL_CELL_MAX_KW, state_builder.FUEL_CELL_POWER_SCALE_KW)
         self.assertFalse(hasattr(reward, 'FUEL_CELL_MAX_KW'))
 
@@ -129,7 +130,7 @@ class RuntimeRobustnessTests(unittest.TestCase):
                 base_config=training.build_formal_mpc_config(), agent=runtime.agent)
         self.assertTrue(result['completed'])
         self.assertEqual(forward.call_count, 2)
-        self.assertEqual(trace.action_id.tolist(), trace[[f'q_A{i}' for i in range(4)]].to_numpy().argmax(1).tolist())
+        self.assertEqual(trace.action_id.tolist(), trace[[f'q_A{i}' for i in range(training.ACTION_DIM)]].to_numpy().argmax(1).tolist())
 
     def test_execution_checker_catches_all_existing_hard_constraints(self):
         import envs.dqn_mpc_weight_env as module
@@ -158,7 +159,8 @@ class RuntimeRobustnessTests(unittest.TestCase):
         loads = np.array([0., 1000.])
         config = training.build_formal_mpc_config()
         with patch.object(DqnMpcWeightEnv, 'step', force_boundary):
-            runtime = self.runtime(warmup_steps=100)
+            runtime = self.runtime(warmup_steps=100, terminal_failure_penalty=123.,
+                                   failure_penalty_calibration="synthetic-test-only")
             train = training.run_training_episode(voyage_id='synthetic', loads_kw=loads,
                 base_config=config, runtime=runtime)
             val = training.run_validation_episode(voyage_id='synthetic', loads_kw=loads,
@@ -168,9 +170,9 @@ class RuntimeRobustnessTests(unittest.TestCase):
         self.assertEqual(train['solver_failure_count'], 1)
         self.assertFalse(val['completed'])
         self.assertFalse(formal['completed'])
-        self.assertEqual(train['episode_reward'], -620.)
-        self.assertEqual(val['episode_reward'], -620.)
-        self.assertEqual(formal['episode_reward'], -620.)
+        self.assertEqual(train['episode_reward'], -123.)
+        self.assertEqual(val['episode_reward'], -123.)
+        self.assertEqual(formal['episode_reward'], -123.)
         self.assertEqual(len(trace), 0)
         self.assertTrue(runtime.replay_buffer.dones[-1])
 

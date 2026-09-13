@@ -29,25 +29,10 @@ class TestDqnMpcWeightActionTable(unittest.TestCase):
             len(DQN_MPC_WEIGHT_ACTIONS),
         )
 
-    def test_action_zero_is_balanced(self) -> None:
-        action = get_weight_action(0)
-        self.assertEqual(action.action_id, 0)
-        self.assertEqual(action.as_tuple(), (0.20, 0.50, 40.0, 16.0))
-        self.assertEqual(action.name, "balanced")
-
-    def test_final_dataset_action_definitions(self) -> None:
-        expected = {
-            0: ((0.20, 0.50, 40.0, 16.0), "balanced"),
-            1: ((0.40, 0.25, 8.0, 8.0), "hydrogen_economy"),
-            2: ((0.25, 0.50, 30.0, 40.0), "fc_smoothing"),
-            3: ((0.15, 0.80, 120.0, 8.0), "soc_protection"),
-        }
-
-        for action_id, (weights, name) in expected.items():
-            with self.subTest(action_id=action_id):
-                action = get_weight_action(action_id)
-                self.assertEqual(action.as_tuple(), weights)
-                self.assertEqual(action.name, name)
+    def test_grid_endpoints(self) -> None:
+        self.assertEqual(len(DQN_MPC_WEIGHT_ACTIONS), 84)
+        self.assertEqual(get_weight_action(0).as_tuple(), (.1, .1, .1, .7))
+        self.assertEqual(get_weight_action(83).as_tuple(), (.7, .1, .1, .1))
 
     def test_as_tuple_uses_required_weight_order(self) -> None:
         action = get_weight_action(1)

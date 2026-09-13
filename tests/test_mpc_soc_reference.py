@@ -18,12 +18,7 @@ for path in (SRC, MAIN):
 
 from dqn.utils.action_mapper import DQN_MPC_WEIGHT_ACTIONS  # noqa: E402
 from mpc_solvers.dqn_mpc_solver_bank import MpcWeightSolverBank  # noqa: E402
-from mpc_solvers.formal_config import (  # noqa: E402
-    SOC_SOFT_MAX,
-    SOC_SOFT_MIN,
-    SOC_SOFT_SCALE,
-    build_formal_mpc_config,
-)
+from mpc_solvers.formal_config import build_formal_mpc_config  # noqa: E402
 from mpc_solvers.mpc_qp_formulation import build_qp_problem  # noqa: E402
 
 
@@ -51,27 +46,30 @@ class MpcSocDeadbandTests(unittest.TestCase):
     def _objective(problem, values: np.ndarray) -> float:
         return float(0.5 * values @ problem.P @ values + problem.q @ values)
 
-    def _deadband_objective(self, soc: float) -> float:
+    def _soc_reference_objective(self, soc: float) -> float:
         config, problem = self._soc_only_problem()
         values = np.zeros(problem.P.shape[0], dtype=float)
         values[2 * config.horizon : 3 * config.horizon + 1] = soc
-        violation = max(0.0, SOC_SOFT_MIN - soc, soc - SOC_SOFT_MAX)
-        values[3 * config.horizon + 1 :] = violation
+        deviation = abs(soc - config.soc_reference)
+        values[3 * config.horizon + 1 :] = deviation
         return self._objective(problem, values)
 
-    def test_deadband_cost_is_zero_inside_closed_working_range(self) -> None:
-        for soc in (0.50, 0.55, 0.60):
-            with self.subTest(soc=soc):
-                self.assertAlmostEqual(self._deadband_objective(soc), 0.0, places=12)
+    def test_soc_reference_cost_is_zero_only_at_reference(self) -> None:
+        self.assertAlmostEqual(self._soc_reference_objective(0.55), 0.0, places=12)
+        self.assertAlmostEqual(self._soc_reference_objective(0.50), 6.0, places=10)
+        self.assertAlmostEqual(self._soc_reference_objective(0.60), 6.0, places=10)
+        self.assertAlmostEqual(self._soc_reference_objective(0.45), 24.0, places=10)
+        self.assertAlmostEqual(self._soc_reference_objective(0.65), 24.0, places=10)
 
-    def test_deadband_cost_is_positive_outside_working_range(self) -> None:
-        self.assertGreater(self._deadband_objective(0.49), 0.0)
-        self.assertGreater(self._deadband_objective(0.61), 0.0)
-
-    def test_equal_distance_from_either_boundary_has_equal_normalized_cost(self) -> None:
+    def test_equal_distance_from_reference_has_equal_normalized_cost(self) -> None:
         self.assertAlmostEqual(
-            self._deadband_objective(0.49),
-            self._deadband_objective(0.61),
+            self._soc_reference_objective(0.50),
+            self._soc_reference_objective(0.60),
+            places=12,
+        )
+        self.assertAlmostEqual(
+            self._soc_reference_objective(0.54),
+            self._soc_reference_objective(0.56),
             places=12,
         )
 
@@ -80,20 +78,18 @@ class MpcSocDeadbandTests(unittest.TestCase):
             tuple(field.name for field in fields(DQN_MPC_WEIGHT_ACTIONS[0])),
             ("action_id", "q_h2", "q_batt", "q_soc", "q_fc_var", "name"),
         )
-        self.assertEqual(
-            DQN_MPC_WEIGHT_ACTIONS[2].as_tuple(),
-            (0.25, 0.50, 30.0, 40.0),
-        )
+        for action in DQN_MPC_WEIGHT_ACTIONS:
+            self.assertTrue(all(weight >= 0.0 for weight in action.as_tuple()))
+            self.assertAlmostEqual(sum(action.as_tuple()), 1.0, places=12)
 
-    def test_all_actions_share_convex_deadband_qp_and_solve(self) -> None:
+    def test_all_actions_share_convex_soc_reference_qp_and_solve(self) -> None:
         bank = MpcWeightSolverBank(self.base_config)
         expected_a = bank._entries[0].A.toarray()
         for action in DQN_MPC_WEIGHT_ACTIONS:
             with self.subTest(action=action.name):
                 entry = bank._entries[action.action_id]
-                self.assertEqual(entry.config.soc_soft_min, SOC_SOFT_MIN)
-                self.assertEqual(entry.config.soc_soft_max, SOC_SOFT_MAX)
-                self.assertEqual(entry.config.soc_band, SOC_SOFT_SCALE)
+                self.assertEqual(entry.config.soc_reference, 0.55)
+                self.assertEqual(entry.config.soc_scale, 0.05)
                 self.assertEqual(entry.P.shape, (25, 25))
                 np.testing.assert_allclose(entry.A.toarray(), expected_a)
                 result, _ = bank.solve(

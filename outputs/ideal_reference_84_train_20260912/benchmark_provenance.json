@@ -1,0 +1,32 @@
+{
+  "data_reads": [
+    "outputs\\unified_objective_action_redesign_20260911\\final_state_action_probe.csv"
+  ],
+  "formal_source_hashes_unchanged": true,
+  "action_count": 84,
+  "failure_reward": null,
+  "formal_config": {
+    "horizon": 6,
+    "dt_seconds": 1.0,
+    "battery_capacity_kwh": 624.0,
+    "battery_charge_max_kw": 624.0,
+    "battery_discharge_max_kw": 1248.0,
+    "battery_power_ref_kw": 624.0,
+    "fuel_cell_min_kw": 0.0,
+    "fuel_cell_max_kw": 600.0,
+    "fuel_cell_ramp_rate_kw_per_s": 48.0,
+    "fuel_cell_ramp_kw": null,
+    "soc_min": 0.2,
+    "soc_max": 0.8,
+    "soc_reference": 0.55,
+    "soc_scale": 0.05,
+    "objective_variant": "n6_h2_batt_socref_fcvar_normalized_v2",
+    "q_h2": 0.25,
+    "q_fc_var": 0.25,
+    "q_soc": 0.25,
+    "q_batt": 0.25,
+    "q_ramp": 0.0,
+    "q_terminal_soc": 0.0
+  },
+  "phase": "benchmark"
+}

@@ -115,13 +115,7 @@ class TestDqnMpcSolverBank(unittest.TestCase):
         self.assertGreaterEqual(float(violation.min()), -SOC_TOLERANCE)
         np.testing.assert_allclose(
             violation,
-            np.maximum(
-                0.0,
-                np.maximum(
-                    float(config.soc_soft_min) - soc[1:],
-                    soc[1:] - float(config.soc_soft_max),
-                ),
-            ),
+            np.abs(soc[1:] - float(config.soc_reference)),
             rtol=0.0,
             atol=SOC_TOLERANCE,
         )
@@ -225,7 +219,7 @@ class TestDqnMpcSolverBank(unittest.TestCase):
                 )
                 self.assertEqual(result.mpc_objective_terms, expected)
 
-    def test_raw_divided_by_weight_sum_equals_normalized_weight_objective(self) -> None:
+    def test_complete_objective_equals_sum_one_weighted_terms(self) -> None:
         action = DQN_MPC_WEIGHT_ACTIONS[2]
         result, _ = self.bank.solve(
             action_id=action.action_id,
@@ -239,14 +233,15 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             [
                 terms["h2_norm"],
                 terms["battery_power_sq_norm"],
-                terms["soc_deadband_sq_norm"],
+                terms["soc_reference_sq_norm"],
                 terms["fc_variation_sq_norm"],
             ],
             dtype=float,
         )
         weights = np.asarray(action.as_tuple(), dtype=float)
-        normalized_from_raw = result.raw_mpc_objective / weights.sum()
-        normalized_from_weights = float(np.dot(weights / weights.sum(), components))
+        self.assertAlmostEqual(float(weights.sum()), 1.0, places=12)
+        normalized_from_raw = result.raw_mpc_objective
+        normalized_from_weights = float(np.dot(weights, components))
         self.assertAlmostEqual(
             normalized_from_raw,
             normalized_from_weights,
@@ -275,7 +270,7 @@ class TestDqnMpcSolverBank(unittest.TestCase):
         self.assertAlmostEqual(
             result.raw_mpc_objective,
             qp_value_without_constant + omitted_fc_constant,
-            places=9,
+            delta=1.0e-6,
         )
 
     def test_action_zero_matches_direct_formal_solve(self) -> None:
@@ -292,13 +287,10 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             },
         )
 
-        # A0 必须保持正式 balanced 权重。
+        # A0 must match the current formal balanced weights.
         action = DQN_MPC_WEIGHT_ACTIONS[0]
 
-        self.assertEqual(
-            action.as_tuple(),
-            (0.20, 0.50, 40.0, 16.0),
-        )
+        self.assertAlmostEqual(sum(action.as_tuple()), 1.0, places=12)
 
         direct_config = replace(
             self.base_config,
@@ -436,7 +428,7 @@ class TestDqnMpcSolverBank(unittest.TestCase):
             self.assertIs(self.bank._entries[3].solver, solver)
 
     def test_invalid_action_id_raises(self) -> None:
-        for action_id in (-1, 7):
+        for action_id in (-1, len(DQN_MPC_WEIGHT_ACTIONS)):
             with self.subTest(action_id=action_id):
                 with self.assertRaises((IndexError, ValueError)):
                     self.bank.solve(

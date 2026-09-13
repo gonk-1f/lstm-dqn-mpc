@@ -1,0 +1,234 @@
+{
+  "cold_default": {
+    "compared_states": 120,
+    "winner_changes": 0,
+    "max_reward_shift": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 5.2493160668590255e-09,
+      "max": 2.0503073579203335e-08,
+      "mean": 2.5641055126946847e-10
+    },
+    "winner_regret_under_other": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "chosen_first_fc_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "chosen_plan_rms_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "max_same_action_plan_rms_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.012210926726827694,
+      "max": 0.02134289760251115,
+      "mean": 0.00035424770093753384
+    },
+    "old_reference_fixed_anchor_reward_shift": {
+      "count": 119,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 8.688396243738918e-06,
+      "max": 3.3211620832918065e-05,
+      "mean": 3.9164944320990713e-07
+    }
+  },
+  "tight_reverse": {
+    "compared_states": 120,
+    "winner_changes": 0,
+    "max_reward_shift": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 3.55222106729337e-10,
+      "max": 5.797966551313039e-10,
+      "mean": 8.486187215902181e-12
+    },
+    "winner_regret_under_other": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "chosen_first_fc_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "chosen_plan_rms_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "max_same_action_plan_rms_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 1.102643181597103e-06,
+      "max": 0.0043657831350727445,
+      "mean": 3.63928701912605e-05
+    },
+    "old_reference_fixed_anchor_reward_shift": {
+      "count": 119,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 1.0971880759491534e-09,
+      "max": 5.685769089436299e-06,
+      "mean": 4.779081616533833e-08
+    }
+  },
+  "warm_forward": {
+    "compared_states": 120,
+    "winner_changes": 0,
+    "max_reward_shift": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 1.873485150696857e-10,
+      "max": 1.6505870070737672e-07,
+      "mean": 1.3774166273718136e-09
+    },
+    "winner_regret_under_other": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "chosen_first_fc_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "chosen_plan_rms_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "max_same_action_plan_rms_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 1.0682794921646276e-05,
+      "max": 0.0003793953408435432,
+      "mean": 3.2715331451320124e-06
+    },
+    "old_reference_fixed_anchor_reward_shift": {
+      "count": 119,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 1.5535998771021168e-07,
+      "max": 6.184889581595243e-07,
+      "mean": 6.789515615457002e-09
+    }
+  },
+  "warm_reverse": {
+    "compared_states": 120,
+    "winner_changes": 0,
+    "max_reward_shift": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 1.5068840592338839e-09,
+      "max": 7.010685276753748e-08,
+      "mean": 6.092385655860622e-10
+    },
+    "winner_regret_under_other": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "chosen_first_fc_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "chosen_plan_rms_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "max_same_action_plan_rms_change_kw": {
+      "count": 120,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0053748160259018156,
+      "max": 0.010526109874680296,
+      "mean": 0.00014361806506297915
+    },
+    "old_reference_fixed_anchor_reward_shift": {
+      "count": 119,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 1.0617173196310045e-05,
+      "max": 1.4886250895629338e-05,
+      "mean": 2.919961088542004e-07
+    }
+  }
+}

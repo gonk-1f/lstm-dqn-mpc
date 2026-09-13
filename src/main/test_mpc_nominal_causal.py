@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 import sys
@@ -17,14 +18,16 @@ if str(SRC_ROOT) not in sys.path:
 from envs.dqn_mpc_weight_env import (
     DqnMpcWeightEnv,
     MpcSolveFailure,
+    terminal_failure_reward,
 )
+from dqn.utils.action_mapper import DQN_MPC_WEIGHT_ACTIONS
 import train_dqn_mpc_mlp as training
 
 
 TEST_OUTPUT_DIR = (
     REPO_ROOT
     / "outputs"
-    / "mpc_nominal_causal_test"
+    / "mpc_fixed_grid_a0_executed_reward_v1_test"
 )
 
 TRACE_DIR = TEST_OUTPUT_DIR / "traces"
@@ -49,6 +52,7 @@ def run_test_episode(
     voyage_id: str,
     loads_kw: np.ndarray,
     base_config,
+    failure_config=None,
 ) -> tuple[dict[str, object], pd.DataFrame]:
     env = DqnMpcWeightEnv(
         loads_kw=loads_kw,
@@ -82,12 +86,12 @@ def run_test_episode(
                 action
             )
 
-        except MpcSolveFailure:
+        except MpcSolveFailure as error:
             completed = False
             solver_failure_count = 1
             failure_index = int(env.decision_index)
 
-            reward = -620.0
+            reward = terminal_failure_reward(error, failure_config or training.DQNTrainConfig())
 
             action_counts[action] += 1
             episode_reward += reward
@@ -246,7 +250,15 @@ def plot_soc_trajectory(
     )
 
     plt.close(fig)
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description='Fixed grid A0 executed-reward evaluation')
+    parser.add_argument('--terminal-failure-penalty', type=float, default=None)
+    parser.add_argument('--failure-penalty-calibration', default=None)
+    args = parser.parse_args(argv)
+    failure_config = training.DQNTrainConfig(
+        terminal_failure_penalty=args.terminal_failure_penalty,
+        failure_penalty_calibration=args.failure_penalty_calibration)
+    training.require_calibrated_failure_penalty(failure_config)
 
     if TEST_OUTPUT_DIR.exists():
         raise FileExistsError(
@@ -289,6 +301,7 @@ def main() -> None:
             voyage_id=voyage_id,
             loads_kw=loads_kw,
             base_config=base_config,
+            failure_config=failure_config,
         )
 
         results.append(result)
@@ -333,9 +346,11 @@ def main() -> None:
     completed = int(frame["completed"].sum())
 
     summary = {
-        "controller": "fixed_A0_balanced_MPC",
+        "controller": "fixed_grid_A0_executed_reward_MPC",
         "action_id": 0,
-        "action_weights": [0.20, 0.50, 40.0, 16.0],
+        "terminal_failure_penalty": failure_config.terminal_failure_penalty,
+        "failure_penalty_calibration": failure_config.failure_penalty_calibration,
+        "action_weights": list(DQN_MPC_WEIGHT_ACTIONS[0].as_tuple()),
         "test_segments": list(split.test_segments),
         "completed_voyages": completed,
         "total_voyages": len(frame),

@@ -1,0 +1,162 @@
+{
+  "warm_forward": {
+    "count": 120,
+    "winner_changes": 0,
+    "max_reward_shift": {
+      "count": 120,
+      "mean": 2.1808500436093502e-09,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 7.0375391453270295e-09,
+      "max": 2.5301368500318944e-07
+    },
+    "regret_under_other": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    },
+    "first_fc_change_kw": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    },
+    "plan_rms_change_kw": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    }
+  },
+  "warm_reverse": {
+    "count": 120,
+    "winner_changes": 0,
+    "max_reward_shift": {
+      "count": 120,
+      "mean": 2.0191333066169975e-09,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 7.264330703971048e-08,
+      "max": 1.3463528811263892e-07
+    },
+    "regret_under_other": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    },
+    "first_fc_change_kw": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    },
+    "plan_rms_change_kw": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    }
+  },
+  "tight_reverse": {
+    "count": 120,
+    "winner_changes": 0,
+    "max_reward_shift": {
+      "count": 120,
+      "mean": 1.273316135400974e-10,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 7.426711046143473e-10,
+      "max": 1.4362915717880398e-08
+    },
+    "regret_under_other": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    },
+    "first_fc_change_kw": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    },
+    "plan_rms_change_kw": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    }
+  },
+  "cold_default": {
+    "count": 120,
+    "winner_changes": 0,
+    "max_reward_shift": {
+      "count": 120,
+      "mean": 1.7214285850941647e-09,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 5.8463799608166115e-08,
+      "max": 1.0457461482871189e-07
+    },
+    "regret_under_other": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    },
+    "first_fc_change_kw": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    },
+    "plan_rms_change_kw": {
+      "count": 120,
+      "mean": 0.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p50": 0.0,
+      "p99": 0.0,
+      "max": 0.0
+    }
+  }
+}
