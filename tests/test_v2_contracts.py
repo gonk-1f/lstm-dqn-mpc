@@ -55,6 +55,34 @@ class V2ContractTests(unittest.TestCase):
         self.assertEqual(config.prediction_seconds, 210.0)
         self.assertEqual(config.switch_seconds, 330.0)
 
+    def test_timescale_rejects_invalid_step_duration_values(self) -> None:
+        from v2.config import TimeScaleConfig
+
+        invalid_values = (True, "30", None, 30 + 0j, float("nan"), float("inf"))
+        for value in invalid_values:
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    TimeScaleConfig(
+                        ts_mpc_seconds=value,  # type: ignore[arg-type]
+                        n_mpc=5,
+                        dqn_switch_steps=5,
+                    )
+
+    def test_timescale_horizons_require_strict_builtin_integers(self) -> None:
+        from v2.config import TimeScaleConfig
+
+        for field in ("n_mpc", "dqn_switch_steps"):
+            for value in (True, 5.0, "5"):
+                with self.subTest(field=field, value=value):
+                    values = {
+                        "ts_mpc_seconds": 30.0,
+                        "n_mpc": 5,
+                        "dqn_switch_steps": 5,
+                    }
+                    values[field] = value
+                    with self.assertRaises(ValueError):
+                        TimeScaleConfig(**values)  # type: ignore[arg-type]
+
     def test_v1_semantics_are_rejected(self) -> None:
         from v2.contracts import IncompatibleArtifactError, require_v2_semantics
 
@@ -82,6 +110,27 @@ class V2ContractTests(unittest.TestCase):
         extra["legacy_switch_seconds"] = 1.0
         with self.assertRaises(IncompatibleArtifactError):
             require_v2_semantics(extra)
+
+    def test_equality_equivalent_artifact_field_types_are_rejected(self) -> None:
+        from v2.contracts import (
+            IncompatibleArtifactError,
+            control_semantics,
+            require_v2_semantics,
+        )
+
+        wrong_types = (
+            ("ts_mpc_seconds", 30),
+            ("n_mpc", 5.0),
+            ("n_mpc", True),
+            ("dqn_switch_steps", 5.0),
+            ("dqn_switch_steps", True),
+        )
+        for field, value in wrong_types:
+            with self.subTest(field=field, value=value):
+                semantics = control_semantics()
+                semantics[field] = value
+                with self.assertRaises(IncompatibleArtifactError):
+                    require_v2_semantics(semantics)
 
     def test_current_semantics_round_trip(self) -> None:
         from v2.contracts import control_semantics, require_v2_semantics

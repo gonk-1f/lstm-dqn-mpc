@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
+from numbers import Real
 
 
 @dataclass(frozen=True)
@@ -18,7 +19,12 @@ class TimeScaleConfig:
     dqn_switch_steps: int
 
     def __post_init__(self) -> None:
-        if not math.isfinite(float(self.ts_mpc_seconds)) or self.ts_mpc_seconds <= 0:
+        if (
+            isinstance(self.ts_mpc_seconds, bool)
+            or not isinstance(self.ts_mpc_seconds, Real)
+            or not math.isfinite(self.ts_mpc_seconds)
+            or self.ts_mpc_seconds <= 0
+        ):
             raise ValueError("ts_mpc_seconds must be finite and positive")
         if type(self.n_mpc) is not int or self.n_mpc <= 0:
             raise ValueError("n_mpc must be a positive integer")

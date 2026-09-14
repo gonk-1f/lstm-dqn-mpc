@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from .config import TimeScaleConfig
 
 METHOD_VERSION = "multiscale_dqn_wmpc_v2"
@@ -41,7 +43,17 @@ def require_v2_semantics(
     value: object,
     timescale: TimeScaleConfig | None = None,
 ) -> None:
-    if value != control_semantics(timescale):
+    expected = control_semantics(timescale)
+    matches_exactly = (
+        isinstance(value, Mapping)
+        and value.keys() == expected.keys()
+        and all(
+            type(value[key]) is type(expected_value)
+            and value[key] == expected_value
+            for key, expected_value in expected.items()
+        )
+    )
+    if not matches_exactly:
         raise IncompatibleArtifactError(
             "checkpoint/replay semantics are not exactly compatible with "
             f"{METHOD_VERSION}; v1 artifacts cannot be resumed"
