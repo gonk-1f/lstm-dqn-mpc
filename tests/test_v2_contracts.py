@@ -43,6 +43,20 @@ class V2ContractTests(unittest.TestCase):
         self.assertEqual(config.mpc_solves_per_action, 5)
         self.assertNotEqual(config.n_mpc_semantics, config.dqn_switch_steps_semantics)
 
+    def test_integer_step_duration_is_normalized_for_stable_semantics(self) -> None:
+        from v2.config import TimeScaleConfig
+        from v2.contracts import control_semantics, require_v2_semantics
+
+        integer_input = TimeScaleConfig(30, 5, 5)
+        float_input = TimeScaleConfig(30.0, 5, 5)
+
+        self.assertIs(type(integer_input.ts_mpc_seconds), float)
+        self.assertEqual(
+            control_semantics(integer_input),
+            control_semantics(float_input),
+        )
+        require_v2_semantics(control_semantics(integer_input), float_input)
+
     def test_timescale_validation_does_not_couple_n_and_m(self) -> None:
         from v2.config import TimeScaleConfig
 

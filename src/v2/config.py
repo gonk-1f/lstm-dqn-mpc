@@ -26,6 +26,7 @@ class TimeScaleConfig:
             or self.ts_mpc_seconds <= 0
         ):
             raise ValueError("ts_mpc_seconds must be finite and positive")
+        object.__setattr__(self, "ts_mpc_seconds", float(self.ts_mpc_seconds))
         if type(self.n_mpc) is not int or self.n_mpc <= 0:
             raise ValueError("n_mpc must be a positive integer")
         if type(self.dqn_switch_steps) is not int or self.dqn_switch_steps <= 0:
