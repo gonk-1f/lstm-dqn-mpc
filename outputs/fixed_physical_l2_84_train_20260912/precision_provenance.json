@@ -1,8 +1,0 @@
-{
-  "reads": [
-    "outputs\\fixed_physical_l2_84_train_20260912\\window_supplement_results.npz",
-    "outputs\\ideal_reference_84_train_20260912\\state_physical_results.npz",
-    "outputs\\ideal_reference_84_train_20260912\\states.csv"
-  ],
-  "source_script_sha256": "ae89a4d37132fa0abf0c05ed8951bcdd1c0e47451f6908abcdf0f06f22a23ab9"
-}
