@@ -55,3 +55,61 @@ class TimeScaleConfig:
     @property
     def dqn_switch_steps_semantics(self) -> str:
         return "executed MPC control periods per selected DQN action"
+
+
+@dataclass(frozen=True)
+class PlantConfig:
+    fuel_cell_rated_total_kw: float
+    battery_nominal_energy_kwh: float
+    source_type: str
+    source_reference: str
+
+    @classmethod
+    def research_simulation(cls) -> "PlantConfig":
+        return cls(
+            fuel_cell_rated_total_kw=600.0,
+            battery_nominal_energy_kwh=624.0,
+            source_type="research_simulation",
+            source_reference=(
+                "Yang et al., Ocean Engineering (2026), "
+                "DOI 10.1016/j.oceaneng.2026.125687"
+            ),
+        )
+
+    @classmethod
+    def project_configuration(cls) -> "PlantConfig":
+        """Backward-compatible name for the approved research simulation."""
+
+        return cls.research_simulation()
+
+
+@dataclass(frozen=True)
+class RealVesselSpecification:
+    fuel_cell_rated_total_kw: float
+    fuel_cell_module_count: int
+    fuel_cell_module_rated_kw: float
+    battery_nominal_energy_kwh: float
+    battery_cluster_count: int
+    battery_rated_output_min_kw: float
+    battery_rated_voltage_v: float
+    operation_ends_with_shore_charging: bool
+    source_type: str
+    source_reference: str
+
+    @classmethod
+    def from_authoritative_specification(cls) -> "RealVesselSpecification":
+        return cls(
+            fuel_cell_rated_total_kw=560.0,
+            fuel_cell_module_count=8,
+            fuel_cell_module_rated_kw=70.0,
+            battery_nominal_energy_kwh=1806.0,
+            battery_cluster_count=12,
+            battery_rated_output_min_kw=900.0,
+            battery_rated_voltage_v=537.6,
+            operation_ends_with_shore_charging=True,
+            source_type="real_vessel_technical_specification",
+            source_reference=(
+                "rightpdf_“三峡氢舟1号”动力系统系统技术规格书 - "
+                "V1_word2pdf.pdf"
+            ),
+        )
