@@ -56,6 +56,10 @@ The raw API is named `reference_unit_voltage_loss_step_uv`, and its power
 arguments carry `reference_` names. Negative power, power above the explicit
 reference-unit rated power, non-positive duration, non-positive rated power,
 non-finite values, booleans, and numeric-looking text are rejected.
+Result and cumulative-account construction also require finite derived runtime
+and total loss, not merely finite individual components. Account updates
+validate every prospective component plus the prospective runtime and total
+before mutation, so cross-component overflow cannot partially update a ledger.
 
 ## Aggregate-power mapping gate
 

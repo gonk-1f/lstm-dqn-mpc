@@ -287,6 +287,46 @@ class FuelCellDegradationTests(unittest.TestCase):
             before,
         )
 
+    def test_fc_records_and_accounts_reject_cross_component_overflow(self) -> None:
+        from v2.models.fuel_cell_degradation import FuelCellVoltageLoss, FuelCellVoltageLossAccount
+
+        for values in (
+            (1.0e308, 1.0e308, 0.0, 0.0),
+            (1.0e308, 0.0, 1.0e308, 0.0),
+        ):
+            with self.subTest(record=values), self.assertRaises(ValueError):
+                FuelCellVoltageLoss(*values)
+            with self.subTest(account=values), self.assertRaises(ValueError):
+                FuelCellVoltageLossAccount(*values)
+
+        for account, step in (
+            (
+                FuelCellVoltageLossAccount(9.0e307, 0.0, 0.0, 0.0),
+                FuelCellVoltageLoss(0.0, 9.0e307, 0.0, 0.0),
+            ),
+            (
+                FuelCellVoltageLossAccount(9.0e307, 0.0, 0.0, 0.0),
+                FuelCellVoltageLoss(0.0, 0.0, 9.0e307, 0.0),
+            ),
+        ):
+            before = (
+                account.low_runtime_uv,
+                account.high_runtime_uv,
+                account.transient_uv,
+                account.start_stop_uv,
+            )
+            with self.subTest(add=(account, step)), self.assertRaises(ValueError):
+                account.add(step)
+            self.assertEqual(
+                (
+                    account.low_runtime_uv,
+                    account.high_runtime_uv,
+                    account.transient_uv,
+                    account.start_stop_uv,
+                ),
+                before,
+            )
+
 
 class BatteryDegradationTests(unittest.TestCase):
     def test_version_source_and_stress_functions_are_exact(self) -> None:

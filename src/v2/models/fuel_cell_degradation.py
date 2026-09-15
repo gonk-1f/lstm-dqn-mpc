@@ -50,6 +50,27 @@ def _exact_nonnegative_float(value: object, name: str) -> float:
     return value
 
 
+def _validated_voltage_loss_components(
+    low_runtime_uv: object,
+    high_runtime_uv: object,
+    transient_uv: object,
+    start_stop_uv: object,
+) -> tuple[float, float, float, float]:
+    components = (
+        _exact_nonnegative_float(low_runtime_uv, "low_runtime_uv"),
+        _exact_nonnegative_float(high_runtime_uv, "high_runtime_uv"),
+        _exact_nonnegative_float(transient_uv, "transient_uv"),
+        _exact_nonnegative_float(start_stop_uv, "start_stop_uv"),
+    )
+    runtime_uv = components[0] + components[1]
+    if not math.isfinite(runtime_uv):
+        raise ValueError("combined runtime voltage loss must remain finite")
+    total_uv = runtime_uv + components[2] + components[3]
+    if not math.isfinite(total_uv):
+        raise ValueError("total voltage loss must remain finite")
+    return components
+
+
 @dataclass(frozen=True)
 class FuelCellVoltageLoss:
     """Raw one-step voltage-loss components, all in microvolts."""
@@ -60,13 +81,12 @@ class FuelCellVoltageLoss:
     start_stop_uv: float
 
     def __post_init__(self) -> None:
-        for name in (
-            "low_runtime_uv",
-            "high_runtime_uv",
-            "transient_uv",
-            "start_stop_uv",
-        ):
-            _exact_nonnegative_float(getattr(self, name), name)
+        _validated_voltage_loss_components(
+            self.low_runtime_uv,
+            self.high_runtime_uv,
+            self.transient_uv,
+            self.start_stop_uv,
+        )
 
     @property
     def runtime_uv(self) -> float:
@@ -150,23 +170,23 @@ class FuelCellVoltageLossAccount:
         self._validated_components()
 
     def _validated_components(self) -> tuple[float, float, float, float]:
-        return (
-            _exact_nonnegative_float(self.low_runtime_uv, "low_runtime_uv"),
-            _exact_nonnegative_float(self.high_runtime_uv, "high_runtime_uv"),
-            _exact_nonnegative_float(self.transient_uv, "transient_uv"),
-            _exact_nonnegative_float(self.start_stop_uv, "start_stop_uv"),
+        return _validated_voltage_loss_components(
+            self.low_runtime_uv,
+            self.high_runtime_uv,
+            self.transient_uv,
+            self.start_stop_uv,
         )
 
     def add(self, step: FuelCellVoltageLoss) -> None:
         if type(step) is not FuelCellVoltageLoss:
             raise TypeError("step must be an exact FuelCellVoltageLoss")
         current = self._validated_components()
-        additions = (
+        additions = _validated_voltage_loss_components(
             step.low_runtime_uv, step.high_runtime_uv, step.transient_uv, step.start_stop_uv
         )
-        updated = tuple(left + right for left, right in zip(current, additions))
-        if not all(math.isfinite(value) for value in updated):
-            raise ValueError("cumulative voltage-loss addition must remain finite")
+        updated = _validated_voltage_loss_components(
+            *(left + right for left, right in zip(current, additions))
+        )
         (
             self.low_runtime_uv,
             self.high_runtime_uv,
