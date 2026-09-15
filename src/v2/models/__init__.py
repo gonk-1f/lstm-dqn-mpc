@@ -12,7 +12,7 @@ from .fuel_cell_degradation import (
     AggregateFcStateTransition,
     FuelCellVoltageLoss,
     FuelCellVoltageLossAccount,
-    fc_voltage_loss_step_uv,
+    reference_unit_voltage_loss_step_uv,
 )
 
 __all__ = [
@@ -24,6 +24,6 @@ __all__ = [
     "FuelCellVoltageLossAccount",
     "battery_degradation_step",
     "current_stress",
-    "fc_voltage_loss_step_uv",
+    "reference_unit_voltage_loss_step_uv",
     "soc_stress",
 ]

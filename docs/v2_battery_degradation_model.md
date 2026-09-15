@@ -36,6 +36,10 @@ Each step exposes raw Ah, weighted Ah, SOC stress, and current stress. The
 cumulative account sums raw and weighted Ah only; it does not imply a lifetime
 fraction. SOC outside `[0, 1]`, non-positive `I_nom`, non-positive duration,
 non-finite values, booleans, and numeric-looking text are rejected.
+Result records and initial cumulative-account fields apply the same strict
+validation. Cumulative updates compute and validate the complete prospective
+state before mutation, so floating-point overflow is rejected without a
+partial ledger update.
 
 ## Nominal capacity is not lifetime throughput
 

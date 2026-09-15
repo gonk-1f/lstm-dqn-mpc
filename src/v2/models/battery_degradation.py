@@ -29,6 +29,16 @@ def _strict_text(value: object, name: str) -> str:
     return value
 
 
+def _exact_nonnegative_float(value: object, name: str) -> float:
+    if type(value) is not float:
+        raise TypeError(f"{name} must be an exact float")
+    if not math.isfinite(value):
+        raise ValueError(f"{name} must be finite")
+    if value < 0.0:
+        raise ValueError(f"{name} must be non-negative")
+    return value
+
+
 def soc_stress(soc: float) -> float:
     """Return F(SOC) = 1 + 3.25 (1 - SOC)^2."""
 
@@ -58,6 +68,10 @@ class BatteryDegradationStep:
     weighted_ah: float
     soc_stress: float
     current_stress: float
+
+    def __post_init__(self) -> None:
+        for name in ("raw_ah", "weighted_ah", "soc_stress", "current_stress"):
+            _exact_nonnegative_float(getattr(self, name), name)
 
 
 def battery_degradation_step(
@@ -97,18 +111,25 @@ class BatteryThroughputAccount:
     raw_ah: float = 0.0
     weighted_ah: float = 0.0
 
+    def __post_init__(self) -> None:
+        self._validated_values()
+
+    def _validated_values(self) -> tuple[float, float]:
+        return (
+            _exact_nonnegative_float(self.raw_ah, "raw_ah"),
+            _exact_nonnegative_float(self.weighted_ah, "weighted_ah"),
+        )
+
     def add(self, step: BatteryDegradationStep) -> None:
         if type(step) is not BatteryDegradationStep:
             raise TypeError("step must be an exact BatteryDegradationStep")
-        if (
-            not math.isfinite(step.raw_ah)
-            or not math.isfinite(step.weighted_ah)
-            or step.raw_ah < 0.0
-            or step.weighted_ah < 0.0
-        ):
-            raise ValueError("throughput values must be finite and non-negative")
-        self.raw_ah += step.raw_ah
-        self.weighted_ah += step.weighted_ah
+        raw_ah, weighted_ah = self._validated_values()
+        updated_raw_ah = raw_ah + step.raw_ah
+        updated_weighted_ah = weighted_ah + step.weighted_ah
+        if not math.isfinite(updated_raw_ah) or not math.isfinite(updated_weighted_ah):
+            raise ValueError("cumulative throughput addition must remain finite")
+        self.raw_ah = updated_raw_ah
+        self.weighted_ah = updated_weighted_ah
 
 
 @dataclass(frozen=True)

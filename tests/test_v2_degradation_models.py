@@ -34,11 +34,11 @@ class FuelCellDegradationTests(unittest.TestCase):
         self.assertEqual(FC_ACCOUNTING_STRUCTURE_SOURCE_DOI, "10.3390/jmse13010034")
 
     def test_runtime_boundary_is_high_at_exactly_eighty_percent_rated(self) -> None:
-        from v2.models.fuel_cell_degradation import fc_voltage_loss_step_uv
+        from v2.models.fuel_cell_degradation import reference_unit_voltage_loss_step_uv
 
-        below = fc_voltage_loss_step_uv(479.999, 479.999, 3600.0, 600.0, is_on=True)
-        boundary = fc_voltage_loss_step_uv(480.0, 480.0, 3600.0, 600.0, is_on=True)
-        above = fc_voltage_loss_step_uv(500.0, 500.0, 3600.0, 600.0, is_on=True)
+        below = reference_unit_voltage_loss_step_uv(79.999, 79.999, 3600.0, 100.0, is_on=True)
+        boundary = reference_unit_voltage_loss_step_uv(80.0, 80.0, 3600.0, 100.0, is_on=True)
+        above = reference_unit_voltage_loss_step_uv(90.0, 90.0, 3600.0, 100.0, is_on=True)
 
         self.assertAlmostEqual(below.low_runtime_uv, 10.17)
         self.assertEqual(below.high_runtime_uv, 0.0)
@@ -47,9 +47,9 @@ class FuelCellDegradationTests(unittest.TestCase):
         self.assertAlmostEqual(above.high_runtime_uv, 11.74)
 
     def test_off_excludes_runtime_but_not_executed_power_transient(self) -> None:
-        from v2.models.fuel_cell_degradation import fc_voltage_loss_step_uv
+        from v2.models.fuel_cell_degradation import reference_unit_voltage_loss_step_uv
 
-        loss = fc_voltage_loss_step_uv(100.0, 0.0, 3600.0, 600.0, is_on=False)
+        loss = reference_unit_voltage_loss_step_uv(100.0, 0.0, 3600.0, 100.0, is_on=False)
 
         self.assertEqual(loss.low_runtime_uv, 0.0)
         self.assertEqual(loss.high_runtime_uv, 0.0)
@@ -58,26 +58,26 @@ class FuelCellDegradationTests(unittest.TestCase):
         self.assertAlmostEqual(loss.total_uv, loss.transient_uv)
 
     def test_step_exposes_all_raw_components_and_start_stop_proxy(self) -> None:
-        from v2.models.fuel_cell_degradation import fc_voltage_loss_step_uv
+        from v2.models.fuel_cell_degradation import reference_unit_voltage_loss_step_uv
 
-        loss = fc_voltage_loss_step_uv(
-            100.0, 150.0, 1800.0, 600.0, is_on=True, aggregate_start_stop_cycles=2
+        loss = reference_unit_voltage_loss_step_uv(
+            10.0, 15.0, 1800.0, 100.0, is_on=True, aggregate_start_stop_cycles=2
         )
 
         self.assertAlmostEqual(loss.low_runtime_uv, 10.17 * 0.5)
         self.assertEqual(loss.high_runtime_uv, 0.0)
         self.assertAlmostEqual(loss.runtime_uv, 10.17 * 0.5)
-        self.assertAlmostEqual(loss.transient_uv, 0.0441 * 50.0)
+        self.assertAlmostEqual(loss.transient_uv, 0.0441 * 5.0)
         self.assertAlmostEqual(loss.start_stop_uv, 23.91 * 2)
         self.assertAlmostEqual(loss.total_uv, loss.runtime_uv + loss.transient_uv + loss.start_stop_uv)
 
     def test_fc_cumulative_accounting_sums_components_without_normalizing(self) -> None:
-        from v2.models.fuel_cell_degradation import FuelCellVoltageLossAccount, fc_voltage_loss_step_uv
+        from v2.models.fuel_cell_degradation import FuelCellVoltageLossAccount, reference_unit_voltage_loss_step_uv
 
         account = FuelCellVoltageLossAccount()
-        first = fc_voltage_loss_step_uv(0.0, 100.0, 3600.0, 600.0, is_on=True)
-        second = fc_voltage_loss_step_uv(
-            100.0, 500.0, 1800.0, 600.0, is_on=True, aggregate_start_stop_cycles=1
+        first = reference_unit_voltage_loss_step_uv(0.0, 10.0, 3600.0, 100.0, is_on=True)
+        second = reference_unit_voltage_loss_step_uv(
+            10.0, 90.0, 1800.0, 100.0, is_on=True, aggregate_start_stop_cycles=1
         )
         account.add(first)
         account.add(second)
@@ -90,36 +90,57 @@ class FuelCellDegradationTests(unittest.TestCase):
         self.assertFalse(hasattr(account, "relative_life_loss"))
 
     def test_fc_step_inputs_are_strict_and_domain_checked(self) -> None:
-        from v2.models.fuel_cell_degradation import fc_voltage_loss_step_uv
+        from v2.models.fuel_cell_degradation import reference_unit_voltage_loss_step_uv
 
-        base = dict(previous_power_kw=100.0, power_kw=100.0, dt_seconds=1.0, rated_power_kw=600.0, is_on=True)
+        base = dict(previous_reference_power_kw=10.0, reference_power_kw=10.0, dt_seconds=1.0, reference_rated_power_kw=100.0, is_on=True)
         for field, bad in (
-            ("previous_power_kw", -1.0), ("previous_power_kw", 601.0),
-            ("power_kw", -1.0), ("power_kw", 601.0),
+            ("previous_reference_power_kw", -1.0), ("previous_reference_power_kw", 101.0),
+            ("reference_power_kw", -1.0), ("reference_power_kw", 101.0),
             ("dt_seconds", 0.0), ("dt_seconds", -1.0),
-            ("rated_power_kw", 0.0), ("rated_power_kw", -1.0),
+            ("reference_rated_power_kw", 0.0), ("reference_rated_power_kw", -1.0),
         ):
             arguments = dict(base)
             arguments[field] = bad
             with self.subTest(field=field, bad=bad), self.assertRaises(ValueError):
-                fc_voltage_loss_step_uv(**arguments)
+                reference_unit_voltage_loss_step_uv(**arguments)
 
-        for field in ("previous_power_kw", "power_kw", "dt_seconds", "rated_power_kw"):
+        for field in ("previous_reference_power_kw", "reference_power_kw", "dt_seconds", "reference_rated_power_kw"):
             for bad in (math.nan, math.inf, -math.inf, True, "1"):
                 arguments = dict(base)
                 arguments[field] = bad
                 with self.subTest(field=field, bad=bad), self.assertRaises((TypeError, ValueError)):
-                    fc_voltage_loss_step_uv(**arguments)
+                    reference_unit_voltage_loss_step_uv(**arguments)
 
         for bad in (1, np.bool_(True), "yes"):
             arguments = dict(base, is_on=bad)
             with self.subTest(is_on=bad), self.assertRaises(TypeError):
-                fc_voltage_loss_step_uv(**arguments)
+                reference_unit_voltage_loss_step_uv(**arguments)
 
         for bad in (-1, 1.5, True, "1"):
             arguments = dict(base, aggregate_start_stop_cycles=bad)
             with self.subTest(cycles=bad), self.assertRaises((TypeError, ValueError)):
-                fc_voltage_loss_step_uv(**arguments)
+                reference_unit_voltage_loss_step_uv(**arguments)
+
+    def test_aggregate_power_cannot_masquerade_as_source_compatible_power(self) -> None:
+        import v2.models as models
+        from v2.models.fuel_cell_degradation import (
+            AggregateFcPowerMapping,
+            formal_aggregate_fc_voltage_loss_step_uv,
+        )
+
+        self.assertFalse(hasattr(models, "fc_voltage_loss_step_uv"))
+        with self.assertRaises(TypeError):
+            formal_aggregate_fc_voltage_loss_step_uv(
+                0.0, 600.0, 1.0, 600.0, is_on=True, mapping=6.0
+            )
+
+        unresolved = AggregateFcPowerMapping(
+            6.0, "10.0000/unverified", "unverified aggregate-to-reference mapping"
+        )
+        with self.assertRaises(ValueError):
+            formal_aggregate_fc_voltage_loss_step_uv(
+                0.0, 600.0, 1.0, 600.0, is_on=True, mapping=unresolved
+            )
 
     def test_hysteresis_requires_continuous_dwell_and_counts_one_start(self) -> None:
         from v2.models.fuel_cell_degradation import AggregateFcOnOffTracker
@@ -187,6 +208,7 @@ class FuelCellDegradationTests(unittest.TestCase):
 
     def test_fc_formal_normalization_has_no_default_and_fails_closed(self) -> None:
         from v2.models.fuel_cell_degradation import (
+            FC_SINGLE_CELL_VOLTAGE_BASIS,
             FC_LIFETIME_NORMALIZATION_STATUS,
             FuelCellLifetimeNormalization,
             formal_fuel_cell_relative_life_loss,
@@ -196,7 +218,7 @@ class FuelCellDegradationTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             formal_fuel_cell_relative_life_loss(10.0, normalization=500.0)
 
-        unresolved = FuelCellLifetimeNormalization(500.0, "aggregate system terminal voltage", "10.0000/unverified", "unverified 600 kW aggregate")
+        unresolved = FuelCellLifetimeNormalization(0.7, FC_SINGLE_CELL_VOLTAGE_BASIS, "10.0000/unverified", "unverified cell")
         with self.assertRaises(ValueError):
             formal_fuel_cell_relative_life_loss(10.0, normalization=unresolved)
 
@@ -204,14 +226,14 @@ class FuelCellDegradationTests(unittest.TestCase):
             FuelCellLifetimeNormalization()
 
     def test_fc_formal_normalization_rejects_subclasses_and_forged_fields(self) -> None:
-        from v2.models.fuel_cell_degradation import FuelCellLifetimeNormalization, formal_fuel_cell_relative_life_loss
+        from v2.models.fuel_cell_degradation import FC_SINGLE_CELL_VOLTAGE_BASIS, FuelCellLifetimeNormalization, formal_fuel_cell_relative_life_loss
 
         class ForgedNormalization(FuelCellLifetimeNormalization):
             def require_verified(self) -> FuelCellLifetimeNormalization:
                 return self
 
         with self.assertRaises(TypeError):
-            formal_fuel_cell_relative_life_loss(10.0, normalization=ForgedNormalization(500.0, "basis", "fake-doi", "fake-system"))
+            formal_fuel_cell_relative_life_loss(10.0, normalization=ForgedNormalization(0.7, FC_SINGLE_CELL_VOLTAGE_BASIS, "fake-doi", "fake-cell"))
 
         forged_string = type("ForgedString", (str,), {})("basis")
         for arguments in (
@@ -223,11 +245,47 @@ class FuelCellDegradationTests(unittest.TestCase):
                 FuelCellLifetimeNormalization(*arguments)
 
     def test_fc_unverified_formula_is_explicit_and_raw_uv_cannot_be_priced(self) -> None:
-        from v2.models.fuel_cell_degradation import formal_fuel_cell_degradation_cost_cny, fuel_cell_relative_life_loss_unverified
+        from v2.models.fuel_cell_degradation import (
+            FC_SINGLE_CELL_VOLTAGE_BASIS,
+            FuelCellLifetimeNormalization,
+            formal_fuel_cell_degradation_cost_cny,
+            fuel_cell_relative_life_loss_unverified,
+        )
 
-        self.assertAlmostEqual(fuel_cell_relative_life_loss_unverified(50_000_000.0, v_init_v=500.0, voltage_basis="explicit synthetic system basis"), 1.0)
+        self.assertAlmostEqual(fuel_cell_relative_life_loss_unverified(70_000.0, v_init_v=0.7, voltage_basis=FC_SINGLE_CELL_VOLTAGE_BASIS), 1.0)
+        with self.assertRaises(ValueError):
+            fuel_cell_relative_life_loss_unverified(
+                70_000.0, v_init_v=0.7, voltage_basis="aggregate system voltage"
+            )
+        with self.assertRaises(ValueError):
+            FuelCellLifetimeNormalization(
+                0.7, "stack voltage", "10.0000/unverified", "unverified stack"
+            )
         with self.assertRaises(TypeError):
             formal_fuel_cell_degradation_cost_cny(100.0, replacement_cost_cny=1_000_000.0, normalization=500.0)
+
+    def test_fc_records_accounts_reject_forged_fields_and_overflow_atomically(self) -> None:
+        from v2.models.fuel_cell_degradation import FuelCellVoltageLoss, FuelCellVoltageLossAccount
+
+        for values in (
+            (True, 0.0, 0.0, 0.0),
+            ("1", 0.0, 0.0, 0.0),
+            (-1.0, 0.0, 0.0, 0.0),
+            (math.inf, 0.0, 0.0, 0.0),
+        ):
+            with self.subTest(values=values), self.assertRaises((TypeError, ValueError)):
+                FuelCellVoltageLoss(*values)
+            with self.subTest(account_values=values), self.assertRaises((TypeError, ValueError)):
+                FuelCellVoltageLossAccount(*values)
+
+        account = FuelCellVoltageLossAccount(1.0e308, 0.0, 0.0, 0.0)
+        before = (account.low_runtime_uv, account.high_runtime_uv, account.transient_uv, account.start_stop_uv)
+        with self.assertRaises(ValueError):
+            account.add(FuelCellVoltageLoss(1.0e308, 0.0, 0.0, 0.0))
+        self.assertEqual(
+            (account.low_runtime_uv, account.high_runtime_uv, account.transient_uv, account.start_stop_uv),
+            before,
+        )
 
 
 class BatteryDegradationTests(unittest.TestCase):
@@ -346,12 +404,34 @@ class BatteryDegradationTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             formal_battery_degradation_cost_cny(250.0, replacement_cost_cny=1_000_000.0, normalization=10_000.0)
 
+    def test_battery_records_accounts_reject_forged_fields_and_overflow_atomically(self) -> None:
+        from v2.models.battery_degradation import BatteryDegradationStep, BatteryThroughputAccount
+
+        for values in (
+            (True, 0.0, 1.0, 1.0),
+            ("1", 0.0, 1.0, 1.0),
+            (-1.0, 0.0, 1.0, 1.0),
+            (math.inf, 0.0, 1.0, 1.0),
+        ):
+            with self.subTest(values=values), self.assertRaises((TypeError, ValueError)):
+                BatteryDegradationStep(*values)
+
+        for values in ((True, 0.0), ("1", 0.0), (-1.0, 0.0), (math.inf, 0.0)):
+            with self.subTest(account_values=values), self.assertRaises((TypeError, ValueError)):
+                BatteryThroughputAccount(*values)
+
+        account = BatteryThroughputAccount(1.0e308, 1.0e308)
+        before = (account.raw_ah, account.weighted_ah)
+        with self.assertRaises(ValueError):
+            account.add(BatteryDegradationStep(1.0e308, 1.0e308, 1.0, 1.0))
+        self.assertEqual((account.raw_ah, account.weighted_ah), before)
+
 
 class DegradationExportTests(unittest.TestCase):
     def test_models_package_exports_raw_models_but_no_formal_default_normalization(self) -> None:
         import v2.models as models
 
-        for name in ("fc_voltage_loss_step_uv", "AggregateFcOnOffTracker", "battery_degradation_step", "soc_stress", "current_stress"):
+        for name in ("reference_unit_voltage_loss_step_uv", "AggregateFcOnOffTracker", "battery_degradation_step", "soc_stress", "current_stress"):
             self.assertTrue(hasattr(models, name), name)
         self.assertFalse(hasattr(models, "formal_fc_lifetime_normalization"))
         self.assertFalse(hasattr(models, "formal_battery_lifetime_normalization"))

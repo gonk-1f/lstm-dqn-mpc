@@ -16,8 +16,11 @@ FC_HIGH_RUNTIME_LOSS_UV_PER_HOUR = 11.74
 FC_TRANSIENT_LOSS_UV_PER_DELTA_KW = 0.0441
 FC_START_STOP_LOSS_UV_PER_CYCLE = 23.91
 FC_HIGH_LOAD_FRACTION = 0.8
+FC_SOURCE_POWER_BASIS = "source-compatible reference-unit power"
+FC_SINGLE_CELL_VOLTAGE_BASIS = "single-cell voltage"
 
 FC_LIFETIME_NORMALIZATION_STATUS = "NO-GO"
+FC_AGGREGATE_POWER_MAPPING_STATUS = "NO-GO"
 
 
 def _strict_scalar(value: object, name: str) -> float:
@@ -37,6 +40,16 @@ def _strict_text(value: object, name: str) -> str:
     return value
 
 
+def _exact_nonnegative_float(value: object, name: str) -> float:
+    if type(value) is not float:
+        raise TypeError(f"{name} must be an exact float")
+    if not math.isfinite(value):
+        raise ValueError(f"{name} must be finite")
+    if value < 0.0:
+        raise ValueError(f"{name} must be non-negative")
+    return value
+
+
 @dataclass(frozen=True)
 class FuelCellVoltageLoss:
     """Raw one-step voltage-loss components, all in microvolts."""
@@ -45,6 +58,15 @@ class FuelCellVoltageLoss:
     high_runtime_uv: float
     transient_uv: float
     start_stop_uv: float
+
+    def __post_init__(self) -> None:
+        for name in (
+            "low_runtime_uv",
+            "high_runtime_uv",
+            "transient_uv",
+            "start_stop_uv",
+        ):
+            _exact_nonnegative_float(getattr(self, name), name)
 
     @property
     def runtime_uv(self) -> float:
@@ -55,21 +77,26 @@ class FuelCellVoltageLoss:
         return self.runtime_uv + self.transient_uv + self.start_stop_uv
 
 
-def fc_voltage_loss_step_uv(
-    previous_power_kw: float,
-    power_kw: float,
+def reference_unit_voltage_loss_step_uv(
+    previous_reference_power_kw: float,
+    reference_power_kw: float,
     dt_seconds: float,
-    rated_power_kw: float,
+    reference_rated_power_kw: float,
     *,
     is_on: bool,
     aggregate_start_stop_cycles: int = 0,
 ) -> FuelCellVoltageLoss:
-    """Return raw aggregate voltage loss for one executed-power interval."""
+    """Return per-cell voltage loss from a source-compatible reference trace.
 
-    previous = _strict_scalar(previous_power_kw, "previous_power_kw")
-    power = _strict_scalar(power_kw, "power_kw")
+    This low-level equation does not accept an aggregate plant power trace.
+    """
+
+    previous = _strict_scalar(
+        previous_reference_power_kw, "previous_reference_power_kw"
+    )
+    power = _strict_scalar(reference_power_kw, "reference_power_kw")
     duration = _strict_scalar(dt_seconds, "dt_seconds")
-    rated = _strict_scalar(rated_power_kw, "rated_power_kw")
+    rated = _strict_scalar(reference_rated_power_kw, "reference_rated_power_kw")
     if type(is_on) is not bool:
         raise TypeError("is_on must be an exact bool")
     if isinstance(aggregate_start_stop_cycles, bool) or not isinstance(
@@ -79,11 +106,15 @@ def fc_voltage_loss_step_uv(
     cycles = int(aggregate_start_stop_cycles)
 
     if rated <= 0.0:
-        raise ValueError("rated_power_kw must be positive")
+        raise ValueError("reference_rated_power_kw must be positive")
     if previous < 0.0 or previous > rated:
-        raise ValueError("previous_power_kw must lie in [0, rated_power_kw]")
+        raise ValueError(
+            "previous_reference_power_kw must lie in [0, reference_rated_power_kw]"
+        )
     if power < 0.0 or power > rated:
-        raise ValueError("power_kw must lie in [0, rated_power_kw]")
+        raise ValueError(
+            "reference_power_kw must lie in [0, reference_rated_power_kw]"
+        )
     if duration <= 0.0:
         raise ValueError("dt_seconds must be positive")
     if cycles < 0:
@@ -115,21 +146,33 @@ class FuelCellVoltageLossAccount:
     transient_uv: float = 0.0
     start_stop_uv: float = 0.0
 
+    def __post_init__(self) -> None:
+        self._validated_components()
+
+    def _validated_components(self) -> tuple[float, float, float, float]:
+        return (
+            _exact_nonnegative_float(self.low_runtime_uv, "low_runtime_uv"),
+            _exact_nonnegative_float(self.high_runtime_uv, "high_runtime_uv"),
+            _exact_nonnegative_float(self.transient_uv, "transient_uv"),
+            _exact_nonnegative_float(self.start_stop_uv, "start_stop_uv"),
+        )
+
     def add(self, step: FuelCellVoltageLoss) -> None:
         if type(step) is not FuelCellVoltageLoss:
             raise TypeError("step must be an exact FuelCellVoltageLoss")
-        components = (
-            step.low_runtime_uv,
-            step.high_runtime_uv,
-            step.transient_uv,
-            step.start_stop_uv,
+        current = self._validated_components()
+        additions = (
+            step.low_runtime_uv, step.high_runtime_uv, step.transient_uv, step.start_stop_uv
         )
-        if any(not math.isfinite(value) or value < 0.0 for value in components):
-            raise ValueError("voltage-loss components must be finite and non-negative")
-        self.low_runtime_uv += step.low_runtime_uv
-        self.high_runtime_uv += step.high_runtime_uv
-        self.transient_uv += step.transient_uv
-        self.start_stop_uv += step.start_stop_uv
+        updated = tuple(left + right for left, right in zip(current, additions))
+        if not all(math.isfinite(value) for value in updated):
+            raise ValueError("cumulative voltage-loss addition must remain finite")
+        (
+            self.low_runtime_uv,
+            self.high_runtime_uv,
+            self.transient_uv,
+            self.start_stop_uv,
+        ) = updated
 
     @property
     def runtime_uv(self) -> float:
@@ -226,6 +269,78 @@ class AggregateFcOnOffTracker:
 
 
 @dataclass(frozen=True)
+class AggregateFcPowerMapping:
+    """Proposed aggregate-to-reference mapping; none is verified."""
+
+    aggregate_to_reference_power_ratio: float
+    source_doi: str
+    applicability: str
+
+    def __post_init__(self) -> None:
+        if type(self.aggregate_to_reference_power_ratio) is not float:
+            raise TypeError("aggregate_to_reference_power_ratio must be an exact float")
+        if (
+            not math.isfinite(self.aggregate_to_reference_power_ratio)
+            or self.aggregate_to_reference_power_ratio <= 0.0
+        ):
+            raise ValueError(
+                "aggregate_to_reference_power_ratio must be finite and positive"
+            )
+        _strict_text(self.source_doi, "source_doi")
+        _strict_text(self.applicability, "applicability")
+
+    def require_verified(self) -> AggregateFcPowerMapping:
+        raise ValueError(
+            "formal aggregate fuel-cell degradation is NO-GO: no authoritative "
+            "aggregate-to-reference-unit power mapping is available"
+        )
+
+
+def formal_aggregate_fc_voltage_loss_step_uv(
+    previous_aggregate_power_kw: float,
+    aggregate_power_kw: float,
+    dt_seconds: float,
+    aggregate_rated_power_kw: float,
+    *,
+    is_on: bool,
+    mapping: AggregateFcPowerMapping,
+    aggregate_start_stop_cycles: int = 0,
+) -> FuelCellVoltageLoss:
+    """Fail closed before applying per-reference-unit coefficients to aggregate power."""
+
+    previous = _strict_scalar(
+        previous_aggregate_power_kw, "previous_aggregate_power_kw"
+    )
+    power = _strict_scalar(aggregate_power_kw, "aggregate_power_kw")
+    duration = _strict_scalar(dt_seconds, "dt_seconds")
+    rated = _strict_scalar(aggregate_rated_power_kw, "aggregate_rated_power_kw")
+    if type(is_on) is not bool:
+        raise TypeError("is_on must be an exact bool")
+    if isinstance(aggregate_start_stop_cycles, bool) or not isinstance(
+        aggregate_start_stop_cycles, Integral
+    ):
+        raise TypeError("aggregate_start_stop_cycles must be a non-negative integer")
+    if rated <= 0.0:
+        raise ValueError("aggregate_rated_power_kw must be positive")
+    if previous < 0.0 or previous > rated:
+        raise ValueError(
+            "previous_aggregate_power_kw must lie in [0, aggregate_rated_power_kw]"
+        )
+    if power < 0.0 or power > rated:
+        raise ValueError(
+            "aggregate_power_kw must lie in [0, aggregate_rated_power_kw]"
+        )
+    if duration <= 0.0:
+        raise ValueError("dt_seconds must be positive")
+    if int(aggregate_start_stop_cycles) < 0:
+        raise ValueError("aggregate_start_stop_cycles must be non-negative")
+    if type(mapping) is not AggregateFcPowerMapping:
+        raise TypeError("mapping must use the exact provenance-bearing type")
+    AggregateFcPowerMapping.require_verified(mapping)
+    raise AssertionError("unreachable until a formal mapping is authorized")
+
+
+@dataclass(frozen=True)
 class FuelCellLifetimeNormalization:
     """Proposed calibration record; no instance is currently formally verified."""
 
@@ -240,13 +355,15 @@ class FuelCellLifetimeNormalization:
         if not math.isfinite(self.v_init_v) or self.v_init_v <= 0.0:
             raise ValueError("v_init_v must be finite and positive")
         _strict_text(self.voltage_basis, "voltage_basis")
+        if self.voltage_basis != FC_SINGLE_CELL_VOLTAGE_BASIS:
+            raise ValueError("voltage_basis must be exactly 'single-cell voltage'")
         _strict_text(self.source_doi, "source_doi")
         _strict_text(self.applicability, "applicability")
 
     def require_verified(self) -> FuelCellLifetimeNormalization:
         raise ValueError(
-            "formal fuel-cell lifetime normalization is NO-GO: V_init and its "
-            "cell/system voltage basis have no authoritative calibration"
+            "formal fuel-cell lifetime normalization is NO-GO: no applicable "
+            "numeric single-cell V_init has authoritative calibration"
         )
 
 
@@ -265,6 +382,8 @@ def fuel_cell_relative_life_loss_unverified(
         raise ValueError("delta_v_uv must be non-negative")
     if initial_voltage <= 0.0:
         raise ValueError("v_init_v must be positive")
+    if voltage_basis != FC_SINGLE_CELL_VOLTAGE_BASIS:
+        raise ValueError("voltage_basis must be exactly 'single-cell voltage'")
     return loss * 1.0e-6 / (0.1 * initial_voltage)
 
 
