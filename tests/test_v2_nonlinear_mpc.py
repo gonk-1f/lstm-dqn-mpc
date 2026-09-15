@@ -303,7 +303,7 @@ class NonlinearMPCTests(unittest.TestCase):
         def lying_optimizer(*args: object, **kwargs: object) -> SimpleNamespace:
             return SimpleNamespace(
                 success=True,
-                status=0,
+                status=7,
                 message="claimed success",
                 nit=1,
                 fun=0.0,
@@ -311,10 +311,32 @@ class NonlinearMPCTests(unittest.TestCase):
             )
 
         config, estimator, _ = self._objects()
-        with self.assertRaises(NumericalSolverError):
+        with self.assertRaises(NumericalSolverError) as caught:
             NonlinearMPC(config, optimizer=lying_optimizer).solve(
                 300.0, 0.5, 300.0, MPCWeights(0.5, 0.25, 0.25), estimator
             )
+        self.assertEqual(caught.exception.status, 7)
+
+    def test_nonnumeric_success_vector_is_a_structured_numerical_failure(self) -> None:
+        from v2.control.nonlinear_mpc import MPCWeights, NumericalSolverError, NonlinearMPC
+
+        def nonnumeric_optimizer(*args: object, **kwargs: object) -> SimpleNamespace:
+            return SimpleNamespace(
+                success=True,
+                status=8,
+                message="claimed success",
+                nit=1,
+                fun=0.0,
+                x="not-a-vector",
+            )
+
+        config, estimator, _ = self._objects()
+        with self.assertRaises(NumericalSolverError) as caught:
+            NonlinearMPC(config, optimizer=nonnumeric_optimizer).solve(
+                300.0, 0.5, 300.0, MPCWeights(0.5, 0.25, 0.25), estimator
+            )
+        self.assertEqual(caught.exception.kind, "numerical_solver_failure")
+        self.assertEqual(caught.exception.status, 8)
 
     def test_malformed_success_vector_is_a_structured_numerical_failure(self) -> None:
         from v2.control.nonlinear_mpc import MPCWeights, NumericalSolverError, NonlinearMPC

@@ -377,11 +377,15 @@ class NonlinearMPC:
         loads: np.ndarray,
         states: np.ndarray,
         previous_fc: float,
+        solver_status: int,
     ) -> None:
         cfg = self.config
         tolerance = self._PHYSICAL_TOLERANCE
         if powers.shape != (cfg.timescale.n_mpc,) or not np.all(np.isfinite(powers)):
-            raise NumericalSolverError("solver returned a malformed or nonfinite decision vector")
+            raise NumericalSolverError(
+                "solver returned a malformed or nonfinite decision vector",
+                status=solver_status,
+            )
         batteries = loads - powers
         deltas = np.diff(np.concatenate(([previous_fc], powers)))
         residuals = (
@@ -394,7 +398,10 @@ class NonlinearMPC:
             np.min(cfg.soc_max - states),
         )
         if not np.all(np.isfinite(states)) or min(residuals) < -tolerance:
-            raise NumericalSolverError("solver success output failed independent physical residual checks")
+            raise NumericalSolverError(
+                "solver success output failed independent physical residual checks",
+                status=solver_status,
+            )
 
     def solve(
         self,
@@ -490,14 +497,28 @@ class NonlinearMPC:
         if not bool(getattr(raw, "success", False)):
             raise NumericalSolverError(message, status=status)
 
-        powers = np.asarray(getattr(raw, "x", ()), dtype=float)
-        if powers.shape != (cfg.timescale.n_mpc,) or not np.all(np.isfinite(powers)):
+        try:
+            powers = np.asarray(getattr(raw, "x", ()), dtype=float)
+            valid_shape = powers.shape == (cfg.timescale.n_mpc,)
+            all_finite = bool(np.all(np.isfinite(powers)))
+        except Exception as exc:
+            raise NumericalSolverError(
+                f"solver returned an unreadable decision vector: {type(exc).__name__}: {exc}",
+                status=status,
+            ) from exc
+        if not valid_shape or not all_finite:
             raise NumericalSolverError(
                 "solver returned a malformed or nonfinite decision vector",
                 status=status,
             )
-        batteries, states = derive(powers)
-        self._postsolve_check(powers, loads, states, previous)
+        try:
+            batteries, states = derive(powers)
+        except Exception as exc:
+            raise NumericalSolverError(
+                f"solver decision could not be evaluated: {type(exc).__name__}: {exc}",
+                status=status,
+            ) from exc
+        self._postsolve_check(powers, loads, states, previous, status)
         components = objective_components(
             p_fc_kw=tuple(powers),
             base_reference_kw=forecast.base_reference_kw,
