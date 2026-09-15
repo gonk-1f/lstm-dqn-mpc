@@ -152,6 +152,168 @@ class V2DataGuardTests(unittest.TestCase):
         self.assertTrue(inventory.raw_measurements_available)
         self.assertEqual(inventory.usable_measurements, (record,))
 
+    def test_inventory_normalizes_immutable_container_fields(self) -> None:
+        from v2.data.raw_inventory import (
+            ExcelInventoryRecord,
+            MeasurementSourceClass,
+            RawExcelInventory,
+        )
+
+        record = ExcelInventoryRecord(
+            workbook=Path("device-export.xlsx"),
+            source_class=MeasurementSourceClass.ORIGINAL_MEASUREMENT,
+            sheet="Telemetry",
+            column="Power",
+            unit="kW",
+            timestamp="Time",
+            actual_sampling_interval_seconds=30,
+            missing_rate=0,
+            physical_meaning="measured power",
+            usable=True,
+            reason="authorized original export",
+        )
+        inventory = RawExcelInventory(
+            root="audit-root",  # type: ignore[arg-type]
+            records=[record],  # type: ignore[arg-type]
+        )
+
+        self.assertEqual(inventory.root, Path("audit-root"))
+        self.assertIs(type(inventory.records), tuple)
+        self.assertEqual(inventory.records, (record,))
+        self.assertIs(type(record.actual_sampling_interval_seconds), float)
+        self.assertIs(type(record.missing_rate), float)
+
+    def test_inventory_rejects_fake_records_before_payload_loader(self) -> None:
+        from v2.data.raw_inventory import RawExcelInventory
+
+        accesses = 0
+
+        class FakeRecord:
+            usable = True
+            workbook = Path("forged.xlsx")
+
+        def payload_loader() -> object:
+            nonlocal accesses
+            accesses += 1
+            return object()
+
+        with self.assertRaises(TypeError):
+            inventory = RawExcelInventory(
+                root=Path("."),
+                records=(FakeRecord(),),  # type: ignore[arg-type]
+            )
+            from v2.preflight import load_train_payload
+
+            load_train_payload(
+                split="Train",
+                inventory=inventory,
+                technical_specification=None,
+                payload_loader=payload_loader,
+            )
+
+        self.assertEqual(accesses, 0)
+
+    def test_inventory_rejects_record_subclasses(self) -> None:
+        from v2.data.raw_inventory import (
+            ExcelInventoryRecord,
+            MeasurementSourceClass,
+            RawExcelInventory,
+        )
+
+        class ExcelInventoryRecordSubclass(ExcelInventoryRecord):
+            pass
+
+        record = ExcelInventoryRecordSubclass(
+            workbook=Path("device-export.xlsx"),
+            source_class=MeasurementSourceClass.ORIGINAL_MEASUREMENT,
+            sheet="Telemetry",
+            column="Power",
+            unit="kW",
+            timestamp="Time",
+            actual_sampling_interval_seconds=30.0,
+            missing_rate=0.0,
+            physical_meaning="measured power",
+            usable=True,
+            reason="authorized original export",
+        )
+
+        with self.assertRaises(TypeError):
+            RawExcelInventory(root=Path("."), records=(record,))
+
+    def test_measurement_record_requires_a_strict_boolean_usable_flag(self) -> None:
+        from v2.data.raw_inventory import ExcelInventoryRecord
+
+        with self.assertRaises(ValueError):
+            ExcelInventoryRecord(
+                workbook=Path("device-export.xlsx"),
+                source_class="original_measurement",  # type: ignore[arg-type]
+                sheet="Telemetry",
+                column="Power",
+                unit="kW",
+                timestamp="Time",
+                actual_sampling_interval_seconds=30.0,
+                missing_rate=0.0,
+                physical_meaning="measured power",
+                usable="False",  # type: ignore[arg-type]
+                reason="invalid usable flag",
+            )
+
+    def test_measurement_record_rejects_invalid_numeric_metadata(self) -> None:
+        from v2.data.raw_inventory import ExcelInventoryRecord
+
+        valid = {
+            "workbook": Path("device-export.xlsx"),
+            "source_class": "original_measurement",
+            "sheet": "Telemetry",
+            "column": "Power",
+            "unit": "kW",
+            "timestamp": "Time",
+            "actual_sampling_interval_seconds": 30.0,
+            "missing_rate": 0.0,
+            "physical_meaning": "measured power",
+            "usable": True,
+            "reason": "authorized original export",
+        }
+        invalid_overrides = (
+            {"actual_sampling_interval_seconds": True},
+            {"actual_sampling_interval_seconds": "30"},
+            {"actual_sampling_interval_seconds": float("nan")},
+            {"actual_sampling_interval_seconds": float("inf")},
+            {"actual_sampling_interval_seconds": 0},
+            {"missing_rate": False},
+            {"missing_rate": "0"},
+            {"missing_rate": float("nan")},
+            {"missing_rate": float("inf")},
+            {"missing_rate": -0.01},
+            {"missing_rate": 1.01},
+        )
+        for override in invalid_overrides:
+            with self.subTest(override=override), self.assertRaises(ValueError):
+                ExcelInventoryRecord(**(valid | override))
+
+    def test_missing_rate_boundaries_are_valid_and_normalized(self) -> None:
+        from v2.data.raw_inventory import ExcelInventoryRecord
+
+        for missing_rate in (0, 1):
+            with self.subTest(missing_rate=missing_rate):
+                record = ExcelInventoryRecord(
+                    workbook=Path("device-export.xlsx"),
+                    source_class="original_measurement",  # type: ignore[arg-type]
+                    sheet="Telemetry",
+                    column="Power",
+                    unit="kW",
+                    timestamp="Time",
+                    actual_sampling_interval_seconds=30,
+                    missing_rate=missing_rate,
+                    physical_meaning="measured power",
+                    usable=True,
+                    reason="authorized original export",
+                )
+
+                self.assertEqual(record.missing_rate, float(missing_rate))
+                self.assertIs(type(record.missing_rate), float)
+                self.assertIs(type(record.actual_sampling_interval_seconds), float)
+
     def test_preflight_reports_each_missing_evidence_item_without_loading(self) -> None:
         from v2.data.raw_inventory import RawExcelInventory
         from v2.preflight import PreflightBlockedError, load_train_payload
@@ -331,6 +493,7 @@ class V2DataGuardTests(unittest.TestCase):
         self.assertEqual(plant.source_type, "research_simulation")
         self.assertIn("10.1016/j.oceaneng.2026.125687", plant.source_reference)
         self.assertNotIn("JMSE", plant.source_reference)
+        self.assertFalse(hasattr(PlantConfig, "project_configuration"))
 
     def test_real_vessel_specification_is_separate_from_simulation(self) -> None:
         from v2.config import PlantConfig, RealVesselSpecification

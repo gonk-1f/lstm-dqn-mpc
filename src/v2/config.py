@@ -76,13 +76,6 @@ class PlantConfig:
             ),
         )
 
-    @classmethod
-    def project_configuration(cls) -> "PlantConfig":
-        """Backward-compatible name for the approved research simulation."""
-
-        return cls.research_simulation()
-
-
 @dataclass(frozen=True)
 class RealVesselSpecification:
     fuel_cell_rated_total_kw: float

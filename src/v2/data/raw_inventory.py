@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 import math
+from numbers import Real
 from pathlib import Path
 
 
@@ -81,6 +82,35 @@ class ExcelInventoryRecord:
         RawSourcePolicy.require_original_measurement(self.workbook)
         if not isinstance(self.reason, str) or not self.reason.strip():
             raise ValueError("inventory record reason must be explicit")
+        if type(self.usable) is not bool:
+            raise ValueError("inventory record usable must be a boolean")
+
+        interval = self.actual_sampling_interval_seconds
+        if interval is not None:
+            if (
+                isinstance(interval, bool)
+                or not isinstance(interval, Real)
+                or not math.isfinite(interval)
+                or interval <= 0
+            ):
+                raise ValueError(
+                    "sampling interval must be a finite positive real number"
+                )
+            object.__setattr__(
+                self, "actual_sampling_interval_seconds", float(interval)
+            )
+
+        missing_rate = self.missing_rate
+        if missing_rate is not None:
+            if (
+                isinstance(missing_rate, bool)
+                or not isinstance(missing_rate, Real)
+                or not math.isfinite(missing_rate)
+                or not 0.0 <= missing_rate <= 1.0
+            ):
+                raise ValueError("missing_rate must be a finite real number in [0, 1]")
+            object.__setattr__(self, "missing_rate", float(missing_rate))
+
         if not self.usable:
             return
         if source_class is not MeasurementSourceClass.ORIGINAL_MEASUREMENT:
@@ -103,17 +133,11 @@ class ExcelInventoryRecord:
             raise ValueError(
                 "usable measurement records require " + ", ".join(missing)
             )
-        interval = self.actual_sampling_interval_seconds
-        if interval is None or not math.isfinite(interval) or interval <= 0:
+        if self.actual_sampling_interval_seconds is None:
             raise ValueError(
                 "usable measurement records require a finite positive sampling interval"
             )
-        missing_rate = self.missing_rate
-        if (
-            missing_rate is None
-            or not math.isfinite(missing_rate)
-            or not 0.0 <= missing_rate <= 1.0
-        ):
+        if self.missing_rate is None:
             raise ValueError("usable measurement records require missing_rate in [0, 1]")
 
     @classmethod
@@ -148,6 +172,22 @@ def require_train_only(split: str) -> None:
 class RawExcelInventory:
     root: Path
     records: tuple[ExcelInventoryRecord, ...]
+
+    def __post_init__(self) -> None:
+        try:
+            root = Path(self.root)
+        except (TypeError, ValueError) as exc:
+            raise TypeError("inventory root must be path-like") from exc
+        try:
+            records = tuple(self.records)
+        except TypeError as exc:
+            raise TypeError("inventory records must be an iterable") from exc
+        if any(type(record) is not ExcelInventoryRecord for record in records):
+            raise TypeError(
+                "inventory records must contain only exact ExcelInventoryRecord values"
+            )
+        object.__setattr__(self, "root", root)
+        object.__setattr__(self, "records", records)
 
     @property
     def workbooks(self) -> tuple[Path, ...]:
