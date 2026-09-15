@@ -36,15 +36,12 @@ class BatteryEfficiency:
             raise ValueError("eta_chg and eta_dis are uncalibrated")
         charge = _strict_scalar(self.eta_chg, "eta_chg")
         discharge = _strict_scalar(self.eta_dis, "eta_dis")
-        if not 0.0 < charge <= 1.0 or not 0.0 < discharge <= 1.0:
-            raise ValueError("battery efficiencies must lie in (0, 1]")
-        if (
-            not isinstance(self.source_reference, str)
-            or not self.source_reference.strip()
-            or not isinstance(self.source_location, str)
-            or not self.source_location.strip()
-        ):
-            raise ValueError("battery efficiency source reference and location are required")
+        if charge != FORMAL_BATTERY_ETA_CHG or discharge != FORMAL_BATTERY_ETA_DIS:
+            raise ValueError("formal battery efficiencies must both equal 0.95")
+        if self.source_reference != BATTERY_EFFICIENCY_SOURCE_DOI:
+            raise ValueError("formal battery efficiency requires the authoritative DOI")
+        if self.source_location != BATTERY_EFFICIENCY_SOURCE_LOCATION:
+            raise ValueError("formal battery efficiency requires the authoritative table location")
         return charge, discharge
 
     @classmethod
@@ -65,7 +62,7 @@ def formal_battery_efficiency() -> BatteryEfficiency:
     return BatteryEfficiency.formal_default()
 
 
-def next_soc(
+def next_soc_unverified(
     soc: float,
     p_batt_bus_kw: float,
     dt_seconds: float,
@@ -73,7 +70,7 @@ def next_soc(
     eta_chg: float,
     eta_dis: float,
 ) -> float:
-    """Advance SOC without clamping; positive bus power means discharge."""
+    """Pure SOC math for synthetic checks; this is not a formal v2 boundary."""
 
     state = _strict_scalar(soc, "soc")
     bus_power = _strict_scalar(p_batt_bus_kw, "p_batt_bus_kw")
@@ -87,3 +84,26 @@ def next_soc(
         raise ValueError("battery efficiencies must lie in (0, 1]")
     battery_side_kw = bus_power / discharge if bus_power > 0.0 else charge * bus_power
     return state - battery_side_kw * (duration / 3600.0) / capacity
+
+
+def next_soc(
+    soc: float,
+    p_batt_bus_kw: float,
+    dt_seconds: float,
+    capacity_kwh: float,
+    *,
+    efficiency: BatteryEfficiency,
+) -> float:
+    """Advance formal v2 SOC using only the authoritative efficiency calibration."""
+
+    if type(efficiency) is not BatteryEfficiency:
+        raise TypeError("efficiency must be an exact verified BatteryEfficiency")
+    eta_chg, eta_dis = BatteryEfficiency.require_calibrated(efficiency)
+    return next_soc_unverified(
+        soc,
+        p_batt_bus_kw,
+        dt_seconds,
+        capacity_kwh,
+        eta_chg=eta_chg,
+        eta_dis=eta_dis,
+    )

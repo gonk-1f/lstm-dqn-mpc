@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -97,17 +98,21 @@ class FuelCellEfficiencyTests(unittest.TestCase):
         from v2.models.fuel_cell_efficiency import (
             LHV_H2_KWH_PER_KG,
             LHV_H2_MJ_PER_KG,
-            hydrogen_mass_kg,
+            hydrogen_mass_kg_unverified,
         )
 
         self.assertEqual(LHV_H2_MJ_PER_KG, 120.0)
         self.assertAlmostEqual(LHV_H2_KWH_PER_KG, 33.333333333333336)
         self.assertAlmostEqual(
-            hydrogen_mass_kg(100.0, 3600.0, efficiency=0.5, rated_power_kw=600.0),
+            hydrogen_mass_kg_unverified(
+                100.0, 3600.0, efficiency=0.5, rated_power_kw=600.0
+            ),
             6.0,
         )
         self.assertEqual(
-            hydrogen_mass_kg(0.0, 30.0, efficiency=0.0, rated_power_kw=600.0),
+            hydrogen_mass_kg_unverified(
+                0.0, 30.0, efficiency=0.0, rated_power_kw=600.0
+            ),
             0.0,
         )
 
@@ -128,7 +133,7 @@ class FuelCellEfficiencyTests(unittest.TestCase):
     def test_fuel_cell_domain_and_invalid_inputs_are_rejected(self) -> None:
         from v2.models.fuel_cell_efficiency import (
             calibrated_fuel_cell_efficiency_map,
-            hydrogen_mass_kg,
+            hydrogen_mass_kg_unverified,
         )
 
         efficiency_map = calibrated_fuel_cell_efficiency_map()
@@ -147,12 +152,59 @@ class FuelCellEfficiencyTests(unittest.TestCase):
             (1.0, "1", 0.5, 600.0),
         ):
             with self.subTest(arguments=arguments), self.assertRaises((TypeError, ValueError)):
-                hydrogen_mass_kg(
+                hydrogen_mass_kg_unverified(
                     arguments[0],
                     arguments[1],
                     efficiency=arguments[2],
                     rated_power_kw=arguments[3],
                 )
+
+    def test_forged_fuel_cell_provenance_or_curve_cannot_enter_formal_h2(self) -> None:
+        from v2.models.fuel_cell_efficiency import (
+            FuelCellEfficiencyMap,
+            calibrated_fuel_cell_efficiency_map,
+            hydrogen_mass_from_map_kg,
+        )
+
+        authoritative = calibrated_fuel_cell_efficiency_map()
+
+        with self.assertRaises(ValueError):
+            replace(authoritative.provenance, workbook_sha256="z" * 64)
+
+        forged_provenances = (
+            replace(authoritative.provenance, workbook_path="C:/fake/FC_Data.xlsx"),
+            replace(authoritative.provenance, workbook_sha256="0" * 64),
+            replace(authoritative.provenance, worksheet="Sheet2"),
+            replace(authoritative.provenance, cell_range="A2:B11"),
+            replace(authoritative.provenance, source_columns="fake columns"),
+            replace(authoritative.provenance, raw_points=((0.0, 0.0), (100.0, 50.0))),
+            replace(authoritative.provenance, axis_transform="fake transform"),
+            replace(authoritative.provenance, efficiency_transform="fake transform"),
+            replace(authoritative.provenance, endpoint_transform="fake transform"),
+        )
+        for provenance in forged_provenances:
+            forged = replace(authoritative, provenance=provenance)
+            with self.subTest(provenance=provenance), self.assertRaises(ValueError):
+                hydrogen_mass_from_map_kg(300.0, 1.0, forged)
+
+        changed_eta = list(authoritative.efficiencies)
+        changed_eta[4] += 0.001
+        forged_curve = replace(authoritative, efficiencies=changed_eta)
+        with self.assertRaises(ValueError):
+            hydrogen_mass_from_map_kg(300.0, 1.0, forged_curve)
+
+        class ForgedMap(FuelCellEfficiencyMap):
+            def require_formal_calibration(self) -> FuelCellEfficiencyMap:
+                return self
+
+        subclass_forgery = ForgedMap(
+            authoritative.power_kw,
+            changed_eta,
+            authoritative.rated_power_kw,
+            authoritative.provenance,
+        )
+        with self.assertRaises(TypeError):
+            hydrogen_mass_from_map_kg(300.0, 1.0, subclass_forgery)
 
 
 class BatteryEnergyTests(unittest.TestCase):
@@ -175,28 +227,28 @@ class BatteryEnergyTests(unittest.TestCase):
         self.assertEqual(efficiency.source_location, "Table 3")
 
     def test_discharge_and_charge_have_exact_bus_to_battery_signs(self) -> None:
-        from v2.models.battery_energy import next_soc
+        from v2.models.battery_energy import next_soc_unverified
 
         self.assertAlmostEqual(
-            next_soc(0.6, 100.0, 3600.0, 1000.0, eta_chg=0.8, eta_dis=0.8),
+            next_soc_unverified(0.6, 100.0, 3600.0, 1000.0, eta_chg=0.8, eta_dis=0.8),
             0.475,
         )
         self.assertAlmostEqual(
-            next_soc(0.5, -100.0, 3600.0, 1000.0, eta_chg=0.8, eta_dis=0.8),
+            next_soc_unverified(0.5, -100.0, 3600.0, 1000.0, eta_chg=0.8, eta_dis=0.8),
             0.58,
         )
 
     def test_formal_efficiency_is_used_in_soc_dynamics_without_clamping(self) -> None:
         from v2.models.battery_energy import formal_battery_efficiency, next_soc
 
-        eta_chg, eta_dis = formal_battery_efficiency().require_calibrated()
+        efficiency = formal_battery_efficiency()
 
         self.assertAlmostEqual(
-            next_soc(0.01, 100.0, 3600.0, 100.0, eta_chg=eta_chg, eta_dis=eta_dis),
+            next_soc(0.01, 100.0, 3600.0, 100.0, efficiency=efficiency),
             0.01 - 1.0 / 0.95,
         )
         self.assertAlmostEqual(
-            next_soc(0.99, -100.0, 3600.0, 100.0, eta_chg=eta_chg, eta_dis=eta_dis),
+            next_soc(0.99, -100.0, 3600.0, 100.0, efficiency=efficiency),
             0.99 + 0.95,
         )
 
@@ -218,7 +270,7 @@ class BatteryEnergyTests(unittest.TestCase):
                 efficiency.require_calibrated()
 
     def test_battery_inputs_reject_nonfinite_bool_and_coercible_text(self) -> None:
-        from v2.models.battery_energy import BatteryEfficiency, next_soc
+        from v2.models.battery_energy import BatteryEfficiency, next_soc_unverified
 
         for bad in (np.nan, np.inf, True, "0.95"):
             with self.subTest(efficiency=bad), self.assertRaises((TypeError, ValueError)):
@@ -229,10 +281,10 @@ class BatteryEnergyTests(unittest.TestCase):
                     source_location="table",
                 ).require_calibrated()
             with self.subTest(dynamics=bad), self.assertRaises((TypeError, ValueError)):
-                next_soc(bad, 0.0, 1.0, 1.0, eta_chg=0.95, eta_dis=0.95)
+                next_soc_unverified(bad, 0.0, 1.0, 1.0, eta_chg=0.95, eta_dis=0.95)
 
     def test_battery_duration_capacity_and_efficiency_domains_are_strict(self) -> None:
-        from v2.models.battery_energy import next_soc
+        from v2.models.battery_energy import next_soc_unverified
 
         for arguments in (
             (0.5, 0.0, 0.0, 1.0, 0.95, 0.95),
@@ -241,7 +293,40 @@ class BatteryEnergyTests(unittest.TestCase):
             (0.5, 0.0, 1.0, 1.0, 0.95, 1.01),
         ):
             with self.subTest(arguments=arguments), self.assertRaises(ValueError):
-                next_soc(*arguments[:4], eta_chg=arguments[4], eta_dis=arguments[5])
+                next_soc_unverified(
+                    *arguments[:4], eta_chg=arguments[4], eta_dis=arguments[5]
+                )
+
+    def test_formal_soc_rejects_fake_provenance_values_and_bare_efficiencies(self) -> None:
+        from v2.models.battery_energy import (
+            BATTERY_EFFICIENCY_SOURCE_DOI,
+            BatteryEfficiency,
+            next_soc,
+        )
+
+        forged = (
+            BatteryEfficiency(0.8, 0.8, BATTERY_EFFICIENCY_SOURCE_DOI, "Table 3"),
+            BatteryEfficiency(0.95, 0.95, "fake-paper", "Table 3"),
+            BatteryEfficiency(0.95, 0.95, BATTERY_EFFICIENCY_SOURCE_DOI, "fake-table"),
+        )
+        for efficiency in forged:
+            with self.subTest(efficiency=efficiency), self.assertRaises(ValueError):
+                efficiency.require_calibrated()
+            with self.subTest(formal_use=efficiency), self.assertRaises(ValueError):
+                next_soc(0.5, 0.0, 1.0, 1.0, efficiency=efficiency)
+
+        with self.assertRaises(TypeError):
+            next_soc(0.5, 0.0, 1.0, 1.0, eta_chg=0.95, eta_dis=0.95)
+
+        class ForgedBattery(BatteryEfficiency):
+            def require_calibrated(self) -> tuple[float, float]:
+                return 0.8, 0.8
+
+        subclass_forgery = ForgedBattery(
+            0.8, 0.8, BATTERY_EFFICIENCY_SOURCE_DOI, "Table 3"
+        )
+        with self.assertRaises(TypeError):
+            next_soc(0.5, 0.0, 1.0, 1.0, efficiency=subclass_forgery)
 
 
 class V2EnergyBoundaryTests(unittest.TestCase):

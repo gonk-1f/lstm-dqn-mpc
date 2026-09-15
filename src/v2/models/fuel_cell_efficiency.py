@@ -21,6 +21,22 @@ FC_DATA_SHEET = "Sheet1"
 FC_DATA_RANGE = "A2:B12"
 FC_SOURCE_SYSTEM_RATED_POWER_KW = 100.0
 FORMAL_FC_RATED_POWER_KW = 600.0
+FC_DATA_SOURCE_COLUMNS = "A: net system output kW; B: system efficiency percent points"
+FC_DATA_AXIS_TRANSFORM = (
+    "Treat the source as a 100 kW characteristic and preserve load fraction: "
+    "P_formal/600 kW = P_source/100 kW."
+)
+FC_DATA_EFFICIENCY_TRANSFORM = (
+    "Convert percent points to fractions; efficiency is otherwise unchanged."
+)
+FC_DATA_ENDPOINT_TRANSFORM = (
+    "Use source points above 100 kW only as PCHIP support to interpolate the "
+    "source endpoint at exactly 100 kW before mapping it to 600 kW."
+)
+FC_DATA_HYDROGEN_CROSS_CHECK = (
+    "The old m_h2 column is excluded from the formal model; interpreted as g/min, "
+    "it implies about 115.1--116.9 MJ/kg and conflicts with the adopted 120 MJ/kg LHV."
+)
 
 # Values are stored exactly as extracted: column A is kW and column B is percent.
 FC_DATA_RAW_POINTS = (
@@ -84,10 +100,23 @@ class FuelCellEfficiencyProvenance:
         )
         if any(not isinstance(value, str) or not value.strip() for value in text_fields):
             raise ValueError("complete fuel-cell efficiency provenance is required")
-        if len(self.workbook_sha256) != 64:
-            raise ValueError("workbook_sha256 must be a 64-character SHA-256 digest")
-        if not self.raw_points:
-            raise ValueError("provenance must carry the extracted raw points")
+        if len(self.workbook_sha256) != 64 or any(
+            character not in "0123456789abcdefABCDEF"
+            for character in self.workbook_sha256
+        ):
+            raise ValueError("workbook_sha256 must be a 64-character hexadecimal digest")
+        raw = _strict_array(self.raw_points, "provenance raw_points")
+        if raw.ndim != 2 or raw.shape[0] < 2 or raw.shape[1] != 2:
+            raise ValueError("provenance raw_points must be an Nx2 numeric table")
+        if not np.all(np.diff(raw[:, 0]) > 0.0):
+            raise ValueError("provenance source powers must be strictly increasing")
+        if np.any(raw[:, 1] < 0.0) or np.any(raw[:, 1] > 100.0):
+            raise ValueError("provenance efficiency percent points must lie in [0, 100]")
+        object.__setattr__(
+            self,
+            "raw_points",
+            tuple((float(power), float(eta)) for power, eta in raw),
+        )
 
 
 FC_DATA_PROVENANCE = FuelCellEfficiencyProvenance(
@@ -95,22 +124,39 @@ FC_DATA_PROVENANCE = FuelCellEfficiencyProvenance(
     workbook_sha256=FC_DATA_WORKBOOK_SHA256,
     worksheet=FC_DATA_SHEET,
     cell_range=FC_DATA_RANGE,
-    source_columns="A: net system output kW; B: system efficiency percent points",
+    source_columns=FC_DATA_SOURCE_COLUMNS,
     raw_points=FC_DATA_RAW_POINTS,
-    axis_transform=(
-        "Treat the source as a 100 kW characteristic and preserve load fraction: "
-        "P_formal/600 kW = P_source/100 kW."
-    ),
-    efficiency_transform="Convert percent points to fractions; efficiency is otherwise unchanged.",
-    endpoint_transform=(
-        "Use source points above 100 kW only as PCHIP support to interpolate the "
-        "source endpoint at exactly 100 kW before mapping it to 600 kW."
-    ),
-    hydrogen_column_cross_check=(
-        "The old m_h2 column is excluded from the formal model; interpreted as g/min, "
-        "it implies about 115.1--116.9 MJ/kg and conflicts with the adopted 120 MJ/kg LHV."
-    ),
+    axis_transform=FC_DATA_AXIS_TRANSFORM,
+    efficiency_transform=FC_DATA_EFFICIENCY_TRANSFORM,
+    endpoint_transform=FC_DATA_ENDPOINT_TRANSFORM,
+    hydrogen_column_cross_check=FC_DATA_HYDROGEN_CROSS_CHECK,
 )
+
+
+def _formal_curve_points() -> tuple[tuple[float, ...], tuple[float, ...]]:
+    raw = np.asarray(FC_DATA_RAW_POINTS, dtype=np.float64)
+    source_power = raw[:, 0]
+    source_efficiency_percent = raw[:, 1]
+    endpoint_percent = float(
+        PchipInterpolator(source_power, source_efficiency_percent, extrapolate=False)(
+            FC_SOURCE_SYSTEM_RATED_POWER_KW
+        )
+    )
+    within_domain = source_power < FC_SOURCE_SYSTEM_RATED_POWER_KW
+    source_domain_power = np.append(
+        source_power[within_domain], FC_SOURCE_SYSTEM_RATED_POWER_KW
+    )
+    source_domain_eta = np.append(
+        source_efficiency_percent[within_domain], endpoint_percent
+    )
+    axis_scale = FORMAL_FC_RATED_POWER_KW / FC_SOURCE_SYSTEM_RATED_POWER_KW
+    return (
+        tuple(float(value) for value in source_domain_power * axis_scale),
+        tuple(float(value) for value in source_domain_eta / 100.0),
+    )
+
+
+FORMAL_FC_POWER_POINTS_KW, FORMAL_FC_EFFICIENCIES = _formal_curve_points()
 
 
 @dataclass(frozen=True)
@@ -161,29 +207,26 @@ class FuelCellEfficiencyMap:
             return float(result)
         return result
 
+    def require_formal_calibration(self) -> FuelCellEfficiencyMap:
+        """Reject any map not identical to the authoritative formal calibration."""
+
+        if self.provenance != FC_DATA_PROVENANCE:
+            raise ValueError("formal fuel-cell accounting requires authoritative provenance")
+        if (
+            self.rated_power_kw != FORMAL_FC_RATED_POWER_KW
+            or self.power_kw != FORMAL_FC_POWER_POINTS_KW
+            or self.efficiencies != FORMAL_FC_EFFICIENCIES
+        ):
+            raise ValueError("formal fuel-cell accounting requires the authoritative curve")
+        return self
+
 
 def calibrated_fuel_cell_efficiency_map() -> FuelCellEfficiencyMap:
     """Build the formal 600 kW map from the authorized 100 kW source curve."""
 
-    raw = np.asarray(FC_DATA_RAW_POINTS, dtype=np.float64)
-    source_power = raw[:, 0]
-    source_efficiency_percent = raw[:, 1]
-    endpoint_percent = float(
-        PchipInterpolator(source_power, source_efficiency_percent, extrapolate=False)(
-            FC_SOURCE_SYSTEM_RATED_POWER_KW
-        )
-    )
-    within_domain = source_power < FC_SOURCE_SYSTEM_RATED_POWER_KW
-    formal_source_power = np.append(
-        source_power[within_domain], FC_SOURCE_SYSTEM_RATED_POWER_KW
-    )
-    formal_efficiency_percent = np.append(
-        source_efficiency_percent[within_domain], endpoint_percent
-    )
-    scale = FORMAL_FC_RATED_POWER_KW / FC_SOURCE_SYSTEM_RATED_POWER_KW
     return FuelCellEfficiencyMap(
-        power_kw=tuple(formal_source_power * scale),
-        efficiencies=tuple(formal_efficiency_percent / 100.0),
+        power_kw=FORMAL_FC_POWER_POINTS_KW,
+        efficiencies=FORMAL_FC_EFFICIENCIES,
         rated_power_kw=FORMAL_FC_RATED_POWER_KW,
         provenance=FC_DATA_PROVENANCE,
     )
@@ -195,14 +238,14 @@ def formal_fuel_cell_efficiency_map() -> FuelCellEfficiencyMap:
     return calibrated_fuel_cell_efficiency_map()
 
 
-def hydrogen_mass_kg(
+def hydrogen_mass_kg_unverified(
     p_fc_kw: float,
     dt_seconds: float,
     *,
     efficiency: float,
     rated_power_kw: float = FORMAL_FC_RATED_POWER_KW,
 ) -> float:
-    """Return hydrogen mass for one step using power, duration, efficiency, and LHV."""
+    """Pure hydrogen math for synthetic checks; not a formal v2 boundary."""
 
     power = _strict_scalar(p_fc_kw, "p_fc_kw")
     duration = _strict_scalar(dt_seconds, "dt_seconds")
@@ -229,11 +272,12 @@ def hydrogen_mass_from_map_kg(
 ) -> float:
     """Return a step's hydrogen mass using the map's domain and efficiency."""
 
-    if not isinstance(efficiency_map, FuelCellEfficiencyMap):
-        raise TypeError("efficiency_map must be a FuelCellEfficiencyMap")
+    if type(efficiency_map) is not FuelCellEfficiencyMap:
+        raise TypeError("efficiency_map must be an exact FuelCellEfficiencyMap")
+    FuelCellEfficiencyMap.require_formal_calibration(efficiency_map)
     power = _strict_scalar(p_fc_kw, "p_fc_kw")
     eta = float(efficiency_map.eta(power))
-    return hydrogen_mass_kg(
+    return hydrogen_mass_kg_unverified(
         power,
         dt_seconds,
         efficiency=eta,

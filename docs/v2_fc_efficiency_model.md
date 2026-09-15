@@ -55,7 +55,11 @@ outside it fail instead of extrapolating.
 The map preserves the measured zero efficiency at zero output. It does not
 invent a positive idle efficiency. PCHIP is exact at the retained points and
 shape-preserving between them; no polynomial fit or constant-efficiency default
-is used.
+is used. Formal hydrogen accounting revalidates the complete workbook path,
+hexadecimal SHA-256, worksheet, range, source-column meanings, raw points, all
+transformation statements, rated power, formal power knots, and efficiency
+knots. A generic or altered map can still be used for interpolation experiments,
+but it cannot enter formal hydrogen accounting.
 
 The workbook's old `m_h2` column is not a formal input. If interpreted as g/min,
 it implies an effective heating value of approximately 115.1--116.9 MJ/kg,
@@ -79,14 +83,20 @@ At zero output, the implementation returns exactly zero before division, so the
 source-backed value `eta_fc(0) = 0` never creates `0/0`. Positive power requires
 strictly positive efficiency. Power outside 0 through rated output, non-finite
 or non-numeric inputs, non-positive duration, and invalid efficiency all fail
-explicitly.
+explicitly. The generic formula helper is named with an `_unverified` suffix and
+is only a low-level pure-math test utility; the formal public boundary consumes
+and verifies the complete authoritative efficiency map.
 
 ## Battery energy accounting
 
 The formal charge and discharge efficiencies are both 0.95. Source: DOI
 `10.11930/j.issn.1004-9649.202507065`, Table 3. The formal factory returns these
-values with the DOI and table location attached; constructing an uncalibrated or
-source-free `BatteryEfficiency` still fails calibration validation.
+values with the DOI and table location attached. Formal validation requires all
+four values to match exactly; missing values, 0.8 efficiencies, arbitrary source
+strings, altered table locations, and subclasses cannot pass. Formal `next_soc`
+accepts only this verified object, so callers cannot bypass provenance by passing
+bare efficiencies. Synthetic sign/dynamics checks use the explicitly named
+`next_soc_unverified` pure-math helper instead.
 
 With positive bus power defined as discharge, battery-side power is
 
