@@ -70,6 +70,27 @@ class CausalBaseLoadTests(unittest.TestCase):
             with self.subTest(horizon=horizon), self.assertRaises((TypeError, ValueError)):
                 estimator.observe(100.0, horizon=horizon)  # type: ignore[arg-type]
 
+    def test_forecast_copies_arrays_to_finite_immutable_equal_length_tuples(self) -> None:
+        from v2.control.causal_base_load import CausalLoadForecast
+
+        loads = np.asarray([100.0, 110.0])
+        references = np.asarray([90.0, 95.0])
+        forecast = CausalLoadForecast(load_kw=loads, base_reference_kw=references)
+        loads[:] = 999.0
+        references[:] = 999.0
+
+        self.assertEqual(forecast.load_kw, (100.0, 110.0))
+        self.assertEqual(forecast.base_reference_kw, (90.0, 95.0))
+        self.assertIs(type(forecast.load_kw), tuple)
+        for kwargs in (
+            {"load_kw": (), "base_reference_kw": ()},
+            {"load_kw": (1.0,), "base_reference_kw": (1.0, 2.0)},
+            {"load_kw": (float("nan"),), "base_reference_kw": (1.0,)},
+            {"load_kw": np.asarray([[1.0]]), "base_reference_kw": (1.0,)},
+        ):
+            with self.subTest(kwargs=kwargs), self.assertRaises((TypeError, ValueError)):
+                CausalLoadForecast(**kwargs)
+
 
 class ObjectiveTests(unittest.TestCase):
     def test_exact_three_components_and_weighted_sum(self) -> None:
@@ -150,6 +171,33 @@ class ObjectiveTests(unittest.TestCase):
         ):
             with self.subTest(values=values), self.assertRaises((TypeError, ValueError)):
                 MPCWeights(*values)  # type: ignore[arg-type]
+
+    def test_result_leaf_dataclasses_reject_mutable_nonfinite_and_wrong_types(self) -> None:
+        from v2.control.nonlinear_mpc import (
+            MPCCommand,
+            ObjectiveComponents,
+            SolverDiagnostics,
+        )
+
+        components = ObjectiveComponents(1, 2.0, np.float64(3.0))
+        self.assertEqual((components.j_base, components.j_smooth, components.j_soc), (1.0, 2.0, 3.0))
+        command = MPCCommand(100, -20.0, np.float64(0.5))
+        self.assertEqual((command.p_fc_kw, command.p_batt_bus_kw, command.predicted_next_soc), (100.0, -20.0, 0.5))
+        diagnostics = SolverDiagnostics(True, np.int64(0), "ok", np.int64(2), 1)
+        self.assertEqual((diagnostics.status, diagnostics.iterations), (0, 2))
+
+        for constructor, args in (
+            (ObjectiveComponents, (float("nan"), 0.0, 0.0)),
+            (ObjectiveComponents, (-1.0, 0.0, 0.0)),
+            (MPCCommand, (True, 0.0, 0.5)),
+            (MPCCommand, (0.0, 0.0, float("inf"))),
+            (SolverDiagnostics, ("True", 0, "ok", 1, 0.0)),
+            (SolverDiagnostics, (True, True, "ok", 1, 0.0)),
+            (SolverDiagnostics, (True, 0, "ok", -1, 0.0)),
+            (SolverDiagnostics, (True, 0, "ok", 1, float("nan"))),
+        ):
+            with self.subTest(constructor=constructor, args=args), self.assertRaises((TypeError, ValueError)):
+                constructor(*args)
 
 
 class NonlinearMPCTests(unittest.TestCase):
@@ -371,6 +419,155 @@ class NonlinearMPCTests(unittest.TestCase):
             )
         self.assertIsNone(caught.exception.status)
         self.assertIn("backend crashed", str(caught.exception))
+
+    def test_malformed_optimizer_metadata_is_a_structured_failure(self) -> None:
+        from v2.control.nonlinear_mpc import MPCWeights, NumericalSolverError, NonlinearMPC
+
+        attacks = (
+            ({"success": "False", "status": 4, "nit": 1}, 4),
+            ({"success": True, "status": "not-an-int", "nit": 1}, None),
+            ({"success": True, "status": 6, "nit": "one"}, 6),
+            ({"success": True, "status": 7, "nit": -1}, 7),
+        )
+        for metadata, expected_status in attacks:
+            def malicious_optimizer(*args: object, **kwargs: object) -> SimpleNamespace:
+                return SimpleNamespace(
+                    **metadata,
+                    message="malformed metadata",
+                    fun=0.0,
+                    x=np.full(5, 300.0),
+                )
+
+            config, estimator, _ = self._objects()
+            with self.subTest(metadata=metadata), self.assertRaises(NumericalSolverError) as caught:
+                NonlinearMPC(config, optimizer=malicious_optimizer).solve(
+                    300.0, 0.5, 300.0, MPCWeights(0.5, 0.25, 0.25), estimator
+                )
+            self.assertEqual(caught.exception.status, expected_status)
+
+        def numpy_false_optimizer(*args: object, **kwargs: object) -> SimpleNamespace:
+            return SimpleNamespace(
+                success=np.bool_(False),
+                status=np.int64(-3),
+                message="valid failure metadata",
+                nit=np.int64(0),
+                fun=float("nan"),
+                x=np.full(5, 300.0),
+            )
+
+        config, estimator, _ = self._objects()
+        with self.assertRaises(NumericalSolverError) as caught:
+            NonlinearMPC(config, optimizer=numpy_false_optimizer).solve(
+                300.0, 0.5, 300.0, MPCWeights(0.5, 0.25, 0.25), estimator
+            )
+        self.assertEqual(caught.exception.status, -3)
+
+    def test_failed_solves_do_not_consume_filter_observation_and_success_commits_once(self) -> None:
+        from v2.control.nonlinear_mpc import MPCWeights, NonlinearMPC, NumericalSolverError
+
+        weights = MPCWeights(0.5, 0.25, 0.25)
+        config, estimator, controller = self._objects()
+        estimator.observe(100.0, horizon=1)
+        before = estimator.observed_base_kw
+
+        with self.assertRaises(ValueError):
+            controller.solve(200.0, 0.5, 100.0, weights, estimator, warm_start=(1.0,))
+        self.assertEqual(estimator.observed_base_kw, before)
+
+        def failed_optimizer(*args: object, **kwargs: object) -> SimpleNamespace:
+            return SimpleNamespace(
+                success=False,
+                status=9,
+                message="failed",
+                nit=1,
+                fun=float("nan"),
+                x=np.full(5, 100.0),
+            )
+
+        with self.assertRaises(NumericalSolverError):
+            NonlinearMPC(config, optimizer=failed_optimizer).solve(
+                200.0, 0.5, 100.0, weights, estimator
+            )
+        self.assertEqual(estimator.observed_base_kw, before)
+
+        def invalid_solution(*args: object, **kwargs: object) -> SimpleNamespace:
+            return SimpleNamespace(
+                success=True,
+                status=7,
+                message="claimed success",
+                nit=1,
+                fun=0.0,
+                x=np.full(5, 1000.0),
+            )
+
+        with self.assertRaises(NumericalSolverError):
+            NonlinearMPC(config, optimizer=invalid_solution).solve(
+                200.0, 0.5, 100.0, weights, estimator
+            )
+        self.assertEqual(estimator.observed_base_kw, before)
+
+        result = controller.solve(200.0, 0.5, 100.0, weights, estimator)
+        expected_once = estimator.alpha * float(before) + (1.0 - estimator.alpha) * 200.0
+        self.assertAlmostEqual(float(estimator.observed_base_kw), expected_once)
+        self.assertEqual(len(result.p_fc_kw), 5)
+
+    def test_plan_defensively_copies_vectors_and_validates_nested_results(self) -> None:
+        from v2.control.nonlinear_mpc import (
+            MPCPlan,
+            ObjectiveComponents,
+            SolverDiagnostics,
+            shifted_warm_start,
+        )
+
+        source = np.asarray([100.0, 110.0])
+        components = ObjectiveComponents(1.0, 2.0, 3.0)
+        diagnostics = SolverDiagnostics(True, 0, "ok", 2, 6.0)
+        plan = MPCPlan(
+            p_fc_kw=source,
+            p_batt_bus_kw=np.asarray([10.0, 20.0]),
+            soc_path=np.asarray([0.5, 0.49]),
+            load_forecast_kw=np.asarray([110.0, 130.0]),
+            base_reference_kw=np.asarray([90.0, 95.0]),
+            components=components,
+            objective_value=6.0,
+            diagnostics=diagnostics,
+        )
+        source[:] = float("nan")
+        self.assertEqual(plan.p_fc_kw, (100.0, 110.0))
+        self.assertTrue(all(type(vector) is tuple for vector in (
+            plan.p_fc_kw,
+            plan.p_batt_bus_kw,
+            plan.soc_path,
+            plan.load_forecast_kw,
+            plan.base_reference_kw,
+        )))
+        warm = shifted_warm_start(plan)
+        self.assertEqual(warm, (110.0, 110.0))
+        self.assertIsNot(warm, plan.p_fc_kw)
+
+        valid = {
+            "p_fc_kw": (100.0, 110.0),
+            "p_batt_bus_kw": (10.0, 20.0),
+            "soc_path": (0.5, 0.49),
+            "load_forecast_kw": (110.0, 130.0),
+            "base_reference_kw": (90.0, 95.0),
+            "components": components,
+            "objective_value": 6.0,
+            "diagnostics": diagnostics,
+        }
+        attacks = (
+            {"p_fc_kw": ()},
+            {"soc_path": (0.5,)},
+            {"p_batt_bus_kw": (10.0, float("nan"))},
+            {"components": SimpleNamespace(j_base=1.0, j_smooth=2.0, j_soc=3.0)},
+            {"diagnostics": SimpleNamespace(success=True)},
+            {"objective_value": float("nan")},
+        )
+        for override in attacks:
+            values = dict(valid)
+            values.update(override)
+            with self.subTest(override=override), self.assertRaises((TypeError, ValueError)):
+                MPCPlan(**values)
 
     def test_config_and_runtime_inputs_are_strictly_validated(self) -> None:
         from v2.control.nonlinear_mpc import MPCWeights

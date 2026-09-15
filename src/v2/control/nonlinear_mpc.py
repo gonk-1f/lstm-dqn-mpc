@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
-from numbers import Real
+from numbers import Integral, Real
 from typing import Callable, Sequence
 
 import numpy as np
@@ -37,6 +37,15 @@ def _finite_vector(values: object, name: str) -> tuple[float, ...]:
     return tuple(_finite_scalar(value, f"{name}[{index}]") for index, value in enumerate(source))
 
 
+def _integral(value: object, name: str, *, minimum: int | None = None) -> int:
+    if isinstance(value, (bool, np.bool_)) or not isinstance(value, Integral):
+        raise TypeError(f"{name} must be an integral non-bool value")
+    result = int(value)
+    if minimum is not None and result < minimum:
+        raise ValueError(f"{name} must be at least {minimum}")
+    return result
+
+
 @dataclass(frozen=True)
 class ObjectiveWeights:
     q_base: float
@@ -64,6 +73,13 @@ class ObjectiveComponents:
     j_base: float
     j_smooth: float
     j_soc: float
+
+    def __post_init__(self) -> None:
+        for name in ("j_base", "j_smooth", "j_soc"):
+            value = _finite_scalar(getattr(self, name), name)
+            if value < 0.0:
+                raise ValueError(f"{name} must be nonnegative")
+            object.__setattr__(self, name, value)
 
 
 def _validate_deadband(low: float, high: float, scale: float) -> tuple[float, float, float]:
@@ -206,12 +222,35 @@ class SolverDiagnostics:
     iterations: int
     objective_value: float
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.success, (bool, np.bool_)):
+            raise TypeError("success must be an exact bool or numpy bool")
+        status = _integral(self.status, "status")
+        iterations = _integral(self.iterations, "iterations", minimum=0)
+        if type(self.message) is not str:
+            raise TypeError("message must be an exact string")
+        objective_value = _finite_scalar(self.objective_value, "objective_value")
+        if objective_value < 0.0:
+            raise ValueError("objective_value must be nonnegative")
+        object.__setattr__(self, "success", bool(self.success))
+        object.__setattr__(self, "status", status)
+        object.__setattr__(self, "iterations", iterations)
+        object.__setattr__(self, "objective_value", objective_value)
+
 
 @dataclass(frozen=True)
 class MPCCommand:
     p_fc_kw: float
     p_batt_bus_kw: float
     predicted_next_soc: float
+
+    def __post_init__(self) -> None:
+        for name in ("p_fc_kw", "p_batt_bus_kw", "predicted_next_soc"):
+            object.__setattr__(
+                self,
+                name,
+                _finite_scalar(getattr(self, name), name),
+            )
 
 
 @dataclass(frozen=True)
@@ -224,6 +263,35 @@ class MPCPlan:
     components: ObjectiveComponents
     objective_value: float
     diagnostics: SolverDiagnostics
+
+    def __post_init__(self) -> None:
+        vector_names = (
+            "p_fc_kw",
+            "p_batt_bus_kw",
+            "soc_path",
+            "load_forecast_kw",
+            "base_reference_kw",
+        )
+        vectors = tuple(
+            _finite_vector(getattr(self, name), name)
+            for name in vector_names
+        )
+        if not vectors[0] or any(len(vector) != len(vectors[0]) for vector in vectors[1:]):
+            raise ValueError("MPC plan vectors must have the same nonzero length")
+        if type(self.components) is not ObjectiveComponents:
+            raise TypeError("components must be an exact ObjectiveComponents instance")
+        if type(self.diagnostics) is not SolverDiagnostics:
+            raise TypeError("diagnostics must be an exact SolverDiagnostics instance")
+        if not self.diagnostics.success:
+            raise ValueError("a returned MPC plan requires successful solver diagnostics")
+        objective_value = _finite_scalar(self.objective_value, "objective_value")
+        if objective_value < 0.0:
+            raise ValueError("objective_value must be nonnegative")
+        if objective_value != self.diagnostics.objective_value:
+            raise ValueError("plan and diagnostic objective values must match")
+        for name, vector in zip(vector_names, vectors):
+            object.__setattr__(self, name, vector)
+        object.__setattr__(self, "objective_value", objective_value)
 
     def first_command(self) -> MPCCommand:
         """Expose only the command that a receding-horizon loop may execute."""
@@ -434,17 +502,20 @@ class NonlinearMPC:
             raise ValueError("base-load filter sample time must equal the MPC sample time")
         self._validate_initial_state(state, previous)
 
-        forecast = base_load_filter.observe(load, horizon=cfg.timescale.n_mpc)
+        warm: tuple[float, ...] | None = None
+        if warm_start is not None:
+            warm = _finite_vector(warm_start, "warm_start")
+            if len(warm) != cfg.timescale.n_mpc:
+                raise ValueError("warm_start length must equal timescale.n_mpc")
+
+        forecast = base_load_filter.preview(load, horizon=cfg.timescale.n_mpc)
         loads = np.asarray(forecast.load_kw, dtype=float)
         references = np.asarray(forecast.base_reference_kw, dtype=float)
         intervals = self._reachable_intervals(loads, state, previous)
 
-        if warm_start is None:
+        if warm is None:
             initial = self._cold_start(references, intervals, previous)
         else:
-            warm = _finite_vector(warm_start, "warm_start")
-            if len(warm) != cfg.timescale.n_mpc:
-                raise ValueError("warm_start length must equal timescale.n_mpc")
             initial = np.asarray(warm, dtype=float)
 
         def derive(decision: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -492,9 +563,28 @@ class NonlinearMPC:
             )
         except Exception as exc:
             raise NumericalSolverError(f"optimizer raised {type(exc).__name__}: {exc}") from exc
-        status = int(getattr(raw, "status", -1))
-        message = str(getattr(raw, "message", "optimizer returned no message"))
-        if not bool(getattr(raw, "success", False)):
+        status: int | None = None
+        try:
+            status = _integral(getattr(raw, "status"), "optimizer status")
+            success_value = getattr(raw, "success")
+            if not isinstance(success_value, (bool, np.bool_)):
+                raise TypeError("optimizer success must be an exact bool or numpy bool")
+            iterations = _integral(
+                getattr(raw, "nit"),
+                "optimizer iterations",
+                minimum=0,
+            )
+            message_value = getattr(raw, "message")
+            if type(message_value) is not str:
+                raise TypeError("optimizer message must be an exact string")
+            success = bool(success_value)
+            message = message_value
+        except Exception as exc:
+            raise NumericalSolverError(
+                f"optimizer returned malformed metadata: {type(exc).__name__}: {exc}",
+                status=status,
+            ) from exc
+        if not success:
             raise NumericalSolverError(message, status=status)
 
         try:
@@ -535,10 +625,10 @@ class NonlinearMPC:
             success=True,
             status=status,
             message=message,
-            iterations=int(getattr(raw, "nit", -1)),
+            iterations=iterations,
             objective_value=value,
         )
-        return MPCPlan(
+        plan = MPCPlan(
             p_fc_kw=tuple(float(value) for value in powers),
             p_batt_bus_kw=tuple(float(value) for value in batteries),
             soc_path=tuple(float(value) for value in states),
@@ -548,3 +638,5 @@ class NonlinearMPC:
             objective_value=value,
             diagnostics=diagnostics,
         )
+        base_load_filter.commit(load)
+        return plan

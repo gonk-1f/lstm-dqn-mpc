@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 from numbers import Real
+from typing import Sequence
 
 import numpy as np
 
@@ -18,12 +19,35 @@ def _finite_scalar(value: object, name: str) -> float:
     return result
 
 
+def _finite_vector(values: object, name: str) -> tuple[float, ...]:
+    if isinstance(values, np.ndarray):
+        if values.ndim != 1:
+            raise TypeError(f"{name} must be one-dimensional")
+        source = values
+    elif isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
+        raise TypeError(f"{name} must be a numeric sequence")
+    else:
+        source = values
+    return tuple(
+        _finite_scalar(value, f"{name}[{index}]")
+        for index, value in enumerate(source)
+    )
+
+
 @dataclass(frozen=True)
 class CausalLoadForecast:
     """Forecast produced from one current observation and past filter state."""
 
     load_kw: tuple[float, ...]
     base_reference_kw: tuple[float, ...]
+
+    def __post_init__(self) -> None:
+        loads = _finite_vector(self.load_kw, "load_kw")
+        references = _finite_vector(self.base_reference_kw, "base_reference_kw")
+        if not loads or len(loads) != len(references):
+            raise ValueError("forecast vectors must have the same nonzero length")
+        object.__setattr__(self, "load_kw", loads)
+        object.__setattr__(self, "base_reference_kw", references)
 
 
 class CausalBaseLoadFilter:
@@ -54,6 +78,13 @@ class CausalBaseLoadFilter:
         actual measurements.
         """
 
+        forecast = self.preview(load_kw, horizon=horizon)
+        self.commit(load_kw)
+        return forecast
+
+    def preview(self, load_kw: float, *, horizon: int) -> CausalLoadForecast:
+        """Forecast one observation without changing the committed filter state."""
+
         current = _finite_scalar(load_kw, "load_kw")
         if current < 0.0:
             raise ValueError("load_kw must be nonnegative")
@@ -63,14 +94,14 @@ class CausalBaseLoadFilter:
             raise ValueError("horizon must be positive")
 
         if self._observed_base_kw is None:
-            self._observed_base_kw = current
+            observed_base = current
         else:
-            self._observed_base_kw = (
+            observed_base = (
                 self.alpha * self._observed_base_kw
                 + (1.0 - self.alpha) * current
             )
 
-        forecast_base = self._observed_base_kw
+        forecast_base = observed_base
         references: list[float] = []
         for _ in range(horizon):
             forecast_base = self.alpha * forecast_base + (1.0 - self.alpha) * current
@@ -79,3 +110,17 @@ class CausalBaseLoadFilter:
             load_kw=(current,) * horizon,
             base_reference_kw=tuple(references),
         )
+
+    def commit(self, load_kw: float) -> None:
+        """Commit exactly one already-validated current observation."""
+
+        current = _finite_scalar(load_kw, "load_kw")
+        if current < 0.0:
+            raise ValueError("load_kw must be nonnegative")
+        if self._observed_base_kw is None:
+            self._observed_base_kw = current
+        else:
+            self._observed_base_kw = (
+                self.alpha * self._observed_base_kw
+                + (1.0 - self.alpha) * current
+            )
