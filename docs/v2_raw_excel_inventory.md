@@ -11,7 +11,11 @@ into this repository):
 A forced recursive enumeration found 71 `.xlsx` paths: 69 ordinary files and
 2 temporary lock files. There are no `.xls` files. An Excel suffix makes a file
 an accepted **candidate** only; it does not establish that the workbook contains
-usable original telemetry.
+usable original telemetry. Runtime acceptance requires an explicit audited
+`original_measurement` classification and complete measurement metadata; it
+does not infer origin from a filename. The audited rename helpers, cleaned power
+tables, ship profiles, and extracted curves respectively retain
+`rename_helper`, `processed_aggregate`, `generated`, and `digitized` lineage.
 
 | Workbook or group | Sheet | Column | Unit | Timestamp | Actual sampling interval | Missing rate | Physical meaning | Usable | Reason |
 |---|---|---|---|---|---|---|---|---|---|

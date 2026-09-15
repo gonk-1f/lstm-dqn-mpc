@@ -71,12 +71,72 @@ class V2DataGuardTests(unittest.TestCase):
         self.assertFalse(inventory.records[0].usable)
         self.assertFalse(inventory.raw_measurements_available)
 
-    def test_only_explicit_usable_measurement_records_satisfy_inventory(self) -> None:
-        from v2.data.raw_inventory import ExcelInventoryRecord, RawExcelInventory
+    def test_non_excel_record_is_rejected_even_with_complete_original_metadata(
+        self,
+    ) -> None:
+        from v2.data.raw_inventory import (
+            ExcelInventoryRecord,
+            MeasurementSourceClass,
+            UnsupportedRawSourceError,
+        )
+
+        with self.assertRaises(UnsupportedRawSourceError):
+            ExcelInventoryRecord(
+                workbook=Path("device-export.csv"),
+                source_class=MeasurementSourceClass.ORIGINAL_MEASUREMENT,
+                sheet="Telemetry",
+                column="Power",
+                unit="kW",
+                timestamp="Time",
+                actual_sampling_interval_seconds=30.0,
+                missing_rate=0.0,
+                physical_meaning="measured power",
+                usable=True,
+                reason="claimed original device export",
+            )
+
+    def test_known_excel_derivative_classes_cannot_be_marked_usable(self) -> None:
+        from v2.data.raw_inventory import (
+            ExcelInventoryRecord,
+            MeasurementSourceClass,
+        )
+
+        derivative_sources = (
+            ("1修改名称.xlsx", MeasurementSourceClass.RENAME_HELPER),
+            ("Cleaned_Power_Data.xlsx", MeasurementSourceClass.PROCESSED_AGGREGATE),
+            ("interpolated_load.xlsx", MeasurementSourceClass.INTERPOLATED),
+            ("ship_training_profile.xlsx", MeasurementSourceClass.GENERATED),
+            ("extracted_curves.xlsx", MeasurementSourceClass.DIGITIZED),
+        )
+        for workbook, source_class in derivative_sources:
+            with self.subTest(workbook=workbook), self.assertRaises(ValueError):
+                ExcelInventoryRecord(
+                    workbook=Path(workbook),
+                    source_class=source_class,
+                    sheet="Sheet1",
+                    column="Power",
+                    unit="kW",
+                    timestamp="Time",
+                    actual_sampling_interval_seconds=30.0,
+                    missing_rate=0.0,
+                    physical_meaning="derived power",
+                    usable=True,
+                    reason="known derivative lineage",
+                )
+
+    def test_only_explicit_original_measurement_records_satisfy_inventory(
+        self,
+    ) -> None:
+        from v2.data.raw_inventory import (
+            ExcelInventoryRecord,
+            MeasurementSourceClass,
+            RawExcelInventory,
+        )
 
         workbook = Path("device-export.xlsx")
         record = ExcelInventoryRecord(
             workbook=workbook,
+            source_class=MeasurementSourceClass.ORIGINAL_MEASUREMENT,
             sheet="Telemetry",
             column="StackPower",
             unit="kW",
@@ -108,7 +168,7 @@ class V2DataGuardTests(unittest.TestCase):
             load_train_payload(
                 split="Train",
                 inventory=inventory,
-                technical_specification_available=False,
+                technical_specification=None,
                 payload_loader=payload_loader,
             )
 
@@ -123,9 +183,14 @@ class V2DataGuardTests(unittest.TestCase):
         from v2.data.raw_inventory import (
             ExcelInventoryRecord,
             HeldOutDataAccessError,
+            MeasurementSourceClass,
             RawExcelInventory,
         )
-        from v2.preflight import load_train_payload
+        from v2.preflight import (
+            TechnicalSpecificationRecord,
+            TechnicalSpecificationSourceClass,
+            load_train_payload,
+        )
 
         accesses = 0
 
@@ -136,6 +201,7 @@ class V2DataGuardTests(unittest.TestCase):
 
         record = ExcelInventoryRecord(
             workbook=Path("device-export.xlsx"),
+            source_class=MeasurementSourceClass.ORIGINAL_MEASUREMENT,
             sheet="Telemetry",
             column="Power",
             unit="kW",
@@ -147,23 +213,42 @@ class V2DataGuardTests(unittest.TestCase):
             reason="authorized original export",
         )
         inventory = RawExcelInventory(root=Path("."), records=(record,))
+        specification = TechnicalSpecificationRecord(
+            document=Path("vessel-technical-specification.pdf"),
+            source_class=(
+                TechnicalSpecificationSourceClass.AUTHORITATIVE_VESSEL_SPECIFICATION
+            ),
+            sha256="a" * 64,
+            page_count=19,
+            source_identifier="Three Gorges Hydrogen Boat No. 1",
+            source_reference="approved propulsion-system specification V1",
+        )
 
         for split in ("Validation", "Test"):
             with self.subTest(split=split), self.assertRaises(HeldOutDataAccessError):
                 load_train_payload(
                     split=split,
                     inventory=inventory,
-                    technical_specification_available=True,
+                    technical_specification=specification,
                     payload_loader=payload_loader,
                 )
         self.assertEqual(accesses, 0)
 
     def test_preflight_loads_train_payload_only_after_all_gates_pass(self) -> None:
-        from v2.data.raw_inventory import ExcelInventoryRecord, RawExcelInventory
-        from v2.preflight import load_train_payload
+        from v2.data.raw_inventory import (
+            ExcelInventoryRecord,
+            MeasurementSourceClass,
+            RawExcelInventory,
+        )
+        from v2.preflight import (
+            TechnicalSpecificationRecord,
+            TechnicalSpecificationSourceClass,
+            load_train_payload,
+        )
 
         record = ExcelInventoryRecord(
             workbook=Path("device-export.xlsx"),
+            source_class=MeasurementSourceClass.ORIGINAL_MEASUREMENT,
             sheet="Telemetry",
             column="Power",
             unit="kW",
@@ -175,15 +260,66 @@ class V2DataGuardTests(unittest.TestCase):
             reason="authorized original export",
         )
         inventory = RawExcelInventory(root=Path("."), records=(record,))
+        specification = TechnicalSpecificationRecord(
+            document=Path("vessel-technical-specification.pdf"),
+            source_class=(
+                TechnicalSpecificationSourceClass.AUTHORITATIVE_VESSEL_SPECIFICATION
+            ),
+            sha256="C269F9D7E9DEDC23118514FED8EBC0987500948ABF88F8A2129EA0F264315A34",
+            page_count=19,
+            source_identifier="Three Gorges Hydrogen Boat No. 1",
+            source_reference="approved propulsion-system specification V1",
+        )
 
         payload = load_train_payload(
             split="tRaIn",
             inventory=inventory,
-            technical_specification_available=True,
+            technical_specification=specification,
             payload_loader=lambda: {"rows": 10},
         )
 
         self.assertEqual(payload, {"rows": 10})
+
+    def test_technical_specification_record_rejects_non_authoritative_evidence(
+        self,
+    ) -> None:
+        from v2.preflight import TechnicalSpecificationRecord
+
+        valid = {
+            "document": Path("vessel-specification.pdf"),
+            "source_class": "authoritative_vessel_specification",
+            "sha256": "b" * 64,
+            "page_count": 19,
+            "source_identifier": "Three Gorges Hydrogen Boat No. 1",
+            "source_reference": "approved propulsion-system specification V1",
+        }
+        invalid_overrides = (
+            {"document": Path("vessel-specification.xlsx")},
+            {"source_class": "processed_summary"},
+            {"sha256": "not-a-sha256"},
+            {"page_count": 0},
+            {"page_count": True},
+            {"source_identifier": ""},
+            {"source_reference": "   "},
+        )
+        for override in invalid_overrides:
+            with self.subTest(override=override), self.assertRaises(ValueError):
+                TechnicalSpecificationRecord(**(valid | override))
+
+    def test_boolean_cannot_bypass_technical_specification_gate(self) -> None:
+        from v2.data.raw_inventory import RawExcelInventory
+        from v2.preflight import assess_data_preflight
+
+        with self.assertRaises(TypeError):
+            assess_data_preflight(
+                inventory=RawExcelInventory(root=Path("."), records=()),
+                technical_specification_available=True,
+            )
+        with self.assertRaises(TypeError):
+            assess_data_preflight(
+                inventory=RawExcelInventory(root=Path("."), records=()),
+                technical_specification=True,  # type: ignore[arg-type]
+            )
 
     def test_plant_values_are_research_simulation_configuration(self) -> None:
         from v2.config import PlantConfig

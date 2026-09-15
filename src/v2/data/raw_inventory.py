@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 import math
 from pathlib import Path
 
@@ -11,6 +12,16 @@ class UnsupportedRawSourceError(ValueError):
 
 class HeldOutDataAccessError(PermissionError):
     pass
+
+
+class MeasurementSourceClass(str, Enum):
+    UNAUDITED_CANDIDATE = "unaudited_candidate"
+    ORIGINAL_MEASUREMENT = "original_measurement"
+    RENAME_HELPER = "rename_helper"
+    PROCESSED_AGGREGATE = "processed_aggregate"
+    INTERPOLATED = "interpolated"
+    GENERATED = "generated"
+    DIGITIZED = "digitized"
 
 
 class RawSourcePolicy:
@@ -49,6 +60,7 @@ class ExcelInventoryRecord:
     """
 
     workbook: Path
+    source_class: MeasurementSourceClass
     sheet: str | None
     column: str | None
     unit: str | None
@@ -61,10 +73,20 @@ class ExcelInventoryRecord:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "workbook", Path(self.workbook))
-        if not self.reason.strip():
+        try:
+            source_class = MeasurementSourceClass(self.source_class)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("measurement source_class must be explicit and known") from exc
+        object.__setattr__(self, "source_class", source_class)
+        RawSourcePolicy.require_original_measurement(self.workbook)
+        if not isinstance(self.reason, str) or not self.reason.strip():
             raise ValueError("inventory record reason must be explicit")
         if not self.usable:
             return
+        if source_class is not MeasurementSourceClass.ORIGINAL_MEASUREMENT:
+            raise ValueError(
+                "usable measurement records must have original_measurement lineage"
+            )
         required_text = {
             "sheet": self.sheet,
             "column": self.column,
@@ -72,7 +94,11 @@ class ExcelInventoryRecord:
             "timestamp": self.timestamp,
             "physical_meaning": self.physical_meaning,
         }
-        missing = [name for name, value in required_text.items() if not value]
+        missing = [
+            name
+            for name, value in required_text.items()
+            if not isinstance(value, str) or not value.strip()
+        ]
         if missing:
             raise ValueError(
                 "usable measurement records require " + ", ".join(missing)
@@ -94,6 +120,7 @@ class ExcelInventoryRecord:
     def unaudited_candidate(cls, workbook: Path) -> "ExcelInventoryRecord":
         return cls(
             workbook=workbook,
+            source_class=MeasurementSourceClass.UNAUDITED_CANDIDATE,
             sheet=None,
             column=None,
             unit=None,

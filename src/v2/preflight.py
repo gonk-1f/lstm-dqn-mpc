@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+import re
 from typing import TypeVar
 
 from .data.raw_inventory import RawExcelInventory, require_train_only
@@ -29,11 +32,66 @@ class PreflightBlockedError(RuntimeError):
         super().__init__(f"v2 preflight failed: {detail}")
 
 
+class TechnicalSpecificationSourceClass(str, Enum):
+    AUTHORITATIVE_VESSEL_SPECIFICATION = "authoritative_vessel_specification"
+    PROCESSED_SUMMARY = "processed_summary"
+    GENERATED = "generated"
+    DIGITIZED = "digitized"
+
+
+@dataclass(frozen=True)
+class TechnicalSpecificationRecord:
+    document: Path
+    source_class: TechnicalSpecificationSourceClass
+    sha256: str
+    page_count: int
+    source_identifier: str
+    source_reference: str
+
+    def __post_init__(self) -> None:
+        document = Path(self.document)
+        object.__setattr__(self, "document", document)
+        if document.suffix.casefold() != ".pdf":
+            raise ValueError("technical specification evidence must be a PDF")
+        try:
+            source_class = TechnicalSpecificationSourceClass(self.source_class)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                "technical specification source_class must be explicit and known"
+            ) from exc
+        object.__setattr__(self, "source_class", source_class)
+        if (
+            source_class
+            is not TechnicalSpecificationSourceClass.AUTHORITATIVE_VESSEL_SPECIFICATION
+        ):
+            raise ValueError("technical specification evidence must be authoritative")
+        if not isinstance(self.sha256, str) or re.fullmatch(
+            r"[0-9a-fA-F]{64}", self.sha256
+        ) is None:
+            raise ValueError("technical specification sha256 must contain 64 hex digits")
+        if type(self.page_count) is not int or self.page_count <= 0:
+            raise ValueError(
+                "technical specification page_count must be a positive integer"
+            )
+        for field_name in ("source_identifier", "source_reference"):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(
+                    f"technical specification {field_name} must be explicit"
+                )
+
+
 def assess_data_preflight(
     *,
     inventory: RawExcelInventory,
-    technical_specification_available: bool,
+    technical_specification: TechnicalSpecificationRecord | None,
 ) -> PreflightReport:
+    if technical_specification is not None and not isinstance(
+        technical_specification, TechnicalSpecificationRecord
+    ):
+        raise TypeError(
+            "technical_specification must be a TechnicalSpecificationRecord or None"
+        )
     issues: list[PreflightIssue] = []
     if not inventory.raw_measurements_available:
         issues.append(
@@ -45,7 +103,7 @@ def assess_data_preflight(
                 ),
             )
         )
-    if not technical_specification_available:
+    if technical_specification is None:
         issues.append(
             PreflightIssue(
                 code="missing_technical_specification",
@@ -62,7 +120,7 @@ def load_train_payload(
     *,
     split: str,
     inventory: RawExcelInventory,
-    technical_specification_available: bool,
+    technical_specification: TechnicalSpecificationRecord | None,
     payload_loader: Callable[[], PayloadT],
 ) -> PayloadT:
     """Load only after split and provenance gates have passed.
@@ -74,7 +132,7 @@ def load_train_payload(
     require_train_only(split)
     report = assess_data_preflight(
         inventory=inventory,
-        technical_specification_available=technical_specification_available,
+        technical_specification=technical_specification,
     )
     if not report.ready:
         raise PreflightBlockedError(report)

@@ -11,8 +11,12 @@ The candidate source classes are:
 Candidate acceptance is not a usability decision. Each prospective measurement
 must separately record workbook, sheet, column, unit, timestamp field, measured
 sampling interval, missing rate, physical meaning, usability, and the reason for
-that decision. A scanned workbook therefore enters the inventory as unusable
-until those facts are explicitly audited.
+that decision. It must also carry an explicit lineage classification. Only an
+Excel record classified as `original_measurement` can be usable; rename-helper,
+processed-aggregate, interpolated, generated, and digitized records remain
+unusable regardless of filename or otherwise complete metadata. A scanned
+workbook therefore enters the inventory as an `unaudited_candidate` until those
+facts are explicitly audited.
 
 Historical CSV/MAT data, 1 s interpolation, generated profiles, cleaned
 aggregates, and image/digitization transcriptions cannot be promoted to formal
@@ -43,7 +47,10 @@ Method selection and calibration are Train-only. `Train` is matched
 case-insensitively. Validation and Test are rejected before a payload loader can
 run. The provenance preflight separately reports absent usable raw measurements
 and absent technical-specification evidence; it does not collapse those causes
-into a generic `BLOCKED` result.
+into a generic `BLOCKED` result. Technical-specification evidence is represented
+by a validated record rather than a caller-supplied availability flag. The
+record requires an authoritative PDF classification, a 64-hex-digit SHA-256,
+a positive page count, and explicit source identifier and reference fields.
 
 Current formal dataset status: **UNCALIBRATED / NO-GO**. Resolution requires
 source-owner clarification or an authorized, traceable conversion of the
