@@ -59,7 +59,9 @@ is used. Formal hydrogen accounting revalidates the complete workbook path,
 hexadecimal SHA-256, worksheet, range, source-column meanings, raw points, all
 transformation statements, rated power, formal power knots, and efficiency
 knots. A generic or altered map can still be used for interpolation experiments,
-but it cannot enter formal hydrogen accounting.
+but it cannot enter formal hydrogen accounting. Formal evaluation also rebuilds
+PCHIP from the revalidated canonical knots on each call; the map's cached,
+mutable interpolation object is therefore not trusted for hydrogen mass.
 
 The workbook's old `m_h2` column is not a formal input. If interpreted as g/min,
 it implies an effective heating value of approximately 115.1--116.9 MJ/kg,
@@ -95,7 +97,9 @@ values with the DOI and table location attached. Formal validation requires all
 four values to match exactly; missing values, 0.8 efficiencies, arbitrary source
 strings, altered table locations, and subclasses cannot pass. Formal `next_soc`
 accepts only this verified object, so callers cannot bypass provenance by passing
-bare efficiencies. Synthetic sign/dynamics checks use the explicitly named
+bare efficiencies. Exact built-in `float` and `str` fields are required, so
+comparison-overriding subclasses cannot impersonate the canonical values.
+Synthetic sign/dynamics checks use the explicitly named
 `next_soc_unverified` pure-math helper instead.
 
 With positive bus power defined as discharge, battery-side power is

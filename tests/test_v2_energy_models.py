@@ -162,6 +162,7 @@ class FuelCellEfficiencyTests(unittest.TestCase):
     def test_forged_fuel_cell_provenance_or_curve_cannot_enter_formal_h2(self) -> None:
         from v2.models.fuel_cell_efficiency import (
             FuelCellEfficiencyMap,
+            FuelCellEfficiencyProvenance,
             calibrated_fuel_cell_efficiency_map,
             hydrogen_mass_from_map_kg,
         )
@@ -205,6 +206,47 @@ class FuelCellEfficiencyTests(unittest.TestCase):
         )
         with self.assertRaises(TypeError):
             hydrogen_mass_from_map_kg(300.0, 1.0, subclass_forgery)
+
+        class ForgedProvenance(FuelCellEfficiencyProvenance):
+            def __ne__(self, other: object) -> bool:
+                return False
+
+        canonical = authoritative.provenance
+        provenance_subclass = ForgedProvenance(
+            "C:/fake/FC_Data.xlsx",
+            "0" * 64,
+            canonical.worksheet,
+            canonical.cell_range,
+            canonical.source_columns,
+            canonical.raw_points,
+            canonical.axis_transform,
+            canonical.efficiency_transform,
+            canonical.endpoint_transform,
+            canonical.hydrogen_column_cross_check,
+        )
+        forged_map = calibrated_fuel_cell_efficiency_map()
+        object.__setattr__(forged_map, "provenance", provenance_subclass)
+        with self.assertRaises(TypeError):
+            hydrogen_mass_from_map_kg(300.0, 1.0, forged_map)
+
+    def test_formal_hydrogen_ignores_mutated_cached_interpolator_state(self) -> None:
+        from v2.models.fuel_cell_efficiency import (
+            calibrated_fuel_cell_efficiency_map,
+            hydrogen_mass_from_map_kg,
+        )
+
+        efficiency_map = calibrated_fuel_cell_efficiency_map()
+        baseline = hydrogen_mass_from_map_kg(300.0, 3600.0, efficiency_map)
+        segment = int(np.searchsorted(efficiency_map._interpolator.x, 300.0) - 1)
+        efficiency_map._interpolator.c[-1, segment] += 0.01
+
+        self.assertNotAlmostEqual(
+            float(efficiency_map.eta(300.0)),
+            300.0 / (baseline * (120.0 / 3.6)),
+        )
+        self.assertAlmostEqual(
+            hydrogen_mass_from_map_kg(300.0, 3600.0, efficiency_map), baseline
+        )
 
 
 class BatteryEnergyTests(unittest.TestCase):
@@ -327,6 +369,31 @@ class BatteryEnergyTests(unittest.TestCase):
         )
         with self.assertRaises(TypeError):
             next_soc(0.5, 0.0, 1.0, 1.0, efficiency=subclass_forgery)
+
+        class ForgedString(str):
+            def __eq__(self, other: object) -> bool:
+                return True
+
+            def __ne__(self, other: object) -> bool:
+                return False
+
+        string_forgery = BatteryEfficiency(
+            0.95,
+            0.95,
+            ForgedString("fake-doi"),
+            ForgedString("fake-table"),
+        )
+        with self.assertRaises(TypeError):
+            string_forgery.require_calibrated()
+
+        numeric_subclass = BatteryEfficiency(
+            type("ForgedFloat", (float,), {})(0.95),
+            0.95,
+            BATTERY_EFFICIENCY_SOURCE_DOI,
+            "Table 3",
+        )
+        with self.assertRaises(TypeError):
+            numeric_subclass.require_calibrated()
 
 
 class V2EnergyBoundaryTests(unittest.TestCase):

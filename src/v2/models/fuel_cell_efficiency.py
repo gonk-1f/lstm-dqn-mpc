@@ -98,7 +98,7 @@ class FuelCellEfficiencyProvenance:
             self.endpoint_transform,
             self.hydrogen_column_cross_check,
         )
-        if any(not isinstance(value, str) or not value.strip() for value in text_fields):
+        if any(type(value) is not str or not value.strip() for value in text_fields):
             raise ValueError("complete fuel-cell efficiency provenance is required")
         if len(self.workbook_sha256) != 64 or any(
             character not in "0123456789abcdefABCDEF"
@@ -131,6 +131,49 @@ FC_DATA_PROVENANCE = FuelCellEfficiencyProvenance(
     endpoint_transform=FC_DATA_ENDPOINT_TRANSFORM,
     hydrogen_column_cross_check=FC_DATA_HYDROGEN_CROSS_CHECK,
 )
+
+
+def _require_authoritative_provenance(
+    provenance: FuelCellEfficiencyProvenance,
+) -> None:
+    if type(provenance) is not FuelCellEfficiencyProvenance:
+        raise TypeError("formal fuel-cell provenance must use the exact provenance type")
+    text_values = (
+        provenance.workbook_path,
+        provenance.workbook_sha256,
+        provenance.worksheet,
+        provenance.cell_range,
+        provenance.source_columns,
+        provenance.axis_transform,
+        provenance.efficiency_transform,
+        provenance.endpoint_transform,
+        provenance.hydrogen_column_cross_check,
+    )
+    if any(type(value) is not str for value in text_values):
+        raise TypeError("formal fuel-cell provenance text must use exact str values")
+    if type(provenance.raw_points) is not tuple or any(
+        type(point) is not tuple
+        or len(point) != 2
+        or type(point[0]) is not float
+        or type(point[1]) is not float
+        for point in provenance.raw_points
+    ):
+        raise TypeError("formal fuel-cell raw points must use canonical float tuples")
+    expected = (
+        FC_DATA_WORKBOOK_PATH,
+        FC_DATA_WORKBOOK_SHA256,
+        FC_DATA_SHEET,
+        FC_DATA_RANGE,
+        FC_DATA_SOURCE_COLUMNS,
+        FC_DATA_AXIS_TRANSFORM,
+        FC_DATA_EFFICIENCY_TRANSFORM,
+        FC_DATA_ENDPOINT_TRANSFORM,
+        FC_DATA_HYDROGEN_CROSS_CHECK,
+        FC_DATA_RAW_POINTS,
+    )
+    actual = text_values + (provenance.raw_points,)
+    if actual != expected:
+        raise ValueError("formal fuel-cell accounting requires authoritative provenance")
 
 
 def _formal_curve_points() -> tuple[tuple[float, ...], tuple[float, ...]]:
@@ -183,7 +226,7 @@ class FuelCellEfficiencyMap:
             raise ValueError("efficiencies must lie in [0, 1]")
         if np.any(efficiency[power > 0.0] <= 0.0):
             raise ValueError("efficiency must be positive at every positive-power point")
-        if not isinstance(self.provenance, FuelCellEfficiencyProvenance):
+        if type(self.provenance) is not FuelCellEfficiencyProvenance:
             raise TypeError("a complete FuelCellEfficiencyProvenance is required")
         object.__setattr__(self, "power_kw", tuple(float(value) for value in power))
         object.__setattr__(self, "efficiencies", tuple(float(value) for value in efficiency))
@@ -210,8 +253,13 @@ class FuelCellEfficiencyMap:
     def require_formal_calibration(self) -> FuelCellEfficiencyMap:
         """Reject any map not identical to the authoritative formal calibration."""
 
-        if self.provenance != FC_DATA_PROVENANCE:
-            raise ValueError("formal fuel-cell accounting requires authoritative provenance")
+        _require_authoritative_provenance(self.provenance)
+        if type(self.rated_power_kw) is not float:
+            raise TypeError("formal rated power must use the canonical float type")
+        if type(self.power_kw) is not tuple or type(self.efficiencies) is not tuple:
+            raise TypeError("formal curve knots must use canonical tuples")
+        if any(type(value) is not float for value in self.power_kw + self.efficiencies):
+            raise TypeError("formal curve knots must use canonical float values")
         if (
             self.rated_power_kw != FORMAL_FC_RATED_POWER_KW
             or self.power_kw != FORMAL_FC_POWER_POINTS_KW
@@ -276,7 +324,12 @@ def hydrogen_mass_from_map_kg(
         raise TypeError("efficiency_map must be an exact FuelCellEfficiencyMap")
     FuelCellEfficiencyMap.require_formal_calibration(efficiency_map)
     power = _strict_scalar(p_fc_kw, "p_fc_kw")
-    eta = float(efficiency_map.eta(power))
+    canonical_interpolator = PchipInterpolator(
+        np.asarray(FORMAL_FC_POWER_POINTS_KW, dtype=np.float64),
+        np.asarray(FORMAL_FC_EFFICIENCIES, dtype=np.float64),
+        extrapolate=False,
+    )
+    eta = float(canonical_interpolator(power))
     return hydrogen_mass_kg_unverified(
         power,
         dt_seconds,

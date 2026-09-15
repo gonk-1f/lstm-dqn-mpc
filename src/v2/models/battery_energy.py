@@ -34,10 +34,16 @@ class BatteryEfficiency:
     def require_calibrated(self) -> tuple[float, float]:
         if self.eta_chg is None or self.eta_dis is None:
             raise ValueError("eta_chg and eta_dis are uncalibrated")
+        if type(self.eta_chg) is not float or type(self.eta_dis) is not float:
+            raise TypeError("formal battery efficiencies must be exact float values")
         charge = _strict_scalar(self.eta_chg, "eta_chg")
         discharge = _strict_scalar(self.eta_dis, "eta_dis")
         if charge != FORMAL_BATTERY_ETA_CHG or discharge != FORMAL_BATTERY_ETA_DIS:
             raise ValueError("formal battery efficiencies must both equal 0.95")
+        if self.source_reference is None or self.source_location is None:
+            raise ValueError("formal battery efficiency provenance is missing")
+        if type(self.source_reference) is not str or type(self.source_location) is not str:
+            raise TypeError("formal battery provenance fields must be exact str values")
         if self.source_reference != BATTERY_EFFICIENCY_SOURCE_DOI:
             raise ValueError("formal battery efficiency requires the authoritative DOI")
         if self.source_location != BATTERY_EFFICIENCY_SOURCE_LOCATION:
