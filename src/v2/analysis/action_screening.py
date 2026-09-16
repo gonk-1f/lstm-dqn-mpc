@@ -16,7 +16,8 @@ import math
 from numbers import Real
 from typing import Any
 
-from ..dqn.action_space import ActionCandidate, CANDIDATE_ACTION_BANK
+from ..control.nonlinear_mpc import MPCWeights
+from ..dqn.action_space import ActionCandidate, generate_candidate_action_bank
 
 
 class HeldOutSelectionError(PermissionError):
@@ -785,12 +786,29 @@ def _medoid_records(value: ClusteringResult) -> tuple[CandidateScreeningRecord, 
     by_id = {record.candidate_id: record for record in value.records}
     selected: list[CandidateScreeningRecord] = []
     for cluster in value.assignments:
+        pair_distances = {
+            (left, right): _distance(by_id[left], by_id[right])
+            for left in cluster
+            for right in cluster
+        }
+        finite_positive = tuple(
+            distance
+            for distance in pair_distances.values()
+            if math.isfinite(distance) and distance > 0.0
+        )
+        common_scale = max(finite_positive, default=1.0)
+
+        def score(candidate_id: str) -> float:
+            distances = tuple(
+                pair_distances[candidate_id, other] for other in cluster
+            )
+            if any(not math.isfinite(distance) for distance in distances):
+                return math.inf
+            return math.fsum(distance / common_scale for distance in distances)
+
         medoid_id = min(
             cluster,
-            key=lambda candidate_id: (
-                sum(_distance(by_id[candidate_id], by_id[other]) for other in cluster),
-                candidate_id,
-            ),
+            key=lambda candidate_id: (score(candidate_id), candidate_id),
         )
         selected.append(by_id[medoid_id])
     return tuple(selected)
@@ -1108,21 +1126,58 @@ def _validate_solver_audit(value: object) -> SolverReproducibilityAudit:
     return value
 
 
+def _validated_canonical_action_bank(
+    candidates: Iterable[ActionCandidate],
+) -> tuple[ActionCandidate, ...]:
+    try:
+        supplied = tuple(candidates)
+    except TypeError as exc:
+        raise TypeError("candidates must be iterable") from exc
+    if not supplied or any(type(candidate) is not ActionCandidate for candidate in supplied):
+        raise TypeError("candidates must contain exact ActionCandidate values")
+
+    for candidate in supplied:
+        try:
+            reconstructed = ActionCandidate(
+                candidate.n_base, candidate.n_smooth, candidate.n_soc
+            )
+            expected_id = (
+                f"w_{reconstructed.n_base}_{reconstructed.n_smooth}_"
+                f"{reconstructed.n_soc}"
+            )
+            if candidate.action_id != expected_id or candidate != reconstructed:
+                raise ValueError("candidate identity is not canonical")
+            if vars(candidate) != vars(reconstructed):
+                raise ValueError("candidate instance contains injected attributes")
+            weights = ActionCandidate.to_mpc_weights(candidate)
+            if (
+                type(weights) is not MPCWeights
+                or type(weights.q_base) is not float
+                or type(weights.q_smooth) is not float
+                or type(weights.q_soc) is not float
+                or (weights.q_base, weights.q_smooth, weights.q_soc)
+                != reconstructed.as_tuple()
+            ):
+                raise ValueError("candidate MPC weights are not canonical")
+        except (TypeError, ValueError, AttributeError) as exc:
+            raise CatalogFinalizationError(
+                "candidate bank contains mutated or invalid action evidence"
+            ) from exc
+
+    canonical = generate_candidate_action_bank()
+    if supplied != canonical:
+        raise CatalogFinalizationError(
+            "finalization requires the complete canonical 36-candidate bank"
+        )
+    return canonical
+
+
 def finalize_action_catalog(
     candidates: Iterable[ActionCandidate], selection: MedoidSelectionResult, *,
     data_readiness: DataReadinessEvidence, solver_audit: SolverReproducibilityAudit,
 ) -> tuple[ActionCandidate, ...]:
     """Freeze only a complete, sealed, Train-derived screening result."""
-    try:
-        bank = tuple(candidates)
-    except TypeError as exc:
-        raise TypeError("candidates must be iterable") from exc
-    if not bank or any(type(candidate) is not ActionCandidate for candidate in bank):
-        raise TypeError("candidates must contain exact ActionCandidate values")
-    if bank != CANDIDATE_ACTION_BANK:
-        raise CatalogFinalizationError(
-            "finalization requires the complete canonical 36-candidate bank"
-        )
+    bank = _validated_canonical_action_bank(candidates)
     if type(selection) is not MedoidSelectionResult:
         raise TypeError("selection must be an exact MedoidSelectionResult")
     _validate_medoid(selection)

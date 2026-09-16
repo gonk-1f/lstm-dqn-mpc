@@ -118,7 +118,11 @@ The intended future flow is:
    sealed Train-only threshold evidence, and cluster with deterministic
    single-linkage connected components.
 6. Select one medoid per supplied cluster by minimum total normalized distance;
-   candidate ID breaks exact ties.
+   candidate ID breaks exact ties. Medoid scoring first computes all pair
+   distances, divides finite distances by one cluster-wide finite scale, and
+   uses `math.fsum`. This prevents a sum of finite extreme distances from
+   overflowing into a false tie; any genuinely infinite distance still gives
+   that candidate an infinite score.
 7. Freeze the resulting representative count as `K` only after the Train audit
    is reviewed. This module does not invent or freeze `K`.
 
@@ -142,6 +146,12 @@ The generic finalization boundary requires all of the following:
   candidate bank; and
 - nonempty selected records drawn only from the bank, each passing both hard
   gates.
+
+Finalization never trusts the mutable module-level candidate-bank alias. It
+generates a fresh canonical 36-action bank on every call, reconstructs and
+revalidates every supplied exact `ActionCandidate` (integer fields, ID,
+composition invariants, and `MPCWeights` conversion), compares against that
+fresh bank, and returns fresh canonical action objects.
 
 Complete evidence may correctly show that some unselected candidates failed a
 hard gate. Such failures are a reason to remove them, not a reason to pretend

@@ -356,6 +356,57 @@ class V2ActionScreeningTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             HardGateResult()  # type: ignore[call-arg]
 
+    def test_medoid_scoring_resists_finite_distance_sum_overflow(self) -> None:
+        from v2.analysis.action_screening import (
+            BehaviorFingerprint,
+            CandidateScreeningRecord,
+            DistanceThresholdRule,
+            FeasibilityResult,
+            MetricDefinition,
+            MetricDirection,
+            SolverReproducibilityResult,
+            apply_hard_gates,
+            cluster_by_distance,
+            derive_distance_threshold,
+            pareto_front,
+            remove_near_duplicates,
+            select_cluster_medoids,
+        )
+
+        schema = (
+            MetricDefinition("x", MetricDirection.MINIMIZE, 1.0),
+            MetricDefinition("y", MetricDirection.MINIMIZE, 2.0),
+        )
+
+        def point(candidate_id: str, values: tuple[float, float]) -> object:
+            return CandidateScreeningRecord(
+                candidate_id,
+                FeasibilityResult(candidate_id, self.train, True, "ok"),
+                SolverReproducibilityResult(candidate_id, self.train, True, 2, "ok"),
+                BehaviorFingerprint(candidate_id, self.train, schema, values),
+            )
+
+        hard = apply_hard_gates(
+            (
+                point("a", (-1e308, 1e308)),
+                point("m", (0.0, 0.0)),
+                point("z", (1e308, -1e308)),
+            ),
+            audit_id="hard",
+        )
+        pareto = pareto_front(hard, audit_id="pareto")
+        zero = derive_distance_threshold(
+            pareto, rule=DistanceThresholdRule.ZERO, audit_id="zero"
+        )
+        unique = remove_near_duplicates(pareto, zero, audit_id="near")
+        median = derive_distance_threshold(
+            unique, rule=DistanceThresholdRule.MEDIAN_PAIRWISE, audit_id="median"
+        )
+        clusters = cluster_by_distance(unique, median, audit_id="cluster")
+        self.assertEqual(clusters.assignments, (("a", "m", "z"),))
+        selected = select_cluster_medoids(clusters, audit_id="medoid")
+        self.assertEqual(tuple(item.candidate_id for item in selected.records), ("m",))
+
     def test_pareto_result_has_direction_and_deterministic_parent_lineage(self) -> None:
         from v2.analysis.action_screening import apply_hard_gates, pareto_front
 
@@ -706,6 +757,111 @@ class V2ActionScreeningTests(unittest.TestCase):
             ),
         )
         self.assertNotIn(ids[0], tuple(item.action_id for item in result))
+
+    def test_finalization_revalidates_fresh_canonical_bank_after_mutation(self) -> None:
+        from types import SimpleNamespace
+
+        import v2.dqn.action_space as action_space
+        from v2.analysis.action_screening import (
+            CatalogFinalizationError,
+            DataReadinessEvidence,
+            SolverReproducibilityAudit,
+            finalize_action_catalog,
+        )
+
+        local_bank = action_space.generate_candidate_action_bank()
+        object.__setattr__(local_bank[0], "n_soc", 9)
+        with self.assertRaises(CatalogFinalizationError):
+            finalize_action_catalog(  # lineage type is rejected after bank validation
+                local_bank,
+                object(),  # type: ignore[arg-type]
+                data_readiness=object(),  # type: ignore[arg-type]
+                solver_audit=object(),  # type: ignore[arg-type]
+            )
+
+        global_bank = action_space.CANDIDATE_ACTION_BANK
+        first = global_bank[0]
+        original_n_base = first.n_base
+        try:
+            object.__setattr__(first, "n_base", 9)
+            corrupted_ids = tuple(action.action_id for action in global_bank)
+            records = tuple(
+                self.record(action_id, (float(index), float(36 - index)))
+                for index, action_id in enumerate(corrupted_ids)
+            )
+            pipeline = self.pipeline(records)
+            with self.assertRaises(CatalogFinalizationError):
+                finalize_action_catalog(
+                    global_bank,
+                    pipeline,
+                    data_readiness=DataReadinessEvidence(
+                        self.train, True, "data", "all Train rows loaded"
+                    ),
+                    solver_audit=SolverReproducibilityAudit(
+                        self.train,
+                        True,
+                        corrupted_ids,
+                        2,
+                        "solver",
+                        "all candidates repeated",
+                    ),
+                )
+        finally:
+            object.__setattr__(first, "n_base", original_n_base)
+
+        canonical = action_space.generate_candidate_action_bank()
+        ids = tuple(action.action_id for action in canonical)
+        pipeline = self.pipeline(
+            tuple(
+                self.record(action_id, (float(index), float(36 - index)))
+                for index, action_id in enumerate(ids)
+            )
+        )
+        poisoned = action_space.generate_candidate_action_bank()
+        object.__setattr__(
+            poisoned[0],
+            "to_mpc_weights",
+            lambda: SimpleNamespace(q_base=0.1, q_smooth=0.1, q_soc=0.8),
+        )
+        with self.assertRaises(CatalogFinalizationError):
+            finalize_action_catalog(
+                poisoned,
+                pipeline,
+                data_readiness=DataReadinessEvidence(
+                    self.train, True, "data", "all Train rows loaded"
+                ),
+                solver_audit=SolverReproducibilityAudit(
+                    self.train,
+                    True,
+                    ids,
+                    2,
+                    "solver",
+                    "all candidates repeated",
+                ),
+            )
+        result = finalize_action_catalog(
+            canonical,
+            pipeline,
+            data_readiness=DataReadinessEvidence(
+                self.train, True, "data", "all Train rows loaded"
+            ),
+            solver_audit=SolverReproducibilityAudit(
+                self.train,
+                True,
+                ids,
+                2,
+                "solver",
+                "all candidates repeated",
+            ),
+        )
+        from v2.control.nonlinear_mpc import MPCWeights
+
+        for action in result:
+            weights = action.to_mpc_weights()
+            self.assertIs(type(weights), MPCWeights)
+            self.assertAlmostEqual(
+                weights.q_base + weights.q_smooth + weights.q_soc, 1.0
+            )
 
     def test_held_out_records_cannot_reach_any_derived_stage(self) -> None:
         from v2.analysis.action_screening import (
