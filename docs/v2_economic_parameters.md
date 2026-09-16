@@ -46,6 +46,10 @@ window, so it cannot invent either previous fuel-cell power or a trend.
 All power denominators are explicit, finite, and positive. SOC and delta-SOC
 remain fractions. `CANDIDATE_STATE_STATUS` is `NO-GO` until the stated
 Train-only audits are completed without using Validation or Test data.
+Population standard deviation and least-squares trend use common-magnitude
+scaled arithmetic, so representable results remain finite even when finite
+timestamps or loads approach the float range. A truly unrepresentable derived
+feature fails with `ValueError` rather than leaking a raw arithmetic overflow.
 
 ## Source-backed price scenario
 
@@ -117,4 +121,4 @@ derivation rule, audit ID, reason, reward version, and exact Task 6
 `DatasetProvenance` in its digest. Validation, Test, and Unknown provenance are
 rejected. `scaled_reward` revalidates the seal, all bound content, Train
 provenance, digest, and derived arithmetic mean before returning
-`reward_cny / scale_cny`.
+`reward_cny / scale_cny`; a non-finite quotient is rejected.

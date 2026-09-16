@@ -206,6 +206,43 @@ class CandidateOperatingStateTests(unittest.TestCase):
                 normalization=self.scales,
             )
 
+    def test_extreme_finite_time_and_load_keep_representable_trend_finite(self) -> None:
+        from v2.dqn.state import StateNormalization, build_candidate_operating_state
+
+        history = (
+            self.Sample(0.0, 0.5, 0.0, 0.0, 0.0, 0.0),
+            self.Sample(1.0e308, 0.5, 0.0, 0.0, 1.0e308, 0.0),
+        )
+        state = build_candidate_operating_state(
+            history,
+            current_time_seconds=1.0e308,
+            window_seconds=1.0e308,
+            normalization=StateNormalization(1.0, 1.0, 1.0e308, 1.0),
+        )
+
+        self.assertAlmostEqual(state[6], 0.5)
+        self.assertAlmostEqual(state[7], 1.0)
+        self.assertTrue(all(math.isfinite(value) for value in state))
+
+    def test_extreme_symmetric_load_population_std_is_stable(self) -> None:
+        from v2.dqn.state import StateNormalization, build_candidate_operating_state
+
+        history = (
+            self.Sample(0.0, 0.5, 0.0, 0.0, -1.0e308, 0.0),
+            self.Sample(2.0, 0.5, 0.0, 0.0, 1.0e308, 0.0),
+        )
+        state = build_candidate_operating_state(
+            history,
+            current_time_seconds=2.0,
+            window_seconds=2.0,
+            normalization=StateNormalization(1.0, 1.0, 1.0e308, 1.0),
+        )
+
+        self.assertAlmostEqual(state[5], 0.0)
+        self.assertAlmostEqual(state[6], 1.0)
+        self.assertAlmostEqual(state[7], 2.0)
+        self.assertTrue(all(math.isfinite(value) for value in state))
+
 
 class EconomicCostTests(unittest.TestCase):
     def test_price_constants_and_exact_provenance(self) -> None:
@@ -558,6 +595,24 @@ class EconomicCostTests(unittest.TestCase):
             object.__setattr__(forged_subclass, field, getattr(calibration, field))
         with self.assertRaises(TypeError):
             scaled_reward(ledger, calibration=forged_subclass)
+
+    def test_scaled_reward_rejects_nonfinite_quotient(self) -> None:
+        from v2.analysis.action_screening import DataSplit, DatasetProvenance
+        from v2.economics import (
+            RawCnyIntervalLedger,
+            calibrate_reward_scale,
+            scaled_reward,
+        )
+
+        calibration = calibrate_reward_scale(
+            (5.0e-324,),
+            provenance=DatasetProvenance("synthetic", "subnormal", DataSplit.TRAIN),
+            audit_id="subnormal-scale",
+            reason="exercise finite scaled-reward boundary",
+        )
+        ledger = RawCnyIntervalLedger(1.0e308, 0.0, 0.0, 0.0)
+        with self.assertRaises(ValueError):
+            scaled_reward(ledger, calibration=calibration)
 
 
 if __name__ == "__main__":

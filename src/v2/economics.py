@@ -612,7 +612,10 @@ def scaled_reward(
     if type(ledger) is not RawCnyIntervalLedger:
         raise TypeError("ledger must be an exact RawCnyIntervalLedger")
     checked = _validate_reward_scale(calibration)
-    return ledger.reward_cny / checked.scale_cny
+    result = ledger.reward_cny / checked.scale_cny
+    if not math.isfinite(result):
+        raise ValueError("scaled reward must remain finite")
+    return result
 
 
 __all__ = [

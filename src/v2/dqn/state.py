@@ -56,6 +56,79 @@ def _positive_scalar(value: object, name: str) -> float:
     return result
 
 
+def _finite_sum(values: tuple[float, ...], name: str) -> float:
+    try:
+        result = math.fsum(values)
+    except OverflowError as exc:
+        raise ValueError(f"{name} must remain finite") from exc
+    if not math.isfinite(result):
+        raise ValueError(f"{name} must remain finite")
+    return result
+
+
+def _finite_product_ratio(
+    numerators: tuple[float, ...],
+    denominators: tuple[float, ...],
+    name: str,
+) -> float:
+    """Evaluate a product ratio without overflowing representable results."""
+
+    if any(value == 0.0 for value in numerators):
+        return 0.0
+    if any(value == 0.0 for value in denominators):
+        raise ValueError(f"{name} denominator must be non-zero")
+
+    sign = 1.0
+    mantissa = 1.0
+    exponent = 0
+    for value in numerators:
+        checked = _finite_scalar(value, name)
+        if checked < 0.0:
+            sign = -sign
+        part, part_exponent = math.frexp(abs(checked))
+        mantissa *= part
+        exponent += part_exponent
+    for value in denominators:
+        checked = _finite_scalar(value, name)
+        if checked < 0.0:
+            sign = -sign
+        part, part_exponent = math.frexp(abs(checked))
+        mantissa /= part
+        exponent -= part_exponent
+    try:
+        result = math.ldexp(sign * mantissa, exponent)
+    except OverflowError as exc:
+        raise ValueError(f"{name} is not representable as a finite float") from exc
+    if not math.isfinite(result):
+        raise ValueError(f"{name} is not representable as a finite float")
+    return result
+
+
+def _scaled_population_mean_and_std(
+    values: tuple[float, ...],
+) -> tuple[float, float]:
+    """Return finite population moments using a common magnitude scale."""
+
+    scale = max(abs(value) for value in values)
+    if scale == 0.0:
+        return 0.0, 0.0
+    normalized = tuple(value / scale for value in values)
+    normalized_mean = _finite_sum(normalized, "normalized load sum") / len(values)
+    normalized_variance = _finite_sum(
+        tuple((value - normalized_mean) ** 2 for value in normalized),
+        "normalized load squared-deviation sum",
+    ) / len(values)
+    if normalized_variance < 0.0 or not math.isfinite(normalized_variance):
+        raise ValueError("normalized load population variance must be finite")
+    mean = _finite_product_ratio((scale, normalized_mean), (1.0,), "load mean")
+    std = _finite_product_ratio(
+        (scale, math.sqrt(normalized_variance)),
+        (1.0,),
+        "load population standard deviation",
+    )
+    return mean, std
+
+
 @dataclass(frozen=True)
 class OperatingHistorySample:
     """One immutable, timestamped, physical operating record."""
@@ -137,22 +210,50 @@ def _validate_normalization(value: object) -> StateNormalization:
 def _least_squares_slope_per_second(
     samples: tuple[OperatingHistorySample, ...],
 ) -> float:
-    origin = samples[0].timestamp_seconds
-    elapsed = tuple(sample.timestamp_seconds - origin for sample in samples)
-    loads = tuple(sample.load_power_kw for sample in samples)
-    mean_time = math.fsum(elapsed) / len(elapsed)
-    mean_load = math.fsum(loads) / len(loads)
-    numerator = math.fsum(
-        (time - mean_time) * (load - mean_load)
-        for time, load in zip(elapsed, loads)
+    time_center = _finite_sum(
+        (
+            samples[0].timestamp_seconds / 2.0,
+            samples[-1].timestamp_seconds / 2.0,
+        ),
+        "timestamp center",
     )
-    denominator = math.fsum((time - mean_time) ** 2 for time in elapsed)
-    if denominator <= 0.0:
+    elapsed = tuple(sample.timestamp_seconds - time_center for sample in samples)
+    if not all(math.isfinite(value) for value in elapsed):
+        raise ValueError("centered physical timestamps must remain finite")
+    time_scale = max(abs(value) for value in elapsed)
+    if time_scale == 0.0:
         raise ValueError("load trend requires distinct physical timestamps")
-    slope = numerator / denominator
-    if not math.isfinite(slope):
-        raise ValueError("load trend must remain finite")
-    return slope
+    loads = tuple(sample.load_power_kw for sample in samples)
+    load_scale = max(abs(value) for value in loads)
+    if load_scale == 0.0:
+        return 0.0
+
+    normalized_time = tuple(value / time_scale for value in elapsed)
+    normalized_load = tuple(value / load_scale for value in loads)
+    mean_time = _finite_sum(normalized_time, "normalized timestamp sum") / len(
+        normalized_time
+    )
+    mean_load = _finite_sum(normalized_load, "normalized load sum") / len(
+        normalized_load
+    )
+    covariance = _finite_sum(
+        tuple(
+            (time - mean_time) * (load - mean_load)
+            for time, load in zip(normalized_time, normalized_load)
+        ),
+        "normalized load-time covariance sum",
+    )
+    variance = _finite_sum(
+        tuple((time - mean_time) ** 2 for time in normalized_time),
+        "normalized timestamp squared-deviation sum",
+    )
+    if variance <= 0.0:
+        raise ValueError("load trend requires distinct physical timestamps")
+    return _finite_product_ratio(
+        (load_scale, covariance),
+        (time_scale, variance),
+        "load trend slope in kW/s",
+    )
 
 
 def build_candidate_operating_state(
@@ -185,6 +286,8 @@ def build_candidate_operating_state(
     window = _positive_scalar(window_seconds, "window_seconds")
     scales = _validate_normalization(normalization)
     start = now - window
+    if not math.isfinite(start):
+        raise ValueError("window start must remain a finite physical timestamp")
     selected = tuple(
         sample
         for sample in checked_history
@@ -200,11 +303,9 @@ def build_candidate_operating_state(
 
     current = selected[-1]
     previous = selected[-2]
-    load_mean = math.fsum(sample.load_power_kw for sample in selected) / len(selected)
-    load_variance = math.fsum(
-        (sample.load_power_kw - load_mean) ** 2 for sample in selected
-    ) / len(selected)
-    load_std = math.sqrt(load_variance)
+    load_mean, load_std = _scaled_population_mean_and_std(
+        tuple(sample.load_power_kw for sample in selected)
+    )
     load_slope_kw_per_second = _least_squares_slope_per_second(selected)
 
     state = (
@@ -213,9 +314,19 @@ def build_candidate_operating_state(
         previous.fuel_cell_power_kw / scales.fuel_cell_rated_kw,
         current.battery_power_kw / scales.battery_power_scale_kw,
         current.load_power_kw / scales.load_power_scale_kw,
-        load_mean / scales.load_power_scale_kw,
-        load_std / scales.load_power_scale_kw,
-        load_slope_kw_per_second * window / scales.load_power_scale_kw,
+        _finite_product_ratio(
+            (load_mean,), (scales.load_power_scale_kw,), "normalized load mean"
+        ),
+        _finite_product_ratio(
+            (load_std,),
+            (scales.load_power_scale_kw,),
+            "normalized load population standard deviation",
+        ),
+        _finite_product_ratio(
+            (load_slope_kw_per_second, window),
+            (scales.load_power_scale_kw,),
+            "normalized load window trend",
+        ),
         current.causal_base_load_kw / scales.base_load_power_scale_kw,
         current.soc - selected[0].soc,
     )
