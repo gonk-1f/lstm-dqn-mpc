@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-import unittest
+from dataclasses import FrozenInstanceError
+import inspect
 import sys
+import unittest
 from pathlib import Path
 
 import numpy as np
@@ -30,12 +32,11 @@ class V2CandidateActionSpaceTests(unittest.TestCase):
             f"w_{n_base}_{n_smooth}_{n_soc}"
             for n_base, n_smooth, n_soc in expected_numerators
         )
-
         first = generate_candidate_action_bank()
-        second = generate_candidate_action_bank()
+
         self.assertEqual(ACTION_TABLE_VERSION, CONTRACT_VERSION)
         self.assertEqual(ACTION_TABLE_VERSION, "three_weight_simplex_behavior_filtered_v1")
-        self.assertEqual(first, second)
+        self.assertEqual(first, generate_candidate_action_bank())
         self.assertEqual(first, CANDIDATE_ACTION_BANK)
         self.assertEqual(len(first), 36)
         self.assertEqual(tuple(action.numerators for action in first), expected_numerators)
@@ -106,63 +107,92 @@ class V2ActionScreeningTests(unittest.TestCase):
             feasible: bool = True,
             reproducible: bool = True,
             provenance: object = self.train,
+            fingerprint_provenance: object | None = None,
         ) -> object:
-            feasibility = FeasibilityResult(
-                candidate_id, provenance, feasible, "synthetic feasibility"
+            fingerprint_source = (
+                provenance if fingerprint_provenance is None else fingerprint_provenance
             )
-            solver = SolverReproducibilityResult(
-                candidate_id,
-                provenance,
-                reproducible,
-                2,
-                "synthetic repeated solve",
-            )
-            fingerprint = BehaviorFingerprint(candidate_id, self.metrics, values)
             return CandidateScreeningRecord(
-                candidate_id, feasibility, solver, fingerprint
+                candidate_id,
+                FeasibilityResult(
+                    candidate_id, provenance, feasible, "synthetic feasibility"
+                ),
+                SolverReproducibilityResult(
+                    candidate_id,
+                    provenance,
+                    reproducible,
+                    2,
+                    "synthetic repeated solve",
+                ),
+                BehaviorFingerprint(
+                    candidate_id, fingerprint_source, self.metrics, values
+                ),
             )
 
         self.record = record
 
-    def test_train_provenance_is_exact_and_mixed_or_held_out_batches_fail(self) -> None:
+    def pipeline(self, records: object) -> object:
         from v2.analysis.action_screening import (
+            apply_hard_gates,
+            cluster_by_distance,
+            pareto_front,
+            remove_near_duplicates,
+            select_cluster_medoids,
+        )
+
+        hard = apply_hard_gates(records, audit_id="hard-gate-audit")
+        pareto = pareto_front(hard, audit_id="pareto-audit")
+        unique = remove_near_duplicates(
+            pareto, distance_threshold=0.0, audit_id="duplicate-audit"
+        )
+        clusters = cluster_by_distance(
+            unique, distance_threshold=0.0, audit_id="cluster-audit"
+        )
+        return select_cluster_medoids(clusters, audit_id="medoid-audit")
+
+    def test_train_provenance_is_exact_and_fingerprint_cannot_be_laundered(self) -> None:
+        from v2.analysis.action_screening import (
+            BehaviorFingerprint,
+            CandidateScreeningRecord,
             DataSplit,
             DatasetProvenance,
             HeldOutSelectionError,
-            pareto_front,
+            apply_hard_gates,
         )
 
         for split in ("Train", "train", True, 1, None):
             with self.subTest(split=split), self.assertRaises(TypeError):
                 DatasetProvenance("v", "p", split)  # type: ignore[arg-type]
 
-        for split in (DataSplit.VALIDATION, DataSplit.TEST, DataSplit.UNKNOWN):
-            held_out = DatasetProvenance("synthetic_train_v1", "held", split)
-            with self.subTest(split=split), self.assertRaises(HeldOutSelectionError):
-                pareto_front((self.record("a", (1.0, 1.0), provenance=held_out),))
-
-        other_train = DatasetProvenance(
-            "synthetic_train_v1", "different-source", DataSplit.TRAIN
+        validation = DatasetProvenance("synthetic", "validation", DataSplit.VALIDATION)
+        train_gates = self.record("a", (1.0, 1.0))
+        held_out_fingerprint = BehaviorFingerprint(
+            "a", validation, self.metrics, (1.0, 1.0)
         )
-        mixed = (
-            self.record("a", (1.0, 1.0)),
-            self.record("b", (2.0, 2.0), provenance=other_train),
-        )
-        with self.assertRaisesRegex(ValueError, "same.*provenance"):
-            pareto_front(mixed)
-
-        held_out = DatasetProvenance("synthetic_train_v1", "held", DataSplit.TEST)
         with self.assertRaises(HeldOutSelectionError):
-            pareto_front(
+            CandidateScreeningRecord(
+                "a",
+                train_gates.feasibility,
+                train_gates.reproducibility,
+                held_out_fingerprint,
+            )
+
+        for split in (DataSplit.VALIDATION, DataSplit.TEST, DataSplit.UNKNOWN):
+            provenance = DatasetProvenance("synthetic", "held", split)
+            with self.subTest(split=split), self.assertRaises(HeldOutSelectionError):
+                apply_hard_gates(
+                    (self.record("a", (1.0, 1.0), provenance=provenance),),
+                    audit_id="forbidden",
+                )
+
+        other_train = DatasetProvenance("synthetic", "different", DataSplit.TRAIN)
+        with self.assertRaisesRegex(ValueError, "same.*provenance"):
+            apply_hard_gates(
                 (
                     self.record("a", (1.0, 1.0)),
-                    self.record(
-                        "failed-held-out",
-                        (99.0, 99.0),
-                        feasible=False,
-                        provenance=held_out,
-                    ),
-                )
+                    self.record("b", (2.0, 2.0), provenance=other_train),
+                ),
+                audit_id="mixed",
             )
 
     def test_provenance_metadata_and_gate_results_are_strict(self) -> None:
@@ -183,8 +213,7 @@ class V2ActionScreeningTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             SolverReproducibilityResult("a", self.train, True, 1, "reason")
 
-    def test_fingerprints_are_immutable_finite_and_schema_safe(self) -> None:
-        from dataclasses import FrozenInstanceError
+    def test_fingerprints_are_immutable_finite_schema_safe_and_normalizable(self) -> None:
         from v2.analysis.action_screening import (
             BehaviorFingerprint,
             MetricDefinition,
@@ -192,79 +221,115 @@ class V2ActionScreeningTests(unittest.TestCase):
         )
 
         source = np.asarray([1.0, 2.0])
-        fingerprint = BehaviorFingerprint("a", self.metrics, source)
+        fingerprint = BehaviorFingerprint("a", self.train, self.metrics, source)
         source[:] = 99.0
         self.assertEqual(fingerprint.values, (1.0, 2.0))
+        self.assertEqual(fingerprint.provenance, self.train)
         self.assertIs(type(fingerprint.values), tuple)
         with self.assertRaises(FrozenInstanceError):
             fingerprint.values = (3.0, 4.0)  # type: ignore[misc]
 
         with self.assertRaises(ValueError):
-            BehaviorFingerprint("a", self.metrics, (float("nan"), 2.0))
+            BehaviorFingerprint("a", self.train, self.metrics, (float("nan"), 2.0))
         with self.assertRaises(ValueError):
-            BehaviorFingerprint("a", self.metrics, (1.0,))
+            BehaviorFingerprint("a", self.train, self.metrics, (1.0,))
         duplicate = (
             MetricDefinition("same", MetricDirection.MINIMIZE, 1.0),
             MetricDefinition("same", MetricDirection.MAXIMIZE, 1.0),
         )
         with self.assertRaises(ValueError):
-            BehaviorFingerprint("a", duplicate, (1.0, 2.0))
+            BehaviorFingerprint("a", self.train, duplicate, (1.0, 2.0))
         with self.assertRaises(TypeError):
             MetricDefinition("x", "minimize", 1.0)  # type: ignore[arg-type]
         with self.assertRaises(ValueError):
             MetricDefinition("x", MetricDirection.MINIMIZE, float("inf"))
 
-        inconsistent = (
-            self.record("a", (1.0, 1.0)),
-            self.record(
-                "b",
-                (2.0, 2.0),
-            ),
+        overflow_schema = (
+            MetricDefinition("tiny_scale", MetricDirection.MINIMIZE, 1e-308),
         )
-        altered = inconsistent[1].fingerprint
-        object.__setattr__(
-            altered,
-            "metrics",
-            (
-                MetricDefinition("different", MetricDirection.MINIMIZE, 1.0),
-                self.metrics[1],
-            ),
-        )
-        from v2.analysis.action_screening import pareto_front
+        with self.assertRaisesRegex(ValueError, "normalized"):
+            BehaviorFingerprint("a", self.train, overflow_schema, (1e308,))
 
-        with self.assertRaisesRegex(ValueError, "schema"):
-            pareto_front(inconsistent)
-
-    def test_hard_gates_are_explicit_and_run_before_behavior_selection(self) -> None:
+    def test_extreme_finite_normalized_values_do_not_crash_distance_algorithms(self) -> None:
         from v2.analysis.action_screening import (
+            BehaviorFingerprint,
+            CandidateScreeningRecord,
+            FeasibilityResult,
+            MetricDefinition,
+            MetricDirection,
+            SolverReproducibilityResult,
             apply_hard_gates,
-            feasibility_gate,
-            solver_reproducibility_gate,
+            cluster_by_distance,
+            pareto_front,
+            remove_near_duplicates,
+            select_cluster_medoids,
         )
+
+        schema = (
+            MetricDefinition("left", MetricDirection.MINIMIZE, 1.0),
+            MetricDefinition("right", MetricDirection.MINIMIZE, 1.0),
+        )
+
+        def extreme(candidate_id: str, values: tuple[float, float]) -> object:
+            return CandidateScreeningRecord(
+                candidate_id,
+                FeasibilityResult(candidate_id, self.train, True, "ok"),
+                SolverReproducibilityResult(candidate_id, self.train, True, 2, "ok"),
+                BehaviorFingerprint(candidate_id, self.train, schema, values),
+            )
+
+        hard = apply_hard_gates(
+            (
+                extreme("a", (-1e200, 1e200)),
+                extreme("b", (1e200, -1e200)),
+            ),
+            audit_id="hard",
+        )
+        pareto = pareto_front(hard, audit_id="pareto")
+        unique = remove_near_duplicates(
+            pareto, distance_threshold=0.0, audit_id="near"
+        )
+        clusters = cluster_by_distance(unique, distance_threshold=1e308, audit_id="cluster")
+        selected = select_cluster_medoids(clusters, audit_id="medoid")
+        self.assertEqual(tuple(item.candidate_id for item in selected.records), ("a",))
+
+        overflow_hard = apply_hard_gates(
+            (
+                extreme("a", (-1e308, 1e308)),
+                extreme("b", (1e308, -1e308)),
+            ),
+            audit_id="overflow-hard",
+        )
+        overflow_pareto = pareto_front(overflow_hard, audit_id="overflow-pareto")
+        overflow_unique = remove_near_duplicates(
+            overflow_pareto, distance_threshold=0.0, audit_id="overflow-near"
+        )
+        overflow_clusters = cluster_by_distance(
+            overflow_unique,
+            distance_threshold=1e308,
+            audit_id="overflow-cluster",
+        )
+        self.assertEqual(overflow_clusters.assignments, (("a",), ("b",)))
+
+    def test_hard_gate_result_is_first_class_sealed_and_complete(self) -> None:
+        from v2.analysis.action_screening import HardGateResult, apply_hard_gates
 
         records = (
             self.record("ok", (3.0, 3.0)),
             self.record("infeasible", (0.0, 0.0), feasible=False),
             self.record("unstable", (0.0, 0.0), reproducible=False),
         )
-        self.assertEqual(
-            tuple(record.candidate_id for record in apply_hard_gates(records)),
-            ("ok",),
-        )
-        self.assertEqual(
-            tuple(record.candidate_id for record in feasibility_gate(records)),
-            ("ok", "unstable"),
-        )
-        self.assertEqual(
-            tuple(
-                record.candidate_id
-                for record in solver_reproducibility_gate(records)
-            ),
-            ("infeasible", "ok"),
-        )
+        result = apply_hard_gates(records, audit_id="gate-audit")
+        self.assertIs(type(result), HardGateResult)
+        self.assertEqual(result.provenance, self.train)
+        self.assertEqual(result.audit_id, "gate-audit")
+        self.assertEqual(len(result.source_records), 3)
+        self.assertEqual(tuple(item.candidate_id for item in result.records), ("ok",))
+        with self.assertRaises(TypeError):
+            HardGateResult()  # type: ignore[call-arg]
 
-    def test_pareto_direction_and_order_are_deterministic(self) -> None:
-        from v2.analysis.action_screening import pareto_front
+    def test_pareto_result_has_direction_and_deterministic_parent_lineage(self) -> None:
+        from v2.analysis.action_screening import apply_hard_gates, pareto_front
 
         records = (
             self.record("c", (2.0, 4.0)),
@@ -272,91 +337,133 @@ class V2ActionScreeningTests(unittest.TestCase):
             self.record("d", (3.0, 3.0)),
             self.record("b", (2.0, 2.0)),
         )
-        expected = ("a", "b")
-        self.assertEqual(tuple(item.candidate_id for item in pareto_front(records)), expected)
-        self.assertEqual(
-            tuple(item.candidate_id for item in pareto_front(tuple(reversed(records)))),
-            expected,
+        forward = pareto_front(
+            apply_hard_gates(records, audit_id="hard"), audit_id="pareto"
         )
+        reverse = pareto_front(
+            apply_hard_gates(tuple(reversed(records)), audit_id="hard"),
+            audit_id="pareto",
+        )
+        self.assertEqual(tuple(item.candidate_id for item in forward.records), ("a", "b"))
+        self.assertEqual(forward.digest, reverse.digest)
+        with self.assertRaises(TypeError):
+            pareto_front(records, audit_id="raw-records")  # type: ignore[arg-type]
 
-    def test_near_duplicate_removal_uses_explicit_threshold_and_stable_ties(self) -> None:
-        from v2.analysis.action_screening import remove_near_duplicates
+    def test_near_duplicate_result_embeds_threshold_without_detached_label(self) -> None:
+        from v2.analysis.action_screening import (
+            apply_hard_gates,
+            pareto_front,
+            remove_near_duplicates,
+        )
 
         records = (
-            self.record("b", (0.03, 0.04)),
-            self.record("c", (2.0, 2.0)),
-            self.record("a", (0.0, 0.0)),
+            self.record("b", (0.03, 1.94)),
+            self.record("c", (2.0, 0.0)),
+            self.record("a", (0.0, 2.0)),
         )
-        self.assertEqual(
-            tuple(
-                item.candidate_id
-                for item in remove_near_duplicates(
-                    records, 0.05, threshold_provenance=self.train
-                )
+        parent = pareto_front(
+            apply_hard_gates(records, audit_id="hard"), audit_id="pareto"
+        )
+        first = remove_near_duplicates(
+            parent, distance_threshold=0.05, audit_id="near"
+        )
+        second = remove_near_duplicates(
+            pareto_front(
+                apply_hard_gates(tuple(reversed(records)), audit_id="hard"),
+                audit_id="pareto",
             ),
-            ("a", "c"),
+            distance_threshold=0.05,
+            audit_id="near",
         )
-        self.assertEqual(
-            tuple(
-                item.candidate_id
-                for item in remove_near_duplicates(
-                    tuple(reversed(records)),
-                    0.05,
-                    threshold_provenance=self.train,
-                )
-            ),
-            ("a", "c"),
+        self.assertEqual(first.threshold, 0.05)
+        self.assertEqual(tuple(item.candidate_id for item in first.records), ("a", "c"))
+        self.assertEqual(first.digest, second.digest)
+        self.assertNotIn(
+            "threshold_provenance", inspect.signature(remove_near_duplicates).parameters
         )
+        with self.assertRaises(TypeError):
+            remove_near_duplicates(  # type: ignore[arg-type]
+                records, distance_threshold=0.05, audit_id="raw-record-laundering"
+            )
         for bad in (True, -1.0, float("nan"), "0.1"):
             with self.subTest(bad=bad), self.assertRaises((TypeError, ValueError)):
                 remove_near_duplicates(
-                    records, bad, threshold_provenance=self.train
+                    parent, distance_threshold=bad, audit_id="bad"
                 )  # type: ignore[arg-type]
 
-        from v2.analysis.action_screening import DataSplit, DatasetProvenance
-
-        held_out = DatasetProvenance("synthetic", "held", DataSplit.VALIDATION)
-        with self.assertRaisesRegex(PermissionError, "Train-only"):
-            remove_near_duplicates(
-                records, 0.05, threshold_provenance=held_out
-            )
-
-    def test_threshold_clustering_and_medoids_are_deterministic(self) -> None:
+    def test_clustering_and_medoids_only_consume_sealed_parent_results(self) -> None:
         from v2.analysis.action_screening import (
+            ClusteringResult,
+            MedoidSelectionResult,
+            apply_hard_gates,
             cluster_by_distance,
+            pareto_front,
+            remove_near_duplicates,
             select_cluster_medoids,
         )
 
         records = (
             self.record("c", (3.0, 0.0)),
-            self.record("b", (0.2, 0.0)),
-            self.record("a", (0.0, 0.0)),
+            self.record("b", (0.2, 5.8)),
+            self.record("a", (0.0, 6.0)),
+        )
+        parent = remove_near_duplicates(
+            pareto_front(
+                apply_hard_gates(records, audit_id="hard"), audit_id="pareto"
+            ),
+            distance_threshold=0.0,
+            audit_id="near",
         )
         clusters = cluster_by_distance(
-            records,
-            distance_threshold=0.21,
-            threshold_provenance=self.train,
+            parent, distance_threshold=0.23, audit_id="cluster"
         )
-        self.assertEqual(clusters, (("a", "b"), ("c",)))
-        self.assertEqual(
-            tuple(
-                item.candidate_id
-                for item in select_cluster_medoids(
-                    records, clusters, cluster_provenance=self.train
-                )
-            ),
-            ("a", "c"),
-        )
-        self.assertEqual(
-            cluster_by_distance(
-                tuple(reversed(records)),
-                distance_threshold=0.21,
-                threshold_provenance=self.train,
-            ),
-            clusters,
+        self.assertIs(type(clusters), ClusteringResult)
+        self.assertEqual(clusters.assignments, (("a", "b"), ("c",)))
+        medoids = select_cluster_medoids(clusters, audit_id="medoid")
+        self.assertIs(type(medoids), MedoidSelectionResult)
+        self.assertEqual(tuple(item.candidate_id for item in medoids.records), ("a", "c"))
+        with self.assertRaises(TypeError):
+            select_cluster_medoids(  # type: ignore[arg-type]
+                (("a", "b"), ("c",)), audit_id="arbitrary-clusters"
+            )
+        with self.assertRaises(TypeError):
+            ClusteringResult()  # type: ignore[call-arg]
+        with self.assertRaises(TypeError):
+            MedoidSelectionResult()  # type: ignore[call-arg]
+
+    def test_mutated_or_forged_stage_lineage_is_rejected(self) -> None:
+        from v2.analysis.action_screening import (
+            DataSplit,
+            DatasetProvenance,
+            ScreeningLineageError,
+            apply_hard_gates,
+            cluster_by_distance,
+            pareto_front,
+            remove_near_duplicates,
         )
 
-    def test_catalog_finalization_requires_complete_train_data_and_solver_audit(self) -> None:
+        hard = apply_hard_gates(
+            (self.record("a", (0.0, 0.0)),), audit_id="hard"
+        )
+        pareto = pareto_front(hard, audit_id="pareto")
+        near = remove_near_duplicates(
+            pareto, distance_threshold=0.0, audit_id="near"
+        )
+        object.__setattr__(near, "threshold", 999.0)
+        with self.assertRaises(ScreeningLineageError):
+            cluster_by_distance(near, distance_threshold=0.0, audit_id="cluster")
+
+        tainted = self.record("tainted", (1.0, 1.0))
+        tainted_hard = apply_hard_gates((tainted,), audit_id="hard")
+        object.__setattr__(
+            tainted.fingerprint,
+            "provenance",
+            DatasetProvenance("synthetic", "held", DataSplit.TEST),
+        )
+        with self.assertRaises(ScreeningLineageError):
+            pareto_front(tainted_hard, audit_id="must-detect-nested-mutation")
+
+    def test_catalog_finalization_consumes_only_complete_pipeline_result(self) -> None:
         from v2.analysis.action_screening import (
             CatalogFinalizationError,
             DataReadinessEvidence,
@@ -369,104 +476,65 @@ class V2ActionScreeningTests(unittest.TestCase):
             self.record(action.action_id, (float(index), float(36 - index)))
             for index, action in enumerate(CANDIDATE_ACTION_BANK)
         )
-        candidate_ids = tuple(action.action_id for action in CANDIDATE_ACTION_BANK)
-        ready = DataReadinessEvidence(self.train, True, "synthetic-complete-data-audit")
-        passed = SolverReproducibilityAudit(
-            self.train,
-            True,
-            candidate_ids,
-            2,
-            "synthetic-solver-audit",
+        ids = tuple(action.action_id for action in CANDIDATE_ACTION_BANK)
+        pipeline = self.pipeline(records)
+        readiness = DataReadinessEvidence(self.train, True, "complete-data")
+        audit = SolverReproducibilityAudit(
+            self.train, True, ids, 2, "complete-solver-audit"
         )
-
         result = finalize_action_catalog(
             CANDIDATE_ACTION_BANK,
-            records,
-            selected_candidate_ids=(candidate_ids[3], candidate_ids[1]),
-            selection_provenance=self.train,
-            data_readiness=ready,
-            solver_audit=passed,
+            pipeline,
+            data_readiness=readiness,
+            solver_audit=audit,
         )
         self.assertEqual(
-            tuple(action.action_id for action in result),
-            (candidate_ids[1], candidate_ids[3]),
+            tuple(item.action_id for item in result),
+            tuple(item.candidate_id for item in pipeline.records),
         )
-
-        attacks = (
-            {"records": records[:-1]},
-            {
-                "candidates": CANDIDATE_ACTION_BANK[:-1],
-                "records": records[:-1],
-                "solver_audit": SolverReproducibilityAudit(
-                    self.train,
-                    True,
-                    candidate_ids[:-1],
-                    2,
-                    "synthetic-incomplete-bank-audit",
-                ),
-            },
-            {
-                "solver_audit": SolverReproducibilityAudit(
-                    self.train,
-                    False,
-                    candidate_ids,
-                    2,
-                    "failed audit",
-                )
-            },
-            {
-                "data_readiness": DataReadinessEvidence(
-                    self.train, False, "current raw-data NO-GO"
-                )
-            },
+        self.assertNotIn(
+            "selected_candidate_ids", inspect.signature(finalize_action_catalog).parameters
         )
-        for override in attacks:
-            kwargs = {
-                "candidates": CANDIDATE_ACTION_BANK,
-                "records": records,
-                "selected_candidate_ids": (candidate_ids[1],),
-                "selection_provenance": self.train,
-                "data_readiness": ready,
-                "solver_audit": passed,
-            }
-            kwargs.update(override)
-            with self.subTest(override=override), self.assertRaises(CatalogFinalizationError):
-                finalize_action_catalog(**kwargs)
-
-    def test_finalization_rejects_held_out_evidence_before_selection(self) -> None:
-        from v2.analysis.action_screening import (
-            DataReadinessEvidence,
-            DataSplit,
-            DatasetProvenance,
-            HeldOutSelectionError,
-            SolverReproducibilityAudit,
-            finalize_action_catalog,
-        )
-        from v2.dqn.action_space import CANDIDATE_ACTION_BANK
-
-        test_provenance = DatasetProvenance("synthetic", "held", DataSplit.TEST)
-        ids = tuple(action.action_id for action in CANDIDATE_ACTION_BANK)
-        records = tuple(
-            self.record(action_id, (float(index), 0.0), provenance=test_provenance)
-            for index, action_id in enumerate(ids)
-        )
-        with self.assertRaises(HeldOutSelectionError):
-            finalize_action_catalog(
+        with self.assertRaises(TypeError):
+            finalize_action_catalog(  # type: ignore[call-arg]
                 CANDIDATE_ACTION_BANK,
                 records,
                 selected_candidate_ids=(ids[0],),
-                selection_provenance=test_provenance,
-                data_readiness=DataReadinessEvidence(
-                    test_provenance, True, "held-out data"
-                ),
-                solver_audit=SolverReproducibilityAudit(
-                    test_provenance, True, ids, 2, "held-out audit"
-                ),
+                selection_provenance=self.train,
+                data_readiness=readiness,
+                solver_audit=audit,
             )
 
-    def test_finalization_can_remove_failed_candidates_but_cannot_select_them(self) -> None:
+        incomplete = self.pipeline(records[:-1])
+        with self.assertRaisesRegex(CatalogFinalizationError, "complete"):
+            finalize_action_catalog(
+                CANDIDATE_ACTION_BANK,
+                incomplete,
+                data_readiness=readiness,
+                solver_audit=audit,
+            )
+        failed_audit = SolverReproducibilityAudit(
+            self.train, False, ids, 2, "failed-solver-audit"
+        )
+        with self.assertRaises(CatalogFinalizationError):
+            finalize_action_catalog(
+                CANDIDATE_ACTION_BANK,
+                pipeline,
+                data_readiness=readiness,
+                solver_audit=failed_audit,
+            )
+        with self.assertRaises(CatalogFinalizationError):
+            finalize_action_catalog(
+                CANDIDATE_ACTION_BANK,
+                pipeline,
+                data_readiness=DataReadinessEvidence(
+                    self.train, False, "current-NO-GO"
+                ),
+                solver_audit=audit,
+            )
+
+    def test_failed_candidates_may_be_removed_but_never_selected(self) -> None:
         from v2.analysis.action_screening import (
-            CatalogFinalizationError,
             DataReadinessEvidence,
             SolverReproducibilityAudit,
             finalize_action_catalog,
@@ -477,33 +545,42 @@ class V2ActionScreeningTests(unittest.TestCase):
         records = tuple(
             self.record(
                 action_id,
-                (float(index), 0.0),
+                (float(index), float(36 - index)),
                 feasible=index != 0,
             )
             for index, action_id in enumerate(ids)
         )
-        readiness = DataReadinessEvidence(self.train, True, "complete-data")
-        audit = SolverReproducibilityAudit(
-            self.train, True, ids, 2, "complete-solver-audit"
-        )
+        pipeline = self.pipeline(records)
         result = finalize_action_catalog(
             CANDIDATE_ACTION_BANK,
-            records,
-            selected_candidate_ids=(ids[1],),
-            selection_provenance=self.train,
-            data_readiness=readiness,
-            solver_audit=audit,
+            pipeline,
+            data_readiness=DataReadinessEvidence(self.train, True, "data"),
+            solver_audit=SolverReproducibilityAudit(
+                self.train, True, ids, 2, "solver"
+            ),
         )
-        self.assertEqual(tuple(item.action_id for item in result), (ids[1],))
-        with self.assertRaises(CatalogFinalizationError):
-            finalize_action_catalog(
-                CANDIDATE_ACTION_BANK,
-                records,
-                selected_candidate_ids=(ids[0],),
-                selection_provenance=self.train,
-                data_readiness=readiness,
-                solver_audit=audit,
+        self.assertNotIn(ids[0], tuple(item.action_id for item in result))
+
+    def test_held_out_records_cannot_reach_any_derived_stage(self) -> None:
+        from v2.analysis.action_screening import (
+            DataSplit,
+            DatasetProvenance,
+            HeldOutSelectionError,
+            apply_hard_gates,
+        )
+        from v2.dqn.action_space import CANDIDATE_ACTION_BANK
+
+        held_out = DatasetProvenance("synthetic", "held", DataSplit.TEST)
+        with self.assertRaises(HeldOutSelectionError):
+            records = tuple(
+                self.record(
+                    action.action_id,
+                    (float(index), 0.0),
+                    provenance=held_out,
+                )
+                for index, action in enumerate(CANDIDATE_ACTION_BANK)
             )
+            apply_hard_gates(records, audit_id="held-out")
 
 
 if __name__ == "__main__":

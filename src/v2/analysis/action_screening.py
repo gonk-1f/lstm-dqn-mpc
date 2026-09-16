@@ -1,23 +1,30 @@
-"""Train-only deterministic interfaces for offline action screening.
+"""Train-only, tamper-evident interfaces for offline action screening.
 
-The algorithms in this module operate only on evidence supplied by a caller.
-They do not assert that the repository's current data gate has passed or that a
-formal action catalog exists.
+The algorithms operate only on caller-supplied evidence. They do not claim
+that the repository's current data gate has passed or that a final catalog
+exists. Every selection stage consumes the sealed result of its predecessor.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
+import hashlib
+import json
 import math
 from numbers import Real
-from collections.abc import Iterable, Sequence
+from typing import Any
 
 from ..dqn.action_space import ActionCandidate, CANDIDATE_ACTION_BANK
 
 
 class HeldOutSelectionError(PermissionError):
     """Raised before held-out or unknown data can affect method selection."""
+
+
+class ScreeningLineageError(RuntimeError):
+    """Raised when a sealed screening result has been forged or mutated."""
 
 
 class CatalogFinalizationError(RuntimeError):
@@ -84,15 +91,24 @@ class DatasetProvenance:
             raise TypeError("split must be an exact DataSplit; string coercion is forbidden")
 
 
-def _require_train(provenance: object) -> DatasetProvenance:
-    if type(provenance) is not DatasetProvenance:
+def _validate_provenance(value: object) -> DatasetProvenance:
+    if type(value) is not DatasetProvenance:
         raise TypeError("an exact DatasetProvenance is required")
-    if provenance.split is not DataSplit.TRAIN:
+    _nonempty_text(value.dataset_version, "dataset_version")
+    _nonempty_text(value.provenance_id, "provenance_id")
+    if type(value.split) is not DataSplit:
+        raise TypeError("split must remain an exact DataSplit")
+    return value
+
+
+def _require_train(provenance: object) -> DatasetProvenance:
+    checked = _validate_provenance(provenance)
+    if checked.split is not DataSplit.TRAIN:
         raise HeldOutSelectionError(
             "candidate removal, thresholds, clustering, medoids, K, and final "
             "catalog selection are Train-only"
         )
-    return provenance
+    return checked
 
 
 @dataclass(frozen=True)
@@ -111,9 +127,21 @@ class MetricDefinition:
         object.__setattr__(self, "scale", scale)
 
 
+def _validate_metric(value: object) -> MetricDefinition:
+    if type(value) is not MetricDefinition:
+        raise TypeError("metrics must contain exact MetricDefinition values")
+    _nonempty_text(value.name, "metric name")
+    if type(value.direction) is not MetricDirection:
+        raise TypeError("metric direction must remain an exact MetricDirection")
+    if type(value.scale) is not float or not math.isfinite(value.scale) or value.scale <= 0.0:
+        raise ValueError("metric scale must remain a finite positive float")
+    return value
+
+
 @dataclass(frozen=True)
 class BehaviorFingerprint:
     candidate_id: str
+    provenance: DatasetProvenance
     metrics: tuple[MetricDefinition, ...]
     values: tuple[float, ...]
 
@@ -121,6 +149,9 @@ class BehaviorFingerprint:
         object.__setattr__(
             self, "candidate_id", _nonempty_text(self.candidate_id, "candidate_id")
         )
+        if type(self.provenance) is not DatasetProvenance:
+            raise TypeError("fingerprint provenance must be exact DatasetProvenance")
+        _validate_provenance(self.provenance)
         if isinstance(self.metrics, (str, bytes)):
             raise TypeError("metrics must be a sequence of MetricDefinition values")
         try:
@@ -132,7 +163,6 @@ class BehaviorFingerprint:
         names = tuple(metric.name for metric in metrics)
         if len(set(names)) != len(names):
             raise ValueError("fingerprint metric names must be unique")
-
         if isinstance(self.values, (str, bytes)):
             raise TypeError("fingerprint values must be a numeric sequence")
         try:
@@ -145,21 +175,44 @@ class BehaviorFingerprint:
         for index, value in enumerate(source_values):
             if isinstance(value, bool) or not isinstance(value, Real):
                 raise TypeError(f"fingerprint value {index} must be a real non-bool scalar")
-            normalized = float(value)
-            if not math.isfinite(normalized):
+            converted = float(value)
+            if not math.isfinite(converted):
                 raise ValueError("fingerprint values must all be finite")
-            values.append(normalized)
+            if not math.isfinite(converted / metrics[index].scale):
+                raise ValueError("fingerprint normalized values must all be finite")
+            values.append(converted)
         object.__setattr__(self, "metrics", metrics)
         object.__setattr__(self, "values", tuple(values))
 
     @property
     def normalized_minimization_vector(self) -> tuple[float, ...]:
         return tuple(
-            (value / metric.scale)
+            value / metric.scale
             if metric.direction is MetricDirection.MINIMIZE
             else -(value / metric.scale)
             for metric, value in zip(self.metrics, self.values)
         )
+
+
+def _validate_fingerprint(value: object) -> BehaviorFingerprint:
+    if type(value) is not BehaviorFingerprint:
+        raise TypeError("fingerprint must be an exact BehaviorFingerprint")
+    _nonempty_text(value.candidate_id, "candidate_id")
+    _validate_provenance(value.provenance)
+    if type(value.metrics) is not tuple or not value.metrics:
+        raise TypeError("fingerprint metrics must remain a nonempty tuple")
+    for metric in value.metrics:
+        _validate_metric(metric)
+    if len({metric.name for metric in value.metrics}) != len(value.metrics):
+        raise ValueError("fingerprint metric names must remain unique")
+    if type(value.values) is not tuple or len(value.values) != len(value.metrics):
+        raise ValueError("fingerprint values must remain a matching tuple")
+    for metric, item in zip(value.metrics, value.values):
+        if type(item) is not float or not math.isfinite(item):
+            raise ValueError("fingerprint values must remain finite floats")
+        if not math.isfinite(item / metric.scale):
+            raise ValueError("fingerprint normalized values must remain finite")
+    return value
 
 
 @dataclass(frozen=True)
@@ -175,6 +228,7 @@ class FeasibilityResult:
         )
         if type(self.provenance) is not DatasetProvenance:
             raise TypeError("feasibility provenance must be exact DatasetProvenance")
+        _validate_provenance(self.provenance)
         object.__setattr__(self, "passed", _exact_bool(self.passed, "feasibility passed"))
         object.__setattr__(self, "reason", _nonempty_text(self.reason, "feasibility reason"))
 
@@ -193,6 +247,7 @@ class SolverReproducibilityResult:
         )
         if type(self.provenance) is not DatasetProvenance:
             raise TypeError("solver provenance must be exact DatasetProvenance")
+        _validate_provenance(self.provenance)
         object.__setattr__(self, "passed", _exact_bool(self.passed, "solver passed"))
         object.__setattr__(self, "repeated_runs", _repeated_runs(self.repeated_runs))
         object.__setattr__(self, "reason", _nonempty_text(self.reason, "solver reason"))
@@ -207,23 +262,60 @@ class CandidateScreeningRecord:
 
     def __post_init__(self) -> None:
         candidate_id = _nonempty_text(self.candidate_id, "candidate_id")
-        nested_types = (
+        nested = (
             (self.feasibility, FeasibilityResult, "feasibility"),
             (self.reproducibility, SolverReproducibilityResult, "reproducibility"),
             (self.fingerprint, BehaviorFingerprint, "fingerprint"),
         )
-        for value, expected, name in nested_types:
+        for value, expected, name in nested:
             if type(value) is not expected:
                 raise TypeError(f"{name} must be an exact {expected.__name__}")
             if value.candidate_id != candidate_id:
                 raise ValueError("all screening evidence must identify the same candidate")
-        if self.feasibility.provenance != self.reproducibility.provenance:
-            raise ValueError("feasibility and solver evidence must share provenance")
+        provenances = (
+            _require_train(self.feasibility.provenance),
+            _require_train(self.reproducibility.provenance),
+            _require_train(self.fingerprint.provenance),
+        )
+        if provenances[1:] != (provenances[0], provenances[0]):
+            raise ValueError("all screening evidence must share the same exact provenance")
         object.__setattr__(self, "candidate_id", candidate_id)
 
     @property
     def provenance(self) -> DatasetProvenance:
         return self.feasibility.provenance
+
+
+def _validate_record(value: object) -> CandidateScreeningRecord:
+    if type(value) is not CandidateScreeningRecord:
+        raise TypeError("records must contain exact CandidateScreeningRecord values")
+    candidate_id = _nonempty_text(value.candidate_id, "candidate_id")
+    feasibility = value.feasibility
+    reproducibility = value.reproducibility
+    fingerprint = _validate_fingerprint(value.fingerprint)
+    if type(feasibility) is not FeasibilityResult:
+        raise TypeError("feasibility must remain exact FeasibilityResult")
+    if type(reproducibility) is not SolverReproducibilityResult:
+        raise TypeError("reproducibility must remain exact SolverReproducibilityResult")
+    _nonempty_text(feasibility.candidate_id, "candidate_id")
+    _nonempty_text(reproducibility.candidate_id, "candidate_id")
+    _exact_bool(feasibility.passed, "feasibility passed")
+    _exact_bool(reproducibility.passed, "solver passed")
+    _repeated_runs(reproducibility.repeated_runs)
+    _nonempty_text(feasibility.reason, "feasibility reason")
+    _nonempty_text(reproducibility.reason, "solver reason")
+    if candidate_id != feasibility.candidate_id or candidate_id != reproducibility.candidate_id:
+        raise ValueError("screening candidate identity has been altered")
+    if candidate_id != fingerprint.candidate_id:
+        raise ValueError("fingerprint candidate identity has been altered")
+    provenances = (
+        _require_train(feasibility.provenance),
+        _require_train(reproducibility.provenance),
+        _require_train(fingerprint.provenance),
+    )
+    if provenances[1:] != (provenances[0], provenances[0]):
+        raise ValueError("all screening evidence must share the same exact provenance")
+    return value
 
 
 @dataclass(frozen=True)
@@ -235,6 +327,7 @@ class DataReadinessEvidence:
     def __post_init__(self) -> None:
         if type(self.provenance) is not DatasetProvenance:
             raise TypeError("data readiness requires exact DatasetProvenance")
+        _validate_provenance(self.provenance)
         object.__setattr__(self, "passed", _exact_bool(self.passed, "data readiness passed"))
         object.__setattr__(self, "audit_id", _nonempty_text(self.audit_id, "data audit_id"))
 
@@ -250,6 +343,7 @@ class SolverReproducibilityAudit:
     def __post_init__(self) -> None:
         if type(self.provenance) is not DatasetProvenance:
             raise TypeError("solver audit requires exact DatasetProvenance")
+        _validate_provenance(self.provenance)
         object.__setattr__(self, "passed", _exact_bool(self.passed, "solver audit passed"))
         if isinstance(self.candidate_ids, (str, bytes)):
             raise TypeError("candidate_ids must be a sequence")
@@ -275,12 +369,9 @@ def _validated_records(
         raise TypeError("records must be iterable") from exc
     if not result:
         raise ValueError("screening records cannot be empty")
-    if any(type(record) is not CandidateScreeningRecord for record in result):
-        raise TypeError("records must contain exact CandidateScreeningRecord values")
-
-    # Validate every split before applying any filtering.  Thus a failed or
-    # otherwise ignorable held-out row cannot influence the selection path.
-    provenances = tuple(_require_train(record.provenance) for record in result)
+    for record in result:
+        _validate_record(record)
+    provenances = tuple(record.provenance for record in result)
     if any(provenance != provenances[0] for provenance in provenances[1:]):
         raise ValueError("all screening records must share the same exact provenance")
     ids = tuple(record.candidate_id for record in result)
@@ -292,72 +383,225 @@ def _validated_records(
     return tuple(sorted(result, key=lambda record: record.candidate_id))
 
 
-def _matching_train_provenance(
-    value: object,
-    expected: DatasetProvenance,
-    name: str,
-) -> DatasetProvenance:
-    provenance = _require_train(value)
-    if provenance != expected:
-        raise ValueError(f"{name} must match the screening-record provenance")
-    return provenance
-
-
 def _passed_hard_gates(
-    checked: Iterable[CandidateScreeningRecord],
+    records: tuple[CandidateScreeningRecord, ...],
 ) -> tuple[CandidateScreeningRecord, ...]:
     return tuple(
         record
-        for record in checked
+        for record in records
         if record.feasibility.passed and record.reproducibility.passed
     )
 
 
-def apply_hard_gates(
-    records: Iterable[CandidateScreeningRecord],
-) -> tuple[CandidateScreeningRecord, ...]:
-    """Retain only candidates passing both explicit non-objective gates."""
-
-    checked = _validated_records(records)
-    return _passed_hard_gates(checked)
+def _provenance_payload(value: DatasetProvenance) -> list[str]:
+    return [value.dataset_version, value.provenance_id, value.split.value]
 
 
-def feasibility_gate(
-    records: Iterable[CandidateScreeningRecord],
-) -> tuple[CandidateScreeningRecord, ...]:
-    """Retain records whose explicit physical-feasibility result passed."""
-
-    checked = _validated_records(records)
-    return tuple(record for record in checked if record.feasibility.passed)
-
-
-def solver_reproducibility_gate(
-    records: Iterable[CandidateScreeningRecord],
-) -> tuple[CandidateScreeningRecord, ...]:
-    """Retain records whose explicit repeated-solve result passed."""
-
-    checked = _validated_records(records)
-    return tuple(record for record in checked if record.reproducibility.passed)
-
-
-def pareto_front(
-    records: Iterable[CandidateScreeningRecord],
-) -> tuple[CandidateScreeningRecord, ...]:
-    """Return the deterministic non-dominated set after both hard gates."""
-
-    gated = apply_hard_gates(records)
-    vectors = {
-        record.candidate_id: record.fingerprint.normalized_minimization_vector
-        for record in gated
+def _record_payload(value: CandidateScreeningRecord) -> dict[str, Any]:
+    return {
+        "candidate_id": value.candidate_id,
+        "provenance": _provenance_payload(value.provenance),
+        "feasibility": [value.feasibility.passed, value.feasibility.reason],
+        "reproducibility": [
+            value.reproducibility.passed,
+            value.reproducibility.repeated_runs,
+            value.reproducibility.reason,
+        ],
+        "metrics": [
+            [metric.name, metric.direction.value, metric.scale]
+            for metric in value.fingerprint.metrics
+        ],
+        "values": list(value.fingerprint.values),
     }
+
+
+def _digest(payload: object) -> str:
+    encoded = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+_STAGE_SEAL = object()
+
+
+class _SealedStage:
+    def __init__(self, *_: object, **__: object) -> None:
+        raise TypeError("screening stage results can only be created by pipeline functions")
+
+
+@dataclass(frozen=True, init=False)
+class HardGateResult(_SealedStage):
+    source_records: tuple[CandidateScreeningRecord, ...]
+    records: tuple[CandidateScreeningRecord, ...]
+    provenance: DatasetProvenance
+    audit_id: str
+    digest: str
+
+    @classmethod
+    def _create(cls, seal: object, source_records: tuple[CandidateScreeningRecord, ...],
+                records: tuple[CandidateScreeningRecord, ...], provenance: DatasetProvenance,
+                audit_id: str) -> HardGateResult:
+        if seal is not _STAGE_SEAL:
+            raise TypeError("invalid stage-construction seal")
+        instance = object.__new__(cls)
+        for name, value in (("source_records", source_records), ("records", records),
+                            ("provenance", provenance), ("audit_id", audit_id)):
+            object.__setattr__(instance, name, value)
+        object.__setattr__(instance, "digest", _hard_digest(instance))
+        return instance
+
+
+@dataclass(frozen=True, init=False)
+class ParetoResult(_SealedStage):
+    parent: HardGateResult
+    records: tuple[CandidateScreeningRecord, ...]
+    provenance: DatasetProvenance
+    audit_id: str
+    digest: str
+
+    @classmethod
+    def _create(cls, seal: object, parent: HardGateResult,
+                records: tuple[CandidateScreeningRecord, ...], audit_id: str) -> ParetoResult:
+        if seal is not _STAGE_SEAL:
+            raise TypeError("invalid stage-construction seal")
+        instance = object.__new__(cls)
+        for name, value in (("parent", parent), ("records", records),
+                            ("provenance", parent.provenance), ("audit_id", audit_id)):
+            object.__setattr__(instance, name, value)
+        object.__setattr__(instance, "digest", _pareto_digest(instance))
+        return instance
+
+
+@dataclass(frozen=True, init=False)
+class NearDuplicateResult(_SealedStage):
+    parent: ParetoResult
+    records: tuple[CandidateScreeningRecord, ...]
+    provenance: DatasetProvenance
+    threshold: float
+    audit_id: str
+    digest: str
+
+    @classmethod
+    def _create(cls, seal: object, parent: ParetoResult,
+                records: tuple[CandidateScreeningRecord, ...], threshold: float,
+                audit_id: str) -> NearDuplicateResult:
+        if seal is not _STAGE_SEAL:
+            raise TypeError("invalid stage-construction seal")
+        instance = object.__new__(cls)
+        for name, value in (("parent", parent), ("records", records),
+                            ("provenance", parent.provenance), ("threshold", threshold),
+                            ("audit_id", audit_id)):
+            object.__setattr__(instance, name, value)
+        object.__setattr__(instance, "digest", _near_digest(instance))
+        return instance
+
+
+@dataclass(frozen=True, init=False)
+class ClusteringResult(_SealedStage):
+    parent: NearDuplicateResult
+    records: tuple[CandidateScreeningRecord, ...]
+    assignments: tuple[tuple[str, ...], ...]
+    provenance: DatasetProvenance
+    threshold: float
+    audit_id: str
+    digest: str
+
+    @classmethod
+    def _create(cls, seal: object, parent: NearDuplicateResult,
+                assignments: tuple[tuple[str, ...], ...], threshold: float,
+                audit_id: str) -> ClusteringResult:
+        if seal is not _STAGE_SEAL:
+            raise TypeError("invalid stage-construction seal")
+        instance = object.__new__(cls)
+        for name, value in (("parent", parent), ("records", parent.records),
+                            ("assignments", assignments), ("provenance", parent.provenance),
+                            ("threshold", threshold), ("audit_id", audit_id)):
+            object.__setattr__(instance, name, value)
+        object.__setattr__(instance, "digest", _cluster_digest(instance))
+        return instance
+
+
+@dataclass(frozen=True, init=False)
+class MedoidSelectionResult(_SealedStage):
+    parent: ClusteringResult
+    records: tuple[CandidateScreeningRecord, ...]
+    provenance: DatasetProvenance
+    audit_id: str
+    digest: str
+
+    @classmethod
+    def _create(cls, seal: object, parent: ClusteringResult,
+                records: tuple[CandidateScreeningRecord, ...],
+                audit_id: str) -> MedoidSelectionResult:
+        if seal is not _STAGE_SEAL:
+            raise TypeError("invalid stage-construction seal")
+        instance = object.__new__(cls)
+        for name, value in (("parent", parent), ("records", records),
+                            ("provenance", parent.provenance), ("audit_id", audit_id)):
+            object.__setattr__(instance, name, value)
+        object.__setattr__(instance, "digest", _medoid_digest(instance))
+        return instance
+
+
+def _record_ids(records: tuple[CandidateScreeningRecord, ...]) -> list[str]:
+    return [record.candidate_id for record in records]
+
+
+def _hard_digest(value: HardGateResult) -> str:
+    return _digest({"stage": "hard_gate",
+                    "source": [_record_payload(record) for record in value.source_records],
+                    "records": _record_ids(value.records),
+                    "provenance": _provenance_payload(value.provenance),
+                    "audit_id": value.audit_id})
+
+
+def _pareto_digest(value: ParetoResult) -> str:
+    return _digest({"stage": "pareto", "parent": value.parent.digest,
+                    "records": _record_ids(value.records),
+                    "provenance": _provenance_payload(value.provenance),
+                    "audit_id": value.audit_id})
+
+
+def _near_digest(value: NearDuplicateResult) -> str:
+    return _digest({"stage": "near_duplicate", "parent": value.parent.digest,
+                    "records": _record_ids(value.records),
+                    "provenance": _provenance_payload(value.provenance),
+                    "threshold": value.threshold, "audit_id": value.audit_id})
+
+
+def _cluster_digest(value: ClusteringResult) -> str:
+    return _digest({"stage": "clustering", "parent": value.parent.digest,
+                    "records": _record_ids(value.records), "assignments": value.assignments,
+                    "provenance": _provenance_payload(value.provenance),
+                    "threshold": value.threshold, "audit_id": value.audit_id})
+
+
+def _medoid_digest(value: MedoidSelectionResult) -> str:
+    return _digest({"stage": "medoid_selection", "parent": value.parent.digest,
+                    "records": _record_ids(value.records),
+                    "provenance": _provenance_payload(value.provenance),
+                    "audit_id": value.audit_id})
+
+
+def _same_record_objects(actual: tuple[CandidateScreeningRecord, ...],
+                         expected: tuple[CandidateScreeningRecord, ...]) -> bool:
+    return len(actual) == len(expected) and all(
+        left is right for left, right in zip(actual, expected)
+    )
+
+
+def _pareto_records(records: tuple[CandidateScreeningRecord, ...],
+                    ) -> tuple[CandidateScreeningRecord, ...]:
+    vectors = {record.candidate_id: record.fingerprint.normalized_minimization_vector
+               for record in records}
     kept: list[CandidateScreeningRecord] = []
-    for candidate in gated:
+    for candidate in records:
         target = vectors[candidate.candidate_id]
         dominated = any(
             all(left <= right for left, right in zip(vectors[other.candidate_id], target))
             and any(left < right for left, right in zip(vectors[other.candidate_id], target))
-            for other in gated
-            if other.candidate_id != candidate.candidate_id
+            for other in records if other.candidate_id != candidate.candidate_id
         )
         if not dominated:
             kept.append(candidate)
@@ -365,47 +609,26 @@ def pareto_front(
 
 
 def _distance(left: CandidateScreeningRecord, right: CandidateScreeningRecord) -> float:
-    lhs = left.fingerprint.normalized_minimization_vector
-    rhs = right.fingerprint.normalized_minimization_vector
-    return math.sqrt(sum((a - b) ** 2 for a, b in zip(lhs, rhs)))
+    try:
+        result = math.dist(left.fingerprint.normalized_minimization_vector,
+                           right.fingerprint.normalized_minimization_vector)
+    except OverflowError:
+        return math.inf
+    return result if math.isfinite(result) else math.inf
 
 
-def remove_near_duplicates(
-    records: Iterable[CandidateScreeningRecord],
-    distance_threshold: float,
-    *,
-    threshold_provenance: DatasetProvenance,
-) -> tuple[CandidateScreeningRecord, ...]:
-    """Greedily keep the lexicographically first point within each radius."""
-
-    threshold = _nonnegative_finite(distance_threshold, "distance_threshold")
-    checked = _validated_records(records)
-    _matching_train_provenance(
-        threshold_provenance, checked[0].provenance, "threshold_provenance"
-    )
-    gated = _passed_hard_gates(checked)
+def _near_records(records: tuple[CandidateScreeningRecord, ...], threshold: float,
+                  ) -> tuple[CandidateScreeningRecord, ...]:
     representatives: list[CandidateScreeningRecord] = []
-    for candidate in gated:
+    for candidate in records:
         if all(_distance(candidate, kept) > threshold for kept in representatives):
             representatives.append(candidate)
     return tuple(representatives)
 
 
-def cluster_by_distance(
-    records: Iterable[CandidateScreeningRecord],
-    distance_threshold: float,
-    *,
-    threshold_provenance: DatasetProvenance,
-) -> tuple[tuple[str, ...], ...]:
-    """Build deterministic single-linkage components at an explicit threshold."""
-
-    threshold = _nonnegative_finite(distance_threshold, "distance_threshold")
-    checked = _validated_records(records)
-    _matching_train_provenance(
-        threshold_provenance, checked[0].provenance, "threshold_provenance"
-    )
-    gated = _passed_hard_gates(checked)
-    parents = list(range(len(gated)))
+def _cluster_assignments(records: tuple[CandidateScreeningRecord, ...], threshold: float,
+                         ) -> tuple[tuple[str, ...], ...]:
+    parents = list(range(len(records)))
 
     def find(index: int) -> int:
         while parents[index] != index:
@@ -418,48 +641,21 @@ def cluster_by_distance(
         if left_root != right_root:
             parents[max(left_root, right_root)] = min(left_root, right_root)
 
-    for left in range(len(gated)):
-        for right in range(left + 1, len(gated)):
-            if _distance(gated[left], gated[right]) <= threshold:
+    for left in range(len(records)):
+        for right in range(left + 1, len(records)):
+            if _distance(records[left], records[right]) <= threshold:
                 union(left, right)
-
     members: dict[int, list[str]] = {}
-    for index, record in enumerate(gated):
+    for index, record in enumerate(records):
         members.setdefault(find(index), []).append(record.candidate_id)
-    clusters = tuple(tuple(sorted(group)) for group in members.values())
-    return tuple(sorted(clusters, key=lambda group: group[0]))
+    groups = tuple(tuple(sorted(group)) for group in members.values())
+    return tuple(sorted(groups, key=lambda group: group[0]))
 
 
-def select_cluster_medoids(
-    records: Iterable[CandidateScreeningRecord],
-    clusters: Sequence[Sequence[str]],
-    *,
-    cluster_provenance: DatasetProvenance,
-) -> tuple[CandidateScreeningRecord, ...]:
-    """Select minimum-total-distance representatives; IDs break exact ties."""
-
-    checked = _validated_records(records)
-    _matching_train_provenance(
-        cluster_provenance, checked[0].provenance, "cluster_provenance"
-    )
-    gated = _passed_hard_gates(checked)
-    by_id = {record.candidate_id: record for record in gated}
-    if isinstance(clusters, (str, bytes)):
-        raise TypeError("clusters must be a sequence of candidate-ID sequences")
-    normalized_clusters: list[tuple[str, ...]] = []
-    for cluster in clusters:
-        if isinstance(cluster, (str, bytes)):
-            raise TypeError("each cluster must be a candidate-ID sequence")
-        group = tuple(_nonempty_text(value, "cluster candidate_id") for value in cluster)
-        if not group:
-            raise ValueError("clusters cannot be empty")
-        normalized_clusters.append(tuple(sorted(group)))
-    flattened = tuple(value for cluster in normalized_clusters for value in cluster)
-    if len(set(flattened)) != len(flattened) or set(flattened) != set(by_id):
-        raise ValueError("clusters must partition exactly the gated candidate records")
-
+def _medoid_records(value: ClusteringResult) -> tuple[CandidateScreeningRecord, ...]:
+    by_id = {record.candidate_id: record for record in value.records}
     selected: list[CandidateScreeningRecord] = []
-    for cluster in sorted(normalized_clusters, key=lambda group: group[0]):
+    for cluster in value.assignments:
         medoid_id = min(
             cluster,
             key=lambda candidate_id: (
@@ -471,22 +667,229 @@ def select_cluster_medoids(
     return tuple(selected)
 
 
+def _lineage_failure(message: str) -> ScreeningLineageError:
+    return ScreeningLineageError(f"invalid screening lineage: {message}")
+
+
+def _validate_hard(value: HardGateResult) -> None:
+    try:
+        if type(value.source_records) is not tuple or type(value.records) is not tuple:
+            raise ValueError("hard-gate records are not tuples")
+        source = _validated_records(value.source_records)
+        if not _same_record_objects(value.source_records, source):
+            raise ValueError("hard-gate source ordering or identity changed")
+        if not _same_record_objects(value.records, _passed_hard_gates(source)):
+            raise ValueError("hard-gate output changed")
+        if value.provenance != source[0].provenance:
+            raise ValueError("hard-gate provenance changed")
+        _nonempty_text(value.audit_id, "hard-gate audit_id")
+        if type(value.digest) is not str or value.digest != _hard_digest(value):
+            raise ValueError("hard-gate digest mismatch")
+    except ScreeningLineageError:
+        raise
+    except (TypeError, ValueError, AttributeError, HeldOutSelectionError, OverflowError) as exc:
+        raise _lineage_failure(str(exc)) from exc
+
+
+def _validate_pareto(value: ParetoResult) -> None:
+    try:
+        if type(value.parent) is not HardGateResult:
+            raise ValueError("Pareto parent has wrong type")
+        _validate_hard(value.parent)
+        expected = _pareto_records(value.parent.records)
+        if type(value.records) is not tuple or not _same_record_objects(value.records, expected):
+            raise ValueError("Pareto output changed")
+        if value.provenance != value.parent.provenance:
+            raise ValueError("Pareto provenance changed")
+        _nonempty_text(value.audit_id, "Pareto audit_id")
+        if type(value.digest) is not str or value.digest != _pareto_digest(value):
+            raise ValueError("Pareto digest mismatch")
+    except ScreeningLineageError:
+        raise
+    except (TypeError, ValueError, AttributeError, HeldOutSelectionError, OverflowError) as exc:
+        raise _lineage_failure(str(exc)) from exc
+
+
+def _validate_near(value: NearDuplicateResult) -> None:
+    try:
+        if type(value.parent) is not ParetoResult:
+            raise ValueError("near-duplicate parent has wrong type")
+        _validate_pareto(value.parent)
+        if type(value.threshold) is not float:
+            raise ValueError("near-duplicate threshold is not canonical")
+        threshold = _nonnegative_finite(value.threshold, "distance_threshold")
+        expected = _near_records(value.parent.records, threshold)
+        if type(value.records) is not tuple or not _same_record_objects(value.records, expected):
+            raise ValueError("near-duplicate output changed")
+        if value.provenance != value.parent.provenance:
+            raise ValueError("near-duplicate provenance changed")
+        _nonempty_text(value.audit_id, "near-duplicate audit_id")
+        if type(value.digest) is not str or value.digest != _near_digest(value):
+            raise ValueError("near-duplicate digest mismatch")
+    except ScreeningLineageError:
+        raise
+    except (TypeError, ValueError, AttributeError, HeldOutSelectionError, OverflowError) as exc:
+        raise _lineage_failure(str(exc)) from exc
+
+
+def _validate_cluster(value: ClusteringResult) -> None:
+    try:
+        if type(value.parent) is not NearDuplicateResult:
+            raise ValueError("clustering parent has wrong type")
+        _validate_near(value.parent)
+        if type(value.threshold) is not float:
+            raise ValueError("clustering threshold is not canonical")
+        threshold = _nonnegative_finite(value.threshold, "distance_threshold")
+        if type(value.records) is not tuple or not _same_record_objects(value.records,
+                                                                         value.parent.records):
+            raise ValueError("clustering input records changed")
+        expected = _cluster_assignments(value.records, threshold)
+        if type(value.assignments) is not tuple or value.assignments != expected:
+            raise ValueError("cluster assignments changed")
+        if any(type(group) is not tuple for group in value.assignments):
+            raise ValueError("cluster assignments are not canonical tuples")
+        if value.provenance != value.parent.provenance:
+            raise ValueError("clustering provenance changed")
+        _nonempty_text(value.audit_id, "clustering audit_id")
+        if type(value.digest) is not str or value.digest != _cluster_digest(value):
+            raise ValueError("clustering digest mismatch")
+    except ScreeningLineageError:
+        raise
+    except (TypeError, ValueError, AttributeError, HeldOutSelectionError, OverflowError) as exc:
+        raise _lineage_failure(str(exc)) from exc
+
+
+def _validate_medoid(value: MedoidSelectionResult) -> None:
+    try:
+        if type(value.parent) is not ClusteringResult:
+            raise ValueError("medoid parent has wrong type")
+        _validate_cluster(value.parent)
+        expected = _medoid_records(value.parent)
+        if type(value.records) is not tuple or not _same_record_objects(value.records, expected):
+            raise ValueError("medoid output changed")
+        if value.provenance != value.parent.provenance:
+            raise ValueError("medoid provenance changed")
+        _nonempty_text(value.audit_id, "medoid audit_id")
+        if type(value.digest) is not str or value.digest != _medoid_digest(value):
+            raise ValueError("medoid digest mismatch")
+    except ScreeningLineageError:
+        raise
+    except (TypeError, ValueError, AttributeError, HeldOutSelectionError, OverflowError) as exc:
+        raise _lineage_failure(str(exc)) from exc
+
+
+def apply_hard_gates(records: Iterable[CandidateScreeningRecord], *, audit_id: str,
+                     ) -> HardGateResult:
+    """Validate all Train evidence and seal the explicit hard-gate output."""
+    source = _validated_records(records)
+    audit = _nonempty_text(audit_id, "hard-gate audit_id")
+    result = HardGateResult._create(
+        _STAGE_SEAL, source, _passed_hard_gates(source), source[0].provenance, audit
+    )
+    _validate_hard(result)
+    return result
+
+
+def feasibility_gate(records: Iterable[CandidateScreeningRecord],
+                     ) -> tuple[CandidateScreeningRecord, ...]:
+    """Return Train records passing the diagnostic physical-feasibility gate."""
+    checked = _validated_records(records)
+    return tuple(record for record in checked if record.feasibility.passed)
+
+
+def solver_reproducibility_gate(records: Iterable[CandidateScreeningRecord],
+                                ) -> tuple[CandidateScreeningRecord, ...]:
+    """Return Train records passing the diagnostic repeated-solve gate."""
+    checked = _validated_records(records)
+    return tuple(record for record in checked if record.reproducibility.passed)
+
+
+def pareto_front(parent: HardGateResult, *, audit_id: str) -> ParetoResult:
+    """Seal the deterministic non-dominated set from a valid hard-gate result."""
+    if type(parent) is not HardGateResult:
+        raise TypeError("pareto_front requires an exact HardGateResult")
+    _validate_hard(parent)
+    result = ParetoResult._create(
+        _STAGE_SEAL, parent, _pareto_records(parent.records),
+        _nonempty_text(audit_id, "Pareto audit_id")
+    )
+    _validate_pareto(result)
+    return result
+
+
+def remove_near_duplicates(parent: ParetoResult, distance_threshold: float, *, audit_id: str,
+                           ) -> NearDuplicateResult:
+    """Seal deterministic ID-first representatives within a normalized radius."""
+    if type(parent) is not ParetoResult:
+        raise TypeError("remove_near_duplicates requires an exact ParetoResult")
+    _validate_pareto(parent)
+    threshold = _nonnegative_finite(distance_threshold, "distance_threshold")
+    result = NearDuplicateResult._create(
+        _STAGE_SEAL, parent, _near_records(parent.records, threshold), threshold,
+        _nonempty_text(audit_id, "near-duplicate audit_id")
+    )
+    _validate_near(result)
+    return result
+
+
+def cluster_by_distance(parent: NearDuplicateResult, distance_threshold: float, *, audit_id: str,
+                        ) -> ClusteringResult:
+    """Seal deterministic single-linkage components at a declared threshold."""
+    if type(parent) is not NearDuplicateResult:
+        raise TypeError("cluster_by_distance requires an exact NearDuplicateResult")
+    _validate_near(parent)
+    threshold = _nonnegative_finite(distance_threshold, "distance_threshold")
+    result = ClusteringResult._create(
+        _STAGE_SEAL, parent, _cluster_assignments(parent.records, threshold), threshold,
+        _nonempty_text(audit_id, "clustering audit_id")
+    )
+    _validate_cluster(result)
+    return result
+
+
+def select_cluster_medoids(parent: ClusteringResult, *, audit_id: str,
+                           ) -> MedoidSelectionResult:
+    """Seal minimum-total-distance representatives; IDs break exact ties."""
+    if type(parent) is not ClusteringResult:
+        raise TypeError("select_cluster_medoids requires an exact ClusteringResult")
+    _validate_cluster(parent)
+    result = MedoidSelectionResult._create(
+        _STAGE_SEAL, parent, _medoid_records(parent),
+        _nonempty_text(audit_id, "medoid audit_id")
+    )
+    _validate_medoid(result)
+    return result
+
+
+def _validate_readiness(value: object) -> DataReadinessEvidence:
+    if type(value) is not DataReadinessEvidence:
+        raise TypeError("data_readiness must be exact DataReadinessEvidence")
+    _require_train(value.provenance)
+    _exact_bool(value.passed, "data readiness passed")
+    _nonempty_text(value.audit_id, "data audit_id")
+    return value
+
+
+def _validate_solver_audit(value: object) -> SolverReproducibilityAudit:
+    if type(value) is not SolverReproducibilityAudit:
+        raise TypeError("solver_audit must be exact SolverReproducibilityAudit")
+    _require_train(value.provenance)
+    _exact_bool(value.passed, "solver audit passed")
+    if type(value.candidate_ids) is not tuple:
+        raise TypeError("solver audit candidate_ids must remain a tuple")
+    ids = tuple(_nonempty_text(item, "candidate_id") for item in value.candidate_ids)
+    if not ids or len(ids) != len(set(ids)):
+        raise ValueError("solver audit candidate_ids must remain unique")
+    _repeated_runs(value.repeated_runs)
+    _nonempty_text(value.audit_id, "solver audit_id")
+    return value
+
+
 def finalize_action_catalog(
-    candidates: Iterable[ActionCandidate],
-    records: Iterable[CandidateScreeningRecord],
-    *,
-    selected_candidate_ids: Sequence[str],
-    selection_provenance: DatasetProvenance,
-    data_readiness: DataReadinessEvidence,
-    solver_audit: SolverReproducibilityAudit,
+    candidates: Iterable[ActionCandidate], selection: MedoidSelectionResult, *,
+    data_readiness: DataReadinessEvidence, solver_audit: SolverReproducibilityAudit,
 ) -> tuple[ActionCandidate, ...]:
-    """Freeze a supplied selection only after complete, matching Train evidence.
-
-    This generic boundary is usable by a future audited pipeline.  It does not
-    change the repository's current NO-GO status or publish a module-level
-    catalog.
-    """
-
+    """Freeze only a complete, sealed, Train-derived screening result."""
     try:
         bank = tuple(candidates)
     except TypeError as exc:
@@ -497,79 +900,53 @@ def finalize_action_catalog(
         raise CatalogFinalizationError(
             "finalization requires the complete canonical 36-candidate bank"
         )
+    if type(selection) is not MedoidSelectionResult:
+        raise TypeError("selection must be an exact MedoidSelectionResult")
+    _validate_medoid(selection)
+
+    root = selection.parent.parent.parent.parent
+    source = root.source_records
     bank_ids = tuple(candidate.action_id for candidate in bank)
-    if len(set(bank_ids)) != len(bank_ids):
-        raise CatalogFinalizationError("candidate bank IDs must be unique")
-
-    checked = _validated_records(records)
-    evidence_ids = tuple(record.candidate_id for record in checked)
-    if set(evidence_ids) != set(bank_ids) or len(evidence_ids) != len(bank_ids):
+    source_ids = tuple(record.candidate_id for record in source)
+    if len(source) != 36 or source_ids != tuple(sorted(bank_ids)):
         raise CatalogFinalizationError(
-            "complete screening evidence is required for every candidate"
+            "complete screening evidence is required for all 36 candidates"
         )
-    provenance = checked[0].provenance
-
-    _matching_train_provenance(
-        selection_provenance, provenance, "selection_provenance"
-    )
-
-    if type(data_readiness) is not DataReadinessEvidence:
-        raise TypeError("data_readiness must be exact DataReadinessEvidence")
-    if type(solver_audit) is not SolverReproducibilityAudit:
-        raise TypeError("solver_audit must be exact SolverReproducibilityAudit")
-    _require_train(data_readiness.provenance)
-    _require_train(solver_audit.provenance)
-    if data_readiness.provenance != provenance or solver_audit.provenance != provenance:
+    readiness = _validate_readiness(data_readiness)
+    audit = _validate_solver_audit(solver_audit)
+    provenance = selection.provenance
+    if readiness.provenance != provenance or audit.provenance != provenance:
         raise CatalogFinalizationError("all finalization evidence must share provenance")
-    if not data_readiness.passed:
+    if not readiness.passed:
         raise CatalogFinalizationError("usable Train data audit has not passed")
-    if not solver_audit.passed or set(solver_audit.candidate_ids) != set(bank_ids):
+    if (not audit.passed or audit.repeated_runs < 2 or len(audit.candidate_ids) != 36
+            or set(audit.candidate_ids) != set(bank_ids)):
         raise CatalogFinalizationError(
-            "a passed complete solver reproducibility audit is required"
+            "a passed complete repeated-solve audit covering all 36 candidates is required"
         )
-
-    if isinstance(selected_candidate_ids, (str, bytes)):
-        raise TypeError("selected_candidate_ids must be a sequence")
-    selected = tuple(
-        _nonempty_text(candidate_id, "selected candidate_id")
-        for candidate_id in selected_candidate_ids
-    )
-    if not selected or len(set(selected)) != len(selected):
-        raise CatalogFinalizationError("selected candidate IDs must be nonempty and unique")
-    if not set(selected).issubset(bank_ids):
-        raise CatalogFinalizationError("selected candidate IDs must come from the bank")
-    selected_set = set(selected)
-    records_by_id = {record.candidate_id: record for record in checked}
-    if any(
-        not records_by_id[candidate_id].feasibility.passed
-        or not records_by_id[candidate_id].reproducibility.passed
-        for candidate_id in selected
-    ):
+    selected_ids = tuple(record.candidate_id for record in selection.records)
+    if not selected_ids or len(selected_ids) != len(set(selected_ids)):
+        raise CatalogFinalizationError("sealed selection must be nonempty and unique")
+    source_by_id = {record.candidate_id: record for record in source}
+    if any(candidate_id not in source_by_id for candidate_id in selected_ids):
+        raise CatalogFinalizationError("selected candidates must come from the canonical bank")
+    if any(not source_by_id[candidate_id].feasibility.passed
+           or not source_by_id[candidate_id].reproducibility.passed
+           for candidate_id in selected_ids):
         raise CatalogFinalizationError(
             "every selected candidate must pass feasibility and reproducibility"
         )
+    selected_set = set(selected_ids)
     return tuple(candidate for candidate in bank if candidate.action_id in selected_set)
 
 
 __all__ = [
-    "BehaviorFingerprint",
-    "CandidateScreeningRecord",
-    "CatalogFinalizationError",
-    "DataReadinessEvidence",
-    "DataSplit",
-    "DatasetProvenance",
-    "FeasibilityResult",
-    "HeldOutSelectionError",
-    "MetricDefinition",
-    "MetricDirection",
-    "SolverReproducibilityAudit",
-    "SolverReproducibilityResult",
-    "apply_hard_gates",
-    "cluster_by_distance",
-    "feasibility_gate",
-    "finalize_action_catalog",
-    "pareto_front",
-    "remove_near_duplicates",
-    "select_cluster_medoids",
-    "solver_reproducibility_gate",
+    "BehaviorFingerprint", "CandidateScreeningRecord", "CatalogFinalizationError",
+    "ClusteringResult", "DataReadinessEvidence", "DataSplit", "DatasetProvenance",
+    "FeasibilityResult", "HardGateResult", "HeldOutSelectionError",
+    "MedoidSelectionResult", "MetricDefinition", "MetricDirection",
+    "NearDuplicateResult", "ParetoResult", "ScreeningLineageError",
+    "SolverReproducibilityAudit", "SolverReproducibilityResult", "apply_hard_gates",
+    "cluster_by_distance", "feasibility_gate", "finalize_action_catalog", "pareto_front",
+    "remove_near_duplicates", "select_cluster_medoids", "solver_reproducibility_gate",
 ]

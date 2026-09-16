@@ -38,20 +38,34 @@ DQN catalog. Code must not substitute it for the unset final catalog.
 
 ## Train-only evidence model
 
-Every screening record identifies an exact `DatasetProvenance` containing a
-dataset version, provenance ID, and `DataSplit`. Callers cannot pass strings,
-booleans, enum lookalikes, or subclasses as a split or provenance substitute.
-Selection accepts only the exact `DataSplit.TRAIN` member. Validation, Test,
-Unknown, mixed provenance, duplicate candidate IDs, and inconsistent metric
-schemas are rejected before filtering, so even an infeasible held-out row
-cannot be silently ignored and influence a decision.
+Every feasibility result, solver result, and behavior fingerprint identifies
+an exact `DatasetProvenance` containing a dataset version, provenance ID, and
+`DataSplit`. A `CandidateScreeningRecord` can be constructed only when all
+three evidence objects carry the same exact Train provenance. Callers cannot
+pass strings, booleans, enum lookalikes, subclasses, Validation, Test, or
+Unknown as substitutes. Mixed provenance, duplicate candidate IDs, and
+inconsistent metric schemas are rejected before filtering, so even failed
+held-out evidence cannot be silently ignored and influence a decision.
 
-Thresholds, cluster assignments supplied to medoid selection, and the final
-selected IDs each require an explicit provenance argument that must exactly
-match the Train records. This includes choices that would otherwise be easy to
-leak from held-out data: near-duplicate distance, clustering distance,
-representatives, and the final catalog. Validation and Test are reserved for
-evaluation after a future Train-selected catalog is frozen.
+The selection API is a sealed chain:
+
+`HardGateResult -> ParetoResult -> NearDuplicateResult -> ClusteringResult -> MedoidSelectionResult`
+
+Only the hard-gate entry point accepts raw records. Every later operation
+requires the exact preceding result type; distance thresholds, cluster
+assignments, selected representatives, audit IDs, parent lineage, and Train
+provenance are embedded in immutable stage results. Each result has a
+deterministic digest, and consumers recursively revalidate parent content,
+derived output, object identity, and digest before proceeding. This prevents a
+detached Train label from laundering a held-out threshold, arbitrary clusters,
+or raw selected IDs. Validation and Test are reserved for evaluation only
+after a future Train-selected catalog is frozen.
+
+This is an enforcement boundary for declared, audited provenance. Software
+cannot prove that a human did not inspect held-out results before choosing a
+Train-labeled threshold or audit decision. Preventing that procedural leak
+still requires access controls, audit review, and documented experiment
+governance outside this module.
 
 Feasibility and solver reproducibility are separate first-class results. They
 are hard gates, not extra Pareto objectives and not penalty values hidden in a
@@ -61,13 +75,15 @@ reason.
 
 ## Behavior fingerprint contract
 
-A fingerprint contains a candidate ID, an immutable tuple of metric
-definitions, and an immutable tuple of values. Construction defensively copies
-array-like inputs. All values and scales must be finite; scales must be
-positive; metric names must be nonempty and unique; value length must exactly
-match the schema. Each metric declares `MINIMIZE` or `MAXIMIZE` plus a scale.
-The screening algorithms transform these to a normalized lower-is-better
-vector. No mutable NumPy alias or NaN can enter a stored fingerprint.
+A fingerprint contains a candidate ID, exact dataset provenance, an immutable
+tuple of metric definitions, and an immutable tuple of values. Construction
+defensively copies array-like inputs. All values, scales, and normalized values
+must be finite; this includes rejecting finite value/scale inputs whose
+division overflows. Scales must be positive; metric names must be nonempty and
+unique; value length must exactly match the schema. Each metric declares
+`MINIMIZE` or `MAXIMIZE` plus a scale. The screening algorithms transform these
+to a normalized lower-is-better vector. No mutable NumPy alias or NaN can enter
+a stored fingerprint.
 
 The metric schema itself is intentionally not frozen here. A future Train-only
 audit must state the physical metrics, directions, and engineering or
@@ -82,7 +98,9 @@ The intended future flow is:
 3. Compute the Pareto front using each metric's declared direction.
 4. Remove near-duplicates with a declared finite nonnegative normalized
    Euclidean-distance threshold. Candidate-ID order chooses the representative
-   deterministically.
+   deterministically. Stable `math.dist` evaluation avoids overflow from
+   squaring large finite coordinates; a genuinely overflowing distance is
+   treated deterministically as infinity.
 5. Cluster remaining behavior fingerprints using an explicitly selected
    Train-only distance threshold. The provided implementation uses
    deterministic single-linkage connected components.
@@ -102,11 +120,14 @@ The generic finalization boundary requires all of the following:
 
 - complete, unique Train-only screening evidence for every candidate in the
   supplied bank;
-- matching dataset version and provenance for screening records, threshold and
-  selection decisions, data readiness, and solver audit;
+- one recursively valid, complete `MedoidSelectionResult` derived from those
+  36 source records, with no raw selected-ID or detached provenance escape;
+- matching exact Train provenance for the entire pipeline, data readiness, and
+  solver audit;
 - explicit usable-data readiness evidence;
 - a passed repeated-solve audit covering the complete candidate bank; and
-- nonempty selected IDs drawn only from the bank, each passing both hard gates.
+- nonempty selected records drawn only from the bank, each passing both hard
+  gates.
 
 Complete evidence may correctly show that some unselected candidates failed a
 hard gate. Such failures are a reason to remove them, not a reason to pretend
