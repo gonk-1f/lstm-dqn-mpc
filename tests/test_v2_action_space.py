@@ -133,8 +133,10 @@ class V2ActionScreeningTests(unittest.TestCase):
 
     def pipeline(self, records: object) -> object:
         from v2.analysis.action_screening import (
+            DistanceThresholdRule,
             apply_hard_gates,
             cluster_by_distance,
+            derive_distance_threshold,
             pareto_front,
             remove_near_duplicates,
             select_cluster_medoids,
@@ -142,11 +144,17 @@ class V2ActionScreeningTests(unittest.TestCase):
 
         hard = apply_hard_gates(records, audit_id="hard-gate-audit")
         pareto = pareto_front(hard, audit_id="pareto-audit")
+        duplicate_threshold = derive_distance_threshold(
+            pareto, rule=DistanceThresholdRule.ZERO, audit_id="duplicate-threshold"
+        )
         unique = remove_near_duplicates(
-            pareto, distance_threshold=0.0, audit_id="duplicate-audit"
+            pareto, duplicate_threshold, audit_id="duplicate-audit"
+        )
+        cluster_threshold = derive_distance_threshold(
+            unique, rule=DistanceThresholdRule.ZERO, audit_id="cluster-threshold"
         )
         clusters = cluster_by_distance(
-            unique, distance_threshold=0.0, audit_id="cluster-audit"
+            unique, cluster_threshold, audit_id="cluster-audit"
         )
         return select_cluster_medoids(clusters, audit_id="medoid-audit")
 
@@ -254,12 +262,14 @@ class V2ActionScreeningTests(unittest.TestCase):
         from v2.analysis.action_screening import (
             BehaviorFingerprint,
             CandidateScreeningRecord,
+            DistanceThresholdRule,
             FeasibilityResult,
             MetricDefinition,
             MetricDirection,
             SolverReproducibilityResult,
             apply_hard_gates,
             cluster_by_distance,
+            derive_distance_threshold,
             pareto_front,
             remove_near_duplicates,
             select_cluster_medoids,
@@ -286,10 +296,18 @@ class V2ActionScreeningTests(unittest.TestCase):
             audit_id="hard",
         )
         pareto = pareto_front(hard, audit_id="pareto")
-        unique = remove_near_duplicates(
-            pareto, distance_threshold=0.0, audit_id="near"
+        near_threshold = derive_distance_threshold(
+            pareto, rule=DistanceThresholdRule.ZERO, audit_id="near-threshold"
         )
-        clusters = cluster_by_distance(unique, distance_threshold=1e308, audit_id="cluster")
+        unique = remove_near_duplicates(
+            pareto, near_threshold, audit_id="near"
+        )
+        cluster_threshold = derive_distance_threshold(
+            unique,
+            rule=DistanceThresholdRule.MIN_POSITIVE_PAIRWISE,
+            audit_id="cluster-threshold",
+        )
+        clusters = cluster_by_distance(unique, cluster_threshold, audit_id="cluster")
         selected = select_cluster_medoids(clusters, audit_id="medoid")
         self.assertEqual(tuple(item.candidate_id for item in selected.records), ("a",))
 
@@ -301,12 +319,22 @@ class V2ActionScreeningTests(unittest.TestCase):
             audit_id="overflow-hard",
         )
         overflow_pareto = pareto_front(overflow_hard, audit_id="overflow-pareto")
+        overflow_near_threshold = derive_distance_threshold(
+            overflow_pareto,
+            rule=DistanceThresholdRule.ZERO,
+            audit_id="overflow-near-threshold",
+        )
         overflow_unique = remove_near_duplicates(
-            overflow_pareto, distance_threshold=0.0, audit_id="overflow-near"
+            overflow_pareto, overflow_near_threshold, audit_id="overflow-near"
+        )
+        overflow_cluster_threshold = derive_distance_threshold(
+            overflow_unique,
+            rule=DistanceThresholdRule.MIN_POSITIVE_PAIRWISE,
+            audit_id="overflow-cluster-threshold",
         )
         overflow_clusters = cluster_by_distance(
             overflow_unique,
-            distance_threshold=1e308,
+            overflow_cluster_threshold,
             audit_id="overflow-cluster",
         )
         self.assertEqual(overflow_clusters.assignments, (("a",), ("b",)))
@@ -351,7 +379,10 @@ class V2ActionScreeningTests(unittest.TestCase):
 
     def test_near_duplicate_result_embeds_threshold_without_detached_label(self) -> None:
         from v2.analysis.action_screening import (
+            DistanceThresholdEvidence,
+            DistanceThresholdRule,
             apply_hard_gates,
+            derive_distance_threshold,
             pareto_front,
             remove_near_duplicates,
         )
@@ -364,39 +395,59 @@ class V2ActionScreeningTests(unittest.TestCase):
         parent = pareto_front(
             apply_hard_gates(records, audit_id="hard"), audit_id="pareto"
         )
-        first = remove_near_duplicates(
-            parent, distance_threshold=0.05, audit_id="near"
+        threshold = derive_distance_threshold(
+            parent,
+            rule=DistanceThresholdRule.MIN_POSITIVE_PAIRWISE,
+            audit_id="near-threshold",
+        )
+        first = remove_near_duplicates(parent, threshold, audit_id="near")
+        reverse_parent = pareto_front(
+            apply_hard_gates(tuple(reversed(records)), audit_id="hard"),
+            audit_id="pareto",
+        )
+        reverse_threshold = derive_distance_threshold(
+            reverse_parent,
+            rule=DistanceThresholdRule.MIN_POSITIVE_PAIRWISE,
+            audit_id="near-threshold",
         )
         second = remove_near_duplicates(
-            pareto_front(
-                apply_hard_gates(tuple(reversed(records)), audit_id="hard"),
-                audit_id="pareto",
-            ),
-            distance_threshold=0.05,
-            audit_id="near",
+            reverse_parent, reverse_threshold, audit_id="near"
         )
-        self.assertEqual(first.threshold, 0.05)
+        self.assertIs(type(threshold), DistanceThresholdEvidence)
+        self.assertEqual(threshold.rule, DistanceThresholdRule.MIN_POSITIVE_PAIRWISE)
+        self.assertGreater(threshold.value, 0.0)
+        self.assertEqual(first.threshold, threshold.value)
         self.assertEqual(tuple(item.candidate_id for item in first.records), ("a", "c"))
         self.assertEqual(first.digest, second.digest)
+        median = derive_distance_threshold(
+            parent,
+            rule=DistanceThresholdRule.MEDIAN_PAIRWISE,
+            audit_id="median-threshold",
+        )
+        self.assertGreaterEqual(median.value, threshold.value)
         self.assertNotIn(
-            "threshold_provenance", inspect.signature(remove_near_duplicates).parameters
+            "distance_threshold", inspect.signature(remove_near_duplicates).parameters
         )
         with self.assertRaises(TypeError):
             remove_near_duplicates(  # type: ignore[arg-type]
-                records, distance_threshold=0.05, audit_id="raw-record-laundering"
+                parent, 0.05, audit_id="raw-threshold-laundering"
             )
-        for bad in (True, -1.0, float("nan"), "0.1"):
+        for bad in (True, "ZERO", 0):
             with self.subTest(bad=bad), self.assertRaises((TypeError, ValueError)):
-                remove_near_duplicates(
-                    parent, distance_threshold=bad, audit_id="bad"
+                derive_distance_threshold(
+                    parent, rule=bad, audit_id="bad"
                 )  # type: ignore[arg-type]
+        with self.assertRaises(TypeError):
+            DistanceThresholdEvidence()  # type: ignore[call-arg]
 
     def test_clustering_and_medoids_only_consume_sealed_parent_results(self) -> None:
         from v2.analysis.action_screening import (
             ClusteringResult,
+            DistanceThresholdRule,
             MedoidSelectionResult,
             apply_hard_gates,
             cluster_by_distance,
+            derive_distance_threshold,
             pareto_front,
             remove_near_duplicates,
             select_cluster_medoids,
@@ -407,21 +458,31 @@ class V2ActionScreeningTests(unittest.TestCase):
             self.record("b", (0.2, 5.8)),
             self.record("a", (0.0, 6.0)),
         )
+        pareto = pareto_front(
+            apply_hard_gates(records, audit_id="hard"), audit_id="pareto"
+        )
+        near_threshold = derive_distance_threshold(
+            pareto, rule=DistanceThresholdRule.ZERO, audit_id="near-threshold"
+        )
         parent = remove_near_duplicates(
-            pareto_front(
-                apply_hard_gates(records, audit_id="hard"), audit_id="pareto"
-            ),
-            distance_threshold=0.0,
-            audit_id="near",
+            pareto, near_threshold, audit_id="near"
         )
-        clusters = cluster_by_distance(
-            parent, distance_threshold=0.23, audit_id="cluster"
+        cluster_threshold = derive_distance_threshold(
+            parent,
+            rule=DistanceThresholdRule.MIN_POSITIVE_PAIRWISE,
+            audit_id="cluster-threshold",
         )
+        clusters = cluster_by_distance(parent, cluster_threshold, audit_id="cluster")
         self.assertIs(type(clusters), ClusteringResult)
         self.assertEqual(clusters.assignments, (("a", "b"), ("c",)))
         medoids = select_cluster_medoids(clusters, audit_id="medoid")
         self.assertIs(type(medoids), MedoidSelectionResult)
         self.assertEqual(tuple(item.candidate_id for item in medoids.records), ("a", "c"))
+        self.assertNotIn(
+            "distance_threshold", inspect.signature(cluster_by_distance).parameters
+        )
+        with self.assertRaises(TypeError):
+            cluster_by_distance(parent, 1000.0, audit_id="raw-threshold")  # type: ignore[arg-type]
         with self.assertRaises(TypeError):
             select_cluster_medoids(  # type: ignore[arg-type]
                 (("a", "b"), ("c",)), audit_id="arbitrary-clusters"
@@ -435,9 +496,11 @@ class V2ActionScreeningTests(unittest.TestCase):
         from v2.analysis.action_screening import (
             DataSplit,
             DatasetProvenance,
+            DistanceThresholdRule,
             ScreeningLineageError,
             apply_hard_gates,
             cluster_by_distance,
+            derive_distance_threshold,
             pareto_front,
             remove_near_duplicates,
         )
@@ -446,12 +509,39 @@ class V2ActionScreeningTests(unittest.TestCase):
             (self.record("a", (0.0, 0.0)),), audit_id="hard"
         )
         pareto = pareto_front(hard, audit_id="pareto")
-        near = remove_near_duplicates(
-            pareto, distance_threshold=0.0, audit_id="near"
+        threshold = derive_distance_threshold(
+            pareto, rule=DistanceThresholdRule.ZERO, audit_id="threshold"
         )
-        object.__setattr__(near, "threshold", 999.0)
+        object.__setattr__(threshold, "value", 999.0)
         with self.assertRaises(ScreeningLineageError):
-            cluster_by_distance(near, distance_threshold=0.0, audit_id="cluster")
+            remove_near_duplicates(pareto, threshold, audit_id="near")
+
+        clean_threshold = derive_distance_threshold(
+            pareto, rule=DistanceThresholdRule.ZERO, audit_id="clean-threshold"
+        )
+        other_pareto = pareto_front(
+            apply_hard_gates(
+                (self.record("other", (2.0, 2.0)),), audit_id="other-hard"
+            ),
+            audit_id="other-pareto",
+        )
+        wrong_parent_threshold = derive_distance_threshold(
+            other_pareto,
+            rule=DistanceThresholdRule.ZERO,
+            audit_id="wrong-parent-threshold",
+        )
+        with self.assertRaises(ScreeningLineageError):
+            remove_near_duplicates(
+                pareto, wrong_parent_threshold, audit_id="wrong-parent"
+            )
+
+        near = remove_near_duplicates(pareto, clean_threshold, audit_id="near")
+        cluster_threshold = derive_distance_threshold(
+            near, rule=DistanceThresholdRule.ZERO, audit_id="cluster-threshold"
+        )
+        object.__setattr__(cluster_threshold, "audit_id", "mutated-audit")
+        with self.assertRaises(ScreeningLineageError):
+            cluster_by_distance(near, cluster_threshold, audit_id="cluster")
 
         tainted = self.record("tainted", (1.0, 1.0))
         tainted_hard = apply_hard_gates((tainted,), audit_id="hard")
@@ -467,6 +557,7 @@ class V2ActionScreeningTests(unittest.TestCase):
         from v2.analysis.action_screening import (
             CatalogFinalizationError,
             DataReadinessEvidence,
+            ScreeningLineageError,
             SolverReproducibilityAudit,
             finalize_action_catalog,
         )
@@ -478,9 +569,16 @@ class V2ActionScreeningTests(unittest.TestCase):
         )
         ids = tuple(action.action_id for action in CANDIDATE_ACTION_BANK)
         pipeline = self.pipeline(records)
-        readiness = DataReadinessEvidence(self.train, True, "complete-data")
+        readiness = DataReadinessEvidence(
+            self.train, True, "complete-data", "all Train rows loaded"
+        )
         audit = SolverReproducibilityAudit(
-            self.train, True, ids, 2, "complete-solver-audit"
+            self.train,
+            True,
+            ids,
+            2,
+            "complete-solver-audit",
+            "all candidates repeated",
         )
         result = finalize_action_catalog(
             CANDIDATE_ACTION_BANK,
@@ -514,7 +612,7 @@ class V2ActionScreeningTests(unittest.TestCase):
                 solver_audit=audit,
             )
         failed_audit = SolverReproducibilityAudit(
-            self.train, False, ids, 2, "failed-solver-audit"
+            self.train, False, ids, 2, "failed-solver-audit", "solver mismatch"
         )
         with self.assertRaises(CatalogFinalizationError):
             finalize_action_catalog(
@@ -528,9 +626,55 @@ class V2ActionScreeningTests(unittest.TestCase):
                 CANDIDATE_ACTION_BANK,
                 pipeline,
                 data_readiness=DataReadinessEvidence(
-                    self.train, False, "current-NO-GO"
+                    self.train, False, "current-NO-GO", "raw data unavailable"
                 ),
                 solver_audit=audit,
+            )
+
+        tampered_readiness = DataReadinessEvidence(
+            self.train, False, "tampered-data", "data audit failed"
+        )
+        object.__setattr__(tampered_readiness, "passed", True)
+        with self.assertRaises(ScreeningLineageError):
+            finalize_action_catalog(
+                CANDIDATE_ACTION_BANK,
+                pipeline,
+                data_readiness=tampered_readiness,
+                solver_audit=audit,
+            )
+
+        tampered_ids = SolverReproducibilityAudit(
+            self.train,
+            True,
+            ids[:-1],
+            2,
+            "tampered-ids",
+            "one candidate missing",
+        )
+        object.__setattr__(tampered_ids, "candidate_ids", ids)
+        with self.assertRaises(ScreeningLineageError):
+            finalize_action_catalog(
+                CANDIDATE_ACTION_BANK,
+                pipeline,
+                data_readiness=readiness,
+                solver_audit=tampered_ids,
+            )
+
+        tampered_pass = SolverReproducibilityAudit(
+            self.train,
+            False,
+            ids,
+            2,
+            "tampered-pass",
+            "audit failed",
+        )
+        object.__setattr__(tampered_pass, "passed", True)
+        with self.assertRaises(ScreeningLineageError):
+            finalize_action_catalog(
+                CANDIDATE_ACTION_BANK,
+                pipeline,
+                data_readiness=readiness,
+                solver_audit=tampered_pass,
             )
 
     def test_failed_candidates_may_be_removed_but_never_selected(self) -> None:
@@ -554,9 +698,11 @@ class V2ActionScreeningTests(unittest.TestCase):
         result = finalize_action_catalog(
             CANDIDATE_ACTION_BANK,
             pipeline,
-            data_readiness=DataReadinessEvidence(self.train, True, "data"),
+            data_readiness=DataReadinessEvidence(
+                self.train, True, "data", "all Train rows loaded"
+            ),
             solver_audit=SolverReproducibilityAudit(
-                self.train, True, ids, 2, "solver"
+                self.train, True, ids, 2, "solver", "all candidates repeated"
             ),
         )
         self.assertNotIn(ids[0], tuple(item.action_id for item in result))

@@ -52,26 +52,38 @@ The selection API is a sealed chain:
 `HardGateResult -> ParetoResult -> NearDuplicateResult -> ClusteringResult -> MedoidSelectionResult`
 
 Only the hard-gate entry point accepts raw records. Every later operation
-requires the exact preceding result type; distance thresholds, cluster
-assignments, selected representatives, audit IDs, parent lineage, and Train
-provenance are embedded in immutable stage results. Each result has a
-deterministic digest, and consumers recursively revalidate parent content,
-derived output, object identity, and digest before proceeding. This prevents a
-detached Train label from laundering a held-out threshold, arbitrary clusters,
-or raw selected IDs. Validation and Test are reserved for evaluation only
-after a future Train-selected catalog is frozen.
+requires the exact preceding result type. Near-duplicate and clustering
+thresholds are not numeric API arguments: `derive_distance_threshold` seals a
+`DistanceThresholdEvidence` tied to the exact parent object, parent digest,
+Train provenance, registered rule, and audit ID. The registered rules are
+`ZERO`, `MIN_POSITIVE_PAIRWISE`, and `MEDIAN_PAIRWISE`; their numeric values are
+derived solely from the exact parent's normalized Train fingerprints. The
+pairwise rules ignore infinite distances and deterministically fall back to
+zero when no usable finite pair exists.
+
+Threshold evidence, cluster assignments, selected representatives, audit IDs,
+parent lineage, and Train provenance are embedded in immutable stage results.
+Each result has a deterministic digest, and consumers recursively revalidate
+parent content, derived output, object identity, and digest before proceeding.
+This prevents a detached Train label from laundering a held-out numeric
+threshold, arbitrary clusters, or raw selected IDs. Validation and Test are
+reserved for evaluation only after a future Train-selected catalog is frozen.
 
 This is an enforcement boundary for declared, audited provenance. Software
 cannot prove that a human did not inspect held-out results before choosing a
-Train-labeled threshold or audit decision. Preventing that procedural leak
-still requires access controls, audit review, and documented experiment
-governance outside this module.
+registered threshold rule or audit decision. The numeric threshold is derived
+only from Train records, but the rule choice remains an auditable human choice.
+Preventing that procedural leak still requires access controls, audit review,
+and documented experiment governance outside this module.
 
 Feasibility and solver reproducibility are separate first-class results. They
 are hard gates, not extra Pareto objectives and not penalty values hidden in a
 behavior vector. A reproducibility result or audit records at least two runs,
-an explicit pass/fail value, provenance, and a nonempty evidence identifier or
-reason.
+an explicit pass/fail value, provenance, a nonempty evidence identifier, and a
+reason. Data-readiness evidence and the complete solver audit carry
+deterministic digests; finalization recomputes them so `object.__setattr__`
+changes to pass status, covered IDs, provenance, repeats, audit ID, or reason
+are rejected.
 
 ## Behavior fingerprint contract
 
@@ -96,14 +108,15 @@ The intended future flow is:
 1. Evaluate all 36 candidates on one explicitly versioned Train dataset.
 2. Apply the feasibility and repeated-solve reproducibility hard gates.
 3. Compute the Pareto front using each metric's declared direction.
-4. Remove near-duplicates with a declared finite nonnegative normalized
-   Euclidean-distance threshold. Candidate-ID order chooses the representative
+4. Choose a registered, audited threshold rule and derive sealed threshold
+   evidence from the Pareto result's Train fingerprints. Remove near-duplicates
+   using that evidence. Candidate-ID order chooses the representative
    deterministically. Stable `math.dist` evaluation avoids overflow from
    squaring large finite coordinates; a genuinely overflowing distance is
    treated deterministically as infinity.
-5. Cluster remaining behavior fingerprints using an explicitly selected
-   Train-only distance threshold. The provided implementation uses
-   deterministic single-linkage connected components.
+5. Choose and audit a registered rule for the de-duplicated result, derive its
+   sealed Train-only threshold evidence, and cluster with deterministic
+   single-linkage connected components.
 6. Select one medoid per supplied cluster by minimum total normalized distance;
    candidate ID breaks exact ties.
 7. Freeze the resulting representative count as `K` only after the Train audit
@@ -124,8 +137,9 @@ The generic finalization boundary requires all of the following:
   36 source records, with no raw selected-ID or detached provenance escape;
 - matching exact Train provenance for the entire pipeline, data readiness, and
   solver audit;
-- explicit usable-data readiness evidence;
-- a passed repeated-solve audit covering the complete candidate bank; and
+- explicit digest-validated usable-data readiness evidence;
+- a digest-validated, passed repeated-solve audit covering the complete
+  candidate bank; and
 - nonempty selected records drawn only from the bank, each passing both hard
   gates.
 

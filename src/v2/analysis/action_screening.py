@@ -8,7 +8,7 @@ exists. Every selection stage consumes the sealed result of its predecessor.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 import hashlib
 import json
@@ -41,6 +41,12 @@ class DataSplit(Enum):
 class MetricDirection(Enum):
     MINIMIZE = "minimize"
     MAXIMIZE = "maximize"
+
+
+class DistanceThresholdRule(Enum):
+    ZERO = "zero"
+    MIN_POSITIVE_PAIRWISE = "min_positive_pairwise"
+    MEDIAN_PAIRWISE = "median_pairwise"
 
 
 def _nonempty_text(value: object, name: str) -> str:
@@ -323,6 +329,8 @@ class DataReadinessEvidence:
     provenance: DatasetProvenance
     passed: bool
     audit_id: str
+    reason: str
+    digest: str = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         if type(self.provenance) is not DatasetProvenance:
@@ -330,6 +338,11 @@ class DataReadinessEvidence:
         _validate_provenance(self.provenance)
         object.__setattr__(self, "passed", _exact_bool(self.passed, "data readiness passed"))
         object.__setattr__(self, "audit_id", _nonempty_text(self.audit_id, "data audit_id"))
+        object.__setattr__(self, "reason", _nonempty_text(self.reason, "data audit reason"))
+        object.__setattr__(self, "digest", _readiness_digest(self))
+
+    def validate(self) -> DataReadinessEvidence:
+        return _validate_readiness(self)
 
 
 @dataclass(frozen=True)
@@ -339,6 +352,8 @@ class SolverReproducibilityAudit:
     candidate_ids: tuple[str, ...]
     repeated_runs: int
     audit_id: str
+    reason: str
+    digest: str = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         if type(self.provenance) is not DatasetProvenance:
@@ -356,6 +371,11 @@ class SolverReproducibilityAudit:
         object.__setattr__(self, "candidate_ids", ids)
         object.__setattr__(self, "repeated_runs", _repeated_runs(self.repeated_runs))
         object.__setattr__(self, "audit_id", _nonempty_text(self.audit_id, "solver audit_id"))
+        object.__setattr__(self, "reason", _nonempty_text(self.reason, "solver audit reason"))
+        object.__setattr__(self, "digest", _solver_audit_digest(self))
+
+    def validate(self) -> SolverReproducibilityAudit:
+        return _validate_solver_audit(self)
 
 
 def _validated_records(
@@ -422,6 +442,32 @@ def _digest(payload: object) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _readiness_digest(value: DataReadinessEvidence) -> str:
+    return _digest(
+        {
+            "kind": "data_readiness",
+            "provenance": _provenance_payload(value.provenance),
+            "passed": value.passed,
+            "audit_id": value.audit_id,
+            "reason": value.reason,
+        }
+    )
+
+
+def _solver_audit_digest(value: SolverReproducibilityAudit) -> str:
+    return _digest(
+        {
+            "kind": "solver_reproducibility_audit",
+            "provenance": _provenance_payload(value.provenance),
+            "passed": value.passed,
+            "candidate_ids": value.candidate_ids,
+            "repeated_runs": value.repeated_runs,
+            "audit_id": value.audit_id,
+            "reason": value.reason,
+        }
+    )
+
+
 _STAGE_SEAL = object()
 
 
@@ -474,27 +520,66 @@ class ParetoResult(_SealedStage):
 
 
 @dataclass(frozen=True, init=False)
+class DistanceThresholdEvidence(_SealedStage):
+    parent: object
+    provenance: DatasetProvenance
+    rule: DistanceThresholdRule
+    value: float
+    audit_id: str
+    digest: str
+
+    @classmethod
+    def _create(
+        cls,
+        seal: object,
+        parent: object,
+        rule: DistanceThresholdRule,
+        value: float,
+        audit_id: str,
+    ) -> DistanceThresholdEvidence:
+        if seal is not _STAGE_SEAL:
+            raise TypeError("invalid stage-construction seal")
+        instance = object.__new__(cls)
+        for name, item in (
+            ("parent", parent),
+            ("provenance", parent.provenance),
+            ("rule", rule),
+            ("value", value),
+            ("audit_id", audit_id),
+        ):
+            object.__setattr__(instance, name, item)
+        object.__setattr__(instance, "digest", _threshold_digest(instance))
+        return instance
+
+
+@dataclass(frozen=True, init=False)
 class NearDuplicateResult(_SealedStage):
     parent: ParetoResult
     records: tuple[CandidateScreeningRecord, ...]
     provenance: DatasetProvenance
-    threshold: float
+    threshold_evidence: DistanceThresholdEvidence
     audit_id: str
     digest: str
 
     @classmethod
     def _create(cls, seal: object, parent: ParetoResult,
-                records: tuple[CandidateScreeningRecord, ...], threshold: float,
+                records: tuple[CandidateScreeningRecord, ...],
+                threshold_evidence: DistanceThresholdEvidence,
                 audit_id: str) -> NearDuplicateResult:
         if seal is not _STAGE_SEAL:
             raise TypeError("invalid stage-construction seal")
         instance = object.__new__(cls)
         for name, value in (("parent", parent), ("records", records),
-                            ("provenance", parent.provenance), ("threshold", threshold),
+                            ("provenance", parent.provenance),
+                            ("threshold_evidence", threshold_evidence),
                             ("audit_id", audit_id)):
             object.__setattr__(instance, name, value)
         object.__setattr__(instance, "digest", _near_digest(instance))
         return instance
+
+    @property
+    def threshold(self) -> float:
+        return self.threshold_evidence.value
 
 
 @dataclass(frozen=True, init=False)
@@ -503,23 +588,29 @@ class ClusteringResult(_SealedStage):
     records: tuple[CandidateScreeningRecord, ...]
     assignments: tuple[tuple[str, ...], ...]
     provenance: DatasetProvenance
-    threshold: float
+    threshold_evidence: DistanceThresholdEvidence
     audit_id: str
     digest: str
 
     @classmethod
     def _create(cls, seal: object, parent: NearDuplicateResult,
-                assignments: tuple[tuple[str, ...], ...], threshold: float,
+                assignments: tuple[tuple[str, ...], ...],
+                threshold_evidence: DistanceThresholdEvidence,
                 audit_id: str) -> ClusteringResult:
         if seal is not _STAGE_SEAL:
             raise TypeError("invalid stage-construction seal")
         instance = object.__new__(cls)
         for name, value in (("parent", parent), ("records", parent.records),
                             ("assignments", assignments), ("provenance", parent.provenance),
-                            ("threshold", threshold), ("audit_id", audit_id)):
+                            ("threshold_evidence", threshold_evidence),
+                            ("audit_id", audit_id)):
             object.__setattr__(instance, name, value)
         object.__setattr__(instance, "digest", _cluster_digest(instance))
         return instance
+
+    @property
+    def threshold(self) -> float:
+        return self.threshold_evidence.value
 
 
 @dataclass(frozen=True, init=False)
@@ -563,18 +654,33 @@ def _pareto_digest(value: ParetoResult) -> str:
                     "audit_id": value.audit_id})
 
 
+def _threshold_digest(value: DistanceThresholdEvidence) -> str:
+    return _digest(
+        {
+            "kind": "distance_threshold",
+            "parent": value.parent.digest,
+            "provenance": _provenance_payload(value.provenance),
+            "rule": value.rule.value,
+            "value": value.value,
+            "audit_id": value.audit_id,
+        }
+    )
+
+
 def _near_digest(value: NearDuplicateResult) -> str:
     return _digest({"stage": "near_duplicate", "parent": value.parent.digest,
                     "records": _record_ids(value.records),
                     "provenance": _provenance_payload(value.provenance),
-                    "threshold": value.threshold, "audit_id": value.audit_id})
+                    "threshold_evidence": value.threshold_evidence.digest,
+                    "audit_id": value.audit_id})
 
 
 def _cluster_digest(value: ClusteringResult) -> str:
     return _digest({"stage": "clustering", "parent": value.parent.digest,
                     "records": _record_ids(value.records), "assignments": value.assignments,
                     "provenance": _provenance_payload(value.provenance),
-                    "threshold": value.threshold, "audit_id": value.audit_id})
+                    "threshold_evidence": value.threshold_evidence.digest,
+                    "audit_id": value.audit_id})
 
 
 def _medoid_digest(value: MedoidSelectionResult) -> str:
@@ -615,6 +721,29 @@ def _distance(left: CandidateScreeningRecord, right: CandidateScreeningRecord) -
     except OverflowError:
         return math.inf
     return result if math.isfinite(result) else math.inf
+
+
+def _derived_threshold(
+    records: tuple[CandidateScreeningRecord, ...], rule: DistanceThresholdRule
+) -> float:
+    if rule is DistanceThresholdRule.ZERO:
+        return 0.0
+    distances = sorted(
+        distance
+        for left in range(len(records))
+        for right in range(left + 1, len(records))
+        if math.isfinite(distance := _distance(records[left], records[right]))
+    )
+    if rule is DistanceThresholdRule.MIN_POSITIVE_PAIRWISE:
+        return next((distance for distance in distances if distance > 0.0), 0.0)
+    if rule is DistanceThresholdRule.MEDIAN_PAIRWISE:
+        if not distances:
+            return 0.0
+        middle = len(distances) // 2
+        if len(distances) % 2:
+            return distances[middle]
+        return distances[middle - 1] / 2.0 + distances[middle] / 2.0
+    raise TypeError("threshold rule must be an exact DistanceThresholdRule")
 
 
 def _near_records(records: tuple[CandidateScreeningRecord, ...], threshold: float,
@@ -710,14 +839,45 @@ def _validate_pareto(value: ParetoResult) -> None:
         raise _lineage_failure(str(exc)) from exc
 
 
+def _validate_threshold_evidence(
+    value: DistanceThresholdEvidence, expected_parent: object
+) -> None:
+    try:
+        if type(value) is not DistanceThresholdEvidence:
+            raise TypeError("threshold evidence has wrong type")
+        if value.parent is not expected_parent:
+            raise ValueError("threshold evidence belongs to a different parent")
+        if type(expected_parent) is ParetoResult:
+            _validate_pareto(expected_parent)
+        elif type(expected_parent) is NearDuplicateResult:
+            _validate_near(expected_parent)
+        else:
+            raise TypeError("threshold evidence parent has wrong type")
+        if value.provenance != expected_parent.provenance:
+            raise ValueError("threshold evidence provenance changed")
+        if type(value.rule) is not DistanceThresholdRule:
+            raise TypeError("threshold rule must remain exact DistanceThresholdRule")
+        if type(value.value) is not float:
+            raise TypeError("derived threshold must remain a canonical float")
+        expected_value = _derived_threshold(expected_parent.records, value.rule)
+        if value.value != expected_value:
+            raise ValueError("derived threshold value changed")
+        _nonempty_text(value.audit_id, "threshold audit_id")
+        if type(value.digest) is not str or value.digest != _threshold_digest(value):
+            raise ValueError("threshold evidence digest mismatch")
+    except ScreeningLineageError:
+        raise
+    except (TypeError, ValueError, AttributeError, HeldOutSelectionError, OverflowError) as exc:
+        raise _lineage_failure(str(exc)) from exc
+
+
 def _validate_near(value: NearDuplicateResult) -> None:
     try:
         if type(value.parent) is not ParetoResult:
             raise ValueError("near-duplicate parent has wrong type")
         _validate_pareto(value.parent)
-        if type(value.threshold) is not float:
-            raise ValueError("near-duplicate threshold is not canonical")
-        threshold = _nonnegative_finite(value.threshold, "distance_threshold")
+        _validate_threshold_evidence(value.threshold_evidence, value.parent)
+        threshold = value.threshold_evidence.value
         expected = _near_records(value.parent.records, threshold)
         if type(value.records) is not tuple or not _same_record_objects(value.records, expected):
             raise ValueError("near-duplicate output changed")
@@ -737,9 +897,8 @@ def _validate_cluster(value: ClusteringResult) -> None:
         if type(value.parent) is not NearDuplicateResult:
             raise ValueError("clustering parent has wrong type")
         _validate_near(value.parent)
-        if type(value.threshold) is not float:
-            raise ValueError("clustering threshold is not canonical")
-        threshold = _nonnegative_finite(value.threshold, "distance_threshold")
+        _validate_threshold_evidence(value.threshold_evidence, value.parent)
+        threshold = value.threshold_evidence.value
         if type(value.records) is not tuple or not _same_record_objects(value.records,
                                                                          value.parent.records):
             raise ValueError("clustering input records changed")
@@ -817,30 +976,76 @@ def pareto_front(parent: HardGateResult, *, audit_id: str) -> ParetoResult:
     return result
 
 
-def remove_near_duplicates(parent: ParetoResult, distance_threshold: float, *, audit_id: str,
-                           ) -> NearDuplicateResult:
+def derive_distance_threshold(
+    parent: ParetoResult | NearDuplicateResult,
+    *,
+    rule: DistanceThresholdRule,
+    audit_id: str,
+) -> DistanceThresholdEvidence:
+    """Derive a sealed numeric threshold solely from the parent's Train records."""
+    if type(parent) is ParetoResult:
+        _validate_pareto(parent)
+    elif type(parent) is NearDuplicateResult:
+        _validate_near(parent)
+    else:
+        raise TypeError(
+            "derive_distance_threshold requires an exact ParetoResult or "
+            "NearDuplicateResult"
+        )
+    if type(rule) is not DistanceThresholdRule:
+        raise TypeError("rule must be an exact DistanceThresholdRule")
+    audit = _nonempty_text(audit_id, "threshold audit_id")
+    result = DistanceThresholdEvidence._create(
+        _STAGE_SEAL, parent, rule, _derived_threshold(parent.records, rule), audit
+    )
+    _validate_threshold_evidence(result, parent)
+    return result
+
+
+def remove_near_duplicates(
+    parent: ParetoResult,
+    threshold_evidence: DistanceThresholdEvidence,
+    *,
+    audit_id: str,
+) -> NearDuplicateResult:
     """Seal deterministic ID-first representatives within a normalized radius."""
     if type(parent) is not ParetoResult:
         raise TypeError("remove_near_duplicates requires an exact ParetoResult")
+    if type(threshold_evidence) is not DistanceThresholdEvidence:
+        raise TypeError(
+            "remove_near_duplicates requires exact DistanceThresholdEvidence"
+        )
     _validate_pareto(parent)
-    threshold = _nonnegative_finite(distance_threshold, "distance_threshold")
+    _validate_threshold_evidence(threshold_evidence, parent)
     result = NearDuplicateResult._create(
-        _STAGE_SEAL, parent, _near_records(parent.records, threshold), threshold,
+        _STAGE_SEAL,
+        parent,
+        _near_records(parent.records, threshold_evidence.value),
+        threshold_evidence,
         _nonempty_text(audit_id, "near-duplicate audit_id")
     )
     _validate_near(result)
     return result
 
 
-def cluster_by_distance(parent: NearDuplicateResult, distance_threshold: float, *, audit_id: str,
-                        ) -> ClusteringResult:
+def cluster_by_distance(
+    parent: NearDuplicateResult,
+    threshold_evidence: DistanceThresholdEvidence,
+    *,
+    audit_id: str,
+) -> ClusteringResult:
     """Seal deterministic single-linkage components at a declared threshold."""
     if type(parent) is not NearDuplicateResult:
         raise TypeError("cluster_by_distance requires an exact NearDuplicateResult")
+    if type(threshold_evidence) is not DistanceThresholdEvidence:
+        raise TypeError("cluster_by_distance requires exact DistanceThresholdEvidence")
     _validate_near(parent)
-    threshold = _nonnegative_finite(distance_threshold, "distance_threshold")
+    _validate_threshold_evidence(threshold_evidence, parent)
     result = ClusteringResult._create(
-        _STAGE_SEAL, parent, _cluster_assignments(parent.records, threshold), threshold,
+        _STAGE_SEAL,
+        parent,
+        _cluster_assignments(parent.records, threshold_evidence.value),
+        threshold_evidence,
         _nonempty_text(audit_id, "clustering audit_id")
     )
     _validate_cluster(result)
@@ -864,24 +1069,42 @@ def select_cluster_medoids(parent: ClusteringResult, *, audit_id: str,
 def _validate_readiness(value: object) -> DataReadinessEvidence:
     if type(value) is not DataReadinessEvidence:
         raise TypeError("data_readiness must be exact DataReadinessEvidence")
+    try:
+        _validate_provenance(value.provenance)
+        _exact_bool(value.passed, "data readiness passed")
+        _nonempty_text(value.audit_id, "data audit_id")
+        _nonempty_text(value.reason, "data audit reason")
+        if type(value.digest) is not str or value.digest != _readiness_digest(value):
+            raise ValueError("data readiness digest mismatch")
+    except ScreeningLineageError:
+        raise
+    except (TypeError, ValueError, AttributeError) as exc:
+        raise _lineage_failure(str(exc)) from exc
     _require_train(value.provenance)
-    _exact_bool(value.passed, "data readiness passed")
-    _nonempty_text(value.audit_id, "data audit_id")
     return value
 
 
 def _validate_solver_audit(value: object) -> SolverReproducibilityAudit:
     if type(value) is not SolverReproducibilityAudit:
         raise TypeError("solver_audit must be exact SolverReproducibilityAudit")
+    try:
+        _validate_provenance(value.provenance)
+        _exact_bool(value.passed, "solver audit passed")
+        if type(value.candidate_ids) is not tuple:
+            raise TypeError("solver audit candidate_ids must remain a tuple")
+        ids = tuple(_nonempty_text(item, "candidate_id") for item in value.candidate_ids)
+        if not ids or len(ids) != len(set(ids)):
+            raise ValueError("solver audit candidate_ids must remain unique")
+        _repeated_runs(value.repeated_runs)
+        _nonempty_text(value.audit_id, "solver audit_id")
+        _nonempty_text(value.reason, "solver audit reason")
+        if type(value.digest) is not str or value.digest != _solver_audit_digest(value):
+            raise ValueError("solver audit digest mismatch")
+    except ScreeningLineageError:
+        raise
+    except (TypeError, ValueError, AttributeError) as exc:
+        raise _lineage_failure(str(exc)) from exc
     _require_train(value.provenance)
-    _exact_bool(value.passed, "solver audit passed")
-    if type(value.candidate_ids) is not tuple:
-        raise TypeError("solver audit candidate_ids must remain a tuple")
-    ids = tuple(_nonempty_text(item, "candidate_id") for item in value.candidate_ids)
-    if not ids or len(ids) != len(set(ids)):
-        raise ValueError("solver audit candidate_ids must remain unique")
-    _repeated_runs(value.repeated_runs)
-    _nonempty_text(value.audit_id, "solver audit_id")
     return value
 
 
@@ -943,10 +1166,12 @@ def finalize_action_catalog(
 __all__ = [
     "BehaviorFingerprint", "CandidateScreeningRecord", "CatalogFinalizationError",
     "ClusteringResult", "DataReadinessEvidence", "DataSplit", "DatasetProvenance",
+    "DistanceThresholdEvidence", "DistanceThresholdRule",
     "FeasibilityResult", "HardGateResult", "HeldOutSelectionError",
     "MedoidSelectionResult", "MetricDefinition", "MetricDirection",
     "NearDuplicateResult", "ParetoResult", "ScreeningLineageError",
     "SolverReproducibilityAudit", "SolverReproducibilityResult", "apply_hard_gates",
-    "cluster_by_distance", "feasibility_gate", "finalize_action_catalog", "pareto_front",
+    "cluster_by_distance", "derive_distance_threshold", "feasibility_gate",
+    "finalize_action_catalog", "pareto_front",
     "remove_near_duplicates", "select_cluster_medoids", "solver_reproducibility_gate",
 ]
