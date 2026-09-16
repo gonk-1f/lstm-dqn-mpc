@@ -103,9 +103,9 @@ class PriceSource:
             ),
             (
                 SHORE_TARIFF_SOURCE_DOI,
-                "Table 3",
+                "Table 2",
                 "shore electricity scenario tariff source only",
-                "peak-tariff scenario",
+                "scenario_not_measured",
             ),
         }
         if values not in approved:
@@ -120,9 +120,9 @@ EQUIPMENT_PRICE_SOURCE = PriceSource(
 )
 SHORE_TARIFF_SOURCE = PriceSource(
     source_doi=SHORE_TARIFF_SOURCE_DOI,
-    source_location="Table 3",
+    source_location="Table 2",
     role="shore electricity scenario tariff source only",
-    classification="peak-tariff scenario",
+    classification="scenario_not_measured",
 )
 
 
@@ -450,47 +450,102 @@ def _provenance_payload(value: DatasetProvenance) -> tuple[str, str, str]:
     return value.dataset_version, value.provenance_id, value.split.value
 
 
-def _reward_scale_digest(scale_cny: float, provenance: DatasetProvenance) -> str:
+REWARD_SCALE_DERIVATION_RULE = "positive_arithmetic_mean_v1"
+_REWARD_SCALE_SEAL = object()
+
+
+def _derive_reward_scale(train_raw_costs_cny: tuple[float, ...]) -> float:
+    scale = _finite_sum(train_raw_costs_cny, "Train raw-cost sum") / len(
+        train_raw_costs_cny
+    )
+    if not math.isfinite(scale) or scale <= 0.0:
+        raise ValueError("Train-calibrated reward scale must be finite and positive")
+    return scale
+
+
+def _reward_scale_digest(
+    *,
+    scale_cny: float,
+    train_raw_costs_cny: tuple[float, ...],
+    sample_count: int,
+    provenance: DatasetProvenance,
+    derivation_rule: str,
+    audit_id: str,
+    reason: str,
+) -> str:
     payload = {
         "reward_version": REWARD_VERSION,
         "scale_cny": scale_cny.hex(),
+        "train_raw_costs_cny": [value.hex() for value in train_raw_costs_cny],
+        "sample_count": sample_count,
         "provenance": _provenance_payload(provenance),
+        "derivation_rule": derivation_rule,
+        "audit_id": audit_id,
+        "reason": reason,
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(encoded).hexdigest()
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class RewardScaleCalibration:
-    """Tamper-evident positive reward scale calibrated from Train only."""
+    """Sealed Train evidence and its deterministically derived reward scale."""
 
     scale_cny: float
+    train_raw_costs_cny: tuple[float, ...]
+    sample_count: int
     provenance: DatasetProvenance
-    digest: str = field(init=False, repr=False)
+    derivation_rule: str
+    audit_id: str
+    reason: str
+    digest: str = field(repr=False)
+    _seal: object = field(repr=False, compare=False)
 
-    def __post_init__(self) -> None:
-        scale = _positive_scalar(self.scale_cny, "scale_cny")
-        if type(self.provenance) is not DatasetProvenance:
-            raise TypeError("provenance must be an exact DatasetProvenance")
-        _provenance_payload(self.provenance)
-        if self.provenance.split is not DataSplit.TRAIN:
-            raise HeldOutSelectionError(
-                "reward-scale calibration is Train-only; Validation/Test/unknown "
-                "provenance is forbidden"
-            )
-        object.__setattr__(self, "scale_cny", scale)
-        object.__setattr__(self, "digest", _reward_scale_digest(scale, self.provenance))
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        raise TypeError(
+            "RewardScaleCalibration is sealed; use calibrate_reward_scale with "
+            "immutable Train costs and audit evidence"
+        )
 
 
 def _validate_reward_scale(value: object) -> RewardScaleCalibration:
     if type(value) is not RewardScaleCalibration:
         raise TypeError("calibration must be an exact RewardScaleCalibration")
+    if getattr(value, "_seal", None) is not _REWARD_SCALE_SEAL:
+        raise ValueError("reward-scale calibration was not issued by the sealed factory")
     if type(value.scale_cny) is not float:
         raise TypeError("stored reward scale must remain an exact float")
     scale = _positive_scalar(value.scale_cny, "scale_cny")
+    if type(value.train_raw_costs_cny) is not tuple or not value.train_raw_costs_cny:
+        raise ValueError("stored Train raw costs must remain a non-empty tuple")
+    costs = tuple(
+        _nonnegative_scalar(cost, f"train_raw_costs_cny[{index}]")
+        for index, cost in enumerate(value.train_raw_costs_cny)
+    )
+    if any(type(cost) is not float for cost in value.train_raw_costs_cny):
+        raise TypeError("stored Train raw costs must remain exact floats")
+    if type(value.sample_count) is not int or value.sample_count != len(costs):
+        raise ValueError("stored reward-scale sample count is inconsistent")
+    derivation_rule = _exact_text(value.derivation_rule, "derivation_rule")
+    if derivation_rule != REWARD_SCALE_DERIVATION_RULE:
+        raise ValueError("stored reward-scale derivation rule is unsupported")
+    _exact_text(value.audit_id, "audit_id")
+    _exact_text(value.reason, "reason")
+    _provenance_payload(value.provenance)
     if value.provenance.split is not DataSplit.TRAIN:
         raise HeldOutSelectionError("stored reward-scale provenance must remain Train")
-    expected = _reward_scale_digest(scale, value.provenance)
+    derived_scale = _derive_reward_scale(costs)
+    if scale != derived_scale:
+        raise ValueError("stored reward scale does not match its bound Train costs")
+    expected = _reward_scale_digest(
+        scale_cny=scale,
+        train_raw_costs_cny=costs,
+        sample_count=value.sample_count,
+        provenance=value.provenance,
+        derivation_rule=value.derivation_rule,
+        audit_id=value.audit_id,
+        reason=value.reason,
+    )
     if type(value.digest) is not str or value.digest != expected:
         raise ValueError("reward-scale calibration has been mutated or forged")
     return value
@@ -500,6 +555,8 @@ def calibrate_reward_scale(
     train_raw_costs_cny: tuple[float, ...],
     *,
     provenance: DatasetProvenance,
+    audit_id: str,
+    reason: str,
 ) -> RewardScaleCalibration:
     """Calibrate ``C_ref`` as the arithmetic Train mean raw interval cost."""
 
@@ -515,14 +572,36 @@ def calibrate_reward_scale(
         raise TypeError("Train raw costs must be an immutable tuple")
     if not train_raw_costs_cny:
         raise ValueError("Train raw costs must not be empty")
+    checked_audit_id = _exact_text(audit_id, "audit_id")
+    checked_reason = _exact_text(reason, "reason")
     costs = tuple(
         _nonnegative_scalar(value, f"train_raw_costs_cny[{index}]")
         for index, value in enumerate(train_raw_costs_cny)
     )
-    scale = _finite_sum(costs, "Train raw-cost sum") / len(costs)
-    if not math.isfinite(scale) or scale <= 0.0:
-        raise ValueError("Train-calibrated reward scale must be finite and positive")
-    return RewardScaleCalibration(scale, provenance)
+    scale = _derive_reward_scale(costs)
+    sample_count = len(costs)
+    digest = _reward_scale_digest(
+        scale_cny=scale,
+        train_raw_costs_cny=costs,
+        sample_count=sample_count,
+        provenance=provenance,
+        derivation_rule=REWARD_SCALE_DERIVATION_RULE,
+        audit_id=checked_audit_id,
+        reason=checked_reason,
+    )
+    calibration = object.__new__(RewardScaleCalibration)
+    object.__setattr__(calibration, "scale_cny", scale)
+    object.__setattr__(calibration, "train_raw_costs_cny", costs)
+    object.__setattr__(calibration, "sample_count", sample_count)
+    object.__setattr__(calibration, "provenance", provenance)
+    object.__setattr__(
+        calibration, "derivation_rule", REWARD_SCALE_DERIVATION_RULE
+    )
+    object.__setattr__(calibration, "audit_id", checked_audit_id)
+    object.__setattr__(calibration, "reason", checked_reason)
+    object.__setattr__(calibration, "digest", digest)
+    object.__setattr__(calibration, "_seal", _REWARD_SCALE_SEAL)
+    return calibration
 
 
 def scaled_reward(
@@ -547,6 +626,7 @@ __all__ = [
     "PriceSource",
     "REWARD_VERSION",
     "RawCnyIntervalLedger",
+    "REWARD_SCALE_DERIVATION_RULE",
     "RewardScaleCalibration",
     "SHORE_CONVERTER_CALIBRATION_STATUS",
     "SHORE_TARIFF_CNY_PER_KWH",

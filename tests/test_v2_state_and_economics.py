@@ -234,8 +234,8 @@ class EconomicCostTests(unittest.TestCase):
             SHORE_TARIFF_SOURCE.source_doi,
             "10.11930/j.issn.1004-9649.202507065",
         )
-        self.assertEqual(SHORE_TARIFF_SOURCE.source_location, "Table 3")
-        self.assertEqual(SHORE_TARIFF_SOURCE.classification, "peak-tariff scenario")
+        self.assertEqual(SHORE_TARIFF_SOURCE.source_location, "Table 2")
+        self.assertEqual(SHORE_TARIFF_SOURCE.classification, "scenario_not_measured")
         with self.assertRaises(ValueError):
             PriceSource("anything", "somewhere", "invented", "measured tariff")
 
@@ -430,16 +430,37 @@ class EconomicCostTests(unittest.TestCase):
 
         train = DatasetProvenance("synthetic", "train-only", DataSplit.TRAIN)
         ledger = RawCnyIntervalLedger(10.0, 20.0, 30.0, 40.0)
-        calibration = calibrate_reward_scale((50.0, 150.0), provenance=train)
+        calibration = calibrate_reward_scale(
+            (50.0, 150.0),
+            provenance=train,
+            audit_id="reward-scale-audit-001",
+            reason="Train macro-interval raw-cost arithmetic mean",
+        )
         self.assertEqual(calibration.scale_cny, 100.0)
+        self.assertEqual(calibration.train_raw_costs_cny, (50.0, 150.0))
+        self.assertEqual(calibration.sample_count, 2)
+        self.assertEqual(calibration.derivation_rule, "positive_arithmetic_mean_v1")
         self.assertEqual(scaled_reward(ledger, calibration=calibration), -1.0)
         for split in (DataSplit.VALIDATION, DataSplit.TEST, DataSplit.UNKNOWN):
             provenance = DatasetProvenance("synthetic", split.value, split)
             with self.subTest(split=split), self.assertRaises(PermissionError):
-                calibrate_reward_scale((100.0,), provenance=provenance)
+                calibrate_reward_scale(
+                    (100.0,),
+                    provenance=provenance,
+                    audit_id="forbidden-held-out",
+                    reason="must fail before calibration",
+                )
 
-        forged = RewardScaleCalibration(100.0, train)
-        object.__setattr__(forged, "scale_cny", 1.0)
+        with self.assertRaises(TypeError):
+            RewardScaleCalibration(100.0, train)  # type: ignore[call-arg]
+
+        forged = calibrate_reward_scale(
+            (50.0, 150.0),
+            provenance=train,
+            audit_id="reward-scale-audit-001",
+            reason="Train macro-interval raw-cost arithmetic mean",
+        )
+        object.__setattr__(forged, "train_raw_costs_cny", (1.0, 1.0))
         with self.assertRaises(ValueError):
             scaled_reward(ledger, calibration=forged)
         with self.assertRaises(TypeError):
@@ -447,9 +468,96 @@ class EconomicCostTests(unittest.TestCase):
 
         for values in ((0.0,), (-1.0,), (math.nan,), (True,), ("1",)):
             with self.subTest(values=values), self.assertRaises((TypeError, ValueError)):
-                calibrate_reward_scale(values, provenance=train)  # type: ignore[arg-type]
+                calibrate_reward_scale(
+                    values,  # type: ignore[arg-type]
+                    provenance=train,
+                    audit_id="invalid-costs",
+                    reason="must reject invalid calibration evidence",
+                )
         with self.assertRaises(ValueError):
-            calibrate_reward_scale((1.0e308, 1.0e308), provenance=train)
+            calibrate_reward_scale(
+                (1.0e308, 1.0e308),
+                provenance=train,
+                audit_id="overflow-costs",
+                reason="must reject overflow",
+            )
+
+        tainted_provenance = DatasetProvenance(
+            "synthetic", "train-to-test", DataSplit.TRAIN
+        )
+        tainted = calibrate_reward_scale(
+            (100.0,),
+            provenance=tainted_provenance,
+            audit_id="tainted-provenance",
+            reason="must detect provenance mutation",
+        )
+        object.__setattr__(tainted_provenance, "split", DataSplit.TEST)
+        with self.assertRaises(PermissionError):
+            scaled_reward(ledger, calibration=tainted)
+
+    def test_reward_scale_rejects_subclasses_and_mutation_of_bound_evidence(self) -> None:
+        from v2.analysis.action_screening import DataSplit, DatasetProvenance
+        from v2.economics import (
+            RawCnyIntervalLedger,
+            RewardScaleCalibration,
+            calibrate_reward_scale,
+            scaled_reward,
+        )
+
+        train = DatasetProvenance("synthetic", "train", DataSplit.TRAIN)
+        ledger = RawCnyIntervalLedger(1.0, 0.0, 0.0, 0.0)
+        calibration = calibrate_reward_scale(
+            (1.0, 3.0),
+            provenance=train,
+            audit_id="immutable-evidence",
+            reason="bind all calibration evidence",
+        )
+        for field, value in (
+            ("scale_cny", 99.0),
+            ("sample_count", 1),
+            ("derivation_rule", "attacker_rule"),
+            ("audit_id", "attacker-audit"),
+            ("reason", "attacker reason"),
+            ("digest", "0" * 64),
+        ):
+            forged = calibrate_reward_scale(
+                (1.0, 3.0),
+                provenance=train,
+                audit_id="immutable-evidence",
+                reason="bind all calibration evidence",
+            )
+            object.__setattr__(forged, field, value)
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                scaled_reward(ledger, calibration=forged)
+
+        forged_provenance = calibrate_reward_scale(
+            (1.0, 3.0),
+            provenance=train,
+            audit_id="forged-provenance",
+            reason="reject replacement provenance objects",
+        )
+        object.__setattr__(forged_provenance, "provenance", object())
+        with self.assertRaises(TypeError):
+            scaled_reward(ledger, calibration=forged_provenance)
+
+        class CalibrationSubclass(RewardScaleCalibration):
+            pass
+
+        forged_subclass = object.__new__(CalibrationSubclass)
+        for field in (
+            "scale_cny",
+            "train_raw_costs_cny",
+            "sample_count",
+            "provenance",
+            "derivation_rule",
+            "audit_id",
+            "reason",
+            "digest",
+            "_seal",
+        ):
+            object.__setattr__(forged_subclass, field, getattr(calibration, field))
+        with self.assertRaises(TypeError):
+            scaled_reward(ledger, calibration=forged_subclass)
 
 
 if __name__ == "__main__":

@@ -56,15 +56,17 @@ The fixed values are:
 | Hydrogen | 35 CNY/kg | DOI `10.3390/jmse13010034`, unit-price source only |
 | Fuel-cell equipment | 3500 CNY/kW | DOI `10.3390/jmse13010034`, unit-price source only |
 | Battery equipment | 2000 CNY/kWh | DOI `10.3390/jmse13010034`, unit-price source only |
-| Shore electricity | 1.10 CNY/kWh | DOI `10.11930/j.issn.1004-9649.202507065`, Table 3 |
+| Shore electricity | 1.10 CNY/kWh | DOI `10.11930/j.issn.1004-9649.202507065`, Table 2 |
 
 The first DOI is not the source for a 600 kW fuel-cell rating or a 624 kWh
 battery capacity. Those plant values must retain their own provenance.
 
-The shore price is a user-approved **peak-tariff scenario**, not a measured
-actual wharf tariff. `ShoreEnergyClassification` distinguishes `MEASURED` from
-`MODELED`; the code never infers that a channel is measured. Missing prices
-raise an error rather than becoming zero.
+The shore price has the fixed provenance classification
+`scenario_not_measured`: it is a user-approved **peak-tariff scenario**, not a
+measured actual wharf tariff. Table 3 of that source supports the Task 3 0.95
+battery efficiencies, not this tariff. `ShoreEnergyClassification`
+distinguishes `MEASURED` from `MODELED`; the code never infers that a channel is
+measured. Missing prices raise an error rather than becoming zero.
 
 ## Terminal recharge
 
@@ -106,9 +108,13 @@ normalization boundaries, which currently fail closed. The raw ledger class is
 an immutable accounting value, not evidence that its degradation components
 have passed formal normalization.
 
-Reward scaling has no default `C_ref`. `calibrate_reward_scale` computes a
-positive arithmetic mean from an immutable tuple of Train raw-CNY interval
-costs and requires an exact Task 6 `DatasetProvenance` whose split is
-`DataSplit.TRAIN`. Validation, Test, and Unknown provenance are rejected. The
-resulting `RewardScaleCalibration` is tamper-evident, and scaled reward is
+Reward scaling has no default `C_ref`. `calibrate_reward_scale` is the only
+factory for `RewardScaleCalibration`; direct construction is rejected. It
+computes the `positive_arithmetic_mean_v1` scale from a non-empty immutable
+tuple of finite, non-negative Train raw-CNY interval costs, with a zero mean
+rejected. The sealed record binds the exact cost tuple, sample count, scale,
+derivation rule, audit ID, reason, reward version, and exact Task 6
+`DatasetProvenance` in its digest. Validation, Test, and Unknown provenance are
+rejected. `scaled_reward` revalidates the seal, all bound content, Train
+provenance, digest, and derived arithmetic mean before returning
 `reward_cny / scale_cny`.
