@@ -113,6 +113,56 @@ class CandidateOperatingStateTests(unittest.TestCase):
         self.assertAlmostEqual(first[7], expected_slope * 10.0 / 200.0)
         self.assertAlmostEqual(first[9], 0.20)
 
+    def test_left_boundary_uses_sample_age_without_subtraction_drift(self) -> None:
+        from v2.dqn.state import build_candidate_operating_state
+
+        history = (
+            self.Sample(0.1, 0.4, 10.0, 0.0, 20.0, 5.0),
+            self.Sample(1.1, 0.5, 20.0, 0.0, 30.0, 5.0),
+        )
+        state = build_candidate_operating_state(
+            history,
+            current_time_seconds=1.1,
+            window_seconds=1.0,
+            normalization=self.scales,
+        )
+
+        self.assertAlmostEqual(state[2], 0.1)
+        self.assertAlmostEqual(state[5], 25.0 / 200.0)
+        self.assertAlmostEqual(state[9], 0.1)
+
+    def test_nonfinite_extreme_ages_are_causally_outside_window(self) -> None:
+        from v2.dqn.state import StateNormalization, build_candidate_operating_state
+
+        scales = StateNormalization(1.0, 1.0, 1.0, 1.0)
+        with_far_old = (
+            self.Sample(-1.0e308, 0.0, 0.0, 0.0, 1.0e308, 0.0),
+            self.Sample(0.0, 0.4, 0.0, 0.0, 0.0, 0.0),
+            self.Sample(1.0e308, 0.5, 0.0, 0.0, 1.0, 0.0),
+        )
+        old_filtered = build_candidate_operating_state(
+            with_far_old,
+            current_time_seconds=1.0e308,
+            window_seconds=1.0e308,
+            normalization=scales,
+        )
+        self.assertAlmostEqual(old_filtered[5], 0.5)
+        self.assertAlmostEqual(old_filtered[9], 0.1)
+
+        with_far_future = (
+            self.Sample(-1.5e308, 0.4, 0.0, 0.0, 0.0, 0.0),
+            self.Sample(-1.0e308, 0.5, 0.0, 0.0, 1.0, 0.0),
+            self.Sample(1.0e308, 0.9, 0.0, 0.0, -1.0e308, 0.0),
+        )
+        future_filtered = build_candidate_operating_state(
+            with_far_future,
+            current_time_seconds=-1.0e308,
+            window_seconds=1.0e308,
+            normalization=scales,
+        )
+        self.assertAlmostEqual(future_filtered[5], 0.5)
+        self.assertAlmostEqual(future_filtered[9], 0.1)
+
     def test_history_and_scalars_are_strict_immutable_and_domain_checked(self) -> None:
         from v2.dqn.state import (
             OperatingHistorySample,

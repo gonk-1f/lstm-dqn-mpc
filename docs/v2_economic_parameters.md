@@ -38,10 +38,13 @@ fuel-cell group contains two scalars: current and previous fuel-cell power.
 timestamps in seconds. The input history is an immutable tuple with strictly
 increasing timestamps. The window is the inclusive physical-time interval
 `[current_time_seconds - window_seconds, current_time_seconds]`; it is never a
-last-N-samples window. Minutes must be converted explicitly to seconds by the
-caller. Records after `current_time_seconds` are never used. The builder
-requires an exact current-time sample and at least two samples within the
-window, so it cannot invent either previous fuel-cell power or a trend.
+last-N-samples window. Membership is evaluated by signed sample age
+`current_time_seconds - timestamp_seconds`, avoiding a rounded absolute left
+boundary; positive-infinite old ages and negative-infinite future ages are
+outside. Minutes must be converted explicitly to seconds by the caller.
+Records after `current_time_seconds` are never used. The builder requires an
+exact current-time sample and at least two samples within the window, so it
+cannot invent either previous fuel-cell power or a trend.
 
 All power denominators are explicit, finite, and positive. SOC and delta-SOC
 remain fractions. `CANDIDATE_STATE_STATUS` is `NO-GO` until the stated

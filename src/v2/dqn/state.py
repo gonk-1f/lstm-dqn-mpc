@@ -129,6 +129,18 @@ def _scaled_population_mean_and_std(
     return mean, std
 
 
+def _sample_age_seconds(current_time_seconds: float, timestamp_seconds: float) -> float:
+    """Return signed age while classifying finite-subtraction overflow."""
+
+    try:
+        age = current_time_seconds - timestamp_seconds
+    except OverflowError:
+        return math.inf if timestamp_seconds < current_time_seconds else -math.inf
+    if math.isnan(age):
+        raise ValueError("sample age must not be NaN")
+    return age
+
+
 @dataclass(frozen=True)
 class OperatingHistorySample:
     """One immutable, timestamped, physical operating record."""
@@ -285,14 +297,15 @@ def build_candidate_operating_state(
     now = _finite_scalar(current_time_seconds, "current_time_seconds")
     window = _positive_scalar(window_seconds, "window_seconds")
     scales = _validate_normalization(normalization)
-    start = now - window
-    if not math.isfinite(start):
-        raise ValueError("window start must remain a finite physical timestamp")
-    selected = tuple(
-        sample
-        for sample in checked_history
-        if start <= sample.timestamp_seconds <= now
-    )
+    selected_list: list[OperatingHistorySample] = []
+    for sample in checked_history:
+        age = _sample_age_seconds(now, sample.timestamp_seconds)
+        if math.isinf(age):
+            # +inf is older than every finite window; -inf is future data.
+            continue
+        if 0.0 <= age <= window:
+            selected_list.append(sample)
+    selected = tuple(selected_list)
     if not selected or selected[-1].timestamp_seconds != now:
         raise ValueError("history requires an exact current-time sample")
     if len(selected) < 2:
