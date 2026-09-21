@@ -37,6 +37,7 @@ class SelectionParameter(Enum):
     STATE_SCHEMA = "state_schema"
     ACTION_CATALOG = "action_catalog"
     REWARD_SCALE = "reward_scale"
+    OBJECTIVE_NORMALIZATION = "objective_normalization"
 
 
 PayloadT = TypeVar("PayloadT")
@@ -88,7 +89,7 @@ def _canonical_train_provenance(value: object) -> DatasetProvenance:
     if canonical.split is not DataSplit.TRAIN:
         raise HeldOutSelectionError(
             "selection and calibration of N, M, tau_LPF, deadband, state schema, "
-            "action catalog, and reward scale are Train-only"
+            "action catalog, reward scale, and objective normalization are Train-only"
         )
     return canonical
 

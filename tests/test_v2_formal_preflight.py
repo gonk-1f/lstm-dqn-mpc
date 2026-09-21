@@ -17,7 +17,7 @@ if str(SRC) not in sys.path:
 
 
 class FormalPreflightTests(unittest.TestCase):
-    def test_repository_preflight_checks_all_thirteen_required_calibrations(self) -> None:
+    def test_repository_preflight_checks_all_required_calibrations_and_audits(self) -> None:
         from v2.preflight import CalibrationStatus, assess_formal_training_preflight
 
         report = assess_formal_training_preflight()
@@ -38,6 +38,7 @@ class FormalPreflightTests(unittest.TestCase):
                 "soc_deadband",
                 "final_dqn_state",
                 "final_action_catalog",
+                "objective_scale_comparability",
             ),
         )
         self.assertFalse(report.ready)
@@ -46,6 +47,12 @@ class FormalPreflightTests(unittest.TestCase):
         self.assertEqual(report.checks[1].status, CalibrationStatus.VERIFIED)
         self.assertEqual(report.checks[2].status, CalibrationStatus.VERIFIED)
         self.assertEqual(report.checks[5].status, CalibrationStatus.VERIFIED)
+        by_key = {check.key: check for check in report.checks}
+        self.assertEqual(by_key["soc_deadband"].status, CalibrationStatus.VERIFIED)
+        self.assertEqual(
+            by_key["objective_scale_comparability"].status,
+            CalibrationStatus.NO_GO,
+        )
         self.assertTrue(all(check.evidence.strip() for check in report.checks))
 
     def test_formal_gate_blocks_before_payload_or_data_provenance_access(self) -> None:
@@ -67,7 +74,7 @@ class FormalPreflightTests(unittest.TestCase):
             )
 
         self.assertEqual(accesses, 0)
-        self.assertEqual(len(caught.exception.report.checks), 13)
+        self.assertEqual(len(caught.exception.report.checks), 14)
         self.assertIn("FORMAL_TRAINING=NO-GO", str(caught.exception))
 
     def test_preflight_cli_reports_every_check_and_returns_no_go(self) -> None:
@@ -79,7 +86,11 @@ class FormalPreflightTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 2)
         self.assertIn("FORMAL_TRAINING=NO-GO", output.getvalue())
-        self.assertEqual(output.getvalue().count("["), 13)
+        self.assertEqual(
+            sum(line.startswith("[") for line in output.getvalue().splitlines()),
+            14,
+        )
+        self.assertIn("[NO-GO] objective_scale_comparability", output.getvalue())
 
     def test_timescale_cli_rejects_held_out_split_before_reading_payload(self) -> None:
         from v2.main.run_train_only_timescale_audit import main

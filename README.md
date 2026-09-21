@@ -17,11 +17,12 @@ catalog 与完整求解器审计。36 个十分位正单纯形权重只是候选
 - 能量与经济参数：[FC 效率](docs/v2_fc_efficiency_model.md)、[经济参数](docs/v2_economic_parameters.md)
 - 退化模型：[FC 退化](docs/v2_fc_degradation_model.md)、[电池退化](docs/v2_battery_degradation_model.md)
 - 动作与时间尺度：[动作筛选](docs/v2_action_space_design.md)、[Train-only 审计](docs/v2_timescale_selection.md)
+- 目标尺度审计：[Train-only objective-scale audit](docs/v2_objective_scale_audit.md)
 - 完整状态表：[v2 preflight 报告](docs/v2_preflight_report.md)
 
 所有方法选择和标定只允许读取 Train。Validation/Test 只能在方法完全冻结后用于
 评估，不得反向选择 `N`、`M`、`tau_LPF`、deadband、state、action catalog 或
-reward scale。
+reward scale，也不得用 held-out 数据修正 objective normalization。
 
 ## 安全入口
 
@@ -31,7 +32,7 @@ reward scale。
 python -m src.v2.main.run_preflight
 ```
 
-当前返回码为 `2`，表示预期的 NO-GO；返回 `0` 才表示全部 13 项均已冻结。此命令
+当前返回码为 `2`，表示预期的 NO-GO；返回 `0` 才表示全部 14 项均已冻结。此命令
 不读取训练 payload，也不启动训练。
 
 Train-only 时间尺度诊断的输入必须是已审计 Train 数值序列 JSON，并显式给出

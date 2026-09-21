@@ -21,19 +21,19 @@ v2 artifact 必须精确匹配这些语义，v1 checkpoint/replay 不能恢复�
 
 ## 3. exact mathematical model — VERIFIED
 
-下层目标版本为 `fc_base_smooth_soc_deadband_v1`：三项正权重分别约束 FC 对因果
+下层目标版本为 `fc_base_smooth_soc_deadband_mean_v2`：三项正权重分别约束 FC 对因果
 基准负载的跟踪、FC 功率变化和平滑 SOC deadband 罚项。上层版本为
 `macro_interval_real_economic_cost_v1`，宏区间账本只累计氢耗、FC 退化、电池
 退化和实际发生的岸电成本，reward 为负的原始 CNY 总成本：
 
 `J = q_base*J_base + q_smooth*J_smooth + q_soc*J_soc`，
 
-`J_base = sum_i ((P_fc[i]-P_base_hat[i])/P_fc_scale)^2`，
+`J_base = (1/N) sum_i ((P_fc[i]-P_base_hat[i])/600)^2`，
 
-`J_smooth = sum_i (Delta P_fc[i]/Delta_P_fc_scale)^2`，
+`J_smooth = (1/N) sum_i (Delta P_fc[i]/600)^2`，
 
-`J_soc = sum_i phi(SOC[i])`，其中 `phi` 是死区外到最近边界距离除以
-`SOC_scale` 后的平方、死区内为零；
+`J_soc = (1/N) sum_i phi(SOC[i])`，其中 `phi` 是 `[0.40,0.60]` 外到最近
+边界距离除以 `0.60` 后的平方、区间内为零；SOC 物理硬边界仍为 `[0.20,0.80]`；
 
 `reward_macro = -(C_H2 + C_FC_deg + C_Batt_deg + C_shore_if_incurred)`。
 
@@ -100,6 +100,11 @@ Train-only 敏感性范围严格限定为 `M in {5,10}`，且 `N=5` 固定不联
 36 个正十分位三权重候选已确定性生成，但没有在可用真实 Train 工况上完成可行性、
 行为向量、Pareto、去重和聚类链。合成单元测试不构成候选行为证据。
 
+`docs/v2_objective_scale_audit.md` 定义了 Train-only actual-solve 接口、active-P95
+量级比、`0.1*J_i > 0.7*J_j` 支配统计和 behavioral redundancy 检查。由于没有
+可接受的真实 Train 工况和最终 catalog，当前所有数值结果均为 `N/A`，新的
+`objective_scale_comparability` gate 为 **NO-GO**。
+
 ## 14. final K — NO-GO
 
 `FINAL_DQN_ACTION_CATALOG` 仍为 `None`，最终代表数 `K` 未冻结。候选库不能作为
@@ -113,30 +118,30 @@ Train case 和最终 catalog 的重复求解记录。因此不能声称热启动
 
 ## 16. unit/contract test results — VERIFIED
 
-2026-09-21 最终验证只运行一次全仓套件：`374` 个测试全部通过，用时
-`31.135 s`。Task 10 新增的 preflight/CLI 定向测试为 `6/6`，受影响的既有
-data/preflight guard 测试为 `21/21`。未在每个小任务重复全量套件。
+2026-09-21 本增量的 objective/MPC、objective-scale audit、Train-only guard 和
+preflight 定向集合为 `47/47` 通过；其中新增 objective-scale audit 为 `6/6`。
+最终全仓套件只运行一次，`381/381` 通过，用时 `143.057 s`。
 
-求解器 smoke 单独复核了 `N=5` 约束/首步执行与显式 cold/shifted-warm
-确定性，`2/2` 通过，用时 `0.759 s`。`python -m compileall -q src tests`、
-`git diff --check` 均通过；对 `src/v2` 的本地顶层包导入扫描未发现 v2
-正式模块导入旧 `src/{data,dqn,envs,main,mpc,...}` 包。这些结果只证明软件合同与
-合成求解 smoke 通过，不构成真实工况实验或正式训练证据。
+求解器 smoke 单独复核 `N=5` 物理约束/首步执行和显式 cold/shifted-warm
+确定性，`2/2` 通过，用时 `0.643 s`。`python -m compileall -q src tests`、导入
+边界扫描和 `git diff --check` 均通过。合成 objective audit 只证明统计和门禁实现，
+不构成真实 Train objective-scale 数值结果。
 
 ## 17. remaining unsupported assumptions — UNRESOLVED
 
 尚未获得或冻结：可用真实 Train 工况、FC 聚合功率到来源参考单元的映射、FC 寿命
-归一化、电池 `Q_lifetime`、岸电变换效率、正式 `Ts_MPC/N/M/tau_LPF`、SOC
-deadband、`P_fc_scale`、`Delta_P_fc_scale`、电池充放电功率边界、FC 每步爬坡
-限制、最终 state、reward scale、最终 action catalog/K，以及完整真实案例 solver
-audit。不得用研究仿真值、合成夹具或 held-out 表现替代这些证据。
+归一化、电池 `Q_lifetime`、岸电变换效率、正式 `Ts_MPC/N/M/tau_LPF`、电池充放电
+功率边界、FC 每步爬坡限制、最终 state、reward scale、最终 action catalog/K、
+完整真实案例 solver audit，以及真实 Train objective-scale/weighted-dominance/
+behavioral-responsiveness 结果。不得用研究仿真值、合成夹具或 held-out 表现替代这些证据。
 
 ## 18. formal training GO/NO-GO — NO-GO
 
 代码在读取训练 payload 前逐项检查原需求实际列出的全部 13 项：`eta_fc(P)`、
 `eta_chg`、`eta_dis`、FC 退化归一化、电池 `Q_lifetime`、岸电价格、`Ts_MPC`、
 `N`、`M`、`tau_LPF`、SOC deadband、最终 DQN state、最终 action catalog。
-当前有任一非 `VERIFIED` 项即失败关闭，结论为：
+本增量另增加第 14 项 `objective_scale_comparability` gate。当前有任一非
+`VERIFIED` 项即失败关闭，结论为：
 
 `FORMAL_TRAINING = NO-GO`
 

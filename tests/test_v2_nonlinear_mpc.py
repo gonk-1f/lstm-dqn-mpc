@@ -95,7 +95,12 @@ class CausalBaseLoadTests(unittest.TestCase):
 class ObjectiveTests(unittest.TestCase):
     def test_exact_three_components_and_weighted_sum(self) -> None:
         from v2.control.nonlinear_mpc import (
+            DELTA_P_FC_OBJECTIVE_SCALE_KW,
             MPCWeights,
+            P_FC_OBJECTIVE_SCALE_KW,
+            SOC_OBJECTIVE_SCALE,
+            SOC_WORKING_HIGH,
+            SOC_WORKING_LOW,
             objective_components,
             weighted_objective,
         )
@@ -105,28 +110,75 @@ class ObjectiveTests(unittest.TestCase):
             base_reference_kw=(90.0, 110.0, 120.0),
             soc_path=(0.3, 0.5, 0.7),
             previous_executed_p_fc_kw=80.0,
-            p_fc_scale_kw=10.0,
-            delta_p_fc_scale_kw=10.0,
-            soc_deadband_low=0.4,
-            soc_deadband_high=0.6,
-            soc_scale=0.1,
+            p_fc_scale_kw=P_FC_OBJECTIVE_SCALE_KW,
+            delta_p_fc_scale_kw=DELTA_P_FC_OBJECTIVE_SCALE_KW,
+            soc_deadband_low=SOC_WORKING_LOW,
+            soc_deadband_high=SOC_WORKING_HIGH,
+            soc_scale=SOC_OBJECTIVE_SCALE,
         )
 
-        self.assertAlmostEqual(components.j_base, 6.0)
-        self.assertAlmostEqual(components.j_smooth, 17.0)
-        self.assertAlmostEqual(components.j_soc, 2.0)
+        self.assertAlmostEqual(components.j_base, 1.0 / 1800.0)
+        self.assertAlmostEqual(components.j_smooth, 17.0 / 10800.0)
+        self.assertAlmostEqual(components.j_soc, 1.0 / 54.0)
         weights = MPCWeights(q_base=0.2, q_smooth=0.3, q_soc=0.5)
-        self.assertAlmostEqual(weighted_objective(components, weights), 7.3)
+        self.assertAlmostEqual(
+            weighted_objective(components, weights),
+            0.2 / 1800.0 + 0.3 * 17.0 / 10800.0 + 0.5 / 54.0,
+        )
         self.assertEqual(set(components.__dataclass_fields__), {"j_base", "j_smooth", "j_soc"})
 
     def test_soc_deadband_is_zero_on_inclusive_edges(self) -> None:
-        from v2.control.nonlinear_mpc import soc_deadband_penalty
+        from v2.control.nonlinear_mpc import (
+            SOC_OBJECTIVE_SCALE,
+            SOC_WORKING_HIGH,
+            SOC_WORKING_LOW,
+            soc_deadband_penalty,
+        )
 
-        self.assertAlmostEqual(soc_deadband_penalty(0.3, 0.4, 0.6, 0.1), 1.0)
-        self.assertEqual(soc_deadband_penalty(0.4, 0.4, 0.6, 0.1), 0.0)
-        self.assertEqual(soc_deadband_penalty(0.5, 0.4, 0.6, 0.1), 0.0)
-        self.assertEqual(soc_deadband_penalty(0.6, 0.4, 0.6, 0.1), 0.0)
-        self.assertAlmostEqual(soc_deadband_penalty(0.7, 0.4, 0.6, 0.1), 1.0)
+        self.assertEqual(SOC_OBJECTIVE_SCALE, 0.60)
+        self.assertAlmostEqual(
+            soc_deadband_penalty(0.3, SOC_WORKING_LOW, SOC_WORKING_HIGH, SOC_OBJECTIVE_SCALE),
+            1.0 / 36.0,
+        )
+        self.assertEqual(soc_deadband_penalty(0.4, 0.4, 0.6, 0.6), 0.0)
+        self.assertEqual(soc_deadband_penalty(0.5, 0.4, 0.6, 0.6), 0.0)
+        self.assertEqual(soc_deadband_penalty(0.6, 0.4, 0.6, 0.6), 0.0)
+        self.assertAlmostEqual(
+            soc_deadband_penalty(0.7, SOC_WORKING_LOW, SOC_WORKING_HIGH, SOC_OBJECTIVE_SCALE),
+            1.0 / 36.0,
+        )
+
+    def test_objective_components_are_horizon_means_not_sums(self) -> None:
+        from v2.control.nonlinear_mpc import objective_components
+
+        one = objective_components(
+            p_fc_kw=(300.0,),
+            base_reference_kw=(0.0,),
+            soc_path=(0.2,),
+            previous_executed_p_fc_kw=0.0,
+            p_fc_scale_kw=600.0,
+            delta_p_fc_scale_kw=600.0,
+            soc_deadband_low=0.4,
+            soc_deadband_high=0.6,
+            soc_scale=0.6,
+        )
+        repeated = objective_components(
+            p_fc_kw=(300.0,) * 5,
+            base_reference_kw=(0.0,) * 5,
+            soc_path=(0.2,) * 5,
+            previous_executed_p_fc_kw=300.0,
+            p_fc_scale_kw=600.0,
+            delta_p_fc_scale_kw=600.0,
+            soc_deadband_low=0.4,
+            soc_deadband_high=0.6,
+            soc_scale=0.6,
+        )
+
+        self.assertEqual(one.j_base, repeated.j_base)
+        self.assertEqual(one.j_soc, repeated.j_soc)
+        self.assertEqual(repeated.j_base, 0.25)
+        self.assertAlmostEqual(repeated.j_soc, 1.0 / 9.0)
+        self.assertEqual(repeated.j_smooth, 0.0)
 
     def test_objective_accepts_one_dimensional_numeric_numpy_vectors(self) -> None:
         from v2.control.nonlinear_mpc import objective_components
@@ -137,10 +189,10 @@ class ObjectiveTests(unittest.TestCase):
             soc_path=np.asarray([0.5, 0.5]),
             previous_executed_p_fc_kw=100.0,
             p_fc_scale_kw=600.0,
-            delta_p_fc_scale_kw=100.0,
+            delta_p_fc_scale_kw=600.0,
             soc_deadband_low=0.4,
             soc_deadband_high=0.6,
-            soc_scale=0.1,
+            soc_scale=0.6,
         )
         self.assertEqual(components.j_base, 0.0)
         with self.assertRaises(TypeError):
@@ -150,10 +202,10 @@ class ObjectiveTests(unittest.TestCase):
                 soc_path=(0.5, 0.5),
                 previous_executed_p_fc_kw=100.0,
                 p_fc_scale_kw=600.0,
-                delta_p_fc_scale_kw=100.0,
+                delta_p_fc_scale_kw=600.0,
                 soc_deadband_low=0.4,
                 soc_deadband_high=0.6,
-                soc_scale=0.1,
+                soc_scale=0.6,
             )
 
     def test_weights_are_positive_finite_numeric_and_sum_to_one(self) -> None:
@@ -218,11 +270,11 @@ class NonlinearMPCTests(unittest.TestCase):
             "fuel_cell_ramp_kw_per_step": 100.0,
             "soc_min": 0.2,
             "soc_max": 0.8,
-            "soc_deadband_low": 0.45,
-            "soc_deadband_high": 0.55,
+            "soc_deadband_low": 0.4,
+            "soc_deadband_high": 0.6,
             "p_fc_scale_kw": 600.0,
-            "delta_p_fc_scale_kw": 100.0,
-            "soc_scale": 0.1,
+            "delta_p_fc_scale_kw": 600.0,
+            "soc_scale": 0.6,
         }
         values.update(overrides)
         config = MPCConfig(**values)
@@ -581,6 +633,13 @@ class NonlinearMPCTests(unittest.TestCase):
             {"soc_min": 0.8, "soc_max": 0.2},
             {"soc_deadband_low": 0.6, "soc_deadband_high": 0.6},
             {"soc_scale": float("nan")},
+            {"soc_min": 0.1},
+            {"soc_max": 0.9},
+            {"soc_deadband_low": 0.3},
+            {"soc_deadband_high": 0.7},
+            {"p_fc_scale_kw": 599.0},
+            {"delta_p_fc_scale_kw": 100.0},
+            {"soc_scale": 0.05},
         )
         for override in invalid_configs:
             with self.subTest(override=override), self.assertRaises((TypeError, ValueError)):

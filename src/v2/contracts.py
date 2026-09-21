@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from .config import TimeScaleConfig
 
 METHOD_VERSION = "multiscale_dqn_wmpc_v2"
-MPC_OBJECTIVE_VERSION = "fc_base_smooth_soc_deadband_v1"
+MPC_OBJECTIVE_VERSION = "fc_base_smooth_soc_deadband_mean_v2"
 ACTION_TABLE_VERSION = "three_weight_simplex_behavior_filtered_v1"
 REWARD_VERSION = "macro_interval_real_economic_cost_v1"
 FC_ENERGY_VERSION = "eta_fc_lhv_h2_v1"

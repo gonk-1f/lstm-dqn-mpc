@@ -16,6 +16,15 @@ from ..models.battery_energy import BatteryEfficiency, next_soc
 from .causal_base_load import CausalBaseLoadFilter
 
 
+P_FC_OBJECTIVE_SCALE_KW = 600.0
+DELTA_P_FC_OBJECTIVE_SCALE_KW = 600.0
+SOC_HARD_MIN = 0.20
+SOC_HARD_MAX = 0.80
+SOC_WORKING_LOW = 0.40
+SOC_WORKING_HIGH = 0.60
+SOC_OBJECTIVE_SCALE = 0.60
+
+
 def _finite_scalar(value: object, name: str) -> float:
     if isinstance(value, (bool, np.bool_)) or not isinstance(value, Real):
         raise TypeError(f"{name} must be a real numeric scalar, not bool or text")
@@ -130,13 +139,30 @@ def objective_components(
     low, high, state_scale = _validate_deadband(
         soc_deadband_low, soc_deadband_high, soc_scale
     )
-    if power_scale <= 0.0 or ramp_scale <= 0.0:
-        raise ValueError("power objective scales must be positive")
+    expected = (
+        (power_scale, P_FC_OBJECTIVE_SCALE_KW, "p_fc_scale_kw"),
+        (ramp_scale, DELTA_P_FC_OBJECTIVE_SCALE_KW, "delta_p_fc_scale_kw"),
+        (low, SOC_WORKING_LOW, "soc_deadband_low"),
+        (high, SOC_WORKING_HIGH, "soc_deadband_high"),
+        (state_scale, SOC_OBJECTIVE_SCALE, "soc_scale"),
+    )
+    for actual, required, name in expected:
+        if actual != required:
+            raise ValueError(f"{name} must equal the fixed v2 method value {required}")
 
-    j_base = sum(((power - reference) / power_scale) ** 2 for power, reference in zip(powers, references))
+    horizon = len(powers)
+    j_base = math.fsum(
+        ((power - reference) / power_scale) ** 2
+        for power, reference in zip(powers, references)
+    ) / horizon
     prior = (previous,) + powers[:-1]
-    j_smooth = sum(((power - old) / ramp_scale) ** 2 for power, old in zip(powers, prior))
-    j_soc = sum(soc_deadband_penalty(state, low, high, state_scale) for state in states)
+    j_smooth = math.fsum(
+        ((power - old) / ramp_scale) ** 2
+        for power, old in zip(powers, prior)
+    ) / horizon
+    j_soc = math.fsum(
+        soc_deadband_penalty(state, low, high, state_scale) for state in states
+    ) / horizon
     return ObjectiveComponents(float(j_base), float(j_smooth), float(j_soc))
 
 
@@ -212,6 +238,25 @@ class MPCConfig:
         )
         if low < self.soc_min or high > self.soc_max:
             raise ValueError("SOC deadband must lie inside the SOC hard bounds")
+        method_values = (
+            (self.fuel_cell_rated_kw, P_FC_OBJECTIVE_SCALE_KW, "fuel_cell_rated_kw"),
+            (self.soc_min, SOC_HARD_MIN, "soc_min"),
+            (self.soc_max, SOC_HARD_MAX, "soc_max"),
+            (low, SOC_WORKING_LOW, "soc_deadband_low"),
+            (high, SOC_WORKING_HIGH, "soc_deadband_high"),
+            (self.p_fc_scale_kw, P_FC_OBJECTIVE_SCALE_KW, "p_fc_scale_kw"),
+            (
+                self.delta_p_fc_scale_kw,
+                DELTA_P_FC_OBJECTIVE_SCALE_KW,
+                "delta_p_fc_scale_kw",
+            ),
+            (self.soc_scale, SOC_OBJECTIVE_SCALE, "soc_scale"),
+        )
+        for actual, required, name in method_values:
+            if actual != required:
+                raise ValueError(
+                    f"{name} must equal the fixed v2 method value {required}"
+                )
 
 
 @dataclass(frozen=True)

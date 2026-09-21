@@ -40,6 +40,7 @@ class TrainOnlyTimeScaleAuditTests(unittest.TestCase):
             "state_schema",
             "action_catalog",
             "reward_scale",
+            "objective_normalization",
         }
         self.assertEqual({item.value for item in SelectionParameter}, expected)
         for split in (DataSplit.VALIDATION, DataSplit.TEST, DataSplit.UNKNOWN):

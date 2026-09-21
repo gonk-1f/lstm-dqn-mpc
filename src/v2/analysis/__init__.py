@@ -31,6 +31,20 @@ from .action_screening import (
     select_cluster_medoids,
     solver_reproducibility_gate,
 )
+from .objective_scale_audit import (
+    FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS,
+    BehaviorTolerance,
+    BehavioralRedundancy,
+    ContributionDominance,
+    ObjectiveAuditCase,
+    ObjectiveAuditObservation,
+    ObjectiveScaleAuditResult,
+    ObjectiveScaleStatus,
+    SocActiveStatistics,
+    TermStatistics,
+    classify_objective_scale_ratio,
+    run_objective_scale_audit,
+)
 
 __all__ = [
     "BehaviorFingerprint",
@@ -43,6 +57,7 @@ __all__ = [
     "DistanceThresholdEvidence",
     "DistanceThresholdRule",
     "FeasibilityResult",
+    "FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS",
     "HardGateResult",
     "HeldOutSelectionError",
     "MedoidSelectionResult",
@@ -53,6 +68,15 @@ __all__ = [
     "ScreeningLineageError",
     "SolverReproducibilityAudit",
     "SolverReproducibilityResult",
+    "BehaviorTolerance",
+    "BehavioralRedundancy",
+    "ContributionDominance",
+    "ObjectiveAuditCase",
+    "ObjectiveAuditObservation",
+    "ObjectiveScaleAuditResult",
+    "ObjectiveScaleStatus",
+    "SocActiveStatistics",
+    "TermStatistics",
     "apply_hard_gates",
     "cluster_by_distance",
     "derive_distance_threshold",
@@ -62,4 +86,6 @@ __all__ = [
     "remove_near_duplicates",
     "select_cluster_medoids",
     "solver_reproducibility_gate",
+    "classify_objective_scale_ratio",
+    "run_objective_scale_audit",
 ]

@@ -8,6 +8,7 @@ import re
 from typing import TypeVar
 
 from .analysis.timescale_audit import FORMAL_TIMESCALE_SELECTION_STATUS
+from .analysis.objective_scale_audit import FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS
 from .data.raw_inventory import RawExcelInventory, require_train_only
 from .dqn.action_space import ACTION_CATALOG_STATUS
 from .dqn.state import CANDIDATE_STATE_STATUS
@@ -168,8 +169,8 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
         ),
         FormalCalibrationCheck(
             "soc_deadband",
-            CalibrationStatus.UNRESOLVED,
-            "no Train-only calibration has frozen the SOC deadband",
+            CalibrationStatus.VERIFIED,
+            "soft band [0.40,0.60], hard bounds [0.20,0.80], SOC scale 0.60",
         ),
         FormalCalibrationCheck(
             "final_dqn_state",
@@ -184,6 +185,13 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
             if ACTION_CATALOG_STATUS == "NO-GO"
             else CalibrationStatus.UNRESOLVED,
             "36 candidates exist, but screened final K/catalog is unset",
+        ),
+        FormalCalibrationCheck(
+            "objective_scale_comparability",
+            CalibrationStatus.NO_GO
+            if FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS == "NO-GO"
+            else CalibrationStatus.UNRESOLVED,
+            "no accepted Train solve audit has established active-P95 comparability",
         ),
     )
     return FormalTrainingPreflight(checks=checks)

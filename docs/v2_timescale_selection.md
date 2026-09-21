@@ -20,7 +20,8 @@
 - SOC deadband；
 - state schema；
 - action catalog；
-- reward scale。
+- reward scale；
+- objective normalization。
 
 Validation、Test 和 Unknown 只能在方法冻结后用于评估，不能回流选择上述项目。入口接收惰性的 payload loader，并在调用 loader、读取样本或运行求解器之前校验 split 与 provenance。字符串 split、枚举仿制品、旧数据版本、注入字段和修改后的 provenance 均失败关闭。
 
@@ -77,6 +78,7 @@ digest 证明的是同一序列化内容得到同一标识，不是数据真实�
 - `N_MPC=5` 已由数据选定；
 - `M=5` 优于 `M=10`；
 - warm start 在正式案例上更可靠或更快；
-- `tau_LPF`、deadband、state、action catalog 或 reward scale 已校准。
+- `tau_LPF`、state、action catalog、reward scale 或 objective normalization 已完成
+  Train-only 审计（SOC deadband 已由本轮方法定义固定，但未因此解除其他 gate）。
 
 这些项目继续作为 provisional/unsupported evidence 进入后续 preflight，正式训练保持 **NO-GO**。

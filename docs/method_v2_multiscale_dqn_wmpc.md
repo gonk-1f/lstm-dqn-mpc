@@ -2,7 +2,7 @@
 
 ## 方法边界与版本
 
-本页只定义 `MPC_OBJECTIVE_VERSION = fc_base_smooth_soc_deadband_v1` 的下层控制器。下层 MPC 负责控制品质和物理可行性，不计算氢耗价格、设备价格、燃料电池或电池退化成本，也不使用上层 DQN 的经济奖励。上层 DQN 的动作只参数化三个正权重；它不改变下层目标项的定义。
+本页只定义 `MPC_OBJECTIVE_VERSION = fc_base_smooth_soc_deadband_mean_v2` 的下层控制器。下层 MPC 负责控制品质和物理可行性，不计算氢耗价格、设备价格、燃料电池或电池退化成本，也不使用上层 DQN 的经济奖励。上层 DQN 的动作只参数化三个正权重；它不改变下层目标项的定义。
 
 当前冻结的基线时间尺度由 `TimeScaleConfig.provisional()` 给出：
 
@@ -29,25 +29,27 @@
 
 权重为精确字段 `(q_base, q_smooth, q_soc)`。三个值都必须是有限正数，且仅允许浮点表示误差范围内的和为 1。对计划 `P_fc[0:N]`：
 
-`J_base = sum_i ((P_fc[i] - P_base_hat[i]) / P_fc_scale)^2`
+`J_base = (1/N) sum_i ((P_fc[i] - P_base_hat[i]) / 600 kW)^2`
 
-`J_smooth = sum_i (Delta P_fc[i] / Delta_P_fc_scale)^2`
+`J_smooth = (1/N) sum_i (Delta P_fc[i] / 600 kW)^2`
 
 其中 `Delta P_fc[0] = P_fc[0] - P_fc_executed_previous`，后续差分为相邻计划值。首项必须引用上个周期实际执行的燃料电池功率，而不是上一计划中的预测值。
 
 SOC 死区函数为：
 
-`phi(s) = ((L-s)/SOC_scale)^2`，当 `s < L`；
+`phi(s) = ((0.40-s)/0.60)^2`，当 `s < 0.40`；
 
-`phi(s) = 0`，当 `L <= s <= H`；
+`phi(s) = 0`，当 `0.40 <= s <= 0.60`；
 
-`phi(s) = ((s-H)/SOC_scale)^2`，当 `s > H`。
+`phi(s) = ((s-0.60)/0.60)^2`，当 `s > 0.60`。
 
-`J_soc = sum_i phi(SOC[i])`。完整目标严格为：
+`J_soc = (1/N) sum_i phi(SOC[i])`。完整目标严格为：
 
 `J = q_base J_base + q_smooth J_smooth + q_soc J_soc`。
 
-不存在额外惩罚项或隐藏权重。`P_fc_scale`、`Delta_P_fc_scale`、`SOC_scale` 都必须显式给出，单位分别为 kW、kW 和无量纲 SOC，且为有限正数。
+不存在额外惩罚项或隐藏权重。三个方法尺度固定为 `600 kW / 600 kW / 0.60`；
+其中 `0.60 = SOC_max-SOC_min = 0.80-0.20`。权重和为 1 只定义相对偏好，
+不能替代这些 objective magnitude normalization。
 
 ## 功率平衡、能量学与硬约束
 
@@ -64,24 +66,28 @@ SOC 递推只调用 `v2.models.battery_energy.next_soc`，并要求经过来源�
 - `0 <= P_fc <= P_fc_rated`；
 - `P_batt_charge_min <= P_batt_bus <= P_batt_discharge_max`，其中充电下界为负数、放电上界为正数；
 - `abs(Delta P_fc) <= P_fc_ramp_per_step`；
-- `SOC_min <= SOC[i] <= SOC_max`。
+- `0.20 <= SOC[i] <= 0.80`。
 
-SOC 硬约束可配置，当前研究参考常用 `0.2..0.8`，但实现没有把它伪装成已冻结默认值。求解结果不会裁剪燃料电池功率、电池功率或 SOC；成功结果还会经过独立物理残差复核。
+`[0.20,0.80]` 是物理硬约束；`[0.40,0.60]` 只是 SOC 软目标的零惩罚工作区间，
+不会进入约束集合。求解结果不会裁剪燃料电池功率、电池功率或 SOC；成功结果还会经过独立物理残差复核。
 
 ## 参数状态与来源边界
 
 `PlantConfig.research_simulation()` 中有来源记录的研究仿真额定值 `P_fc_rated = 600 kW`、`E_batt = 624 kWh`，调用方可以显式传给 MPC。该来源不提供本实现所需的电池充放电功率边界或燃料电池逐步爬坡限制，因而不能从额定功率或容量推导这些值。
 
-以下参数尚未冻结，当前正式训练状态为 **NO-GO**：
+以下参数或证据尚未冻结，当前正式训练状态为 **NO-GO**：
 
 - `tau_LPF`；
-- SOC 死区 `L/H` 与 `SOC_scale`；
-- `P_fc_scale` 与 `Delta_P_fc_scale`；
 - 电池充电下界与放电上界；
 - 燃料电池每步爬坡限制；
-- 若偏离研究参考，还包括 SOC 硬边界。
+- 使用真实 Train states 和候选 action 实际求解得到的 objective-scale audit。
 
 这些参数只能在 Train 切分上选择、校准和审计。Validation/Test 不得用于选择它们。代码要求显式配置，避免将临时试验值提升为方法事实。
+
+爬坡硬约束与 `J_smooth` 的 600 kW 数值归一化严格分离。当前 `MPCConfig` 要求调用方
+显式给出正的 `fuel_cell_ramp_kw_per_step`，没有正式默认值；仓库求解 smoke fixture
+使用 `100 kW/step`，但它不是来源支持的正式配置。旧 v1 的 `48 kW/s` 不再作为
+`J_smooth` 分母，也没有机械乘以 30 s 生成 `1440 kW/step` 的新硬约束。
 
 ## 确定性求解与执行接口
 

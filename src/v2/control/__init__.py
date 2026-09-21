@@ -2,6 +2,7 @@
 
 from .causal_base_load import CausalBaseLoadFilter, CausalLoadForecast
 from .nonlinear_mpc import (
+    DELTA_P_FC_OBJECTIVE_SCALE_KW,
     MPC_OBJECTIVE_VERSION,
     MPCCommand,
     MPCConfig,
@@ -12,7 +13,13 @@ from .nonlinear_mpc import (
     NumericalSolverError,
     ObjectiveComponents,
     ObjectiveWeights,
+    P_FC_OBJECTIVE_SCALE_KW,
     PhysicalInfeasibilityError,
+    SOC_HARD_MAX,
+    SOC_HARD_MIN,
+    SOC_OBJECTIVE_SCALE,
+    SOC_WORKING_HIGH,
+    SOC_WORKING_LOW,
     SolverDiagnostics,
     objective_components,
     shifted_warm_start,
@@ -23,6 +30,7 @@ from .nonlinear_mpc import (
 __all__ = [
     "CausalBaseLoadFilter",
     "CausalLoadForecast",
+    "DELTA_P_FC_OBJECTIVE_SCALE_KW",
     "MPC_OBJECTIVE_VERSION",
     "MPCCommand",
     "MPCConfig",
@@ -33,7 +41,13 @@ __all__ = [
     "NumericalSolverError",
     "ObjectiveComponents",
     "ObjectiveWeights",
+    "P_FC_OBJECTIVE_SCALE_KW",
     "PhysicalInfeasibilityError",
+    "SOC_HARD_MAX",
+    "SOC_HARD_MIN",
+    "SOC_OBJECTIVE_SCALE",
+    "SOC_WORKING_HIGH",
+    "SOC_WORKING_LOW",
     "SolverDiagnostics",
     "objective_components",
     "shifted_warm_start",
