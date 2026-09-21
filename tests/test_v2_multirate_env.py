@@ -209,6 +209,73 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         self.assertEqual(environment.transitions, ())
         self.assertEqual(replayed, [])
 
+    def test_replay_observer_receives_a_detached_canonical_snapshot(self) -> None:
+        observed = []
+
+        def mutate_snapshot(transition):
+            observed.append(transition)
+            object.__setattr__(transition, "state", (999.0,))
+            object.__setattr__(transition.action, "n_base", 9)
+            object.__setattr__(transition.ledger, "h2_cost_cny", 999.0)
+
+        backend = _Backend(self._ledgers(2))
+        environment = self._environment(
+            backend,
+            _StateProvider(),
+            n=2,
+            m=1,
+            replay_sink=mutate_snapshot,
+        )
+        environment.reset()
+
+        committed = environment.step("w_2_3_5")
+
+        self.assertIs(committed, environment.transitions[0])
+        self.assertIsNot(observed[0], committed)
+        self.assertIsNot(observed[0].state, committed.state)
+        self.assertIsNot(observed[0].next_state, committed.next_state)
+        self.assertIsNot(observed[0].action, committed.action)
+        self.assertIsNot(observed[0].ledger, committed.ledger)
+        self.assertEqual(committed.state, (1.0, 0.0))
+        self.assertEqual(committed.action.numerators, (2, 3, 5))
+        self.assertEqual(committed.ledger.components_cny, (1.0, 2.0, 3.0, 4.0))
+        second = environment.step("w_2_3_5")
+        self.assertEqual(second.action.numerators, (2, 3, 5))
+
+    def test_replay_observer_failure_reports_already_committed_transition(self) -> None:
+        from v2.envs.multirate_weight_env import ReplaySinkNotificationError
+
+        observed = []
+
+        def append_then_raise_once(transition):
+            observed.append(transition)
+            if len(observed) == 1:
+                raise RuntimeError("observer storage failed after append")
+
+        backend = _Backend(self._ledgers(2))
+        provider = _StateProvider()
+        environment = self._environment(
+            backend,
+            provider,
+            n=2,
+            m=1,
+            replay_sink=append_then_raise_once,
+        )
+        environment.reset()
+
+        with self.assertRaises(ReplaySinkNotificationError) as caught:
+            environment.step("w_2_3_5")
+
+        self.assertTrue(caught.exception.transition_committed)
+        self.assertIs(caught.exception.transition, environment.transitions[0])
+        self.assertIsNot(observed[0], environment.transitions[0])
+        self.assertEqual(environment.current_state, (2.0, 0.0))
+        self.assertEqual(backend.calls, 1)
+
+        second = environment.step("w_2_3_5")
+        self.assertIs(second, environment.transitions[1])
+        self.assertEqual(backend.calls, 2)
+
     def test_strict_boundaries_and_no_go_training_status(self) -> None:
         import numpy as np
 
@@ -333,7 +400,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         environment.reset()
         with self.assertRaises(MacroStepExecutionError) as caught:
             environment.step("w_2_3_5")
-        self.assertEqual(caught.exception.executed_mpc_steps, 0)
+        self.assertEqual(caught.exception.executed_mpc_steps, 1)
         self.assertEqual(environment.transitions, ())
 
 

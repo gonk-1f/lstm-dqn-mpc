@@ -156,6 +156,36 @@ class MacroStepExecutionError(RuntimeError):
         self.executed_mpc_steps = executed_mpc_steps
 
 
+class ReplaySinkNotificationError(RuntimeError):
+    """An observer failed after the authoritative transition was committed."""
+
+    def __init__(self, transition: MacroTransition) -> None:
+        if type(transition) is not MacroTransition:
+            raise TypeError("transition must be an exact MacroTransition")
+        MacroTransition(**transition.__dict__)
+        super().__init__(
+            "replay observer notification failed after the transition was committed"
+        )
+        self.transition_committed = True
+        self.transition = transition
+
+
+def _transition_snapshot(value: MacroTransition) -> MacroTransition:
+    """Return a deeply detached canonical value for an external observer."""
+    if type(value) is not MacroTransition:
+        raise TypeError("transition must be an exact MacroTransition")
+    MacroTransition(**value.__dict__)
+    return MacroTransition(
+        state=tuple(item for item in value.state),
+        action=ActionCandidate(*value.action.numerators),
+        reward_cny=value.reward_cny,
+        next_state=tuple(item for item in value.next_state),
+        done=value.done,
+        executed_mpc_steps=value.executed_mpc_steps,
+        ledger=RawCnyIntervalLedger(*value.ledger.components_cny),
+    )
+
+
 class MultiRateWeightEnvironment:
     """Hold one immutable weight action for ``dqn_switch_steps`` executions."""
 
@@ -246,6 +276,9 @@ class MultiRateWeightEnvironment:
                 # prevents one call from poisoning a later MPC execution.
                 weights = MPCWeights(*canonical_weight_values)
                 result = self._execute_mpc_step(weights)
+                # Returning from this boundary means one physical command was
+                # executed even if the backend's result object is malformed.
+                executed += 1
                 if type(result) is not MPCExecutionResult:
                     raise TypeError("backend result must be an exact MPCExecutionResult")
                 _validate_ledger(result.ledger)
@@ -256,7 +289,6 @@ class MultiRateWeightEnvironment:
                 ledger = RawCnyIntervalLedger(*result.ledger.components_cny)
                 done_snapshot = result.done
                 ledgers.append(ledger)
-                executed += 1
                 done = done_snapshot
                 if done:
                     break
@@ -278,8 +310,6 @@ class MultiRateWeightEnvironment:
                 executed_mpc_steps=executed,
                 ledger=macro_ledger,
             )
-            if self._replay_sink is not None:
-                self._replay_sink(transition)
         except Exception as exc:
             self._failed = True
             if isinstance(exc, MacroStepExecutionError):
@@ -292,6 +322,12 @@ class MultiRateWeightEnvironment:
         self._transitions.append(transition)
         self._current_state = next_state
         self._done = done
+        if self._replay_sink is not None:
+            observer_value = _transition_snapshot(transition)
+            try:
+                self._replay_sink(observer_value)
+            except Exception as exc:
+                raise ReplaySinkNotificationError(transition) from exc
         return transition
 
 
@@ -301,5 +337,6 @@ __all__ = [
     "MacroStepExecutionError",
     "MacroTransition",
     "MultiRateWeightEnvironment",
+    "ReplaySinkNotificationError",
     "TRAINING_READINESS_STATUS",
 ]

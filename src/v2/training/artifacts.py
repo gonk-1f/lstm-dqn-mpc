@@ -403,7 +403,7 @@ def decode_artifact(
         document = json.loads(data.decode("ascii"), object_pairs_hook=_reject_duplicate_keys)
     except IncompatibleArtifactError:
         raise
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+    except (UnicodeDecodeError, ValueError) as exc:
         raise IncompatibleArtifactError("artifact is not a v2 canonical JSON envelope") from exc
     top_keys = {"metadata", "payload_base64", "payload_encoding", "sha256"}
     if type(document) is not dict or set(document) != top_keys:
@@ -545,6 +545,13 @@ def _validate_replay_transitions(
             raise ValueError("replay action is outside the metadata action catalog")
         if not 1 <= transition.executed_mpc_steps <= metadata.dqn_switch_steps:
             raise ValueError("replay execution count is outside the metadata timescale")
+        if (
+            not transition.done
+            and transition.executed_mpc_steps != metadata.dqn_switch_steps
+        ):
+            raise ValueError(
+                "non-terminal replay transitions must execute the full switch interval"
+            )
     return transitions
 
 
@@ -564,7 +571,7 @@ def decode_replay(
         )
     except IncompatibleArtifactError:
         raise
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+    except (UnicodeDecodeError, ValueError) as exc:
         raise IncompatibleArtifactError("replay payload is not canonical JSON") from exc
     if type(values) is not list:
         raise IncompatibleArtifactError("replay payload must be a JSON array")

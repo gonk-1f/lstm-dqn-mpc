@@ -174,6 +174,25 @@ class V2ArtifactTests(unittest.TestCase):
                 decode_artifact(pretty, expected_metadata=metadata)
         decoder.assert_not_called()
 
+    def test_untrusted_json_integer_limit_errors_are_wrapped(self) -> None:
+        from v2.contracts import IncompatibleArtifactError
+        from v2.training.artifacts import decode_artifact, decode_replay, encode_artifact
+
+        huge_integer = b"1" * 5000
+        with self.assertRaises(IncompatibleArtifactError):
+            decode_artifact(
+                b"[" + huge_integer + b"]",
+                expected_metadata=self._metadata(),
+            )
+
+        replay_metadata = self._metadata(kind="replay", state_dimension=2)
+        replay_envelope = encode_artifact(
+            replay_metadata,
+            b"[" + huge_integer + b"]",
+        )
+        with self.assertRaises(IncompatibleArtifactError):
+            decode_replay(replay_envelope, expected_metadata=replay_metadata)
+
     def test_legacy_action_identity_cannot_form_v2_metadata(self) -> None:
         from v2.training.artifacts import ArtifactMetadata
 
@@ -277,13 +296,13 @@ class V2ArtifactTests(unittest.TestCase):
         dimension_metadata = self._metadata(kind="replay", state_dimension=10)
         ledger = RawCnyIntervalLedger(1.0, 2.0, 3.0, 4.0)
 
-        def transition(*, state=(1.0, 2.0), action=None, steps=3):
+        def transition(*, state=(1.0, 2.0), action=None, steps=3, done=False):
             return MacroTransition(
                 state=state,
                 action=action or self._catalog()[0],
                 reward_cny=-10.0,
                 next_state=tuple(value + 1.0 for value in state),
-                done=False,
+                done=done,
                 executed_mpc_steps=steps,
                 ledger=ledger,
             )
@@ -292,6 +311,7 @@ class V2ArtifactTests(unittest.TestCase):
             (dimension_metadata, transition(state=(1.0, 2.0))),
             (metadata, transition(action=ActionCandidate(3, 3, 4))),
             (metadata, transition(steps=99)),
+            (metadata, transition(steps=2, done=False)),
         )
         for case_metadata, value in invalid:
             with self.subTest(value=value):
@@ -316,6 +336,13 @@ class V2ArtifactTests(unittest.TestCase):
                 envelope = encode_artifact(case_metadata, payload)
                 with self.assertRaises(IncompatibleArtifactError):
                     decode_replay(envelope, expected_metadata=case_metadata)
+
+        early_terminal = transition(steps=2, done=True)
+        encoded = encode_replay(metadata, (early_terminal,))
+        self.assertEqual(
+            decode_replay(encoded, expected_metadata=metadata),
+            (early_terminal,),
+        )
 
     def test_replay_revalidates_tampered_exact_fields(self) -> None:
         from v2.economics import RawCnyIntervalLedger

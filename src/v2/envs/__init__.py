@@ -5,6 +5,7 @@ from .multirate_weight_env import (
     MacroStepExecutionError,
     MacroTransition,
     MultiRateWeightEnvironment,
+    ReplaySinkNotificationError,
     TRAINING_READINESS_STATUS,
 )
 
@@ -13,5 +14,6 @@ __all__ = [
     "MacroStepExecutionError",
     "MacroTransition",
     "MultiRateWeightEnvironment",
+    "ReplaySinkNotificationError",
     "TRAINING_READINESS_STATUS",
 ]
