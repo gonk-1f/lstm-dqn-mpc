@@ -422,6 +422,8 @@ def decode_artifact(
     metadata_document = _metadata_document(metadata)
     if digest != _envelope_digest(metadata_document, payload_base64):
         raise IncompatibleArtifactError("artifact digest does not match its contents")
+    if _canonical_json(document) != data:
+        raise IncompatibleArtifactError("artifact bytes are not in canonical form")
     try:
         payload = base64.b64decode(payload_base64, validate=True)
     except (ValueError, base64.binascii.Error) as exc:
@@ -513,12 +515,37 @@ def encode_replay(
     metadata: ArtifactMetadata,
     transitions: tuple[MacroTransition, ...],
 ) -> bytes:
-    if type(metadata) is not ArtifactMetadata or metadata.kind != "replay":
-        raise TypeError("replay encoding requires exact replay metadata")
-    if type(transitions) is not tuple:
-        raise TypeError("transitions must be an immutable exact tuple")
+    _validate_replay_transitions(metadata, transitions)
     payload = _canonical_json([_transition_document(item) for item in transitions])
     return encode_artifact(metadata, payload)
+
+
+def _validate_replay_transitions(
+    metadata: ArtifactMetadata,
+    transitions: tuple[MacroTransition, ...],
+) -> tuple[MacroTransition, ...]:
+    if type(metadata) is not ArtifactMetadata or metadata.kind != "replay":
+        raise TypeError("replay validation requires exact replay metadata")
+    _metadata_document(metadata)
+    if type(transitions) is not tuple:
+        raise TypeError("transitions must be an immutable exact tuple")
+
+    for transition in transitions:
+        if type(transition) is not MacroTransition:
+            raise TypeError("replay must contain exact MacroTransition values")
+        # Reconstruct first so forged bool/subclass/nested fields fail before
+        # metadata binding checks.
+        MacroTransition(**transition.__dict__)
+        if (
+            len(transition.state) != metadata.state_dimension
+            or len(transition.next_state) != metadata.state_dimension
+        ):
+            raise ValueError("replay state dimensions do not match metadata")
+        if transition.action.action_id not in metadata.action_catalog_identity:
+            raise ValueError("replay action is outside the metadata action catalog")
+        if not 1 <= transition.executed_mpc_steps <= metadata.dqn_switch_steps:
+            raise ValueError("replay execution count is outside the metadata timescale")
+    return transitions
 
 
 def decode_replay(
@@ -544,6 +571,12 @@ def decode_replay(
     transitions = tuple(_transition_from_document(item) for item in values)
     if _canonical_json([_transition_document(item) for item in transitions]) != envelope.payload:
         raise IncompatibleArtifactError("replay payload bytes are not canonical")
+    try:
+        _validate_replay_transitions(envelope.metadata, transitions)
+    except (TypeError, ValueError, IncompatibleArtifactError) as exc:
+        raise IncompatibleArtifactError(
+            "replay transitions do not match artifact metadata"
+        ) from exc
     return transitions
 
 

@@ -5,6 +5,7 @@ import hashlib
 import json
 import sys
 import unittest
+from unittest import mock
 from pathlib import Path
 
 
@@ -154,6 +155,25 @@ class V2ArtifactTests(unittest.TestCase):
         with self.assertRaises(FrozenInstanceError):
             metadata.seed = 5  # type: ignore[misc]
 
+    def test_noncanonical_envelope_is_rejected_before_base64_decode(self) -> None:
+        import base64
+
+        from v2.contracts import IncompatibleArtifactError
+        from v2.training.artifacts import decode_artifact, encode_artifact
+
+        metadata = self._metadata()
+        document = json.loads(encode_artifact(metadata, b"payload"))
+        pretty = json.dumps(document, indent=2).encode("ascii")
+        real_decode = base64.b64decode
+
+        with mock.patch(
+            "v2.training.artifacts.base64.b64decode",
+            wraps=real_decode,
+        ) as decoder:
+            with self.assertRaises(IncompatibleArtifactError):
+                decode_artifact(pretty, expected_metadata=metadata)
+        decoder.assert_not_called()
+
     def test_legacy_action_identity_cannot_form_v2_metadata(self) -> None:
         from v2.training.artifacts import ArtifactMetadata
 
@@ -235,7 +255,7 @@ class V2ArtifactTests(unittest.TestCase):
             executed_mpc_steps=3,
             ledger=RawCnyIntervalLedger(1.0, 2.0, 3.0, 4.0),
         )
-        metadata = self._metadata(kind="replay")
+        metadata = self._metadata(kind="replay", state_dimension=2)
         encoded = encode_replay(metadata, (transition,))
         decoded = decode_replay(encoded, expected_metadata=metadata)
 
@@ -245,6 +265,82 @@ class V2ArtifactTests(unittest.TestCase):
         self.assertEqual(encode_replay(metadata, decoded), encoded)
         with self.assertRaises(FrozenInstanceError):
             decoded[0].done = True  # type: ignore[misc]
+
+    def test_replay_transitions_must_match_metadata_on_encode_and_decode(self) -> None:
+        from v2.contracts import IncompatibleArtifactError
+        from v2.dqn.action_space import ActionCandidate
+        from v2.economics import RawCnyIntervalLedger
+        from v2.envs.multirate_weight_env import MacroTransition
+        from v2.training.artifacts import decode_replay, encode_artifact, encode_replay
+
+        metadata = self._metadata(kind="replay", state_dimension=2)
+        dimension_metadata = self._metadata(kind="replay", state_dimension=10)
+        ledger = RawCnyIntervalLedger(1.0, 2.0, 3.0, 4.0)
+
+        def transition(*, state=(1.0, 2.0), action=None, steps=3):
+            return MacroTransition(
+                state=state,
+                action=action or self._catalog()[0],
+                reward_cny=-10.0,
+                next_state=tuple(value + 1.0 for value in state),
+                done=False,
+                executed_mpc_steps=steps,
+                ledger=ledger,
+            )
+
+        invalid = (
+            (dimension_metadata, transition(state=(1.0, 2.0))),
+            (metadata, transition(action=ActionCandidate(3, 3, 4))),
+            (metadata, transition(steps=99)),
+        )
+        for case_metadata, value in invalid:
+            with self.subTest(value=value):
+                with self.assertRaises((TypeError, ValueError)):
+                    encode_replay(case_metadata, (value,))
+
+                payload = json.dumps(
+                    [
+                        {
+                            "action_numerators": list(value.action.numerators),
+                            "done": value.done,
+                            "executed_mpc_steps": value.executed_mpc_steps,
+                            "ledger_components_cny": list(value.ledger.components_cny),
+                            "next_state": list(value.next_state),
+                            "reward_cny": value.reward_cny,
+                            "state": list(value.state),
+                        }
+                    ],
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("ascii")
+                envelope = encode_artifact(case_metadata, payload)
+                with self.assertRaises(IncompatibleArtifactError):
+                    decode_replay(envelope, expected_metadata=case_metadata)
+
+    def test_replay_revalidates_tampered_exact_fields(self) -> None:
+        from v2.economics import RawCnyIntervalLedger
+        from v2.envs.multirate_weight_env import MacroTransition
+        from v2.training.artifacts import encode_replay
+
+        class IntSubclass(int):
+            pass
+
+        metadata = self._metadata(kind="replay", state_dimension=2)
+        ledger = RawCnyIntervalLedger(1.0, 2.0, 3.0, 4.0)
+        for forged_steps in (True, IntSubclass(2)):
+            value = MacroTransition(
+                state=(1.0, 2.0),
+                action=self._catalog()[0],
+                reward_cny=-10.0,
+                next_state=(2.0, 3.0),
+                done=False,
+                executed_mpc_steps=2,
+                ledger=ledger,
+            )
+            object.__setattr__(value, "executed_mpc_steps", forged_steps)
+            with self.subTest(forged_steps=forged_steps):
+                with self.assertRaises(TypeError):
+                    encode_replay(metadata, (value,))
 
 
 if __name__ == "__main__":

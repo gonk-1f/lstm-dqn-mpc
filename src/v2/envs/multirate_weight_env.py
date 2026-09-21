@@ -233,7 +233,7 @@ class MultiRateWeightEnvironment:
         except KeyError as exc:
             raise ValueError(f"unknown action_id: {action_id}") from exc
         _validate_candidate(action)
-        weights = action.to_mpc_weights()
+        canonical_weight_values = action.as_tuple()
 
         ledgers: list[RawCnyIntervalLedger] = []
         done = False
@@ -242,15 +242,22 @@ class MultiRateWeightEnvironment:
             # N is intentionally absent here: it belongs inside each backend
             # solve.  M alone determines actual receding-horizon executions.
             for _ in range(self._timescale.dqn_switch_steps):
+                # Backends are untrusted mutable boundaries.  A fresh value
+                # prevents one call from poisoning a later MPC execution.
+                weights = MPCWeights(*canonical_weight_values)
                 result = self._execute_mpc_step(weights)
                 if type(result) is not MPCExecutionResult:
                     raise TypeError("backend result must be an exact MPCExecutionResult")
                 _validate_ledger(result.ledger)
                 if type(result.done) is not bool:
                     raise TypeError("stored backend done flag must remain an exact bool")
-                ledgers.append(result.ledger)
+                # Snapshot before the next backend call can mutate an object it
+                # previously returned.
+                ledger = RawCnyIntervalLedger(*result.ledger.components_cny)
+                done_snapshot = result.done
+                ledgers.append(ledger)
                 executed += 1
-                done = result.done
+                done = done_snapshot
                 if done:
                     break
 

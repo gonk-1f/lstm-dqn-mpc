@@ -89,7 +89,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
 
         self.assertEqual(backend.calls, 5)
         self.assertEqual(provider.calls, 2)
-        self.assertEqual(len({id(value) for value in backend.weights}), 1)
+        self.assertEqual(len({id(value) for value in backend.weights}), 5)
         self.assertTrue(
             all(
                 (value.q_base, value.q_smooth, value.q_soc) == (0.2, 0.3, 0.5)
@@ -106,6 +106,60 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         self.assertEqual(environment.transitions, (transition,))
         with self.assertRaises(FrozenInstanceError):
             transition.reward_cny = 0.0  # type: ignore[misc]
+
+    def test_backend_cannot_mutate_later_weights_or_prior_ledger_snapshots(self) -> None:
+        from v2.economics import RawCnyIntervalLedger
+        from v2.envs.multirate_weight_env import MPCExecutionResult
+
+        source_ledgers = (
+            RawCnyIntervalLedger(1.0, 2.0, 3.0, 4.0),
+            RawCnyIntervalLedger(5.0, 6.0, 7.0, 8.0),
+            RawCnyIntervalLedger(9.0, 10.0, 11.0, 12.0),
+        )
+
+        class MutatingBackend:
+            def __init__(self):
+                self.calls = 0
+                self.received_values = []
+                self.weights = []
+
+            def execute_mpc_step(self, weights):
+                if self.calls:
+                    object.__setattr__(
+                        source_ledgers[self.calls - 1],
+                        "h2_cost_cny",
+                        999.0,
+                    )
+                self.received_values.append(
+                    (weights.q_base, weights.q_smooth, weights.q_soc)
+                )
+                self.weights.append(weights)
+                object.__setattr__(weights, "q_base", 999.0)
+                ledger = source_ledgers[self.calls]
+                self.calls += 1
+                return MPCExecutionResult(ledger, False)
+
+        backend = MutatingBackend()
+        environment = self._environment(
+            backend,
+            _StateProvider(),
+            n=2,
+            m=3,
+        )
+        environment.reset()
+
+        transition = environment.step("w_2_3_5")
+
+        self.assertEqual(
+            backend.received_values,
+            [(0.2, 0.3, 0.5)] * 3,
+        )
+        self.assertEqual(len({id(value) for value in backend.weights}), 3)
+        self.assertEqual(
+            transition.ledger.components_cny,
+            (15.0, 18.0, 21.0, 24.0),
+        )
+        self.assertEqual(transition.action_id, "w_2_3_5")
 
     def test_loop_count_uses_m_not_prediction_horizon_n(self) -> None:
         backend = _Backend(self._ledgers(3))
