@@ -7,7 +7,15 @@ from pathlib import Path
 import re
 from typing import TypeVar
 
+from .analysis.timescale_audit import FORMAL_TIMESCALE_SELECTION_STATUS
 from .data.raw_inventory import RawExcelInventory, require_train_only
+from .dqn.action_space import ACTION_CATALOG_STATUS
+from .dqn.state import CANDIDATE_STATE_STATUS
+from .economics import FORMAL_PRICE_CATALOG, SHORE_TARIFF_SOURCE
+from .models.battery_degradation import BATTERY_LIFETIME_NORMALIZATION_STATUS
+from .models.battery_energy import BATTERY_EFFICIENCY_CALIBRATION_STATUS
+from .models.fuel_cell_degradation import FC_LIFETIME_NORMALIZATION_STATUS
+from .models.fuel_cell_efficiency import FC_EFFICIENCY_CALIBRATION_STATUS
 
 
 @dataclass(frozen=True)
@@ -30,6 +38,162 @@ class PreflightBlockedError(RuntimeError):
         self.report = report
         detail = "; ".join(f"{issue.code}: {issue.message}" for issue in report.issues)
         super().__init__(f"v2 preflight failed: {detail}")
+
+
+class CalibrationStatus(str, Enum):
+    VERIFIED = "VERIFIED"
+    PROVISIONAL = "PROVISIONAL"
+    NO_GO = "NO-GO"
+    UNRESOLVED = "UNRESOLVED"
+
+
+@dataclass(frozen=True)
+class FormalCalibrationCheck:
+    key: str
+    status: CalibrationStatus
+    evidence: str
+
+
+@dataclass(frozen=True)
+class FormalTrainingPreflight:
+    checks: tuple[FormalCalibrationCheck, ...]
+
+    @property
+    def ready(self) -> bool:
+        return all(check.status is CalibrationStatus.VERIFIED for check in self.checks)
+
+    @property
+    def formal_training(self) -> str:
+        return "GO" if self.ready else "NO-GO"
+
+    @property
+    def issues(self) -> tuple[PreflightIssue, ...]:
+        return tuple(
+            PreflightIssue(
+                code=f"unfrozen_{check.key}",
+                message=f"{check.status.value}: {check.evidence}",
+            )
+            for check in self.checks
+            if check.status is not CalibrationStatus.VERIFIED
+        )
+
+
+class FormalTrainingBlockedError(RuntimeError):
+    def __init__(self, report: FormalTrainingPreflight) -> None:
+        self.report = report
+        detail = "; ".join(
+            f"{issue.code}: {issue.message}" for issue in report.issues
+        )
+        super().__init__(f"FORMAL_TRAINING=NO-GO: {detail}")
+
+
+def assess_formal_training_preflight() -> FormalTrainingPreflight:
+    """Return the repository's complete, non-overridable formal-training gate.
+
+    The source text calls this a twelve-item gate but enumerates thirteen
+    distinct calibrations.  All thirteen are kept explicit here.  A unit test
+    or CLI argument cannot promote an unresolved item to ``VERIFIED``.
+    """
+
+    battery_efficiency_verified = (
+        BATTERY_EFFICIENCY_CALIBRATION_STATUS == "SOURCE_BACKED"
+    )
+    checks = (
+        FormalCalibrationCheck(
+            "eta_fc_curve",
+            CalibrationStatus.VERIFIED
+            if FC_EFFICIENCY_CALIBRATION_STATUS == "SOURCE_BACKED"
+            else CalibrationStatus.NO_GO,
+            "docs/v2_fc_efficiency_model.md; FC_Data.xlsx SHA-256 and A2:B12 are frozen",
+        ),
+        FormalCalibrationCheck(
+            "eta_chg",
+            CalibrationStatus.VERIFIED
+            if battery_efficiency_verified
+            else CalibrationStatus.NO_GO,
+            "0.95; DOI 10.11930/j.issn.1004-9649.202507065, Table 3",
+        ),
+        FormalCalibrationCheck(
+            "eta_dis",
+            CalibrationStatus.VERIFIED
+            if battery_efficiency_verified
+            else CalibrationStatus.NO_GO,
+            "0.95; DOI 10.11930/j.issn.1004-9649.202507065, Table 3",
+        ),
+        FormalCalibrationCheck(
+            "fc_degradation_normalization",
+            CalibrationStatus.NO_GO
+            if FC_LIFETIME_NORMALIZATION_STATUS == "NO-GO"
+            else CalibrationStatus.UNRESOLVED,
+            "single-cell initial-voltage normalization and aggregate mapping are unapproved",
+        ),
+        FormalCalibrationCheck(
+            "battery_q_lifetime_normalization",
+            CalibrationStatus.NO_GO
+            if BATTERY_LIFETIME_NORMALIZATION_STATUS == "NO-GO"
+            else CalibrationStatus.UNRESOLVED,
+            "authoritative lifetime-throughput Q_lifetime is absent",
+        ),
+        FormalCalibrationCheck(
+            "shore_electricity_price",
+            CalibrationStatus.VERIFIED
+            if FORMAL_PRICE_CATALOG.shore_cny_per_kwh == 1.10
+            and SHORE_TARIFF_SOURCE.classification == "scenario_not_measured"
+            else CalibrationStatus.NO_GO,
+            "1.10 CNY/kWh peak-tariff scenario; not a measured wharf tariff",
+        ),
+        FormalCalibrationCheck(
+            "ts_mpc",
+            CalibrationStatus.PROVISIONAL,
+            "30 s baseline only; real Train evidence is unavailable",
+        ),
+        FormalCalibrationCheck(
+            "n_mpc",
+            CalibrationStatus.PROVISIONAL
+            if FORMAL_TIMESCALE_SELECTION_STATUS == "NO-GO"
+            else CalibrationStatus.UNRESOLVED,
+            "N=5 baseline only; no formal Train selection",
+        ),
+        FormalCalibrationCheck(
+            "dqn_switch_steps",
+            CalibrationStatus.PROVISIONAL
+            if FORMAL_TIMESCALE_SELECTION_STATUS == "NO-GO"
+            else CalibrationStatus.UNRESOLVED,
+            "M sensitivity is restricted to {5,10}; no formal selection",
+        ),
+        FormalCalibrationCheck(
+            "tau_lpf",
+            CalibrationStatus.UNRESOLVED,
+            "no Train-only calibration has frozen tau_LPF",
+        ),
+        FormalCalibrationCheck(
+            "soc_deadband",
+            CalibrationStatus.UNRESOLVED,
+            "no Train-only calibration has frozen the SOC deadband",
+        ),
+        FormalCalibrationCheck(
+            "final_dqn_state",
+            CalibrationStatus.NO_GO
+            if CANDIDATE_STATE_STATUS == "NO-GO"
+            else CalibrationStatus.UNRESOLVED,
+            "candidate state has not passed required Train-only audits",
+        ),
+        FormalCalibrationCheck(
+            "final_action_catalog",
+            CalibrationStatus.NO_GO
+            if ACTION_CATALOG_STATUS == "NO-GO"
+            else CalibrationStatus.UNRESOLVED,
+            "36 candidates exist, but screened final K/catalog is unset",
+        ),
+    )
+    return FormalTrainingPreflight(checks=checks)
+
+
+def require_formal_training_ready() -> FormalTrainingPreflight:
+    report = assess_formal_training_preflight()
+    if not report.ready:
+        raise FormalTrainingBlockedError(report)
+    return report
 
 
 class TechnicalSpecificationSourceClass(str, Enum):
@@ -137,3 +301,21 @@ def load_train_payload(
     if not report.ready:
         raise PreflightBlockedError(report)
     return payload_loader()
+
+
+def load_formal_train_payload(
+    *,
+    split: str,
+    inventory: RawExcelInventory,
+    technical_specification: TechnicalSpecificationRecord | None,
+    payload_loader: Callable[[], PayloadT],
+) -> PayloadT:
+    """Fail on every unfrozen formal calibration before any payload access."""
+
+    require_formal_training_ready()
+    return load_train_payload(
+        split=split,
+        inventory=inventory,
+        technical_specification=technical_specification,
+        payload_loader=payload_loader,
+    )
