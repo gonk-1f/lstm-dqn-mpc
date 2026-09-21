@@ -6,6 +6,13 @@ v1 方法说明与诊断文档已移入 `docs/archive_v1/`，删除/保留范围
 `docs/v2_cleanup_manifest.md`。该状态只证明代码与文档边界已清理，不证明 v2
 数据或模型已完成标定。
 
+最终对比 v1 基线 commit `ba81281da8236f0816d352a51ccfd7d176baabaf`：共删除
+852 个已跟踪文件，全部位于清单列出的 15 个 v1 `outputs/` 目录；另有
+2 个忽略的 v1 输出树和 2 个空占位目录按清单处理。10 个已跟踪文档以
+100% rename 移入 `docs/archive_v1/`，另保留并归档 1 个原未跟踪的论文复核文档。
+完整路径、单目录文件数、恢复 commit 与本地 recovery cache 位置均以
+`docs/v2_cleanup_manifest.md` 为权威记录；未发现清单外的已跟踪文件删除。
+
 ## 2. code architecture — VERIFIED
 
 当前实现按 `data`、`models`、`control`、`dqn`、`envs`、`economics`、
@@ -106,9 +113,15 @@ Train case 和最终 catalog 的重复求解记录。因此不能声称热启动
 
 ## 16. unit/contract test results — VERIFIED
 
-Task 10 采用最小充分验证：只执行新增正式 preflight/CLI 测试、受影响的既有
-preflight/data guard 测试、改动 Python 文件编译和 `git diff --check`。此节不声称
-本任务重新运行了全部 v2 或全仓测试；最终全量验证属于 Task 11。
+2026-09-21 最终验证只运行一次全仓套件：`374` 个测试全部通过，用时
+`31.135 s`。Task 10 新增的 preflight/CLI 定向测试为 `6/6`，受影响的既有
+data/preflight guard 测试为 `21/21`。未在每个小任务重复全量套件。
+
+求解器 smoke 单独复核了 `N=5` 约束/首步执行与显式 cold/shifted-warm
+确定性，`2/2` 通过，用时 `0.759 s`。`python -m compileall -q src tests`、
+`git diff --check` 均通过；对 `src/v2` 的本地顶层包导入扫描未发现 v2
+正式模块导入旧 `src/{data,dqn,envs,main,mpc,...}` 包。这些结果只证明软件合同与
+合成求解 smoke 通过，不构成真实工况实验或正式训练证据。
 
 ## 17. remaining unsupported assumptions — UNRESOLVED
 
