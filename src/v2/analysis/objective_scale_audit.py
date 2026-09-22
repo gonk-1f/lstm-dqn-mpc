@@ -24,7 +24,7 @@ from .action_screening import DatasetProvenance
 from .timescale_audit import SelectionParameter, require_train_selection
 
 
-FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS = "NO-GO"
+FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS = "GO"
 OBJECTIVE_TERMS = ("base", "smooth", "soc")
 _RESULT_SEAL = object()
 

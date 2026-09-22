@@ -6,9 +6,18 @@ MPC 每 `Ts_MPC` 秒滚动求解，上层 DQN 动作在 `M` 个已执行 MPC 周
 不是旧版单步 MPC 自身目标值。
 
 当前状态是 **`FORMAL_TRAINING = NO-GO`**。仓库没有正式训练入口，也不会用
-占位值绕过缺失证据。主要未冻结项包括燃料电池与电池寿命归一化、真实 Train
-工况数据、`Ts_MPC/N/M/tau_LPF/SOC deadband`、最终 DQN state、最终 action
-catalog 与完整求解器审计。36 个十分位正单纯形权重只是候选库，不是正式动作表。
+占位值绕过缺失证据。当前 provisional 基线为 `Ts_MPC=30 s`、`N=5`、`M=5`；
+SOC 硬边界为 `[0.20,0.80]`，工作区间为 `[0.40,0.60]`，objective
+normalization 固定为 `600 / 600 / 0.60`。真实 Train objective-scale audit 已完成，
+其 gate 为 **PASS / VERIFIED**。
+
+该 PASS 不表示正式训练已放行。`tau_LPF=90 s` 只用于当前审计，仍是 provisional
+project parameter；FC hard ramp 当前允许 disabled，未恢复旧 `48 kW/step`。
+审计使用的 battery bounds 为 `[-624,+1248] kW`，来源是 Yang et al. (2026)
+Table 6 的研究配置，不是原船硬件边界。主要剩余 blocker 包括 FC/电池寿命归一化、
+正式 `Ts_MPC/N/M/tau_LPF` 选择、完整正式 Train payload、最终 DQN state、最终
+action catalog/K、reward scale、岸电变换效率及最终 catalog 的求解器鲁棒性审计。
+36 个十分位正单纯形权重只是候选库，不是正式动作表。
 
 ## 当前 v2 边界
 
@@ -46,10 +55,11 @@ python -m src.v2.main.run_train_only_timescale_audit `
   --change-threshold <train-registered-threshold>
 ```
 
-该入口只执行 `N=5`、`M in {5,10}` 的诊断，不选择正式参数、不访问
-Validation/Test、不启动 DQN 训练。即使诊断完成，当前仍返回 `2`，因为正式时间
-尺度状态保持 NO-GO。仓库当前没有满足 v2 原始数据门槛的真实 Train payload，
-因此不要用合成数据结果声称完成了正式审计。
+当前配置保持 `N=5`、`M=5`；时间尺度诊断域可比较 `M in {5,10}`，但不会自动
+改写当前基线或选择正式参数。该入口不访问 Validation/Test，也不启动 DQN 训练。
+当前仍返回 `2`，因为正式时间尺度和其他独立 gate 尚未全部 VERIFIED。真实 Train
+objective-scale 结果见 `docs/v2_objective_scale_audit.md`；不得把该窄范围 PASS 或
+合成测试结果表述成完整正式训练已就绪。
 
 ## v1 历史归档
 

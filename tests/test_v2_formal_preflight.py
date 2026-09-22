@@ -51,7 +51,7 @@ class FormalPreflightTests(unittest.TestCase):
         self.assertEqual(by_key["soc_deadband"].status, CalibrationStatus.VERIFIED)
         self.assertEqual(
             by_key["objective_scale_comparability"].status,
-            CalibrationStatus.NO_GO,
+            CalibrationStatus.VERIFIED,
         )
         self.assertTrue(all(check.evidence.strip() for check in report.checks))
 
@@ -90,7 +90,7 @@ class FormalPreflightTests(unittest.TestCase):
             sum(line.startswith("[") for line in output.getvalue().splitlines()),
             14,
         )
-        self.assertIn("[NO-GO] objective_scale_comparability", output.getvalue())
+        self.assertIn("[VERIFIED] objective_scale_comparability", output.getvalue())
 
     def test_timescale_cli_rejects_held_out_split_before_reading_payload(self) -> None:
         from v2.main.run_train_only_timescale_audit import main

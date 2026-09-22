@@ -9,7 +9,7 @@
 - MPC 采样周期 `Ts_MPC = 30 s`；
 - 预测长度 `N_MPC = 5`，即每次求解预测未来 5 个 MPC 步；
 - 滚动时域每次只执行计划的第 0 步，下一控制周期重新观测和求解；
-- `dqn_switch_steps` 是上层动作保持的实际控制步数，不参与下层计划长度。即使当前暂定值也为 5，它与 `N_MPC` 仍是不同概念。
+- `dqn_switch_steps=M=5` 是当前 provisional 基线，不参与下层计划长度；它与同为 5 的 `N_MPC` 仍是不同概念。
 
 ## 因果负载与基准功率
 
@@ -65,7 +65,7 @@ SOC 递推只调用 `v2.models.battery_energy.next_soc`，并要求经过来源�
 
 - `0 <= P_fc <= P_fc_rated`；
 - `P_batt_charge_min <= P_batt_bus <= P_batt_discharge_max`，其中充电下界为负数、放电上界为正数；
-- `abs(Delta P_fc) <= P_fc_ramp_per_step`；
+- 若配置了 `P_fc_ramp_per_step`，则 `abs(Delta P_fc) <= P_fc_ramp_per_step`；
 - `0.20 <= SOC[i] <= 0.80`。
 
 `[0.20,0.80]` 是物理硬约束；`[0.40,0.60]` 只是 SOC 软目标的零惩罚工作区间，
@@ -73,21 +73,37 @@ SOC 递推只调用 `v2.models.battery_energy.next_soc`，并要求经过来源�
 
 ## 参数状态与来源边界
 
-`PlantConfig.research_simulation()` 中有来源记录的研究仿真额定值 `P_fc_rated = 600 kW`、`E_batt = 624 kWh`，调用方可以显式传给 MPC。该来源不提供本实现所需的电池充放电功率边界或燃料电池逐步爬坡限制，因而不能从额定功率或容量推导这些值。
+`PlantConfig.research_simulation()` 中有来源记录的研究仿真值
+`P_fc_rated=600 kW`、`E_batt=624 kWh`、`P_batt_min=-624 kW`、
+`P_batt_max=+1248 kW`，均来自 Yang et al. (2026) Table 6。用户于
+2026-09-22 明确批准将该组电池边界用于本次 objective-scale audit。它们属于当前
+研究仿真 MPC 配置，不得表述成 12 簇、约 1806 kWh 原船硬件边界；原船技术规格
+本身仍只给出系统额定输出不低于 900 kW。
+
+本次 objective-scale audit 由用户于 2026-09-22 临时指定
+`tau_LPF=90 s`。在名义 `Ts_MPC=30 s` 下对应
+`alpha=exp(-30/90)=0.7165313106`。该值只解除本次审计的参数阻塞，来源分类为
+`user_approved_provisional_audit_parameter`；它不是两篇论文直接给出的数值，也不
+自动成为正式训练参数。
 
 以下参数或证据尚未冻结，当前正式训练状态为 **NO-GO**：
 
-- `tau_LPF`；
-- 电池充电下界与放电上界；
-- 燃料电池每步爬坡限制；
-- 使用真实 Train states 和候选 action 实际求解得到的 objective-scale audit。
+- 正式训练使用的 `tau_LPF`；
+- 正式 `Ts_MPC/N/M` 选择、最终 DQN state/action catalog、退化归一化、reward scale
+  及最终 catalog 的 solver robustness 证据。
+
+真实 Train objective-scale audit 已在 6 个代表 case、完整 36 个候选 action 上完成
+216 次求解，active-P95 `scale_ratio=1.827863`，其独立 gate 为
+**PASS / VERIFIED**。该结果不提升上述其他 gate，也不授权正式训练。
 
 这些参数只能在 Train 切分上选择、校准和审计。Validation/Test 不得用于选择它们。代码要求显式配置，避免将临时试验值提升为方法事实。
 
-爬坡硬约束与 `J_smooth` 的 600 kW 数值归一化严格分离。当前 `MPCConfig` 要求调用方
-显式给出正的 `fuel_cell_ramp_kw_per_step`，没有正式默认值；仓库求解 smoke fixture
-使用 `100 kW/step`，但它不是来源支持的正式配置。旧 v1 的 `48 kW/s` 不再作为
-`J_smooth` 分母，也没有机械乘以 30 s 生成 `1440 kW/step` 的新硬约束。
+爬坡硬约束与 `J_smooth` 的 600 kW 数值归一化严格分离。`MPCConfig` 允许
+`fuel_cell_ramp_kw_per_step=None` 且默认关闭；只有调用方显式给出正的来源支持值
+时才加入 hard ramp。当前 v2 baseline 在约 30 s supervisory 尺度没有可靠标定值，
+因此不启用 hard ramp。仓库求解 smoke fixture 中的正数仅为测试输入。旧 v1 的
+`48 kW/s` 不再作为 `J_smooth` 分母，也没有机械乘以 30 s 生成
+`1440 kW/step` 的新硬约束。
 
 ## 确定性求解与执行接口
 

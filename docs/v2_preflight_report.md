@@ -44,9 +44,10 @@ v2 artifact 必须精确匹配这些语义，v1 checkpoint/replay 不能恢复�
 
 ## 4. raw-data support — NO-GO
 
-`docs/v2_raw_excel_inventory.md` 与 `docs/v2_data_provenance.md` 没有登记可用于正式
-v2 工况循环的、已审计且带时间戳的原始 Train 测量。现有候选文件不能因扩展名或
-历史处理结果自动升级为 raw fact；不得读取 Validation/Test 来弥补此缺口。
+objective-scale audit 已从冻结清单中的 46 个 Train parent 读取原始时间戳遥测，
+并形成 1,211 个严格合规 supervisory states；这足以支持该窄范围审计。仓库仍未
+形成可用于完整正式训练的 episode/state/reward payload 合同与全链路证据，因此本项
+继续 **NO-GO**。不得读取 Validation/Test 或使用历史处理结果弥补正式训练缺口。
 
 ## 5. FC efficiency source — VERIFIED
 
@@ -86,24 +87,29 @@ FC 四工况电压损失结构和电池 SOC/电流加权吞吐方程已编码并
 
 ## 11. MPC Ts / N evidence — PROVISIONAL
 
-`Ts_MPC=30 s`、`N=5` 只是用户批准的待审计基线。当前没有真实 Train 时间序列
-证据证明相关长度或求解鲁棒性支持该组合，不能称为正式选择。
+当前 nominal/provisional 基线为 `Ts_MPC=30 s`、`N=5`。Train 原始时钟审计支持
+约 30 s supervisory cadence，且 objective-scale audit 用 `N=5` 完成 216 次求解；
+但这不是正式时间尺度选择或完整 solver-robustness 证据，因此本项仍为
+**PROVISIONAL**。
 
 ## 12. DQN M evidence — PROVISIONAL
 
-Train-only 敏感性范围严格限定为 `M in {5,10}`，且 `N=5` 固定不联动。
-`src/v2/analysis/timescale_audit.py` 只生成诊断快照，不填写正式 M；当前不能声称
-`M=5` 或 `M=10` 更优。
+当前配置为 `M=5`，属于 provisional project baseline，且与 `N=5` 的语义独立。
+Train-only 敏感性诊断域仍限定为 `M in {5,10}`；
+`src/v2/analysis/timescale_audit.py` 只生成诊断快照，不填写正式 M，因此不能声称
+`M=5` 已完成正式优选。
 
 ## 13. candidate action behavior analysis — NO-GO
 
 36 个正十分位三权重候选已确定性生成，但没有在可用真实 Train 工况上完成可行性、
 行为向量、Pareto、去重和聚类链。合成单元测试不构成候选行为证据。
 
-`docs/v2_objective_scale_audit.md` 定义了 Train-only actual-solve 接口、active-P95
-量级比、`0.1*J_i > 0.7*J_j` 支配统计和 behavioral redundancy 检查。由于没有
-可接受的真实 Train 工况和最终 catalog，当前所有数值结果均为 `N/A`，新的
-`objective_scale_comparability` gate 为 **NO-GO**。
+`docs/v2_objective_scale_audit.md` 已使用 46 个清单内 Train parent 构建 1,211 个
+合规 supervisory states，并对 6 个代表 case 与完整 36 个候选 action 完成 216 次
+实际求解。active-P95 量级比为 `1.827863`，因此
+`objective_scale_comparability` gate 为 **VERIFIED**。但最大有序 dominance 比例
+达到 `46.76%`，属于明确的局部行为警告；该结果不等同于最终 action catalog 的
+行为筛选，candidate action behavior analysis 仍为 **NO-GO**。
 
 ## 14. final K — NO-GO
 
@@ -118,22 +124,24 @@ Train case 和最终 catalog 的重复求解记录。因此不能声称热启动
 
 ## 16. unit/contract test results — VERIFIED
 
-2026-09-21 本增量的 objective/MPC、objective-scale audit、Train-only guard 和
-preflight 定向集合为 `47/47` 通过；其中新增 objective-scale audit 为 `6/6`。
-最终全仓套件只运行一次，`381/381` 通过，用时 `143.057 s`。
-
-求解器 smoke 单独复核 `N=5` 物理约束/首步执行和显式 cold/shifted-warm
-确定性，`2/2` 通过，用时 `0.643 s`。`python -m compileall -q src tests`、导入
-边界扫描和 `git diff --check` 均通过。合成 objective audit 只证明统计和门禁实现，
-不构成真实 Train objective-scale 数值结果。
+2026-09-22 最终 checkpoint 验证：全仓 `393/393` tests 通过；N=5 物理约束/首步
+执行与 cold/shifted-warm 确定性 solver smoke 为 `2/2`；compile/import check 与
+`git diff --check` 通过。真实审计使用原始 Train 遥测并完成 216 次 MPC 求解；
+合成单元测试仍只用于证明统计、门禁和数据规则实现，不替代该真实结果。
 
 ## 17. remaining unsupported assumptions — UNRESOLVED
 
-尚未获得或冻结：可用真实 Train 工况、FC 聚合功率到来源参考单元的映射、FC 寿命
-归一化、电池 `Q_lifetime`、岸电变换效率、正式 `Ts_MPC/N/M/tau_LPF`、电池充放电
-功率边界、FC 每步爬坡限制、最终 state、reward scale、最终 action catalog/K、
-完整真实案例 solver audit，以及真实 Train objective-scale/weighted-dominance/
-behavioral-responsiveness 结果。不得用研究仿真值、合成夹具或 held-out 表现替代这些证据。
+尚未获得或冻结：FC 聚合功率到来源参考单元的映射、FC 寿命
+归一化、电池 `Q_lifetime`、岸电变换效率、正式 `Ts_MPC/N/M/tau_LPF`、原船/正式
+训练适用的电池充放电功率边界、FC 每步爬坡限制、最终 state、reward scale、最终 action catalog/K、
+最终 catalog 的完整真实案例 solver robustness audit，以及独立的完整
+behavioral-responsiveness 筛选。objective-scale 与 weighted-dominance 的 Train-only
+结果已经归档；不得用其替代仍缺失的证据，也不得用研究仿真值、合成夹具或
+held-out 表现补齐这些门槛。
+
+当前审计值 `tau_LPF=90 s` 仍是 provisional project parameter；FC hard ramp 允许
+disabled，未使用旧 `48 kW/step`。审计 battery bounds `[-624,+1248] kW` 来自
+Yang et al. (2026) Table 6 的研究配置，不能提升为原船或正式训练硬件边界。
 
 ## 18. formal training GO/NO-GO — NO-GO
 
@@ -145,4 +153,5 @@ behavioral-responsiveness 结果。不得用研究仿真值、合成夹具或 he
 
 `FORMAL_TRAINING = NO-GO`
 
-本报告没有执行真实训练、Validation/Test 评估或真实工况 solver audit。
+本报告没有执行真实训练或 Validation/Test 评估，也没有执行最终 catalog 的正式
+solver robustness audit。

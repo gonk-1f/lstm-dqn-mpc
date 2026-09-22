@@ -490,8 +490,11 @@ class V2DataGuardTests(unittest.TestCase):
 
         self.assertEqual(plant.fuel_cell_rated_total_kw, 600.0)
         self.assertEqual(plant.battery_nominal_energy_kwh, 624.0)
+        self.assertEqual(plant.battery_charge_min_kw, -624.0)
+        self.assertEqual(plant.battery_discharge_max_kw, 1248.0)
         self.assertEqual(plant.source_type, "research_simulation")
         self.assertIn("10.1016/j.oceaneng.2026.125687", plant.source_reference)
+        self.assertIn("Table 6", plant.source_reference)
         self.assertNotIn("JMSE", plant.source_reference)
         self.assertFalse(hasattr(PlantConfig, "project_configuration"))
 

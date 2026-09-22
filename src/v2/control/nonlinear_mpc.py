@@ -186,7 +186,6 @@ class MPCConfig:
     battery_efficiency: BatteryEfficiency
     battery_charge_min_kw: float
     battery_discharge_max_kw: float
-    fuel_cell_ramp_kw_per_step: float
     soc_min: float
     soc_max: float
     soc_deadband_low: float
@@ -194,6 +193,7 @@ class MPCConfig:
     p_fc_scale_kw: float
     delta_p_fc_scale_kw: float
     soc_scale: float
+    fuel_cell_ramp_kw_per_step: float | None = None
 
     def __post_init__(self) -> None:
         if type(self.timescale) is not TimeScaleConfig:
@@ -207,7 +207,6 @@ class MPCConfig:
             "battery_capacity_kwh",
             "battery_charge_min_kw",
             "battery_discharge_max_kw",
-            "fuel_cell_ramp_kw_per_step",
             "soc_min",
             "soc_max",
             "soc_deadband_low",
@@ -218,17 +217,30 @@ class MPCConfig:
         )
         for name in numeric_names:
             object.__setattr__(self, name, _finite_scalar(getattr(self, name), name))
+        if self.fuel_cell_ramp_kw_per_step is not None:
+            object.__setattr__(
+                self,
+                "fuel_cell_ramp_kw_per_step",
+                _finite_scalar(
+                    self.fuel_cell_ramp_kw_per_step,
+                    "fuel_cell_ramp_kw_per_step",
+                ),
+            )
         for name in (
             "fuel_cell_rated_kw",
             "battery_capacity_kwh",
             "battery_discharge_max_kw",
-            "fuel_cell_ramp_kw_per_step",
             "p_fc_scale_kw",
             "delta_p_fc_scale_kw",
             "soc_scale",
         ):
             if getattr(self, name) <= 0.0:
                 raise ValueError(f"{name} must be positive")
+        if (
+            self.fuel_cell_ramp_kw_per_step is not None
+            and self.fuel_cell_ramp_kw_per_step <= 0.0
+        ):
+            raise ValueError("fuel_cell_ramp_kw_per_step must be positive when enabled")
         if self.battery_charge_min_kw >= 0.0:
             raise ValueError("battery_charge_min_kw must be negative")
         if not 0.0 <= self.soc_min < self.soc_max <= 1.0:
@@ -427,19 +439,16 @@ class NonlinearMPC:
         soc_high = current_soc
         intervals: list[tuple[float, float]] = []
         for step, load in enumerate(loads):
-            low = max(
-                0.0,
-                load - cfg.battery_discharge_max_kw,
-                prior_low - cfg.fuel_cell_ramp_kw_per_step,
-            )
-            high = min(
-                cfg.fuel_cell_rated_kw,
-                load - cfg.battery_charge_min_kw,
-                prior_high + cfg.fuel_cell_ramp_kw_per_step,
-            )
+            lower_bounds = [0.0, load - cfg.battery_discharge_max_kw]
+            upper_bounds = [cfg.fuel_cell_rated_kw, load - cfg.battery_charge_min_kw]
+            if cfg.fuel_cell_ramp_kw_per_step is not None:
+                lower_bounds.append(prior_low - cfg.fuel_cell_ramp_kw_per_step)
+                upper_bounds.append(prior_high + cfg.fuel_cell_ramp_kw_per_step)
+            low = max(lower_bounds)
+            high = min(upper_bounds)
             if low > high + self._PHYSICAL_TOLERANCE:
                 raise PhysicalInfeasibilityError(
-                    f"no power satisfying fuel-cell, battery, and ramp bounds at horizon step {step}"
+                    f"no power satisfying configured fuel-cell and battery bounds at horizon step {step}"
                 )
             maximum_battery = load - low
             minimum_battery = load - high
@@ -477,8 +486,11 @@ class NonlinearMPC:
         values: list[float] = []
         prior = previous_fc
         for reference, (reachable_low, reachable_high) in zip(references, intervals):
-            low = max(reachable_low, prior - cfg.fuel_cell_ramp_kw_per_step)
-            high = min(reachable_high, prior + cfg.fuel_cell_ramp_kw_per_step)
+            low = reachable_low
+            high = reachable_high
+            if cfg.fuel_cell_ramp_kw_per_step is not None:
+                low = max(low, prior - cfg.fuel_cell_ramp_kw_per_step)
+                high = min(high, prior + cfg.fuel_cell_ramp_kw_per_step)
             value = min(max(reference, low), high)
             values.append(float(value))
             prior = value
@@ -500,16 +512,19 @@ class NonlinearMPC:
                 status=solver_status,
             )
         batteries = loads - powers
-        deltas = np.diff(np.concatenate(([previous_fc], powers)))
-        residuals = (
+        residuals = [
             np.min(powers),
             np.min(cfg.fuel_cell_rated_kw - powers),
             np.min(batteries - cfg.battery_charge_min_kw),
             np.min(cfg.battery_discharge_max_kw - batteries),
-            np.min(cfg.fuel_cell_ramp_kw_per_step - np.abs(deltas)),
             np.min(states - cfg.soc_min),
             np.min(cfg.soc_max - states),
-        )
+        ]
+        if cfg.fuel_cell_ramp_kw_per_step is not None:
+            deltas = np.diff(np.concatenate(([previous_fc], powers)))
+            residuals.append(
+                np.min(cfg.fuel_cell_ramp_kw_per_step - np.abs(deltas))
+            )
         if not np.all(np.isfinite(states)) or min(residuals) < -tolerance:
             raise NumericalSolverError(
                 "solver success output failed independent physical residual checks",
@@ -585,17 +600,20 @@ class NonlinearMPC:
 
         def physical_inequalities(decision: np.ndarray) -> np.ndarray:
             batteries, states = derive(decision)
-            deltas = np.diff(np.concatenate(([previous], decision)))
-            return np.concatenate(
-                (
-                    batteries - cfg.battery_charge_min_kw,
-                    cfg.battery_discharge_max_kw - batteries,
-                    cfg.fuel_cell_ramp_kw_per_step - deltas,
-                    cfg.fuel_cell_ramp_kw_per_step + deltas,
-                    states - cfg.soc_min,
-                    cfg.soc_max - states,
+            margins = [
+                batteries - cfg.battery_charge_min_kw,
+                cfg.battery_discharge_max_kw - batteries,
+            ]
+            if cfg.fuel_cell_ramp_kw_per_step is not None:
+                deltas = np.diff(np.concatenate(([previous], decision)))
+                margins.extend(
+                    (
+                        cfg.fuel_cell_ramp_kw_per_step - deltas,
+                        cfg.fuel_cell_ramp_kw_per_step + deltas,
+                    )
                 )
-            )
+            margins.extend((states - cfg.soc_min, cfg.soc_max - states))
+            return np.concatenate(margins)
 
         try:
             raw = self._optimizer(

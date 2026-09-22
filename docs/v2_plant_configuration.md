@@ -10,8 +10,12 @@ interchangeable.
 |---|---:|---|---|
 | Aggregate fuel-cell rated power | 600 kW | Yang et al., *Ocean Engineering* (2026), DOI `10.1016/j.oceaneng.2026.125687` | approved research simulation input |
 | Battery nominal energy | 624 kWh | same simulation configuration | approved research simulation input |
+| Battery charge lower bound | -624 kW | same source, Table 6 | approved for objective-scale audit |
+| Battery discharge upper bound | +1248 kW | same source, Table 6 | approved for objective-scale audit |
 
-These are the values encoded by `PlantConfig.research_simulation()`. They must
+These are the values encoded by `PlantConfig.research_simulation()`. The power
+bounds were explicitly accepted by the user on 2026-09-22 for the objective-
+scale audit. They must
 not be described as real-vessel specifications and are not sourced to a JMSE
 2025 paper.
 
@@ -28,6 +32,7 @@ Source:
 | Fuel-cell arrangement | 8 modules x 70 kW |
 | Battery nominal energy | approximately 1,806 kWh |
 | Battery clusters | 12 |
+| Rated energy per cluster | 150.5 kWh |
 | Battery rated output | at least 900 kW |
 | Battery rated voltage | 537.6 V |
 | End-of-operation condition | shore charging |
@@ -36,3 +41,9 @@ These values are encoded separately by
 `RealVesselSpecification.from_authoritative_specification()`. No simulation may
 silently combine the 560 kW / approximately 1,806 kWh vessel configuration with
 the 600 kW / 624 kWh research configuration.
+
+For the Train-only supervisory audit, the 12 equal-capacity cluster SOC values
+may therefore be aggregated by arithmetic mean only after every cluster passes
+duplicate handling, causal alignment, and freshness checks. The specification's
+"at least 900 kW" output requirement is not a maximum discharge bound and does
+not define a charging lower bound.

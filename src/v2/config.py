@@ -61,6 +61,8 @@ class TimeScaleConfig:
 class PlantConfig:
     fuel_cell_rated_total_kw: float
     battery_nominal_energy_kwh: float
+    battery_charge_min_kw: float
+    battery_discharge_max_kw: float
     source_type: str
     source_reference: str
 
@@ -69,10 +71,12 @@ class PlantConfig:
         return cls(
             fuel_cell_rated_total_kw=600.0,
             battery_nominal_energy_kwh=624.0,
+            battery_charge_min_kw=-624.0,
+            battery_discharge_max_kw=1248.0,
             source_type="research_simulation",
             source_reference=(
                 "Yang et al., Ocean Engineering (2026), "
-                "DOI 10.1016/j.oceaneng.2026.125687"
+                "DOI 10.1016/j.oceaneng.2026.125687, Table 6"
             ),
         )
 

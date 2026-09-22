@@ -13,6 +13,13 @@ if str(SRC) not in sys.path:
 
 
 class ObjectiveScaleAuditTests(unittest.TestCase):
+    def test_repository_status_records_completed_train_scale_audit(self) -> None:
+        from v2.analysis.objective_scale_audit import (
+            FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS,
+        )
+
+        self.assertEqual(FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS, "GO")
+
     @staticmethod
     def _provenance(split=None):
         from v2.analysis.action_screening import DataSplit, DatasetProvenance

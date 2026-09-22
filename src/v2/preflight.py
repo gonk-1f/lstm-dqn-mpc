@@ -146,26 +146,26 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
         FormalCalibrationCheck(
             "ts_mpc",
             CalibrationStatus.PROVISIONAL,
-            "30 s baseline only; real Train evidence is unavailable",
+            "30 s nominal baseline; Train clock audit supports cadence, formal selection remains provisional",
         ),
         FormalCalibrationCheck(
             "n_mpc",
             CalibrationStatus.PROVISIONAL
             if FORMAL_TIMESCALE_SELECTION_STATUS == "NO-GO"
             else CalibrationStatus.UNRESOLVED,
-            "N=5 baseline only; no formal Train selection",
+            "N=5 baseline completed the scale audit; no formal Train selection",
         ),
         FormalCalibrationCheck(
             "dqn_switch_steps",
             CalibrationStatus.PROVISIONAL
             if FORMAL_TIMESCALE_SELECTION_STATUS == "NO-GO"
             else CalibrationStatus.UNRESOLVED,
-            "M sensitivity is restricted to {5,10}; no formal selection",
+            "M=5 provisional baseline; sensitivity is restricted to {5,10} with no formal selection",
         ),
         FormalCalibrationCheck(
             "tau_lpf",
             CalibrationStatus.UNRESOLVED,
-            "no Train-only calibration has frozen tau_LPF",
+            "90 s is audit-only provisional; formal training calibration remains unfrozen",
         ),
         FormalCalibrationCheck(
             "soc_deadband",
@@ -188,10 +188,14 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
         ),
         FormalCalibrationCheck(
             "objective_scale_comparability",
-            CalibrationStatus.NO_GO
-            if FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS == "NO-GO"
-            else CalibrationStatus.UNRESOLVED,
-            "no accepted Train solve audit has established active-P95 comparability",
+            CalibrationStatus.VERIFIED
+            if FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS == "GO"
+            else (
+                CalibrationStatus.NO_GO
+                if FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS == "NO-GO"
+                else CalibrationStatus.UNRESOLVED
+            ),
+            "accepted Train-only audit: active-P95 scale ratio 1.827863 (PASS)",
         ),
     )
     return FormalTrainingPreflight(checks=checks)

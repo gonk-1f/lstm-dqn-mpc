@@ -13,11 +13,15 @@ scratch/
 debug/
 *.tmp
 *.bak
+*.stdout
+*.stderr
 
 # Temporary experiment artifacts.
 outputs/**/_debug/
 outputs/**/_scratch/
 outputs/**/_temporary/
+outputs/**/_solver_dumps/
+outputs/**/_audit_scratch/
 outputs/**/tmp/
 outputs/**/checkpoints/_temporary/
 outputs/**/*_debug.png

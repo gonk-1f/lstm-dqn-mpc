@@ -1,107 +1,197 @@
 # v2 Train-only objective-scale audit
 
-## 1. Final objective definitions
+Audit date: 2026-09-22
+Branch: `refactor/multiscale-dqn-wmpc-v2`
 
-For horizon length `N`:
+## 1. Decision
+
+`OBJECTIVE_SCALE_AUDIT_READY = YES`
+
+`OBJECTIVE_SCALE_GATE = PASS`
+
+The audit used original timestamped telemetry from the 46 parents frozen as
+Train in `parent_split_manifest.csv`. Strict causal construction produced 1,211
+audit-ready supervisory states from 20 Train parents. Six deterministic
+representative cases were solved with all 36 canonical simplex actions, for 216
+accepted MPC solves.
+
+The three active P95 values are `0.0492065`, `0.0376662`, and `0.0688487`.
+Their `scale_ratio` is `1.827863`, which is below the project PASS boundary of
+5. The fixed `600 / 600 / 0.60` normalization therefore passes the declared
+global objective-scale comparability criterion on this Train audit.
+
+This PASS is qualified. Ordered minimum-vs-maximum-weight dominance reaches
+`46.76%` for `J_SOC > J_base` and `46.30%` for `J_SOC > J_smooth`. The three
+terms are globally comparable at active P95, but there is clear local,
+state/action-conditioned dominance. The audit does not justify claiming that
+every simplex weight remains equally influential in every operating state.
+
+No objective formula, normalization constant, SOC band, hard boundary, DQN
+simplex action, or action catalog was changed. No DQN training was run.
+
+## 2. Frozen audit contract
+
+For horizon length `N=5`, the unweighted components remain:
 
 `J_base = (1/N) sum_i ((P_fc(i)-P_base(i))/600 kW)^2`
 
 `J_smooth = (1/N) sum_i ((P_fc(i)-P_fc(i-1))/600 kW)^2`
 
-The first smoothness difference uses the previously executed FC power. For SOC,
-`d_SOC=0.40-SOC` below 0.40, zero on the inclusive interval `[0.40,0.60]`, and
-`SOC-0.60` above 0.60:
+`J_SOC = (1/N) sum_i (d_SOC(SOC(i))/0.60)^2`
 
-`J_SOC = (1/N) sum_i (d_SOC(SOC(i))/0.60)^2`.
+where `d_SOC=0` within `[0.40,0.60]`, is the distance to `0.40` below the
+working band, and is the distance to `0.60` above it. The hard SOC interval is
+unchanged at `[0.20,0.80]`.
 
-The DQN action remains three positive weights summing to one. Weight simplex and
-fixed objective normalization have different roles and are not interchangeable.
+The audit uses the research-simulation battery bounds `-624/+1248 kW`, the
+provisional approximately 30 s MPC scale, an audit-only `tau_LPF=90 s`, and no
+hard FC ramp. Disabling the hard ramp does not disable `J_smooth`.
 
-## 2. Why the fixed scales are 600 / 600 / 0.60
+## 3. Train-only eligibility rules
 
-`P_fc_scale=600 kW` is the aggregate rated power of the selected research
-simulation configuration. `Delta_P_fc_scale=600 kW` uses the same rated-power
-scale for numerical comparability; the old v1 `48 kW` one-second quantity is no
-longer used as an objective denominator. `SOC_scale=0.60` is the width of the
-hard physical interval, `0.80-0.20`.
+Only manifest-declared Train parents were read. Validation, Test, old 1 s
+interpolated data, and derived `aligned_30s` tables were not used as audit
+states.
 
-The FC hard ramp constraint is independent. Code still requires an explicit
-positive `fuel_cell_ramp_kw_per_step`; there is no formal source-backed default.
-The solver smoke fixture currently uses `100 kW/step`, which is test input rather
-than a calibrated plant fact. This change neither adopts `48 kW/step` nor creates
-`48*30=1440 kW/step`.
+The frozen rules are:
 
-## 3. SOC hard and soft regions
+- `FRESHNESS_CAP_SECONDS = 10.0`; accepted matches satisfy
+  `0 <= supervisory_timestamp - source_timestamp <= 10 s`.
+- Matching is causal, one-to-one, and never uses future samples or stale
+  forward-fill.
+- All eight FC channels, all twelve BMS cluster channels, and AIS speed must be
+  complete and fresh.
+- `SPEED_ZERO_TOLERANCE_KN = 0.1` and `FC_ZERO_TOLERANCE_KW = 8.0` are
+  provisional Train-derived audit rules, not equipment limits.
+- Shore classification requires at least two consecutive, gap-free samples
+  with near-zero speed, near-zero total FC power, and negative total battery
+  power.
+- A complete fresh state with speed above `0.1 kn` and nonnegative reconstructed
+  balance is `sailing_island`; ambiguous, contradictory, stale, incomplete, or
+  long-gap-contaminated states are `unknown`.
+- Only `sailing_island` may use
+  `P_load = P_fc_total + P_batt_total`, with battery discharge positive.
 
-- Hard physical constraint: `0.20 <= SOC <= 0.80`.
-- Soft zero-penalty working band: `0.40 <= SOC <= 0.60`.
+The raw loader collapses exact within-channel duplicates before strict state
+construction. The state builder observed zero remaining exact duplicate rows
+and zero conflicting duplicate timestamps.
 
-The working band is not added to the SLSQP constraint set. SOC values outside it
-but inside the hard interval remain physically feasible and receive a soft
-quadratic penalty.
+## 4. Supervisory-state result
 
-## 4. Train-only evidence boundary
+| Item | Count |
+|---|---:|
+| Train parents read | 46 |
+| candidate supervisory states | 33,115 |
+| `sailing_island` | 6,175 |
+| `shore_connected` | 566 |
+| `unknown` | 26,374 |
+| audit-ready states | 1,211 |
+| Train parents contributing audit-ready states | 20 |
+| representative cases | 6 |
+| canonical actions per case | 36 |
+| accepted MPC solves | 216 |
 
-`run_objective_scale_audit` rejects Validation, Test, Unknown, old dataset
-versions, and forged provenance before invoking the lazy state loader or solver
-runner. Each accepted Train state is solved with the complete canonical 36-action
-tenth-grid bank in canonical order; subsets and reordered banks are rejected. The returned exact `MPCPlan`
-must contain a successful five-step plan whose total objective matches the
-requested action weights.
+SOC coverage among the 1,211 audit-ready states was:
 
-Validation/Test cannot select normalization constants, thresholds, or action
-weights. The audit never applies a recommended rescaling automatically.
+| SOC band | Count |
+|---|---:|
+| `< 0.40` | 0 |
+| `[0.40,0.60]` | 134 |
+| `> 0.60` | 1,077 |
 
-## 5. Objective statistics
+The deterministic representative set covered every available hard-bound-valid
+SOC band, low/medium/high load, and steady/rapid load change. No eligible
+below-0.40 state existed, so the audit contains positive SOC penalties from the
+upper side only; no lower-side behavior is inferred.
 
-The required per-term output is `count`, population `mean/std`, `P50`, `P90`,
-`P95`, `P99`, and `max`. SOC additionally reports `Pr(J_SOC>0)` and the four
-conditional positive percentiles.
+Representative case IDs:
 
-Current formal Train result: **not available**. The repository has no accepted
-raw Train operating-cycle payload and no final action catalog. Consequently no
-actual Train MPC solve set was created in this increment; counts, means,
-percentiles, and maxima are reported as `N/A`, not replaced by synthetic values.
+1. `3月27日07_00_3月27日11_00/2024-03-27T08:35:29+08:00`
+2. `3月27日07_00_3月27日11_00/2024-03-27T08:42:59+08:00`
+3. `3月28日08_00_3月28日11_00/2024-03-28T09:48:31+08:00`
+4. `4月18日12_00_4月18日18_00/2024-04-18T14:25:43+08:00`
+5. `4月23日13_00_4月23日18_00/2024-04-23T17:29:22+08:00`
+6. `5月9日08_00_5月9日17_00/2024-05-09T09:49:08+08:00`
 
-## 6. Active-P95 scale ratio
+Provenance ID:
+`sha256:8d3c927af075b70b167a5d3e35235de1bbe3d02a2da9ff21016d5d77747fa4db`.
 
-The audit uses full-distribution P95 for `J_base` and `J_smooth`, and
-`P95(J_SOC | J_SOC>0)` for SOC. It computes
-`max(P95_active)/min(P95_active)`. The declared project engineering rule is:
+Result digest:
+`691719dedacbc7053728b09d21bd20597ae7253c45b1250b1c514a07992087d5`.
 
-- ratio `<=5`: GO;
-- `5<ratio<10`: WARNING;
-- ratio `>=10`: NO-GO.
+## 5. Unweighted objective statistics
 
-These limits are engineering review targets, not theoretical constants. Current
-ratio: `N/A`; objective-scale status: **NO-GO**, because positive-SOC and other
-representative Train solve evidence is absent.
+| Objective | count | mean | P50 | P90 | P95 | P99 | max |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `J_base` | 216 | 0.0103392 | 0.00328228 | 0.0302056 | 0.0492065 | 0.0759031 | 0.0851657 |
+| `J_smooth` | 216 | 0.0101138 | 0.00329250 | 0.0347131 | 0.0376662 | 0.0448716 | 0.0486550 |
+| `J_SOC` | 216 | 0.0480326 | 0.0524876 | 0.0675149 | 0.0686387 | 0.0695259 | 0.0697423 |
 
-## 7. Weighted contribution dominance
+SOC activity statistics:
 
-For every ordered term pair the audit records actual `q_i*J_i` distributions
-and the count/rate of samples satisfying `0.1*J_i > 0.7*J_j`, including affected
-state/action IDs. Current result: `N/A`; it is therefore not known whether one
-term at weight 0.1 still persistently dominates another at weight 0.7.
+| Statistic | Result |
+|---|---:|
+| `count(J_SOC > 0)` | 180 |
+| `Pr(J_SOC > 0)` | 0.833333 |
+| `P50(J_SOC \| J_SOC > 0)` | 0.0534461 |
+| `P90(J_SOC \| J_SOC > 0)` | 0.0676663 |
+| `P95(J_SOC \| J_SOC > 0)` | 0.0688487 |
+| `P99(J_SOC \| J_SOC > 0)` | 0.0695701 |
 
-## 8. Behavioral responsiveness
+## 6. Active P95 and scale ratio
 
-Per Train state, the audit compares different actions using raw components,
-first FC command, first battery command, and the complete predicted SOC path.
-Numerically indistinguishable action pairs under explicit tolerances are listed
-as behavioral redundancy. Current result: `N/A`; no claim about action
-responsiveness is supported, and the action catalog is not redesigned here.
+| Objective | active P95 source | active P95 |
+|---|---|---:|
+| `J_base` | full-distribution P95 | 0.0492065 |
+| `J_smooth` | full-distribution P95 | 0.0376662 |
+| `J_SOC` | positive-only P95 | 0.0688487 |
 
-## 9. Recommendation boundary
+`scale_ratio = 0.0688487 / 0.0376662 = 1.827863`.
 
-When a completed Train audit is NO-GO, its active P95 values may be recorded as
-candidate fixed constants `c_i` for a later reviewed proposal
-`J_i_final=J_i/c_i`. This increment does not have the evidence required to
-compute such constants and does not modify the method beyond the approved
-600/600/0.60 definitions.
+The project criterion is:
 
-## 10. Final decision
+- `scale_ratio <= 5`: PASS;
+- `5 < scale_ratio < 10`: WARNING;
+- `scale_ratio >= 10`: NO-GO.
 
-`OBJECTIVE_SCALE_AUDIT = NO-GO` and `FORMAL_TRAINING = NO-GO`. Unit tests use
-synthetic plans only to verify formulas, split guards, statistics, contribution
-logic, redundancy detection, and sealing; they are not experimental results.
+Result: **PASS**.
+
+## 7. Minimum-vs-maximum-weight dominance
+
+For every ordered pair, the event is `0.1 * J_i > 0.7 * J_j`. Rates use all
+216 accepted state/action observations.
+
+| Dominant term `i` | Dominated term `j` | Count | Proportion |
+|---|---|---:|---:|
+| `J_base` | `J_smooth` | 26 | 12.04% |
+| `J_base` | `J_SOC` | 15 | 6.94% |
+| `J_smooth` | `J_base` | 69 | 31.94% |
+| `J_smooth` | `J_SOC` | 36 | 16.67% |
+| `J_SOC` | `J_base` | 101 | 46.76% |
+| `J_SOC` | `J_smooth` | 100 | 46.30% |
+
+There is clear dominance in this representative audit, especially from the SOC
+term against the other terms. This does not contradict the active-P95 PASS:
+active P95 tests global scale comparability, while dominance is a local
+state/action test and is amplified when another objective is near zero.
+
+No project threshold was approved for converting a dominance proportion into a
+different gate result, so these rates are reported as a material warning and do
+not overwrite the declared active-P95 gate.
+
+## 8. Conclusion and boundary
+
+The `600 / 600 / 0.60` normalization is sufficient to pass the project's
+current global objective-scale criterion on the audited Train subset. It is not
+sufficient evidence that DQN weight changes will always have balanced local
+influence, because the ordered dominance rates are substantial and the sample
+contains no eligible SOC-below-0.40 state.
+
+Therefore:
+
+- objective-scale comparability: **PASS / VERIFIED**;
+- obvious local dominance: **YES**;
+- automatic normalization change: **NO**;
+- new scaling coefficients introduced: **NO**;
+- formal DQN training authorized by this report: **NO**; other independent
+  preflight gates remain unresolved or NO-GO.

@@ -365,6 +365,33 @@ class NonlinearMPCTests(unittest.TestCase):
         result = controller.solve(300.0, 0.5, 300.0, MPCWeights(0.5, 0.25, 0.25), estimator)
         self.assertEqual(len(result.p_fc_kw), 3)
 
+    def test_hard_ramp_can_be_disabled_without_removing_smoothness_objective(self) -> None:
+        import inspect
+
+        from v2.control.nonlinear_mpc import MPCWeights
+
+        config, estimator, controller = self._objects(
+            battery_charge_min_kw=-100.0,
+            battery_discharge_max_kw=100.0,
+            fuel_cell_ramp_kw_per_step=None,
+        )
+        result = controller.solve(
+            500.0,
+            0.5,
+            0.0,
+            MPCWeights(0.1, 0.8, 0.1),
+            estimator,
+        )
+
+        self.assertIsNone(config.fuel_cell_ramp_kw_per_step)
+        self.assertIsNone(
+            inspect.signature(type(config)).parameters[
+                "fuel_cell_ramp_kw_per_step"
+            ].default
+        )
+        self.assertGreater(result.p_fc_kw[0], 100.0)
+        self.assertGreater(result.components.j_smooth, 0.0)
+
     def test_obvious_physical_infeasibility_is_distinct_from_solver_failure(self) -> None:
         from v2.control.nonlinear_mpc import (
             MPCWeights,
@@ -630,6 +657,7 @@ class NonlinearMPCTests(unittest.TestCase):
             {"battery_charge_min_kw": 0.0},
             {"battery_discharge_max_kw": float("inf")},
             {"fuel_cell_ramp_kw_per_step": 0.0},
+            {"fuel_cell_ramp_kw_per_step": True},
             {"soc_min": 0.8, "soc_max": 0.2},
             {"soc_deadband_low": 0.6, "soc_deadband_high": 0.6},
             {"soc_scale": float("nan")},

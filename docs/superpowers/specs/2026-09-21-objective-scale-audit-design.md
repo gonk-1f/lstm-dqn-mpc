@@ -17,10 +17,11 @@ other objective-scale or SOC-band values so callers cannot silently run a
 different v2 objective under the same version. The existing positive,
 sum-to-one three-weight simplex is unchanged.
 
-The hard FC ramp constraint remains a separate explicit positive
-`fuel_cell_ramp_kw_per_step`. No value is inferred from 48 kW/s or from the new
-600 kW smoothness normalization. The repository still has no source-backed,
-formally frozen per-step ramp value, so this remains a preflight limitation.
+The hard FC ramp constraint remains separate from the smoothness objective and
+is optional. `fuel_cell_ramp_kw_per_step=None` is the baseline default because
+there is no source-backed value for the approximately 30 s supervisory scale.
+No value is inferred from 48 kW/s or from the 600 kW smoothness normalization;
+`J_smooth` remains active when the hard ramp is disabled.
 
 ## Train-only audit
 
@@ -52,4 +53,3 @@ catalog, so no formal numeric audit is run in this increment. The report must
 show unavailable statistics rather than synthetic values and the new
 objective-scale preflight item remains NO-GO. Synthetic fixtures validate only
 the audit mathematics and access guards.
-
