@@ -37,17 +37,35 @@ The approved end-of-life denominator is:
 ```text
 FC_EOL_VOLTAGE_LOSS_UV = 70_000.0
 
-D_fc_raw = cumulative_voltage_loss_uv / FC_EOL_VOLTAGE_LOSS_UV
-D_fc_econ = clip(D_fc_raw, 0, 1)
-fc_eol_reached = D_fc_raw >= 1
+D_fc_raw_before
+    = cumulative_voltage_loss_before_uv / FC_EOL_VOLTAGE_LOSS_UV
+D_fc_raw_after
+    = cumulative_voltage_loss_after_uv / FC_EOL_VOLTAGE_LOSS_UV
 
-C_fc_deg = D_fc_econ * 3500 CNY/kW * 600 kW
+D_fc_econ_before = clip(D_fc_raw_before, 0, 1)
+D_fc_econ_after = clip(D_fc_raw_after, 0, 1)
+
+delta_D_fc_econ = D_fc_econ_after - D_fc_econ_before
+delta_D_fc_econ >= 0
+
+C_fc_deg_interval
+    = delta_D_fc_econ * 3500 CNY/kW * 600 kW
+
+fc_eol_reached = D_fc_raw_after >= 1
 ```
 
-`D_fc_raw` is diagnostic and may exceed one. `D_fc_econ` is the only value used
-for economic accounting. The 600 kW rating is the aggregate plant rating, so
-the maximum modeled replacement charge is `2_100_000 CNY`, not eight times that
-amount.
+The cumulative raw and economic fractions remain diagnostic state. Only the
+non-negative clipped difference enters the current 30-second interval ledger.
+An interval that crosses EOL charges only the remaining fraction up to one; an
+interval starting at or above EOL charges zero even while raw voltage loss
+continues to accumulate. The formal boundary rejects a decreasing cumulative
+input rather than creating a negative cost.
+
+The 600 kW rating is the aggregate plant rating. Without a modeled replacement
+and state reset, the sum of all interval fuel-cell degradation charges is
+bounded by `3500 * 600 = 2_100_000 CNY`, not eight times that amount. A ledger
+must never multiply the cumulative `D_fc_econ_after` by replacement price on
+every interval.
 
 The existing voltage-loss coefficients retain their current source roles.
 The aggregate-equivalent representation is a modeling abstraction for the EMS,
@@ -128,14 +146,31 @@ analysis and the hook must not choose a value dynamically.
 Battery life and cost are:
 
 ```text
-D_batt_raw = Q_weighted_Ah / Q_lifetime_Ah
-D_batt_econ = clip(D_batt_raw, 0, 1)
-battery_eol_reached = D_batt_raw >= 1
+D_batt_raw_before
+    = cumulative_weighted_Ah_before / Q_lifetime_Ah
+D_batt_raw_after
+    = cumulative_weighted_Ah_after / Q_lifetime_Ah
 
-C_batt_deg = D_batt_econ * 2000 CNY/kWh * 624 kWh
+D_batt_econ_before = clip(D_batt_raw_before, 0, 1)
+D_batt_econ_after = clip(D_batt_raw_after, 0, 1)
+
+delta_D_batt_econ = D_batt_econ_after - D_batt_econ_before
+delta_D_batt_econ >= 0
+
+C_batt_deg_interval
+    = delta_D_batt_econ * 2000 CNY/kWh * 624 kWh
+
+battery_eol_reached = D_batt_raw_after >= 1
 ```
 
-The maximum modeled battery replacement charge is `1_248_000 CNY`.
+Only the non-negative clipped difference enters the current 30-second interval
+ledger. Crossing EOL charges only the uncharged remainder, while further raw
+weighted-Ah accumulation after EOL has zero economic increment. Decreasing
+cumulative weighted Ah is invalid. Without a modeled replacement and state
+reset, the sum of all interval battery degradation charges is bounded by
+`2000 * 624 = 1_248_000 CNY`; cumulative economic loss must not be charged
+again on later intervals.
+
 The battery lifetime-normalization status becomes
 `PROVISIONAL / LITERATURE-CALIBRATED`, never `VERIFIED` or measured.
 
@@ -168,10 +203,26 @@ C_total = C_H2 + C_fc_deg + C_batt_deg + C_shore_if_incurred
 reward_cny = -C_total
 ```
 
+Each physical MPC execution returns one ledger for its actual 30-second
+interval. That ledger accepts only:
+
+- hydrogen consumed in the current interval;
+- incremental fuel-cell economic lifetime cost in the current interval;
+- incremental battery economic lifetime cost in the current interval; and
+- shore energy cost incurred in the current interval or terminal recharge.
+
 The formal ledger accepts the exact approved fuel-cell normalization and the
-exact provisional battery normalization. It uses only the clipped economic
-fractions for replacement cost while preserving raw fractions and EOL flags in
-the degradation results for diagnostics. No `0.3/0.4/0.3` weights are added.
+exact provisional battery normalization. It derives degradation charges from
+before/after cumulative raw states and uses only the clipped cumulative-fraction
+differences. Cumulative raw degradation, cumulative raw life fraction, clipped
+cumulative economic fraction, and EOL flags remain available as diagnostic
+state but are not ledger cost inputs.
+
+`MultiRateWeightEnvironment` sums the four components across its `M` physical
+MPC executions. Therefore its macro ledger is economically correct only when
+each input ledger contains interval increments. Passing cumulative degradation
+cost into each step would double count prior lifetime consumption and is a
+contract violation. No `0.3/0.4/0.3` weights are added.
 
 ## Preflight and status reporting
 
@@ -201,15 +252,18 @@ changed.
 Implementation follows test-first red-green cycles covering:
 
 - fuel-cell raw/economic/EOL behavior below, at, and above 70,000 microvolts;
+- fuel-cell incremental cost before EOL, across EOL, and after EOL;
 - aggregate 600 kW fuel-cell replacement cost with no eightfold charge;
 - exact battery Ah and 1C derivations from 624 kWh and 432 V;
 - ampere-hour integration including the mandatory `/3600` conversion;
 - battery raw/economic/EOL behavior and the exact lifetime denominator;
+- battery incremental cost before EOL, across EOL, and after EOL;
 - immutable sensitivity candidates with no sensitivity execution;
 - rejection of provenance that misclassifies 15000 as measured, manufacturer,
   or project configuration data;
 - terminal recharge using exactly one 0.95 factor;
 - formal ledger integration and maximum replacement-cost bounds;
+- five-step macro-ledger summation without cumulative-cost double counting;
 - preflight statuses and continued formal-training NO-GO; and
 - regression protection for existing MPC objectives and control behavior.
 
