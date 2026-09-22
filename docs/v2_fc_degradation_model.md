@@ -96,27 +96,40 @@ Power supplied to every update is checked against the explicit zero-to-rated
 domain. The tracker reports per-update starts/stops and cumulative aggregate
 counts.
 
-## Lifetime normalization and cost gate
+## Aggregate-equivalent lifetime normalization and interval cost
 
-The stated relative normalization is
+The approved aggregate-equivalent EMS model uses
+`FC_EOL_VOLTAGE_LOSS_UV = 70,000`. This is a literature/model calibration, not
+a vessel-measured initial voltage or a claim that all eight physical stacks age
+identically. The older single-cell `0.1 V_init` helper remains explicitly
+synthetic and does not define the formal economic boundary.
+
+For cumulative diagnostic loss before and after one physical interval,
 
 \[
-D_{fc}=\frac{\Delta V}{0.1V_{init}}.
+D_{raw,before}=\frac{V_{loss,before}}{70000},\qquad
+D_{raw,after}=\frac{V_{loss,after}}{70000},
 \]
 
-Here the cited basis is single-cell voltage: `Delta V` is a single-cell loss and
-`V_init` must be a single-cell initial voltage in the same physical basis. The
-implementation's explicitly synthetic helper converts input microvolts to
-volts before applying the formula and requires the exact basis label
-`single-cell voltage`; stack and aggregate-system bases are rejected. No
-applicable numeric single-cell `V_init` has been approved. The formal status is
-therefore exactly `NO-GO`; no formal default or formal factory exists.
+\[
+\Delta D_{econ}=clip(D_{raw,after},0,1)
+                 -clip(D_{raw,before},0,1).
+\]
 
-A proposed formal normalization record must carry the single-cell initial
-voltage, exact single-cell basis, source DOI, and applicability. Even a
-complete-looking record is rejected because no authoritative numeric record
-has been approved. Bare numeric normalization and subclasses are also rejected.
-Consequently, raw microvolt loss cannot be multiplied by fuel-cell replacement
-price. The formal relative-life and degradation-to-CNY entrypoints fail before
-any such multiplication. This document does not invent an initial voltage,
-power mapping, lifetime, or equipment-cost conversion.
+Cumulative loss must be non-negative and monotonic. `D_raw` may exceed one,
+the clipped cumulative economic fraction cannot, and EOL is reported from
+`D_raw_after >= 1`. The current interval cost is
+
+\[
+C_{FC,interval}=\Delta D_{econ}\times3500\times600\;CNY.
+\]
+
+Crossing EOL charges only the remaining uncharged fraction. Further raw loss
+after EOL has zero economic increment. Without a modeled replacement/reset,
+the sum of all interval charges is bounded by `2,100,000 CNY`; the model never
+multiplies cost by eight stacks and never recharges a cumulative fraction.
+
+The normalization status is `VERIFIED` for this aggregate-equivalent model.
+The separate aggregate-power-to-reference-unit coefficient mapping remains an
+unresolved raw-model applicability issue and is not promoted by this economic
+normalization.

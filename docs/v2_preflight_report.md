@@ -61,23 +61,32 @@ objective-scale audit 已从冻结清单中的 46 个 Train parent 读取原始�
 `10.11930/j.issn.1004-9649.202507065` Table 3。来源、位置和值必须同时匹配；
 这两个效率只进入能量/SOC 动力学，不进入退化归一化。
 
-## 7. degradation equations — NO-GO
+## 7. degradation equations — MIXED
 
 FC 四工况电压损失结构和电池 SOC/电流加权吞吐方程已编码并带来源，分别见
 `docs/v2_fc_degradation_model.md` 与 `docs/v2_battery_degradation_model.md`。
-但 FC 缺少适用的单电池初始电压及聚合功率映射，电池缺少权威
-`Q_lifetime`；两类 raw loss 都不能转换为正式寿命比例或 CNY。
+FC 经济归一化采用 70,000 microvolt aggregate-equivalent EOL，状态为
+**VERIFIED literature/model**，不是 vessel-measured。电池采用
+`15000 * (624000/432) Ah`；configuration status 为 **FROZEN**，evidence status
+仍为 **SECONDARY_LITERATURE / LITERATURE-CALIBRATED**，不是 vessel measured、
+manufacturer specification 或 Yang measured parameter。
+两者均按 before/after clipped cumulative fraction 的差值生成 interval CNY，跨越
+EOL 只补剩余寿命，EOL 后不重复收费。FC 原始功率到来源参考单元的映射适用性仍未
+解决，但不再冒充经济归一化 blocker。
 
 ## 8. economic prices — VERIFIED
 
 固定场景采用氢气 `35 CNY/kg`、FC `3500 CNY/kW`、电池 `2000 CNY/kWh` 和
 岸电 `1.10 CNY/kWh`。来源角色见 `docs/v2_economic_parameters.md`。价格已冻结
-不等于退化成本可计算；后者仍受第 7 节归一化 gate 阻止。
+且 interval degradation cost 已可按第 7 节合同计算。Battery lifetime factor 已冻结
+为 formal baseline，但其 secondary-literature evidence classification 保持不变。
 
-## 9. shore-data status — NO-GO
+## 9. shore-data status — VERIFIED ASSUMPTION / NOT MEASURED
 
 `1.10 CNY/kWh` 是 `scenario_not_measured` 的峰时电价场景，不是项目码头实测
-电价。仓库也没有已批准的岸电变换器效率，因此终端补能量的正式计算继续失败关闭。
+电价。终端补能使用一次 aggregate `0.95` 文献假设，不再叠加第二个岸电变换器
+效率。该代码合同为 **VERIFIED literature-based aggregate assumption**，但不代表
+实船岸电计量或合同电价。
 
 ## 10. plant parameter provenance — VERIFIED
 
@@ -85,19 +94,18 @@ FC 四工况电压损失结构和电池 SOC/电流加权吞吐方程已编码并
 560 kW/约 1806 kWh 的真实船舶规格记录。两组值不得拼接为同一正式设备；
 当前“VERIFIED”仅指来源分类和分离规则可追溯。
 
-## 11. MPC Ts / N evidence — PROVISIONAL
+## 11. MPC Ts / N configuration — FROZEN
 
-当前 nominal/provisional 基线为 `Ts_MPC=30 s`、`N=5`。Train 原始时钟审计支持
-约 30 s supervisory cadence，且 objective-scale audit 用 `N=5` 完成 216 次求解；
-但这不是正式时间尺度选择或完整 solver-robustness 证据，因此本项仍为
-**PROVISIONAL**。
+`Ts_MPC=30 s` 已冻结为 nominal control interval，并由 Train 原始时钟审计支持，
+状态为 **VERIFIED**。`N=5` 已冻结为 `FROZEN_PROJECT_DESIGN`，每次 solve 预测
+5 个 30 s supervisory steps，即 150 s；它不是文献证明或全局优化得到的唯一最优值。
 
-## 12. DQN M evidence — PROVISIONAL
+## 12. DQN M configuration — FROZEN
 
-当前配置为 `M=5`，属于 provisional project baseline，且与 `N=5` 的语义独立。
-Train-only 敏感性诊断域仍限定为 `M in {5,10}`；
-`src/v2/analysis/timescale_audit.py` 只生成诊断快照，不填写正式 M，因此不能声称
-`M=5` 已完成正式优选。
+`M=5` 已冻结为 `FROZEN_PROJECT_DESIGN`：同一个 DQN-selected action 保持 5 次
+真实 rolling MPC solve，即 150 s macro interval。`M` 与 MPC 内部 prediction horizon
+`N` 语义独立。历史 Train-only `M in {5,10}` 诊断不构成最优性证明，也不再阻塞
+formal training。
 
 ## 13. candidate action behavior analysis — NO-GO
 
@@ -124,32 +132,36 @@ Train case 和最终 catalog 的重复求解记录。因此不能声称热启动
 
 ## 16. unit/contract test results — VERIFIED
 
-2026-09-22 最终 checkpoint 验证：全仓 `393/393` tests 通过；N=5 物理约束/首步
-执行与 cold/shifted-warm 确定性 solver smoke 为 `2/2`；compile/import check 与
-`git diff --check` 通过。真实审计使用原始 Train 遥测并完成 216 次 MPC 求解；
+2026-09-22 本次参数冻结收口后，当前工作树已通过：focused parameter/contract
+tests `58/58`、全部 v2 tests `208/208`、N=5 物理约束/首步执行与
+cold/shifted-warm 确定性 solver smoke `2/2`、compile/import 和
+`git diff --check`。真实审计使用原始 Train 遥测并完成 216 次 MPC 求解；
 合成单元测试仍只用于证明统计、门禁和数据规则实现，不替代该真实结果。
 
 ## 17. remaining unsupported assumptions — UNRESOLVED
 
-尚未获得或冻结：FC 聚合功率到来源参考单元的映射、FC 寿命
-归一化、电池 `Q_lifetime`、岸电变换效率、正式 `Ts_MPC/N/M/tau_LPF`、原船/正式
-训练适用的电池充放电功率边界、FC 每步爬坡限制、最终 state、reward scale、最终 action catalog/K、
+尚未获得或冻结：正式 Train dataset/episode payload、FC 聚合功率到来源参考单元的
+raw-model 映射、原船/正式训练适用的电池充放电功率边界、
+FC 每步爬坡限制、最终 state、reward scale、最终 action catalog/K、
 最终 catalog 的完整真实案例 solver robustness audit，以及独立的完整
 behavioral-responsiveness 筛选。objective-scale 与 weighted-dominance 的 Train-only
 结果已经归档；不得用其替代仍缺失的证据，也不得用研究仿真值、合成夹具或
 held-out 表现补齐这些门槛。
 
-当前审计值 `tau_LPF=90 s` 仍是 provisional project parameter；FC hard ramp 允许
-disabled，未使用旧 `48 kW/step`。审计 battery bounds `[-624,+1248] kW` 来自
+`tau_LPF=90 s` 已冻结为 `FROZEN_PROJECT_DESIGN`，在 `Ts=30 s` 下
+`alpha=exp(-30/90)`；它有 LPF/FC-low-frequency 文献结构支持，但不是实船标定值或
+唯一最优值。FC hard ramp 允许 disabled，未使用旧 `48 kW/step`。审计 battery bounds `[-624,+1248] kW` 来自
 Yang et al. (2026) Table 6 的研究配置，不能提升为原船或正式训练硬件边界。
 
 ## 18. formal training GO/NO-GO — NO-GO
 
-代码在读取训练 payload 前逐项检查原需求实际列出的全部 13 项：`eta_fc(P)`、
-`eta_chg`、`eta_dis`、FC 退化归一化、电池 `Q_lifetime`、岸电价格、`Ts_MPC`、
-`N`、`M`、`tau_LPF`、SOC deadband、最终 DQN state、最终 action catalog。
-本增量另增加第 14 项 `objective_scale_comparability` gate。当前有任一非
-`VERIFIED` 项即失败关闭，结论为：
+代码在读取训练 payload 前检查 15 项：`eta_fc(P)`、`eta_chg`、`eta_dis`、FC 退化
+归一化、电池 `Q_lifetime`、岸电充电效率、岸电价格、`Ts_MPC`、`N`、`M`、
+`tau_LPF`、SOC deadband、最终 DQN state、最终 action catalog，以及
+`objective_scale_comparability`。其中 battery lifetime、N、M 与 tau 已按冻结配置
+通过 gate，但 evidence classification 仍独立保留。最终 state/action 仍非
+`VERIFIED`；正式 dataset/episode payload 与最终集成 solver robustness 也未关闭，
+结论为：
 
 `FORMAL_TRAINING = NO-GO`
 

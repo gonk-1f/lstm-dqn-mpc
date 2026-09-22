@@ -568,6 +568,9 @@ class NonlinearMPC:
             if len(warm) != cfg.timescale.n_mpc:
                 raise ValueError("warm_start length must equal timescale.n_mpc")
 
+        # Horizon index k denotes one Ts_MPC=30 s sample. N=n_mpc controls this
+        # plan only; the frozen M=5 execution count belongs to the outer
+        # MultiRateWeightEnvironment and does not change the MPC equations.
         forecast = base_load_filter.preview(load, horizon=cfg.timescale.n_mpc)
         loads = np.asarray(forecast.load_kw, dtype=float)
         references = np.asarray(forecast.base_reference_kw, dtype=float)

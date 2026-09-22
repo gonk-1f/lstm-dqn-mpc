@@ -43,9 +43,11 @@ where `d_SOC=0` within `[0.40,0.60]`, is the distance to `0.40` below the
 working band, and is the distance to `0.60` above it. The hard SOC interval is
 unchanged at `[0.20,0.80]`.
 
-The audit uses the research-simulation battery bounds `-624/+1248 kW`, the
-provisional approximately 30 s MPC scale, an audit-only `tau_LPF=90 s`, and no
-hard FC ramp. Disabling the hard ramp does not disable `J_smooth`.
+The audit used the research-simulation battery bounds `-624/+1248 kW`, the
+30 s MPC scale, `tau_LPF=90 s`, and no hard FC ramp. Those timescale values are
+now frozen project-design baseline configuration; this historical audit is not
+evidence that they are vessel-calibrated or uniquely optimal. Disabling the hard
+ramp does not disable `J_smooth`.
 
 ## 3. Train-only eligibility rules
 

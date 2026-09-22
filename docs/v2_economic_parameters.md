@@ -6,12 +6,15 @@
 
 Formal training remains **NO-GO**. The following blockers are intentional:
 
+- the formal Train dataset/episode payload is not frozen;
 - the candidate DQN state has not passed Train-only distribution, correlation,
   redundancy, and sensitivity audits;
-- the aggregate fuel-cell lifetime normalization is not verified;
-- the battery lifetime-throughput normalization is not verified; and
-- no verified shore-converter efficiency is available for modeled terminal
-  recharge.
+- the final action catalog/K is not frozen; and
+- final integrated preflight and final-catalog solver robustness remain open.
+
+The formal baseline now freezes `N=5`, `M=5`, and `tau_LPF=90 s` as project
+design configuration. Their evidence classification is kept separate and does
+not claim vessel measurement or global optimality.
 
 Passing unit tests confirms formulas and gates. It does not promote any of
 these unresolved quantities to formal calibration.
@@ -83,15 +86,13 @@ The episode-specific target is exactly `episode_initial_soc`:
 E_battery_needed_kWh = max(0, episode_initial_soc - episode_end_soc)
                        * battery_capacity_kWh
 
-E_grid_kWh = E_battery_needed_kWh / eta_chg / eta_shore_converter
+E_grid_kWh = E_battery_needed_kWh / eta_chg
 ```
 
-`eta_chg` must come from the exact Task 3 `BatteryEfficiency` calibration and
-therefore equals 0.95. There is no approved `eta_shore_converter`. The formal
-`terminal_recharge_grid_energy` boundary is consequently NO-GO. The distinctly
-named `terminal_recharge_grid_energy_unverified` function is pure arithmetic
-for synthetic tests only and requires the converter efficiency explicitly.
-Its modeled output is rejected by the formal interval-ledger boundary.
+`eta_chg` comes from the exact Task 3 `BatteryEfficiency` calibration and equals
+0.95. At this boundary it is the single aggregate charging-path assumption;
+there is no second shore-converter divisor. The formal output remains
+`MODELED`, not measured vessel energy, and may enter the interval ledger.
 
 ## Raw-CNY interval ledger and reward
 
@@ -105,15 +106,18 @@ reward_cny = -C_total
 There are no `0.3/0.4/0.3` coefficients and no other artificial component
 weights. Raw CNY components are retained for logging.
 
-Fuel-cell degradation cost may only use a verified relative life loss in
-`[0, 1]` multiplied by `3500 CNY/kW * rated_kW`. Battery degradation cost may
-only use a verified relative life loss in `[0, 1]` multiplied by
-`2000 CNY/kWh * capacity_kWh`. The current Task 4 quantities—raw microvolts and
-raw or stress-weighted ampere-hours—are not relative life fractions.
-`build_formal_interval_ledger` therefore delegates to the Task 4 formal
-normalization boundaries, which currently fail closed. The raw ledger class is
-an immutable accounting value, not evidence that its degradation components
-have passed formal normalization.
+Fuel-cell and battery degradation charges are the difference between clipped
+cumulative economic fractions at the interval's before/after boundaries. They
+are not the cumulative fractions themselves. FC cost uses
+`delta_D_fc_econ * 3500 CNY/kW * 600 kW`; battery cost uses
+`delta_D_batt_econ * 2000 CNY/kWh * 624 kWh`. Crossing EOL charges only the
+remaining fraction, and post-EOL intervals charge zero without a modeled
+replacement/reset.
+
+Each `RawCnyIntervalLedger` contains only the current physical interval's H2,
+incremental FC degradation, incremental battery degradation, and incurred
+shore costs. `MultiRateWeightEnvironment` may therefore sum M ledgers without
+recharging prior cumulative degradation.
 
 Reward scaling has no default `C_ref`. `calibrate_reward_scale` is the only
 factory for `RewardScaleCalibration`; direct construction is rejected. It

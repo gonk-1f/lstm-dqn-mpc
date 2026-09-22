@@ -21,7 +21,7 @@ class IncompatibleArtifactError(ValueError):
 def control_semantics(
     timescale: TimeScaleConfig | None = None,
 ) -> dict[str, object]:
-    scale = timescale or TimeScaleConfig.provisional()
+    scale = timescale or TimeScaleConfig.formal_baseline()
     return {
         "method_version": METHOD_VERSION,
         "mpc_objective_version": MPC_OBJECTIVE_VERSION,

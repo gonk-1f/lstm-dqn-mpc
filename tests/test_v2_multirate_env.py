@@ -298,7 +298,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
             from v2.envs.multirate_weight_env import MultiRateWeightEnvironment
 
             MultiRateWeightEnvironment(
-                timescale=TimeScaleConfig.provisional(),
+                timescale=TimeScaleConfig.formal_baseline(),
                 action_catalog=(self._candidate(),),
                 backend=_Backend(self._ledgers(5)),
                 state_provider=_StateProvider(),
@@ -307,7 +307,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         from v2.config import TimeScaleConfig
         from v2.envs.multirate_weight_env import MultiRateWeightEnvironment
 
-        forged_timescale = TimeScaleConfig.provisional()
+        forged_timescale = TimeScaleConfig.formal_baseline()
         object.__setattr__(forged_timescale, "dqn_switch_steps", 0)
         with self.assertRaises(ValueError):
             MultiRateWeightEnvironment(
@@ -337,7 +337,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         object.__setattr__(candidate, "to_mpc_weights", lambda: MPCWeights(0.2, 0.3, 0.5))
         with self.assertRaises(ValueError):
             MultiRateWeightEnvironment(
-                timescale=TimeScaleConfig.provisional(),
+                timescale=TimeScaleConfig.formal_baseline(),
                 action_catalog=(candidate,),
                 backend=_Backend(self._ledgers(5)),
                 state_provider=_StateProvider(),
@@ -376,7 +376,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             MultiRateWeightEnvironment(
-                timescale=TimeScaleConfig.provisional(),
+                timescale=TimeScaleConfig.formal_baseline(),
                 action_catalog=(self._candidate(), self._candidate()),
                 backend=_Backend(self._ledgers(5)),
                 state_provider=_StateProvider(),
@@ -391,7 +391,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
 
         provider = _StateProvider()
         environment = MultiRateWeightEnvironment(
-            timescale=TimeScaleConfig.provisional(),
+            timescale=TimeScaleConfig.formal_baseline(),
             action_catalog=(self._candidate(),),
             backend=MalformedBackend(),
             state_provider=provider,

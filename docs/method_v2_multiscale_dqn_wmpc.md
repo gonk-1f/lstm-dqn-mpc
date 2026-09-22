@@ -4,12 +4,14 @@
 
 本页只定义 `MPC_OBJECTIVE_VERSION = fc_base_smooth_soc_deadband_mean_v2` 的下层控制器。下层 MPC 负责控制品质和物理可行性，不计算氢耗价格、设备价格、燃料电池或电池退化成本，也不使用上层 DQN 的经济奖励。上层 DQN 的动作只参数化三个正权重；它不改变下层目标项的定义。
 
-当前冻结的基线时间尺度由 `TimeScaleConfig.provisional()` 给出：
+当前冻结的正式基线时间尺度由 `TimeScaleConfig.formal_baseline()` 给出，配置状态为
+`FROZEN_PROJECT_DESIGN`：
 
 - MPC 采样周期 `Ts_MPC = 30 s`；
 - 预测长度 `N_MPC = 5`，即每次求解预测未来 5 个 MPC 步；
 - 滚动时域每次只执行计划的第 0 步，下一控制周期重新观测和求解；
-- `dqn_switch_steps=M=5` 是当前 provisional 基线，不参与下层计划长度；它与同为 5 的 `N_MPC` 仍是不同概念。
+- `dqn_switch_steps=M=5`，同一个 DQN 权重动作保持 5 次真实 rolling MPC solve，
+  即 150 s；它不参与下层计划长度，与同为 5 的 `N_MPC` 是不同概念。
 
 ## 因果负载与基准功率
 
@@ -80,23 +82,24 @@ SOC 递推只调用 `v2.models.battery_energy.next_soc`，并要求经过来源�
 研究仿真 MPC 配置，不得表述成 12 簇、约 1806 kWh 原船硬件边界；原船技术规格
 本身仍只给出系统额定输出不低于 900 kW。
 
-本次 objective-scale audit 由用户于 2026-09-22 临时指定
-`tau_LPF=90 s`。在名义 `Ts_MPC=30 s` 下对应
-`alpha=exp(-30/90)=0.7165313106`。该值只解除本次审计的参数阻塞，来源分类为
-`user_approved_provisional_audit_parameter`；它不是两篇论文直接给出的数值，也不
-自动成为正式训练参数。
+正式 baseline 冻结 `tau_LPF=90 s`。在固定 `Ts_MPC=30 s` 下对应
+`alpha=exp(-30/90)=0.7165313106`。其配置状态为
+`FROZEN_PROJECT_DESIGN`，evidence classification 为 `PROJECT_DESIGN`：LPF/FC
+低频分配结构有文献支持，但 90 s 不是 Three Gorges Hydrogen Boat 1 实船标定值，
+也不声明为唯一最优值。未来论文可做 sensitivity，但不再阻塞 formal training。
 
-以下参数或证据尚未冻结，当前正式训练状态为 **NO-GO**：
-
-- 正式训练使用的 `tau_LPF`；
-- 正式 `Ts_MPC/N/M` 选择、最终 DQN state/action catalog、退化归一化、reward scale
-  及最终 catalog 的 solver robustness 证据。
+`Ts_MPC=30 s`、`N_MPC=5`、`M=5` 和 `tau_LPF=90 s` 均已冻结为项目设计配置，
+不再是正式训练 blocker。`N=5` 产生 150 s prediction horizon；`M=5` 产生
+150 s macro interval。该冻结不声称 N/M/tau 是由文献或全局优化证明的唯一最优值。
+正式训练仍因 dataset/episode payload、最终 DQN state、最终 action catalog/K 和
+最终集成 preflight/solver robustness 未关闭而 **NO-GO**。
 
 真实 Train objective-scale audit 已在 6 个代表 case、完整 36 个候选 action 上完成
 216 次求解，active-P95 `scale_ratio=1.827863`，其独立 gate 为
 **PASS / VERIFIED**。该结果不提升上述其他 gate，也不授权正式训练。
 
-这些参数只能在 Train 切分上选择、校准和审计。Validation/Test 不得用于选择它们。代码要求显式配置，避免将临时试验值提升为方法事实。
+未来对这些冻结参数的 sensitivity 或证据审计只能使用 Train 切分；Validation/Test
+不得回流改变 baseline。代码要求显式配置并保留 evidence classification。
 
 爬坡硬约束与 `J_smooth` 的 600 kW 数值归一化严格分离。`MPCConfig` 允许
 `fuel_cell_ramp_kw_per_step=None` 且默认关闭；只有调用方显式给出正的来源支持值

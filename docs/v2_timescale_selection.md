@@ -2,13 +2,18 @@
 
 ## 当前结论
 
-正式时间尺度选择和正式训练均为 **NO-GO**。当前仓库只冻结一个待验证的基线：
+正式 baseline 已冻结以下项目设计配置，但正式训练仍为 **NO-GO**：
 
 - `Ts_MPC = 30 s`；
 - 下层预测长度 `N_MPC = 5`；
-- 上层动作保持步数的 Train-only 敏感性范围仅为 `M in {5, 10}`。
+- 上层动作保持步数 `M = 5`；
+- `tau_LPF = 90 s`。
 
-`N_MPC` 与 `M` 的语义不同。前者是一次滚动优化向未来预测的步数，后者是一个 DQN 权重动作实际保持并执行的 MPC 周期数。审计接口把 `N_MPC` 固定为 5，不在同一次敏感性分析里改变两个量。代码产生的是诊断快照，不会填写 `selected_dqn_switch_steps`；其状态始终为 `NO-GO`。合成测试只验证算法定义，不能替代真实 Train 航次证据。
+`N_MPC` 与 `M` 的语义不同。前者是一次滚动优化向未来预测的步数，后者是一个
+DQN 权重动作实际保持并执行的 MPC 周期数。在 `Ts=30 s` 下，两者数值都为 5，
+分别形成 150 s prediction horizon 和 150 s macro interval。配置状态为
+`FROZEN_PROJECT_DESIGN`；证据状态为 `PROJECT_DESIGN`，不声称数据优选、文献全局
+最优或实船标定。既有审计接口只保留为非阻塞诊断快照。
 
 ## Train-only 边界
 
@@ -50,7 +55,9 @@ Validation、Test 和 Unknown 只能在方法冻结后用于评估，不能回�
 - 各区间总体方差的平均值；
 - 未进入完整区间的尾部样本数。
 
-任何尾部截断都显式入账，不能静默丢弃。当前接口不允许增加、删除或重排候选，也不允许改变 `N_MPC=5`。将来只有在真实 Train 数据 provenance、样本覆盖和求解器审计都通过后，才可依据预先登记的决策规则冻结 `M`；Validation/Test 上的表现不得改变选择。
+任何尾部截断都显式入账，不能静默丢弃。当前接口不允许增加、删除或重排候选，
+也不允许改变 `N_MPC=5`。该诊断不再负责冻结 M，也不阻塞 formal training；未来
+论文若报告 sensitivity，仍只能使用 Train 数据且不得由 Validation/Test 改变 baseline。
 
 ## 配对冷启动/热启动审计
 
@@ -78,7 +85,10 @@ digest 证明的是同一序列化内容得到同一标识，不是数据真实�
 - `N_MPC=5` 已由数据选定；
 - `M=5` 优于 `M=10`；
 - warm start 在正式案例上更可靠或更快；
-- `tau_LPF`、state、action catalog、reward scale 或 objective normalization 已完成
-  Train-only 审计（SOC deadband 已由本轮方法定义固定，但未因此解除其他 gate）。
+- `N=5`、`M=5` 或 `tau_LPF=90 s` 是唯一最优值或实船标定值；
+- state、action catalog、reward scale 或 objective normalization 已完成全部
+  Train-only 审计（SOC deadband 已由方法定义固定，但未因此解除其他 gate）。
 
-这些项目继续作为 provisional/unsupported evidence 进入后续 preflight，正式训练保持 **NO-GO**。
+N、M 与 tau 的 frozen configuration 已通过 preflight，未升级其 evidence 等级。
+正式训练因 dataset/episode payload、最终 state、最终 action catalog/K 和最终集成
+solver robustness 仍保持 **NO-GO**。

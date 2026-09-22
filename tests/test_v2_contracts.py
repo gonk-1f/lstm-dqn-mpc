@@ -30,10 +30,10 @@ class V2ContractTests(unittest.TestCase):
             expected,
         )
 
-    def test_provisional_timescales_have_separate_semantics(self) -> None:
+    def test_frozen_timescales_have_separate_semantics(self) -> None:
         from v2.config import TimeScaleConfig
 
-        config = TimeScaleConfig.provisional()
+        config = TimeScaleConfig.formal_baseline()
 
         self.assertEqual(config.ts_mpc_seconds, 30.0)
         self.assertEqual(config.n_mpc, 5)

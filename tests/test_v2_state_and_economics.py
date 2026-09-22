@@ -345,9 +345,8 @@ class EconomicCostTests(unittest.TestCase):
             with self.subTest(bad=bad), self.assertRaises((TypeError, ValueError)):
                 hydrogen_cost_cny(bad)  # type: ignore[arg-type]
 
-    def test_terminal_recharge_targets_episode_initial_soc_and_converter_is_gated(self) -> None:
+    def test_terminal_recharge_targets_episode_initial_soc_with_one_formal_efficiency(self) -> None:
         from v2.economics import (
-            ShoreConverterCalibration,
             ShoreEnergyClassification,
             terminal_recharge_grid_energy,
             terminal_recharge_grid_energy_unverified,
@@ -373,19 +372,14 @@ class EconomicCostTests(unittest.TestCase):
         self.assertIs(below.classification, ShoreEnergyClassification.MODELED)
         self.assertEqual(above.energy_kwh, 0.0)
 
-        unresolved = ShoreConverterCalibration(
-            0.95,
-            "UNVERIFIED",
-            "no approved vessel-specific converter calibration",
+        formal = terminal_recharge_grid_energy(
+            episode_initial_soc=0.60,
+            episode_end_soc=0.50,
+            battery_capacity_kwh=100.0,
+            battery_efficiency=efficiency,
         )
-        with self.assertRaisesRegex(ValueError, "NO-GO"):
-            terminal_recharge_grid_energy(
-                episode_initial_soc=0.60,
-                episode_end_soc=0.50,
-                battery_capacity_kwh=100.0,
-                battery_efficiency=efficiency,
-                converter_calibration=unresolved,
-            )
+        self.assertAlmostEqual(formal.energy_kwh, 10.0 / 0.95)
+        self.assertIs(formal.classification, ShoreEnergyClassification.MODELED)
 
     def test_missing_shore_tariff_is_a_gate_and_not_a_zero_cost_default(self) -> None:
         from v2.economics import (
@@ -406,41 +400,28 @@ class EconomicCostTests(unittest.TestCase):
                 ShoreEnergy(1.0, ShoreEnergyClassification.MODELED), prices=missing
             )
 
-    def test_unverified_modeled_shore_energy_cannot_enter_formal_ledger(self) -> None:
+    def test_modeled_shore_energy_enters_formal_interval_ledger(self) -> None:
         from v2.economics import (
             ShoreEnergy,
             ShoreEnergyClassification,
             build_formal_interval_ledger,
         )
-        from v2.models.battery_degradation import BatteryLifetimeNormalization
-        from v2.models.fuel_cell_degradation import (
-            FC_SINGLE_CELL_VOLTAGE_BASIS,
-            FuelCellLifetimeNormalization,
+        from v2.models.battery_degradation import (
+            formal_battery_lifetime_normalization,
         )
 
-        with self.assertRaisesRegex(ValueError, "shore-converter"):
-            build_formal_interval_ledger(
-                hydrogen_mass_kg=0.0,
-                fuel_cell_voltage_loss_uv=0.0,
-                fuel_cell_rated_kw=100.0,
-                fuel_cell_normalization=FuelCellLifetimeNormalization(
-                    0.7,
-                    FC_SINGLE_CELL_VOLTAGE_BASIS,
-                    "10.0000/unverified",
-                    "unverified cell",
-                ),
-                battery_weighted_ah=0.0,
-                battery_capacity_kwh=100.0,
-                battery_normalization=BatteryLifetimeNormalization(
-                    10_000.0,
-                    "10.0000/unverified",
-                    "weighted Ah",
-                    "unverified battery",
-                ),
-                shore_energy=ShoreEnergy(
-                    1.0, ShoreEnergyClassification.MODELED
-                ),
-            )
+        ledger = build_formal_interval_ledger(
+            hydrogen_mass_kg=0.0,
+            fuel_cell_cumulative_voltage_loss_before_uv=0.0,
+            fuel_cell_cumulative_voltage_loss_after_uv=0.0,
+            fuel_cell_rated_kw=600.0,
+            battery_cumulative_weighted_ah_before=0.0,
+            battery_cumulative_weighted_ah_after=0.0,
+            battery_capacity_kwh=624.0,
+            battery_normalization=formal_battery_lifetime_normalization(),
+            shore_energy=ShoreEnergy(1.0, ShoreEnergyClassification.MODELED),
+        )
+        self.assertEqual(ledger.components_cny, (0.0, 0.0, 0.0, 1.1))
 
     def test_ledger_is_immutable_exact_unweighted_sum_and_negative_reward(self) -> None:
         from v2.economics import RawCnyIntervalLedger
@@ -462,47 +443,54 @@ class EconomicCostTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             RawCnyIntervalLedger(1.0e308, 1.0e308, 0.0, 0.0)
 
-    def test_formal_degradation_rejects_raw_units_and_full_ledger_is_no_go(self) -> None:
+    def test_formal_ledger_prices_only_interval_degradation_increments(self) -> None:
         from v2.economics import build_formal_interval_ledger
-        from v2.models.battery_degradation import BatteryLifetimeNormalization
-        from v2.models.fuel_cell_degradation import (
-            FC_SINGLE_CELL_VOLTAGE_BASIS,
-            FuelCellLifetimeNormalization,
+        from v2.models.battery_degradation import (
+            formal_battery_lifetime_normalization,
         )
 
         with self.assertRaises(TypeError):
             build_formal_interval_ledger(
                 hydrogen_mass_kg=1.0,
-                fuel_cell_voltage_loss_uv=10.0,
-                fuel_cell_rated_kw=100.0,
-                fuel_cell_normalization=500.0,  # type: ignore[arg-type]
-                battery_weighted_ah=10.0,
-                battery_capacity_kwh=100.0,
+                fuel_cell_cumulative_voltage_loss_before_uv=0.0,
+                fuel_cell_cumulative_voltage_loss_after_uv=10.0,
+                fuel_cell_rated_kw=600.0,
+                battery_cumulative_weighted_ah_before=0.0,
+                battery_cumulative_weighted_ah_after=10.0,
+                battery_capacity_kwh=624.0,
                 battery_normalization=10_000.0,  # type: ignore[arg-type]
                 shore_energy=None,
             )
 
-        fc_unresolved = FuelCellLifetimeNormalization(
-            0.7,
-            FC_SINGLE_CELL_VOLTAGE_BASIS,
-            "10.0000/unverified",
-            "unverified cell",
+        normalization = formal_battery_lifetime_normalization()
+        ledger = build_formal_interval_ledger(
+            hydrogen_mass_kg=1.0,
+            fuel_cell_cumulative_voltage_loss_before_uv=0.0,
+            fuel_cell_cumulative_voltage_loss_after_uv=35_000.0,
+            fuel_cell_rated_kw=600.0,
+            battery_cumulative_weighted_ah_before=0.0,
+            battery_cumulative_weighted_ah_after=(
+                0.25 * normalization.q_lifetime_ah
+            ),
+            battery_capacity_kwh=624.0,
+            battery_normalization=normalization,
+            shore_energy=None,
         )
-        batt_unresolved = BatteryLifetimeNormalization(
-            10_000.0,
-            "10.0000/unverified",
-            "weighted Ah",
-            "unverified battery",
-        )
-        with self.assertRaisesRegex(ValueError, "NO-GO"):
+        self.assertEqual(ledger.h2_cost_cny, 35.0)
+        self.assertEqual(ledger.fuel_cell_degradation_cost_cny, 1_050_000.0)
+        self.assertEqual(ledger.battery_degradation_cost_cny, 312_000.0)
+        self.assertEqual(ledger.shore_cost_cny, 0.0)
+
+        with self.assertRaisesRegex(ValueError, "must not decrease"):
             build_formal_interval_ledger(
-                hydrogen_mass_kg=1.0,
-                fuel_cell_voltage_loss_uv=10.0,
-                fuel_cell_rated_kw=100.0,
-                fuel_cell_normalization=fc_unresolved,
-                battery_weighted_ah=10.0,
-                battery_capacity_kwh=100.0,
-                battery_normalization=batt_unresolved,
+                hydrogen_mass_kg=0.0,
+                fuel_cell_cumulative_voltage_loss_before_uv=2.0,
+                fuel_cell_cumulative_voltage_loss_after_uv=1.0,
+                fuel_cell_rated_kw=600.0,
+                battery_cumulative_weighted_ah_before=0.0,
+                battery_cumulative_weighted_ah_after=0.0,
+                battery_capacity_kwh=624.0,
+                battery_normalization=normalization,
                 shore_energy=None,
             )
 

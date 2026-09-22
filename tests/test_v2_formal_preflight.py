@@ -30,6 +30,7 @@ class FormalPreflightTests(unittest.TestCase):
                 "eta_dis",
                 "fc_degradation_normalization",
                 "battery_q_lifetime_normalization",
+                "shore_charging_efficiency",
                 "shore_electricity_price",
                 "ts_mpc",
                 "n_mpc",
@@ -46,8 +47,12 @@ class FormalPreflightTests(unittest.TestCase):
         self.assertEqual(report.checks[0].status, CalibrationStatus.VERIFIED)
         self.assertEqual(report.checks[1].status, CalibrationStatus.VERIFIED)
         self.assertEqual(report.checks[2].status, CalibrationStatus.VERIFIED)
+        self.assertEqual(report.checks[3].status, CalibrationStatus.VERIFIED)
+        self.assertEqual(report.checks[4].status, CalibrationStatus.VERIFIED)
         self.assertEqual(report.checks[5].status, CalibrationStatus.VERIFIED)
         by_key = {check.key: check for check in report.checks}
+        for key in ("n_mpc", "dqn_switch_steps", "tau_lpf"):
+            self.assertEqual(by_key[key].status, CalibrationStatus.VERIFIED)
         self.assertEqual(by_key["soc_deadband"].status, CalibrationStatus.VERIFIED)
         self.assertEqual(
             by_key["objective_scale_comparability"].status,
@@ -74,7 +79,7 @@ class FormalPreflightTests(unittest.TestCase):
             )
 
         self.assertEqual(accesses, 0)
-        self.assertEqual(len(caught.exception.report.checks), 14)
+        self.assertEqual(len(caught.exception.report.checks), 15)
         self.assertIn("FORMAL_TRAINING=NO-GO", str(caught.exception))
 
     def test_preflight_cli_reports_every_check_and_returns_no_go(self) -> None:
@@ -88,7 +93,7 @@ class FormalPreflightTests(unittest.TestCase):
         self.assertIn("FORMAL_TRAINING=NO-GO", output.getvalue())
         self.assertEqual(
             sum(line.startswith("[") for line in output.getvalue().splitlines()),
-            14,
+            15,
         )
         self.assertIn("[VERIFIED] objective_scale_comparability", output.getvalue())
 

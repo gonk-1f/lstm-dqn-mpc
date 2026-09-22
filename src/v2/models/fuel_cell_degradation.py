@@ -19,7 +19,10 @@ FC_HIGH_LOAD_FRACTION = 0.8
 FC_SOURCE_POWER_BASIS = "source-compatible reference-unit power"
 FC_SINGLE_CELL_VOLTAGE_BASIS = "single-cell voltage"
 
-FC_LIFETIME_NORMALIZATION_STATUS = "NO-GO"
+FC_EOL_VOLTAGE_LOSS_UV = 70_000.0
+FC_AGGREGATE_REPLACEMENT_COST_CNY = 3_500.0 * 600.0
+FC_LIFETIME_NORMALIZATION_STATUS = "VERIFIED"
+FC_LIFETIME_EVIDENCE_CLASS = "literature/model verified; not vessel-measured"
 FC_AGGREGATE_POWER_MAPPING_STATUS = "NO-GO"
 
 
@@ -201,6 +204,92 @@ class FuelCellVoltageLossAccount:
     @property
     def total_uv(self) -> float:
         return self.runtime_uv + self.transient_uv + self.start_stop_uv
+
+
+@dataclass(frozen=True)
+class FuelCellLifeState:
+    """Cumulative aggregate-equivalent life state at one interval boundary."""
+
+    cumulative_voltage_loss_uv: float
+    raw_life_fraction: float
+    economic_life_fraction: float
+    eol_reached: bool
+
+    def __post_init__(self) -> None:
+        _exact_nonnegative_float(
+            self.cumulative_voltage_loss_uv,
+            "cumulative_voltage_loss_uv",
+        )
+        _exact_nonnegative_float(self.raw_life_fraction, "raw_life_fraction")
+        economic = _exact_nonnegative_float(
+            self.economic_life_fraction,
+            "economic_life_fraction",
+        )
+        if economic > 1.0:
+            raise ValueError("economic_life_fraction must lie in [0, 1]")
+        if type(self.eol_reached) is not bool:
+            raise TypeError("eol_reached must be an exact bool")
+
+
+@dataclass(frozen=True)
+class FuelCellLifeIncrement:
+    """Non-duplicating economic life consumed by one physical interval."""
+
+    before: FuelCellLifeState
+    after: FuelCellLifeState
+    delta_economic_fraction: float
+
+    def __post_init__(self) -> None:
+        if type(self.before) is not FuelCellLifeState:
+            raise TypeError("before must be an exact FuelCellLifeState")
+        if type(self.after) is not FuelCellLifeState:
+            raise TypeError("after must be an exact FuelCellLifeState")
+        delta = _exact_nonnegative_float(
+            self.delta_economic_fraction,
+            "delta_economic_fraction",
+        )
+        if delta > 1.0:
+            raise ValueError("delta_economic_fraction must lie in [0, 1]")
+
+
+def fuel_cell_life_state(
+    cumulative_voltage_loss_uv: float,
+) -> FuelCellLifeState:
+    """Return raw, clipped-economic, and EOL cumulative diagnostics."""
+
+    loss = _strict_scalar(
+        cumulative_voltage_loss_uv,
+        "cumulative_voltage_loss_uv",
+    )
+    if loss < 0.0:
+        raise ValueError("cumulative_voltage_loss_uv must be non-negative")
+    raw = loss / FC_EOL_VOLTAGE_LOSS_UV
+    economic = min(raw, 1.0)
+    return FuelCellLifeState(
+        cumulative_voltage_loss_uv=loss,
+        raw_life_fraction=raw,
+        economic_life_fraction=economic,
+        eol_reached=raw >= 1.0,
+    )
+
+
+def formal_fuel_cell_interval_life_loss(
+    cumulative_voltage_loss_before_uv: float,
+    cumulative_voltage_loss_after_uv: float,
+) -> FuelCellLifeIncrement:
+    """Return the clipped cumulative-life difference for one interval."""
+
+    before = fuel_cell_life_state(cumulative_voltage_loss_before_uv)
+    after = fuel_cell_life_state(cumulative_voltage_loss_after_uv)
+    if after.cumulative_voltage_loss_uv < before.cumulative_voltage_loss_uv:
+        raise ValueError("cumulative fuel-cell voltage loss must not decrease")
+    return FuelCellLifeIncrement(
+        before=before,
+        after=after,
+        delta_economic_fraction=(
+            after.economic_life_fraction - before.economic_life_fraction
+        ),
+    )
 
 
 @dataclass(frozen=True)
@@ -424,17 +513,25 @@ def formal_fuel_cell_relative_life_loss(
 
 
 def formal_fuel_cell_degradation_cost_cny(
-    delta_v_uv: float,
+    cumulative_voltage_loss_before_uv: float,
+    cumulative_voltage_loss_after_uv: float,
     *,
     replacement_cost_cny: float,
-    normalization: FuelCellLifetimeNormalization,
 ) -> float:
-    """Fail closed before raw microvolts can be multiplied by equipment price."""
+    """Charge only newly consumed clipped life in the current interval."""
 
-    relative_loss = formal_fuel_cell_relative_life_loss(
-        delta_v_uv, normalization=normalization
+    increment = formal_fuel_cell_interval_life_loss(
+        cumulative_voltage_loss_before_uv,
+        cumulative_voltage_loss_after_uv,
     )
     price = _strict_scalar(replacement_cost_cny, "replacement_cost_cny")
     if price < 0.0:
         raise ValueError("replacement_cost_cny must be non-negative")
-    return relative_loss * price
+    if price != FC_AGGREGATE_REPLACEMENT_COST_CNY:
+        raise ValueError(
+            "replacement_cost_cny must equal 3500 CNY/kW * 600 kW"
+        )
+    result = increment.delta_economic_fraction * price
+    if not math.isfinite(result):
+        raise ValueError("fuel-cell interval degradation cost must remain finite")
+    return result

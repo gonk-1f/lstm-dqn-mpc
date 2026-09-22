@@ -206,7 +206,7 @@ class FuelCellDegradationTests(unittest.TestCase):
             with self.subTest(power=power, duration=duration), self.assertRaises((TypeError, ValueError)):
                 tracker.update(power, duration)
 
-    def test_fc_formal_normalization_has_no_default_and_fails_closed(self) -> None:
+    def test_fc_aggregate_normalization_is_verified_while_legacy_single_cell_api_stays_closed(self) -> None:
         from v2.models.fuel_cell_degradation import (
             FC_SINGLE_CELL_VOLTAGE_BASIS,
             FC_LIFETIME_NORMALIZATION_STATUS,
@@ -214,7 +214,7 @@ class FuelCellDegradationTests(unittest.TestCase):
             formal_fuel_cell_relative_life_loss,
         )
 
-        self.assertEqual(FC_LIFETIME_NORMALIZATION_STATUS, "NO-GO")
+        self.assertEqual(FC_LIFETIME_NORMALIZATION_STATUS, "VERIFIED")
         with self.assertRaises(TypeError):
             formal_fuel_cell_relative_life_loss(10.0, normalization=500.0)
 
@@ -244,7 +244,7 @@ class FuelCellDegradationTests(unittest.TestCase):
             with self.subTest(arguments=arguments), self.assertRaises((TypeError, ValueError)):
                 FuelCellLifetimeNormalization(*arguments)
 
-    def test_fc_unverified_formula_is_explicit_and_raw_uv_cannot_be_priced(self) -> None:
+    def test_fc_legacy_formula_is_explicit_and_old_cost_signature_is_rejected(self) -> None:
         from v2.models.fuel_cell_degradation import (
             FC_SINGLE_CELL_VOLTAGE_BASIS,
             FuelCellLifetimeNormalization,
@@ -400,32 +400,87 @@ class BatteryDegradationTests(unittest.TestCase):
             with self.subTest(current=current, nominal=nominal), self.assertRaises((TypeError, ValueError)):
                 current_stress(current, nominal)
 
-    def test_q_nominal_and_q_lifetime_are_distinct_and_formal_gate_is_no_go(self) -> None:
-        from v2.models.battery_degradation import BATTERY_LIFETIME_NORMALIZATION_STATUS, BatteryLifetimeNormalization, formal_battery_relative_life_loss
+    def test_q_nominal_and_q_lifetime_are_distinct_and_literature_calibrated(self) -> None:
+        from v2.models.battery_degradation import (
+            BATTERY_LIFETIME_CONFIGURATION_STATUS,
+            BATTERY_LIFETIME_EVIDENCE_STATUS,
+            formal_battery_lifetime_normalization,
+            formal_battery_relative_life_loss,
+        )
 
-        self.assertEqual(BATTERY_LIFETIME_NORMALIZATION_STATUS, "NO-GO")
+        self.assertEqual(
+            BATTERY_LIFETIME_CONFIGURATION_STATUS,
+            "FROZEN",
+        )
+        self.assertEqual(
+            BATTERY_LIFETIME_EVIDENCE_STATUS,
+            "SECONDARY_LITERATURE / LITERATURE-CALIBRATED",
+        )
         with self.assertRaises(TypeError):
             formal_battery_relative_life_loss(10.0, normalization=10_000.0)
-        unresolved = BatteryLifetimeNormalization(10_000.0, "10.0000/unverified", "weighted Ah", "unverified battery system")
-        with self.assertRaises(ValueError):
-            formal_battery_relative_life_loss(10.0, normalization=unresolved)
-        self.assertNotIn("nominal", " ".join(BatteryLifetimeNormalization.__annotations__))
+        normalization = formal_battery_lifetime_normalization()
+        self.assertAlmostEqual(
+            formal_battery_relative_life_loss(
+                10.0,
+                normalization=normalization,
+            ),
+            10.0 / normalization.q_lifetime_ah,
+        )
+        self.assertNotEqual(
+            normalization.nominal_charge_capacity_ah,
+            normalization.q_lifetime_ah,
+        )
 
     def test_battery_formal_normalization_rejects_subclasses_and_forged_fields(self) -> None:
-        from v2.models.battery_degradation import BatteryLifetimeNormalization, formal_battery_relative_life_loss
+        from v2.models.battery_degradation import (
+            BatteryLifetimeNormalization,
+            formal_battery_lifetime_normalization,
+            formal_battery_relative_life_loss,
+        )
 
         class ForgedNormalization(BatteryLifetimeNormalization):
-            def require_verified(self) -> BatteryLifetimeNormalization:
+            def require_literature_calibrated(self) -> BatteryLifetimeNormalization:
                 return self
 
+        approved = formal_battery_lifetime_normalization()
         with self.assertRaises(TypeError):
-            formal_battery_relative_life_loss(10.0, normalization=ForgedNormalization(10_000.0, "doi", "weighted Ah", "fake-system"))
+            formal_battery_relative_life_loss(
+                10.0,
+                normalization=ForgedNormalization(
+                    approved.q_lifetime_ah,
+                    approved.throughput_factor,
+                    approved.nominal_charge_capacity_ah,
+                    approved.provenance_classification,
+                    approved.evidence_basis,
+                    approved.applicability,
+                ),
+            )
 
-        forged_string = type("ForgedString", (str,), {})("weighted Ah")
         for arguments in (
-            (True, "doi", "weighted Ah", "system"), (0.0, "doi", "weighted Ah", "system"),
-            (10_000.0, "", "weighted Ah", "system"), (10_000.0, "doi", "", "system"),
-            (10_000.0, "doi", "weighted Ah", ""), (10_000.0, "doi", forged_string, "system"),
+            (
+                True,
+                approved.throughput_factor,
+                approved.nominal_charge_capacity_ah,
+                approved.provenance_classification,
+                approved.evidence_basis,
+                approved.applicability,
+            ),
+            (
+                approved.q_lifetime_ah,
+                10_000.0,
+                approved.nominal_charge_capacity_ah,
+                approved.provenance_classification,
+                approved.evidence_basis,
+                approved.applicability,
+            ),
+            (
+                approved.q_lifetime_ah,
+                approved.throughput_factor,
+                approved.nominal_charge_capacity_ah,
+                "manufacturer specification",
+                approved.evidence_basis,
+                approved.applicability,
+            ),
         ):
             with self.subTest(arguments=arguments), self.assertRaises((TypeError, ValueError)):
                 BatteryLifetimeNormalization(*arguments)
@@ -438,11 +493,16 @@ class BatteryDegradationTests(unittest.TestCase):
             with self.subTest(weighted=weighted, lifetime=lifetime), self.assertRaises((TypeError, ValueError)):
                 battery_relative_life_loss_unverified(weighted, q_lifetime_ah=lifetime)
 
-    def test_raw_ah_cannot_enter_formal_cost_without_verified_normalization(self) -> None:
+    def test_bare_number_cannot_enter_formal_interval_cost(self) -> None:
         from v2.models.battery_degradation import formal_battery_degradation_cost_cny
 
         with self.assertRaises(TypeError):
-            formal_battery_degradation_cost_cny(250.0, replacement_cost_cny=1_000_000.0, normalization=10_000.0)
+            formal_battery_degradation_cost_cny(
+                0.0,
+                250.0,
+                replacement_cost_cny=1_000_000.0,
+                normalization=10_000.0,
+            )
 
     def test_battery_records_accounts_reject_forged_fields_and_overflow_atomically(self) -> None:
         from v2.models.battery_degradation import BatteryDegradationStep, BatteryThroughputAccount

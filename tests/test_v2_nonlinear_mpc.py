@@ -261,7 +261,7 @@ class NonlinearMPCTests(unittest.TestCase):
         from v2.models.battery_energy import formal_battery_efficiency
 
         values: dict[str, object] = {
-            "timescale": TimeScaleConfig.provisional(),
+            "timescale": TimeScaleConfig.formal_baseline(),
             "fuel_cell_rated_kw": 600.0,
             "battery_capacity_kwh": 624.0,
             "battery_efficiency": formal_battery_efficiency(),

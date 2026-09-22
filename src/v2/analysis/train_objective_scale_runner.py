@@ -8,7 +8,7 @@ import math
 from numbers import Real
 from typing import Sequence
 
-from ..config import PlantConfig, TimeScaleConfig
+from ..config import PlantConfig, TAU_LPF_SECONDS, TimeScaleConfig
 from ..control.causal_base_load import CausalBaseLoadFilter
 from ..control.nonlinear_mpc import (
     DELTA_P_FC_OBJECTIVE_SCALE_KW,
@@ -32,7 +32,7 @@ from .objective_scale_audit import (
 )
 
 
-AUDIT_TAU_LPF_SECONDS = 90.0
+AUDIT_TAU_LPF_SECONDS = TAU_LPF_SECONDS
 
 
 def _finite(value: object, name: str) -> float:
@@ -165,7 +165,7 @@ def select_representative_cases(
 def _mpc_config() -> MPCConfig:
     plant = PlantConfig.research_simulation()
     return MPCConfig(
-        timescale=TimeScaleConfig.provisional(),
+        timescale=TimeScaleConfig.formal_baseline(),
         fuel_cell_rated_kw=plant.fuel_cell_rated_total_kw,
         battery_capacity_kwh=plant.battery_nominal_energy_kwh,
         battery_efficiency=formal_battery_efficiency(),

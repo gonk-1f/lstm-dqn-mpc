@@ -9,7 +9,28 @@ from numbers import Real
 
 BATTERY_DEGRADATION_MODEL_VERSION = "soc_current_weighted_throughput_v1"
 BATTERY_DEGRADATION_SOURCE_DOI = "10.3390/en14133810"
-BATTERY_LIFETIME_NORMALIZATION_STATUS = "NO-GO"
+BATTERY_ENERGY_CAPACITY_KWH = 624.0
+BATTERY_NOMINAL_VOLTAGE_V = 432.0
+BATTERY_NOMINAL_CHARGE_CAPACITY_AH = 624_000.0 / 432.0
+BATTERY_CURRENT_REF_1C_A = BATTERY_NOMINAL_CHARGE_CAPACITY_AH
+BATTERY_LIFETIME_THROUGHPUT_FACTOR = 15_000.0
+BATTERY_LIFETIME_Q_AH = (
+    BATTERY_LIFETIME_THROUGHPUT_FACTOR
+    * BATTERY_NOMINAL_CHARGE_CAPACITY_AH
+)
+BATTERY_REPLACEMENT_COST_CNY = 2_000.0 * BATTERY_ENERGY_CAPACITY_KWH
+BATTERY_LIFETIME_SENSITIVITY_FACTORS = (10_000.0, 15_000.0, 20_000.0)
+BATTERY_LIFETIME_CONFIGURATION_STATUS = "FROZEN"
+BATTERY_LIFETIME_EVIDENCE_STATUS = (
+    "SECONDARY_LITERATURE / LITERATURE-CALIBRATED"
+)
+BATTERY_LIFETIME_PROVENANCE_CLASSIFICATION = (
+    "literature-based lifetime-throughput modeling assumption"
+)
+BATTERY_LIFETIME_EVIDENCE_BASIS = "secondary literature basis"
+BATTERY_LIFETIME_APPLICABILITY = (
+    "frozen project baseline battery lifetime normalization; not vessel measured"
+)
 
 
 def _strict_scalar(value: object, name: str) -> float:
@@ -134,30 +155,174 @@ class BatteryThroughputAccount:
 
 @dataclass(frozen=True)
 class BatteryLifetimeNormalization:
-    """Proposed lifetime-throughput record; none is formally verified yet."""
+    """Frozen lifetime-throughput baseline with an explicit evidence boundary."""
 
     q_lifetime_ah: float
-    source_doi: str
-    unit: str
-    chemistry_system_applicability: str
+    throughput_factor: float
+    nominal_charge_capacity_ah: float
+    provenance_classification: str
+    evidence_basis: str
+    applicability: str
 
     def __post_init__(self) -> None:
-        if type(self.q_lifetime_ah) is not float:
-            raise TypeError("formal q_lifetime_ah must be an exact float")
-        if not math.isfinite(self.q_lifetime_ah) or self.q_lifetime_ah <= 0.0:
-            raise ValueError("q_lifetime_ah must be finite and positive")
-        _strict_text(self.source_doi, "source_doi")
-        _strict_text(self.unit, "unit")
-        _strict_text(
-            self.chemistry_system_applicability,
-            "chemistry_system_applicability",
+        numeric = (
+            ("q_lifetime_ah", self.q_lifetime_ah, BATTERY_LIFETIME_Q_AH),
+            (
+                "throughput_factor",
+                self.throughput_factor,
+                BATTERY_LIFETIME_THROUGHPUT_FACTOR,
+            ),
+            (
+                "nominal_charge_capacity_ah",
+                self.nominal_charge_capacity_ah,
+                BATTERY_NOMINAL_CHARGE_CAPACITY_AH,
+            ),
         )
+        for name, value, expected in numeric:
+            if type(value) is not float:
+                raise TypeError(f"{name} must be an exact float")
+            if not math.isfinite(value) or value <= 0.0:
+                raise ValueError(f"{name} must be finite and positive")
+            if value != expected:
+                raise ValueError(f"{name} must equal the approved derived value")
 
-    def require_verified(self) -> BatteryLifetimeNormalization:
-        raise ValueError(
-            "formal battery lifetime normalization is NO-GO: no authoritative "
-            "Q_lifetime with unit and chemistry/system applicability is available"
+        text = (
+            (
+                "provenance_classification",
+                self.provenance_classification,
+                BATTERY_LIFETIME_PROVENANCE_CLASSIFICATION,
+            ),
+            (
+                "evidence_basis",
+                self.evidence_basis,
+                BATTERY_LIFETIME_EVIDENCE_BASIS,
+            ),
+            (
+                "applicability",
+                self.applicability,
+                BATTERY_LIFETIME_APPLICABILITY,
+            ),
         )
+        for name, value, expected in text:
+            _strict_text(value, name)
+            if value != expected:
+                raise ValueError(f"{name} must preserve the approved source role")
+
+    def require_literature_calibrated(self) -> BatteryLifetimeNormalization:
+        BatteryLifetimeNormalization.__post_init__(self)
+        return self
+
+
+def formal_battery_lifetime_normalization() -> BatteryLifetimeNormalization:
+    """Return the frozen baseline with secondary-literature provenance."""
+
+    return BatteryLifetimeNormalization(
+        q_lifetime_ah=BATTERY_LIFETIME_Q_AH,
+        throughput_factor=BATTERY_LIFETIME_THROUGHPUT_FACTOR,
+        nominal_charge_capacity_ah=BATTERY_NOMINAL_CHARGE_CAPACITY_AH,
+        provenance_classification=BATTERY_LIFETIME_PROVENANCE_CLASSIFICATION,
+        evidence_basis=BATTERY_LIFETIME_EVIDENCE_BASIS,
+        applicability=BATTERY_LIFETIME_APPLICABILITY,
+    )
+
+
+@dataclass(frozen=True)
+class BatteryLifeState:
+    """Cumulative weighted-Ah life state at one interval boundary."""
+
+    cumulative_weighted_ah: float
+    raw_life_fraction: float
+    economic_life_fraction: float
+    eol_reached: bool
+
+    def __post_init__(self) -> None:
+        _exact_nonnegative_float(
+            self.cumulative_weighted_ah,
+            "cumulative_weighted_ah",
+        )
+        _exact_nonnegative_float(self.raw_life_fraction, "raw_life_fraction")
+        economic = _exact_nonnegative_float(
+            self.economic_life_fraction,
+            "economic_life_fraction",
+        )
+        if economic > 1.0:
+            raise ValueError("economic_life_fraction must lie in [0, 1]")
+        if type(self.eol_reached) is not bool:
+            raise TypeError("eol_reached must be an exact bool")
+
+
+@dataclass(frozen=True)
+class BatteryLifeIncrement:
+    """Non-duplicating economic life consumed by one physical interval."""
+
+    before: BatteryLifeState
+    after: BatteryLifeState
+    delta_economic_fraction: float
+
+    def __post_init__(self) -> None:
+        if type(self.before) is not BatteryLifeState:
+            raise TypeError("before must be an exact BatteryLifeState")
+        if type(self.after) is not BatteryLifeState:
+            raise TypeError("after must be an exact BatteryLifeState")
+        delta = _exact_nonnegative_float(
+            self.delta_economic_fraction,
+            "delta_economic_fraction",
+        )
+        if delta > 1.0:
+            raise ValueError("delta_economic_fraction must lie in [0, 1]")
+
+
+def battery_life_state(
+    cumulative_weighted_ah: float,
+    *,
+    normalization: BatteryLifetimeNormalization,
+) -> BatteryLifeState:
+    """Return raw, clipped-economic, and EOL cumulative diagnostics."""
+
+    throughput = _strict_scalar(
+        cumulative_weighted_ah,
+        "cumulative_weighted_ah",
+    )
+    if throughput < 0.0:
+        raise ValueError("cumulative_weighted_ah must be non-negative")
+    if type(normalization) is not BatteryLifetimeNormalization:
+        raise TypeError("normalization must use the exact provenance-bearing type")
+    checked = normalization.require_literature_calibrated()
+    raw = throughput / checked.q_lifetime_ah
+    economic = min(raw, 1.0)
+    return BatteryLifeState(
+        cumulative_weighted_ah=throughput,
+        raw_life_fraction=raw,
+        economic_life_fraction=economic,
+        eol_reached=raw >= 1.0,
+    )
+
+
+def formal_battery_interval_life_loss(
+    cumulative_weighted_ah_before: float,
+    cumulative_weighted_ah_after: float,
+    *,
+    normalization: BatteryLifetimeNormalization,
+) -> BatteryLifeIncrement:
+    """Return the clipped cumulative-life difference for one interval."""
+
+    before = battery_life_state(
+        cumulative_weighted_ah_before,
+        normalization=normalization,
+    )
+    after = battery_life_state(
+        cumulative_weighted_ah_after,
+        normalization=normalization,
+    )
+    if after.cumulative_weighted_ah < before.cumulative_weighted_ah:
+        raise ValueError("cumulative weighted Ah must not decrease")
+    return BatteryLifeIncrement(
+        before=before,
+        after=after,
+        delta_economic_fraction=(
+            after.economic_life_fraction - before.economic_life_fraction
+        ),
+    )
 
 
 def battery_relative_life_loss_unverified(
@@ -181,15 +346,15 @@ def formal_battery_relative_life_loss(
     *,
     normalization: BatteryLifetimeNormalization,
 ) -> float:
-    """Fail closed until lifetime throughput has verified applicability."""
+    """Return cumulative raw life under the frozen literature calibration."""
 
     throughput = _strict_scalar(weighted_ah, "weighted_ah")
     if throughput < 0.0:
         raise ValueError("weighted_ah must be non-negative")
     if type(normalization) is not BatteryLifetimeNormalization:
         raise TypeError("formal normalization must use the exact provenance-bearing type")
-    BatteryLifetimeNormalization.require_verified(normalization)
-    raise AssertionError("unreachable until a formal calibration is authorized")
+    checked = normalization.require_literature_calibrated()
+    return throughput / checked.q_lifetime_ah
 
 
 def require_lifetime_normalization(
@@ -206,21 +371,31 @@ def require_lifetime_normalization(
         raise TypeError(
             "bare q_lifetime_ah is not formal calibration; provenance is required"
         )
-    BatteryLifetimeNormalization.require_verified(q_lifetime_ah)
+    q_lifetime_ah.require_literature_calibrated()
 
 
 def formal_battery_degradation_cost_cny(
-    weighted_ah: float,
+    cumulative_weighted_ah_before: float,
+    cumulative_weighted_ah_after: float,
     *,
     replacement_cost_cny: float,
     normalization: BatteryLifetimeNormalization,
 ) -> float:
-    """Fail closed before raw/weighted Ah can be multiplied by equipment price."""
+    """Charge only newly consumed clipped life in the current interval."""
 
-    relative_loss = formal_battery_relative_life_loss(
-        weighted_ah, normalization=normalization
+    increment = formal_battery_interval_life_loss(
+        cumulative_weighted_ah_before,
+        cumulative_weighted_ah_after,
+        normalization=normalization,
     )
     price = _strict_scalar(replacement_cost_cny, "replacement_cost_cny")
     if price < 0.0:
         raise ValueError("replacement_cost_cny must be non-negative")
-    return relative_loss * price
+    if price != BATTERY_REPLACEMENT_COST_CNY:
+        raise ValueError(
+            "replacement_cost_cny must equal 2000 CNY/kWh * 624 kWh"
+        )
+    result = increment.delta_economic_fraction * price
+    if not math.isfinite(result):
+        raise ValueError("battery interval degradation cost must remain finite")
+    return result

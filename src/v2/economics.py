@@ -19,12 +19,11 @@ from .analysis.action_screening import (
 from .contracts import REWARD_VERSION
 from .models.battery_degradation import (
     BatteryLifetimeNormalization,
-    formal_battery_relative_life_loss,
+    formal_battery_degradation_cost_cny,
 )
 from .models.battery_energy import BatteryEfficiency
 from .models.fuel_cell_degradation import (
-    FuelCellLifetimeNormalization,
-    formal_fuel_cell_relative_life_loss,
+    formal_fuel_cell_degradation_cost_cny,
 )
 
 
@@ -36,7 +35,11 @@ SHORE_TARIFF_CNY_PER_KWH = 1.10
 EQUIPMENT_PRICE_SOURCE_DOI = "10.3390/jmse13010034"
 SHORE_TARIFF_SOURCE_DOI = "10.11930/j.issn.1004-9649.202507065"
 SHORE_CONVERTER_CALIBRATION_STATUS = "NO-GO"
-DEGRADATION_COST_STATUS = "NO-GO"
+SHORE_CHARGING_EFFICIENCY_STATUS = "VERIFIED"
+SHORE_CHARGING_EFFICIENCY_EVIDENCE = (
+    "literature-based aggregate assumption; not vessel-measured"
+)
+DEGRADATION_COST_STATUS = "INTERVAL-CALIBRATED"
 
 
 def _finite_scalar(value: object, name: str) -> float:
@@ -302,21 +305,24 @@ def terminal_recharge_grid_energy(
     episode_end_soc: float,
     battery_capacity_kwh: float,
     battery_efficiency: BatteryEfficiency,
-    converter_calibration: ShoreConverterCalibration,
 ) -> ShoreEnergy:
-    """Formal terminal recharge boundary, currently closed by calibration."""
+    """Apply the approved aggregate 0.95 charge-path efficiency exactly once."""
 
-    if type(converter_calibration) is not ShoreConverterCalibration:
-        raise TypeError(
-            "converter_calibration must be an exact ShoreConverterCalibration"
-        )
-    converter = ShoreConverterCalibration.require_verified(converter_calibration)
-    return terminal_recharge_grid_energy_unverified(
-        episode_initial_soc=episode_initial_soc,
-        episode_end_soc=episode_end_soc,
-        battery_capacity_kwh=battery_capacity_kwh,
-        battery_efficiency=battery_efficiency,
-        eta_shore_converter=converter,
+    initial = _finite_scalar(episode_initial_soc, "episode_initial_soc")
+    end = _finite_scalar(episode_end_soc, "episode_end_soc")
+    if not 0.0 <= initial <= 1.0 or not 0.0 <= end <= 1.0:
+        raise ValueError("episode SOC values must lie in [0, 1]")
+    capacity = _positive_scalar(battery_capacity_kwh, "battery_capacity_kwh")
+    if type(battery_efficiency) is not BatteryEfficiency:
+        raise TypeError("battery_efficiency must be an exact BatteryEfficiency")
+    eta_chg, _ = BatteryEfficiency.require_calibrated(battery_efficiency)
+    battery_side_needed_kwh = max(0.0, initial - end) * capacity
+    grid_energy = battery_side_needed_kwh / eta_chg
+    if not math.isfinite(grid_energy):
+        raise ValueError("terminal grid recharge energy must remain finite")
+    return ShoreEnergy(
+        grid_energy,
+        ShoreEnergyClassification.MODELED,
     )
 
 
@@ -367,68 +373,55 @@ class RawCnyIntervalLedger:
 def build_formal_interval_ledger(
     *,
     hydrogen_mass_kg: float,
-    fuel_cell_voltage_loss_uv: float,
+    fuel_cell_cumulative_voltage_loss_before_uv: float,
+    fuel_cell_cumulative_voltage_loss_after_uv: float,
     fuel_cell_rated_kw: float,
-    fuel_cell_normalization: FuelCellLifetimeNormalization,
-    battery_weighted_ah: float,
+    battery_cumulative_weighted_ah_before: float,
+    battery_cumulative_weighted_ah_after: float,
     battery_capacity_kwh: float,
     battery_normalization: BatteryLifetimeNormalization,
     shore_energy: ShoreEnergy | None,
     prices: EconomicPriceCatalog = FORMAL_PRICE_CATALOG,
 ) -> RawCnyIntervalLedger:
-    """Build the formal ledger only after Task 4 normalizations are verified.
-
-    The current Task 4 normalization objects fail closed.  In particular,
-    bare microvolts and raw or weighted ampere-hours can never be interpreted
-    directly as relative life fractions here.
-    """
+    """Build one physical interval ledger from cumulative before/after states."""
 
     catalog = _validate_prices(prices)
     fc_rated = _positive_scalar(fuel_cell_rated_kw, "fuel_cell_rated_kw")
     battery_capacity = _positive_scalar(
         battery_capacity_kwh, "battery_capacity_kwh"
     )
-    if type(fuel_cell_normalization) is not FuelCellLifetimeNormalization:
-        raise TypeError(
-            "fuel_cell_normalization must be an exact FuelCellLifetimeNormalization"
+    if fc_rated != 600.0:
+        raise ValueError("fuel_cell_rated_kw must equal the approved 600 kW rating")
+    if battery_capacity != 624.0:
+        raise ValueError(
+            "battery_capacity_kwh must equal the approved 624 kWh capacity"
         )
     if type(battery_normalization) is not BatteryLifetimeNormalization:
         raise TypeError(
             "battery_normalization must be an exact BatteryLifetimeNormalization"
         )
     if shore_energy is not None:
-        checked_shore = _validate_shore_energy(shore_energy)
-        if checked_shore.classification is ShoreEnergyClassification.MODELED:
-            raise ValueError(
-                "formal modeled shore energy is NO-GO: the shore-converter "
-                "efficiency calibration is unverified"
-            )
+        _validate_shore_energy(shore_energy)
     if catalog.fuel_cell_cny_per_kw is None:
         raise ValueError("fuel-cell equipment price is missing")
     if catalog.battery_cny_per_kwh is None:
         raise ValueError("battery equipment price is missing")
 
     h2_cost = hydrogen_cost_cny(hydrogen_mass_kg, prices=catalog)
-    fc_relative_loss = formal_fuel_cell_relative_life_loss(
-        fuel_cell_voltage_loss_uv,
-        normalization=fuel_cell_normalization,
+    fc_cost = formal_fuel_cell_degradation_cost_cny(
+        fuel_cell_cumulative_voltage_loss_before_uv,
+        fuel_cell_cumulative_voltage_loss_after_uv,
+        replacement_cost_cny=(
+            fc_rated * catalog.fuel_cell_cny_per_kw
+        ),
     )
-    fc_relative_loss = _nonnegative_scalar(fc_relative_loss, "fc_relative_life_loss")
-    if fc_relative_loss > 1.0:
-        raise ValueError("fc_relative_life_loss must lie in [0, 1]")
-    fc_cost = fc_relative_loss * fc_rated * catalog.fuel_cell_cny_per_kw
-
-    battery_relative_loss = formal_battery_relative_life_loss(
-        battery_weighted_ah,
+    battery_cost = formal_battery_degradation_cost_cny(
+        battery_cumulative_weighted_ah_before,
+        battery_cumulative_weighted_ah_after,
+        replacement_cost_cny=(
+            battery_capacity * catalog.battery_cny_per_kwh
+        ),
         normalization=battery_normalization,
-    )
-    battery_relative_loss = _nonnegative_scalar(
-        battery_relative_loss, "battery_relative_life_loss"
-    )
-    if battery_relative_loss > 1.0:
-        raise ValueError("battery_relative_life_loss must lie in [0, 1]")
-    battery_cost = (
-        battery_relative_loss * battery_capacity * catalog.battery_cny_per_kwh
     )
     shore_cost = (
         0.0
@@ -632,6 +625,8 @@ __all__ = [
     "REWARD_SCALE_DERIVATION_RULE",
     "RewardScaleCalibration",
     "SHORE_CONVERTER_CALIBRATION_STATUS",
+    "SHORE_CHARGING_EFFICIENCY_EVIDENCE",
+    "SHORE_CHARGING_EFFICIENCY_STATUS",
     "SHORE_TARIFF_CNY_PER_KWH",
     "SHORE_TARIFF_SOURCE",
     "ShoreConverterCalibration",

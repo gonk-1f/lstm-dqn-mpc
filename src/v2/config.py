@@ -5,13 +5,23 @@ import math
 from numbers import Real
 
 
+TS_MPC_SECONDS = 30.0
+N_MPC = 5
+DQN_SWITCH_STEPS = 5
+TAU_LPF_SECONDS = 90.0
+FORMAL_TIMESCALE_CONFIGURATION_STATUS = "FROZEN_PROJECT_DESIGN"
+N_MPC_EVIDENCE_STATUS = "PROJECT_DESIGN"
+DQN_SWITCH_STEPS_EVIDENCE_STATUS = "PROJECT_DESIGN"
+TAU_LPF_EVIDENCE_STATUS = "PROJECT_DESIGN"
+
+
 @dataclass(frozen=True)
 class TimeScaleConfig:
     """Independent lower-MPC and upper-DQN timing parameters.
 
     ``n_mpc`` is a prediction-horizon length. ``dqn_switch_steps`` is the
     count of real receding-horizon control periods for which an action is held.
-    They deliberately remain distinct even when their provisional values match.
+    They deliberately remain distinct even when their frozen values match.
     """
 
     ts_mpc_seconds: float
@@ -33,8 +43,12 @@ class TimeScaleConfig:
             raise ValueError("dqn_switch_steps must be a positive integer")
 
     @classmethod
-    def provisional(cls) -> "TimeScaleConfig":
-        return cls(ts_mpc_seconds=30.0, n_mpc=5, dqn_switch_steps=5)
+    def formal_baseline(cls) -> "TimeScaleConfig":
+        return cls(
+            ts_mpc_seconds=TS_MPC_SECONDS,
+            n_mpc=N_MPC,
+            dqn_switch_steps=DQN_SWITCH_STEPS,
+        )
 
     @property
     def prediction_seconds(self) -> float:

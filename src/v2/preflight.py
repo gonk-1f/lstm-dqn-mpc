@@ -7,15 +7,36 @@ from pathlib import Path
 import re
 from typing import TypeVar
 
-from .analysis.timescale_audit import FORMAL_TIMESCALE_SELECTION_STATUS
 from .analysis.objective_scale_audit import FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS
+from .config import (
+    DQN_SWITCH_STEPS,
+    DQN_SWITCH_STEPS_EVIDENCE_STATUS,
+    FORMAL_TIMESCALE_CONFIGURATION_STATUS,
+    N_MPC,
+    N_MPC_EVIDENCE_STATUS,
+    TAU_LPF_EVIDENCE_STATUS,
+    TAU_LPF_SECONDS,
+)
 from .data.raw_inventory import RawExcelInventory, require_train_only
 from .dqn.action_space import ACTION_CATALOG_STATUS
 from .dqn.state import CANDIDATE_STATE_STATUS
-from .economics import FORMAL_PRICE_CATALOG, SHORE_TARIFF_SOURCE
-from .models.battery_degradation import BATTERY_LIFETIME_NORMALIZATION_STATUS
+from .economics import (
+    FORMAL_PRICE_CATALOG,
+    SHORE_CHARGING_EFFICIENCY_EVIDENCE,
+    SHORE_CHARGING_EFFICIENCY_STATUS,
+    SHORE_TARIFF_SOURCE,
+)
+from .models.battery_degradation import (
+    BATTERY_LIFETIME_CONFIGURATION_STATUS,
+    BATTERY_LIFETIME_EVIDENCE_BASIS,
+    BATTERY_LIFETIME_EVIDENCE_STATUS,
+    BATTERY_LIFETIME_THROUGHPUT_FACTOR,
+)
 from .models.battery_energy import BATTERY_EFFICIENCY_CALIBRATION_STATUS
-from .models.fuel_cell_degradation import FC_LIFETIME_NORMALIZATION_STATUS
+from .models.fuel_cell_degradation import (
+    FC_LIFETIME_EVIDENCE_CLASS,
+    FC_LIFETIME_NORMALIZATION_STATUS,
+)
 from .models.fuel_cell_efficiency import FC_EFFICIENCY_CALIBRATION_STATUS
 
 
@@ -50,6 +71,8 @@ class CalibrationStatus(str, Enum):
 
 @dataclass(frozen=True)
 class FormalCalibrationCheck:
+    """A formal-use gate; VERIFIED does not imply measured evidence."""
+
     key: str
     status: CalibrationStatus
     evidence: str
@@ -91,8 +114,8 @@ class FormalTrainingBlockedError(RuntimeError):
 def assess_formal_training_preflight() -> FormalTrainingPreflight:
     """Return the repository's complete, non-overridable formal-training gate.
 
-    The source text calls this a twelve-item gate but enumerates thirteen
-    distinct calibrations.  All thirteen are kept explicit here.  A unit test
+    The source text calls this a twelve-item gate but the implemented evidence
+    boundary enumerates fifteen distinct checks.  All checks remain explicit. A unit test
     or CLI argument cannot promote an unresolved item to ``VERIFIED``.
     """
 
@@ -123,17 +146,32 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
         ),
         FormalCalibrationCheck(
             "fc_degradation_normalization",
-            CalibrationStatus.NO_GO
-            if FC_LIFETIME_NORMALIZATION_STATUS == "NO-GO"
-            else CalibrationStatus.UNRESOLVED,
-            "single-cell initial-voltage normalization and aggregate mapping are unapproved",
+            CalibrationStatus.VERIFIED
+            if FC_LIFETIME_NORMALIZATION_STATUS == "VERIFIED"
+            else CalibrationStatus.NO_GO,
+            (
+                "aggregate-equivalent 70,000 microvolt EOL model; "
+                f"{FC_LIFETIME_EVIDENCE_CLASS}"
+            ),
         ),
         FormalCalibrationCheck(
             "battery_q_lifetime_normalization",
-            CalibrationStatus.NO_GO
-            if BATTERY_LIFETIME_NORMALIZATION_STATUS == "NO-GO"
-            else CalibrationStatus.UNRESOLVED,
-            "authoritative lifetime-throughput Q_lifetime is absent",
+            CalibrationStatus.VERIFIED
+            if BATTERY_LIFETIME_CONFIGURATION_STATUS == "FROZEN"
+            and BATTERY_LIFETIME_THROUGHPUT_FACTOR == 15_000.0
+            else CalibrationStatus.NO_GO,
+            (
+                f"configuration={BATTERY_LIFETIME_CONFIGURATION_STATUS}; "
+                f"evidence={BATTERY_LIFETIME_EVIDENCE_STATUS}; "
+                f"{BATTERY_LIFETIME_EVIDENCE_BASIS}; not vessel measured"
+            ),
+        ),
+        FormalCalibrationCheck(
+            "shore_charging_efficiency",
+            CalibrationStatus.VERIFIED
+            if SHORE_CHARGING_EFFICIENCY_STATUS == "VERIFIED"
+            else CalibrationStatus.NO_GO,
+            f"0.95; {SHORE_CHARGING_EFFICIENCY_EVIDENCE}",
         ),
         FormalCalibrationCheck(
             "shore_electricity_price",
@@ -145,27 +183,45 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
         ),
         FormalCalibrationCheck(
             "ts_mpc",
-            CalibrationStatus.PROVISIONAL,
-            "30 s nominal baseline; Train clock audit supports cadence, formal selection remains provisional",
+            CalibrationStatus.VERIFIED,
+            "30 s frozen nominal control interval; Train clock audit supports cadence",
         ),
         FormalCalibrationCheck(
             "n_mpc",
-            CalibrationStatus.PROVISIONAL
-            if FORMAL_TIMESCALE_SELECTION_STATUS == "NO-GO"
-            else CalibrationStatus.UNRESOLVED,
-            "N=5 baseline completed the scale audit; no formal Train selection",
+            CalibrationStatus.VERIFIED
+            if FORMAL_TIMESCALE_CONFIGURATION_STATUS == "FROZEN_PROJECT_DESIGN"
+            and N_MPC == 5
+            else CalibrationStatus.NO_GO,
+            (
+                f"configuration={FORMAL_TIMESCALE_CONFIGURATION_STATUS}; "
+                f"evidence={N_MPC_EVIDENCE_STATUS}; N=5 gives a 150 s prediction "
+                "horizon and is not claimed as a literature-proven global optimum"
+            ),
         ),
         FormalCalibrationCheck(
             "dqn_switch_steps",
-            CalibrationStatus.PROVISIONAL
-            if FORMAL_TIMESCALE_SELECTION_STATUS == "NO-GO"
-            else CalibrationStatus.UNRESOLVED,
-            "M=5 provisional baseline; sensitivity is restricted to {5,10} with no formal selection",
+            CalibrationStatus.VERIFIED
+            if FORMAL_TIMESCALE_CONFIGURATION_STATUS == "FROZEN_PROJECT_DESIGN"
+            and DQN_SWITCH_STEPS == 5
+            else CalibrationStatus.NO_GO,
+            (
+                f"configuration={FORMAL_TIMESCALE_CONFIGURATION_STATUS}; "
+                f"evidence={DQN_SWITCH_STEPS_EVIDENCE_STATUS}; M=5 holds one DQN "
+                "action across five real rolling MPC solves (150 s), independent of N"
+            ),
         ),
         FormalCalibrationCheck(
             "tau_lpf",
-            CalibrationStatus.UNRESOLVED,
-            "90 s is audit-only provisional; formal training calibration remains unfrozen",
+            CalibrationStatus.VERIFIED
+            if FORMAL_TIMESCALE_CONFIGURATION_STATUS == "FROZEN_PROJECT_DESIGN"
+            and TAU_LPF_SECONDS == 90.0
+            else CalibrationStatus.NO_GO,
+            (
+                f"configuration={FORMAL_TIMESCALE_CONFIGURATION_STATUS}; "
+                f"evidence={TAU_LPF_EVIDENCE_STATUS}; tau=90 s project control "
+                "design with LPF/FC-low-frequency literature structure support; "
+                "not vessel-measured and not a unique optimum"
+            ),
         ),
         FormalCalibrationCheck(
             "soc_deadband",
