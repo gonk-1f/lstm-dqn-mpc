@@ -103,6 +103,7 @@ Required structure:
 - `train/`: 49 CSV files
 - `validation/`: 12 CSV files
 - `test/`: 5 CSV files
+- `metadata/sample_manifest.csv`
 - `metadata/parent_split_manifest.csv`
 - `metadata/trim_boundary_audit.csv`
 - `metadata/interpolation_audit.csv`
@@ -111,6 +112,8 @@ Required structure:
 - `metadata/policy.json`
 
 The existing `data/processed/operating_dataset_final/` remains unchanged. The new builder refuses to overwrite an existing destination. After all checks pass, update the formal dataset loader's default root to the new dataset.
+
+`sample_manifest.csv` is the authoritative segment-level input to the existing formal loader. It contains one row per parent segment and freezes `parent`, `sample_id`, `relative_path`, `split`, and `point_count_1s`. `parent_split_manifest.csv` is the parent-level split and stratification audit; it is not a runtime fallback for the formal loader.
 
 ## Audit Requirements
 
