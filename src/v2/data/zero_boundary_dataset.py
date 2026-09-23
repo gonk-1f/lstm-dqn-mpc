@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections import Counter
 
 import numpy as np
 import pandas as pd
@@ -13,6 +14,16 @@ from utils.rebuilt_operating_dataset import pchip_to_one_second
 ZERO_DEADBAND_KW = 1.0
 ACTIVE_THRESHOLD_KW = 1.0
 SUSTAINED_POINTS = 3
+TRAIN_COUNT = 49
+VALIDATION_COUNT = 12
+TEST_COUNT = 5
+FIXED_TEST_PARENTS = (
+    "3月26日14_00_3月26日16_00",
+    "3月29日08_00_3月29日15_00",
+    "4月18日12_00_4月18日18_00",
+    "5月8日08_00_5月8日17_00",
+    "6月11日08_00_6月11日11_00",
+)
 
 
 @dataclass(frozen=True)
@@ -322,3 +333,174 @@ def reconstruct_one_second(
         raise ValueError("one-second reconstruction produced non-finite load")
     output.loc[output.index[[0, -1]], "load_total_kw"] = 0.0
     return output, qa
+
+
+def segment_features(parent: str, frame: pd.DataFrame) -> dict[str, object]:
+    """Return the raw-only parent features used by frozen stratification."""
+    required = {"timestamp", "time_s", "load_total_kw"}
+    missing = required.difference(frame.columns)
+    if missing:
+        raise ValueError(f"segment feature source is missing columns: {sorted(missing)}")
+    load = pd.to_numeric(frame["load_total_kw"], errors="coerce").to_numpy(
+        dtype=float
+    )
+    timestamps = pd.to_datetime(frame["timestamp"], errors="coerce")
+    time_s = pd.to_numeric(frame["time_s"], errors="coerce").to_numpy(dtype=float)
+    if (
+        len(load) < 2
+        or not np.isfinite(load).all()
+        or timestamps.isna().any()
+        or not np.isfinite(time_s).all()
+    ):
+        raise ValueError("segment features require a finite time series")
+    return {
+        "parent": str(parent),
+        "chronological_timestamp": timestamps.iloc[0],
+        "month": int(timestamps.iloc[0].month),
+        "duration_s": float(time_s[-1]),
+        "mean_load_kw": float(np.mean(load)),
+        "p95_load_kw": float(np.percentile(load, 95)),
+    }
+
+
+def _quartile_labels(
+    result: pd.DataFrame,
+    non_test_index: pd.Index,
+    column: str,
+) -> pd.Series:
+    labels, bins = pd.qcut(
+        result.loc[non_test_index, column],
+        q=4,
+        labels=False,
+        duplicates="drop",
+        retbins=True,
+    )
+    if set(pd.Series(labels).dropna().astype(int)) != {0, 1, 2, 3}:
+        raise ValueError(f"{column} does not form four non-Test quartiles")
+    output = pd.Series(pd.NA, index=result.index, dtype="Int64")
+    output.loc[non_test_index] = pd.Series(
+        labels.to_numpy(dtype=int),
+        index=non_test_index,
+        dtype="Int64",
+    )
+    test_index = result.index.difference(non_test_index)
+    extended = np.asarray(bins, dtype=float).copy()
+    extended[0] = -np.inf
+    extended[-1] = np.inf
+    output.loc[test_index] = pd.cut(
+        result.loc[test_index, column],
+        bins=extended,
+        labels=False,
+        include_lowest=True,
+    ).astype("Int64")
+    return output
+
+
+def assign_parent_splits(features: pd.DataFrame) -> pd.DataFrame:
+    """Assign the fixed Test parents and deterministic 49/12 Train/Validation."""
+    required = {
+        "parent",
+        "chronological_timestamp",
+        "month",
+        "duration_s",
+        "mean_load_kw",
+        "p95_load_kw",
+    }
+    missing = required.difference(features.columns)
+    if missing:
+        raise ValueError(f"parent features are missing columns: {sorted(missing)}")
+    result = features.loc[:, sorted(required)].copy()
+    result["parent"] = result["parent"].astype(str)
+    result["chronological_timestamp"] = pd.to_datetime(
+        result["chronological_timestamp"], errors="coerce"
+    )
+    if len(result) != TRAIN_COUNT + VALIDATION_COUNT + TEST_COUNT:
+        raise ValueError("expected exactly 66 parent feature rows")
+    if result["parent"].duplicated().any():
+        raise ValueError("parent features contain duplicate identifiers")
+    if result["chronological_timestamp"].isna().any():
+        raise ValueError("parent features contain invalid timestamps")
+    if set(FIXED_TEST_PARENTS).difference(result["parent"]):
+        raise ValueError("one or more fixed Test parents are missing")
+    numeric_columns = ("month", "duration_s", "mean_load_kw", "p95_load_kw")
+    for column in numeric_columns:
+        result[column] = pd.to_numeric(result[column], errors="coerce")
+        if not np.isfinite(result[column].to_numpy(dtype=float)).all():
+            raise ValueError(f"parent feature {column} must be finite")
+    result = result.sort_values(
+        ["chronological_timestamp", "parent"], kind="stable"
+    ).reset_index(drop=True)
+    result["chronological_rank"] = np.arange(len(result), dtype=int)
+    is_test = result["parent"].isin(FIXED_TEST_PARENTS)
+    if int(is_test.sum()) != TEST_COUNT:
+        raise ValueError("fixed Test parent count is not five")
+    non_test_index = result.index[~is_test]
+    for source_column, output_column in (
+        ("duration_s", "duration_quartile"),
+        ("mean_load_kw", "mean_load_quartile"),
+        ("p95_load_kw", "p95_load_quartile"),
+    ):
+        result[output_column] = _quartile_labels(
+            result,
+            non_test_index,
+            source_column,
+        )
+
+    label_columns = (
+        "month",
+        "duration_quartile",
+        "mean_load_quartile",
+        "p95_load_quartile",
+    )
+
+    def labels_for(row: pd.Series) -> tuple[str, ...]:
+        return tuple(
+            f"{column}={int(row[column])}" for column in label_columns
+        )
+
+    label_map = {
+        str(result.loc[index, "parent"]): labels_for(result.loc[index])
+        for index in non_test_index
+    }
+    available_counts = Counter(
+        label for labels in label_map.values() for label in labels
+    )
+    targets = {
+        label: 0.2 * count for label, count in available_counts.items()
+    }
+    selected: list[str] = []
+    selected_counts: Counter[str] = Counter()
+    candidates = [
+        str(parent) for parent in result.loc[non_test_index, "parent"].tolist()
+    ]
+    chronological_rank = result.set_index("parent")["chronological_rank"].to_dict()
+    while len(selected) < VALIDATION_COUNT:
+        scored: list[tuple[float, int, str]] = []
+        for parent in candidates:
+            trial = selected_counts.copy()
+            trial.update(label_map[parent])
+            score = float(
+                sum(
+                    abs(float(trial[label]) - target)
+                    for label, target in targets.items()
+                )
+            )
+            scored.append((score, int(chronological_rank[parent]), parent))
+        _, _, chosen = min(scored)
+        selected.append(chosen)
+        selected_counts.update(label_map[chosen])
+        candidates.remove(chosen)
+
+    validation = set(selected)
+    result["split"] = np.where(
+        is_test,
+        "test",
+        np.where(result["parent"].isin(validation), "validation", "train"),
+    )
+    if result["split"].value_counts().to_dict() != {
+        "train": TRAIN_COUNT,
+        "validation": VALIDATION_COUNT,
+        "test": TEST_COUNT,
+    }:
+        raise AssertionError("parent split counts violate the frozen contract")
+    return result
