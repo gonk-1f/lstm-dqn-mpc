@@ -21,7 +21,7 @@ For each gap independently:
 1. Select up to the three nearest observed supervisory points before the gap and up to the three nearest observed points after it.
 2. Require at least four distinct anchor timestamps. If this invariant is not met, fail the parent plot explicitly instead of silently extrapolating or substituting another interpolation method.
 3. Fit a local natural cubic spline using actual elapsed seconds as the independent variable.
-4. Generate nominal timestamps `left_boundary + n * 30 seconds` while each generated timestamp remains strictly earlier than the right observed boundary.
+4. Compute the nominal missing count as `round(gap_seconds / 30) - 1`, then generate that many timestamps at `left_boundary + n * 30 seconds`. This respects the accepted 28–31-second clock jitter and avoids creating a synthetic point only 1–10 seconds before a measured right boundary.
 5. Evaluate separate splines for:
    - `P_fc_total_kw`
    - `P_batt_raw_total_kw`
