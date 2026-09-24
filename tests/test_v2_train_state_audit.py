@@ -407,5 +407,153 @@ class TrainStateAuditNumericalTests(unittest.TestCase):
         self.assertEqual(comparison.loc["MINIMUM", "dimension"], 5)
 
 
+class TrainStateAuditArtifactTests(unittest.TestCase):
+    def test_markov_inventory_covers_required_memory(self) -> None:
+        from v2.analysis.train_state_audit import markov_inventory
+
+        inventory = markov_inventory().set_index("memory_id")
+
+        required = {
+            "causal_lpf_state",
+            "previous_executed_fc_power",
+            "cumulative_fc_voltage_loss",
+            "cumulative_battery_weighted_ah",
+            "previous_dqn_action",
+            "mpc_warm_start",
+            "terminal_recharge_initial_soc",
+            "macro_step_position",
+        }
+        self.assertTrue(required.issubset(inventory.index))
+        self.assertFalse(inventory["classification"].eq("").any())
+        self.assertFalse(inventory["state_treatment"].eq("").any())
+        self.assertFalse(inventory["code_evidence"].eq("").any())
+
+    def test_artifact_writer_emits_reproducible_audit_bundle(self) -> None:
+        from v2.analysis.train_state_audit import (
+            build_causal_feature_rows,
+            write_audit_artifacts,
+        )
+
+        segment, states, load_frame = TrainStateAuditCausalFeatureTests._fixture()
+        base = build_causal_feature_rows(segment, states, load_frame)[0]
+        rows = tuple(
+            replace(
+                base,
+                timestamp=base.timestamp + timedelta(seconds=30 * index),
+                soc=base.soc + 0.01 * index,
+                fc_power_kw=base.fc_power_kw + 20.0 * index,
+                previous_fc_power_kw=base.previous_fc_power_kw + 10.0 * index,
+                recent_load_population_std_kw=(
+                    base.recent_load_population_std_kw + index
+                ),
+                recent_load_trend_kw_per_s=(
+                    base.recent_load_trend_kw_per_s + 0.1 * index
+                ),
+                delta_fc_kw=base.delta_fc_kw + 10.0 * index,
+            )
+            for index in range(5)
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            output = root / "audit"
+            report = root / "report.md"
+
+            manifest = write_audit_artifacts(
+                rows=rows,
+                segments=(segment,),
+                output_root=output,
+                report_path=report,
+                dataset_root=root / "dataset",
+                raw_root=root / "raw",
+            )
+
+            expected = {
+                "audit_manifest.json",
+                "feature_rows.csv",
+                "feature_statistics.csv",
+                "pearson_correlation.csv",
+                "spearman_correlation.csv",
+                "power_balance_residuals.csv",
+                "redundancy_summary.csv",
+                "regime_summary.csv",
+                "state_comparison.csv",
+                "markov_inventory.csv",
+                "candidate_correlation_heatmap.png",
+                "feature_distributions.png",
+                "regime_discrimination.png",
+            }
+            self.assertEqual(
+                {path.name for path in output.iterdir()},
+                expected,
+            )
+            self.assertEqual(manifest["dataset_version"], segment.dataset_version)
+            self.assertEqual(manifest["train_segment_count"], 1)
+            self.assertEqual(manifest["eligible_row_count"], len(rows))
+            text = report.read_text(encoding="utf-8")
+            self.assertIn("Current 10-dimensional candidate", text)
+            self.assertIn("S7 conclusion", text)
+            self.assertIn("KEEP", text)
+
+    def test_runner_executes_with_injected_train_parent_loader(self) -> None:
+        from v2.main.run_train_state_audit import run_train_state_audit
+
+        segment, states, load_frame = TrainStateAuditCausalFeatureTests._fixture()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            dataset = root / "dataset"
+            train_path = dataset / segment.relative_path
+            train_path.parent.mkdir(parents=True)
+            load_frame.to_csv(train_path, index=False)
+            metadata = dataset / "metadata"
+            metadata.mkdir()
+            pd.DataFrame(
+                [
+                    {
+                        "parent": segment.parent,
+                        "sample_id": segment.sample_id,
+                        "relative_path": segment.relative_path,
+                        "split": "train",
+                        "start_timestamp": segment.start_timestamp.isoformat(),
+                        "end_timestamp": segment.end_timestamp.isoformat(),
+                        "sha256": _sha256(train_path),
+                    },
+                    {
+                        "parent": "held_out",
+                        "sample_id": "test_001",
+                        "relative_path": "test/test_001.csv",
+                        "split": "test",
+                        "start_timestamp": segment.start_timestamp.isoformat(),
+                        "end_timestamp": segment.end_timestamp.isoformat(),
+                        "sha256": "must-not-open",
+                    },
+                ]
+            ).to_csv(metadata / "sample_manifest.csv", index=False)
+            (metadata / "qa_summary.json").write_text(
+                json.dumps(
+                    {"dataset_version": "operating_dataset_zero_boundary_v2"}
+                ),
+                encoding="utf-8",
+            )
+            output = root / "output"
+            report = root / "report.md"
+            calls: list[str] = []
+
+            def loader(parent: str):
+                calls.append(parent)
+                return states
+
+            manifest = run_train_state_audit(
+                dataset_root=dataset,
+                raw_root=root / "raw",
+                output_root=output,
+                report_path=report,
+                state_loader=loader,
+            )
+
+            self.assertEqual(calls, [segment.parent])
+            self.assertEqual(manifest["held_out_segment_files_opened"], 0)
+            self.assertTrue(report.is_file())
+
+
 if __name__ == "__main__":
     unittest.main()

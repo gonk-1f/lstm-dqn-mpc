@@ -648,6 +648,386 @@ def state_comparison() -> pd.DataFrame:
     )
 
 
+def markov_inventory() -> pd.DataFrame:
+    """Return the code-audited memory inventory for the current v2 design."""
+
+    rows = (
+        (
+            "battery_soc",
+            "PHYSICAL_TRANSITION_STATE",
+            "KEEP soc",
+            "src/v2/models/battery_energy.py:next_soc",
+            "SOC directly changes the next physical state and q_soc trade-off.",
+        ),
+        (
+            "causal_lpf_state",
+            "CONTROLLER_DYNAMIC_STATE",
+            "KEEP causal_base_load_fraction",
+            "src/v2/control/causal_base_load.py:CausalBaseLoadFilter._observed_base_kw",
+            "The next base reference depends on the committed LPF state.",
+        ),
+        (
+            "previous_executed_fc_power",
+            "CONTROLLER_DYNAMIC_STATE",
+            "COVER with current FC plus delta FC",
+            "src/v2/control/nonlinear_mpc.py:NonlinearMPC.solve",
+            "P_fc(k) and delta P_fc(k) recover P_fc(k-1) exactly.",
+        ),
+        (
+            "fc_on_off_state",
+            "DEGRADATION_DYNAMIC_STATE",
+            "COVER by current FC operating state",
+            "src/v2/models/fuel_cell_degradation.py:FuelCellVoltageLossTracker.is_on",
+            "Start/stop status is observable from the executed FC on/off condition.",
+        ),
+        (
+            "cumulative_fc_voltage_loss",
+            "REWARD_CLIPPING_STATE",
+            "CONDITIONAL: omit only with reset and far-from-EOL invariant",
+            "src/v2/models/fuel_cell_degradation.py:fuel_cell_economic_life_increment",
+            "Below EOL, marginal interval cost is independent of the cumulative level; clipping changes it near EOL.",
+        ),
+        (
+            "cumulative_battery_weighted_ah",
+            "REWARD_CLIPPING_STATE",
+            "CONDITIONAL: omit only with reset and far-from-EOL invariant",
+            "src/v2/models/battery_degradation.py:battery_economic_life_increment",
+            "Below EOL, marginal interval cost is independent of the cumulative level; clipping changes it near EOL.",
+        ),
+        (
+            "cumulative_start_stop_counts",
+            "DIAGNOSTIC_ACCOUNTING",
+            "OMIT",
+            "src/v2/models/fuel_cell_degradation.py:FuelCellVoltageLossTracker",
+            "Counts diagnose accumulated loss; the next increment depends on current on/off transition, not the count.",
+        ),
+        (
+            "previous_dqn_action",
+            "POLICY_HISTORY",
+            "OMIT while no switching penalty or action-rate constraint exists",
+            "src/v2/envs/multirate_weight_env.py:MultiRateWeightEnvironment.step",
+            "The environment holds the selected action for M steps but defines no reward or transition term from the prior action.",
+        ),
+        (
+            "mpc_warm_start",
+            "NUMERICAL_SOLVER_STATE",
+            "OMIT; enforce solver robustness separately",
+            "src/v2/control/nonlinear_mpc.py:shifted_warm_start",
+            "Warm start is an optional initial guess, not a physical state; local-solution sensitivity remains a solver audit concern.",
+        ),
+        (
+            "terminal_recharge_initial_soc",
+            "EPISODE_ACCOUNTING_STATE",
+            "OMIT only when initial SOC is frozen per episode",
+            "src/v2/economics.py:terminal_recharge_grid_energy",
+            "Terminal shore cost depends on initial minus final SOC; a variable initial SOC would need state or explicit episode context.",
+        ),
+        (
+            "macro_step_position",
+            "MULTIRATE_EXECUTION_STATE",
+            "OMIT at DQN decision boundaries",
+            "src/v2/envs/multirate_weight_env.py:MultiRateWeightEnvironment.step",
+            "The DQN is queried only at macro boundaries; the M-step countdown is internal during action execution.",
+        ),
+        (
+            "environment_done_failed_replay_history",
+            "SOFTWARE_BOOKKEEPING",
+            "OMIT",
+            "src/v2/envs/multirate_weight_env.py:MultiRateWeightEnvironment",
+            "Done/failure gates and replay history do not define a continuing physical state presented for another action.",
+        ),
+    )
+    return pd.DataFrame(
+        rows,
+        columns=(
+            "memory_id",
+            "classification",
+            "state_treatment",
+            "code_evidence",
+            "reason",
+        ),
+    )
+
+
+def _markdown_table(frame: pd.DataFrame) -> str:
+    def cell(value: object) -> str:
+        if pd.isna(value):
+            return ""
+        if isinstance(value, (float, np.floating)):
+            return f"{float(value):.6g}"
+        return str(value).replace("|", "<br>").replace("\n", " ")
+
+    header = "| " + " | ".join(str(column) for column in frame.columns) + " |"
+    rule = "| " + " | ".join("---" for _ in frame.columns) + " |"
+    body = [
+        "| " + " | ".join(cell(value) for value in row) + " |"
+        for row in frame.itertuples(index=False, name=None)
+    ]
+    return "\n".join((header, rule, *body))
+
+
+def _feature_statistics_bundle(
+    physical: pd.DataFrame,
+    normalized: pd.DataFrame,
+) -> pd.DataFrame:
+    physical_columns = (
+        "soc",
+        "fc_power_kw",
+        "previous_fc_power_kw",
+        "battery_power_kw",
+        "load_power_kw",
+        "recent_load_mean_kw",
+        "recent_load_population_std_kw",
+        "recent_load_trend_kw_per_s",
+        "base_load_kw",
+        "recent_delta_soc",
+        "delta_load_kw",
+        "delta_fc_kw",
+        "measured_power_balance_residual_kw",
+    )
+    physical_stats = descriptive_statistics(physical.loc[:, physical_columns])
+    physical_stats.insert(1, "representation", "physical")
+    normalized_stats = descriptive_statistics(normalized)
+    normalized_stats.insert(1, "representation", "normalized")
+    return pd.concat((physical_stats, normalized_stats), ignore_index=True)
+
+
+def _render_plots(
+    output_root: Path,
+    normalized: pd.DataFrame,
+    pearson: pd.DataFrame,
+    regimes: pd.DataFrame,
+) -> None:
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    figure, axis = plt.subplots(figsize=(11, 9))
+    image = axis.imshow(pearson.to_numpy(dtype=float), vmin=-1.0, vmax=1.0, cmap="coolwarm")
+    labels = [str(value) for value in pearson.columns]
+    axis.set_xticks(range(len(labels)), labels, rotation=60, ha="right", fontsize=8)
+    axis.set_yticks(range(len(labels)), labels, fontsize=8)
+    axis.set_title("Train-only Pearson correlation of normalized state features")
+    figure.colorbar(image, ax=axis, label="Pearson r")
+    figure.tight_layout()
+    figure.savefig(output_root / "candidate_correlation_heatmap.png", dpi=180)
+    plt.close(figure)
+
+    distribution_features = PROPOSED_NORMALIZED_FEATURES
+    figure, axes = plt.subplots(4, 2, figsize=(11, 13))
+    for axis, feature in zip(axes.flat, distribution_features):
+        axis.hist(normalized[feature].to_numpy(dtype=float), bins=40, color="#2b6f9f")
+        axis.set_title(feature)
+        axis.set_ylabel("Train observations")
+    axes.flat[-1].axis("off")
+    figure.suptitle("Train-only distributions for proposed S7", y=0.995)
+    figure.tight_layout()
+    figure.savefig(output_root / "feature_distributions.png", dpi=180)
+    plt.close(figure)
+
+    figure, axis = plt.subplots(figsize=(10, 5))
+    axis.bar(regimes["regime"], regimes["count"], color="#4c8f6f")
+    axis.set_ylabel("Eligible Train observations")
+    axis.set_title("Train-only operating-regime coverage")
+    axis.tick_params(axis="x", rotation=35)
+    figure.tight_layout()
+    figure.savefig(output_root / "regime_discrimination.png", dpi=180)
+    plt.close(figure)
+
+
+def _render_report(
+    *,
+    statistics: pd.DataFrame,
+    redundancy: pd.DataFrame,
+    regimes: pd.DataFrame,
+    comparison: pd.DataFrame,
+    inventory: pd.DataFrame,
+    segment_count: int,
+    row_count: int,
+) -> str:
+    relationship = redundancy.set_index("relationship")
+    mean_base = relationship.loc["recent_load_mean_vs_causal_base"]
+    delta_soc = relationship.loc["recent_delta_soc_vs_battery_power"]
+    balance = relationship.loc["environment_power_balance"]
+    decisions = pd.DataFrame(
+        (
+            ("soc", "KEEP", "Physical energy margin and direct q_soc relevance."),
+            ("fuel_cell_power_fraction", "KEEP", "FC operating point affects efficiency, degradation, and feasible allocation."),
+            ("previous_fuel_cell_power_fraction", "REPLACE", "Use delta P_fc with current P_fc; the representation is invertible and directly aligned with q_smooth."),
+            ("battery_power_fraction", "REMOVE", "Exact environment identity P_batt=P_load-P_fc makes it deterministic."),
+            ("load_power_fraction", "REPLACE", "Use P_base and P_load-P_base to separate low- and high-frequency demand."),
+            ("recent_load_mean_fraction", "REMOVE", f"P_base is the controller state; Train Pearson={mean_base['pearson']:.4f}, Spearman={mean_base['spearman']:.4f}."),
+            ("recent_load_population_std_fraction", "KEEP", "Causal volatility distinguishes demand for smoothing beyond the instantaneous residual."),
+            ("recent_load_window_trend_fraction", "KEEP", "Causal sign and rate distinguish rise, fall, and steady operation."),
+            ("causal_base_load_fraction", "KEEP", "Required LPF memory and direct q_base reference."),
+            ("recent_delta_soc", "REMOVE", f"It is an integrated battery-power consequence; Train correlation with current battery power={delta_soc['pearson']:.4f}."),
+        ),
+        columns=("current_feature", "decision", "reason"),
+    )
+    schema = pd.DataFrame(
+        (
+            (1, "soc", "SOC(k)", "unchanged fraction", "current"),
+            (2, "causal_base_load_fraction", "P_base(k)", "divide by 600 kW", "LPF state"),
+            (3, "load_residual_fraction", "P_load(k)-P_base(k)", "divide by 600 kW", "current"),
+            (4, "recent_load_population_std_fraction", "population std of P_load over [k-150 s,k]", "divide by 600 kW", "150 s causal history"),
+            (5, "recent_load_window_trend_fraction", "least-squares load trend over [k-150 s,k]", "trend*150 s/600 kW", "150 s causal history"),
+            (6, "fuel_cell_power_fraction", "P_fc(k)", "divide by 600 kW", "current"),
+            (7, "fuel_cell_delta_fraction", "P_fc(k)-P_fc(k-1)", "divide by 600 kW", "previous executed FC"),
+        ),
+        columns=("order", "feature", "definition", "normalization", "memory"),
+    )
+    normalized_stats = statistics.loc[
+        statistics["representation"].eq("normalized")
+        & statistics["feature"].isin(PROPOSED_NORMALIZED_FEATURES)
+    ].copy()
+    sections = [
+        "# V2 DQN State Audit\n",
+        "## Scope and evidence boundary\n",
+        f"The audit used {segment_count} segments and {row_count} eligible 30-second observations from `operating_dataset_zero_boundary_v2/train` only. Validation and Test segment CSVs were not opened. Raw FC/BMS telemetry was restricted by the Train parent and timestamp whitelist. No DQN training or action screening was performed.\n",
+        "## Current 10-dimensional candidate\n",
+        _markdown_table(decisions),
+        "\n## Recommended S7 schema\n",
+        _markdown_table(schema),
+        "\nAll scales are fixed physical scales. Train min-max normalization is not used. The 600 kW denominator is the frozen v2 research-simulation plant rating, not the 560 kW real-vessel specification.\n",
+        "## Train-only numerical evidence\n",
+        _markdown_table(normalized_stats),
+        f"\nThe simulated environment power balance is an exact identity. The measured audit residual has maximum absolute value {float(balance['measured_max_abs_residual_kw']):.6g} kW and is treated as telemetry/alignment mismatch, not independent battery-state information.\n",
+        "## Redundancy analysis\n",
+        _markdown_table(redundancy),
+        "\n## Operating-regime coverage\n",
+        _markdown_table(regimes),
+        "\nTrain-derived trend, volatility, and FC thresholds in this table are descriptive only. They are not production policy thresholds and were not fitted using held-out data.\n",
+        "## Structural state comparison\n",
+        _markdown_table(comparison),
+        "\nThese are structural, causal ablations. No DQN performance claim is made because training is outside this audit.\n",
+        "## Markov audit\n",
+        _markdown_table(inventory),
+        "\nCumulative FC and battery lifetime fractions can be omitted only if every training episode resets their accounting and a preflight bound proves the episode remains away from EOL clipping. Otherwise both clipped lifetime states must be added. MPC warm-start history stays outside the DQN state, but the integrated solver-robustness gate must demonstrate that numerical initialization does not create materially different executed commands. Terminal recharge also requires a frozen initial-SOC episode contract.\n",
+        "## Minimum defensible state\n",
+        "The minimum state is `[SOC, P_base, P_load-P_base, P_fc, delta_P_fc]` (S5). It preserves the battery energy margin, LPF memory, instantaneous peak/valley demand, FC operating point, and FC movement. It removes explicit volatility and trend, so it is suitable only as a paper ablation baseline, not the primary recommendation.\n",
+        "## S7 conclusion\n",
+        "The proposed seven-dimensional state is the recommended v2 baseline because every feature is causal, available at the DQN decision boundary, physically tied to q_base/q_smooth/q_soc, and avoids the deterministic battery/load/FC duplication in S10. This audit does not change `CANDIDATE_STATE_STATUS`; formal freeze still requires implementing the schema and enforcing the episode-reset, EOL-distance, terminal-SOC, and integrated solver-robustness contracts.\n",
+    ]
+    return "\n".join(sections)
+
+
+def write_audit_artifacts(
+    *,
+    rows: Sequence[AuditFeatureRow],
+    segments: Sequence[TrainSegment],
+    output_root: str | Path,
+    report_path: str | Path,
+    dataset_root: str | Path,
+    raw_root: str | Path,
+) -> dict[str, object]:
+    """Write one immutable Train-only evidence bundle and Markdown report."""
+
+    checked_rows = tuple(rows)
+    checked_segments = tuple(segments)
+    if not checked_rows:
+        raise ValueError("state audit requires at least one eligible Train row")
+    if not checked_segments:
+        raise ValueError("state audit requires at least one Train segment")
+    destination = Path(output_root).resolve()
+    if destination.exists():
+        raise FileExistsError(f"audit output already exists: {destination}")
+    destination.mkdir(parents=True)
+    report = Path(report_path).resolve()
+    report.parent.mkdir(parents=True, exist_ok=True)
+
+    physical = feature_frame(checked_rows)
+    normalized = normalize_feature_frame(physical)
+    statistics = _feature_statistics_bundle(physical, normalized)
+    pearson, spearman = correlation_matrices(normalized)
+    redundancy = redundancy_summary(physical)
+    regimes = regime_summary(physical)
+    comparison = state_comparison()
+    inventory = markov_inventory()
+
+    physical.to_csv(destination / "feature_rows.csv", index=False, encoding="utf-8")
+    statistics.to_csv(
+        destination / "feature_statistics.csv", index=False, encoding="utf-8"
+    )
+    pearson.to_csv(destination / "pearson_correlation.csv", encoding="utf-8")
+    spearman.to_csv(destination / "spearman_correlation.csv", encoding="utf-8")
+    physical.loc[
+        :,
+        [
+            "parent",
+            "sample_id",
+            "timestamp",
+            "load_power_kw",
+            "fc_power_kw",
+            "battery_power_kw",
+            "measured_power_balance_residual_kw",
+        ],
+    ].to_csv(
+        destination / "power_balance_residuals.csv",
+        index=False,
+        encoding="utf-8",
+    )
+    redundancy.to_csv(
+        destination / "redundancy_summary.csv", index=False, encoding="utf-8"
+    )
+    regimes.to_csv(destination / "regime_summary.csv", index=False, encoding="utf-8")
+    comparison.to_csv(
+        destination / "state_comparison.csv", index=False, encoding="utf-8"
+    )
+    inventory.to_csv(
+        destination / "markov_inventory.csv", index=False, encoding="utf-8"
+    )
+    _render_plots(destination, normalized, pearson, regimes)
+
+    report.write_text(
+        _render_report(
+            statistics=statistics,
+            redundancy=redundancy,
+            regimes=regimes,
+            comparison=comparison,
+            inventory=inventory,
+            segment_count=len(checked_segments),
+            row_count=len(checked_rows),
+        ),
+        encoding="utf-8",
+    )
+    artifact_hashes = {
+        path.name: _sha256(path)
+        for path in sorted(destination.iterdir())
+        if path.is_file() and path.name != "audit_manifest.json"
+    }
+    versions = {segment.dataset_version for segment in checked_segments}
+    if versions != {ACTIVE_DATASET_VERSION}:
+        raise ValueError("all audit segments must use the active dataset version")
+    manifest: dict[str, object] = {
+        "dataset_version": ACTIVE_DATASET_VERSION,
+        "dataset_root": str(Path(dataset_root).resolve()),
+        "raw_root": str(Path(raw_root).resolve()),
+        "split": "train",
+        "train_segment_count": len(checked_segments),
+        "train_parent_count": len({segment.parent for segment in checked_segments}),
+        "eligible_row_count": len(checked_rows),
+        "sample_seconds": AUDIT_SAMPLE_SECONDS,
+        "history_seconds": AUDIT_HISTORY_SECONDS,
+        "tau_lpf_seconds": AUDIT_TAU_LPF_SECONDS,
+        "power_scale_kw": AUDIT_POWER_SCALE_KW,
+        "battery_power_scale_kw": AUDIT_BATTERY_POWER_SCALE_KW,
+        "segment_ids": [segment.sample_id for segment in checked_segments],
+        "segment_sha256": {
+            segment.sample_id: segment.sha256 for segment in checked_segments
+        },
+        "artifact_sha256": artifact_hashes,
+        "held_out_segment_files_opened": 0,
+        "formal_training_started": False,
+        "action_catalog_modified": False,
+    }
+    (destination / "audit_manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return manifest
+
+
 __all__ = [
     "ACTIVE_DATASET_VERSION",
     "AUDIT_BATTERY_POWER_SCALE_KW",
@@ -665,8 +1045,10 @@ __all__ = [
     "descriptive_statistics",
     "feature_frame",
     "load_train_segments",
+    "markov_inventory",
     "normalize_feature_frame",
     "redundancy_summary",
     "regime_summary",
     "state_comparison",
+    "write_audit_artifacts",
 ]
