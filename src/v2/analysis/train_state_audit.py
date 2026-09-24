@@ -949,6 +949,7 @@ def _render_plots(
 
 def _render_report(
     *,
+    physical: pd.DataFrame,
     statistics: pd.DataFrame,
     redundancy: pd.DataFrame,
     regimes: pd.DataFrame,
@@ -957,34 +958,36 @@ def _render_report(
     segment_count: int,
     row_count: int,
 ) -> str:
+    from ..control.nonlinear_mpc import SOC_HARD_MAX, SOC_HARD_MIN
+
     relationship = redundancy.set_index("relationship")
     mean_base = relationship.loc["recent_load_mean_vs_causal_base"]
     delta_soc = relationship.loc["recent_delta_soc_vs_battery_power"]
     balance = relationship.loc["environment_power_balance"]
     decisions = pd.DataFrame(
         (
-            ("soc", "KEEP", "Physical energy margin and direct q_soc relevance."),
-            ("fuel_cell_power_fraction", "KEEP", "FC operating point affects efficiency, degradation, and feasible allocation."),
-            ("previous_fuel_cell_power_fraction", "REPLACE", "Use delta P_fc with current P_fc; the representation is invertible and directly aligned with q_smooth."),
-            ("battery_power_fraction", "REMOVE", "Exact environment identity P_batt=P_load-P_fc makes it deterministic."),
-            ("load_power_fraction", "REPLACE", "Use P_base and P_load-P_base to separate low- and high-frequency demand."),
-            ("recent_load_mean_fraction", "REMOVE", f"P_base is the controller state; Train Pearson={mean_base['pearson']:.4f}, Spearman={mean_base['spearman']:.4f}."),
-            ("recent_load_population_std_fraction", "KEEP", "Causal volatility distinguishes demand for smoothing beyond the instantaneous residual."),
-            ("recent_load_window_trend_fraction", "KEEP", "Causal sign and rate distinguish rise, fall, and steady operation."),
-            ("causal_base_load_fraction", "KEEP", "Required LPF memory and direct q_base reference."),
-            ("recent_delta_soc", "REMOVE", f"It is an integrated battery-power consequence; Train correlation with current battery power={delta_soc['pearson']:.4f}."),
+            ("soc", "KEEP", "q_soc", "直接描述电池能量裕量。"),
+            ("fuel_cell_power_fraction", "KEEP", "q_base / q_smooth / economic reward", "FC 工作点影响功率分配、效率与退化。"),
+            ("previous_fuel_cell_power_fraction", "REPLACE", "q_smooth", "改为 delta P_fc；与当前 P_fc 联合可精确恢复前一时刻功率，且控制语义更直接。"),
+            ("battery_power_fraction", "REMOVE", "none independently", "环境中 P_batt=P_load-P_fc，是确定性冗余。"),
+            ("load_power_fraction", "REPLACE", "q_base / q_smooth", "用 P_base 与 P_load-P_base 分离低频基础负荷和瞬时峰谷。"),
+            ("recent_load_mean_fraction", "REMOVE", "q_base already covered", f"P_base 是下层控制器真实动态状态；Train Pearson={mean_base['pearson']:.4f}，Spearman={mean_base['spearman']:.4f}。"),
+            ("recent_load_population_std_fraction", "KEEP", "q_smooth", "因果波动强度提供瞬时 residual 之外的信息。"),
+            ("recent_load_window_trend_fraction", "KEEP", "q_base / q_smooth", "区分增载、减载与稳态，决定 FC 跟随和电池缓冲需求。"),
+            ("causal_base_load_fraction", "KEEP", "q_base", "它既是 LPF 必要记忆，也是 J_base 的直接参考。"),
+            ("recent_delta_soc", "REMOVE", "q_soc already covered by SOC", f"它主要是电池功率的时间积分结果；与当前电池功率的 Train Pearson={delta_soc['pearson']:.4f}。"),
         ),
-        columns=("current_feature", "decision", "reason"),
+        columns=("current_feature", "decision", "weight_link", "reason"),
     )
     schema = pd.DataFrame(
         (
-            (1, "soc", "SOC(k)", "unchanged fraction", "current"),
-            (2, "causal_base_load_fraction", "P_base(k)", "divide by 600 kW", "LPF state"),
-            (3, "load_residual_fraction", "P_load(k)-P_base(k)", "divide by 600 kW", "current"),
-            (4, "recent_load_population_std_fraction", "population std of P_load over [k-150 s,k]", "divide by 600 kW", "150 s causal history"),
-            (5, "recent_load_window_trend_fraction", "least-squares load trend over [k-150 s,k]", "trend*150 s/600 kW", "150 s causal history"),
-            (6, "fuel_cell_power_fraction", "P_fc(k)", "divide by 600 kW", "current"),
-            (7, "fuel_cell_delta_fraction", "P_fc(k)-P_fc(k-1)", "divide by 600 kW", "previous executed FC"),
+            (1, "soc", "SOC(k)", "保持原始 fraction", "当前值"),
+            (2, "causal_base_load_fraction", "P_base(k)", "除以 600 kW", "LPF 内部状态"),
+            (3, "load_residual_fraction", "P_load(k)-P_base(k)", "除以 600 kW", "当前值"),
+            (4, "recent_load_population_std_fraction", "[k-150 s,k] 内 P_load 的总体标准差", "除以 600 kW", "150 s 因果历史"),
+            (5, "recent_load_window_trend_fraction", "[k-150 s,k] 内负荷最小二乘趋势", "trend*150 s/600 kW", "150 s 因果历史"),
+            (6, "fuel_cell_power_fraction", "P_fc(k)", "除以 600 kW", "当前值"),
+            (7, "fuel_cell_delta_fraction", "P_fc(k)-P_fc(k-1)", "除以 600 kW", "前一执行 FC 功率"),
         ),
         columns=("order", "feature", "definition", "normalization", "memory"),
     )
@@ -992,33 +995,41 @@ def _render_report(
         statistics["representation"].eq("normalized")
         & statistics["feature"].isin(PROPOSED_NORMALIZED_FEATURES)
     ].copy()
+    outside_soc = (
+        (physical["soc"].astype(float) < SOC_HARD_MIN)
+        | (physical["soc"].astype(float) > SOC_HARD_MAX)
+    )
+    outside_count = int(outside_soc.sum())
+    outside_fraction = float(outside_soc.mean())
     sections = [
-        "# V2 DQN State Audit\n",
-        "## Scope and evidence boundary\n",
-        f"The audit used {segment_count} segments and {row_count} eligible 30-second observations from `operating_dataset_zero_boundary_v2/train` only. Validation and Test segment CSVs were not opened. Raw FC/BMS telemetry was restricted by the Train parent and timestamp whitelist. No DQN training or action screening was performed.\n",
-        "## Current 10-dimensional candidate\n",
+        "# V2 DQN 状态空间审核\n",
+        "## 审核范围\n",
+        f"本审核只使用 `operating_dataset_zero_boundary_v2/train` 的 {segment_count} 个航段和 {row_count} 个 eligible 30 s 状态点。Validation/Test 航段 CSV 打开数为 0。原始 FC/BMS 遥测由 Train parent 与时间边界双重白名单限制。本轮未运行 DQN 训练或动作筛选。\n",
+        "## 当前 10 维候选状态\n",
         _markdown_table(decisions),
-        "\n## Recommended S7 schema\n",
+        "\n## 推荐 S7 schema\n",
         _markdown_table(schema),
-        "\nAll scales are fixed physical scales. Train min-max normalization is not used. The 600 kW denominator is the frozen v2 research-simulation plant rating, not the 560 kW real-vessel specification.\n",
-        "## Train-only numerical evidence\n",
+        "\n所有尺度都是固定物理尺度，不使用 Train min-max。600 kW 是冻结的 v2 research-simulation plant rating，不是实船技术规格中的 560 kW；归一化结果允许超出 [-1,1]，不得裁剪。\n",
+        "## Train-only 数值证据\n",
         _markdown_table(normalized_stats),
-        f"\nThe simulated environment power balance is an exact identity. The measured audit residual has maximum absolute value {float(balance['measured_max_abs_residual_kw']):.6g} kW and is treated as telemetry/alignment mismatch, not independent battery-state information.\n",
-        "## Redundancy analysis\n",
+        f"\n仿真环境中的功率平衡是精确恒等式。实测重建残差最大绝对值为 {float(balance['measured_max_abs_residual_kw']):.6g} kW；该量来自同源功率重建，不能作为 battery_power 独立信息的证据。\n",
+        "## 冗余分析\n",
         _markdown_table(redundancy),
-        "\n## Operating-regime coverage\n",
+        "\n## 运行工况区分能力\n",
         _markdown_table(regimes),
-        "\nTrain-derived trend, volatility, and FC thresholds in this table are descriptive only. They are not production policy thresholds and were not fitted using held-out data.\n",
-        "## Structural state comparison\n",
+        "\n表中的 trend、volatility 和 FC 阈值仅用于 Train 描述，不是生产策略阈值，也没有利用 held-out 数据拟合。\n",
+        "## 状态结构消融比较\n",
         _markdown_table(comparison),
-        "\nThese are structural, causal ablations. No DQN performance claim is made because training is outside this audit.\n",
-        "## Markov audit\n",
+        "\n这些比较是结构与因果信息消融。由于本轮禁止训练，不能声称 S7、S6-A 或 S6-B 的回报性能优劣。\n",
+        "## Markov 性审核\n",
         _markdown_table(inventory),
-        "\nCumulative FC and battery lifetime fractions can be omitted only if every training episode resets their accounting and a preflight bound proves the episode remains away from EOL clipping. Otherwise both clipped lifetime states must be added. MPC warm-start history stays outside the DQN state, but the integrated solver-robustness gate must demonstrate that numerical initialization does not create materially different executed commands. Terminal recharge also requires a frozen initial-SOC episode contract.\n",
+        "\n只有在每个训练 episode 都重置累计退化、且 preflight 上界证明 episode 远离 EOL clipping 时，累计 FC/Battery lifetime fraction 才可省略；否则必须增加两项 clipped lifetime state。MPC warm start 不进入 DQN state，但 integrated solver robustness 必须证明不同初值不会导致实质不同的执行命令。terminal recharge 还要求冻结 episode initial SOC。\n",
         "## Minimum defensible state\n",
-        "The minimum state is `[SOC, P_base, P_load-P_base, P_fc, delta_P_fc]` (S5). It preserves the battery energy margin, LPF memory, instantaneous peak/valley demand, FC operating point, and FC movement. It removes explicit volatility and trend, so it is suitable only as a paper ablation baseline, not the primary recommendation.\n",
-        "## S7 conclusion\n",
-        "The proposed seven-dimensional state is the recommended v2 baseline because every feature is causal, available at the DQN decision boundary, physically tied to q_base/q_smooth/q_soc, and avoids the deterministic battery/load/FC duplication in S10. This audit does not change `CANDIDATE_STATE_STATUS`; formal freeze still requires implementing the schema and enforcing the episode-reset, EOL-distance, terminal-SOC, and integrated solver-robustness contracts.\n",
+        "最小可辩护状态为 `[SOC, P_base, P_load-P_base, P_fc, delta_P_fc]`（S5）。它保留电池能量裕量、LPF 记忆、瞬时峰谷、FC 工作点与 FC 动态，但删除显式 volatility 和 trend，因此只适合作为论文消融基线，不应作为首选正式状态。\n",
+        "## 证据边界与局限性\n",
+        f"实船 Train SOC 中有 {outside_count}/{row_count}（{outside_fraction:.2%}）位于 v2 仿真硬区间 [{SOC_HARD_MIN:.2f}, {SOC_HARD_MAX:.2f}] 之外。这些实测 SOC/FC 数据用于判断特征覆盖与区分力，不代表未来仿真策略的 state-visitation distribution。正式环境仍将依据模型转移生成 SOC 与 FC 轨迹。功率平衡残差接近零是因为 formal load 与 FC/BMS 功率同源构造，不是独立传感器验证。\n",
+        "## S7 明确结论\n",
+        "建议采用 proposed 7-dimensional state 作为 v2 正式 baseline：各特征均为因果、在 DQN 决策边界可获得、与 q_base/q_smooth/q_soc 有明确关系，并删除 S10 中确定性的 battery/load/FC 重复信息。S6-A 删除 delta_P_fc 后削弱 q_smooth 的直接动态信息；S6-B 删除 load_std 后失去与 trend 低相关的波动强度信息。因此二者仅作为消融，不优先于 S7。本审核不修改 `CANDIDATE_STATE_STATUS`；正式 freeze 仍需另行实现 schema，并落实 episode reset、EOL distance、terminal initial SOC 与 integrated solver robustness 合同。\n",
     ]
     return "\n".join(sections)
 
@@ -1092,6 +1103,7 @@ def write_audit_artifacts(
 
     report.write_text(
         _render_report(
+            physical=physical,
             statistics=statistics,
             redundancy=redundancy,
             regimes=regimes,

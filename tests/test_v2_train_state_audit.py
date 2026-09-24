@@ -550,8 +550,9 @@ class TrainStateAuditArtifactTests(unittest.TestCase):
             self.assertEqual(manifest["train_segment_count"], 1)
             self.assertEqual(manifest["eligible_row_count"], len(rows))
             text = report.read_text(encoding="utf-8")
-            self.assertIn("Current 10-dimensional candidate", text)
-            self.assertIn("S7 conclusion", text)
+            self.assertIn("当前 10 维候选状态", text)
+            self.assertIn("S7 明确结论", text)
+            self.assertIn("证据边界与局限性", text)
             self.assertIn("KEEP", text)
 
     def test_runner_executes_with_injected_train_parent_loader(self) -> None:
