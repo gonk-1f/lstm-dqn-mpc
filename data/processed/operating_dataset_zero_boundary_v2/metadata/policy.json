@@ -1,0 +1,46 @@
+{
+  "active_threshold_kw": 1.0,
+  "alignment_tolerance_seconds": 10.0,
+  "approved_boundary_exclusions": {
+    "3月25日14_00_3月25日17_00": "start",
+    "3月28日08_00_3月28日11_00": "end",
+    "4月21日08_00_4月21日16_00": "end",
+    "4月23日13_00_4月23日18_00": "start",
+    "4月24日07_00_4月24日17_00": "end",
+    "4月29日08_00_4月29日18_00": "end",
+    "4月7日08_00_4月7日12_00": "end",
+    "6月13日08_00_6月13日14_00": "start",
+    "6月6日10_00_6月6日21_00": "end",
+    "7月19日07_00_7月19日09_00": "end",
+    "7月22日08_00_7月22日11_00": "end",
+    "7月24日14_00_7月24日17_00": "end",
+    "7月9日08_00_7月9日16_00": "end"
+  },
+  "battery_raw_sign": "negative discharge, positive charge",
+  "dataset_version": "operating_dataset_zero_boundary_v2",
+  "fixed_test_parents": [
+    "3月26日14_00_3月26日16_00",
+    "3月29日08_00_3月29日15_00",
+    "4月18日12_00_4月18日18_00",
+    "5月8日08_00_5月8日17_00",
+    "6月11日08_00_6月11日11_00"
+  ],
+  "gap_interpolation": "local natural cubic on FC and raw-sign battery independently",
+  "included_parent_count": 53,
+  "nominal_step_seconds": 30.0,
+  "one_second_interpolation": "PCHIP within selected boundaries only",
+  "parent_count": 53,
+  "quartile_basis": "48 non-Test included parents only",
+  "raw_parent_count": 66,
+  "source_power_identity": "P_source_total = P_fc_total - P_battery_raw_total",
+  "source_power_status": "derived from 8 FC and 12 battery clusters; not independently measured",
+  "split_counts": {
+    "test": 5,
+    "train": 38,
+    "validation": 10
+  },
+  "sustained_points": 3,
+  "validation_selection": "greedy iterative multilabel stratification to 20 percent targets",
+  "validation_tie_break": "chronological parent order then parent identifier",
+  "zero_deadband_kw": 1.0
+}
