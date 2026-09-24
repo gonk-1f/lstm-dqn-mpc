@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 import hashlib
 import json
@@ -21,6 +21,30 @@ AUDIT_SAMPLE_SECONDS = 30.0
 AUDIT_HISTORY_SECONDS = 150.0
 AUDIT_TAU_LPF_SECONDS = 90.0
 AUDIT_POWER_SCALE_KW = 600.0
+AUDIT_BATTERY_POWER_SCALE_KW = 1248.0
+NEAR_ZERO_VARIANCE_STD = 1.0e-8
+
+CANDIDATE_NORMALIZED_FEATURES = (
+    "soc",
+    "fuel_cell_power_fraction",
+    "previous_fuel_cell_power_fraction",
+    "battery_power_fraction",
+    "load_power_fraction",
+    "recent_load_mean_fraction",
+    "recent_load_population_std_fraction",
+    "recent_load_window_trend_fraction",
+    "causal_base_load_fraction",
+    "recent_delta_soc",
+)
+PROPOSED_NORMALIZED_FEATURES = (
+    "soc",
+    "causal_base_load_fraction",
+    "load_residual_fraction",
+    "recent_load_population_std_fraction",
+    "recent_load_window_trend_fraction",
+    "fuel_cell_power_fraction",
+    "fuel_cell_delta_fraction",
+)
 
 
 @dataclass(frozen=True)
@@ -321,15 +345,328 @@ def build_train_feature_rows(
     return tuple(rows)
 
 
+def feature_frame(rows: Sequence[AuditFeatureRow]) -> pd.DataFrame:
+    """Convert immutable physical rows into a stable tabular representation."""
+
+    checked = tuple(rows)
+    if not checked or any(type(row) is not AuditFeatureRow for row in checked):
+        raise TypeError("rows must contain AuditFeatureRow values")
+    frame = pd.DataFrame(asdict(row) for row in checked)
+    ordered = [field.name for field in AuditFeatureRow.__dataclass_fields__.values()]
+    return frame.loc[:, ordered]
+
+
+def normalize_feature_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Apply frozen physical denominators without data-fitted min-max scaling."""
+
+    required = {
+        "soc",
+        "fc_power_kw",
+        "previous_fc_power_kw",
+        "battery_power_kw",
+        "load_power_kw",
+        "recent_load_mean_kw",
+        "recent_load_population_std_kw",
+        "recent_load_trend_kw_per_s",
+        "base_load_kw",
+        "recent_delta_soc",
+        "delta_load_kw",
+        "delta_fc_kw",
+    }
+    missing = required.difference(frame.columns)
+    if missing:
+        raise ValueError(f"feature frame is missing columns: {sorted(missing)}")
+    result = pd.DataFrame(index=frame.index)
+    result["soc"] = frame["soc"].astype(float)
+    result["fuel_cell_power_fraction"] = (
+        frame["fc_power_kw"].astype(float) / AUDIT_POWER_SCALE_KW
+    )
+    result["previous_fuel_cell_power_fraction"] = (
+        frame["previous_fc_power_kw"].astype(float) / AUDIT_POWER_SCALE_KW
+    )
+    result["battery_power_fraction"] = (
+        frame["battery_power_kw"].astype(float) / AUDIT_BATTERY_POWER_SCALE_KW
+    )
+    result["load_power_fraction"] = (
+        frame["load_power_kw"].astype(float) / AUDIT_POWER_SCALE_KW
+    )
+    result["recent_load_mean_fraction"] = (
+        frame["recent_load_mean_kw"].astype(float) / AUDIT_POWER_SCALE_KW
+    )
+    result["recent_load_population_std_fraction"] = (
+        frame["recent_load_population_std_kw"].astype(float)
+        / AUDIT_POWER_SCALE_KW
+    )
+    result["recent_load_window_trend_fraction"] = (
+        frame["recent_load_trend_kw_per_s"].astype(float)
+        * AUDIT_HISTORY_SECONDS
+        / AUDIT_POWER_SCALE_KW
+    )
+    result["causal_base_load_fraction"] = (
+        frame["base_load_kw"].astype(float) / AUDIT_POWER_SCALE_KW
+    )
+    result["recent_delta_soc"] = frame["recent_delta_soc"].astype(float)
+    result["load_residual_fraction"] = (
+        frame["delta_load_kw"].astype(float) / AUDIT_POWER_SCALE_KW
+    )
+    result["fuel_cell_delta_fraction"] = (
+        frame["delta_fc_kw"].astype(float) / AUDIT_POWER_SCALE_KW
+    )
+    if not np.isfinite(result.to_numpy(dtype=float)).all():
+        raise ValueError("normalized feature frame must be finite")
+    return result
+
+
+def descriptive_statistics(frame: pd.DataFrame) -> pd.DataFrame:
+    """Return stable Train-only descriptive statistics for numeric features."""
+
+    rows: list[dict[str, object]] = []
+    for feature in frame.columns:
+        values = pd.to_numeric(frame[feature], errors="coerce")
+        finite = values[np.isfinite(values.to_numpy(dtype=float))]
+        if finite.empty:
+            raise ValueError(f"feature has no finite observations: {feature}")
+        array = finite.to_numpy(dtype=float)
+        std = float(np.std(array, ddof=0))
+        rows.append(
+            {
+                "feature": str(feature),
+                "count": int(array.size),
+                "missing_count": int(len(values) - array.size),
+                "min": float(np.min(array)),
+                "max": float(np.max(array)),
+                "mean": float(np.mean(array)),
+                "std": std,
+                "p01": float(np.quantile(array, 0.01)),
+                "p05": float(np.quantile(array, 0.05)),
+                "p50": float(np.quantile(array, 0.50)),
+                "p95": float(np.quantile(array, 0.95)),
+                "p99": float(np.quantile(array, 0.99)),
+                "near_zero_variance": bool(std <= NEAR_ZERO_VARIANCE_STD),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def correlation_matrices(
+    frame: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Return pairwise-complete Pearson and Spearman matrices."""
+
+    numeric = frame.apply(pd.to_numeric, errors="coerce")
+    return numeric.corr(method="pearson"), numeric.corr(method="spearman")
+
+
+def _pair_correlations(
+    frame: pd.DataFrame,
+    left: str,
+    right: str,
+) -> tuple[float, float]:
+    pair = frame[[left, right]].dropna()
+    if len(pair) < 2 or pair[left].nunique() < 2 or pair[right].nunique() < 2:
+        return math.nan, math.nan
+    return (
+        float(pair[left].corr(pair[right], method="pearson")),
+        float(pair[left].corr(pair[right], method="spearman")),
+    )
+
+
+def redundancy_summary(frame: pd.DataFrame) -> pd.DataFrame:
+    """Summarize model identities separately from measured correlations."""
+
+    required = {
+        "measured_power_balance_residual_kw",
+        "recent_load_mean_kw",
+        "base_load_kw",
+        "fc_power_kw",
+        "previous_fc_power_kw",
+        "delta_fc_kw",
+        "recent_delta_soc",
+        "battery_power_kw",
+    }
+    missing = required.difference(frame.columns)
+    if missing:
+        raise ValueError(f"redundancy frame is missing columns: {sorted(missing)}")
+    residual = frame["measured_power_balance_residual_kw"].to_numpy(dtype=float)
+    relationships = [
+        (
+            "recent_load_mean_vs_causal_base",
+            "recent_load_mean_kw",
+            "base_load_kw",
+            "EMPIRICAL_CORRELATION",
+        ),
+        (
+            "current_fc_vs_previous_fc",
+            "fc_power_kw",
+            "previous_fc_power_kw",
+            "LINEAR_REPARAMETERIZATION_WITH_DELTA",
+        ),
+        (
+            "recent_delta_soc_vs_battery_power",
+            "recent_delta_soc",
+            "battery_power_kw",
+            "EMPIRICAL_CORRELATION",
+        ),
+    ]
+    rows: list[dict[str, object]] = [
+        {
+            "relationship": "environment_power_balance",
+            "left_feature": "battery_power_kw",
+            "right_feature": "load_power_kw-fc_power_kw",
+            "model_status": "EXACT_IDENTITY",
+            "pearson": math.nan,
+            "spearman": math.nan,
+            "measured_max_abs_residual_kw": float(np.max(np.abs(residual))),
+            "interpretation": (
+                "Battery power is deterministic in the simulated environment; "
+                "measured residual reflects telemetry/alignment mismatch."
+            ),
+        }
+    ]
+    for name, left, right, status in relationships:
+        pearson, spearman = _pair_correlations(frame, left, right)
+        rows.append(
+            {
+                "relationship": name,
+                "left_feature": left,
+                "right_feature": right,
+                "model_status": status,
+                "pearson": pearson,
+                "spearman": spearman,
+                "measured_max_abs_residual_kw": math.nan,
+                "interpretation": "Train-only descriptive evidence",
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def regime_summary(frame: pd.DataFrame) -> pd.DataFrame:
+    """Describe physically relevant Train regimes without freezing policy thresholds."""
+
+    required = {
+        "soc",
+        "fc_power_kw",
+        "load_power_kw",
+        "recent_load_population_std_kw",
+        "recent_load_trend_kw_per_s",
+        "delta_load_kw",
+        "delta_fc_kw",
+    }
+    missing = required.difference(frame.columns)
+    if missing:
+        raise ValueError(f"regime frame is missing columns: {sorted(missing)}")
+    trend = frame["recent_load_trend_kw_per_s"].astype(float)
+    volatility = frame["recent_load_population_std_kw"].astype(float)
+    fc = frame["fc_power_kw"].astype(float)
+    trend_deadband = float(np.quantile(np.abs(trend), 0.50))
+    volatility_high = float(np.quantile(volatility, 0.75))
+    fc_low = float(np.quantile(fc, 0.25))
+    fc_high = float(np.quantile(fc, 0.75))
+    masks = (
+        ("steady_load", np.abs(trend) <= trend_deadband, trend_deadband, "kW/s"),
+        ("load_rise", trend > trend_deadband, trend_deadband, "kW/s"),
+        ("load_fall", trend < -trend_deadband, -trend_deadband, "kW/s"),
+        ("high_volatility", volatility >= volatility_high, volatility_high, "kW"),
+        ("low_soc", frame["soc"].astype(float) < 0.4, 0.4, "fraction"),
+        ("high_soc", frame["soc"].astype(float) > 0.6, 0.6, "fraction"),
+        ("fc_low_load", fc <= fc_low, fc_low, "kW"),
+        ("fc_high_load", fc >= fc_high, fc_high, "kW"),
+    )
+    rows: list[dict[str, object]] = []
+    for name, mask, threshold, unit in masks:
+        subset = frame.loc[mask]
+        rows.append(
+            {
+                "regime": name,
+                "count": int(len(subset)),
+                "fraction": float(len(subset) / len(frame)) if len(frame) else 0.0,
+                "threshold": threshold,
+                "threshold_unit": unit,
+                "threshold_status": (
+                    "FROZEN_CONTROLLER_BOUND" if name in {"low_soc", "high_soc"}
+                    else "DESCRIPTIVE_TRAIN_ONLY"
+                ),
+                "mean_soc": float(subset["soc"].mean()) if len(subset) else math.nan,
+                "mean_load_kw": (
+                    float(subset["load_power_kw"].mean()) if len(subset) else math.nan
+                ),
+                "mean_fc_kw": (
+                    float(subset["fc_power_kw"].mean()) if len(subset) else math.nan
+                ),
+                "mean_delta_load_kw": (
+                    float(subset["delta_load_kw"].mean()) if len(subset) else math.nan
+                ),
+                "mean_delta_fc_kw": (
+                    float(subset["delta_fc_kw"].mean()) if len(subset) else math.nan
+                ),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def state_comparison() -> pd.DataFrame:
+    """Return the frozen audit definitions of requested state ablations."""
+
+    s7 = PROPOSED_NORMALIZED_FEATURES
+    definitions = (
+        ("S10", CANDIDATE_NORMALIZED_FEATURES, "current candidate"),
+        ("S7", s7, "full proposed"),
+        (
+            "S6-A",
+            tuple(feature for feature in s7 if feature != "fuel_cell_delta_fraction"),
+            "remove FC delta",
+        ),
+        (
+            "S6-B",
+            tuple(
+                feature
+                for feature in s7
+                if feature != "recent_load_population_std_fraction"
+            ),
+            "remove load standard deviation",
+        ),
+        (
+            "MINIMUM",
+            (
+                "soc",
+                "causal_base_load_fraction",
+                "load_residual_fraction",
+                "fuel_cell_power_fraction",
+                "fuel_cell_delta_fraction",
+            ),
+            "minimum defensible physical state",
+        ),
+    )
+    return pd.DataFrame(
+        {
+            "state_id": name,
+            "dimension": len(features),
+            "features": "|".join(features),
+            "purpose": purpose,
+        }
+        for name, features, purpose in definitions
+    )
+
+
 __all__ = [
     "ACTIVE_DATASET_VERSION",
+    "AUDIT_BATTERY_POWER_SCALE_KW",
     "AUDIT_HISTORY_SECONDS",
     "AUDIT_POWER_SCALE_KW",
     "AUDIT_SAMPLE_SECONDS",
     "AUDIT_TAU_LPF_SECONDS",
     "AuditFeatureRow",
+    "CANDIDATE_NORMALIZED_FEATURES",
+    "PROPOSED_NORMALIZED_FEATURES",
     "TrainSegment",
     "build_causal_feature_rows",
     "build_train_feature_rows",
+    "correlation_matrices",
+    "descriptive_statistics",
+    "feature_frame",
     "load_train_segments",
+    "normalize_feature_frame",
+    "redundancy_summary",
+    "regime_summary",
+    "state_comparison",
 ]

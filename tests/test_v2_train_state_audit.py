@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import hashlib
 import json
 import math
@@ -10,6 +11,7 @@ import unittest
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import numpy as np
 import pandas as pd
 
 
@@ -255,6 +257,154 @@ class TrainStateAuditCausalFeatureTests(unittest.TestCase):
         self.assertEqual(calls, ["train_parent"])
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0].sample_id, "train_001")
+
+
+class TrainStateAuditNumericalTests(unittest.TestCase):
+    def _rows(self):
+        from v2.analysis.train_state_audit import build_causal_feature_rows
+
+        segment, states, load_frame = TrainStateAuditCausalFeatureTests._fixture()
+        base = build_causal_feature_rows(segment, states, load_frame)[0]
+        return tuple(
+            replace(
+                base,
+                timestamp=base.timestamp + timedelta(seconds=30 * index),
+                soc=base.soc + 0.01 * index,
+                fc_power_kw=base.fc_power_kw + 20.0 * index,
+                previous_fc_power_kw=base.previous_fc_power_kw + 10.0 * index,
+                battery_power_kw=base.battery_power_kw - 5.0 * index,
+                load_power_kw=base.load_power_kw + 15.0 * index,
+                recent_load_mean_kw=base.recent_load_mean_kw + 12.0 * index,
+                recent_load_population_std_kw=(
+                    base.recent_load_population_std_kw + 2.0 * index
+                ),
+                recent_load_trend_kw_per_s=(
+                    base.recent_load_trend_kw_per_s + 0.1 * index
+                ),
+                base_load_kw=base.base_load_kw + 8.0 * index,
+                recent_delta_soc=base.recent_delta_soc - 0.001 * index,
+                delta_load_kw=base.delta_load_kw + 7.0 * index,
+                delta_fc_kw=base.delta_fc_kw + 10.0 * index,
+                measured_power_balance_residual_kw=0.1 * index,
+            )
+            for index in range(5)
+        )
+
+    def test_normalization_uses_frozen_physical_scales(self) -> None:
+        from v2.analysis.train_state_audit import (
+            AUDIT_BATTERY_POWER_SCALE_KW,
+            AUDIT_HISTORY_SECONDS,
+            AUDIT_POWER_SCALE_KW,
+            feature_frame,
+            normalize_feature_frame,
+        )
+
+        physical = feature_frame(self._rows())
+        normalized = normalize_feature_frame(physical)
+
+        self.assertAlmostEqual(
+            normalized.iloc[0]["fuel_cell_power_fraction"],
+            physical.iloc[0]["fc_power_kw"] / AUDIT_POWER_SCALE_KW,
+        )
+        self.assertAlmostEqual(
+            normalized.iloc[0]["battery_power_fraction"],
+            physical.iloc[0]["battery_power_kw"] / AUDIT_BATTERY_POWER_SCALE_KW,
+        )
+        self.assertAlmostEqual(
+            normalized.iloc[0]["recent_load_window_trend_fraction"],
+            physical.iloc[0]["recent_load_trend_kw_per_s"]
+            * AUDIT_HISTORY_SECONDS
+            / AUDIT_POWER_SCALE_KW,
+        )
+        self.assertAlmostEqual(
+            normalized.iloc[0]["load_residual_fraction"],
+            physical.iloc[0]["delta_load_kw"] / AUDIT_POWER_SCALE_KW,
+        )
+
+    def test_descriptive_statistics_use_population_std_and_fixed_columns(self) -> None:
+        from v2.analysis.train_state_audit import descriptive_statistics
+
+        frame = pd.DataFrame({"feature": [1.0, 2.0, 3.0, 4.0]})
+        statistics = descriptive_statistics(frame)
+
+        self.assertEqual(
+            statistics.columns.tolist(),
+            [
+                "feature",
+                "count",
+                "missing_count",
+                "min",
+                "max",
+                "mean",
+                "std",
+                "p01",
+                "p05",
+                "p50",
+                "p95",
+                "p99",
+                "near_zero_variance",
+            ],
+        )
+        self.assertAlmostEqual(statistics.iloc[0]["std"], math.sqrt(1.25))
+        self.assertFalse(bool(statistics.iloc[0]["near_zero_variance"]))
+
+    def test_correlations_are_symmetric_with_unit_diagonal(self) -> None:
+        from v2.analysis.train_state_audit import correlation_matrices
+
+        frame = pd.DataFrame(
+            {
+                "a": [1.0, 2.0, 4.0, 8.0],
+                "b": [2.0, 1.0, 8.0, 3.0],
+                "c": [9.0, 3.0, 5.0, 7.0],
+            }
+        )
+        pearson, spearman = correlation_matrices(frame)
+
+        pd.testing.assert_frame_equal(pearson, pearson.T)
+        pd.testing.assert_frame_equal(spearman, spearman.T)
+        self.assertTrue(np.allclose(np.diag(pearson), 1.0))
+        self.assertTrue(np.allclose(np.diag(spearman), 1.0))
+
+    def test_redundancy_and_regime_outputs_are_explicit(self) -> None:
+        from v2.analysis.train_state_audit import (
+            feature_frame,
+            redundancy_summary,
+            regime_summary,
+        )
+
+        frame = feature_frame(self._rows())
+        redundancy = redundancy_summary(frame)
+        regimes = regime_summary(frame)
+
+        balance = redundancy.loc[
+            redundancy["relationship"].eq("environment_power_balance")
+        ].iloc[0]
+        self.assertEqual(balance["model_status"], "EXACT_IDENTITY")
+        self.assertGreater(float(balance["measured_max_abs_residual_kw"]), 0.0)
+        self.assertIn("threshold_status", regimes.columns)
+        self.assertTrue(
+            set(regimes["regime"]).issuperset(
+                {"steady_load", "load_rise", "load_fall", "high_volatility"}
+            )
+        )
+
+    def test_state_comparison_has_exact_requested_ablations(self) -> None:
+        from v2.analysis.train_state_audit import state_comparison
+
+        comparison = state_comparison().set_index("state_id")
+
+        self.assertEqual(comparison.loc["S10", "dimension"], 10)
+        self.assertEqual(comparison.loc["S7", "dimension"], 7)
+        self.assertEqual(comparison.loc["S6-A", "dimension"], 6)
+        self.assertNotIn(
+            "fuel_cell_delta_fraction",
+            comparison.loc["S6-A", "features"].split("|"),
+        )
+        self.assertNotIn(
+            "recent_load_population_std_fraction",
+            comparison.loc["S6-B", "features"].split("|"),
+        )
+        self.assertEqual(comparison.loc["MINIMUM", "dimension"], 5)
 
 
 if __name__ == "__main__":
