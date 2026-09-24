@@ -75,7 +75,7 @@ The sole formal dataset is
 - require exactly 53 unique segments split 38 Train, 10 Validation, 5 Test;
 - require parent-level split disjointness;
 - validate each CSV timestamp and `time_s` index, one-second source cadence,
-  finite nonnegative formal load, declared point count, start/end timestamps,
+  finite signed source power, declared point count, start/end timestamps,
   and duration;
 - derive the 30 s supervisory index without interpolation or nearest-neighbor
   replacement;
@@ -88,25 +88,59 @@ macro step so resume reproduces the uninterrupted order exactly. Validation
 uses a fixed manifest order and never writes replay or performs optimizer
 updates. Test is not opened by the training command.
 
-Each DQN macro action is held for five real rolling MPC solves. Each solve
-uses `Ts=30 s` and `N=5`; only its first command is executed. A terminal macro
-may contain one to four solves when a segment ends. Episode reset must reset
-SOC, LPF, previous FC power, and cumulative FC/battery degradation. Terminal
-shore charging is charged once per completed episode from the frozen initial
-SOC contract.
+Each DQN macro action is held for five real 30 s supervisory steps. A sailing
+step performs one rolling MPC solve with `N=5` and executes only its first
+command. Shore and idle steps use the explicit mode-aware branches below and
+do not invoke the MPC optimizer. A terminal macro may contain one to four
+supervisory steps when a segment ends. Episode reset must reset SOC, LPF,
+previous FC power, and cumulative FC/battery degradation.
+
+## Signed source-power and shore-mode contract
+
+The frozen dataset intentionally retains negative `load_total_kw` values. They
+must not be passed to `NonlinearMPC`, clipped, made absolute, interpolated, or
+deleted. The 30 s environment uses the dataset's frozen `1 kW` zero deadband:
+
+- `load_total_kw > 1`: sailing mode; execute MPC;
+- `load_total_kw < -1`: modeled shore-charging mode;
+- `abs(load_total_kw) <= 1`: idle/deadband mode.
+
+In shore mode, the selected DQN weight action remains held for macro timing
+but has no physical control effect. FC power is forced to zero. The magnitude
+of the negative signed source power is treated as the available battery-bus
+charging power, constrained by the frozen battery charge limit and the room
+between current SOC and the fixed episode initial SOC of `0.60`. Accepted
+charge updates SOC through the approved aggregate `eta_chg=0.95`; shore cost
+uses the corresponding accepted grid-side energy and `1.10 CNY/kWh` exactly
+once. The energy channel is classified as modeled, not a measured grid meter.
+
+Idle mode forces zero FC and battery power and has a zero interval ledger.
+The causal FC base-load filter is reset when sailing resumes after a shore or
+idle block, preventing a negative shore trace from becoming an FC reference.
+The signed load history remains causal and available to the S7 load residual,
+standard-deviation, and trend features, so shore states are distinguishable.
+
+Shore and idle supervisory steps remain inside the original parent episode
+and inside DQN replay; no source CSV or split assignment is changed. Such
+steps are action-invariant by design and must be identified in progress and
+summary logs. At the end of the parent episode, modeled terminal recharge
+charges only any remaining deficit below SOC `0.60`; already accepted interval
+shore energy is not charged again.
 
 ## Training-volume baseline
 
 The 38 Train segments contain 927,560 s of trace duration. Using complete
-30 s intervals gives 30,909 MPC solves and 6,197 macro transitions per round,
-including partial terminal macros.
+30 s intervals gives 30,909 supervisory steps and 6,197 macro transitions per
+round, including partial terminal macros. With the frozen 1 kW mode deadband,
+one round contains 25,175 sailing/MPC steps, 2,868 modeled shore steps, and
+2,866 idle steps.
 
-| Rounds | Macro transitions | MPC solves |
-| ---: | ---: | ---: |
-| 20 | 123,940 | 618,180 |
-| 30 | 185,910 | 927,270 |
-| 40 | 247,880 | 1,236,360 |
-| 50 | 309,850 | 1,545,450 |
+| Rounds | Macro transitions | Supervisory steps | MPC solves |
+| ---: | ---: | ---: | ---: |
+| 20 | 123,940 | 618,180 | 503,500 |
+| 30 | 185,910 | 927,270 | 755,250 |
+| 40 | 247,880 | 1,236,360 | 1,007,000 |
+| 50 | 309,850 | 1,545,450 | 1,258,750 |
 
 The default is 30 rounds. It provides about 185,910 macro transitions while
 avoiding the unproven compute cost of 40 or 50 rounds. A completed 30-round
@@ -185,6 +219,8 @@ following checks are verified:
 - full dataset index/integrity audit;
 - finite causal state construction over every Train episode boundary;
 - action-to-MPC mapping and macro-step timing;
+- signed-load mode classification, interval shore accounting, and no-double-
+  charge terminal accounting;
 - episode reset, EOL-distance, and fixed initial-SOC contracts;
 - representative Train cold/warm solver reproducibility;
 - checkpoint/replay round-trip and incompatible legacy rejection;
