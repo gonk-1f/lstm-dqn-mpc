@@ -12,22 +12,13 @@ import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OPERATING_DATASET_ROOT = (
-    REPO_ROOT / "data" / "processed" / "operating_dataset_final"
+    REPO_ROOT / "data" / "processed" / "operating_dataset_zero_boundary_v2"
 )
 DEFAULT_SPLIT_MANIFEST = (
     DEFAULT_OPERATING_DATASET_ROOT / "metadata" / "sample_manifest.csv"
 )
 LOAD_COLUMN = "load_total_kw"
 SPLIT_NAMES = ("train", "validation", "test")
-EXPECTED_PARENT_VOYAGE_COUNT = 65
-EXPECTED_SEGMENT_COUNT = 145
-EXPECTED_POINT_COUNT = 735_885
-EXPECTED_SPLIT_POINT_COUNTS = {
-    "train": 521_376,
-    "validation": 167_251,
-    "test": 47_258,
-}
-
 # The final dataset admits only independently feasible formal samples. Any
 # rejected physical stress case remains outside the train/validation/test manifest.
 PHYSICAL_INFEASIBLE_STRESS_CASES: dict[str, dict[str, str]] = {}

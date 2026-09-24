@@ -412,7 +412,7 @@ def _quartile_labels(
 
 
 def assign_parent_splits(features: pd.DataFrame) -> pd.DataFrame:
-    """Assign the fixed Test parents and deterministic 49/12 Train/Validation."""
+    """Assign the fixed Test parents and deterministic 38/10 Train/Validation."""
     required = {
         "parent",
         "chronological_timestamp",
@@ -430,7 +430,7 @@ def assign_parent_splits(features: pd.DataFrame) -> pd.DataFrame:
         result["chronological_timestamp"], errors="coerce"
     )
     if len(result) != TRAIN_COUNT + VALIDATION_COUNT + TEST_COUNT:
-        raise ValueError("expected exactly 66 parent feature rows")
+        raise ValueError("expected exactly 53 eligible parent feature rows")
     if result["parent"].duplicated().any():
         raise ValueError("parent features contain duplicate identifiers")
     if result["chronological_timestamp"].isna().any():

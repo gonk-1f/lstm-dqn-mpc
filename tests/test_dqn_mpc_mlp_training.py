@@ -102,12 +102,12 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.require_api()
         split = training.load_voyage_split(training.DEFAULT_SPLIT_MANIFEST)
 
-        self.assertEqual(len(split.train_segments), 110)
-        self.assertEqual(len(split.validation_segments), 27)
-        self.assertEqual(len(split.test_segments), 8)
-        self.assertEqual(len(split.train_parents), 45)
-        self.assertEqual(len(split.validation_parents), 13)
-        self.assertEqual(len(split.test_parents), 7)
+        self.assertEqual(len(split.train_segments), 38)
+        self.assertEqual(len(split.validation_segments), 10)
+        self.assertEqual(len(split.test_segments), 5)
+        self.assertEqual(len(split.train_parents), 38)
+        self.assertEqual(len(split.validation_parents), 10)
+        self.assertEqual(len(split.test_parents), 5)
 
         train = set(split.train_segments)
         validation = set(split.validation_segments)
@@ -115,9 +115,9 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         self.assertFalse(train & validation)
         self.assertFalse(train & test)
         self.assertFalse(validation & test)
-        self.assertEqual(len(train | validation | test), 145)
+        self.assertEqual(len(train | validation | test), 53)
         self.assertTrue(
-            all(identifier.startswith(("train_parent_", "validation_parent_", "test_parent_")) for identifier in train | validation | test)
+            all(identifier.startswith("zero_boundary_") for identifier in train | validation | test)
         )
 
     def test_effective_training_and_validation_exclude_only_physical_stress_cases(
@@ -133,9 +133,9 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
         with patch.object(training, 'load_operating_segment_loads',
                           return_value=np.asarray([200., 201.])) as load:
             statistics = training.effective_split_statistics(split)
-        self.assertEqual(statistics['train'], {'segment_count': 110, 'point_count': 220})
-        self.assertEqual(statistics['validation'], {'segment_count': 27, 'point_count': 54})
-        self.assertEqual(load.call_count, 137)
+        self.assertEqual(statistics['train'], {'segment_count': 38, 'point_count': 76})
+        self.assertEqual(statistics['validation'], {'segment_count': 10, 'point_count': 20})
+        self.assertEqual(load.call_count, 48)
 
     def test_formal_configuration_uses_gamma_0_99(self) -> None:
         runtime = training.create_training_runtime(self.make_config())
@@ -161,7 +161,9 @@ class TestDqnMpcMlpTraining(unittest.TestCase):
             split.train_segments[0],
             split=split,
         )
-        self.assertGreaterEqual(float(loads.min()), 0.0)
+        self.assertTrue(np.isfinite(loads).all())
+        self.assertEqual(float(loads[0]), 0.0)
+        self.assertEqual(float(loads[-1]), 0.0)
         self.assertGreaterEqual(len(loads), 2)
 
     def test_runtime_locks_formal_mlp_design_and_sync_interval(

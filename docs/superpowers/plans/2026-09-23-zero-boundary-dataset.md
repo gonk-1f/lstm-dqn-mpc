@@ -562,7 +562,7 @@ Expected: every v2 file and the complete suite pass.
 - [ ] **Step 5: Run solver smoke and compile/import checks**
 
 ```powershell
-python -X utf8 -B -m unittest tests.test_v2_nonlinear_mpc.NonlinearMPCTests.test_scipy_backend_smoke -v
+python -X utf8 -B -m unittest tests.test_v2_nonlinear_mpc.NonlinearMPCTests.test_n5_plan_constraints_balance_formal_soc_and_first_step_only -v
 python -X utf8 -B -m compileall -q src tests
 python -X utf8 -B -c "from v2.data.segment_power_source import load_parent_power_series; from v2.data.zero_boundary_dataset import trim_to_zero_boundaries, assign_parent_splits; from utils.formal_operating_dataset import load_formal_operating_split; s=load_formal_operating_split(); assert (len(s.train_parents),len(s.validation_parents),len(s.test_parents))==(38,10,5)"
 git diff --check
