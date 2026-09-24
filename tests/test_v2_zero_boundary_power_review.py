@@ -17,6 +17,7 @@ if str(SRC) not in sys.path:
 
 from v2.data.zero_boundary_power_review import (  # noqa: E402
     axis_limits,
+    build_review,
     load_review_entries,
 )
 
@@ -118,6 +119,38 @@ class ZeroBoundaryPowerReviewTests(unittest.TestCase):
                         "test": 1,
                     },
                 )
+
+    def test_build_review_writes_split_plots_manifest_and_index(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            dataset = self.make_dataset(root)
+            output = root / "review"
+            rows = build_review(
+                dataset,
+                output,
+                expected_split_counts={"train": 1, "validation": 1, "test": 1},
+            )
+            self.assertEqual(len(rows), 3)
+            self.assertEqual(len(list(output.rglob("*.png"))), 3)
+            for split, sample_id in (
+                ("train", "zero_boundary_001"),
+                ("validation", "zero_boundary_002"),
+                ("test", "zero_boundary_003"),
+            ):
+                self.assertTrue((output / split / f"{sample_id}.png").is_file())
+            review = pd.read_csv(output / "review_manifest.csv")
+            self.assertEqual(
+                review.split.tolist(), ["train", "validation", "test"]
+            )
+            self.assertEqual(float(review.loc[0, "minimum_kw"]), -2.0)
+            self.assertNotEqual(
+                float(review.loc[0, "y_max_kw"]),
+                float(review.loc[2, "y_max_kw"]),
+            )
+            html = (output / "index.html").read_text(encoding="utf-8")
+            self.assertLess(html.index('id="train"'), html.index('id="validation"'))
+            self.assertLess(html.index('id="validation"'), html.index('id="test"'))
+            self.assertIn("每个航段采用独立纵轴", html)
 
 
 if __name__ == "__main__":
