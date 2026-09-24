@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import hashlib
+import json
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 
 import numpy as np
@@ -21,6 +24,8 @@ from v2.data.zero_boundary_dataset import (  # noqa: E402
     segment_features,
     trim_to_zero_boundaries,
 )
+from v2.data.segment_power_source import ParentPowerSeries  # noqa: E402
+from main.build_zero_boundary_operating_dataset import build_dataset  # noqa: E402
 
 
 class ZeroBoundaryDatasetTests(unittest.TestCase):
@@ -189,6 +194,119 @@ class ZeroBoundaryDatasetTests(unittest.TestCase):
             features["p95_load_kw"],
             float(np.percentile(one_second.load_total_kw, 95)),
         )
+
+    @staticmethod
+    def synthetic_parent_names() -> list[str]:
+        names = []
+        for index in range(61):
+            month = index // 28 + 1
+            day = index % 28 + 1
+            names.append(f"合成{month}月{day}日00_00_{index:03d}")
+        return names + list(FIXED_TEST_PARENTS)
+
+    @classmethod
+    def synthetic_power_series(cls, parent: str) -> ParentPowerSeries:
+        parents = cls.synthetic_parent_names()
+        rank = parents.index(parent)
+        scale = 1.0 + rank / 100.0
+        pause = [0.0] * (rank % 8)
+        source = np.asarray(
+            [0.0, 10.0, 20.0, 30.0, 0.0, -5.0]
+            + pause
+            + [15.0 * scale, 25.0 * scale, 35.0 * scale, 0.0, -20.0],
+            dtype=float,
+        )
+        origin = datetime(2024, 1, 1, tzinfo=timezone.utc) + timedelta(
+            days=rank
+        )
+        timestamps = tuple(
+            origin + timedelta(seconds=30 * index)
+            for index in range(len(source))
+        )
+        battery_raw = np.full(len(source), 100.0)
+        return ParentPowerSeries(
+            parent=parent,
+            timestamps=timestamps,
+            fc_total_kw=source + battery_raw,
+            battery_raw_total_kw=battery_raw,
+            source_total_kw=source,
+            ais_present=np.zeros(len(source), dtype=bool),
+            duplicate_count=0,
+            duplicate_conflict_count=0,
+            channel_span_violation_count=0,
+        )
+
+    def test_builder_refuses_an_existing_destination(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "already-exists"
+            output.mkdir()
+
+            with self.assertRaisesRegex(FileExistsError, "already exists"):
+                build_dataset(
+                    root,
+                    output,
+                    discover_parents=lambda _: self.synthetic_parent_names(),
+                    load_parent=self.synthetic_power_series,
+                )
+
+    def test_builder_writes_complete_hashed_zero_boundary_dataset(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "dataset"
+            parents = self.synthetic_parent_names()
+
+            summary = build_dataset(
+                root,
+                output,
+                discover_parents=lambda _: parents,
+                load_parent=lambda _, parent: self.synthetic_power_series(parent),
+            )
+
+            manifest = pd.read_csv(output / "metadata" / "sample_manifest.csv")
+            self.assertEqual(summary["parent_count"], 66)
+            self.assertEqual(len(manifest), 66)
+            self.assertEqual(
+                manifest["split"].value_counts().to_dict(),
+                {"train": 49, "validation": 12, "test": 5},
+            )
+            self.assertEqual(
+                set(manifest.loc[manifest.split.eq("test"), "parent"]),
+                set(FIXED_TEST_PARENTS),
+            )
+            for relative, expected_hash in manifest[
+                ["relative_path", "sha256"]
+            ].itertuples(index=False, name=None):
+                path = output / relative
+                self.assertTrue(path.is_file())
+                self.assertEqual(
+                    hashlib.sha256(path.read_bytes()).hexdigest(),
+                    expected_hash,
+                )
+                frame = pd.read_csv(path)
+                np.testing.assert_array_equal(
+                    frame.time_s.to_numpy(dtype=float),
+                    np.arange(len(frame), dtype=float),
+                )
+                self.assertEqual(frame.load_total_kw.iloc[0], 0.0)
+                self.assertEqual(frame.load_total_kw.iloc[-1], 0.0)
+            for name in (
+                "sample_manifest.csv",
+                "parent_split_manifest.csv",
+                "trim_boundary_audit.csv",
+                "interpolation_audit.csv",
+                "source_files.csv",
+                "policy.json",
+                "qa_summary.json",
+            ):
+                self.assertTrue((output / "metadata" / name).is_file(), name)
+            qa = json.loads(
+                (output / "metadata" / "qa_summary.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(qa["formal_training_status"], "NO-GO")
+            self.assertTrue(all(qa["acceptance_checks"].values()))
 
 
 if __name__ == "__main__":
