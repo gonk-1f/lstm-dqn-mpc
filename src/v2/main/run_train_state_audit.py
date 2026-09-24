@@ -8,15 +8,13 @@ from pathlib import Path
 from typing import Callable, Sequence
 
 from ..analysis.train_state_audit import (
+    AuditSupervisorySample,
+    assemble_audit_supervisory_samples,
     build_train_feature_rows,
     load_train_segments,
     write_audit_artifacts,
 )
 from ..data.segment_power_source import _load_parent
-from ..data.train_supervisory_audit import (
-    ParentSupervisoryState,
-    build_parent_supervisory_states,
-)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -28,16 +26,15 @@ DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs" / "v2_dqn_state_audit"
 DEFAULT_REPORT_PATH = PROJECT_ROOT / "docs" / "v2_dqn_state_audit.md"
 
 
-StateLoader = Callable[[str], Sequence[ParentSupervisoryState]]
+StateLoader = Callable[[str], Sequence[AuditSupervisorySample]]
 
 
 def _raw_state_loader(raw_root: Path) -> StateLoader:
     root = Path(raw_root).resolve()
 
-    def load(parent: str) -> tuple[ParentSupervisoryState, ...]:
+    def load(parent: str) -> tuple[AuditSupervisorySample, ...]:
         loaded = _load_parent(root, parent)
-        result = build_parent_supervisory_states(loaded.channels)
-        return result.states
+        return assemble_audit_supervisory_samples(loaded.channels)
 
     return load
 

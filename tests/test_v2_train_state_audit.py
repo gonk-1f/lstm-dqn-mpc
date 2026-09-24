@@ -7,7 +7,9 @@ import math
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -257,6 +259,64 @@ class TrainStateAuditCausalFeatureTests(unittest.TestCase):
         self.assertEqual(calls, ["train_parent"])
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0].sample_id, "train_001")
+
+    def test_near_synchronous_snapshot_uses_latest_arrival_without_ais(self) -> None:
+        from v2.analysis.train_state_audit import assemble_audit_supervisory_samples
+        from v2.data.train_supervisory_audit import (
+            ParentRawChannels,
+            RawChannel,
+            RawRecord,
+        )
+
+        start = datetime(2024, 1, 1, tzinfo=ZoneInfo("Asia/Shanghai"))
+
+        def channel(channel_id: str, offset: int, values: tuple[float, ...]):
+            return RawChannel(
+                channel_id,
+                tuple(
+                    RawRecord(
+                        start + timedelta(seconds=30 * cycle + offset),
+                        values,
+                        f"{channel_id}/{cycle}",
+                    )
+                    for cycle in range(6)
+                ),
+            )
+
+        fc = tuple(
+            channel(f"fc-{index}", 0 if index == 0 else 2, (10.0,))
+            for index in range(8)
+        )
+        battery = tuple(
+            channel(f"battery-{index}", 4, (5.0, 0.6))
+            for index in range(12)
+        )
+        channels = ParentRawChannels(
+            "train_parent",
+            fc,
+            battery,
+            RawChannel("ais-speed", ()),
+        )
+
+        samples = assemble_audit_supervisory_samples(channels)
+
+        self.assertEqual(len(samples), 6)
+        self.assertEqual(samples[0].timestamp, start + timedelta(seconds=4))
+        self.assertAlmostEqual(samples[0].fc_power_kw, 80.0)
+        self.assertAlmostEqual(samples[0].battery_power_kw, 60.0)
+        self.assertAlmostEqual(samples[0].soc, 0.6)
+        self.assertIsNone(samples[0].previous_fc_power_kw)
+        self.assertAlmostEqual(samples[1].previous_fc_power_kw, 80.0)
+
+        from v2.main.run_train_state_audit import _raw_state_loader
+
+        with patch(
+            "v2.main.run_train_state_audit._load_parent",
+            return_value=SimpleNamespace(channels=channels),
+        ):
+            loaded = _raw_state_loader(Path("unused"))("train_parent")
+        self.assertEqual(type(loaded[0]).__name__, "AuditSupervisorySample")
+        self.assertEqual(sum(sample.audit_eligible for sample in loaded), 5)
 
 
 class TrainStateAuditNumericalTests(unittest.TestCase):

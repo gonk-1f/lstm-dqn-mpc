@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from ..data.train_supervisory_audit import ParentSupervisoryState
+from ..data.train_supervisory_audit import ParentRawChannels, resolve_duplicates
 
 
 ACTIVE_DATASET_VERSION = "operating_dataset_zero_boundary_v2"
@@ -77,6 +78,111 @@ class AuditFeatureRow:
     delta_fc_kw: float
     measured_power_balance_residual_kw: float
     history_sample_count: int
+
+
+@dataclass(frozen=True)
+class AuditSupervisorySample:
+    """One complete FC/BMS snapshot observed at its latest channel arrival."""
+
+    parent_id: str
+    timestamp: datetime
+    fc_power_kw: float
+    battery_power_kw: float
+    soc: float
+    previous_fc_power_kw: float | None
+
+    @property
+    def audit_eligible(self) -> bool:
+        return self.previous_fc_power_kw is not None
+
+    @property
+    def p_fc_total_kw(self) -> float:
+        return self.fc_power_kw
+
+    @property
+    def p_batt_total_kw(self) -> float:
+        return self.battery_power_kw
+
+    @property
+    def soc_system(self) -> float:
+        return self.soc
+
+    @property
+    def previous_p_fc_total_kw(self) -> float | None:
+        return self.previous_fc_power_kw
+
+
+def assemble_audit_supervisory_samples(
+    channels: ParentRawChannels,
+) -> tuple[AuditSupervisorySample, ...]:
+    """Align complete FC/BMS cycles and timestamp them at latest arrival.
+
+    A channel selected up to ten seconds after the first-FC reference is not
+    future information at the returned snapshot: the snapshot time is the
+    latest selected channel arrival. AIS is intentionally excluded because it
+    is not an input to the audited state and formal Train boundaries already
+    define the operating interval.
+    """
+
+    if type(channels) is not ParentRawChannels:
+        raise TypeError("channels must be an exact ParentRawChannels")
+    from ..data.segment_power_source import (
+        ALIGNMENT_TOLERANCE_SECONDS,
+        align_near_synchronous_cycles,
+    )
+
+    raw_channels = channels.fuel_cell_channels + channels.battery_channels
+    resolved = tuple(resolve_duplicates(channel.records) for channel in raw_channels)
+    reference = tuple(record.timestamp for record in resolved[0].records)
+    if not reference:
+        return ()
+    alignment = align_near_synchronous_cycles(
+        reference,
+        tuple(
+            tuple(record.timestamp for record in resolution.records)
+            for resolution in resolved
+        ),
+        tolerance_seconds=ALIGNMENT_TOLERANCE_SECONDS,
+        max_channel_span_seconds=ALIGNMENT_TOLERANCE_SECONDS,
+    )
+    samples: list[AuditSupervisorySample] = []
+    previous_fc: float | None = None
+    previous_timestamp: datetime | None = None
+    for position, snapshot in zip(
+        alignment.valid_reference_positions,
+        alignment.snapshot_timestamps,
+    ):
+        selected = tuple(
+            resolution.records[alignment.channel_indices[index][position]]
+            for index, resolution in enumerate(resolved)
+            if alignment.channel_indices[index][position] is not None
+        )
+        if len(selected) != 20:
+            continue
+        fc = math.fsum(record.values[0] for record in selected[:8])
+        battery = math.fsum(record.values[0] for record in selected[8:20])
+        soc = math.fsum(record.values[1] for record in selected[8:20]) / 12.0
+        if not (math.isfinite(fc) and math.isfinite(battery) and 0.0 <= soc <= 1.0):
+            continue
+        usable_previous = previous_fc
+        if (
+            previous_timestamp is None
+            or (snapshot - previous_timestamp).total_seconds() > 45.0
+        ):
+            usable_previous = None
+        samples.append(
+            AuditSupervisorySample(
+                parent_id=channels.parent_id,
+                timestamp=snapshot,
+                fc_power_kw=float(fc),
+                battery_power_kw=float(battery),
+                soc=float(soc),
+                previous_fc_power_kw=usable_previous,
+            )
+        )
+        previous_fc = float(fc)
+        previous_timestamp = snapshot
+    return tuple(samples)
 
 
 def _sha256(path: Path) -> str:
@@ -218,7 +324,7 @@ def _least_squares_trend(
 
 def build_causal_feature_rows(
     segment: TrainSegment,
-    states: Sequence[ParentSupervisoryState],
+    states: Sequence[ParentSupervisoryState | AuditSupervisorySample],
     load_frame: pd.DataFrame,
 ) -> tuple[AuditFeatureRow, ...]:
     """Build fully observed Train rows using only a segment-local causal window."""
@@ -226,8 +332,9 @@ def build_causal_feature_rows(
     if type(segment) is not TrainSegment:
         raise TypeError("segment must be an exact TrainSegment")
     checked = tuple(states)
-    if any(type(state) is not ParentSupervisoryState for state in checked):
-        raise TypeError("states must contain exact ParentSupervisoryState values")
+    allowed = (ParentSupervisoryState, AuditSupervisorySample)
+    if any(type(state) not in allowed for state in checked):
+        raise TypeError("states must contain supported exact supervisory values")
     if any(
         current.timestamp <= previous.timestamp
         for previous, current in zip(checked, checked[1:])
@@ -314,7 +421,9 @@ def build_causal_feature_rows(
 def build_train_feature_rows(
     dataset_root: str | Path,
     segments: Sequence[TrainSegment],
-    state_loader: Callable[[str], Sequence[ParentSupervisoryState]],
+    state_loader: Callable[
+        [str], Sequence[ParentSupervisoryState | AuditSupervisorySample]
+    ],
 ) -> tuple[AuditFeatureRow, ...]:
     """Build rows for an already authenticated Train whitelist only."""
 
@@ -324,7 +433,9 @@ def build_train_feature_rows(
     checked = tuple(segments)
     if not checked or any(type(segment) is not TrainSegment for segment in checked):
         raise TypeError("segments must contain TrainSegment values")
-    state_cache: dict[str, tuple[ParentSupervisoryState, ...]] = {}
+    state_cache: dict[
+        str, tuple[ParentSupervisoryState | AuditSupervisorySample, ...]
+    ] = {}
     rows: list[AuditFeatureRow] = []
     for segment in checked:
         path = _train_path(root, segment.relative_path)
@@ -1036,9 +1147,11 @@ __all__ = [
     "AUDIT_SAMPLE_SECONDS",
     "AUDIT_TAU_LPF_SECONDS",
     "AuditFeatureRow",
+    "AuditSupervisorySample",
     "CANDIDATE_NORMALIZED_FEATURES",
     "PROPOSED_NORMALIZED_FEATURES",
     "TrainSegment",
+    "assemble_audit_supervisory_samples",
     "build_causal_feature_rows",
     "build_train_feature_rows",
     "correlation_matrices",
