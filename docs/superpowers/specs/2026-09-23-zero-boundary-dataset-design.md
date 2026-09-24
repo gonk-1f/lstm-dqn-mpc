@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Build a new versioned operating dataset from all 66 recognizable Hydrogen Boat 1 parent recording windows. Each parent produces one trimmed operating segment whose load starts and ends at zero. Remove the leading stationary zero-power dwell and the terminal stationary or shore-charging tail while retaining all behavior between the departure and arrival boundaries.
+Audit all 66 recognizable Hydrogen Boat 1 parent recording windows and build a new versioned operating dataset from the 53 windows that contain auditable zero boundaries. Each included parent produces one trimmed operating segment whose load starts and ends at zero. Remove the leading stationary zero-power dwell and the terminal stationary or shore-charging tail while retaining all behavior between the departure and arrival boundaries.
 
 This change builds and splits the operating dataset only. It does not construct a DQN episode payload, audit or freeze the DQN state, screen actions, run sensitivity analysis, train a model, or make `FORMAL_TRAINING` automatically `GO`.
 
@@ -15,11 +15,16 @@ This change builds and splits the operating dataset only. It does not construct 
 - The dataset load is `P_source_total`. It is not described as an independently measured whole-vessel load.
 - Every measured, aligned, cubic-imputed, boundary-constructed, and one-second PCHIP value retains distinct provenance.
 
-## One Segment per Parent
+## One Segment per Eligible Parent
 
-Each of the 66 parent recording windows produces exactly one final segment. Internal zero-power periods, stops, and negative-power intervals remain in the segment when they occur between the selected start and end boundaries. The rule removes only the pre-departure prefix and the post-arrival suffix.
+Each of the 53 eligible parent recording windows produces exactly one final segment. Internal zero-power periods, stops, and negative-power intervals remain in the segment when they occur between the selected start and end boundaries. The rule removes only the pre-departure prefix and the post-arrival suffix.
 
-The build fails rather than silently excluding a parent if an auditable start or end boundary cannot be established.
+The build audits all 66 parents and excludes only the following 13 windows whose available records do not bracket the required boundary:
+
+- Missing start boundary: `3月25日14_00_3月25日17_00`, `4月23日13_00_4月23日18_00`, `6月13日08_00_6月13日14_00`.
+- Missing end boundary: `3月28日08_00_3月28日11_00`, `4月7日08_00_4月7日12_00`, `4月21日08_00_4月21日16_00`, `4月24日07_00_4月24日17_00`, `4月29日08_00_4月29日18_00`, `6月6日10_00_6月6日21_00`, `7月9日08_00_7月9日16_00`, `7月19日07_00_7月19日09_00`, `7月22日08_00_7月22日11_00`, `7月24日14_00_7月24日17_00`.
+
+These are incomplete recording windows for this boundary contract, not failed interpolation cases. The build records them in `excluded_parent_manifest.csv`; it does not force their observed active boundary value to zero, extrapolate outside the recording, or silently exclude any additional parent. Any unexpected missing boundary or different exclusion set fails the build.
 
 ## Boundary Detection
 
@@ -76,19 +81,19 @@ These names each match exactly one recognizable parent. No fragment from any of 
 
 ## Train and Validation Split
 
-The remaining 61 parents are split into:
+After the 13 approved exclusions and five fixed Test parents, the remaining 48 parents are split into:
 
-- Train: 49 parents
-- Validation: 12 parents
+- Train: 38 parents
+- Validation: 10 parents
 
 Selection is deterministic and uses no controller, model, reward, or performance result.
 
 1. Calculate trimmed-segment month, duration, mean load, and P95 load.
-2. Calculate duration, mean-load, and P95 quartile bins using only the 61 non-Test parents.
+2. Calculate duration, mean-load, and P95 quartile bins using only the 48 non-Test included parents.
 3. Represent every parent by its month and three quartile labels.
-4. Select 12 Validation parents using deterministic greedy iterative stratification. At each step, select the candidate that minimizes the total absolute deviation from the 20% target counts across month and feature-bin labels.
+4. Select 10 Validation parents using deterministic greedy iterative stratification. At each step, select the candidate that minimizes the total absolute deviation from the 20% target counts across month and feature-bin labels.
 5. Break equal scores by chronological parent order.
-6. Assign the remaining 49 parents to Train.
+6. Assign the remaining 38 parents to Train.
 
 The manifest freezes the resulting parent-level allocation. No parent can span splits.
 
@@ -100,11 +105,12 @@ Write a new dataset root:
 
 Required structure:
 
-- `train/`: 49 CSV files
-- `validation/`: 12 CSV files
+- `train/`: 38 CSV files
+- `validation/`: 10 CSV files
 - `test/`: 5 CSV files
 - `metadata/sample_manifest.csv`
 - `metadata/parent_split_manifest.csv`
+- `metadata/excluded_parent_manifest.csv`
 - `metadata/trim_boundary_audit.csv`
 - `metadata/interpolation_audit.csv`
 - `metadata/qa_summary.json`
@@ -128,6 +134,8 @@ The existing `data/processed/operating_dataset_final/` remains unchanged. The ne
 - removed prefix or suffix point and duration counts;
 - first/last sustained-operation evidence.
 
+`excluded_parent_manifest.csv` records each approved excluded parent, whether the missing boundary is `start` or `end`, first/minimum/maximum/last available source power, deadband and nonpositive point counts, and the explicit `NO_BRACKET_WITHIN_RECORDING` reason.
+
 `interpolation_audit.csv` records the 30-second cubic gaps, generated-point counts, natural-cubic warnings, and one-second PCHIP point counts. It distinguishes measured and imputed records.
 
 `policy.json` freezes every threshold, fixed Test parent, split count, stratification feature, tie-break rule, and interpolation method.
@@ -136,8 +144,9 @@ The existing `data/processed/operating_dataset_final/` remains unchanged. The ne
 
 ## Acceptance Criteria
 
-- Exactly 66 final segment CSV files exist.
-- Train/Validation/Test counts are exactly 49/12/5.
+- Exactly 53 final segment CSV files exist.
+- Train/Validation/Test counts are exactly 38/10/5.
+- The exclusion manifest contains exactly the 13 approved incomplete-boundary parents and no others.
 - The five specified parents are the complete Test set.
 - Parent leakage count is zero.
 - Every CSV has finite numeric load values.
@@ -163,7 +172,7 @@ Test-driven implementation covers:
 - boundary component interpolation and power identity;
 - one-second time-axis reset and zero endpoints;
 - fixed Test-parent assignment;
-- deterministic 49/12 Train/Validation stratification;
+- deterministic 38/10 Train/Validation stratification;
 - parent leakage prevention;
 - refusal to overwrite an existing destination;
 - formal loader integration with the new root.

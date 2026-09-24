@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build and freeze a new 66-parent, zero-boundary, one-second operating dataset with deterministic 49/12/5 Train/Validation/Test allocation and make it the formal loader default only after all artifact checks pass.
+**Goal:** Audit 66 raw parents, build and freeze the 53 parents with bracketed zero boundaries as a one-second operating dataset with deterministic 38/10/5 Train/Validation/Test allocation, and make it the formal loader default only after all artifact checks pass.
 
-**Architecture:** Put reusable power-series assembly, zero-boundary trimming, and deterministic parent stratification in focused `src/v2/data` modules. A new one-shot builder composes those functions, writes the versioned dataset and complete provenance metadata without overwriting, then the formal loader changes its default root and accepts the explicitly retained internal negative-power samples. Tests establish each contract before implementation, and the actual 66-parent build happens only after synthetic focused tests are green.
+**Architecture:** Put reusable power-series assembly, zero-boundary trimming, and deterministic parent stratification in focused `src/v2/data` modules. A new one-shot builder audits all 66 parents, admits exactly 53 bracketed parents, records the 13 approved incomplete-boundary exclusions, writes the versioned dataset and complete provenance metadata without overwriting, then the formal loader changes its default root and accepts the explicitly retained internal negative-power samples. Tests establish each contract before implementation, and the actual raw build happens only after synthetic focused tests are green.
 
 **Tech Stack:** Python 3, `unittest`, NumPy, pandas, SciPy (`CubicSpline`, `PchipInterpolator`), existing audited FC/BMS/AIS readers, SHA-256, JSON/CSV metadata, PowerShell, Git.
 
@@ -18,7 +18,7 @@
 - Create `tests/test_v2_segment_power_source.py`: focused channel-alignment and power-sign tests.
 - Create `tests/test_v2_zero_boundary_dataset.py`: focused boundary, PCHIP, split, and builder tests.
 - Modify `src/utils/formal_operating_dataset.py`: switch the default root after artifact validation, read frozen expected totals from the new metadata, and permit finite internal negative load.
-- Modify `tests/test_formal_operating_dataset.py`: assert the new 66/49/12/5 contract without opening held-out values in ordinary manifest tests.
+- Modify `tests/test_formal_operating_dataset.py`: assert the new 53/38/10/5 contract without opening held-out values in ordinary manifest tests.
 - Create `data/processed/operating_dataset_zero_boundary_v2/{train,validation,test,metadata}` through the builder only.
 - Preserve `data/processed/operating_dataset_final`, raw telemetry, and `outputs/v2_segment_power_review/gap_diagnostics.csv` byte-for-byte.
 
@@ -30,8 +30,8 @@ ACTIVE_THRESHOLD_KW = 1.0
 SUSTAINED_POINTS = 3
 ALIGNMENT_TOLERANCE_SECONDS = 10.0
 NOMINAL_STEP_SECONDS = 30.0
-TRAIN_COUNT = 49
-VALIDATION_COUNT = 12
+TRAIN_COUNT = 38
+VALIDATION_COUNT = 10
 TEST_COUNT = 5
 FIXED_TEST_PARENTS = (
     "3月26日14_00_3月26日16_00",
@@ -190,11 +190,11 @@ git commit -m "feat(v2): add zero-boundary trimming"
 
 - [ ] **Step 1: Add red split tests**
 
-Add tests that build 66 synthetic feature rows, substitute the five exact fixed Test names, and assert:
+Add tests that build 53 included synthetic feature rows, substitute the five exact fixed Test names, and assert:
 
 ```python
 assignment = assign_parent_splits(features)
-self.assertEqual(assignment.split.value_counts().to_dict(), {"train": 49, "validation": 12, "test": 5})
+self.assertEqual(assignment.split.value_counts().to_dict(), {"train": 38, "validation": 10, "test": 5})
 self.assertEqual(set(assignment.loc[assignment.split.eq("test"), "parent"]), set(FIXED_TEST_PARENTS))
 self.assertEqual(assignment.groupby("parent").split.nunique().max(), 1)
 pd.testing.assert_frame_equal(assignment, assign_parent_splits(features.sample(frac=1.0, random_state=7)))
@@ -230,7 +230,7 @@ def segment_features(parent: str, frame: pd.DataFrame) -> dict[str, object]:
     }
 ```
 
-For each continuous feature column, compute non-Test quartiles with `pd.qcut(non_test[column], q=4, labels=False, duplicates="drop")`; fail unless the resulting labels are exactly `{0, 1, 2, 3}`. Represent each candidate with four labels: `month=<m>`, `duration_quartile=<q>`, `mean_load_quartile=<q>`, and `p95_load_quartile=<q>`. Starting with an empty Validation set, try every remaining candidate and choose the one minimizing the sum over labels of `abs(selected_count - 0.2 * available_count)`. Recompute the score after each addition, break ties by chronological timestamp then parent identifier, select exactly 12, assign the other 49 to Train, and append the fixed five Test parents. Reject duplicate/missing parents and any fixed Test mismatch.
+For each continuous feature column, compute non-Test quartiles with `pd.qcut(non_test[column], q=4, labels=False, duplicates="drop")`; fail unless the resulting labels are exactly `{0, 1, 2, 3}`. Represent each candidate with four labels: `month=<m>`, `duration_quartile=<q>`, `mean_load_quartile=<q>`, and `p95_load_quartile=<q>`. Starting with an empty Validation set, try every remaining candidate and choose the one minimizing the sum over labels of `abs(selected_count - 0.2 * available_count)`. Recompute the score after each addition, break ties by chronological timestamp then parent identifier, select exactly 10, assign the other 38 to Train, and append the fixed five Test parents. Reject duplicate/missing parents and any fixed Test mismatch.
 
 - [ ] **Step 4: Run, inspect, and commit**
 
@@ -344,7 +344,7 @@ git commit -m "refactor(v2): track parent power assembly"
 
 Patch the builder's discovery and parent-series provider so no real telemetry is opened. Assert that an existing destination raises `FileExistsError`; a complete synthetic run writes one CSV per parent, starts and ends each CSV at zero, uses exact one-second `time_s`, and creates every required metadata file. Assert `sample_manifest.csv` paths exist, hashes match, and the five fixed Test parents are the only Test rows.
 
-Use a 66-parent fixture because split counts are contractual; each source series should contain 11 thirty-second anchors with a leading zero, three sustained positive points, an internal stop, a second sustained block, and a trailing zero/negative tail.
+Use a 66-parent raw fixture because source accounting is contractual. Give 53 parents a leading zero, three sustained positive points, an internal stop, a second sustained block, and a trailing zero/negative tail. Give the exact 13 approved exclusions their recorded missing-start or missing-end pattern and assert `excluded_parent_manifest.csv` contains only those parents.
 
 - [ ] **Step 2: Confirm builder tests fail before the script exists**
 
@@ -375,7 +375,7 @@ def build_dataset(
         raise ValueError("expected exactly 66 recognizable parents")
 ```
 
-For every parent: assemble measured aligned power; call `interpolate_power_gaps`; construct an anchor frame with measured/imputed provenance; trim to zero boundaries; reconstruct at one second; compute features. After all parents succeed, assign splits, write exactly 49/12/5 CSVs, then write both manifests and audits. Use stable sample IDs `zero_boundary_001` through `zero_boundary_066` in chronological order.
+For every parent: assemble measured aligned power; call `interpolate_power_gaps`; construct an anchor frame with measured/imputed provenance; attempt zero-boundary trimming. Permit failure only when the parent and missing-boundary side exactly match the approved 13-parent exclusion contract, and record the raw boundary evidence. Reconstruct and compute features for the other 53 parents. Assign splits, write exactly 38/10/5 CSVs, then write all manifests and audits. Use stable sample IDs `zero_boundary_001` through `zero_boundary_053` in included chronological order.
 
 Write `policy.json` with all constants, the exact five Test parents, the greedy objective, chronological tie-break, natural cubic and PCHIP methods, battery sign convention, and the statement that source load is derived rather than independently measured. Write `source_files.csv` with relative raw path, size, and SHA-256. Write `qa_summary.json` with artifact counts, per-split point totals, negative/internal-stop counts, every acceptance result, raw/code/artifact hashes, and `formal_training_status: "NO-GO"` plus the remaining dataset-external blockers.
 
@@ -441,7 +441,7 @@ git add tests/test_formal_operating_dataset.py src/utils/formal_operating_datase
 git commit -m "feat(v2): validate formal dataset metadata"
 ```
 
-## Task 6: Build the real 66-parent dataset and independently validate artifacts
+## Task 6: Audit all 66 parents, build the eligible 53-parent dataset, and independently validate artifacts
 
 **Files:**
 - Create through builder: `data/processed/operating_dataset_zero_boundary_v2/`
@@ -456,10 +456,10 @@ Read the spreadsheet skill's required workflow and scientific-research guidance 
 Get-ChildItem 'C:\Users\20883\OneDrive\Desktop\氢舟一号' -Recurse -File | Get-FileHash -Algorithm SHA256 | Export-Csv .codex_tmp\zero_boundary_raw_hashes_before.csv -NoTypeInformation -Encoding utf8
 Get-ChildItem data\processed\operating_dataset_final -Recurse -File | Get-FileHash -Algorithm SHA256 | Export-Csv .codex_tmp\old_dataset_hashes_before.csv -NoTypeInformation -Encoding utf8
 Get-FileHash outputs\v2_segment_power_review\gap_diagnostics.csv -Algorithm SHA256 | Export-Csv .codex_tmp\gap_diagnostics_hash_before.csv -NoTypeInformation -Encoding utf8
-node 'C:\Users\20883\.codex\plugins\cache\openai-primary-runtime\spreadsheets\26.909.12148\skills\spreadsheets\container_tools\mark_artifact_operation_started.mjs' --operation-kind create --expected-output-count 71 --output-format csv
+node 'C:\Users\20883\.codex\plugins\cache\openai-primary-runtime\spreadsheets\26.909.12148\skills\spreadsheets\container_tools\mark_artifact_operation_started.mjs' --operation-kind create --expected-output-count 59 --output-format csv
 ```
 
-The expected CSV count is 66 segment files plus 5 CSV metadata files (`sample_manifest`, `parent_split_manifest`, `trim_boundary_audit`, `interpolation_audit`, and `source_files`). JSON metadata is not counted by this CSV marker.
+The expected CSV count is 53 segment files plus 6 CSV metadata files (`sample_manifest`, `parent_split_manifest`, `excluded_parent_manifest`, `trim_boundary_audit`, `interpolation_audit`, and `source_files`). JSON metadata is not counted by this CSV marker. The first execution marked 71 outputs before the user approved the 13-parent exclusion; do not invoke the marker a second time merely to revise the count.
 
 - [ ] **Step 2: Run the one-shot real build**
 
@@ -469,15 +469,15 @@ Run:
 python -X utf8 -B src/main/build_zero_boundary_operating_dataset.py --raw-root 'C:\Users\20883\OneDrive\Desktop\氢舟一号' --output-root data\processed\operating_dataset_zero_boundary_v2
 ```
 
-Expected: exit code 0; exactly 49 Train, 12 Validation, and 5 Test CSV files; no `.building-*` directory remains.
+Expected: exit code 0; exactly 38 Train, 10 Validation, and 5 Test CSV files; exactly 13 approved exclusions; no `.building-*` directory remains.
 
 - [ ] **Step 3: Run independent acceptance checks**
 
-Run the explicit-root artifact tests and auditor; these load every manifest path and assert exact 66/49/12/5 counts, fixed Test membership, unique parents, finite loads, exact `time_s = 0..n-1`, zero endpoints, sustained positive operation, SHA-256 agreement, and no missing/orphan paths or leakage:
+Run the explicit-root artifact tests and auditor; these load every manifest path and assert exact 53/38/10/5 counts, the 13 approved exclusions, fixed Test membership, unique parents, finite loads, exact `time_s = 0..n-1`, zero endpoints, sustained positive operation, SHA-256 agreement, and no missing/orphan paths or leakage:
 
 ```powershell
 python -X utf8 -B tests/test_v2_zero_boundary_dataset.py
-python -X utf8 -B -c "from pathlib import Path; from utils.formal_operating_dataset import audit_formal_operating_dataset; a=audit_formal_operating_dataset(Path('data/processed/operating_dataset_zero_boundary_v2')); assert (a.parent_voyage_count,a.segment_count)==(66,66); assert a.missing_segment_paths==a.orphan_segment_paths==a.parent_split_leakage==()"
+python -X utf8 -B -c "from pathlib import Path; from utils.formal_operating_dataset import audit_formal_operating_dataset; a=audit_formal_operating_dataset(Path('data/processed/operating_dataset_zero_boundary_v2')); assert (a.parent_voyage_count,a.segment_count)==(53,53); assert a.missing_segment_paths==a.orphan_segment_paths==a.parent_split_leakage==()"
 ```
 
 Then compare pre/post hashes:
@@ -495,7 +495,7 @@ Expected: every `Compare-Object` command prints nothing.
 
 - [ ] **Step 4: Inspect the split and boundary audits before switching the default**
 
-Verify every `trim_boundary_audit.csv` parent has exactly one start and one end row, constructed fractions lie in `[0,1]`, no extrapolation flag exists, all rounded timestamps lie within their brackets, and removed prefix/suffix counts are nonnegative. Verify the split manifest has 66 unique parents, exactly 12 validation parents, and the Test names exactly match the frozen list. If any check fails, stop without changing the formal default and leave `FORMAL_TRAINING` at `NO-GO`.
+Verify every included parent in `trim_boundary_audit.csv` has exactly one start and one end row, constructed fractions lie in `[0,1]`, no extrapolation flag exists, all rounded timestamps lie within their brackets, and removed prefix/suffix counts are nonnegative. Verify `excluded_parent_manifest.csv` contains exactly the approved 3 missing-start and 10 missing-end parents. Verify the split manifest has 53 unique parents, exactly 10 validation parents, and the Test names exactly match the frozen list. If any check fails, stop without changing the formal default and leave `FORMAL_TRAINING` at `NO-GO`.
 
 - [ ] **Step 5: Enforce per-file remote size safety and commit the complete versioned artifact**
 
@@ -508,7 +508,7 @@ git add data/processed/operating_dataset_zero_boundary_v2
 git commit -m "data(v2): add zero-boundary operating set"
 ```
 
-Expected: no file reaches 100 MB and the complete versioned root, including all 66 segment CSVs and metadata, is committed. Do not add Git LFS or alter ignore policy in this task.
+Expected: no file reaches 100 MB and the complete versioned root, including all 53 segment CSVs and metadata, is committed. Do not add Git LFS or alter ignore policy in this task.
 
 ## Task 7: Switch the validated formal default, run full verification, and hand off
 
@@ -521,9 +521,9 @@ Replace the old hard-coded 65-parent/145-segment manifest assertion in `tests/te
 
 ```python
 frame = load_formal_operating_split().manifest
-self.assertEqual(frame.parent_voyage.nunique(), 66)
-self.assertEqual(len(frame), 66)
-self.assertEqual(frame.groupby("split").size().to_dict(), {"test": 5, "train": 49, "validation": 12})
+self.assertEqual(frame.parent_voyage.nunique(), 53)
+self.assertEqual(len(frame), 53)
+self.assertEqual(frame.groupby("split").size().to_dict(), {"test": 5, "train": 38, "validation": 10})
 self.assertEqual(int((frame.groupby("parent_voyage").split.nunique() > 1).sum()), 0)
 ```
 
@@ -564,11 +564,11 @@ Expected: every v2 file and the complete suite pass.
 ```powershell
 python -X utf8 -B -m unittest tests.test_v2_nonlinear_mpc.NonlinearMPCTests.test_scipy_backend_smoke -v
 python -X utf8 -B -m compileall -q src tests
-python -X utf8 -B -c "from v2.data.segment_power_source import load_parent_power_series; from v2.data.zero_boundary_dataset import trim_to_zero_boundaries, assign_parent_splits; from utils.formal_operating_dataset import load_formal_operating_split; s=load_formal_operating_split(); assert (len(s.train_parents),len(s.validation_parents),len(s.test_parents))==(49,12,5)"
+python -X utf8 -B -c "from v2.data.segment_power_source import load_parent_power_series; from v2.data.zero_boundary_dataset import trim_to_zero_boundaries, assign_parent_splits; from utils.formal_operating_dataset import load_formal_operating_split; s=load_formal_operating_split(); assert (len(s.train_parents),len(s.validation_parents),len(s.test_parents))==(38,10,5)"
 git diff --check
 ```
 
-Expected: solver smoke succeeds, compilation/import succeeds, split tuple is 49/12/5, and `git diff --check` prints nothing.
+Expected: solver smoke succeeds, compilation/import succeeds, split tuple is 38/10/5, and `git diff --check` prints nothing.
 
 - [ ] **Step 6: Review scope and commit**
 
@@ -582,4 +582,4 @@ git add data/processed/operating_dataset_zero_boundary_v2/metadata
 git commit -m "feat(v2): freeze zero-boundary operating data"
 ```
 
-Do not push unless the user explicitly requests it. Final reporting must state the 66/49/12/5 counts, fixed Test parents, boundary-kind counts, retained internal-negative count, total one-second points, validation commands, artifact root, commit SHA, and unchanged `FORMAL_TRAINING: NO-GO` blockers.
+Do not push unless the user explicitly requests it. Final reporting must state the 66 audited / 13 excluded / 53 included counts, 38/10/5 split, fixed Test parents, boundary-kind counts, retained internal-negative count, total one-second points, validation commands, artifact root, commit SHA, and unchanged `FORMAL_TRAINING: NO-GO` blockers.

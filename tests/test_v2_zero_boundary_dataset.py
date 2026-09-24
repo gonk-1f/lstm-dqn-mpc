@@ -18,6 +18,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from v2.data.zero_boundary_dataset import (  # noqa: E402
+    APPROVED_BOUNDARY_EXCLUSIONS,
     FIXED_TEST_PARENTS,
     assign_parent_splits,
     reconstruct_one_second,
@@ -109,7 +110,7 @@ class ZeroBoundaryDatasetTests(unittest.TestCase):
 
     @staticmethod
     def feature_frame() -> pd.DataFrame:
-        parents = [f"parent_{index:03d}" for index in range(61)] + list(
+        parents = [f"parent_{index:03d}" for index in range(48)] + list(
             FIXED_TEST_PARENTS
         )
         origin = pd.Timestamp("2024-01-01T00:00:00Z")
@@ -137,7 +138,7 @@ class ZeroBoundaryDatasetTests(unittest.TestCase):
 
         self.assertEqual(
             assignment.split.value_counts().to_dict(),
-            {"train": 49, "validation": 12, "test": 5},
+            {"train": 38, "validation": 10, "test": 5},
         )
         self.assertEqual(
             set(assignment.loc[assignment.split.eq("test"), "parent"]),
@@ -198,24 +199,38 @@ class ZeroBoundaryDatasetTests(unittest.TestCase):
     @staticmethod
     def synthetic_parent_names() -> list[str]:
         names = []
-        for index in range(61):
+        for index in range(48):
             month = index // 28 + 1
             day = index % 28 + 1
             names.append(f"合成{month}月{day}日00_00_{index:03d}")
-        return names + list(FIXED_TEST_PARENTS)
+        return names + list(FIXED_TEST_PARENTS) + list(
+            APPROVED_BOUNDARY_EXCLUSIONS
+        )
 
     @classmethod
     def synthetic_power_series(cls, parent: str) -> ParentPowerSeries:
         parents = cls.synthetic_parent_names()
         rank = parents.index(parent)
         scale = 1.0 + rank / 100.0
-        pause = [0.0] * (rank % 8)
-        source = np.asarray(
-            [0.0, 10.0, 20.0, 30.0, 0.0, -5.0]
-            + pause
-            + [15.0 * scale, 25.0 * scale, 35.0 * scale, 0.0, -20.0],
-            dtype=float,
-        )
+        exclusion_side = APPROVED_BOUNDARY_EXCLUSIONS.get(parent)
+        if exclusion_side == "start":
+            source = np.asarray(
+                [20.0, 22.0, 24.0, 30.0, 28.0, 26.0, 20.0],
+                dtype=float,
+            )
+        elif exclusion_side == "end":
+            source = np.asarray(
+                [0.0, 10.0, 20.0, 30.0, 28.0, 26.0, 20.0],
+                dtype=float,
+            )
+        else:
+            pause = [0.0] * (rank % 8)
+            source = np.asarray(
+                [0.0, 10.0, 20.0, 30.0, 0.0, -5.0]
+                + pause
+                + [15.0 * scale, 25.0 * scale, 35.0 * scale, 0.0, -20.0],
+                dtype=float,
+            )
         origin = datetime(2024, 1, 1, tzinfo=timezone.utc) + timedelta(
             days=rank
         )
@@ -264,15 +279,24 @@ class ZeroBoundaryDatasetTests(unittest.TestCase):
             )
 
             manifest = pd.read_csv(output / "metadata" / "sample_manifest.csv")
-            self.assertEqual(summary["parent_count"], 66)
-            self.assertEqual(len(manifest), 66)
+            excluded = pd.read_csv(
+                output / "metadata" / "excluded_parent_manifest.csv"
+            )
+            self.assertEqual(summary["raw_parent_count"], 66)
+            self.assertEqual(summary["excluded_parent_count"], 13)
+            self.assertEqual(summary["parent_count"], 53)
+            self.assertEqual(len(manifest), 53)
             self.assertEqual(
                 manifest["split"].value_counts().to_dict(),
-                {"train": 49, "validation": 12, "test": 5},
+                {"train": 38, "validation": 10, "test": 5},
             )
             self.assertEqual(
                 set(manifest.loc[manifest.split.eq("test"), "parent"]),
                 set(FIXED_TEST_PARENTS),
+            )
+            self.assertEqual(
+                dict(zip(excluded.parent, excluded.missing_boundary)),
+                APPROVED_BOUNDARY_EXCLUSIONS,
             )
             for relative, expected_hash in manifest[
                 ["relative_path", "sha256"]
@@ -293,6 +317,7 @@ class ZeroBoundaryDatasetTests(unittest.TestCase):
             for name in (
                 "sample_manifest.csv",
                 "parent_split_manifest.csv",
+                "excluded_parent_manifest.csv",
                 "trim_boundary_audit.csv",
                 "interpolation_audit.csv",
                 "source_files.csv",

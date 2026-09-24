@@ -14,8 +14,8 @@ from utils.rebuilt_operating_dataset import pchip_to_one_second
 ZERO_DEADBAND_KW = 1.0
 ACTIVE_THRESHOLD_KW = 1.0
 SUSTAINED_POINTS = 3
-TRAIN_COUNT = 49
-VALIDATION_COUNT = 12
+TRAIN_COUNT = 38
+VALIDATION_COUNT = 10
 TEST_COUNT = 5
 FIXED_TEST_PARENTS = (
     "3月26日14_00_3月26日16_00",
@@ -24,6 +24,21 @@ FIXED_TEST_PARENTS = (
     "5月8日08_00_5月8日17_00",
     "6月11日08_00_6月11日11_00",
 )
+APPROVED_BOUNDARY_EXCLUSIONS = {
+    "3月25日14_00_3月25日17_00": "start",
+    "3月28日08_00_3月28日11_00": "end",
+    "4月7日08_00_4月7日12_00": "end",
+    "4月21日08_00_4月21日16_00": "end",
+    "4月23日13_00_4月23日18_00": "start",
+    "4月24日07_00_4月24日17_00": "end",
+    "4月29日08_00_4月29日18_00": "end",
+    "6月6日10_00_6月6日21_00": "end",
+    "6月13日08_00_6月13日14_00": "start",
+    "7月9日08_00_7月9日16_00": "end",
+    "7月19日07_00_7月19日09_00": "end",
+    "7月22日08_00_7月22日11_00": "end",
+    "7月24日14_00_7月24日17_00": "end",
+}
 
 
 @dataclass(frozen=True)

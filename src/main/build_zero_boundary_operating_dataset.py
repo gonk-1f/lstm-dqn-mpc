@@ -28,6 +28,7 @@ from v2.data.segment_power_source import (  # noqa: E402
 )
 from v2.data.zero_boundary_dataset import (  # noqa: E402
     ACTIVE_THRESHOLD_KW,
+    APPROVED_BOUNDARY_EXCLUSIONS,
     FIXED_TEST_PARENTS,
     SUSTAINED_POINTS,
     TEST_COUNT,
@@ -43,7 +44,9 @@ from v2.data.zero_boundary_dataset import (  # noqa: E402
 
 NOMINAL_STEP_SECONDS = 30.0
 ALIGNMENT_TOLERANCE_SECONDS = 10.0
-EXPECTED_PARENT_COUNT = TRAIN_COUNT + VALIDATION_COUNT + TEST_COUNT
+EXPECTED_RAW_PARENT_COUNT = 66
+EXPECTED_INCLUDED_PARENT_COUNT = TRAIN_COUNT + VALIDATION_COUNT + TEST_COUNT
+EXPECTED_EXCLUDED_PARENT_COUNT = len(APPROVED_BOUNDARY_EXCLUSIONS)
 
 
 def _sha256(path: Path) -> str:
@@ -170,7 +173,7 @@ def _validate_outputs(
         for frame in frames.values()
     )
     return {
-        "exact_parent_and_split_counts": len(frames) == EXPECTED_PARENT_COUNT
+        "exact_parent_and_split_counts": len(frames) == EXPECTED_INCLUDED_PARENT_COUNT
         and split_counts
         == {"train": TRAIN_COUNT, "validation": VALIDATION_COUNT, "test": TEST_COUNT},
         "fixed_test_set": fixed_test == set(FIXED_TEST_PARENTS),
@@ -198,7 +201,10 @@ def build_dataset(
         discover_parents(raw_root),
         key=lambda value: parent_sort_key(Path(value)),
     )
-    if len(parents) != EXPECTED_PARENT_COUNT or len(set(parents)) != EXPECTED_PARENT_COUNT:
+    if (
+        len(parents) != EXPECTED_RAW_PARENT_COUNT
+        or len(set(parents)) != EXPECTED_RAW_PARENT_COUNT
+    ):
         raise ValueError("expected exactly 66 recognizable parents")
     temporary = output_root.with_name(
         f"{output_root.name}.building-{os.getpid()}"
@@ -211,6 +217,7 @@ def build_dataset(
         trims: dict[str, object] = {}
         interpolation_rows: dict[str, dict[str, object]] = {}
         feature_rows: list[dict[str, object]] = []
+        excluded_rows: list[dict[str, object]] = []
         for parent in parents:
             measured = load_parent(raw_root, parent)
             if measured.parent != parent:
@@ -230,31 +237,80 @@ def build_dataset(
                     "is_cubic_imputed": filled.is_interpolated,
                 }
             )
-            trimmed = trim_to_zero_boundaries(anchor)
-            one_second, pchip_qa = reconstruct_one_second(trimmed.frame)
-            frames[parent] = one_second
-            trims[parent] = trimmed
-            feature_rows.append(segment_features(parent, one_second))
-            interpolation_rows[parent] = {
+            common_interpolation = {
                 "aligned_measured_points": len(measured.timestamps),
                 "cubic_gap_count": filled.interpolation_gap_count,
                 "cubic_imputed_points": filled.interpolated_point_count,
                 "cubic_max_gap_seconds": filled.max_interpolated_gap_seconds,
                 "cubic_warning_count": len(filled.warning_messages),
                 "cubic_warning_messages": "|".join(filled.warning_messages),
-                "trimmed_anchor_points": len(trimmed.frame),
-                "pchip_output_points": int(pchip_qa["output_points"]),
-                "pchip_floating_negative_zeroed": int(
-                    pchip_qa["floating_negative_zeroed"]
-                ),
                 "duplicate_count": measured.duplicate_count,
                 "duplicate_conflict_count": measured.duplicate_conflict_count,
                 "channel_span_violation_count": measured.channel_span_violation_count,
                 "ais_present_points": int(np.count_nonzero(measured.ais_present)),
             }
+            try:
+                trimmed = trim_to_zero_boundaries(anchor)
+            except ValueError as error:
+                expected_side = APPROVED_BOUNDARY_EXCLUSIONS.get(parent)
+                expected_message = (
+                    f"{expected_side} boundary is not bracketed"
+                    if expected_side is not None
+                    else None
+                )
+                if expected_message is None or str(error) != expected_message:
+                    raise ValueError(
+                        f"{parent}: unexpected boundary failure: {error}"
+                    ) from error
+                values = anchor["source_total_kw"].to_numpy(dtype=float)
+                excluded_rows.append(
+                    {
+                        "parent": parent,
+                        "missing_boundary": expected_side,
+                        "reason_code": "NO_BRACKET_WITHIN_RECORDING",
+                        "reason": str(error),
+                        "first_timestamp": pd.Timestamp(anchor["timestamp"].iloc[0]).isoformat(),
+                        "last_timestamp": pd.Timestamp(anchor["timestamp"].iloc[-1]).isoformat(),
+                        "point_count_30s": len(anchor),
+                        "first_load_kw": float(values[0]),
+                        "minimum_load_kw": float(np.min(values)),
+                        "maximum_load_kw": float(np.max(values)),
+                        "last_load_kw": float(values[-1]),
+                        "deadband_point_count": int(
+                            np.count_nonzero(np.abs(values) <= ZERO_DEADBAND_KW)
+                        ),
+                        "nonpositive_point_count": int(np.count_nonzero(values <= 0.0)),
+                        **common_interpolation,
+                    }
+                )
+                continue
+            one_second, pchip_qa = reconstruct_one_second(trimmed.frame)
+            frames[parent] = one_second
+            trims[parent] = trimmed
+            feature_rows.append(segment_features(parent, one_second))
+            interpolation_rows[parent] = {
+                **common_interpolation,
+                "trimmed_anchor_points": len(trimmed.frame),
+                "pchip_output_points": int(pchip_qa["output_points"]),
+                "pchip_floating_negative_zeroed": int(
+                    pchip_qa["floating_negative_zeroed"]
+                ),
+            }
+
+        actual_exclusions = {
+            str(row["parent"]): str(row["missing_boundary"])
+            for row in excluded_rows
+        }
+        if actual_exclusions != APPROVED_BOUNDARY_EXCLUSIONS:
+            raise ValueError(
+                "actual boundary exclusions do not match the approved 13-parent set"
+            )
 
         assignment = assign_parent_splits(pd.DataFrame(feature_rows))
         checks = _validate_outputs(frames, assignment)
+        checks["approved_boundary_exclusions_exact"] = (
+            actual_exclusions == APPROVED_BOUNDARY_EXCLUSIONS
+        )
         if not all(checks.values()):
             failed = sorted(name for name, passed in checks.items() if not passed)
             raise ValueError(f"dataset acceptance failed before writing: {failed}")
@@ -316,6 +372,11 @@ def build_dataset(
             index=False,
             encoding="utf-8-sig",
         )
+        pd.DataFrame(excluded_rows).to_csv(
+            metadata / "excluded_parent_manifest.csv",
+            index=False,
+            encoding="utf-8-sig",
+        )
         pd.DataFrame(boundary_rows).rename(
             columns={"kind": "boundary_kind"}
         ).to_csv(
@@ -337,7 +398,7 @@ def build_dataset(
         )
         policy = {
             "dataset_version": "operating_dataset_zero_boundary_v2",
-            "parent_count": EXPECTED_PARENT_COUNT,
+            "parent_count": EXPECTED_INCLUDED_PARENT_COUNT,
             "split_counts": {
                 "train": TRAIN_COUNT,
                 "validation": VALIDATION_COUNT,
@@ -356,7 +417,10 @@ def build_dataset(
             "source_power_status": "derived from 8 FC and 12 battery clusters; not independently measured",
             "validation_selection": "greedy iterative multilabel stratification to 20 percent targets",
             "validation_tie_break": "chronological parent order then parent identifier",
-            "quartile_basis": "61 non-Test parents only",
+            "raw_parent_count": EXPECTED_RAW_PARENT_COUNT,
+            "included_parent_count": EXPECTED_INCLUDED_PARENT_COUNT,
+            "approved_boundary_exclusions": APPROVED_BOUNDARY_EXCLUSIONS,
+            "quartile_basis": "48 non-Test included parents only",
         }
         _write_json(metadata / "policy.json", policy)
 
@@ -375,7 +439,9 @@ def build_dataset(
         }
         summary: dict[str, object] = {
             "dataset_version": "operating_dataset_zero_boundary_v2",
-            "parent_count": EXPECTED_PARENT_COUNT,
+            "raw_parent_count": EXPECTED_RAW_PARENT_COUNT,
+            "excluded_parent_count": EXPECTED_EXCLUDED_PARENT_COUNT,
+            "parent_count": EXPECTED_INCLUDED_PARENT_COUNT,
             "segment_count": len(sample_manifest),
             "point_count": int(sample_manifest["point_count_1s"].sum()),
             "split_point_counts": split_points,
