@@ -20,6 +20,9 @@ from v2.data.zero_boundary_power_review import (  # noqa: E402
     build_review,
     load_review_entries,
 )
+from main.build_zero_boundary_power_review import (  # noqa: E402
+    validated_output_path,
+)
 
 
 def sha256(path: Path) -> str:
@@ -151,6 +154,34 @@ class ZeroBoundaryPowerReviewTests(unittest.TestCase):
             self.assertLess(html.index('id="train"'), html.index('id="validation"'))
             self.assertLess(html.index('id="validation"'), html.index('id="test"'))
             self.assertIn("每个航段采用独立纵轴", html)
+
+    def test_production_output_guard_and_overwrite_refusal(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            outputs = root / "outputs"
+            outputs.mkdir()
+            accepted = validated_output_path(root, outputs / "review")
+            self.assertEqual(accepted, (outputs / "review").resolve())
+            with self.assertRaisesRegex(ValueError, "repository outputs"):
+                validated_output_path(root, root / "data" / "review")
+
+            dataset = self.make_dataset(root)
+            target = outputs / "review"
+            build_review(
+                dataset,
+                target,
+                expected_split_counts={"train": 1, "validation": 1, "test": 1},
+            )
+            with self.assertRaises(FileExistsError):
+                build_review(
+                    dataset,
+                    target,
+                    expected_split_counts={
+                        "train": 1,
+                        "validation": 1,
+                        "test": 1,
+                    },
+                )
 
 
 if __name__ == "__main__":
