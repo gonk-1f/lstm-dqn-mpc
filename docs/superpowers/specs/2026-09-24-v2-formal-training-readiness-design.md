@@ -97,16 +97,21 @@ The load dataset is accompanied by a versioned 30 s AIS sidecar generated
 directly from each parent folder's `推进系统/AIS航速_*.csv`. The sidecar covers all
 53 segments without changing any power CSV or split assignment. Each row stores
 the segment ID, timestamp, `time_s`, nonnegative `speed_kn`, and provenance.
-Normal points use the latest causal AIS record no more than 10 s old. The 962
+Normal points use one unused nearest AIS record within the existing ±10 s
+near-synchronous sensor-alignment tolerance; equidistant ties are rejected.
+This represents asynchronous snapshot assembly, not future load look-ahead.
 Train supervisory positions inside already-approved multichannel acquisition
 gaps are filled with shape-preserving PCHIP between observed AIS brackets and
 are labelled `INTERPOLATED_GAP_PCHIP`; interpolation never extrapolates beyond
 the original AIS coverage. A separate manifest records source hashes, sidecar
 hashes, per-segment counts, and provenance counts.
 
-The AIS state decision is Train-only: all 38 Train parents have AIS, 29,947 of
-30,909 complete supervisory positions (96.89%) align causally within 10 s,
-there are no conflicting AIS timestamps, and the Train maximum is 15.9 kn.
+The AIS state decision is Train-only: all 38 Train parents have AIS. Unique
+near-synchronous alignment covers 28,987 of 30,909 complete supervisory
+positions (93.78%); the remaining 1,922 bracketed positions are explicit PCHIP
+reconstructions. There are no conflicting AIS timestamps, and the Train
+maximum is 15.9 kn. These counts come from the generated sidecar and are not
+inferred through timestamp-unit conversions.
 Validation/Test sidecars are generated mechanically after the schema and
 normalization are frozen; their distributions are not used to select state
 features or normalization.

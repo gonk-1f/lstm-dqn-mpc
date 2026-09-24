@@ -1,11 +1,8 @@
-"""DQN-facing v2 contracts.
-
-The candidate bank is intentionally exported separately from the unavailable
-formal action catalog.
-"""
+"""Frozen formal and historical candidate DQN-facing v2 contracts."""
 
 from .action_space import (
     ACTION_CATALOG_STATUS,
+    ACTION_CATALOG_DIGEST,
     ACTION_TABLE_VERSION,
     CANDIDATE_ACTION_BANK,
     FINAL_DQN_ACTION_CATALOG,
@@ -18,13 +15,20 @@ from .state import (
     CANDIDATE_STATE_FEATURE_NAMES,
     CANDIDATE_STATE_GROUP_NAMES,
     CANDIDATE_STATE_STATUS,
+    FORMAL_STATE_DIMENSION,
+    FORMAL_STATE_FEATURE_NAMES,
+    FORMAL_STATE_SCHEMA_DIGEST,
+    FORMAL_STATE_SCHEMA_VERSION,
+    FORMAL_STATE_STATUS,
     OperatingHistorySample,
     StateNormalization,
     build_candidate_operating_state,
+    build_formal_operating_state,
 )
 
 __all__ = [
     "ACTION_CATALOG_STATUS",
+    "ACTION_CATALOG_DIGEST",
     "ACTION_TABLE_VERSION",
     "CANDIDATE_ACTION_BANK",
     "FINAL_DQN_ACTION_CATALOG",
@@ -35,7 +39,13 @@ __all__ = [
     "CANDIDATE_STATE_FEATURE_NAMES",
     "CANDIDATE_STATE_GROUP_NAMES",
     "CANDIDATE_STATE_STATUS",
+    "FORMAL_STATE_DIMENSION",
+    "FORMAL_STATE_FEATURE_NAMES",
+    "FORMAL_STATE_SCHEMA_DIGEST",
+    "FORMAL_STATE_SCHEMA_VERSION",
+    "FORMAL_STATE_STATUS",
     "OperatingHistorySample",
     "StateNormalization",
     "build_candidate_operating_state",
+    "build_formal_operating_state",
 ]

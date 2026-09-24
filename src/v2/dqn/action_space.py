@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import json
 
 from ..contracts import ACTION_TABLE_VERSION
 from ..control.nonlinear_mpc import MPCWeights
@@ -67,24 +69,27 @@ def generate_candidate_action_bank() -> tuple[ActionCandidate, ...]:
 CANDIDATE_ACTION_BANK = generate_candidate_action_bank()
 CANDIDATE_ACTIONS = CANDIDATE_ACTION_BANK
 
-# This is deliberately not the candidate bank.  It remains unset until a
-# complete Train-only screen and solver audit pass the explicit finalization
-# boundary in v2.analysis.action_screening.
-ACTION_CATALOG_STATUS = "NO-GO"
-FINAL_DQN_ACTION_CATALOG: None = None
-FINAL_DQN_ACTIONS: None = None
+ACTION_CATALOG_STATUS = "FROZEN_PROJECT_BASELINE"
+FINAL_DQN_ACTION_CATALOG = CANDIDATE_ACTION_BANK
+FINAL_DQN_ACTIONS = FINAL_DQN_ACTION_CATALOG
+ACTION_CATALOG_DIGEST = hashlib.sha256(
+    json.dumps(
+        [
+            {"id": action.action_id, "numerators": action.numerators}
+            for action in FINAL_DQN_ACTION_CATALOG
+        ],
+        separators=(",", ":"),
+    ).encode("utf-8")
+).hexdigest()
 
 
 def get_final_dqn_action_catalog() -> tuple[ActionCandidate, ...]:
-    raise ActionCatalogUnavailableError(
-        "NO-GO: usable Train operating-cycle data and a passed solver "
-        "reproducibility audit are absent; the candidate bank is not a final "
-        "DQN action catalog"
-    )
+    return FINAL_DQN_ACTION_CATALOG
 
 
 __all__ = [
     "ACTION_CATALOG_STATUS",
+    "ACTION_CATALOG_DIGEST",
     "ACTION_TABLE_VERSION",
     "CANDIDATE_ACTIONS",
     "CANDIDATE_ACTION_BANK",

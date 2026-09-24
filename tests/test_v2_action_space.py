@@ -35,7 +35,7 @@ class V2CandidateActionSpaceTests(unittest.TestCase):
         first = generate_candidate_action_bank()
 
         self.assertEqual(ACTION_TABLE_VERSION, CONTRACT_VERSION)
-        self.assertEqual(ACTION_TABLE_VERSION, "three_weight_simplex_behavior_filtered_v1")
+        self.assertEqual(ACTION_TABLE_VERSION, "three_weight_simplex_complete36_v1")
         self.assertEqual(first, generate_candidate_action_bank())
         self.assertEqual(first, CANDIDATE_ACTION_BANK)
         self.assertEqual(len(first), 36)
@@ -61,20 +61,20 @@ class V2CandidateActionSpaceTests(unittest.TestCase):
                     action.as_tuple(),
                 )
 
-    def test_candidate_bank_is_not_a_default_final_dqn_catalog(self) -> None:
+    def test_complete_bank_is_the_frozen_formal_baseline_catalog(self) -> None:
         from v2.dqn.action_space import (
             ACTION_CATALOG_STATUS,
+            ACTION_CATALOG_DIGEST,
             CANDIDATE_ACTION_BANK,
             FINAL_DQN_ACTION_CATALOG,
-            ActionCatalogUnavailableError,
             get_final_dqn_action_catalog,
         )
 
         self.assertEqual(len(CANDIDATE_ACTION_BANK), 36)
-        self.assertEqual(ACTION_CATALOG_STATUS, "NO-GO")
-        self.assertIsNone(FINAL_DQN_ACTION_CATALOG)
-        with self.assertRaisesRegex(ActionCatalogUnavailableError, "NO-GO"):
-            get_final_dqn_action_catalog()
+        self.assertEqual(ACTION_CATALOG_STATUS, "FROZEN_PROJECT_BASELINE")
+        self.assertEqual(FINAL_DQN_ACTION_CATALOG, CANDIDATE_ACTION_BANK)
+        self.assertEqual(get_final_dqn_action_catalog(), CANDIDATE_ACTION_BANK)
+        self.assertRegex(ACTION_CATALOG_DIGEST, r"^[0-9a-f]{64}$")
 
 
 class V2ActionScreeningTests(unittest.TestCase):

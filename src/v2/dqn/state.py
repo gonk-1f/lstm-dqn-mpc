@@ -8,6 +8,8 @@ both current and previous power.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import json
 import math
 from numbers import Real
 
@@ -38,6 +40,36 @@ CANDIDATE_STATE_FEATURE_NAMES = (
     "causal_base_load_fraction",
     "recent_delta_soc",
 )
+
+FORMAL_STATE_STATUS = "FROZEN_PROJECT_BASELINE"
+FORMAL_STATE_SCHEMA_VERSION = "v2_s9_ais_shore_v1"
+FORMAL_STATE_FEATURE_NAMES = (
+    "soc",
+    "speed_fraction",
+    "shore_connected",
+    "causal_base_load_fraction",
+    "load_residual_fraction",
+    "recent_load_population_std_fraction",
+    "recent_load_window_trend_fraction",
+    "fuel_cell_power_fraction",
+    "fuel_cell_delta_fraction",
+)
+FORMAL_STATE_DIMENSION = len(FORMAL_STATE_FEATURE_NAMES)
+FORMAL_STATE_POWER_SCALE_KW = 600.0
+FORMAL_STATE_SPEED_SCALE_KN = 20.0
+FORMAL_STATE_WINDOW_SECONDS = 150.0
+FORMAL_STATE_SCHEMA_DIGEST = hashlib.sha256(
+    json.dumps(
+        {
+            "version": FORMAL_STATE_SCHEMA_VERSION,
+            "features": FORMAL_STATE_FEATURE_NAMES,
+            "power_scale_kw": FORMAL_STATE_POWER_SCALE_KW,
+            "speed_scale_kn": FORMAL_STATE_SPEED_SCALE_KN,
+            "window_seconds": FORMAL_STATE_WINDOW_SECONDS,
+        },
+        separators=(",", ":"),
+    ).encode("utf-8")
+).hexdigest()
 
 
 def _finite_scalar(value: object, name: str) -> float:
@@ -350,11 +382,82 @@ def build_candidate_operating_state(
     return state
 
 
+def build_formal_operating_state(
+    history: tuple[OperatingHistorySample, ...],
+    *,
+    current_time_seconds: float,
+    speed_kn: float,
+    shore_connected: bool,
+) -> tuple[float, ...]:
+    """Build the frozen S9 state from an inclusive causal 150 s history."""
+
+    if type(history) is not tuple or not history:
+        raise TypeError("history must be a nonempty immutable tuple")
+    checked = tuple(_validate_sample(sample) for sample in history)
+    if any(
+        current.timestamp_seconds <= previous.timestamp_seconds
+        for previous, current in zip(checked, checked[1:])
+    ):
+        raise ValueError("history timestamps must be strictly increasing")
+    now = _finite_scalar(current_time_seconds, "current_time_seconds")
+    speed = _finite_scalar(speed_kn, "speed_kn")
+    if speed < 0.0:
+        raise ValueError("speed_kn must be nonnegative")
+    if type(shore_connected) is not bool:
+        raise TypeError("shore_connected must be an exact bool")
+    selected = tuple(
+        sample
+        for sample in checked
+        if 0.0 <= _sample_age_seconds(now, sample.timestamp_seconds)
+        <= FORMAL_STATE_WINDOW_SECONDS
+    )
+    if not selected or selected[-1].timestamp_seconds != now:
+        raise ValueError("history requires an exact current-time sample")
+    current = selected[-1]
+    previous_fc = (
+        selected[-2].fuel_cell_power_kw
+        if len(selected) >= 2
+        else current.fuel_cell_power_kw
+    )
+    _, load_std = _scaled_population_mean_and_std(
+        tuple(sample.load_power_kw for sample in selected)
+    )
+    load_slope = (
+        _least_squares_slope_per_second(selected) if len(selected) >= 2 else 0.0
+    )
+    state = (
+        float(current.soc),
+        speed / FORMAL_STATE_SPEED_SCALE_KN,
+        1.0 if shore_connected else 0.0,
+        current.causal_base_load_kw / FORMAL_STATE_POWER_SCALE_KW,
+        (current.load_power_kw - current.causal_base_load_kw)
+        / FORMAL_STATE_POWER_SCALE_KW,
+        load_std / FORMAL_STATE_POWER_SCALE_KW,
+        load_slope * FORMAL_STATE_WINDOW_SECONDS / FORMAL_STATE_POWER_SCALE_KW,
+        current.fuel_cell_power_kw / FORMAL_STATE_POWER_SCALE_KW,
+        (current.fuel_cell_power_kw - previous_fc) / FORMAL_STATE_POWER_SCALE_KW,
+    )
+    if len(state) != FORMAL_STATE_DIMENSION or not all(
+        type(value) is float and math.isfinite(value) for value in state
+    ):
+        raise ValueError("formal S9 state must contain nine finite floats")
+    return state
+
+
 __all__ = [
     "CANDIDATE_STATE_FEATURE_NAMES",
     "CANDIDATE_STATE_GROUP_NAMES",
     "CANDIDATE_STATE_STATUS",
+    "FORMAL_STATE_DIMENSION",
+    "FORMAL_STATE_FEATURE_NAMES",
+    "FORMAL_STATE_POWER_SCALE_KW",
+    "FORMAL_STATE_SCHEMA_DIGEST",
+    "FORMAL_STATE_SCHEMA_VERSION",
+    "FORMAL_STATE_SPEED_SCALE_KN",
+    "FORMAL_STATE_STATUS",
+    "FORMAL_STATE_WINDOW_SECONDS",
     "OperatingHistorySample",
     "StateNormalization",
     "build_candidate_operating_state",
+    "build_formal_operating_state",
 ]
