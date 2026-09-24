@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
 
 import numpy as np
@@ -133,6 +134,41 @@ def _read_split_manifest(root: Path) -> pd.DataFrame:
     return manifest
 
 
+def _read_expected_counts(root: Path) -> dict[str, object] | None:
+    """Read frozen dataset totals when the versioned metadata provides them."""
+    path = root / "metadata" / "qa_summary.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"formal dataset QA summary is missing: {path}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    names = {"parent_count", "segment_count", "point_count", "split_point_counts"}
+    present = names.intersection(payload)
+    if not present:
+        return None
+    missing = names.difference(payload)
+    if missing:
+        raise ValueError(f"formal dataset QA summary is missing counts: {sorted(missing)}")
+    for name in ("parent_count", "segment_count", "point_count"):
+        value = payload[name]
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError(f"formal dataset QA summary has invalid {name}")
+    split_counts = payload["split_point_counts"]
+    if not isinstance(split_counts, dict) or set(split_counts) != set(SPLIT_NAMES):
+        raise ValueError("formal dataset QA summary has invalid split_point_counts")
+    if any(
+        isinstance(value, bool) or not isinstance(value, int) or value < 0
+        for value in split_counts.values()
+    ):
+        raise ValueError("formal dataset QA summary has invalid split point count")
+    return {
+        "parent_count": payload["parent_count"],
+        "segment_count": payload["segment_count"],
+        "point_count": payload["point_count"],
+        "split_point_counts": {
+            str(name): int(value) for name, value in split_counts.items()
+        },
+    }
+
+
 def load_formal_operating_split(
     dataset_root: str | Path = DEFAULT_OPERATING_DATASET_ROOT,
 ) -> OperatingSegmentSplit:
@@ -211,7 +247,7 @@ def load_operating_segment_loads(
     loads = frame[LOAD_COLUMN].to_numpy(dtype=np.float64, copy=True)
     time_s = frame["time_s"].to_numpy(dtype=np.float64, copy=False)
     timestamps = pd.to_datetime(frame["timestamp"], errors="coerce")
-    if len(loads) < 2 or not np.isfinite(loads).all() or bool((loads < 0.0).any()):
+    if len(loads) < 2 or not np.isfinite(loads).all():
         raise ValueError(f"formal segment has invalid loads: {identifier}")
     if (
         timestamps.isna().any()
@@ -268,7 +304,7 @@ def audit_formal_operating_dataset(
         for path in directory.glob("*.csv")
     }
     parent_split_counts = split.manifest.groupby("parent_voyage")["split"].nunique()
-    return FormalDatasetAudit(
+    audit = FormalDatasetAudit(
         parent_voyage_count=int(split.manifest["parent_voyage"].nunique()),
         segment_count=int(len(split.manifest)),
         point_count=point_count,
@@ -278,3 +314,20 @@ def audit_formal_operating_dataset(
         orphan_segment_paths=tuple(sorted(str(path) for path in actual_paths.difference(referenced))),
         parent_split_leakage=tuple(sorted(parent_split_counts[parent_split_counts.gt(1)].index.astype(str))),
     )
+    expected = _read_expected_counts(root)
+    if expected is not None:
+        comparisons = {
+            "parent_count": (audit.parent_voyage_count, expected["parent_count"]),
+            "segment_count": (audit.segment_count, expected["segment_count"]),
+            "point_count": (audit.point_count, expected["point_count"]),
+            "split_point_counts": (
+                audit.split_point_counts,
+                expected["split_point_counts"],
+            ),
+        }
+        for name, (actual, frozen) in comparisons.items():
+            if actual != frozen:
+                raise ValueError(
+                    f"formal dataset {name} mismatch: actual={actual!r}, expected={frozen!r}"
+                )
+    return audit

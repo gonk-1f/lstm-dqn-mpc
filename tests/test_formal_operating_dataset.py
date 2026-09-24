@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import unittest
 import inspect
+import json
 import tempfile
 from pathlib import Path
 import pandas as pd
@@ -20,6 +21,7 @@ for path in (SRC, MAIN):
 from utils.formal_operating_dataset import (  # noqa: E402
     audit_formal_operating_dataset,
     load_formal_operating_split,
+    load_operating_segment_loads,
 )
 import test_dqn_mpc_causal as dqn_test  # noqa: E402
 import test_mpc_nominal_causal as a0_test  # noqa: E402
@@ -34,11 +36,18 @@ class FormalOperatingDatasetTests(unittest.TestCase):
         for name in ('train', 'validation', 'test'):
             (root / name).mkdir()
             relative = f'{name}/fixture_{name}.csv'
+            loads = [0., -5., 0.] if name == 'validation' else [0., 220., 0.]
             pd.DataFrame(dict(timestamp=pd.date_range('2024-01-01', periods=3, freq='s'),
-                time_s=[0., 1., 2.], load_total_kw=[0., 220., 221.])).to_csv(root / relative, index=False)
+                time_s=[0., 1., 2.], load_total_kw=loads)).to_csv(root / relative, index=False)
             rows.append(dict(parent=f'parent_{name}', sample_id=f'fixture_{name}',
                 relative_path=relative, split=name, point_count_1s=3))
         pd.DataFrame(rows).to_csv(root / 'metadata' / 'sample_manifest.csv', index=False)
+        (root / 'metadata' / 'qa_summary.json').write_text(json.dumps({
+            'parent_count': 3,
+            'segment_count': 3,
+            'point_count': 9,
+            'split_point_counts': {'train': 3, 'validation': 3, 'test': 3},
+        }), encoding='utf-8')
         return load_formal_operating_split(root)
 
     def test_legacy_split_manifest_is_not_a_runtime_fallback(self) -> None:
@@ -71,10 +80,37 @@ class FormalOperatingDatasetTests(unittest.TestCase):
             audit.split_point_counts,
             {"train": 3, "validation": 3, "test": 3},
         )
-        self.assertEqual(audit.negative_load_point_count, 0)
+        self.assertEqual(audit.negative_load_point_count, 1)
         self.assertEqual(audit.orphan_segment_paths, ())
         self.assertEqual(audit.missing_segment_paths, ())
         self.assertEqual(audit.parent_split_leakage, ())
+
+    def test_formal_loader_retains_finite_internal_negative_load(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            split = self.make_fixture(Path(directory))
+
+            loads = load_operating_segment_loads(
+                'validation',
+                split.validation_segments[0],
+                split=split,
+            )
+
+        self.assertEqual(loads.tolist(), [0.0, -5.0, 0.0])
+
+    def test_dataset_auditor_rejects_metadata_point_count_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_fixture(root)
+            qa_path = root / 'metadata' / 'qa_summary.json'
+            qa = json.loads(qa_path.read_text(encoding='utf-8'))
+            qa['point_count'] = 10
+            qa_path.write_text(json.dumps(qa), encoding='utf-8')
+
+            with self.assertRaisesRegex(
+                ValueError,
+                'formal dataset point_count mismatch',
+            ):
+                audit_formal_operating_dataset(root)
 
     def test_dqn_and_fixed_a0_load_the_same_ordered_test_segments(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
