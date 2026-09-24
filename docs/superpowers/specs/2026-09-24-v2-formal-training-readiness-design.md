@@ -3,7 +3,7 @@
 ## Scope
 
 Build a new, independent v2 DQN training path that is ready to be started by
-the user from a PyCharm terminal. The implementation freezes the approved S7
+the user from a PyCharm terminal. The implementation freezes the approved S9
 state and the complete canonical 36-action bank, validates the current
 `operating_dataset_zero_boundary_v2` index and runtime contracts, and exposes
 visible training progress. This task stops before a long-running formal
@@ -26,22 +26,33 @@ dependency of the new entrypoint.
 
 ## Frozen DQN state
 
-The formal state is the following ordered seven-scalar tuple:
+The formal state is the following ordered nine-scalar tuple:
 
 1. `soc`: current battery SOC fraction;
-2. `causal_base_load_fraction`: current causal LPF state divided by 600 kW;
-3. `load_residual_fraction`: `(P_load - P_base) / 600 kW`;
-4. `recent_load_population_std_fraction`: population standard deviation over
+2. `speed_fraction`: current AIS speed in knots divided by the fixed 20 kn
+   project normalization scale, without clipping;
+3. `shore_connected`: exact binary mode flag derived from signed source power;
+4. `causal_base_load_fraction`: current causal LPF state divided by 600 kW;
+5. `load_residual_fraction`: `(P_load - P_base) / 600 kW`;
+6. `recent_load_population_std_fraction`: population standard deviation over
    the inclusive 150 s causal load window divided by 600 kW;
-5. `recent_load_window_trend_fraction`: least-squares load slope over the
+7. `recent_load_window_trend_fraction`: least-squares load slope over the
    inclusive causal window, multiplied by 150 s and divided by 600 kW;
-6. `fuel_cell_power_fraction`: current executed FC power divided by 600 kW;
-7. `fuel_cell_delta_fraction`: current minus previous executed FC power,
+8. `fuel_cell_power_fraction`: current executed FC power divided by 600 kW;
+9. `fuel_cell_delta_fraction`: current minus previous executed FC power,
    divided by 600 kW.
 
 The state schema receives a stable version identifier and a frozen status.
-No Train min-max normalization, clipping, future observation, battery power,
-raw load duplication, recent load mean, or recent SOC delta is permitted.
+The 20 kn speed scale is a frozen engineering scale above the Train-observed
+15.9 kn maximum; it is not a claimed vessel rated speed. No Train min-max
+normalization, clipping, future observation, battery power, raw load
+duplication, recent load mean, or recent SOC delta is permitted.
+
+`shore_connected` is not a learned classifier output. It is an explicit
+environment observation and hard interlock. This prevents the controller from
+depending on a neural network to infer a safety-critical grid-connection state
+from noisy or missing AIS. The DQN learns mode-conditioned action values; it
+does not receive authority to keep FC online in shore mode.
 
 At an episode start, the causal history is cold-started without future data:
 the first load value initializes the 150 s history, the LPF initializes from
@@ -71,7 +82,8 @@ The sole formal dataset is
 `data/processed/operating_dataset_zero_boundary_v2`. Startup validation must:
 
 - validate the manifest schema and every relative path;
-- verify every segment SHA-256 against the manifest;
+- verify every Train/Validation segment SHA-256 against the manifest; validate
+  Test identities and paths from frozen metadata without opening Test payloads;
 - require exactly 53 unique segments split 38 Train, 10 Validation, 5 Test;
 - require parent-level split disjointness;
 - validate each CSV timestamp and `time_s` index, one-second source cadence,
@@ -80,6 +92,24 @@ The sole formal dataset is
 - derive the 30 s supervisory index without interpolation or nearest-neighbor
   replacement;
 - prevent Test access during training and model selection.
+
+The load dataset is accompanied by a versioned 30 s AIS sidecar generated
+directly from each parent folder's `推进系统/AIS航速_*.csv`. The sidecar covers all
+53 segments without changing any power CSV or split assignment. Each row stores
+the segment ID, timestamp, `time_s`, nonnegative `speed_kn`, and provenance.
+Normal points use the latest causal AIS record no more than 10 s old. The 962
+Train supervisory positions inside already-approved multichannel acquisition
+gaps are filled with shape-preserving PCHIP between observed AIS brackets and
+are labelled `INTERPOLATED_GAP_PCHIP`; interpolation never extrapolates beyond
+the original AIS coverage. A separate manifest records source hashes, sidecar
+hashes, per-segment counts, and provenance counts.
+
+The AIS state decision is Train-only: all 38 Train parents have AIS, 29,947 of
+30,909 complete supervisory positions (96.89%) align causally within 10 s,
+there are no conflicting AIS timestamps, and the Train maximum is 15.9 kn.
+Validation/Test sidecars are generated mechanically after the schema and
+normalization are frozen; their distributions are not used to select state
+features or normalization.
 
 One Train segment is one episode. Every round visits all 38 Train episodes.
 The episode order is reshuffled every round by one fixed-seed RNG. Checkpoints
@@ -104,6 +134,15 @@ deleted. The 30 s environment uses the dataset's frozen `1 kW` zero deadband:
 - `load_total_kw > 1`: sailing mode; execute MPC;
 - `load_total_kw < -1`: modeled shore-charging mode;
 - `abs(load_total_kw) <= 1`: idle/deadband mode.
+
+The signed-power classification is authoritative for the hard energy-mode
+branch. AIS speed is supporting context, not the sole shore detector: 195 of
+the 2,868 Train negative-power steps have aligned speed above 0.1 kn and 136
+have no directly aligned AIS observation. Treating those records as sailing
+would pass negative demand to MPC and could incorrectly run FC. Therefore every
+`load_total_kw < -1` step sets `shore_connected=1` and forces the shore branch,
+regardless of speed. Positive stationary load remains an islanded hotel-load
+case and is not reclassified as shore solely because speed is zero.
 
 In shore mode, the selected DQN weight action remains held for macro timing
 but has no physical control effect. FC power is forced to zero. The magnitude
@@ -214,7 +253,8 @@ so PyCharm displays continuous progress. Output flushing is mandatory.
 Formal training is enabled only when all existing calibrations plus the
 following checks are verified:
 
-- frozen S7 identity, order, dimension, history, and normalization;
+- frozen S9 identity, order, dimension, history, speed provenance, explicit
+  shore flag, and normalization;
 - frozen 36-action identity, order, and digest;
 - full dataset index/integrity audit;
 - finite causal state construction over every Train episode boundary;
@@ -233,7 +273,8 @@ superiority or convergence before training and held-out evaluation.
 ## Testing strategy
 
 Implementation follows red-green TDD. Focused tests cover state construction,
-action freezing, data-index validation, deterministic shuffle/resume,
+AIS sidecar construction and provenance, shore interlocking, action freezing,
+data-index validation, deterministic shuffle/resume,
 epsilon scheduling, replay updates, terminal accounting, logging fields,
 artifact compatibility, CLI modes, and legacy isolation. Final verification
 includes all v2 tests, solver smoke, compile/import, preflight, integrated
