@@ -117,7 +117,11 @@ def _boundary_row(parent: str, split: str, boundary: object) -> dict[str, object
 def _source_file_rows(raw_root: Path, excluded_root: Path) -> list[dict[str, object]]:
     rows = []
     for path in sorted(Path(raw_root).rglob("*")):
-        if not path.is_file():
+        if (
+            not path.is_file()
+            or path.suffix.lower() != ".csv"
+            or path.name.startswith("~$")
+        ):
             continue
         resolved = path.resolve()
         try:

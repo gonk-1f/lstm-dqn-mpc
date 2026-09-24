@@ -270,6 +270,8 @@ class ZeroBoundaryDatasetTests(unittest.TestCase):
             root = Path(directory)
             output = root / "dataset"
             parents = self.synthetic_parent_names()
+            (root / "telemetry.csv").write_text("timestamp,value\n", encoding="utf-8")
+            (root / "~$office-lock.xlsx").write_bytes(b"not-a-telemetry-source")
 
             summary = build_dataset(
                 root,
@@ -332,6 +334,13 @@ class ZeroBoundaryDatasetTests(unittest.TestCase):
             )
             self.assertEqual(qa["formal_training_status"], "NO-GO")
             self.assertTrue(all(qa["acceptance_checks"].values()))
+            source_files = pd.read_csv(
+                output / "metadata" / "source_files.csv"
+            )
+            self.assertEqual(
+                source_files.relative_path.tolist(),
+                ["telemetry.csv"],
+            )
 
 
 if __name__ == "__main__":
