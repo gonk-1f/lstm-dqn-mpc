@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import csv
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -19,7 +20,7 @@ from .config import (
 )
 from .data.raw_inventory import RawExcelInventory, require_train_only
 from .dqn.action_space import ACTION_CATALOG_STATUS
-from .dqn.state import CANDIDATE_STATE_STATUS
+from .dqn.state import FORMAL_STATE_STATUS
 from .economics import (
     FORMAL_PRICE_CATALOG,
     SHORE_CHARGING_EFFICIENCY_EVIDENCE,
@@ -34,10 +35,21 @@ from .models.battery_degradation import (
 )
 from .models.battery_energy import BATTERY_EFFICIENCY_CALIBRATION_STATUS
 from .models.fuel_cell_degradation import (
+    FC_AGGREGATE_POWER_MAPPING_STATUS,
     FC_LIFETIME_EVIDENCE_CLASS,
     FC_LIFETIME_NORMALIZATION_STATUS,
 )
 from .models.fuel_cell_efficiency import FC_EFFICIENCY_CALIBRATION_STATUS
+
+
+DEFAULT_MODE_MANIFEST = (
+    Path(__file__).resolve().parents[2]
+    / "data"
+    / "processed"
+    / "operating_dataset_zero_boundary_v2_modes"
+    / "metadata"
+    / "sample_manifest.csv"
+)
 
 
 @dataclass(frozen=True)
@@ -111,6 +123,29 @@ class FormalTrainingBlockedError(RuntimeError):
         super().__init__(f"FORMAL_TRAINING=NO-GO: {detail}")
 
 
+def _shore_mode_evidence() -> tuple[CalibrationStatus, str]:
+    if not DEFAULT_MODE_MANIFEST.is_file():
+        return CalibrationStatus.NO_GO, "authenticated shore-mode manifest is missing"
+    counts = {"train": 0, "validation": 0, "test": 0}
+    try:
+        with DEFAULT_MODE_MANIFEST.open("r", encoding="utf-8-sig", newline="") as handle:
+            rows = tuple(csv.DictReader(handle))
+        for row in rows:
+            split = row["split"]
+            if split not in counts:
+                raise ValueError("unknown split")
+            counts[split] += int(row["unresolved_row_count"])
+    except (KeyError, TypeError, ValueError, OSError) as exc:
+        return CalibrationStatus.NO_GO, f"shore-mode manifest is invalid: {exc}"
+    evidence = (
+        "authenticated FC/BMS/AIS composite mode sidecar; unresolved rows: "
+        f"Train={counts['train']}, Validation={counts['validation']}, Test={counts['test']}"
+    )
+    if counts["train"] or counts["validation"]:
+        return CalibrationStatus.UNRESOLVED, evidence
+    return CalibrationStatus.VERIFIED, evidence
+
+
 def assess_formal_training_preflight() -> FormalTrainingPreflight:
     """Return the repository's complete, non-overridable formal-training gate.
 
@@ -122,6 +157,7 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
     battery_efficiency_verified = (
         BATTERY_EFFICIENCY_CALIBRATION_STATUS == "SOURCE_BACKED"
     )
+    shore_mode_status, shore_mode_evidence = _shore_mode_evidence()
     checks = (
         FormalCalibrationCheck(
             "eta_fc_curve",
@@ -229,18 +265,28 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
             "soft band [0.40,0.60], hard bounds [0.20,0.80], SOC scale 0.60",
         ),
         FormalCalibrationCheck(
+            "fc_aggregate_power_mapping",
+            CalibrationStatus.VERIFIED
+            if FC_AGGREGATE_POWER_MAPPING_STATUS == "FROZEN_PROJECT_MODEL"
+            else CalibrationStatus.NO_GO,
+            (
+                "600 kW aggregate to 100 kW literature reference by equal "
+                "normalized load; frozen project model, not vessel-measured"
+            ),
+        ),
+        FormalCalibrationCheck(
             "final_dqn_state",
-            CalibrationStatus.NO_GO
-            if CANDIDATE_STATE_STATUS == "NO-GO"
-            else CalibrationStatus.UNRESOLVED,
-            "candidate state has not passed required Train-only audits",
+            CalibrationStatus.VERIFIED
+            if FORMAL_STATE_STATUS == "FROZEN_PROJECT_BASELINE"
+            else CalibrationStatus.NO_GO,
+            "S8 ONBOARD-only AIS-aware state is frozen from Train-only evidence",
         ),
         FormalCalibrationCheck(
             "final_action_catalog",
-            CalibrationStatus.NO_GO
-            if ACTION_CATALOG_STATUS == "NO-GO"
-            else CalibrationStatus.UNRESOLVED,
-            "36 candidates exist, but screened final K/catalog is unset",
+            CalibrationStatus.VERIFIED
+            if ACTION_CATALOG_STATUS == "FROZEN_PROJECT_BASELINE"
+            else CalibrationStatus.NO_GO,
+            "complete canonical 36-action catalog frozen for the first baseline",
         ),
         FormalCalibrationCheck(
             "objective_scale_comparability",
@@ -252,6 +298,11 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
                 else CalibrationStatus.UNRESOLVED
             ),
             "accepted Train-only audit: active-P95 scale ratio 1.827863 (PASS)",
+        ),
+        FormalCalibrationCheck(
+            "shore_mode_sidecar",
+            shore_mode_status,
+            shore_mode_evidence,
         ),
     )
     return FormalTrainingPreflight(checks=checks)

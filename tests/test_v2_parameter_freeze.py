@@ -108,7 +108,7 @@ class FrozenParameterPreflightTests(unittest.TestCase):
 
         self.assertEqual(
             tuple(check.key for check in report.checks if check.status is not CalibrationStatus.VERIFIED),
-            ("final_dqn_state", "final_action_catalog"),
+            ("shore_mode_sidecar",),
         )
         self.assertFalse(report.ready)
         self.assertEqual(report.formal_training, "NO-GO")

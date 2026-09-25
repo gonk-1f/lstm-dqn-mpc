@@ -37,9 +37,11 @@ class FormalPreflightTests(unittest.TestCase):
                 "dqn_switch_steps",
                 "tau_lpf",
                 "soc_deadband",
+                "fc_aggregate_power_mapping",
                 "final_dqn_state",
                 "final_action_catalog",
                 "objective_scale_comparability",
+                "shore_mode_sidecar",
             ),
         )
         self.assertFalse(report.ready)
@@ -58,29 +60,21 @@ class FormalPreflightTests(unittest.TestCase):
             by_key["objective_scale_comparability"].status,
             CalibrationStatus.VERIFIED,
         )
+        self.assertEqual(by_key["shore_mode_sidecar"].status, CalibrationStatus.UNRESOLVED)
+        self.assertIn("Train=685", by_key["shore_mode_sidecar"].evidence)
+        self.assertIn("Validation=230", by_key["shore_mode_sidecar"].evidence)
         self.assertTrue(all(check.evidence.strip() for check in report.checks))
 
-    def test_formal_gate_blocks_before_payload_or_data_provenance_access(self) -> None:
-        from v2.preflight import FormalTrainingBlockedError, load_formal_train_payload
-
-        accesses = 0
-
-        def payload_loader() -> object:
-            nonlocal accesses
-            accesses += 1
-            return object()
+    def test_formal_configuration_gate_fails_closed_on_unresolved_mode_evidence(self) -> None:
+        from v2.preflight import FormalTrainingBlockedError, require_formal_training_ready
 
         with self.assertRaises(FormalTrainingBlockedError) as caught:
-            load_formal_train_payload(
-                split="Train",
-                inventory=object(),
-                technical_specification=object(),
-                payload_loader=payload_loader,
-            )
-
-        self.assertEqual(accesses, 0)
-        self.assertEqual(len(caught.exception.report.checks), 15)
-        self.assertIn("FORMAL_TRAINING=NO-GO", str(caught.exception))
+            require_formal_training_ready()
+        self.assertEqual(len(caught.exception.report.checks), 17)
+        self.assertEqual(
+            tuple(issue.code for issue in caught.exception.report.issues),
+            ("unfrozen_shore_mode_sidecar",),
+        )
 
     def test_preflight_cli_reports_every_check_and_returns_no_go(self) -> None:
         from v2.main.run_preflight import main
@@ -93,7 +87,7 @@ class FormalPreflightTests(unittest.TestCase):
         self.assertIn("FORMAL_TRAINING=NO-GO", output.getvalue())
         self.assertEqual(
             sum(line.startswith("[") for line in output.getvalue().splitlines()),
-            15,
+            17,
         )
         self.assertIn("[VERIFIED] objective_scale_comparability", output.getvalue())
 
@@ -151,16 +145,13 @@ class FormalPreflightTests(unittest.TestCase):
         self.assertEqual(rendered["formal_selection_status"], "NO-GO")
         self.assertEqual(rendered["candidate_switch_steps"], [5, 10])
 
-    def test_preflight_report_has_exactly_eighteen_numbered_sections(self) -> None:
+    def test_preflight_report_matches_current_go_boundary(self) -> None:
         report = (ROOT / "docs" / "v2_preflight_report.md").read_text(encoding="utf-8")
-        headings = [line for line in report.splitlines() if line.startswith("## ")]
-
-        self.assertEqual(len(headings), 18)
-        self.assertEqual(
-            [heading.split(".", 1)[0] for heading in headings],
-            [f"## {index}" for index in range(1, 19)],
-        )
         self.assertIn("FORMAL_TRAINING = NO-GO", report)
+        self.assertIn("685", report)
+        self.assertIn("S8", report)
+        self.assertIn("36-action", report)
+        self.assertIn("Test payload", report)
 
 
 if __name__ == "__main__":

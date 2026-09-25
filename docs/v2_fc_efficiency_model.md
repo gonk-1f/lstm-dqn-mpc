@@ -3,10 +3,10 @@
 ## Calibration status
 
 Fuel-cell system efficiency and battery charge/discharge efficiency are now
-**SOURCE_BACKED**. They are no longer reasons to block formal training. Overall
-formal v2 training remains **NO-GO** because later evidence gates are unresolved,
-including fuel-cell and battery lifetime normalization and the final
-deadband/state/action catalog.
+**SOURCE_BACKED**. They are no longer reasons to block formal training. The
+later lifetime, state, action, dataset, and integrated-runtime gates have since
+been frozen or verified; current readiness is recorded in
+`docs/v2_preflight_report.md`.
 
 ## Fuel-cell numeric source
 

@@ -23,7 +23,12 @@ FC_EOL_VOLTAGE_LOSS_UV = 70_000.0
 FC_AGGREGATE_REPLACEMENT_COST_CNY = 3_500.0 * 600.0
 FC_LIFETIME_NORMALIZATION_STATUS = "VERIFIED"
 FC_LIFETIME_EVIDENCE_CLASS = "literature/model verified; not vessel-measured"
-FC_AGGREGATE_POWER_MAPPING_STATUS = "NO-GO"
+FC_AGGREGATE_POWER_MAPPING_STATUS = "FROZEN_PROJECT_MODEL"
+FC_AGGREGATE_TO_REFERENCE_POWER_RATIO = 1.0 / 6.0
+FC_AGGREGATE_MAPPING_APPLICABILITY = (
+    "equal normalized-load mapping from the formal 600 kW aggregate to the "
+    "100 kW literature reference unit; project model, not vessel-measured"
+)
 
 
 def _strict_scalar(value: object, name: str) -> float:
@@ -379,7 +384,7 @@ class AggregateFcOnOffTracker:
 
 @dataclass(frozen=True)
 class AggregateFcPowerMapping:
-    """Proposed aggregate-to-reference mapping; none is verified."""
+    """Explicit aggregate-to-reference project-model mapping."""
 
     aggregate_to_reference_power_ratio: float
     source_doi: str
@@ -399,10 +404,22 @@ class AggregateFcPowerMapping:
         _strict_text(self.applicability, "applicability")
 
     def require_verified(self) -> AggregateFcPowerMapping:
-        raise ValueError(
-            "formal aggregate fuel-cell degradation is NO-GO: no authoritative "
-            "aggregate-to-reference-unit power mapping is available"
-        )
+        if (
+            self.aggregate_to_reference_power_ratio
+            != FC_AGGREGATE_TO_REFERENCE_POWER_RATIO
+            or self.source_doi != FC_DEGRADATION_SOURCE_DOI
+            or self.applicability != FC_AGGREGATE_MAPPING_APPLICABILITY
+        ):
+            raise ValueError("aggregate fuel-cell mapping is not the frozen project model")
+        return self
+
+
+def formal_aggregate_fc_power_mapping() -> AggregateFcPowerMapping:
+    return AggregateFcPowerMapping(
+        aggregate_to_reference_power_ratio=FC_AGGREGATE_TO_REFERENCE_POWER_RATIO,
+        source_doi=FC_DEGRADATION_SOURCE_DOI,
+        applicability=FC_AGGREGATE_MAPPING_APPLICABILITY,
+    )
 
 
 def formal_aggregate_fc_voltage_loss_step_uv(
@@ -445,8 +462,16 @@ def formal_aggregate_fc_voltage_loss_step_uv(
         raise ValueError("aggregate_start_stop_cycles must be non-negative")
     if type(mapping) is not AggregateFcPowerMapping:
         raise TypeError("mapping must use the exact provenance-bearing type")
-    AggregateFcPowerMapping.require_verified(mapping)
-    raise AssertionError("unreachable until a formal mapping is authorized")
+    checked = AggregateFcPowerMapping.require_verified(mapping)
+    ratio = checked.aggregate_to_reference_power_ratio
+    return reference_unit_voltage_loss_step_uv(
+        previous * ratio,
+        power * ratio,
+        duration,
+        rated * ratio,
+        is_on=is_on,
+        aggregate_start_stop_cycles=int(aggregate_start_stop_cycles),
+    )
 
 
 @dataclass(frozen=True)

@@ -172,6 +172,38 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         self.assertEqual(backend.calls, 3)
         self.assertEqual(transition.executed_mpc_steps, 3)
 
+    def test_shore_intervals_are_drained_without_counting_as_mpc_steps(self) -> None:
+        from v2.envs.multirate_weight_env import MPCExecutionResult
+
+        class EventBackend:
+            def __init__(self, ledgers):
+                self.results = (
+                    MPCExecutionResult(ledgers[0], False, True, True),
+                    MPCExecutionResult(ledgers[1], False, True, True),
+                    MPCExecutionResult(ledgers[2], False, True, False),
+                    MPCExecutionResult(ledgers[3], False, False, False),
+                    MPCExecutionResult(ledgers[4], False, False, True),
+                )
+                self.calls = 0
+
+            def execute_mpc_step(self, weights):
+                result = self.results[self.calls]
+                self.calls += 1
+                return result
+
+        backend = EventBackend(self._ledgers(5))
+        provider = _StateProvider()
+        environment = self._environment(backend, provider)
+        environment.reset()
+
+        transition = environment.step("w_2_3_5")
+
+        self.assertEqual(backend.calls, 5)
+        self.assertEqual(transition.executed_mpc_steps, 3)
+        self.assertEqual(transition.ledger.components_cny, (15.0, 10.0, 15.0, 20.0))
+        self.assertEqual(provider.calls, 2)
+        self.assertFalse(transition.done)
+
     def test_early_done_still_builds_one_boundary_state_and_one_transition(self) -> None:
         backend = _Backend(self._ledgers(5), done_at=2)
         provider = _StateProvider()
@@ -276,7 +308,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         self.assertIs(second, environment.transitions[1])
         self.assertEqual(backend.calls, 2)
 
-    def test_strict_boundaries_and_no_go_training_status(self) -> None:
+    def test_strict_boundaries_and_integrated_preflight_status(self) -> None:
         import numpy as np
 
         from v2.envs.multirate_weight_env import (
@@ -284,7 +316,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
             TRAINING_READINESS_STATUS,
         )
 
-        self.assertEqual(TRAINING_READINESS_STATUS, "NO-GO")
+        self.assertEqual(TRAINING_READINESS_STATUS, "READY_FOR_INTEGRATED_PREFLIGHT")
         with self.assertRaises(TypeError):
             MPCExecutionResult(self._ledgers(1)[0], 0)  # type: ignore[arg-type]
 
@@ -293,7 +325,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             environment.reset()
 
-        with self.assertRaisesRegex(PermissionError, "synthetic_test_mode"):
+        with self.assertRaisesRegex(PermissionError, "exactly one"):
             from v2.config import TimeScaleConfig
             from v2.envs.multirate_weight_env import MultiRateWeightEnvironment
 

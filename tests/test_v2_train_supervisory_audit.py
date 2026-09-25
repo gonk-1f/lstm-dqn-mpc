@@ -79,8 +79,8 @@ class TrainSupervisoryAuditBuilderTests(unittest.TestCase):
 
         complete = build_parent_supervisory_states(self._parent_channels())
         self.assertEqual(len(complete.states), 3)
-        self.assertIs(complete.states[0].mode, OperatingMode.UNKNOWN)
-        self.assertIs(complete.states[1].mode, OperatingMode.SAILING_ISLAND)
+        self.assertIs(complete.states[0].mode, OperatingMode.UNRESOLVED)
+        self.assertIs(complete.states[1].mode, OperatingMode.ONBOARD)
         self.assertEqual(complete.states[1].p_fc_total_kw, 80.0)
         self.assertEqual(complete.states[1].p_batt_total_kw, 12.0)
         self.assertEqual(complete.states[1].p_load_kw, 92.0)
@@ -91,7 +91,7 @@ class TrainSupervisoryAuditBuilderTests(unittest.TestCase):
         stale = build_parent_supervisory_states(
             self._parent_channels(stale_last_battery=True)
         )
-        self.assertIs(stale.states[-1].mode, OperatingMode.UNKNOWN)
+        self.assertIs(stale.states[-1].mode, OperatingMode.UNRESOLVED)
         self.assertIsNone(stale.states[-1].p_load_kw)
         self.assertFalse(stale.states[-1].channels_complete)
 

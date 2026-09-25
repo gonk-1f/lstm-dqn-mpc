@@ -1,17 +1,15 @@
-# v2 Candidate Action Space and Screening Boundary
+# v2 Frozen Action Space and Optional Screening Boundary
 
 ## Status
 
-The formal v2 DQN action catalog is **NO-GO / unset**. The repository has a
-canonical candidate bank, but it does not have usable Train operating-cycle
-data or a completed solver reproducibility audit. Therefore
-`FINAL_DQN_ACTION_CATALOG` is `None`, and the default catalog getter fails
-closed. Nothing in this implementation claims that real-data screening has
-run, that a catalog size `K` has been selected, or that any candidate is fit
-for formal training.
+The first formal v2 baseline freezes the complete canonical 36-action bank as
+`FINAL_DQN_ACTION_CATALOG`. Its configuration status is
+`FROZEN_PROJECT_BASELINE`; this is a project design decision, not evidence that
+behavioral screening proved all 36 actions optimal. The catalog order and
+digest are bound into every formal checkpoint.
 
 The frozen compatibility identifier is
-`three_weight_simplex_behavior_filtered_v1`, matching the v2 contracts module.
+`three_weight_simplex_complete36_v1`, matching the v2 contracts module.
 
 ## Candidate bank
 
@@ -33,8 +31,9 @@ are `w_<n_base>_<n_smooth>_<n_soc>`. Both order and IDs are independent of
 Python hashes and runtime container ordering. Each candidate converts directly
 to Task 5 `MPCWeights`.
 
-The 36-member `CANDIDATE_ACTION_BANK` is an experimental search domain, not a
-DQN catalog. Code must not substitute it for the unset final catalog.
+For the first baseline, `FINAL_DQN_ACTION_CATALOG` is exactly the immutable
+36-member `CANDIDATE_ACTION_BANK`. Future Train-only sensitivity or screening
+may define a new versioned catalog, but does not block this baseline.
 
 ## Train-only evidence model
 
@@ -101,7 +100,7 @@ The metric schema itself is intentionally not frozen here. A future Train-only
 audit must state the physical metrics, directions, and engineering or
 Train-derived scales it uses.
 
-## Deterministic screening pipeline
+## Optional future deterministic screening pipeline
 
 The intended future flow is:
 
@@ -123,15 +122,15 @@ The intended future flow is:
    uses `math.fsum`. This prevents a sum of finite extreme distances from
    overflowing into a false tie; any genuinely infinite distance still gives
    that candidate an infinite score.
-7. Freeze the resulting representative count as `K` only after the Train audit
-   is reviewed. This module does not invent or freeze `K`.
+7. Publish any resulting representative count as a new catalog version only
+   after the Train audit is reviewed; it must not silently replace complete36.
 
 The Pareto, de-duplication, clustering, and medoid functions are small
 dependency-light algorithms that can be exercised with synthetic records now.
 They are interfaces for a future empirical audit, not evidence that the audit
 already happened.
 
-## Finalization gate
+## Generic screening finalization gate
 
 The generic finalization boundary requires all of the following:
 
@@ -158,8 +157,5 @@ hard gate. Such failures are a reason to remove them, not a reason to pretend
 the audit is incomplete. Selecting one of those failed candidates is rejected.
 
 Passing this generic function with synthetic evidence does not mutate module
-constants or publish a repository catalog. Under the current raw-data status,
-the production getter remains NO-GO until a future reviewed Train-only workflow
-supplies real usable data, audited solver evidence, documented thresholds, and
-a frozen representative set. Validation and Test must not participate in that
-selection.
+constants or replace the frozen complete36 catalog. Validation and Test must
+not participate in any future catalog selection.

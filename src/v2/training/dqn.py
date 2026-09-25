@@ -56,7 +56,7 @@ class DqnTrainingConfig:
         if self.learning_rate <= 0.0 or self.gradient_clip_norm <= 0.0:
             raise ValueError("learning rate and gradient clip must be positive")
         if self.state_dim != FORMAL_STATE_DIMENSION or self.action_dim != len(FINAL_DQN_ACTION_CATALOG):
-            raise ValueError("DQN dimensions must match frozen S9/36 contracts")
+            raise ValueError("DQN dimensions must match frozen S8/36 contracts")
 
     @classmethod
     def formal_baseline(cls) -> "DqnTrainingConfig":
@@ -64,7 +64,7 @@ class DqnTrainingConfig:
             state_dim=FORMAL_STATE_DIMENSION,
             action_dim=len(FINAL_DQN_ACTION_CATALOG),
             hidden_dims=(128, 128),
-            gamma=0.99,
+            gamma=1.0,
             learning_rate=1.0e-4,
             batch_size=256,
             replay_capacity=200_000,
@@ -246,6 +246,14 @@ class DqnAgent:
             raise ValueError("epsilon must lie in [0, 1]")
         if self.rng.random() < float(epsilon):
             return self.rng.randrange(self.config.action_dim)
+        return self.greedy_action(values)
+
+    def greedy_action(self, state: np.ndarray) -> int:
+        """Select the online-network argmax without consuming exploration RNG."""
+
+        values = np.asarray(state, dtype=np.float32)
+        if values.shape != (self.config.state_dim,) or not np.isfinite(values).all():
+            raise ValueError("state must be one finite formal state vector")
         with torch.no_grad():
             tensor = torch.as_tensor(values, device=self.device).unsqueeze(0)
             return int(self.online(tensor).argmax(dim=1).item())

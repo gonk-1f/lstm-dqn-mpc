@@ -178,7 +178,7 @@ class ParentSupervisoryState:
     @property
     def audit_eligible(self) -> bool:
         return (
-            self.mode is OperatingMode.SAILING_ISLAND
+            self.mode is OperatingMode.ONBOARD
             and self.channels_complete
             and not self.conflicting_duplicate
             and not self.long_gap_contaminated
@@ -300,7 +300,7 @@ def build_parent_supervisory_states(
     for row, mode in zip(raw_rows, modes):
         sample = row["sample"]
         assert type(sample) is ModeSample
-        load = reconstruct_sailing_load(sample, mode) if mode is OperatingMode.SAILING_ISLAND else None
+        load = reconstruct_sailing_load(sample, mode) if mode is OperatingMode.ONBOARD else None
         states.append(
             ParentSupervisoryState(
                 channels.parent_id,

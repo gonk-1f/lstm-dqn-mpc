@@ -42,17 +42,16 @@ CANDIDATE_STATE_FEATURE_NAMES = (
 )
 
 FORMAL_STATE_STATUS = "FROZEN_PROJECT_BASELINE"
-FORMAL_STATE_SCHEMA_VERSION = "v2_s9_ais_shore_v1"
+FORMAL_STATE_SCHEMA_VERSION = "v2_s8_onboard_ais_v1"
 FORMAL_STATE_FEATURE_NAMES = (
     "soc",
-    "speed_fraction",
-    "shore_connected",
     "causal_base_load_fraction",
     "load_residual_fraction",
     "recent_load_population_std_fraction",
     "recent_load_window_trend_fraction",
     "fuel_cell_power_fraction",
     "fuel_cell_delta_fraction",
+    "speed_fraction",
 )
 FORMAL_STATE_DIMENSION = len(FORMAL_STATE_FEATURE_NAMES)
 FORMAL_STATE_POWER_SCALE_KW = 600.0
@@ -387,9 +386,8 @@ def build_formal_operating_state(
     *,
     current_time_seconds: float,
     speed_kn: float,
-    shore_connected: bool,
 ) -> tuple[float, ...]:
-    """Build the frozen S9 state from an inclusive causal 150 s history."""
+    """Build the frozen ONBOARD-only S8 from an inclusive causal history."""
 
     if type(history) is not tuple or not history:
         raise TypeError("history must be a nonempty immutable tuple")
@@ -403,8 +401,6 @@ def build_formal_operating_state(
     speed = _finite_scalar(speed_kn, "speed_kn")
     if speed < 0.0:
         raise ValueError("speed_kn must be nonnegative")
-    if type(shore_connected) is not bool:
-        raise TypeError("shore_connected must be an exact bool")
     selected = tuple(
         sample
         for sample in checked
@@ -427,8 +423,6 @@ def build_formal_operating_state(
     )
     state = (
         float(current.soc),
-        speed / FORMAL_STATE_SPEED_SCALE_KN,
-        1.0 if shore_connected else 0.0,
         current.causal_base_load_kw / FORMAL_STATE_POWER_SCALE_KW,
         (current.load_power_kw - current.causal_base_load_kw)
         / FORMAL_STATE_POWER_SCALE_KW,
@@ -436,11 +430,12 @@ def build_formal_operating_state(
         load_slope * FORMAL_STATE_WINDOW_SECONDS / FORMAL_STATE_POWER_SCALE_KW,
         current.fuel_cell_power_kw / FORMAL_STATE_POWER_SCALE_KW,
         (current.fuel_cell_power_kw - previous_fc) / FORMAL_STATE_POWER_SCALE_KW,
+        speed / FORMAL_STATE_SPEED_SCALE_KN,
     )
     if len(state) != FORMAL_STATE_DIMENSION or not all(
         type(value) is float and math.isfinite(value) for value in state
     ):
-        raise ValueError("formal S9 state must contain nine finite floats")
+        raise ValueError("formal S8 state must contain eight finite floats")
     return state
 
 

@@ -15,7 +15,7 @@ from .dqn import DqnAgent
 from .schedule import EpisodeShuffleSchedule
 
 
-CHECKPOINT_VERSION = "v2_formal_dqn_checkpoint_v1"
+CHECKPOINT_VERSION = "v2_formal_dqn_checkpoint_v2"
 
 
 class IncompatibleCheckpointError(ValueError):
@@ -27,6 +27,15 @@ class ResumeMetadata:
     global_macro_step: int
     round_index: int
     episode_position: int
+    current_permutation: tuple[str, ...]
+
+
+def _config_identity(agent: DqnAgent) -> dict[str, object]:
+    """Return immutable training semantics; round budget may only be extended."""
+
+    identity = asdict(agent.config)
+    identity.pop("rounds")
+    return identity
 
 
 def save_checkpoint(
@@ -37,6 +46,7 @@ def save_checkpoint(
     global_macro_step: int,
     round_index: int,
     episode_position: int,
+    current_permutation: tuple[str, ...],
 ) -> None:
     if type(agent) is not DqnAgent or type(schedule) is not EpisodeShuffleSchedule:
         raise TypeError("agent and schedule must use exact v2 types")
@@ -47,6 +57,16 @@ def save_checkpoint(
     ):
         if type(value) is not int or value < 0:
             raise ValueError(f"{name} must be a nonnegative exact integer")
+    episode_ids = schedule.state_dict()["episode_ids"]
+    if (
+        type(current_permutation) is not tuple
+        or len(current_permutation) != len(episode_ids)
+        or set(current_permutation) != set(episode_ids)
+        or any(type(value) is not str for value in current_permutation)
+    ):
+        raise ValueError("current_permutation must contain every Train episode exactly once")
+    if episode_position > len(current_permutation):
+        raise ValueError("episode_position exceeds current_permutation")
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_name(f"{destination.name}.tmp-{os.getpid()}")
@@ -59,12 +79,14 @@ def save_checkpoint(
         "action_catalog_digest": ACTION_CATALOG_DIGEST,
         "action_dim": len(FINAL_DQN_ACTION_CATALOG),
         "semantics": control_semantics(),
-        "training_config": asdict(agent.config),
+        "training_config_identity": _config_identity(agent),
+        "round_budget": agent.config.rounds,
         "agent": agent.state_dict(),
         "schedule": schedule.state_dict(),
         "global_macro_step": global_macro_step,
         "round_index": round_index,
         "episode_position": episode_position,
+        "current_permutation": current_permutation,
     }
     try:
         torch.save(payload, temporary)
@@ -93,10 +115,13 @@ def load_checkpoint(
         "action_catalog_digest": ACTION_CATALOG_DIGEST,
         "action_dim": len(FINAL_DQN_ACTION_CATALOG),
         "semantics": control_semantics(),
-        "training_config": asdict(agent.config),
+        "training_config_identity": _config_identity(agent),
     }
     if any(payload.get(key) != value for key, value in expected.items()):
         raise IncompatibleCheckpointError("checkpoint state/action/config identity differs")
+    saved_round_budget = payload.get("round_budget")
+    if type(saved_round_budget) is not int or agent.config.rounds < saved_round_budget:
+        raise IncompatibleCheckpointError("resume round budget cannot be reduced")
     try:
         agent.load_state_dict(payload["agent"])
         schedule.load_state_dict(payload["schedule"])
@@ -105,9 +130,19 @@ def load_checkpoint(
         ))
         if any(type(value) is not int or value < 0 for value in values):
             raise ValueError("checkpoint counters are invalid")
+        permutation = payload["current_permutation"]
+        episode_ids = schedule.state_dict()["episode_ids"]
+        if (
+            type(permutation) is not tuple
+            or len(permutation) != len(episode_ids)
+            or set(permutation) != set(episode_ids)
+            or any(type(value) is not str for value in permutation)
+            or values[2] > len(permutation)
+        ):
+            raise ValueError("checkpoint current permutation is invalid")
     except Exception as exc:
         raise IncompatibleCheckpointError(f"checkpoint runtime state differs: {exc}") from exc
-    return ResumeMetadata(*values)
+    return ResumeMetadata(*values, permutation)
 
 
 __all__ = [

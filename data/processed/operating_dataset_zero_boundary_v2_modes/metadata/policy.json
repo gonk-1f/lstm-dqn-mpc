@@ -1,0 +1,30 @@
+{
+  "ais_manifest_sha256": "0e17b66f3d290a065cf975cbdc20d4c698dba0d2fe4e4a0f291dae3d68ef78fd",
+  "battery_bus_sign": "positive discharge, negative charge",
+  "component_interpolation": "PCHIP within bracketed reconstructed raw-component span",
+  "mode_counts": {
+    "onboard": 35752,
+    "shore_charging": 3232,
+    "shore_pending": 42,
+    "unresolved": 915
+  },
+  "power_manifest_sha256": "2cc5f510d55785543930c4c11c2f8208bfd4c3ce4cafd9fbbe3e97918048d346",
+  "schema_version": "v2_shore_mode_30s_v1",
+  "split_mode_counts": {
+    "test": {
+      "onboard": 2765
+    },
+    "train": {
+      "onboard": 28041,
+      "shore_charging": 2151,
+      "shore_pending": 32,
+      "unresolved": 685
+    },
+    "validation": {
+      "onboard": 4946,
+      "shore_charging": 1081,
+      "shore_pending": 10,
+      "unresolved": 230
+    }
+  }
+}

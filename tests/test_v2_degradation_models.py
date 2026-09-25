@@ -142,6 +142,31 @@ class FuelCellDegradationTests(unittest.TestCase):
                 0.0, 600.0, 1.0, 600.0, is_on=True, mapping=unresolved
             )
 
+    def test_frozen_project_mapping_preserves_normalized_aggregate_load(self) -> None:
+        from v2.models.fuel_cell_degradation import (
+            FC_AGGREGATE_POWER_MAPPING_STATUS,
+            formal_aggregate_fc_power_mapping,
+            formal_aggregate_fc_voltage_loss_step_uv,
+            reference_unit_voltage_loss_step_uv,
+        )
+
+        mapping = formal_aggregate_fc_power_mapping()
+        self.assertEqual(FC_AGGREGATE_POWER_MAPPING_STATUS, "FROZEN_PROJECT_MODEL")
+        self.assertEqual(mapping.aggregate_to_reference_power_ratio, 1.0 / 6.0)
+        self.assertIn("not vessel-measured", mapping.applicability)
+        aggregate = formal_aggregate_fc_voltage_loss_step_uv(
+            300.0, 600.0, 30.0, 600.0,
+            is_on=True,
+            mapping=mapping,
+            aggregate_start_stop_cycles=1,
+        )
+        reference = reference_unit_voltage_loss_step_uv(
+            50.0, 100.0, 30.0, 100.0,
+            is_on=True,
+            aggregate_start_stop_cycles=1,
+        )
+        self.assertEqual(aggregate, reference)
+
     def test_hysteresis_requires_continuous_dwell_and_counts_one_start(self) -> None:
         from v2.models.fuel_cell_degradation import AggregateFcOnOffTracker
 

@@ -13,8 +13,10 @@ from typing import Sequence
 FRESHNESS_CAP_SECONDS = 10.0
 SPEED_ZERO_TOLERANCE_KN = 0.1
 FC_ZERO_TOLERANCE_KW = 8.0
+BATTERY_CHARGE_THRESHOLD_KW = 1.0
+SOURCE_LOAD_DEADBAND_KW = 1.0
 LONG_GAP_SECONDS = 45.0
-SHORE_MIN_CONSECUTIVE_SAMPLES = 2
+SHORE_MIN_CONSECUTIVE_SAMPLES = 3
 
 
 def _finite(value: object, name: str) -> float:
@@ -32,9 +34,10 @@ def is_fresh_causal_age(age_seconds: object) -> bool:
 
 
 class OperatingMode(Enum):
-    SAILING_ISLAND = "sailing_island"
-    SHORE_CONNECTED = "shore_connected"
-    UNKNOWN = "unknown"
+    ONBOARD = "onboard"
+    SHORE_PENDING = "shore_pending"
+    SHORE_CHARGING = "shore_charging"
+    UNRESOLVED = "unresolved"
 
 
 @dataclass(frozen=True)
@@ -46,6 +49,7 @@ class ModeSample:
     channels_complete: bool = True
     conflicting_duplicate: bool = False
     long_gap_contaminated: bool = False
+    p_load_kw: float | None = None
 
     def __post_init__(self) -> None:
         if type(self.timestamp) is not datetime:
@@ -56,6 +60,8 @@ class ModeSample:
             object.__setattr__(self, name, _finite(getattr(self, name), name))
         if self.speed_kn < 0.0:
             raise ValueError("speed_kn must be nonnegative")
+        if self.p_load_kw is not None:
+            object.__setattr__(self, "p_load_kw", _finite(self.p_load_kw, "p_load_kw"))
         for name in (
             "channels_complete",
             "conflicting_duplicate",
@@ -78,7 +84,7 @@ def _shore_candidate(sample: ModeSample) -> bool:
         sample.quality_valid
         and sample.speed_kn <= SPEED_ZERO_TOLERANCE_KN
         and abs(sample.p_fc_total_kw) <= FC_ZERO_TOLERANCE_KW
-        and sample.p_batt_total_kw < 0.0
+        and sample.p_batt_total_kw < -BATTERY_CHARGE_THRESHOLD_KW
     )
 
 
@@ -94,7 +100,7 @@ def classify_operating_modes(samples: Sequence[ModeSample]) -> tuple[OperatingMo
     ):
         raise ValueError("sample timestamps must be strictly increasing")
 
-    modes = [OperatingMode.UNKNOWN] * len(checked)
+    modes = [OperatingMode.UNRESOLVED] * len(checked)
     shore_flags = [_shore_candidate(sample) for sample in checked]
     start = 0
     while start < len(checked):
@@ -110,15 +116,27 @@ def classify_operating_modes(samples: Sequence[ModeSample]) -> tuple[OperatingMo
         ):
             end += 1
         if end - start >= SHORE_MIN_CONSECUTIVE_SAMPLES:
-            modes[start:end] = [OperatingMode.SHORE_CONNECTED] * (end - start)
+            modes[start : start + SHORE_MIN_CONSECUTIVE_SAMPLES - 1] = [
+                OperatingMode.SHORE_PENDING
+            ] * (SHORE_MIN_CONSECUTIVE_SAMPLES - 1)
+            modes[start + SHORE_MIN_CONSECUTIVE_SAMPLES - 1 : end] = [
+                OperatingMode.SHORE_CHARGING
+            ] * (end - start - SHORE_MIN_CONSECUTIVE_SAMPLES + 1)
         start = end
 
     for index, sample in enumerate(checked):
-        if modes[index] is OperatingMode.SHORE_CONNECTED or not sample.quality_valid:
+        if modes[index] in {
+            OperatingMode.SHORE_PENDING,
+            OperatingMode.SHORE_CHARGING,
+        } or not sample.quality_valid:
             continue
-        reconstructed = sample.p_fc_total_kw + sample.p_batt_total_kw
-        if sample.speed_kn > SPEED_ZERO_TOLERANCE_KN and reconstructed >= 0.0:
-            modes[index] = OperatingMode.SAILING_ISLAND
+        reconstructed = (
+            sample.p_fc_total_kw + sample.p_batt_total_kw
+            if sample.p_load_kw is None
+            else sample.p_load_kw
+        )
+        if reconstructed >= -SOURCE_LOAD_DEADBAND_KW:
+            modes[index] = OperatingMode.ONBOARD
     return tuple(modes)
 
 
@@ -127,10 +145,10 @@ def reconstruct_sailing_load(sample: ModeSample, mode: OperatingMode) -> float:
         raise TypeError("sample must be an exact ModeSample")
     if type(mode) is not OperatingMode:
         raise TypeError("mode must be an exact OperatingMode")
-    if mode is not OperatingMode.SAILING_ISLAND:
-        raise ValueError("load reconstruction is restricted to sailing_island")
-    if not sample.quality_valid or sample.speed_kn <= SPEED_ZERO_TOLERANCE_KN:
-        raise ValueError("sample does not satisfy sailing eligibility")
+    if mode is not OperatingMode.ONBOARD:
+        raise ValueError("load reconstruction is restricted to onboard mode")
+    if not sample.quality_valid:
+        raise ValueError("sample does not satisfy onboard eligibility")
     load = sample.p_fc_total_kw + sample.p_batt_total_kw
     if load < 0.0:
         raise ValueError("negative reconstructed sailing load is contradictory")
@@ -138,10 +156,12 @@ def reconstruct_sailing_load(sample: ModeSample, mode: OperatingMode) -> float:
 
 
 __all__ = [
+    "BATTERY_CHARGE_THRESHOLD_KW",
     "FC_ZERO_TOLERANCE_KW",
     "FRESHNESS_CAP_SECONDS",
     "LONG_GAP_SECONDS",
     "SHORE_MIN_CONSECUTIVE_SAMPLES",
+    "SOURCE_LOAD_DEADBAND_KW",
     "SPEED_ZERO_TOLERANCE_KN",
     "ModeSample",
     "OperatingMode",

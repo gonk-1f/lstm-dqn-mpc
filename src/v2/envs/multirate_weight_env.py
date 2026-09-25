@@ -14,10 +14,12 @@ from typing import Callable, Protocol
 from ..config import TimeScaleConfig
 from ..control.nonlinear_mpc import MPCWeights
 from ..dqn.action_space import ActionCandidate
+from ..dqn.action_space import FINAL_DQN_ACTION_CATALOG
+from ..dqn.state import FORMAL_STATE_DIMENSION
 from ..economics import RawCnyIntervalLedger
 
 
-TRAINING_READINESS_STATUS = "NO-GO"
+TRAINING_READINESS_STATUS = "READY_FOR_INTEGRATED_PREFLIGHT"
 
 
 def _validate_timescale(value: object) -> TimeScaleConfig:
@@ -88,22 +90,30 @@ def _validate_ledger(value: object) -> RawCnyIntervalLedger:
 
 
 class MPCStepBackend(Protocol):
-    """Backend boundary: one call means one solve and first-command execution."""
+    """Backend boundary: one call advances one physical control interval."""
 
     def execute_mpc_step(self, weights: MPCWeights) -> "MPCExecutionResult": ...
 
 
 @dataclass(frozen=True)
 class MPCExecutionResult:
-    """Economic result of exactly one physically executed MPC command."""
+    """Economic result of one physical interval, with explicit MPC semantics."""
 
     ledger: RawCnyIntervalLedger
     done: bool
+    mpc_solve_executed: bool = True
+    next_decision_ready: bool = True
 
     def __post_init__(self) -> None:
         _validate_ledger(self.ledger)
         if type(self.done) is not bool:
             raise TypeError("done must be an exact bool")
+        if type(self.mpc_solve_executed) is not bool:
+            raise TypeError("mpc_solve_executed must be an exact bool")
+        if type(self.next_decision_ready) is not bool:
+            raise TypeError("next_decision_ready must be an exact bool")
+        if self.done and not self.next_decision_ready:
+            raise ValueError("terminal interval must expose a decision boundary")
 
 
 @dataclass(frozen=True)
@@ -197,14 +207,16 @@ class MultiRateWeightEnvironment:
         backend: MPCStepBackend,
         state_provider: Callable[[], tuple[float, ...]],
         synthetic_test_mode: bool = False,
+        formal_training_mode: bool = False,
         replay_sink: Callable[[MacroTransition], None] | None = None,
     ) -> None:
         if type(synthetic_test_mode) is not bool:
             raise TypeError("synthetic_test_mode must be an exact bool")
-        if not synthetic_test_mode:
+        if type(formal_training_mode) is not bool:
+            raise TypeError("formal_training_mode must be an exact bool")
+        if synthetic_test_mode == formal_training_mode:
             raise PermissionError(
-                "formal v2 training is NO-GO; synthetic_test_mode=True is required "
-                "for an explicitly injected test backend"
+                "exactly one of synthetic_test_mode or formal_training_mode is required"
             )
         checked_timescale = _validate_timescale(timescale)
         if type(action_catalog) is not tuple:
@@ -212,6 +224,8 @@ class MultiRateWeightEnvironment:
         if not action_catalog:
             raise ValueError("action_catalog must not be empty")
         checked_catalog = tuple(_validate_candidate(item) for item in action_catalog)
+        if formal_training_mode and checked_catalog != FINAL_DQN_ACTION_CATALOG:
+            raise ValueError("formal mode requires the exact frozen 36-action catalog")
         action_ids = tuple(item.action_id for item in checked_catalog)
         if len(set(action_ids)) != len(action_ids):
             raise ValueError("action_catalog contains duplicate action IDs")
@@ -226,6 +240,8 @@ class MultiRateWeightEnvironment:
         self._timescale = checked_timescale
         self._actions = dict(zip(action_ids, checked_catalog))
         self._execute_mpc_step = execute
+        self._backend = backend
+        self._formal_training_mode = formal_training_mode
         self._state_provider = state_provider
         self._replay_sink = replay_sink
         self._current_state: tuple[float, ...] | None = None
@@ -242,7 +258,14 @@ class MultiRateWeightEnvironment:
         return self._current_state
 
     def reset(self) -> tuple[float, ...]:
+        if self._formal_training_mode:
+            reset_backend = getattr(self._backend, "reset", None)
+            if not callable(reset_backend):
+                raise TypeError("formal backend must expose callable reset")
+            reset_backend()
         state = _validate_state(self._state_provider(), "reset state")
+        if self._formal_training_mode and len(state) != FORMAL_STATE_DIMENSION:
+            raise ValueError("formal reset state must use frozen S8 dimension")
         self._current_state = state
         self._transitions.clear()
         self._done = False
@@ -271,15 +294,16 @@ class MultiRateWeightEnvironment:
         try:
             # N is intentionally absent here: it belongs inside each backend
             # solve.  M alone determines actual receding-horizon executions.
-            for _ in range(self._timescale.dqn_switch_steps):
+            encountered_pause = False
+            while True:
                 # Backends are untrusted mutable boundaries.  A fresh value
                 # prevents one call from poisoning a later MPC execution.
                 weights = MPCWeights(*canonical_weight_values)
                 result = self._execute_mpc_step(weights)
                 # Returning from this boundary means one physical command was
                 # executed even if the backend's result object is malformed.
-                executed += 1
                 if type(result) is not MPCExecutionResult:
+                    executed += 1
                     raise TypeError("backend result must be an exact MPCExecutionResult")
                 _validate_ledger(result.ledger)
                 if type(result.done) is not bool:
@@ -289,8 +313,17 @@ class MultiRateWeightEnvironment:
                 ledger = RawCnyIntervalLedger(*result.ledger.components_cny)
                 done_snapshot = result.done
                 ledgers.append(ledger)
+                if result.mpc_solve_executed:
+                    executed += 1
+                else:
+                    encountered_pause = True
                 done = done_snapshot
                 if done:
+                    break
+                if result.next_decision_ready and (
+                    encountered_pause
+                    or executed >= self._timescale.dqn_switch_steps
+                ):
                     break
 
             components = tuple(

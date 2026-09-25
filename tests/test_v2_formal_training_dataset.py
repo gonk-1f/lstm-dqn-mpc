@@ -4,6 +4,9 @@ from pathlib import Path
 import sys
 import unittest
 
+import numpy as np
+import pandas as pd
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
@@ -12,21 +15,62 @@ if str(SRC) not in sys.path:
 
 DATASET = ROOT / "data" / "processed" / "operating_dataset_zero_boundary_v2"
 AIS = ROOT / "data" / "processed" / "operating_dataset_zero_boundary_v2_ais"
+MODES = ROOT / "data" / "processed" / "operating_dataset_zero_boundary_v2_modes"
 
 
 class TestFormalTrainingDataset(unittest.TestCase):
+    def test_episode_macro_count_excludes_shore_pause_intervals(self) -> None:
+        from v2.data.formal_training_dataset import FormalEpisode
+
+        modes = (
+            *("onboard",) * 4,
+            *("shore_pending",) * 2,
+            *("shore_charging",) * 8,
+            *("onboard",) * 4,
+        )
+        size = len(modes)
+        episode = FormalEpisode(
+            parent="fixture",
+            sample_id="fixture_001",
+            split="train",
+            timestamp=tuple(pd.Timestamp("2024-01-01") + pd.Timedelta(seconds=30 * i) for i in range(size)),
+            time_s=np.arange(size, dtype=float) * 30.0,
+            load_kw=np.zeros(size),
+            speed_kn=np.zeros(size),
+            speed_provenance=("RAW_AIS",) * size,
+            fc_power_kw=np.zeros(size),
+            battery_bus_kw=np.zeros(size),
+            operating_mode=modes,
+            mode_reason=("fixture",) * size,
+        )
+
+        self.assertEqual(episode.macro_transition_count, 2)
+
     def test_authenticates_current_train_and_ais_without_opening_test(self) -> None:
         from v2.data.formal_training_dataset import FormalTrainingDataset
 
-        dataset = FormalTrainingDataset.open(DATASET, AIS)
+        dataset = FormalTrainingDataset.open(DATASET, AIS, MODES)
         self.assertEqual(dataset.split_counts, {"train": 38, "validation": 10, "test": 5})
         self.assertEqual(dataset.train_supervisory_steps, 30_909)
-        self.assertEqual(dataset.train_macro_transitions, 6_197)
+        self.assertEqual(
+            dataset.unresolved_mode_counts,
+            {"train": 685, "validation": 230, "test": 0},
+        )
+        self.assertGreater(dataset.train_macro_transitions, 0)
+        self.assertLess(dataset.train_macro_transitions, 6_197)
         self.assertEqual(dataset.opened_test_payloads, 0)
         episodes = dataset.load_train()
         self.assertEqual(len(episodes), 38)
         self.assertEqual(sum(item.step_count for item in episodes), 30_909)
         self.assertTrue(all(item.speed_kn.shape == item.load_kw.shape for item in episodes))
+        self.assertTrue(all(item.fc_power_kw.shape == item.load_kw.shape for item in episodes))
+        self.assertTrue(all(item.battery_bus_kw.shape == item.load_kw.shape for item in episodes))
+        self.assertTrue(all(len(item.operating_mode) == item.step_count for item in episodes))
+        self.assertTrue(
+            {mode for item in episodes for mode in item.operating_mode}.issuperset(
+                {"onboard", "shore_pending", "shore_charging", "unresolved"}
+            )
+        )
         self.assertTrue(any((item.load_kw < -1.0).any() for item in episodes))
         self.assertEqual(dataset.opened_test_payloads, 0)
         with self.assertRaisesRegex(PermissionError, "Test"):

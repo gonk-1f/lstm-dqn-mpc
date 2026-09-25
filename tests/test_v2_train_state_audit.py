@@ -151,7 +151,7 @@ class TrainStateAuditCausalFeatureTests(unittest.TestCase):
                 ParentSupervisoryState(
                     parent_id="train_parent",
                     timestamp=timestamp,
-                    mode=OperatingMode.SAILING_ISLAND,
+                    mode=OperatingMode.ONBOARD,
                     p_fc_total_kw=fc_kw,
                     p_batt_total_kw=load_kw - fc_kw,
                     p_load_kw=load_kw,

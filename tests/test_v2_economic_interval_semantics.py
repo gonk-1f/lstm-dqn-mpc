@@ -408,7 +408,7 @@ class ShoreAndMacroLedgerTests(unittest.TestCase):
 
 
 class EconomicClosurePreflightTests(unittest.TestCase):
-    def test_preflight_reports_evidence_classes_and_remains_no_go(self) -> None:
+    def test_preflight_reports_verified_economic_evidence_despite_mode_blocker(self) -> None:
         from v2.preflight import CalibrationStatus, assess_formal_training_preflight
 
         report = assess_formal_training_preflight()
@@ -452,6 +452,7 @@ class EconomicClosurePreflightTests(unittest.TestCase):
 
         self.assertFalse(report.ready)
         self.assertEqual(report.formal_training, "NO-GO")
+        self.assertEqual(by_key["shore_mode_sidecar"].status, CalibrationStatus.UNRESOLVED)
 
 
 if __name__ == "__main__":
