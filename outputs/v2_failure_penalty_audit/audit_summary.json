@@ -1,0 +1,331 @@
+{
+  "action_catalog_digest": "85a2b7e07bc955d91df0edcff71802e911a56272bf81654b238c859eec735501",
+  "calibration_id": "v2_train_w_8_1_1_v1",
+  "completed_episode_count": 29,
+  "dataset_version": "operating_dataset_zero_boundary_v2",
+  "episode_results": [
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -5444.187927982597,
+      "raw_economic_cost_cny": 5444.187927982597,
+      "sample_id": "zero_boundary_002",
+      "transition_count": 60
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -5785.677359307455,
+      "raw_economic_cost_cny": 5785.677359307455,
+      "sample_id": "zero_boundary_005",
+      "transition_count": 60
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -3055.1944413104347,
+      "raw_economic_cost_cny": 3055.1944413104347,
+      "sample_id": "zero_boundary_006",
+      "transition_count": 71
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -4974.560145357531,
+      "raw_economic_cost_cny": 4974.560145357531,
+      "sample_id": "zero_boundary_007",
+      "transition_count": 58
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -8961.527916361256,
+      "raw_economic_cost_cny": 8961.527916361256,
+      "sample_id": "zero_boundary_008",
+      "transition_count": 151
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -9642.229905036309,
+      "raw_economic_cost_cny": 9642.229905036309,
+      "sample_id": "zero_boundary_011",
+      "transition_count": 150
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -3384.0548157365693,
+      "raw_economic_cost_cny": 3384.0548157365693,
+      "sample_id": "zero_boundary_013",
+      "transition_count": 69
+    },
+    {
+      "episode_completed": false,
+      "failure_kind": "physical_mpc_infeasibility",
+      "failure_penalty_score": 50000.0,
+      "learning_reward": -52415.026880013174,
+      "raw_economic_cost_cny": 2415.026880013176,
+      "sample_id": "zero_boundary_015",
+      "transition_count": 32
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -10869.052797186303,
+      "raw_economic_cost_cny": 10869.052797186303,
+      "sample_id": "zero_boundary_016",
+      "transition_count": 139
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -17882.761183075218,
+      "raw_economic_cost_cny": 17882.761183075218,
+      "sample_id": "zero_boundary_017",
+      "transition_count": 178
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -1667.0750839786976,
+      "raw_economic_cost_cny": 1667.0750839786976,
+      "sample_id": "zero_boundary_020",
+      "transition_count": 24
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -2836.150808820181,
+      "raw_economic_cost_cny": 2836.150808820181,
+      "sample_id": "zero_boundary_021",
+      "transition_count": 47
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -2259.814202433141,
+      "raw_economic_cost_cny": 2259.814202433141,
+      "sample_id": "zero_boundary_022",
+      "transition_count": 37
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -8542.97133499684,
+      "raw_economic_cost_cny": 8542.97133499684,
+      "sample_id": "zero_boundary_029",
+      "transition_count": 214
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -9258.902782392972,
+      "raw_economic_cost_cny": 9258.902782392972,
+      "sample_id": "zero_boundary_033",
+      "transition_count": 196
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -8168.465027589935,
+      "raw_economic_cost_cny": 8168.465027589935,
+      "sample_id": "zero_boundary_034",
+      "transition_count": 329
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -15306.453970049175,
+      "raw_economic_cost_cny": 15306.453970049175,
+      "sample_id": "zero_boundary_037",
+      "transition_count": 380
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -6589.406449215661,
+      "raw_economic_cost_cny": 6589.406449215661,
+      "sample_id": "zero_boundary_038",
+      "transition_count": 141
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -9292.395553893795,
+      "raw_economic_cost_cny": 9292.395553893795,
+      "sample_id": "zero_boundary_040",
+      "transition_count": 102
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -7643.335516286989,
+      "raw_economic_cost_cny": 7643.335516286989,
+      "sample_id": "zero_boundary_041",
+      "transition_count": 129
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -11084.69222795574,
+      "raw_economic_cost_cny": 11084.69222795574,
+      "sample_id": "zero_boundary_042",
+      "transition_count": 105
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -8901.89891299418,
+      "raw_economic_cost_cny": 8901.89891299418,
+      "sample_id": "zero_boundary_044",
+      "transition_count": 162
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -16565.381365331657,
+      "raw_economic_cost_cny": 16565.381365331657,
+      "sample_id": "zero_boundary_045",
+      "transition_count": 170
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -20779.575664249034,
+      "raw_economic_cost_cny": 20779.575664249034,
+      "sample_id": "zero_boundary_046",
+      "transition_count": 274
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -3933.2035938050294,
+      "raw_economic_cost_cny": 3933.2035938050294,
+      "sample_id": "zero_boundary_048",
+      "transition_count": 58
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -2713.5962563833373,
+      "raw_economic_cost_cny": 2713.5962563833373,
+      "sample_id": "zero_boundary_049",
+      "transition_count": 54
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -11979.392929326568,
+      "raw_economic_cost_cny": 11979.392929326568,
+      "sample_id": "zero_boundary_050",
+      "transition_count": 167
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -2098.0372864800042,
+      "raw_economic_cost_cny": 2098.0372864800042,
+      "sample_id": "zero_boundary_051",
+      "transition_count": 29
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -2973.0897925593545,
+      "raw_economic_cost_cny": 2973.0897925593545,
+      "sample_id": "zero_boundary_052",
+      "transition_count": 48
+    },
+    {
+      "episode_completed": true,
+      "failure_kind": null,
+      "failure_penalty_score": 0.0,
+      "learning_reward": -3081.512786582793,
+      "raw_economic_cost_cny": 3081.512786582793,
+      "sample_id": "zero_boundary_053",
+      "transition_count": 51
+    }
+  ],
+  "evidence_status": "DERIVED_TRAIN_ONLY / PROJECT_DESIGN",
+  "failed_episode_count": 1,
+  "failed_episode_ids": [
+    "zero_boundary_015"
+  ],
+  "failure_kind": "physical_mpc_infeasibility",
+  "failure_penalty_score": 50000.0,
+  "formal_training_started": false,
+  "input_manifest_sha256": {
+    "ais": "e7853ea68f3bad5c302c36e92522b01a83b736c8b48f2d54541ffd35f0d2829d",
+    "modes": "2a44ade715a3094f883867b70e99acfbe5b0cd4a64de2a9c5631a379e0191f8f",
+    "power": "413f2c8e60487ab43f5d24d179d0cbe20697eb1204ab6521151044a03dddf029"
+  },
+  "maximum_completed_cost_episode_id": "zero_boundary_046",
+  "maximum_completed_raw_economic_cost_cny": 20779.575664249034,
+  "reference_action_id": "w_8_1_1",
+  "result_digest": "112c25d23474f09f71013386e91571f37894a66579d8899debde807a170c9801",
+  "schema_version": "v2_terminal_failure_audit_v1",
+  "split": "train",
+  "test_payloads_opened": 0,
+  "train_segment_count": 30,
+  "train_segment_ids": [
+    "zero_boundary_002",
+    "zero_boundary_005",
+    "zero_boundary_006",
+    "zero_boundary_007",
+    "zero_boundary_008",
+    "zero_boundary_011",
+    "zero_boundary_013",
+    "zero_boundary_015",
+    "zero_boundary_016",
+    "zero_boundary_017",
+    "zero_boundary_020",
+    "zero_boundary_021",
+    "zero_boundary_022",
+    "zero_boundary_029",
+    "zero_boundary_033",
+    "zero_boundary_034",
+    "zero_boundary_037",
+    "zero_boundary_038",
+    "zero_boundary_040",
+    "zero_boundary_041",
+    "zero_boundary_042",
+    "zero_boundary_044",
+    "zero_boundary_045",
+    "zero_boundary_046",
+    "zero_boundary_048",
+    "zero_boundary_049",
+    "zero_boundary_050",
+    "zero_boundary_051",
+    "zero_boundary_052",
+    "zero_boundary_053"
+  ]
+}

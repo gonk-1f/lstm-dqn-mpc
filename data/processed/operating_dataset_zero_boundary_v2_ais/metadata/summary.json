@@ -1,13 +1,13 @@
 {
-  "aligned_raw_count": 37175,
-  "interpolated_gap_count": 2766,
+  "aligned_raw_count": 28687,
+  "interpolated_gap_count": 2291,
   "schema_version": "v2_ais_speed_30s_v1",
-  "segment_count": 53,
+  "segment_count": 43,
   "speed_normalization_kn": 20.0,
   "split_segment_counts": {
     "test": 5,
-    "train": 38,
-    "validation": 10
+    "train": 30,
+    "validation": 8
   },
-  "supervisory_row_count": 39941
+  "supervisory_row_count": 30978
 }

@@ -1,9 +1,4 @@
-"""Candidate causal operating state for the v2 DQN.
-
-The state is deliberately *not* a finalized training schema.  Its nine
-semantic groups flatten to ten scalars because the fuel-cell group contains
-both current and previous power.
-"""
+"""Candidate audit features and the frozen causal S8 formal DQN state."""
 
 from __future__ import annotations
 

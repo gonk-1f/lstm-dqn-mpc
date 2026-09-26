@@ -318,6 +318,114 @@ class TrainStateAuditCausalFeatureTests(unittest.TestCase):
         self.assertEqual(type(loaded[0]).__name__, "AuditSupervisorySample")
         self.assertEqual(sum(sample.audit_eligible for sample in loaded), 5)
 
+    def test_formal_episode_rows_follow_s8_axis_and_reset_at_shore(self) -> None:
+        from v2.analysis.train_state_audit import build_formal_episode_feature_rows
+        from v2.data.formal_training_dataset import FormalEpisode
+
+        start = pd.Timestamp("2024-01-01T00:00:00+08:00")
+        modes = (*("onboard",) * 6, *("shore_charging",) * 3, *("onboard",) * 2)
+        count = len(modes)
+        raw_load = np.asarray(
+            [-0.5, 100.0, 120.0, 140.0, 160.0, 180.0, -40.0, -40.0, -40.0, 90.0, 110.0]
+        )
+        fc = np.asarray([0.0, 60.0, 70.0, 80.0, 90.0, 100.0, 0.0, 0.0, 0.0, 50.0, 60.0])
+        battery = raw_load - fc
+        episode = FormalEpisode(
+            parent="train_parent",
+            sample_id="train_001",
+            split="train",
+            timestamp=tuple(start + pd.Timedelta(seconds=30 * i) for i in range(count)),
+            time_s=np.arange(count, dtype=float) * 30.0,
+            load_kw=raw_load,
+            speed_kn=np.asarray([0.2] * 6 + [0.0] * 3 + [1.0, 1.5]),
+            speed_provenance=("UNIQUE_NEAREST_RAW_WITHIN_10S",) * count,
+            fc_power_kw=fc,
+            battery_bus_kw=battery,
+            operating_mode=tuple(modes),
+            mode_reason=("fixture",) * count,
+        )
+        soc = tuple(0.60 - 0.001 * index for index in range(count))
+
+        rows = build_formal_episode_feature_rows(episode, soc)
+
+        self.assertEqual(len(rows), 8)
+        self.assertEqual([row.history_sample_count for row in rows], [1, 2, 3, 4, 5, 6, 1, 2])
+        self.assertEqual(rows[0].load_power_kw, 0.0)
+        self.assertEqual(rows[0].delta_fc_kw, 0.0)
+        self.assertEqual(rows[6].delta_fc_kw, 0.0)
+        self.assertEqual(rows[-1].speed_kn, 1.5)
+
+    def test_episode_life_upper_bounds_prove_hidden_clipping_is_unreachable(self) -> None:
+        from v2.analysis.train_state_audit import episode_life_upper_bounds
+        from v2.data.formal_training_dataset import FormalEpisode
+        from v2.data.supervisory_rules import OperatingMode
+
+        start = pd.Timestamp("2024-01-01T00:00:00+08:00")
+        modes = (
+            OperatingMode.ONBOARD.value,
+            OperatingMode.ONBOARD.value,
+            OperatingMode.SHORE_PENDING.value,
+            OperatingMode.SHORE_CHARGING.value,
+            OperatingMode.ONBOARD.value,
+        )
+        episode = FormalEpisode(
+            "parent",
+            "train_001",
+            "train",
+            tuple(start + pd.Timedelta(seconds=30 * index) for index in range(5)),
+            np.arange(5, dtype=float) * 30.0,
+            np.asarray([10.0, 20.0, -10.0, -20.0, 30.0]),
+            np.asarray([2.0, 2.0, 0.0, 0.0, 3.0]),
+            ("raw",) * 5,
+            np.asarray([0.0, 10.0, 0.0, 0.0, 10.0]),
+            np.asarray([10.0, 10.0, -10.0, -20.0, 20.0]),
+            modes,
+            ("fixture",) * 5,
+        )
+
+        bounds = episode_life_upper_bounds(episode)
+
+        self.assertEqual(bounds["onboard_step_count"], 3)
+        self.assertEqual(bounds["shore_run_count"], 1)
+        self.assertLess(bounds["fc_raw_life_fraction_upper_bound"], 1.0)
+        self.assertLess(bounds["battery_raw_life_fraction_upper_bound"], 1.0)
+
+    def test_battery_soc_alignment_is_causal_complete_and_no_reuse(self) -> None:
+        from v2.analysis.train_state_audit import align_battery_soc_to_timestamps
+        from v2.data.train_supervisory_audit import (
+            ParentRawChannels,
+            RawChannel,
+            RawRecord,
+        )
+
+        start = datetime(2024, 1, 1, tzinfo=ZoneInfo("Asia/Shanghai"))
+        empty_fc = tuple(RawChannel(f"fc-{index}", ()) for index in range(8))
+        battery = tuple(
+            RawChannel(
+                f"battery-{index}",
+                tuple(
+                    RawRecord(
+                        start + timedelta(seconds=30 * cycle),
+                        (0.0, 0.60 - 0.01 * cycle),
+                        f"battery-{index}/{cycle}",
+                    )
+                    for cycle in range(3)
+                ),
+            )
+            for index in range(12)
+        )
+        channels = ParentRawChannels(
+            "train_parent",
+            empty_fc,
+            battery,
+            RawChannel("ais-speed", ()),
+        )
+        targets = tuple(start + timedelta(seconds=30 * cycle) for cycle in range(3))
+
+        aligned = align_battery_soc_to_timestamps(channels, targets)
+
+        self.assertEqual(aligned, (0.60, 0.59, 0.58))
+
 
 class TrainStateAuditNumericalTests(unittest.TestCase):
     def _rows(self):
@@ -380,6 +488,19 @@ class TrainStateAuditNumericalTests(unittest.TestCase):
             normalized.iloc[0]["load_residual_fraction"],
             physical.iloc[0]["delta_load_kw"] / AUDIT_POWER_SCALE_KW,
         )
+
+    def test_normalized_formal_s8_matches_frozen_schema_order(self) -> None:
+        from v2.analysis.train_state_audit import (
+            feature_frame,
+            formal_s8_frame,
+            normalize_feature_frame,
+        )
+        from v2.dqn.state import FORMAL_STATE_FEATURE_NAMES
+
+        normalized = normalize_feature_frame(feature_frame(self._rows()))
+        formal = formal_s8_frame(normalized)
+
+        self.assertEqual(tuple(formal.columns), FORMAL_STATE_FEATURE_NAMES)
 
     def test_descriptive_statistics_use_population_std_and_fixed_columns(self) -> None:
         from v2.analysis.train_state_audit import descriptive_statistics
@@ -448,21 +569,18 @@ class TrainStateAuditNumericalTests(unittest.TestCase):
             )
         )
 
-    def test_state_comparison_has_exact_requested_ablations(self) -> None:
+    def test_state_comparison_contains_frozen_s8_and_speed_ablation(self) -> None:
         from v2.analysis.train_state_audit import state_comparison
 
         comparison = state_comparison().set_index("state_id")
 
         self.assertEqual(comparison.loc["S10", "dimension"], 10)
-        self.assertEqual(comparison.loc["S7", "dimension"], 7)
-        self.assertEqual(comparison.loc["S6-A", "dimension"], 6)
+        self.assertEqual(comparison.loc["S8", "dimension"], 8)
+        self.assertIn("speed_fraction", comparison.loc["S8", "features"].split("|"))
+        self.assertEqual(comparison.loc["S7-NO-SPEED", "dimension"], 7)
         self.assertNotIn(
-            "fuel_cell_delta_fraction",
-            comparison.loc["S6-A", "features"].split("|"),
-        )
-        self.assertNotIn(
-            "recent_load_population_std_fraction",
-            comparison.loc["S6-B", "features"].split("|"),
+            "speed_fraction",
+            comparison.loc["S7-NO-SPEED", "features"].split("|"),
         )
         self.assertEqual(comparison.loc["MINIMUM", "dimension"], 5)
 
@@ -517,6 +635,9 @@ class TrainStateAuditArtifactTests(unittest.TestCase):
             root = Path(temporary)
             output = root / "audit"
             report = root / "report.md"
+            manifests = tuple(root / name for name in ("power.csv", "ais.csv", "modes.csv"))
+            for index, path in enumerate(manifests):
+                path.write_text(f"manifest-{index}\n", encoding="utf-8")
 
             manifest = write_audit_artifacts(
                 rows=rows,
@@ -525,6 +646,9 @@ class TrainStateAuditArtifactTests(unittest.TestCase):
                 report_path=report,
                 dataset_root=root / "dataset",
                 raw_root=root / "raw",
+                power_manifest_path=manifests[0],
+                ais_manifest_path=manifests[1],
+                mode_manifest_path=manifests[2],
             )
 
             expected = {
@@ -549,9 +673,33 @@ class TrainStateAuditArtifactTests(unittest.TestCase):
             self.assertEqual(manifest["dataset_version"], segment.dataset_version)
             self.assertEqual(manifest["train_segment_count"], 1)
             self.assertEqual(manifest["eligible_row_count"], len(rows))
+            from v2.dqn.state import (
+                FORMAL_STATE_SCHEMA_DIGEST,
+                FORMAL_STATE_SCHEMA_VERSION,
+            )
+
+            self.assertEqual(
+                manifest["formal_state_schema_version"],
+                FORMAL_STATE_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                manifest["formal_state_schema_digest"],
+                FORMAL_STATE_SCHEMA_DIGEST,
+            )
+            self.assertEqual(
+                manifest["input_manifest_sha256"],
+                {
+                    "power": _sha256(manifests[0]),
+                    "ais": _sha256(manifests[1]),
+                    "modes": _sha256(manifests[2]),
+                },
+            )
+            self.assertIn("measured_proxy_coverage", manifest)
+            self.assertIn("hidden_life_state_upper_bounds", manifest)
             text = report.read_text(encoding="utf-8")
             self.assertIn("当前 10 维候选状态", text)
-            self.assertIn("S7 明确结论", text)
+            self.assertIn("S8 最终结论", text)
+            self.assertIn("speed_fraction", text)
             self.assertIn("证据边界与局限性", text)
             self.assertIn("KEEP", text)
 
@@ -614,6 +762,84 @@ class TrainStateAuditArtifactTests(unittest.TestCase):
             self.assertEqual(calls, [segment.parent])
             self.assertEqual(manifest["held_out_segment_files_opened"], 0)
             self.assertTrue(report.is_file())
+
+    def test_runner_uses_authenticated_formal_s8_axis_and_binds_manifests(self) -> None:
+        from v2.data.formal_training_dataset import FormalEpisode
+        from v2.data.supervisory_rules import OperatingMode
+        from v2.main.run_train_state_audit import run_train_state_audit
+
+        segment, _, load_frame = TrainStateAuditCausalFeatureTests._fixture()
+        timestamps = tuple(pd.Timestamp(value) for value in load_frame["timestamp"])
+        episode = FormalEpisode(
+            parent=segment.parent,
+            sample_id=segment.sample_id,
+            split="train",
+            timestamp=timestamps,
+            time_s=np.arange(6, dtype=float) * 30.0,
+            load_kw=np.asarray([100, 120, 140, 160, 180, 200], dtype=float),
+            speed_kn=np.asarray([3, 4, 5, 6, 7, 8], dtype=float),
+            speed_provenance=("raw",) * 6,
+            fc_power_kw=np.asarray([80, 90, 100, 110, 120, 130], dtype=float),
+            battery_bus_kw=np.asarray([20, 30, 40, 50, 60, 70], dtype=float),
+            operating_mode=(OperatingMode.ONBOARD.value,) * 6,
+            mode_reason=("fixture",) * 6,
+        )
+        fake_dataset = SimpleNamespace(
+            load_train=lambda: (episode,),
+            opened_test_payloads=0,
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            dataset = root / "dataset"
+            train_path = dataset / segment.relative_path
+            train_path.parent.mkdir(parents=True)
+            load_frame.to_csv(train_path, index=False)
+            metadata = dataset / "metadata"
+            metadata.mkdir()
+            pd.DataFrame(
+                [
+                    {
+                        "parent": segment.parent,
+                        "sample_id": segment.sample_id,
+                        "relative_path": segment.relative_path,
+                        "split": "train",
+                        "start_timestamp": segment.start_timestamp.isoformat(),
+                        "end_timestamp": segment.end_timestamp.isoformat(),
+                        "sha256": _sha256(train_path),
+                    }
+                ]
+            ).to_csv(metadata / "sample_manifest.csv", index=False)
+            (metadata / "qa_summary.json").write_text(
+                json.dumps({"dataset_version": "operating_dataset_zero_boundary_v2"}),
+                encoding="utf-8",
+            )
+            ais = root / "ais" / "metadata"
+            modes = root / "modes" / "metadata"
+            ais.mkdir(parents=True)
+            modes.mkdir(parents=True)
+            (ais / "sample_manifest.csv").write_text("ais\n", encoding="utf-8")
+            (modes / "sample_manifest.csv").write_text("modes\n", encoding="utf-8")
+
+            with patch(
+                "v2.main.run_train_state_audit.FormalTrainingDataset.open",
+                return_value=fake_dataset,
+            ):
+                manifest = run_train_state_audit(
+                    dataset_root=dataset,
+                    ais_root=ais.parent,
+                    mode_root=modes.parent,
+                    raw_root=root / "raw",
+                    output_root=root / "output",
+                    report_path=root / "report.md",
+                    soc_loader=lambda _: (0.6, 0.59, 0.58, 0.57, 0.56, 0.55),
+                )
+
+            self.assertEqual(manifest["eligible_row_count"], 6)
+            self.assertEqual(manifest["held_out_segment_files_opened"], 0)
+            self.assertEqual(
+                set(manifest["input_manifest_sha256"]),
+                {"power", "ais", "modes"},
+            )
 
 
 if __name__ == "__main__":

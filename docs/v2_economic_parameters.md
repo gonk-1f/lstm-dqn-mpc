@@ -2,15 +2,11 @@
 
 ## Status
 
-`REWARD_VERSION` is `macro_interval_real_economic_cost_v1`.
+`REWARD_VERSION` is `macro_interval_economic_plus_terminal_failure_v2`.
 
-Formal training remains **NO-GO**. The following blockers are intentional:
-
-- the formal Train dataset/episode payload is not frozen;
-- the candidate DQN state has not passed Train-only distribution, correlation,
-  redundancy, and sensitivity audits;
-- the final action catalog/K is not frozen; and
-- final integrated preflight and final-catalog solver robustness remain open.
+Formal training is **GO** under the authenticated integrated preflight. The
+dataset, S8 state, 36-action catalog, objective-scale audit, and terminal
+failure policy are frozen for this baseline.
 
 The formal baseline now freezes `N=5`, `M=5`, and `tau_LPF=90 s` as project
 design configuration. Their evidence classification is kept separate and does
@@ -105,6 +101,12 @@ reward_cny = -C_total
 
 There are no `0.3/0.4/0.3` coefficients and no other artificial component
 weights. Raw CNY components are retained for logging.
+
+For a normal transition, `learning_reward = reward_cny`. A deterministic
+physical MPC infeasibility terminates only the current episode and uses
+`learning_reward = reward_cny - 50000`. The 50,000 term is a separate
+`DERIVED_TRAIN_ONLY / PROJECT_DESIGN` failure score; it is never inserted into
+`RawCnyIntervalLedger` and must not be reported as CNY expense.
 
 Fuel-cell and battery degradation charges are the difference between clipped
 cumulative economic fractions at the interval's before/after boundaries. They

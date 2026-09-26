@@ -1,0 +1,16 @@
+{
+  "definition": "mode=unresolved AND speed_kn>0.1 AND load_total_kw<0",
+  "point_count": 291,
+  "segment_count": 10,
+  "complete_raw_12_cluster_points": 274,
+  "all_12_raw_clusters_charging_points": 242,
+  "raw_bms_match_tolerance_seconds": 10.0,
+  "note": "Negative total power is derived FC plus battery-bus power; it is not an independently measured demand channel.",
+  "battery_current_sign_audit": {
+    "interval_count": 83136,
+    "current_soc_delta_correlation": 0.8337583402,
+    "positive_current_interpretation": "charging",
+    "negative_current_interpretation": "discharging"
+  },
+  "source_attribution": "UNRESOLVED: raw package has no propulsion motor/generator power or shore-plug state channel; FC+BMS is not a closed bus balance."
+}

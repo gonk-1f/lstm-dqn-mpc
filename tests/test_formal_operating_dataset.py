@@ -62,13 +62,13 @@ class FormalOperatingDatasetTests(unittest.TestCase):
     def test_frozen_manifest_totals_and_parent_groups_match_final_dataset(self) -> None:
         # Manifest metadata only. A unit-test run must never open held-out loads.
         frame = load_formal_operating_split().manifest
-        self.assertEqual(frame.parent_voyage.nunique(), 53)
-        self.assertEqual(len(frame), 53)
-        self.assertEqual(int(frame.num_1s_points.sum()), 1_198_690)
+        self.assertEqual(frame.parent_voyage.nunique(), 43)
+        self.assertEqual(len(frame), 43)
+        self.assertEqual(int(frame.num_1s_points.sum()), 929_709)
         self.assertEqual(frame.groupby('split').num_1s_points.sum().to_dict(),
-                         {'train': 927598, 'validation': 188087, 'test': 83005})
+                         {'train': 707941, 'validation': 138763, 'test': 83005})
         self.assertEqual(frame.groupby('split').size().to_dict(),
-                         {'test': 5, 'train': 38, 'validation': 10})
+                         {'test': 5, 'train': 30, 'validation': 8})
         self.assertEqual(int((frame.groupby('parent_voyage').split.nunique() > 1).sum()), 0)
 
     def test_dataset_auditor_checks_complete_disjoint_synthetic_dataset(self) -> None:

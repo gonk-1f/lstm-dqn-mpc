@@ -1,95 +1,88 @@
 # v2 formal-training preflight report
 
-更新日期：2026-09-25。当前配置与集成实现状态为：
+更新日期：2026-09-26。当前配置、数据与集成门禁状态为：
 
-`FORMAL_TRAINING = NO-GO`
+`FORMAL_TRAINING = GO`
 
-NO-GO 的当前原因是岸电模式证据尚未全部闭合，不是时间尺度、退化归一化、
-S8 或36动作未冻结。
+## 已冻结合同
 
-## 已冻结配置
+- `Ts=30 s`，`N_MPC=5`（150 s prediction horizon）；
+- `DQN_SWITCH_STEPS=5`（同一 action 最多保持 5 次真实 ONBOARD MPC solve）；
+- `TAU_LPF_SECONDS=90`；
+- ONBOARD-only AIS-aware S8；
+- 完整 36-action positive tenth-grid catalog；
+- episode return 使用 `gamma=1.0`；正常 transition 的 learning reward 为真实
+  interval CNY 增量成本之负值；
+- 可证明的物理不可行终止当前 episode，另加 50,000 分失败惩罚；该分数不是 CNY，
+  不进入 formal economic ledger；
+- 岸电期间暂停 DQN/MPC，FC 强制为 0，SOC、电池退化和岸电成本继续更新。
 
-- `Ts=30 s`：verified nominal control interval；
-- `N_MPC=5`：`FROZEN_PROJECT_DESIGN`，150 s prediction horizon；
-- `DQN_SWITCH_STEPS=5`：`FROZEN_PROJECT_DESIGN`；仅计算真实 ONBOARD rolling
-  MPC solves，岸电物理步不计入 M；
-- `TAU_LPF_SECONDS=90`：`FROZEN_PROJECT_DESIGN`；
-- battery lifetime factor `15000`：配置冻结，证据仍为
-  `SECONDARY_LITERATURE / LITERATURE-CALIBRATED`；
-- FC lifetime normalization：70,000 microvolt aggregate-equivalent EOL，
-  `VERIFIED literature/model`，不是 vessel-measured；
-- DQN state：ONBOARD-only S8 `FROZEN_PROJECT_BASELINE`；
-- DQN actions：完整 36-action positive tenth-grid catalog，
-  `FROZEN_PROJECT_BASELINE`，不是筛选后全局最优集合；
-- formal economic return：`gamma=1.0`，有限 episode 未折扣总 CNY。
+## 当前数据身份
 
-## 数据与 mode sidecar
+- Power：30 Train / 8 Validation / 5 Test；
+- Train：23,590 个 30 s 点，其中 18,448 ONBOARD、88 SHORE_PENDING、
+  5,054 SHORE_CHARGING、0 UNRESOLVED；
+- Validation：3,261 ONBOARD、28 SHORE_PENDING、1,334 SHORE_CHARGING、
+  0 UNRESOLVED；
+- Test：2,728 ONBOARD、6 SHORE_PENDING、31 SHORE_CHARGING、0 UNRESOLVED；
+- Train macro transitions：3,721。
 
-正式 power 数据与 AIS sidecar 保持 38 Train、10 Validation、5 Test。新增
-`operating_dataset_zero_boundary_v2_modes`，在完全相同的30 s 时间轴上保留：
+岸电分类仅依赖质量有效的 AIS 近零航速与 BMS 充电证据；原始 FC 只保留为诊断，
+不作为岸电 gate。ONBOARD 的 `[-1,0) kW` 数值死区在进入状态、LPF 和 MPC 前归零，
+小于 `-1 kW` 则 fail closed。
 
-- 8 FC 聚合功率；
-- 12 BMS 聚合电池母线功率，放电为正、充电为负；
-- frozen `load_total_kw` 与组件重构残差；
-- AIS speed 与 provenance；
-- completeness、freshness、duplicate conflict；
-- `ONBOARD`、`SHORE_PENDING`、`SHORE_CHARGING`、`UNRESOLVED`。
+## S8 状态审计
 
-岸电候选要求 AIS 近静止、FC 总功率处于8 kW项目停机容差内、电池充电超过
-1 kW，且数据质量有效。连续3个30 s候选点确认岸电；前两个点以因果
-`SHORE_PENDING` 暂停控制。短候选段、质量失败或负总功率但复合证据不充分的点
-保持 `UNRESOLVED`。
-
-当前真实计数：
-
-- Train：28,041 ONBOARD，32 SHORE_PENDING，2,151 SHORE_CHARGING，
-  685 UNRESOLVED；
-- Validation：4,946 ONBOARD，10 SHORE_PENDING，1,081 SHORE_CHARGING，
-  230 UNRESOLVED；
-- Test：2,765 ONBOARD，0 UNRESOLVED。
-
-因此不能把所有负总功率点自动改写成岸电。当前5,652个 Train ONBOARD macro
-候选只是基于已知模式的诊断量；unresolved 审核后必须重新计算最终训练量。
-
-## S8 与事件驱动 transition
-
-S8 顺序为：
+冻结顺序为：
 
 `[SOC, base/600, residual/600, std/600, trend*150/600, FC/600, deltaFC/600, speed/20]`
 
-只在 ONBOARD 决策边界构造。岸电期间 DQN action、MPC solve、epsilon、global
-step、replay 和 gradient update 均暂停；SOC、岸电费用、电池退化及必要的 FC
-停机退化继续逐30 s更新。岸电结束后清空 LPF 与 onboard load history，保留 SOC
-和累计退化，并以当前负荷/航速构造因果 cold-start S8。
+审计包绑定当前 power/AIS/mode 三份 manifest、30 个 Train segment 的 SHA-256、
+生产 schema digest 及全部审计 artifact hash。Validation/Test payload 未用于状态审计。
 
-一个 action 最多执行5次 ONBOARD MPC。如果第3次后进入岸电，transition 的
-`executed_mpc_steps=3`；岸电期间全部增量 ledger 归入该 transition，在下一次
-ONBOARD 或 episode 结束时闭合。
+严格的 12 簇 BMS 因果 SOC proxy 覆盖 9,846/18,448 个 ONBOARD 点和 28/30 个
+Train 航段；缺少 proxy 的 `zero_boundary_011`、`zero_boundary_034` 仍完整保留在
+formal 训练轴中，因为正式环境 SOC 由模型递推，不由该 proxy 驱动。
 
-## 经济与退化合同
+累计退化未进入 S8 的条件也已闭合：逐 episode 重置后，保守最坏上界为
+FC raw lifetime fraction `0.770929631`、battery `0.03448025`，均低于 EOL=1，
+因此当前 episode 内不会进入 clipped-cost 的隐藏状态区。
 
-reward 是氢耗、FC经济寿命增量、电池经济寿命增量和岸电费用的负原始 CNY
-总和。FC 与 battery 均使用 clipped cumulative fraction 的 before/after 差值，
-跨 EOL 只补剩余寿命，EOL 后继续保留 raw diagnostics 但不重复收 replacement
-cost。
+## Objective 与 solver 门禁
 
-岸电原始 BMS 曲线作为电池侧充电能力轨迹；实际吸收功率受仿真 SOC、0.60
-目标、0.80硬上限和区间长度约束。grid energy 为实际电池侧能量除以一次
-`eta_chg=0.95`，再按1.10 CNY/kWh计费。
+当前 30-Train-segment objective audit 使用 6 个确定性代表工况 × 36 actions =
+216 次 solve；active-P95 `scale_ratio=1.855794906`，状态为 PASS。结果 digest 与
+当前 sample/source manifests 均由 preflight 认证。
 
-## 当前门禁与允许命令
+Train-only terminal-failure audit 以固定动作 `w_8_1_1` 运行全部 30 个 Train
+航段：29 个完成，`zero_boundary_015` 因硬 SOC 可达性失败；已完成航段最大原始
+经济成本为 `20,779.575664249 CNY`（`zero_boundary_046`）。50,000 分失败惩罚
+高于该参考最大值两倍，证据分类为 `DERIVED_TRAIN_ONLY / PROJECT_DESIGN`。
+审计未打开 Test payload，并由当前 power/AIS/mode manifests、36-action digest 和
+结果 digest 共同认证。
+
+正式入口的 live preflight 还会：
+
+- 认证 Train/Validation power、AIS、mode payload；
+- 验证所有 Train S8 有限且维数为 8；
+- 对首、中、末三个动作执行可重复性 solver 检查；
+- 确认 Test payload 未被训练/模型选择打开。
+- 认证 terminal-failure penalty 的 Train-only 标定及其独立于经济 ledger 的语义。
+
+## 运行边界
+
+预检：
 
 ```powershell
-$env:PYTHONPATH="src"
-python -m v2.main.train_formal_dqn --preflight-only
-python -m v2.main.train_formal_dqn --smoke-only
+$env:PYTHONPATH=(Resolve-Path "src").Path
+python -X utf8 -u -m v2.main.train_formal_dqn --preflight-only
 ```
 
-`--preflight-only` 应返回退出码2和 `FORMAL_TRAINING=NO-GO`；`--smoke-only`
-只执行有界事件链、无梯度且不写正式 checkpoint。685/230 unresolved mode 点完成
-审核或采用明确、可审计的排除/分段政策之前，不得运行正式长训练。
+集成 smoke（无梯度、无 checkpoint）：
 
-Train、Validation 与 Test payload 均已建立并保持严格隔离；其中 Test payload
-不参与模式阈值确定、状态/动作设计、训练或超参数选择。当前 NO-GO 仅表示
-Train/Validation 的 unresolved mode 证据尚未收口，不得把 Test 无 unresolved
-误解为可以绕过该门禁。
+```powershell
+python -X utf8 -u -m v2.main.train_formal_dqn --smoke-only
+```
+
+正式训练入口独立于旧 84-action 脚本；Train 每轮用固定 seed 重新打乱，
+Validation 不打乱且不训练，Test 不参与训练或模型选择。

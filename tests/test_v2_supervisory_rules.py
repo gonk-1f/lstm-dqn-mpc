@@ -13,6 +13,28 @@ if str(SRC) not in sys.path:
 
 
 class SupervisoryRuleTests(unittest.TestCase):
+    def test_onboard_load_normalization_clamps_only_the_frozen_deadband(self) -> None:
+        from v2.data.supervisory_rules import (
+            ModeSample,
+            OperatingMode,
+            normalize_onboard_load_kw,
+            reconstruct_sailing_load,
+        )
+
+        self.assertEqual(normalize_onboard_load_kw(0.0), 0.0)
+        self.assertEqual(normalize_onboard_load_kw(12.5), 12.5)
+        self.assertEqual(normalize_onboard_load_kw(-1.0), 0.0)
+        self.assertEqual(normalize_onboard_load_kw(-0.001), 0.0)
+        with self.assertRaisesRegex(ValueError, "deadband"):
+            normalize_onboard_load_kw(-1.001)
+        sample = ModeSample(
+            datetime(2024, 1, 1, tzinfo=timezone.utc),
+            1.0,
+            0.0,
+            -0.5,
+        )
+        self.assertEqual(reconstruct_sailing_load(sample, OperatingMode.ONBOARD), 0.0)
+
     def test_freshness_cap_is_inclusive_causal_and_fixed_at_ten_seconds(self) -> None:
         from v2.data.supervisory_rules import (
             FRESHNESS_CAP_SECONDS,
@@ -30,7 +52,6 @@ class SupervisoryRuleTests(unittest.TestCase):
     def test_mode_classification_requires_three_causal_shore_samples(self) -> None:
         from v2.data.supervisory_rules import (
             BATTERY_CHARGE_THRESHOLD_KW,
-            FC_ZERO_TOLERANCE_KW,
             SHORE_MIN_CONSECUTIVE_SAMPLES,
             SPEED_ZERO_TOLERANCE_KN,
             ModeSample,
@@ -39,7 +60,6 @@ class SupervisoryRuleTests(unittest.TestCase):
         )
 
         self.assertEqual(SPEED_ZERO_TOLERANCE_KN, 0.1)
-        self.assertEqual(FC_ZERO_TOLERANCE_KW, 8.0)
         self.assertEqual(BATTERY_CHARGE_THRESHOLD_KW, 1.0)
         self.assertEqual(SHORE_MIN_CONSECUTIVE_SAMPLES, 3)
         start = datetime(2024, 1, 1, tzinfo=timezone.utc)
@@ -84,6 +104,34 @@ class SupervisoryRuleTests(unittest.TestCase):
                 OperatingMode.UNRESOLVED,
                 OperatingMode.UNRESOLVED,
                 OperatingMode.UNRESOLVED,
+            ),
+        )
+
+    def test_nonzero_recorded_fc_does_not_block_confirmed_shore_charging(self) -> None:
+        from v2.data.supervisory_rules import (
+            ModeSample,
+            OperatingMode,
+            classify_operating_modes,
+        )
+
+        start = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        samples = tuple(
+            ModeSample(
+                start + timedelta(seconds=30 * index),
+                0.0,
+                fc_kw,
+                -150.0,
+                p_load_kw=-50.0,
+            )
+            for index, fc_kw in enumerate((100.0, 106.0, 107.0))
+        )
+
+        self.assertEqual(
+            classify_operating_modes(samples),
+            (
+                OperatingMode.SHORE_PENDING,
+                OperatingMode.SHORE_PENDING,
+                OperatingMode.SHORE_CHARGING,
             ),
         )
 

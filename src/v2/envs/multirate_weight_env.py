@@ -12,11 +12,12 @@ import math
 from typing import Callable, Protocol
 
 from ..config import TimeScaleConfig
-from ..control.nonlinear_mpc import MPCWeights
+from ..control.nonlinear_mpc import MPCWeights, PhysicalInfeasibilityError
 from ..dqn.action_space import ActionCandidate
 from ..dqn.action_space import FINAL_DQN_ACTION_CATALOG
 from ..dqn.state import FORMAL_STATE_DIMENSION
 from ..economics import RawCnyIntervalLedger
+from ..failure_policy import FORMAL_FAILURE_KIND, FORMAL_FAILURE_POLICY, FormalFailurePolicy
 
 
 TRAINING_READINESS_STATUS = "READY_FOR_INTEGRATED_PREFLIGHT"
@@ -122,31 +123,68 @@ class MacroTransition:
 
     state: tuple[float, ...]
     action: ActionCandidate
-    reward_cny: float
+    learning_reward: float
     next_state: tuple[float, ...]
     done: bool
     executed_mpc_steps: int
     ledger: RawCnyIntervalLedger
+    failure_penalty_score: float = 0.0
+    failure_kind: str | None = None
 
     def __post_init__(self) -> None:
         _validate_state(self.state, "state")
         _validate_candidate(self.action)
         _validate_state(self.next_state, "next_state")
         _validate_ledger(self.ledger)
-        if type(self.reward_cny) is not float or not math.isfinite(self.reward_cny):
-            raise TypeError("reward_cny must be an exact finite float")
-        if self.reward_cny != self.ledger.reward_cny:
-            raise ValueError("reward_cny must equal the negative raw-CNY ledger total")
+        if type(self.learning_reward) is not float or not math.isfinite(self.learning_reward):
+            raise TypeError("learning_reward must be an exact finite float")
+        if (
+            type(self.failure_penalty_score) is not float
+            or not math.isfinite(self.failure_penalty_score)
+            or self.failure_penalty_score < 0.0
+        ):
+            raise TypeError("failure_penalty_score must be an exact finite nonnegative float")
         if type(self.done) is not bool:
             raise TypeError("done must be an exact bool")
         if type(self.executed_mpc_steps) is not int:
             raise TypeError("executed_mpc_steps must be an exact integer")
-        if self.executed_mpc_steps <= 0:
-            raise ValueError("executed_mpc_steps must be positive")
+        if self.executed_mpc_steps < 0:
+            raise ValueError("executed_mpc_steps must be nonnegative")
+        if self.failure_kind is None:
+            if self.failure_penalty_score != 0.0:
+                raise ValueError("successful transition cannot carry a failure penalty")
+            if self.executed_mpc_steps <= 0:
+                raise ValueError("successful transition must execute at least one MPC step")
+            if self.learning_reward != self.ledger.reward_cny:
+                raise ValueError("successful learning reward must equal raw economic reward")
+        else:
+            if type(self.failure_kind) is not str:
+                raise TypeError("failure_kind must be an exact string or None")
+            if self.failure_kind != FORMAL_FAILURE_KIND:
+                raise ValueError("failure_kind differs from the formal physical failure kind")
+            if not self.done:
+                raise ValueError("failed transition must terminate the episode")
+            if self.failure_penalty_score != FORMAL_FAILURE_POLICY.penalty_score:
+                raise ValueError("failed transition must use the frozen penalty score")
+            expected = self.ledger.reward_cny - self.failure_penalty_score
+            if self.learning_reward != expected:
+                raise ValueError("failed learning reward must include the separate penalty")
 
     @property
     def action_id(self) -> str:
         return self.action.action_id
+
+    @property
+    def raw_economic_cost_cny(self) -> float:
+        return self.ledger.total_cost_cny
+
+    @property
+    def failed(self) -> bool:
+        return self.failure_kind is not None
+
+    @property
+    def episode_completed(self) -> bool:
+        return self.done and not self.failed
 
 
 class MacroStepExecutionError(RuntimeError):
@@ -188,11 +226,13 @@ def _transition_snapshot(value: MacroTransition) -> MacroTransition:
     return MacroTransition(
         state=tuple(item for item in value.state),
         action=ActionCandidate(*value.action.numerators),
-        reward_cny=value.reward_cny,
+        learning_reward=value.learning_reward,
         next_state=tuple(item for item in value.next_state),
         done=value.done,
         executed_mpc_steps=value.executed_mpc_steps,
         ledger=RawCnyIntervalLedger(*value.ledger.components_cny),
+        failure_penalty_score=value.failure_penalty_score,
+        failure_kind=value.failure_kind,
     )
 
 
@@ -209,6 +249,7 @@ class MultiRateWeightEnvironment:
         synthetic_test_mode: bool = False,
         formal_training_mode: bool = False,
         replay_sink: Callable[[MacroTransition], None] | None = None,
+        failure_policy: FormalFailurePolicy | None = None,
     ) -> None:
         if type(synthetic_test_mode) is not bool:
             raise TypeError("synthetic_test_mode must be an exact bool")
@@ -236,6 +277,13 @@ class MultiRateWeightEnvironment:
             raise TypeError("state_provider must be callable")
         if replay_sink is not None and not callable(replay_sink):
             raise TypeError("replay_sink must be callable or None")
+        if formal_training_mode and failure_policy is None:
+            failure_policy = FORMAL_FAILURE_POLICY
+        if failure_policy is not None:
+            if type(failure_policy) is not FormalFailurePolicy:
+                raise TypeError("failure_policy must be an exact FormalFailurePolicy or None")
+            if failure_policy != FORMAL_FAILURE_POLICY:
+                raise ValueError("failure_policy differs from the frozen formal policy")
 
         self._timescale = checked_timescale
         self._actions = dict(zip(action_ids, checked_catalog))
@@ -244,6 +292,7 @@ class MultiRateWeightEnvironment:
         self._formal_training_mode = formal_training_mode
         self._state_provider = state_provider
         self._replay_sink = replay_sink
+        self._failure_policy = failure_policy
         self._current_state: tuple[float, ...] | None = None
         self._transitions: list[MacroTransition] = []
         self._done = False
@@ -326,23 +375,49 @@ class MultiRateWeightEnvironment:
                 ):
                     break
 
-            components = tuple(
-                math.fsum(ledger.components_cny[index] for ledger in ledgers)
-                for index in range(4)
-            )
-            if not all(math.isfinite(value) for value in components):
-                raise ValueError("macro raw-CNY component accumulation must remain finite")
-            macro_ledger = RawCnyIntervalLedger(*components)
+            macro_ledger = _aggregate_ledgers(ledgers)
             next_state = _validate_state(self._state_provider(), "boundary next_state")
             transition = MacroTransition(
                 state=self._current_state,
                 action=action,
-                reward_cny=macro_ledger.reward_cny,
+                learning_reward=macro_ledger.reward_cny,
                 next_state=next_state,
                 done=done,
                 executed_mpc_steps=executed,
                 ledger=macro_ledger,
             )
+        except PhysicalInfeasibilityError as exc:
+            if self._failure_policy is None:
+                self._failed = True
+                raise MacroStepExecutionError(
+                    "macro-step execution failed",
+                    executed_mpc_steps=executed,
+                ) from exc
+            try:
+                macro_ledger = _aggregate_ledgers(ledgers)
+                next_state = _validate_state(
+                    self._state_provider(), "physical failure next_state"
+                )
+                transition = MacroTransition(
+                    state=self._current_state,
+                    action=action,
+                    learning_reward=(
+                        macro_ledger.reward_cny - self._failure_policy.penalty_score
+                    ),
+                    next_state=next_state,
+                    done=True,
+                    executed_mpc_steps=executed,
+                    ledger=macro_ledger,
+                    failure_penalty_score=self._failure_policy.penalty_score,
+                    failure_kind=self._failure_policy.failure_kind,
+                )
+                done = True
+            except Exception as transition_error:
+                self._failed = True
+                raise MacroStepExecutionError(
+                    "physical-failure transition construction failed",
+                    executed_mpc_steps=executed,
+                ) from transition_error
         except Exception as exc:
             self._failed = True
             if isinstance(exc, MacroStepExecutionError):
@@ -362,6 +437,18 @@ class MultiRateWeightEnvironment:
             except Exception as exc:
                 raise ReplaySinkNotificationError(transition) from exc
         return transition
+
+
+def _aggregate_ledgers(
+    ledgers: list[RawCnyIntervalLedger],
+) -> RawCnyIntervalLedger:
+    components = tuple(
+        math.fsum(ledger.components_cny[index] for ledger in ledgers)
+        for index in range(4)
+    )
+    if not all(math.isfinite(value) for value in components):
+        raise ValueError("macro raw-CNY component accumulation must remain finite")
+    return RawCnyIntervalLedger(*components)
 
 
 __all__ = [

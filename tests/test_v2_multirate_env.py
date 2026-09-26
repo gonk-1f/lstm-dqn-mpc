@@ -66,10 +66,14 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         n: int = 5,
         m: int = 5,
         replay_sink=None,
+        failure_policy=None,
     ):
         from v2.config import TimeScaleConfig
         from v2.envs.multirate_weight_env import MultiRateWeightEnvironment
 
+        keywords = {}
+        if failure_policy is not None:
+            keywords["failure_policy"] = failure_policy
         return MultiRateWeightEnvironment(
             timescale=TimeScaleConfig(30.0, n, m),
             action_catalog=(self._candidate(),),
@@ -77,6 +81,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
             state_provider=provider,
             synthetic_test_mode=True,
             replay_sink=replay_sink,
+            **keywords,
         )
 
     def test_one_action_is_held_for_five_executions_and_one_boundary_transition(self) -> None:
@@ -101,11 +106,14 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         self.assertEqual(transition.action_id, "w_2_3_5")
         self.assertEqual(transition.executed_mpc_steps, 5)
         self.assertEqual(transition.ledger.components_cny, (15.0, 10.0, 15.0, 20.0))
-        self.assertEqual(transition.reward_cny, -60.0)
+        self.assertEqual(transition.learning_reward, -60.0)
+        self.assertEqual(transition.raw_economic_cost_cny, 60.0)
+        self.assertEqual(transition.failure_penalty_score, 0.0)
+        self.assertFalse(transition.failed)
         self.assertFalse(transition.done)
         self.assertEqual(environment.transitions, (transition,))
         with self.assertRaises(FrozenInstanceError):
-            transition.reward_cny = 0.0  # type: ignore[misc]
+            transition.learning_reward = 0.0  # type: ignore[misc]
 
     def test_backend_cannot_mutate_later_weights_or_prior_ledger_snapshots(self) -> None:
         from v2.economics import RawCnyIntervalLedger
@@ -220,7 +228,7 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "done"):
             environment.step("w_2_3_5")
 
-    def test_failure_reports_partial_count_and_emits_no_transition(self) -> None:
+    def test_nonphysical_failure_reports_partial_count_and_emits_no_transition(self) -> None:
         from v2.envs.multirate_weight_env import MacroStepExecutionError
 
         backend = _Backend(self._ledgers(5), fail_at=3)
@@ -240,6 +248,76 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
         self.assertEqual(provider.calls, 1)
         self.assertEqual(environment.transitions, ())
         self.assertEqual(replayed, [])
+
+    def test_physical_infeasibility_emits_terminal_transition_with_partial_ledger(self) -> None:
+        from v2.control.nonlinear_mpc import PhysicalInfeasibilityError
+        from v2.envs.multirate_weight_env import MPCExecutionResult
+        from v2.failure_policy import FORMAL_FAILURE_POLICY
+
+        class PhysicalFailureBackend:
+            def __init__(self, ledgers):
+                self.ledgers = ledgers
+                self.calls = 0
+
+            def execute_mpc_step(self, weights):
+                self.calls += 1
+                if self.calls == 3:
+                    raise PhysicalInfeasibilityError("no reachable SOC")
+                return MPCExecutionResult(self.ledgers[self.calls - 1], False)
+
+        backend = PhysicalFailureBackend(self._ledgers(5))
+        provider = _StateProvider()
+        replayed = []
+        environment = self._environment(
+            backend,
+            provider,
+            replay_sink=replayed.append,
+            failure_policy=FORMAL_FAILURE_POLICY,
+        )
+        environment.reset()
+
+        transition = environment.step("w_2_3_5")
+
+        self.assertTrue(transition.done)
+        self.assertTrue(transition.failed)
+        self.assertFalse(transition.episode_completed)
+        self.assertEqual(transition.executed_mpc_steps, 2)
+        self.assertEqual(transition.ledger.components_cny, (3.0, 4.0, 6.0, 8.0))
+        self.assertEqual(transition.raw_economic_cost_cny, 21.0)
+        self.assertEqual(transition.failure_penalty_score, 50_000.0)
+        self.assertEqual(transition.learning_reward, -50_021.0)
+        self.assertEqual(transition.failure_kind, "physical_mpc_infeasibility")
+        self.assertEqual(provider.calls, 2)
+        self.assertEqual(environment.transitions, (transition,))
+        self.assertEqual(replayed, [transition])
+        with self.assertRaisesRegex(RuntimeError, "done"):
+            environment.step("w_2_3_5")
+
+    def test_physical_infeasibility_before_execution_emits_zero_cost_failure(self) -> None:
+        from v2.control.nonlinear_mpc import PhysicalInfeasibilityError
+        from v2.failure_policy import FORMAL_FAILURE_POLICY
+
+        class ImmediatePhysicalFailureBackend:
+            def execute_mpc_step(self, weights):
+                raise PhysicalInfeasibilityError("initial horizon infeasible")
+
+        provider = _StateProvider()
+        environment = self._environment(
+            ImmediatePhysicalFailureBackend(),
+            provider,
+            failure_policy=FORMAL_FAILURE_POLICY,
+        )
+        environment.reset()
+
+        transition = environment.step("w_2_3_5")
+
+        self.assertTrue(transition.failed)
+        self.assertTrue(transition.done)
+        self.assertEqual(transition.executed_mpc_steps, 0)
+        self.assertEqual(transition.raw_economic_cost_cny, 0.0)
+        self.assertEqual(transition.failure_penalty_score, 50_000.0)
+        self.assertEqual(transition.learning_reward, -50_000.0)
+        self.assertEqual(provider.calls, 2)
 
     def test_replay_observer_receives_a_detached_canonical_snapshot(self) -> None:
         observed = []

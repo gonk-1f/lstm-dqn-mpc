@@ -465,7 +465,11 @@ def _transition_document(value: MacroTransition) -> dict[str, object]:
     return {
         "state": list(value.state),
         "action_numerators": list(value.action.numerators),
-        "reward_cny": value.reward_cny,
+        "learning_reward": value.learning_reward,
+        "raw_economic_cost_cny": value.raw_economic_cost_cny,
+        "failure_penalty_score": value.failure_penalty_score,
+        "failure_kind": value.failure_kind,
+        "episode_completed": value.episode_completed,
         "next_state": list(value.next_state),
         "done": value.done,
         "executed_mpc_steps": value.executed_mpc_steps,
@@ -476,7 +480,11 @@ def _transition_document(value: MacroTransition) -> dict[str, object]:
 _TRANSITION_KEYS = {
     "state",
     "action_numerators",
-    "reward_cny",
+    "learning_reward",
+    "raw_economic_cost_cny",
+    "failure_penalty_score",
+    "failure_kind",
+    "episode_completed",
     "next_state",
     "done",
     "executed_mpc_steps",
@@ -498,15 +506,26 @@ def _transition_from_document(value: object) -> MacroTransition:
     try:
         action = ActionCandidate(*value["action_numerators"])
         ledger = RawCnyIntervalLedger(*value["ledger_components_cny"])
-        return MacroTransition(
+        transition = MacroTransition(
             state=tuple(value["state"]),
             action=action,
-            reward_cny=value["reward_cny"],
+            learning_reward=value["learning_reward"],
             next_state=tuple(value["next_state"]),
             done=value["done"],
             executed_mpc_steps=value["executed_mpc_steps"],
             ledger=ledger,
+            failure_penalty_score=value["failure_penalty_score"],
+            failure_kind=value["failure_kind"],
         )
+        if type(value["raw_economic_cost_cny"]) is not float:
+            raise TypeError("raw_economic_cost_cny must be an exact float")
+        if value["raw_economic_cost_cny"] != transition.raw_economic_cost_cny:
+            raise ValueError("raw economic cost differs from ledger total")
+        if type(value["episode_completed"]) is not bool:
+            raise TypeError("episode_completed must be an exact bool")
+        if value["episode_completed"] != transition.episode_completed:
+            raise ValueError("episode completion flag differs from transition semantics")
+        return transition
     except (TypeError, ValueError) as exc:
         raise IncompatibleArtifactError("replay transition is incompatible with v2") from exc
 
@@ -543,7 +562,7 @@ def _validate_replay_transitions(
             raise ValueError("replay state dimensions do not match metadata")
         if transition.action.action_id not in metadata.action_catalog_identity:
             raise ValueError("replay action is outside the metadata action catalog")
-        if not 1 <= transition.executed_mpc_steps <= metadata.dqn_switch_steps:
+        if not 0 <= transition.executed_mpc_steps <= metadata.dqn_switch_steps:
             raise ValueError("replay execution count is outside the metadata timescale")
         if (
             not transition.done

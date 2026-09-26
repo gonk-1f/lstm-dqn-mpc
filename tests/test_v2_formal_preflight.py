@@ -41,11 +41,13 @@ class FormalPreflightTests(unittest.TestCase):
                 "final_dqn_state",
                 "final_action_catalog",
                 "objective_scale_comparability",
+                "terminal_failure_policy",
+                "curated_dataset_release",
                 "shore_mode_sidecar",
             ),
         )
-        self.assertFalse(report.ready)
-        self.assertEqual(report.formal_training, "NO-GO")
+        self.assertTrue(report.ready)
+        self.assertEqual(report.formal_training, "GO")
         self.assertEqual(report.checks[0].status, CalibrationStatus.VERIFIED)
         self.assertEqual(report.checks[1].status, CalibrationStatus.VERIFIED)
         self.assertEqual(report.checks[2].status, CalibrationStatus.VERIFIED)
@@ -60,36 +62,68 @@ class FormalPreflightTests(unittest.TestCase):
             by_key["objective_scale_comparability"].status,
             CalibrationStatus.VERIFIED,
         )
-        self.assertEqual(by_key["shore_mode_sidecar"].status, CalibrationStatus.UNRESOLVED)
-        self.assertIn("Train=685", by_key["shore_mode_sidecar"].evidence)
-        self.assertIn("Validation=230", by_key["shore_mode_sidecar"].evidence)
+        self.assertEqual(
+            by_key["curated_dataset_release"].status,
+            CalibrationStatus.VERIFIED,
+        )
+        self.assertIn("authenticated", by_key["curated_dataset_release"].evidence)
+        self.assertIn("v2_s8_onboard_ais_v1", by_key["final_dqn_state"].evidence)
+        self.assertEqual(
+            by_key["shore_mode_sidecar"].status,
+            CalibrationStatus.VERIFIED,
+        )
+        self.assertIn("Train=0", by_key["shore_mode_sidecar"].evidence)
+        self.assertIn("Validation=0", by_key["shore_mode_sidecar"].evidence)
         self.assertTrue(all(check.evidence.strip() for check in report.checks))
 
-    def test_formal_configuration_gate_fails_closed_on_unresolved_mode_evidence(self) -> None:
-        from v2.preflight import FormalTrainingBlockedError, require_formal_training_ready
+    def test_formal_configuration_gate_accepts_authenticated_release(self) -> None:
+        from v2.preflight import require_formal_training_ready
 
-        with self.assertRaises(FormalTrainingBlockedError) as caught:
-            require_formal_training_ready()
-        self.assertEqual(len(caught.exception.report.checks), 17)
-        self.assertEqual(
-            tuple(issue.code for issue in caught.exception.report.issues),
-            ("unfrozen_shore_mode_sidecar",),
-        )
+        report = require_formal_training_ready()
 
-    def test_preflight_cli_reports_every_check_and_returns_no_go(self) -> None:
+        self.assertTrue(report.ready)
+        self.assertEqual(report.issues, ())
+
+    def test_preflight_cli_reports_every_check_and_returns_go(self) -> None:
         from v2.main.run_preflight import main
 
         output = io.StringIO()
         with redirect_stdout(output):
             exit_code = main([])
 
-        self.assertEqual(exit_code, 2)
-        self.assertIn("FORMAL_TRAINING=NO-GO", output.getvalue())
+        self.assertEqual(exit_code, 0)
+        self.assertIn("FORMAL_TRAINING=GO", output.getvalue())
         self.assertEqual(
             sum(line.startswith("[") for line in output.getvalue().splitlines()),
-            17,
+            19,
         )
         self.assertIn("[VERIFIED] objective_scale_comparability", output.getvalue())
+        self.assertIn("[VERIFIED] terminal_failure_policy", output.getvalue())
+
+    def test_terminal_failure_audit_rejects_missing_or_tampered_evidence(self) -> None:
+        from v2.preflight import CalibrationStatus, _failure_policy_evidence
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "audit_summary.json"
+            status, evidence = _failure_policy_evidence(path)
+            self.assertEqual(status, CalibrationStatus.NO_GO)
+            self.assertIn("missing", evidence)
+
+            source = ROOT / "outputs" / "v2_failure_penalty_audit" / "audit_summary.json"
+            payload = json.loads(source.read_text(encoding="utf-8"))
+            mutations = (
+                ("test_payloads_opened", 1),
+                ("reference_action_id", "w_1_1_8"),
+                ("maximum_completed_raw_economic_cost_cny", 1.0),
+                ("failure_penalty_score", 49_999.0),
+            )
+            for key, value in mutations:
+                with self.subTest(key=key):
+                    changed = dict(payload)
+                    changed[key] = value
+                    path.write_text(json.dumps(changed), encoding="utf-8")
+                    status, _ = _failure_policy_evidence(path)
+                    self.assertEqual(status, CalibrationStatus.NO_GO)
 
     def test_timescale_cli_rejects_held_out_split_before_reading_payload(self) -> None:
         from v2.main.run_train_only_timescale_audit import main
@@ -147,8 +181,8 @@ class FormalPreflightTests(unittest.TestCase):
 
     def test_preflight_report_matches_current_go_boundary(self) -> None:
         report = (ROOT / "docs" / "v2_preflight_report.md").read_text(encoding="utf-8")
-        self.assertIn("FORMAL_TRAINING = NO-GO", report)
-        self.assertIn("685", report)
+        self.assertIn("FORMAL_TRAINING = GO", report)
+        self.assertIn("30", report)
         self.assertIn("S8", report)
         self.assertIn("36-action", report)
         self.assertIn("Test payload", report)

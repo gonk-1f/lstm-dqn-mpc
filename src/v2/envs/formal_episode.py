@@ -20,7 +20,7 @@ from ..control.nonlinear_mpc import (
     MPCConfig,
     NonlinearMPC,
 )
-from ..data.supervisory_rules import OperatingMode
+from ..data.supervisory_rules import OperatingMode, normalize_onboard_load_kw
 from ..dqn.state import OperatingHistorySample, build_formal_operating_state
 from ..economics import (
     ShoreEnergy,
@@ -185,6 +185,8 @@ class FormalEpisodeBackend:
 
     def _current_sample(self) -> tuple[OperatingHistorySample, float, OperatingMode]:
         load, speed, time_s, mode = self._current_values()
+        if mode is OperatingMode.ONBOARD:
+            load = normalize_onboard_load_kw(load)
         sample = OperatingHistorySample(
             time_s,
             float(self.soc),

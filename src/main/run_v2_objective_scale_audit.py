@@ -26,11 +26,11 @@ from v2.analysis.train_objective_scale_runner import (
 )
 from v2.contracts import DATASET_VERSION
 from v2.data.supervisory_rules import (
-    FC_ZERO_TOLERANCE_KW,
     FRESHNESS_CAP_SECONDS,
     LONG_GAP_SECONDS,
     SPEED_ZERO_TOLERANCE_KN,
     OperatingMode,
+    normalize_onboard_load_kw,
 )
 from v2.data.train_supervisory_audit import (
     ParentRawChannels,
@@ -154,12 +154,17 @@ def _provenance_digest(
     source_inventory: pd.DataFrame,
 ) -> str:
     parents = tuple(train_manifest["parent"].astype(str))
+    path_column = (
+        "relative_path" if "relative_path" in source_inventory.columns else "path"
+    )
+    parent_set = set(parents)
     sources = source_inventory.loc[
-        source_inventory["path"].astype(str).map(
-            lambda value: any(f"\\{parent}\\" in value for parent in parents)
+        source_inventory[path_column].astype(str).map(
+            lambda value: value.replace("\\", "/").split("/", 1)[0]
+            in parent_set
         ),
-        ["path", "sha256"],
-    ].sort_values("path")
+        [path_column, "sha256"],
+    ].sort_values(path_column)
     payload = {
         "dataset_version": DATASET_VERSION,
         "parents": parents,
@@ -167,7 +172,7 @@ def _provenance_digest(
         "rules": {
             "freshness_cap_seconds": FRESHNESS_CAP_SECONDS,
             "speed_zero_tolerance_kn": SPEED_ZERO_TOLERANCE_KN,
-            "fc_zero_tolerance_kw": FC_ZERO_TOLERANCE_KW,
+            "recorded_fc_shore_classification": "IGNORED_DIAGNOSTIC_ONLY",
             "long_gap_seconds": LONG_GAP_SECONDS,
         },
     }
@@ -196,7 +201,7 @@ def _jsonable(value: object) -> object:
 
 
 def run(raw_root: Path, metadata_root: Path) -> dict[str, object]:
-    manifest = pd.read_csv(metadata_root / "parent_split_manifest.csv")
+    manifest = pd.read_csv(metadata_root / "sample_manifest.csv")
     train_manifest = manifest.loc[
         manifest["split"].astype(str).str.casefold().eq("train")
     ].copy()
@@ -207,7 +212,10 @@ def run(raw_root: Path, metadata_root: Path) -> dict[str, object]:
     ready_states: list[AuditReadyState] = []
     exact_duplicates = 0
     conflicts = 0
-    for parent in train_manifest["parent"].astype(str):
+    for manifest_row in train_manifest.itertuples(index=False):
+        parent = str(manifest_row.parent)
+        start = _aware(manifest_row.start_timestamp)
+        end = _aware(manifest_row.end_timestamp)
         parent_result = build_parent_supervisory_states(_read_parent(raw_root, parent))
         exact_duplicates += parent_result.exact_duplicate_rows_removed
         conflicts += parent_result.conflicting_duplicate_count
@@ -215,31 +223,40 @@ def run(raw_root: Path, metadata_root: Path) -> dict[str, object]:
 
         history: list[float] = []
         previous_state = None
-        for state in parent_result.states:
+        selected_states = tuple(
+            state
+            for state in parent_result.states
+            if start <= state.timestamp <= end
+        )
+        for state in selected_states:
             contiguous_sailing = (
-                state.mode is OperatingMode.SAILING_ISLAND
+                state.mode is OperatingMode.ONBOARD
                 and state.p_load_kw is not None
                 and previous_state is not None
-                and previous_state.mode is OperatingMode.SAILING_ISLAND
+                and previous_state.mode is OperatingMode.ONBOARD
                 and previous_state.p_load_kw is not None
                 and not state.long_gap_contaminated
             )
             if not contiguous_sailing:
                 history = []
             if contiguous_sailing and state.audit_eligible and history:
+                load_kw = normalize_onboard_load_kw(state.p_load_kw)
+                previous_load_kw = normalize_onboard_load_kw(
+                    previous_state.p_load_kw
+                )
                 ready_states.append(
                     AuditReadyState(
                         parent,
                         state.timestamp,
-                        state.p_load_kw,
+                        load_kw,
                         state.soc_system,
                         state.previous_p_fc_total_kw,
                         tuple(history),
-                        abs(state.p_load_kw - previous_state.p_load_kw),
+                        abs(load_kw - previous_load_kw),
                     )
                 )
-            if state.mode is OperatingMode.SAILING_ISLAND and state.p_load_kw is not None:
-                history.append(state.p_load_kw)
+            if state.mode is OperatingMode.ONBOARD and state.p_load_kw is not None:
+                history.append(normalize_onboard_load_kw(state.p_load_kw))
             previous_state = state
 
     source_inventory = pd.read_csv(metadata_root / "source_files.csv")
@@ -263,8 +280,18 @@ def run(raw_root: Path, metadata_root: Path) -> dict[str, object]:
         "above_0.6": sum(state.soc_system > 0.6 for state in ready_states),
     }
     return {
+        "dataset_version": "operating_dataset_zero_boundary_v2",
+        "train_segment_ids": tuple(train_manifest["sample_id"].astype(str)),
+        "input_manifest_sha256": {
+            "sample_manifest.csv": hashlib.sha256(
+                (metadata_root / "sample_manifest.csv").read_bytes()
+            ).hexdigest(),
+            "source_files.csv": hashlib.sha256(
+                (metadata_root / "source_files.csv").read_bytes()
+            ).hexdigest(),
+        },
         "readiness": "YES",
-        "train_parent_count": int(len(train_manifest)),
+        "train_parent_count": int(train_manifest["parent"].nunique()),
         "supervisory_state_count": len(all_states),
         "mode_counts": mode_counts,
         "audit_ready_state_count": len(ready_states),
@@ -293,9 +320,19 @@ def main() -> int:
         type=Path,
         default=PROJECT_ROOT / "data" / "processed" / "operating_dataset_final" / "metadata",
     )
+    parser.add_argument("--output-path", type=Path)
     arguments = parser.parse_args()
     summary = run(arguments.raw_root.resolve(), arguments.metadata_root.resolve())
-    print(json.dumps(_jsonable(summary), ensure_ascii=False, indent=2, allow_nan=False))
+    rendered = json.dumps(
+        _jsonable(summary), ensure_ascii=False, indent=2, allow_nan=False
+    )
+    if arguments.output_path is not None:
+        output = arguments.output_path.resolve()
+        if output.exists():
+            raise FileExistsError(f"objective audit output already exists: {output}")
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
     return 0
 
 

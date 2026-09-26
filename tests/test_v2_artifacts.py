@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
+import base64
 import hashlib
 import json
 import sys
@@ -268,7 +269,7 @@ class V2ArtifactTests(unittest.TestCase):
         transition = MacroTransition(
             state=(1.0, 2.0),
             action=ActionCandidate(2, 3, 5),
-            reward_cny=-10.0,
+            learning_reward=-10.0,
             next_state=(3.0, 4.0),
             done=False,
             executed_mpc_steps=3,
@@ -300,7 +301,7 @@ class V2ArtifactTests(unittest.TestCase):
             return MacroTransition(
                 state=state,
                 action=action or self._catalog()[0],
-                reward_cny=-10.0,
+                learning_reward=-10.0,
                 next_state=tuple(value + 1.0 for value in state),
                 done=done,
                 executed_mpc_steps=steps,
@@ -324,9 +325,13 @@ class V2ArtifactTests(unittest.TestCase):
                             "action_numerators": list(value.action.numerators),
                             "done": value.done,
                             "executed_mpc_steps": value.executed_mpc_steps,
+                            "failure_kind": value.failure_kind,
+                            "failure_penalty_score": value.failure_penalty_score,
                             "ledger_components_cny": list(value.ledger.components_cny),
+                            "learning_reward": value.learning_reward,
                             "next_state": list(value.next_state),
-                            "reward_cny": value.reward_cny,
+                            "raw_economic_cost_cny": value.raw_economic_cost_cny,
+                            "episode_completed": value.episode_completed,
                             "state": list(value.state),
                         }
                     ],
@@ -344,6 +349,56 @@ class V2ArtifactTests(unittest.TestCase):
             (early_terminal,),
         )
 
+    def test_failed_replay_transition_roundtrip_preserves_separate_penalty(self) -> None:
+        from v2.dqn.action_space import ActionCandidate
+        from v2.economics import RawCnyIntervalLedger
+        from v2.envs.multirate_weight_env import MacroTransition
+        from v2.failure_policy import FORMAL_FAILURE_KIND
+        from v2.training.artifacts import decode_replay, encode_replay
+
+        transition = MacroTransition(
+            state=(1.0, 2.0),
+            action=ActionCandidate(2, 3, 5),
+            learning_reward=-50_010.0,
+            next_state=(3.0, 4.0),
+            done=True,
+            executed_mpc_steps=0,
+            ledger=RawCnyIntervalLedger(1.0, 2.0, 3.0, 4.0),
+            failure_penalty_score=50_000.0,
+            failure_kind=FORMAL_FAILURE_KIND,
+        )
+        metadata = self._metadata(kind="replay", state_dimension=2)
+
+        encoded = encode_replay(metadata, (transition,))
+
+        self.assertEqual(decode_replay(encoded, expected_metadata=metadata), (transition,))
+        payload = json.loads(encoded.decode("ascii"))
+        document = json.loads(base64.b64decode(payload["payload_base64"]).decode("ascii"))[0]
+        self.assertEqual(document["raw_economic_cost_cny"], 10.0)
+        self.assertEqual(document["failure_penalty_score"], 50_000.0)
+        self.assertEqual(document["learning_reward"], -50_010.0)
+        self.assertFalse(document["episode_completed"])
+
+    def test_legacy_reward_only_replay_payload_is_rejected(self) -> None:
+        from v2.contracts import IncompatibleArtifactError
+        from v2.training.artifacts import decode_replay, encode_artifact
+
+        metadata = self._metadata(kind="replay", state_dimension=2)
+        legacy = [{
+            "state": [1.0, 2.0],
+            "action_numerators": [1, 4, 5],
+            "reward_cny": -10.0,
+            "next_state": [2.0, 3.0],
+            "done": False,
+            "executed_mpc_steps": 3,
+            "ledger_components_cny": [1.0, 2.0, 3.0, 4.0],
+        }]
+        payload = json.dumps(legacy, sort_keys=True, separators=(",", ":")).encode("ascii")
+        envelope = encode_artifact(metadata, payload)
+
+        with self.assertRaises(IncompatibleArtifactError):
+            decode_replay(envelope, expected_metadata=metadata)
+
     def test_replay_revalidates_tampered_exact_fields(self) -> None:
         from v2.economics import RawCnyIntervalLedger
         from v2.envs.multirate_weight_env import MacroTransition
@@ -358,7 +413,7 @@ class V2ArtifactTests(unittest.TestCase):
             value = MacroTransition(
                 state=(1.0, 2.0),
                 action=self._catalog()[0],
-                reward_cny=-10.0,
+                learning_reward=-10.0,
                 next_state=(2.0, 3.0),
                 done=False,
                 executed_mpc_steps=2,

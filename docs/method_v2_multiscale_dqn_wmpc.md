@@ -91,12 +91,12 @@ SOC 递推只调用 `v2.models.battery_energy.next_soc`，并要求经过来源�
 `Ts_MPC=30 s`、`N_MPC=5`、`M=5` 和 `tau_LPF=90 s` 均已冻结为项目设计配置，
 不再是正式训练 blocker。`N=5` 产生 150 s prediction horizon；`M=5` 产生
 150 s macro interval。该冻结不声称 N/M/tau 是由文献或全局优化证明的唯一最优值。
-正式训练仍因 dataset/episode payload、最终 DQN state、最终 action catalog/K 和
-最终集成 preflight/solver robustness 未关闭而 **NO-GO**。
+当前 dataset/episode payload、最终 S8、完整 36-action catalog 与集成
+preflight/solver robustness 均已关闭，正式训练门禁为 **GO**。
 
 真实 Train objective-scale audit 已在 6 个代表 case、完整 36 个候选 action 上完成
-216 次求解，active-P95 `scale_ratio=1.827863`，其独立 gate 为
-**PASS / VERIFIED**。该结果不提升上述其他 gate，也不授权正式训练。
+216 次求解，active-P95 `scale_ratio=1.855794906`，其独立 gate 为
+**PASS / VERIFIED**。结果已绑定当前 30 个 Train segment 与 raw-source inventory。
 
 未来对这些冻结参数的 sensitivity 或证据审计只能使用 Train 切分；Validation/Test
 不得回流改变 baseline。代码要求显式配置并保留 evidence classification。
@@ -120,4 +120,13 @@ SOC 递推只调用 `v2.models.battery_energy.next_soc`，并要求经过来源�
 
 `PhysicalInfeasibilityError` 表示在调用优化器前即可证明的物理不可行，例如当前状态越过硬边界，或某个预测步不存在同时满足额定功率、电池功率和爬坡限制的功率区间，或可达 SOC 与硬区间不相交。
 
+在 formal DQN 环境中，这一确定性物理不可行会终止当前 episode，并产生一个
+`done=True` replay transition。失败前已成功执行 interval 的 H2、FC 退化、电池退化
+和岸电成本仍按 raw CNY ledger 累加；另加冻结的 50,000 分 terminal failure
+penalty 形成 learning reward。该 penalty 是 Train-only 派生的项目设计分数，绝不
+作为真实经济成本写入 ledger。失败后进入下一个航段，初始 SOC 仍为 0.60。
+
 `NumericalSolverError` 表示数值求解失败，包括 SLSQP 未成功、元数据类型或取值无效、成功标志下返回不可读取/错误长度/非有限解，或结果未通过独立物理残差复核。`success` 只接受布尔值，`status` 和迭代次数只接受非布尔整数，且迭代次数不得为负。数值失败不会被笼统标成物理不可行，也没有可能违反约束的后备控制命令。两类异常均提供机器可读的 `kind`；数值异常仅在求解器状态已经通过整数校验时保留 `status`。
+
+数值失败、非有限状态、接口违约和程序错误不会转换为失败 replay；它们继续
+fail closed 并中止运行，以免 DQN 从软件故障中学习。

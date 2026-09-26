@@ -33,9 +33,11 @@ from v2.data.zero_boundary_dataset import (  # noqa: E402
     SUSTAINED_POINTS,
     TEST_COUNT,
     TRAIN_COUNT,
+    UNEXPLAINED_NEGATIVE_POWER_EXCLUSIONS,
     VALIDATION_COUNT,
     ZERO_DEADBAND_KW,
     assign_parent_splits,
+    exclude_unexplained_negative_power_segments,
     reconstruct_one_second,
     segment_features,
     trim_to_zero_boundaries,
@@ -45,8 +47,6 @@ from v2.data.zero_boundary_dataset import (  # noqa: E402
 NOMINAL_STEP_SECONDS = 30.0
 ALIGNMENT_TOLERANCE_SECONDS = 10.0
 EXPECTED_RAW_PARENT_COUNT = 66
-EXPECTED_INCLUDED_PARENT_COUNT = TRAIN_COUNT + VALIDATION_COUNT + TEST_COUNT
-EXPECTED_EXCLUDED_PARENT_COUNT = len(APPROVED_BOUNDARY_EXCLUSIONS)
 
 
 def _sha256(path: Path) -> str:
@@ -142,6 +142,7 @@ def _source_file_rows(raw_root: Path, excluded_root: Path) -> list[dict[str, obj
 def _validate_outputs(
     frames: dict[str, pd.DataFrame],
     assignment: pd.DataFrame,
+    expected_split_counts: dict[str, int],
 ) -> dict[str, bool]:
     split_counts = assignment["split"].value_counts().to_dict()
     fixed_test = set(
@@ -177,9 +178,10 @@ def _validate_outputs(
         for frame in frames.values()
     )
     return {
-        "exact_parent_and_split_counts": len(frames) == EXPECTED_INCLUDED_PARENT_COUNT
-        and split_counts
-        == {"train": TRAIN_COUNT, "validation": VALIDATION_COUNT, "test": TEST_COUNT},
+        "exact_parent_and_split_counts": (
+            len(frames) == sum(expected_split_counts.values())
+            and split_counts == expected_split_counts
+        ),
         "fixed_test_set": fixed_test == set(FIXED_TEST_PARENTS),
         "no_parent_leakage": int(assignment.groupby("parent")["split"].nunique().max()) == 1,
         "finite_loads": finite,
@@ -195,6 +197,7 @@ def build_dataset(
     *,
     discover_parents: Callable[[Path], list[str]] = discover_parent_ids,
     load_parent: Callable[[Path, str], ParentPowerSeries] = load_parent_power_series,
+    unexplained_power_exclusions: dict[str, dict[str, str]] | None = None,
 ) -> dict[str, object]:
     """Build one immutable dataset root and return its QA summary."""
     raw_root = Path(raw_root).resolve()
@@ -311,9 +314,45 @@ def build_dataset(
             )
 
         assignment = assign_parent_splits(pd.DataFrame(feature_rows))
-        checks = _validate_outputs(frames, assignment)
+        retained_assignment, unexplained_rows = (
+            exclude_unexplained_negative_power_segments(
+                assignment,
+                exclusions=unexplained_power_exclusions,
+            )
+        )
+        retained_parents = set(retained_assignment["parent"].astype(str))
+        retained_frames = {
+            parent: frame
+            for parent, frame in frames.items()
+            if parent in retained_parents
+        }
+        expected_split_counts = (
+            {
+                "train": TRAIN_COUNT,
+                "validation": VALIDATION_COUNT,
+                "test": TEST_COUNT,
+            }
+            if unexplained_power_exclusions is None
+            else {
+                split: int(retained_assignment["split"].eq(split).sum())
+                for split in ("train", "validation", "test")
+            }
+        )
+        checks = _validate_outputs(
+            retained_frames,
+            retained_assignment,
+            expected_split_counts,
+        )
         checks["approved_boundary_exclusions_exact"] = (
             actual_exclusions == APPROVED_BOUNDARY_EXCLUSIONS
+        )
+        checks["unexplained_negative_power_exclusions_exact"] = (
+            set(unexplained_rows["sample_id"])
+            == set(
+                UNEXPLAINED_NEGATIVE_POWER_EXCLUSIONS
+                if unexplained_power_exclusions is None
+                else unexplained_power_exclusions
+            )
         )
         if not all(checks.values()):
             failed = sorted(name for name, passed in checks.items() if not passed)
@@ -326,14 +365,14 @@ def build_dataset(
         sample_rows: list[dict[str, object]] = []
         boundary_rows: list[dict[str, object]] = []
         audit_rows: list[dict[str, object]] = []
-        for row in assignment.itertuples(index=False):
+        for row in retained_assignment.itertuples(index=False):
             parent = str(row.parent)
             split = str(row.split)
             rank = int(row.chronological_rank) + 1
             sample_id = f"zero_boundary_{rank:03d}"
             relative = Path(split) / f"{sample_id}.csv"
             path = temporary / relative
-            frame = frames[parent]
+            frame = retained_frames[parent]
             frame.to_csv(path, index=False, encoding="utf-8-sig")
             sample_rows.append(
                 {
@@ -371,13 +410,18 @@ def build_dataset(
             "mean_load_quartile",
             "p95_load_quartile",
         ]
-        assignment[parent_columns].to_csv(
+        retained_assignment[parent_columns].to_csv(
             metadata / "parent_split_manifest.csv",
             index=False,
             encoding="utf-8-sig",
         )
         pd.DataFrame(excluded_rows).to_csv(
             metadata / "excluded_parent_manifest.csv",
+            index=False,
+            encoding="utf-8-sig",
+        )
+        unexplained_rows.to_csv(
+            metadata / "unexplained_negative_power_exclusions.csv",
             index=False,
             encoding="utf-8-sig",
         )
@@ -402,12 +446,8 @@ def build_dataset(
         )
         policy = {
             "dataset_version": "operating_dataset_zero_boundary_v2",
-            "parent_count": EXPECTED_INCLUDED_PARENT_COUNT,
-            "split_counts": {
-                "train": TRAIN_COUNT,
-                "validation": VALIDATION_COUNT,
-                "test": TEST_COUNT,
-            },
+            "parent_count": len(retained_assignment),
+            "split_counts": expected_split_counts,
             "fixed_test_parents": list(FIXED_TEST_PARENTS),
             "zero_deadband_kw": ZERO_DEADBAND_KW,
             "active_threshold_kw": ACTIVE_THRESHOLD_KW,
@@ -422,9 +462,24 @@ def build_dataset(
             "validation_selection": "greedy iterative multilabel stratification to 20 percent targets",
             "validation_tie_break": "chronological parent order then parent identifier",
             "raw_parent_count": EXPECTED_RAW_PARENT_COUNT,
-            "included_parent_count": EXPECTED_INCLUDED_PARENT_COUNT,
+            "included_parent_count": len(retained_assignment),
             "approved_boundary_exclusions": APPROVED_BOUNDARY_EXCLUSIONS,
-            "quartile_basis": "48 non-Test included parents only",
+            "unexplained_negative_power_exclusions": (
+                UNEXPLAINED_NEGATIVE_POWER_EXCLUSIONS
+                if unexplained_power_exclusions is None
+                else unexplained_power_exclusions
+            ),
+            "unexplained_negative_power_exclusion_reason": (
+                "moving negative derived total power has no observable source "
+                "in the available FC/BMS/AIS telemetry"
+            ),
+            "split_assignment_stage": (
+                "frozen 38/10/5 assignment before quality exclusions; retained "
+                "sample IDs and splits are not renumbered or reassigned"
+            ),
+            "quartile_basis": (
+                "48 non-Test boundary-eligible parents before quality exclusions"
+            ),
         }
         _write_json(metadata / "policy.json", policy)
 
@@ -444,17 +499,22 @@ def build_dataset(
         summary: dict[str, object] = {
             "dataset_version": "operating_dataset_zero_boundary_v2",
             "raw_parent_count": EXPECTED_RAW_PARENT_COUNT,
-            "excluded_parent_count": EXPECTED_EXCLUDED_PARENT_COUNT,
-            "parent_count": EXPECTED_INCLUDED_PARENT_COUNT,
+            "excluded_parent_count": len(excluded_rows) + len(unexplained_rows),
+            "boundary_excluded_parent_count": len(excluded_rows),
+            "unexplained_negative_power_excluded_parent_count": len(unexplained_rows),
+            "parent_count": len(retained_assignment),
             "segment_count": len(sample_manifest),
             "point_count": int(sample_manifest["point_count_1s"].sum()),
             "split_point_counts": split_points,
             "split_parent_counts": {
                 key: int(value)
-                for key, value in assignment["split"].value_counts().items()
+                for key, value in retained_assignment["split"].value_counts().items()
             },
             "negative_load_point_count": int(
-                sum((frame["load_total_kw"] < 0.0).sum() for frame in frames.values())
+                sum(
+                    (frame["load_total_kw"] < 0.0).sum()
+                    for frame in retained_frames.values()
+                )
             ),
             "acceptance_checks": checks,
             "source_file_count": len(source_rows),
@@ -462,9 +522,8 @@ def build_dataset(
             "artifact_hashes": artifact_hashes,
             "formal_training_status": "NO-GO",
             "formal_training_blockers": [
-                "final DQN state audit and freeze",
-                "final action catalog 36 -> K screening and freeze",
-                "final integrated preflight and solver robustness",
+                "DQN state audit must be recomputed after dataset exclusion",
+                "integrated formal-training preflight must authenticate the curated manifests",
             ],
         }
         _write_json(metadata / "qa_summary.json", summary)

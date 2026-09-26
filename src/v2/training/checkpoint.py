@@ -11,11 +11,12 @@ import torch
 from ..contracts import control_semantics
 from ..dqn.action_space import ACTION_CATALOG_DIGEST, FINAL_DQN_ACTION_CATALOG
 from ..dqn.state import FORMAL_STATE_SCHEMA_DIGEST, FORMAL_STATE_SCHEMA_VERSION
+from ..failure_policy import FORMAL_FAILURE_POLICY
 from .dqn import DqnAgent
 from .schedule import EpisodeShuffleSchedule
 
 
-CHECKPOINT_VERSION = "v2_formal_dqn_checkpoint_v2"
+CHECKPOINT_VERSION = "v2_formal_dqn_checkpoint_v3"
 
 
 class IncompatibleCheckpointError(ValueError):
@@ -79,6 +80,7 @@ def save_checkpoint(
         "action_catalog_digest": ACTION_CATALOG_DIGEST,
         "action_dim": len(FINAL_DQN_ACTION_CATALOG),
         "semantics": control_semantics(),
+        "failure_policy": asdict(FORMAL_FAILURE_POLICY),
         "training_config_identity": _config_identity(agent),
         "round_budget": agent.config.rounds,
         "agent": agent.state_dict(),
@@ -115,6 +117,7 @@ def load_checkpoint(
         "action_catalog_digest": ACTION_CATALOG_DIGEST,
         "action_dim": len(FINAL_DQN_ACTION_CATALOG),
         "semantics": control_semantics(),
+        "failure_policy": asdict(FORMAL_FAILURE_POLICY),
         "training_config_identity": _config_identity(agent),
     }
     if any(payload.get(key) != value for key, value in expected.items()):

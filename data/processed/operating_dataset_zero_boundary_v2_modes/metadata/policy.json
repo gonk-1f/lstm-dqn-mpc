@@ -1,30 +1,31 @@
 {
-  "ais_manifest_sha256": "0e17b66f3d290a065cf975cbdc20d4c698dba0d2fe4e4a0f291dae3d68ef78fd",
+  "ais_manifest_sha256": "e7853ea68f3bad5c302c36e92522b01a83b736c8b48f2d54541ffd35f0d2829d",
   "battery_bus_sign": "positive discharge, negative charge",
   "component_interpolation": "PCHIP within bracketed reconstructed raw-component span",
   "mode_counts": {
-    "onboard": 35752,
-    "shore_charging": 3232,
-    "shore_pending": 42,
-    "unresolved": 915
+    "onboard": 24437,
+    "shore_charging": 6419,
+    "shore_pending": 122
   },
-  "power_manifest_sha256": "2cc5f510d55785543930c4c11c2f8208bfd4c3ce4cafd9fbbe3e97918048d346",
+  "power_manifest_sha256": "413f2c8e60487ab43f5d24d179d0cbe20697eb1204ab6521151044a03dddf029",
+  "recorded_fc_role": "diagnostic only; ignored for shore classification",
   "schema_version": "v2_shore_mode_30s_v1",
+  "shore_candidate_evidence": "quality-valid AIS speed and battery-bus charging power",
   "split_mode_counts": {
     "test": {
-      "onboard": 2765
+      "onboard": 2728,
+      "shore_charging": 31,
+      "shore_pending": 6
     },
     "train": {
-      "onboard": 28041,
-      "shore_charging": 2151,
-      "shore_pending": 32,
-      "unresolved": 685
+      "onboard": 18448,
+      "shore_charging": 5054,
+      "shore_pending": 88
     },
     "validation": {
-      "onboard": 4946,
-      "shore_charging": 1081,
-      "shore_pending": 10,
-      "unresolved": 230
+      "onboard": 3261,
+      "shore_charging": 1334,
+      "shore_pending": 28
     }
   }
 }

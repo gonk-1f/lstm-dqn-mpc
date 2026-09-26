@@ -14,8 +14,10 @@ from utils.rebuilt_operating_dataset import pchip_to_one_second
 ZERO_DEADBAND_KW = 1.0
 ACTIVE_THRESHOLD_KW = 1.0
 SUSTAINED_POINTS = 3
-TRAIN_COUNT = 38
-VALIDATION_COUNT = 10
+ASSIGNMENT_TRAIN_COUNT = 38
+ASSIGNMENT_VALIDATION_COUNT = 10
+TRAIN_COUNT = 30
+VALIDATION_COUNT = 8
 TEST_COUNT = 5
 FIXED_TEST_PARENTS = (
     "3月26日14_00_3月26日16_00",
@@ -38,6 +40,48 @@ APPROVED_BOUNDARY_EXCLUSIONS = {
     "7月19日07_00_7月19日09_00": "end",
     "7月22日08_00_7月22日11_00": "end",
     "7月24日14_00_7月24日17_00": "end",
+}
+UNEXPLAINED_NEGATIVE_POWER_EXCLUSIONS = {
+    "zero_boundary_014": {
+        "parent": "4月25日08_00_4月25日18_00",
+        "split": "train",
+    },
+    "zero_boundary_023": {
+        "parent": "5月14日12_00_5月14日19_00",
+        "split": "train",
+    },
+    "zero_boundary_024": {
+        "parent": "5月15日08_00_5月15日17_00",
+        "split": "validation",
+    },
+    "zero_boundary_025": {
+        "parent": "5月17日08_00_5月17日18_00",
+        "split": "train",
+    },
+    "zero_boundary_026": {
+        "parent": "5月20日08_00_5月20日18_00",
+        "split": "train",
+    },
+    "zero_boundary_027": {
+        "parent": "5月21日05_00_5月21日11_00",
+        "split": "validation",
+    },
+    "zero_boundary_028": {
+        "parent": "5月24日08_00_5月24日19_00",
+        "split": "train",
+    },
+    "zero_boundary_030": {
+        "parent": "5月29日14_00_5月29日17_00",
+        "split": "train",
+    },
+    "zero_boundary_031": {
+        "parent": "5月30日05_00_5月30日17_00",
+        "split": "train",
+    },
+    "zero_boundary_039": {
+        "parent": "6月20日08_00_6月20日16_00",
+        "split": "train",
+    },
 }
 
 
@@ -429,7 +473,8 @@ def assign_parent_splits(features: pd.DataFrame) -> pd.DataFrame:
     result["chronological_timestamp"] = pd.to_datetime(
         result["chronological_timestamp"], errors="coerce"
     )
-    if len(result) != TRAIN_COUNT + VALIDATION_COUNT + TEST_COUNT:
+    expected_count = ASSIGNMENT_TRAIN_COUNT + ASSIGNMENT_VALIDATION_COUNT + TEST_COUNT
+    if len(result) != expected_count:
         raise ValueError("expected exactly 53 eligible parent feature rows")
     if result["parent"].duplicated().any():
         raise ValueError("parent features contain duplicate identifiers")
@@ -489,7 +534,7 @@ def assign_parent_splits(features: pd.DataFrame) -> pd.DataFrame:
         str(parent) for parent in result.loc[non_test_index, "parent"].tolist()
     ]
     chronological_rank = result.set_index("parent")["chronological_rank"].to_dict()
-    while len(selected) < VALIDATION_COUNT:
+    while len(selected) < ASSIGNMENT_VALIDATION_COUNT:
         scored: list[tuple[float, int, str]] = []
         for parent in candidates:
             trial = selected_counts.copy()
@@ -513,9 +558,63 @@ def assign_parent_splits(features: pd.DataFrame) -> pd.DataFrame:
         np.where(result["parent"].isin(validation), "validation", "train"),
     )
     if result["split"].value_counts().to_dict() != {
-        "train": TRAIN_COUNT,
-        "validation": VALIDATION_COUNT,
+        "train": ASSIGNMENT_TRAIN_COUNT,
+        "validation": ASSIGNMENT_VALIDATION_COUNT,
         "test": TEST_COUNT,
     }:
         raise AssertionError("parent split counts violate the frozen contract")
     return result
+
+
+def exclude_unexplained_negative_power_segments(
+    assignment: pd.DataFrame,
+    exclusions: dict[str, dict[str, str]] | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Remove the frozen moving-negative-power segments without renumbering."""
+
+    selected = (
+        UNEXPLAINED_NEGATIVE_POWER_EXCLUSIONS
+        if exclusions is None
+        else exclusions
+    )
+    required = {"parent", "split", "chronological_rank"}
+    missing = required.difference(assignment.columns)
+    if missing:
+        raise ValueError(
+            f"split assignment is missing exclusion columns: {sorted(missing)}"
+        )
+    source = assignment.copy()
+    source["sample_id"] = source["chronological_rank"].map(
+        lambda value: f"zero_boundary_{int(value) + 1:03d}"
+    )
+    if source["sample_id"].duplicated().any():
+        raise ValueError("split assignment produces duplicate sample IDs")
+    indexed = source.set_index("sample_id", drop=False)
+    rows: list[dict[str, str]] = []
+    for sample_id in sorted(selected):
+        expected = selected[sample_id]
+        if sample_id not in indexed.index:
+            raise ValueError(f"unexplained-power exclusion is missing: {sample_id}")
+        actual = indexed.loc[sample_id]
+        if str(actual["parent"]) != str(expected["parent"]):
+            raise ValueError(f"{sample_id}: exclusion parent identity differs")
+        if str(actual["split"]) != str(expected["split"]):
+            raise ValueError(f"{sample_id}: exclusion split identity differs")
+        if str(actual["split"]) == "test":
+            raise ValueError("unexplained-power exclusions cannot remove Test")
+        rows.append(
+            {
+                "parent": str(actual["parent"]),
+                "sample_id": sample_id,
+                "split": str(actual["split"]),
+                "reason": "UNEXPLAINED_MOVING_NEGATIVE_TOTAL_POWER",
+            }
+        )
+    retained = source.loc[~source["sample_id"].isin(selected)].drop(
+        columns="sample_id"
+    )
+    audit = pd.DataFrame(
+        rows,
+        columns=("parent", "sample_id", "split", "reason"),
+    )
+    return retained.reset_index(drop=True), audit

@@ -12,7 +12,6 @@ from typing import Sequence
 
 FRESHNESS_CAP_SECONDS = 10.0
 SPEED_ZERO_TOLERANCE_KN = 0.1
-FC_ZERO_TOLERANCE_KW = 8.0
 BATTERY_CHARGE_THRESHOLD_KW = 1.0
 SOURCE_LOAD_DEADBAND_KW = 1.0
 LONG_GAP_SECONDS = 45.0
@@ -31,6 +30,15 @@ def _finite(value: object, name: str) -> float:
 def is_fresh_causal_age(age_seconds: object) -> bool:
     age = _finite(age_seconds, "age_seconds")
     return 0.0 <= age <= FRESHNESS_CAP_SECONDS
+
+
+def normalize_onboard_load_kw(load_kw: object) -> float:
+    """Map the frozen numerical deadband to zero before MPC execution."""
+
+    load = _finite(load_kw, "load_kw")
+    if load < -SOURCE_LOAD_DEADBAND_KW:
+        raise ValueError("ONBOARD load lies below the frozen source-load deadband")
+    return max(0.0, load)
 
 
 class OperatingMode(Enum):
@@ -83,7 +91,6 @@ def _shore_candidate(sample: ModeSample) -> bool:
     return (
         sample.quality_valid
         and sample.speed_kn <= SPEED_ZERO_TOLERANCE_KN
-        and abs(sample.p_fc_total_kw) <= FC_ZERO_TOLERANCE_KW
         and sample.p_batt_total_kw < -BATTERY_CHARGE_THRESHOLD_KW
     )
 
@@ -150,14 +157,11 @@ def reconstruct_sailing_load(sample: ModeSample, mode: OperatingMode) -> float:
     if not sample.quality_valid:
         raise ValueError("sample does not satisfy onboard eligibility")
     load = sample.p_fc_total_kw + sample.p_batt_total_kw
-    if load < 0.0:
-        raise ValueError("negative reconstructed sailing load is contradictory")
-    return float(load)
+    return normalize_onboard_load_kw(load)
 
 
 __all__ = [
     "BATTERY_CHARGE_THRESHOLD_KW",
-    "FC_ZERO_TOLERANCE_KW",
     "FRESHNESS_CAP_SECONDS",
     "LONG_GAP_SECONDS",
     "SHORE_MIN_CONSECUTIVE_SAMPLES",
@@ -167,5 +171,6 @@ __all__ = [
     "OperatingMode",
     "classify_operating_modes",
     "is_fresh_causal_age",
+    "normalize_onboard_load_kw",
     "reconstruct_sailing_load",
 ]

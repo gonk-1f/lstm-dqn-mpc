@@ -48,9 +48,9 @@ diagnostic evidence, separate from the simulated zero-FC command.
 Rebuild only the mode sidecar from the already curated power and AIS datasets.
 Do not change dataset membership, Train/Validation/Test assignments, raw power
 payloads, AIS payloads, or interpolation. Under the approved rule, the 110
-previously unresolved samples in `zero_boundary_029` are expected to become a
-confirmed shore event: two `shore_pending` samples followed by 108
-`shore_charging` samples.
+previously unresolved samples in `zero_boundary_029` are expected to join the
+already confirmed contiguous shore event as `shore_charging`. The event keeps
+its original two leading `shore_pending` samples.
 
 ## Tests and verification
 

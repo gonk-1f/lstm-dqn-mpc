@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 
-FROZEN_SPLIT_COUNTS = {"train": 38, "validation": 10, "test": 5}
+FROZEN_SPLIT_COUNTS = {"train": 30, "validation": 8, "test": 5}
 SPLIT_ORDER = ("train", "validation", "test")
 REQUIRED_COLUMNS = ("timestamp", "time_s", "load_total_kw")
 

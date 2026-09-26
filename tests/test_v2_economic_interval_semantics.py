@@ -404,11 +404,13 @@ class ShoreAndMacroLedgerTests(unittest.TestCase):
             transition.ledger.fuel_cell_degradation_cost_cny,
             cumulative_fc_cost_recharged_each_step,
         )
-        self.assertEqual(transition.reward_cny, -90.0)
+        self.assertEqual(transition.learning_reward, -90.0)
+        self.assertEqual(transition.raw_economic_cost_cny, 90.0)
+        self.assertEqual(transition.failure_penalty_score, 0.0)
 
 
 class EconomicClosurePreflightTests(unittest.TestCase):
-    def test_preflight_reports_verified_economic_evidence_despite_mode_blocker(self) -> None:
+    def test_preflight_reports_verified_economics_despite_dataset_blocker(self) -> None:
         from v2.preflight import CalibrationStatus, assess_formal_training_preflight
 
         report = assess_formal_training_preflight()
@@ -450,9 +452,16 @@ class EconomicClosurePreflightTests(unittest.TestCase):
                     for fragment in fragments:
                         self.assertIn(fragment, by_key[key].evidence)
 
-        self.assertFalse(report.ready)
-        self.assertEqual(report.formal_training, "NO-GO")
-        self.assertEqual(by_key["shore_mode_sidecar"].status, CalibrationStatus.UNRESOLVED)
+        self.assertTrue(report.ready)
+        self.assertEqual(report.formal_training, "GO")
+        self.assertEqual(
+            by_key["shore_mode_sidecar"].status,
+            CalibrationStatus.VERIFIED,
+        )
+        self.assertEqual(
+            by_key["curated_dataset_release"].status,
+            CalibrationStatus.VERIFIED,
+        )
 
 
 if __name__ == "__main__":

@@ -14,8 +14,8 @@ from .ais_speed_sidecar import AIS_GAP_PROVENANCE, AIS_RAW_PROVENANCE
 from .supervisory_rules import OperatingMode
 
 
-EXPECTED_SPLIT_COUNTS = {"train": 38, "validation": 10, "test": 5}
-EXPECTED_TRAIN_STEPS = 30_909
+EXPECTED_SPLIT_COUNTS = {"train": 30, "validation": 8, "test": 5}
+EXPECTED_TRAIN_STEPS = 23_590
 
 
 def _onboard_macro_transition_count(values: tuple[str, ...]) -> int:

@@ -71,7 +71,7 @@ class DqnTrainingConfig:
             warmup_steps=5_000,
             target_sync_steps=1_000,
             gradient_clip_norm=10.0,
-            rounds=30,
+            rounds=40,
         )
 
 

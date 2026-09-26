@@ -17,6 +17,13 @@ if str(SRC) not in sys.path:
 
 
 class TestV2CheckpointResume(unittest.TestCase):
+    def test_checkpoint_version_is_v3_for_terminal_failure_semantics(self) -> None:
+        from v2.contracts import REWARD_VERSION
+        from v2.training.checkpoint import CHECKPOINT_VERSION
+
+        self.assertEqual(CHECKPOINT_VERSION, "v2_formal_dqn_checkpoint_v3")
+        self.assertEqual(REWARD_VERSION, "macro_interval_economic_plus_terminal_failure_v2")
+
     def test_round_trip_restores_agent_replay_schedule_and_counters(self) -> None:
         from v2.training.checkpoint import load_checkpoint, save_checkpoint
         from v2.training.dqn import DqnAgent, DqnTrainingConfig
@@ -98,6 +105,46 @@ class TestV2CheckpointResume(unittest.TestCase):
                     agent=DqnAgent(DqnTrainingConfig.formal_baseline(), seed=1, device="cpu"),
                     schedule=EpisodeShuffleSchedule(("a",), seed=1),
                 )
+
+    def test_rejects_v2_checkpoint_before_mutating_runtime_state(self) -> None:
+        from v2.training.checkpoint import (
+            IncompatibleCheckpointError,
+            load_checkpoint,
+            save_checkpoint,
+        )
+        from v2.training.dqn import DqnAgent, DqnTrainingConfig
+        from v2.training.schedule import EpisodeShuffleSchedule
+
+        config = DqnTrainingConfig.formal_baseline()
+        source_agent = DqnAgent(config, seed=42, device="cpu")
+        source_schedule = EpisodeShuffleSchedule(("a", "b"), seed=42)
+        permutation = source_schedule.next_round()
+        with tempfile.TemporaryDirectory() as directory:
+            current_path = Path(directory) / "current.pt"
+            legacy_path = Path(directory) / "legacy-v2.pt"
+            save_checkpoint(
+                current_path,
+                agent=source_agent,
+                schedule=source_schedule,
+                global_macro_step=1,
+                round_index=0,
+                episode_position=1,
+                current_permutation=permutation,
+            )
+            payload = torch.load(current_path, map_location="cpu", weights_only=False)
+            payload["checkpoint_version"] = "v2_formal_dqn_checkpoint_v2"
+            payload["semantics"]["reward_version"] = "macro_interval_real_economic_cost_v1"
+            torch.save(payload, legacy_path)
+
+            target_agent = DqnAgent(config, seed=7, device="cpu")
+            target_schedule = EpisodeShuffleSchedule(("a", "b"), seed=7)
+            agent_before = target_agent.state_dict()
+            schedule_before = target_schedule.state_dict()
+            with self.assertRaises(IncompatibleCheckpointError):
+                load_checkpoint(legacy_path, agent=target_agent, schedule=target_schedule)
+            self.assertEqual(target_schedule.state_dict(), schedule_before)
+            self.assertEqual(target_agent.optimizer_steps, agent_before["optimizer_steps"])
+            self.assertEqual(len(target_agent.replay), len(agent_before["replay"]["actions"]))
 
 
 if __name__ == "__main__":

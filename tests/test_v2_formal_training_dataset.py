@@ -50,25 +50,25 @@ class TestFormalTrainingDataset(unittest.TestCase):
         from v2.data.formal_training_dataset import FormalTrainingDataset
 
         dataset = FormalTrainingDataset.open(DATASET, AIS, MODES)
-        self.assertEqual(dataset.split_counts, {"train": 38, "validation": 10, "test": 5})
-        self.assertEqual(dataset.train_supervisory_steps, 30_909)
+        self.assertEqual(dataset.split_counts, {"train": 30, "validation": 8, "test": 5})
+        self.assertEqual(dataset.train_supervisory_steps, 23_590)
         self.assertEqual(
             dataset.unresolved_mode_counts,
-            {"train": 685, "validation": 230, "test": 0},
+            {"train": 0, "validation": 0, "test": 0},
         )
         self.assertGreater(dataset.train_macro_transitions, 0)
-        self.assertLess(dataset.train_macro_transitions, 6_197)
+        self.assertLessEqual(dataset.train_macro_transitions, 4_718)
         self.assertEqual(dataset.opened_test_payloads, 0)
         episodes = dataset.load_train()
-        self.assertEqual(len(episodes), 38)
-        self.assertEqual(sum(item.step_count for item in episodes), 30_909)
+        self.assertEqual(len(episodes), 30)
+        self.assertEqual(sum(item.step_count for item in episodes), 23_590)
         self.assertTrue(all(item.speed_kn.shape == item.load_kw.shape for item in episodes))
         self.assertTrue(all(item.fc_power_kw.shape == item.load_kw.shape for item in episodes))
         self.assertTrue(all(item.battery_bus_kw.shape == item.load_kw.shape for item in episodes))
         self.assertTrue(all(len(item.operating_mode) == item.step_count for item in episodes))
         self.assertTrue(
             {mode for item in episodes for mode in item.operating_mode}.issuperset(
-                {"onboard", "shore_pending", "shore_charging", "unresolved"}
+                {"onboard", "shore_pending", "shore_charging"}
             )
         )
         self.assertTrue(any((item.load_kw < -1.0).any() for item in episodes))
@@ -79,7 +79,7 @@ class TestFormalTrainingDataset(unittest.TestCase):
     def test_fixed_seed_shuffle_is_per_round_and_resumable(self) -> None:
         from v2.training.schedule import EpisodeShuffleSchedule
 
-        identifiers = tuple(f"e{index:02d}" for index in range(38))
+        identifiers = tuple(f"e{index:02d}" for index in range(30))
         first = EpisodeShuffleSchedule(identifiers, seed=42)
         round_1 = first.next_round()
         saved = first.state_dict()

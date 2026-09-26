@@ -134,6 +134,14 @@ class TestShoreModeSidecar(unittest.TestCase):
             self.assertEqual(manifest.loc[0, "sha256"], _sha256(output / "train" / "sample.csv"))
             self.assertEqual(summary["mode_counts"]["shore_pending"], 2)
             self.assertEqual(summary["mode_counts"]["shore_charging"], 1)
+            self.assertEqual(
+                summary["shore_candidate_evidence"],
+                "quality-valid AIS speed and battery-bus charging power",
+            )
+            self.assertEqual(
+                summary["recorded_fc_role"],
+                "diagnostic only; ignored for shore classification",
+            )
 
     def test_builder_rejects_existing_destination_and_identity_mismatch(self) -> None:
         from v2.data.shore_mode_sidecar import build_shore_mode_sidecar

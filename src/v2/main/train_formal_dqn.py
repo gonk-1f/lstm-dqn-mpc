@@ -6,7 +6,7 @@ This module deliberately does not import or delegate to the legacy trainer.
 from __future__ import annotations
 
 import argparse
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 import time
 from typing import Sequence
@@ -16,7 +16,7 @@ import numpy as np
 from ..config import TAU_LPF_SECONDS, TimeScaleConfig
 from ..control.causal_base_load import CausalBaseLoadFilter
 from ..data.formal_training_dataset import FormalEpisode, FormalTrainingDataset
-from ..data.supervisory_rules import OperatingMode
+from ..data.supervisory_rules import OperatingMode, normalize_onboard_load_kw
 from ..dqn.action_space import FINAL_DQN_ACTION_CATALOG
 from ..dqn.state import OperatingHistorySample, build_formal_operating_state
 from ..envs.formal_episode import (
@@ -34,7 +34,26 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_POWER_ROOT = REPOSITORY_ROOT / "data" / "processed" / "operating_dataset_zero_boundary_v2"
 DEFAULT_AIS_ROOT = REPOSITORY_ROOT / "data" / "processed" / "operating_dataset_zero_boundary_v2_ais"
 DEFAULT_MODE_ROOT = REPOSITORY_ROOT / "data" / "processed" / "operating_dataset_zero_boundary_v2_modes"
-DEFAULT_OUTPUT_ROOT = REPOSITORY_ROOT / "outputs" / "v2_formal_dqn"
+DEFAULT_OUTPUT_ROOT = REPOSITORY_ROOT / "outputs" / "v2_formal_dqn_v3"
+
+
+@dataclass(frozen=True)
+class ValidationSummary:
+    raw_economic_cost_cny: float
+    failure_penalty_score: float
+    learning_reward: float
+    transitions: int
+    completed_episodes: int
+    failed_episodes: int
+
+    @property
+    def completion_rate(self) -> float:
+        total = self.completed_episodes + self.failed_episodes
+        return float(self.completed_episodes / total) if total else 0.0
+
+    @classmethod
+    def empty(cls) -> "ValidationSummary":
+        return cls(0.0, 0.0, 0.0, 0, 0, 0)
 
 
 def _positive_int(text: str) -> int:
@@ -53,7 +72,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--ais-root", type=Path, default=DEFAULT_AIS_ROOT)
     parser.add_argument("--mode-root", type=Path, default=DEFAULT_MODE_ROOT)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_ROOT)
-    parser.add_argument("--rounds", type=_positive_int, default=30)
+    parser.add_argument("--rounds", type=_positive_int, default=40)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--log-every", type=_positive_int, default=1)
@@ -95,8 +114,14 @@ def _validate_all_states(episodes: tuple[FormalEpisode, ...]) -> int:
             if mode is not OperatingMode.ONBOARD:
                 history.clear()
                 continue
+            normalized_load = normalize_onboard_load_kw(float(load_kw))
             sample = OperatingHistorySample(
-                float(time_s), 0.60, float(fc_kw), 0.0, float(load_kw), float(load_kw)
+                float(time_s),
+                0.60,
+                float(fc_kw),
+                0.0,
+                normalized_load,
+                normalized_load,
             )
             history.append(sample)
             # Only the frozen 150 s causal window can affect S8.
@@ -245,7 +270,12 @@ def _smoke(train: tuple[FormalEpisode, ...]) -> None:
     epsilon = epsilon_at_global_step(0)
     print(
         f"SMOKE=PASS episode={episode.sample_id} steps={transition.executed_mpc_steps} "
-        f"mpc_solves={backend.mpc_solve_count} reward_cny={transition.reward_cny:.9f} "
+        f"mpc_solves={backend.mpc_solve_count} "
+        f"raw_economic_cost_cny={transition.raw_economic_cost_cny:.9f} "
+        f"failure_penalty_score={transition.failure_penalty_score:.9f} "
+        f"learning_reward={transition.learning_reward:.9f} "
+        f"episode_completed={'YES' if transition.episode_completed else 'NO'} "
+        f"failure_kind={transition.failure_kind or 'NONE'} "
         f"epsilon={epsilon:.6f} greedy_rate={1.0 - epsilon:.6f} "
         f"paused_shore_steps={backend.mode_counts[OperatingMode.SHORE_PENDING] + backend.mode_counts[OperatingMode.SHORE_CHARGING]} "
         "gradient_updates=0 checkpoint=NONE",
@@ -265,7 +295,9 @@ def _progress_line(
     action_index: int,
     epsilon: float,
     transition: object,
-    episode_reward: float,
+    episode_raw_economic_cost_cny: float,
+    episode_failure_penalty_score: float,
+    episode_learning_reward: float,
     loss: float | None,
     replay_size: int,
     backend: FormalEpisodeBackend,
@@ -283,7 +315,14 @@ def _progress_line(
         f"segment={episode.sample_id} macro={episode_macro} global={global_step} "
         f"action_index={action_index} action_id={action.action_id} weights={action.as_tuple()} "
         f"epsilon={epsilon:.6f} greedy_rate={1.0 - epsilon:.6f} "
-        f"reward_cny={transition.reward_cny:.9f} episode_reward_cny={episode_reward:.9f} "
+        f"raw_economic_cost_cny={transition.raw_economic_cost_cny:.9f} "
+        f"failure_penalty_score={transition.failure_penalty_score:.9f} "
+        f"learning_reward={transition.learning_reward:.9f} "
+        f"episode_raw_economic_cost_cny={episode_raw_economic_cost_cny:.9f} "
+        f"episode_failure_penalty_score={episode_failure_penalty_score:.9f} "
+        f"episode_learning_reward={episode_learning_reward:.9f} "
+        f"episode_completed={'YES' if transition.episode_completed else 'NO'} "
+        f"failure_kind={transition.failure_kind or 'NONE'} "
         f"loss={loss_text} replay={replay_size} soc={state[0]:.9f} load_kw={load:.6f} "
         f"base_kw={state[1] * 600.0:.6f} fc_kw={backend.previous_fc_kw:.6f} "
         f"delta_fc_kw={state[6] * 600.0:.6f} executed_steps={transition.executed_mpc_steps} "
@@ -296,9 +335,16 @@ def _progress_line(
     )
 
 
-def _evaluate_validation(agent: DqnAgent, validation: tuple[FormalEpisode, ...]) -> tuple[float, int]:
-    total_reward = 0.0
+def _evaluate_validation(
+    agent: DqnAgent,
+    validation: tuple[FormalEpisode, ...],
+) -> ValidationSummary:
+    raw_economic_cost_cny = 0.0
+    failure_penalty_score = 0.0
+    learning_reward = 0.0
     transitions = 0
+    completed_episodes = 0
+    failed_episodes = 0
     for episode in validation:  # Manifest order is fixed; never shuffled.
         _, environment = _environment(episode)
         state = environment.reset()
@@ -306,11 +352,26 @@ def _evaluate_validation(agent: DqnAgent, validation: tuple[FormalEpisode, ...])
         while not done:
             action_index = agent.greedy_action(np.asarray(state, dtype=np.float32))
             transition = environment.step(FINAL_DQN_ACTION_CATALOG[action_index].action_id)
-            total_reward += transition.reward_cny
+            raw_economic_cost_cny += transition.raw_economic_cost_cny
+            failure_penalty_score += transition.failure_penalty_score
+            learning_reward += transition.learning_reward
             transitions += 1
             state = transition.next_state
             done = transition.done
-    return total_reward, transitions
+        if transition.failed:
+            failed_episodes += 1
+        elif transition.episode_completed:
+            completed_episodes += 1
+        else:  # pragma: no cover - environment contract guard
+            raise RuntimeError("validation episode ended without terminal outcome")
+    return ValidationSummary(
+        raw_economic_cost_cny,
+        failure_penalty_score,
+        learning_reward,
+        transitions,
+        completed_episodes,
+        failed_episodes,
+    )
 
 
 def _train(
@@ -339,13 +400,20 @@ def _train(
     latest_path = args.output_dir / "latest.pt"
     started = time.perf_counter()
     while round_index < config.rounds:
+        round_raw_economic_cost_cny = 0.0
+        round_failure_penalty_score = 0.0
+        round_learning_reward = 0.0
+        round_completed_episodes = 0
+        round_failed_episodes = 0
         for position in range(episode_position, len(permutation)):
             episode = by_id[permutation[position]]
             backend, environment = _environment(episode)
             state = environment.reset()
             done = False
             episode_macro = 0
-            episode_reward = 0.0
+            episode_raw_economic_cost_cny = 0.0
+            episode_failure_penalty_score = 0.0
+            episode_learning_reward = 0.0
             while not done:
                 epsilon = epsilon_at_global_step(global_step)
                 action_index = agent.select_action(
@@ -358,13 +426,15 @@ def _train(
                 agent.replay.append(
                     np.asarray(transition.state, dtype=np.float32),
                     action_index,
-                    transition.reward_cny,
+                    transition.learning_reward,
                     np.asarray(transition.next_state, dtype=np.float32),
                     transition.done,
                 )
                 global_step += 1
                 episode_macro += 1
-                episode_reward += transition.reward_cny
+                episode_raw_economic_cost_cny += transition.raw_economic_cost_cny
+                episode_failure_penalty_score += transition.failure_penalty_score
+                episode_learning_reward += transition.learning_reward
                 loss: float | None = None
                 if (
                     global_step >= config.warmup_steps
@@ -387,7 +457,9 @@ def _train(
                         action_index=action_index,
                         epsilon=epsilon,
                         transition=transition,
-                        episode_reward=episode_reward,
+                        episode_raw_economic_cost_cny=episode_raw_economic_cost_cny,
+                        episode_failure_penalty_score=episode_failure_penalty_score,
+                        episode_learning_reward=episode_learning_reward,
                         loss=loss,
                         replay_size=len(agent.replay),
                         backend=backend,
@@ -396,6 +468,16 @@ def _train(
                     )
                 state = transition.next_state
                 done = transition.done
+
+            round_raw_economic_cost_cny += episode_raw_economic_cost_cny
+            round_failure_penalty_score += episode_failure_penalty_score
+            round_learning_reward += episode_learning_reward
+            if transition.failed:
+                round_failed_episodes += 1
+            elif transition.episode_completed:
+                round_completed_episodes += 1
+            else:  # pragma: no cover - environment contract guard
+                raise RuntimeError("training episode ended without terminal outcome")
 
             save_checkpoint(
                 latest_path,
@@ -412,11 +494,17 @@ def _train(
                 flush=True,
             )
 
-        validation_reward, validation_transitions = _evaluate_validation(agent, validation)
+        validation_summary = _evaluate_validation(agent, validation)
         print(
             f"validation round={round_index + 1}/{config.rounds} "
-            f"episodes={len(validation)} transitions={validation_transitions} "
-            f"reward_cny={validation_reward:.9f} shuffle=NO replay_updates=0 "
+            f"episodes={len(validation)} transitions={validation_summary.transitions} "
+            f"raw_economic_cost_cny={validation_summary.raw_economic_cost_cny:.9f} "
+            f"failure_penalty_score={validation_summary.failure_penalty_score:.9f} "
+            f"learning_reward={validation_summary.learning_reward:.9f} "
+            f"completed_episodes={validation_summary.completed_episodes} "
+            f"failed_episodes={validation_summary.failed_episodes} "
+            f"completion_rate={validation_summary.completion_rate:.6f} "
+            f"shuffle=NO replay_updates=0 "
             f"optimizer_updates=0 test_payloads_opened=0",
             flush=True,
         )
@@ -445,6 +533,12 @@ def _train(
         )
         print(
             f"round_complete={completed_round}/{config.rounds} global={global_step} "
+            f"raw_economic_cost_cny={round_raw_economic_cost_cny:.9f} "
+            f"failure_penalty_score={round_failure_penalty_score:.9f} "
+            f"learning_reward={round_learning_reward:.9f} "
+            f"completed_episodes={round_completed_episodes} "
+            f"failed_episodes={round_failed_episodes} "
+            f"completion_rate={round_completed_episodes / len(permutation):.6f} "
             f"checkpoint={latest_path} periodic_checkpoint={periodic_path} "
             f"elapsed_s={time.perf_counter() - started:.1f}",
             flush=True,

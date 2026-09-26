@@ -4,6 +4,8 @@ from collections.abc import Callable
 import csv
 from dataclasses import dataclass
 from enum import Enum
+import hashlib
+import json
 from pathlib import Path
 import re
 from typing import TypeVar
@@ -19,8 +21,9 @@ from .config import (
     TAU_LPF_SECONDS,
 )
 from .data.raw_inventory import RawExcelInventory, require_train_only
-from .dqn.action_space import ACTION_CATALOG_STATUS
+from .dqn.action_space import ACTION_CATALOG_DIGEST, ACTION_CATALOG_STATUS
 from .dqn.state import FORMAL_STATE_STATUS
+from .failure_policy import FORMAL_FAILURE_POLICY
 from .economics import (
     FORMAL_PRICE_CATALOG,
     SHORE_CHARGING_EFFICIENCY_EVIDENCE,
@@ -50,6 +53,54 @@ DEFAULT_MODE_MANIFEST = (
     / "metadata"
     / "sample_manifest.csv"
 )
+DEFAULT_DATASET_QA = (
+    Path(__file__).resolve().parents[2]
+    / "data"
+    / "processed"
+    / "operating_dataset_zero_boundary_v2"
+    / "metadata"
+    / "qa_summary.json"
+)
+DEFAULT_POWER_MANIFEST = DEFAULT_DATASET_QA.parent / "sample_manifest.csv"
+DEFAULT_AIS_MANIFEST = (
+    Path(__file__).resolve().parents[2]
+    / "data"
+    / "processed"
+    / "operating_dataset_zero_boundary_v2_ais"
+    / "metadata"
+    / "sample_manifest.csv"
+)
+DEFAULT_STATE_AUDIT_ROOT = (
+    Path(__file__).resolve().parents[2] / "outputs" / "v2_dqn_state_audit"
+)
+DEFAULT_STATE_AUDIT_MANIFEST = DEFAULT_STATE_AUDIT_ROOT / "audit_manifest.json"
+DEFAULT_OBJECTIVE_AUDIT = (
+    Path(__file__).resolve().parents[2]
+    / "outputs"
+    / "v2_objective_scale_audit"
+    / "audit_summary.json"
+)
+EXPECTED_OBJECTIVE_AUDIT_RESULT_DIGEST = (
+    "3a7243751169a118ec62079a4f76c9b6391413777ebbc42f24a117bc9a47605e"
+)
+DEFAULT_FAILURE_POLICY_AUDIT = (
+    Path(__file__).resolve().parents[2]
+    / "outputs"
+    / "v2_failure_penalty_audit"
+    / "audit_summary.json"
+)
+EXPECTED_FAILURE_POLICY_AUDIT_RESULT_DIGEST = (
+    "112c25d23474f09f71013386e91571f37894a66579d8899debde807a170c9801"
+)
+EXPECTED_FAILURE_REFERENCE_MAX_COST_CNY = 20_779.575664249034
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 @dataclass(frozen=True)
@@ -138,7 +189,8 @@ def _shore_mode_evidence() -> tuple[CalibrationStatus, str]:
     except (KeyError, TypeError, ValueError, OSError) as exc:
         return CalibrationStatus.NO_GO, f"shore-mode manifest is invalid: {exc}"
     evidence = (
-        "authenticated FC/BMS/AIS composite mode sidecar; unresolved rows: "
+        "authenticated AIS/BMS shore classification with FC retained as diagnostic; "
+        "unresolved rows: "
         f"Train={counts['train']}, Validation={counts['validation']}, Test={counts['test']}"
     )
     if counts["train"] or counts["validation"]:
@@ -146,18 +198,280 @@ def _shore_mode_evidence() -> tuple[CalibrationStatus, str]:
     return CalibrationStatus.VERIFIED, evidence
 
 
+def _formal_state_audit_evidence() -> tuple[CalibrationStatus, str]:
+    if not DEFAULT_STATE_AUDIT_MANIFEST.is_file():
+        return CalibrationStatus.NO_GO, "formal S8 audit manifest is missing"
+    try:
+        payload = json.loads(DEFAULT_STATE_AUDIT_MANIFEST.read_text(encoding="utf-8"))
+        from .analysis.train_state_audit import ACTIVE_DATASET_VERSION
+        from .dqn.state import FORMAL_STATE_SCHEMA_DIGEST, FORMAL_STATE_SCHEMA_VERSION
+
+        if payload["dataset_version"] != ACTIVE_DATASET_VERSION:
+            raise ValueError("dataset version differs")
+        if (
+            payload["formal_state_schema_version"] != FORMAL_STATE_SCHEMA_VERSION
+            or payload["formal_state_schema_digest"] != FORMAL_STATE_SCHEMA_DIGEST
+        ):
+            raise ValueError("formal S8 schema differs")
+        if (
+            payload["split"] != "train"
+            or payload["train_segment_count"] != 30
+            or payload["train_parent_count"] != 30
+            or payload["held_out_segment_files_opened"] != 0
+            or payload["formal_training_started"] is not False
+            or payload["action_catalog_modified"] is not False
+            or payload["sample_seconds"] != 30.0
+            or payload["tau_lpf_seconds"] != 90.0
+        ):
+            raise ValueError("formal audit boundary fields differ")
+
+        input_paths = {
+            "power": DEFAULT_POWER_MANIFEST,
+            "ais": DEFAULT_AIS_MANIFEST,
+            "modes": DEFAULT_MODE_MANIFEST,
+        }
+        expected_inputs = {name: _sha256(path) for name, path in input_paths.items()}
+        if payload["input_manifest_sha256"] != expected_inputs:
+            raise ValueError("input manifest hashes differ")
+
+        with DEFAULT_POWER_MANIFEST.open(
+            "r", encoding="utf-8-sig", newline=""
+        ) as handle:
+            power_rows = tuple(csv.DictReader(handle))
+        train_rows = tuple(row for row in power_rows if row["split"] == "train")
+        expected_segments = {row["sample_id"]: row["sha256"] for row in train_rows}
+        if (
+            len(train_rows) != 30
+            or set(payload["segment_ids"]) != set(expected_segments)
+            or payload["segment_sha256"] != expected_segments
+        ):
+            raise ValueError("Train segment identity or hashes differ")
+
+        artifact_hashes = payload["artifact_sha256"]
+        if not isinstance(artifact_hashes, dict) or not artifact_hashes:
+            raise ValueError("audit artifact hashes are missing")
+        for name, expected in artifact_hashes.items():
+            if type(name) is not str or Path(name).name != name:
+                raise ValueError("audit artifact name is unsafe")
+            path = DEFAULT_STATE_AUDIT_ROOT / name
+            if not path.is_file() or _sha256(path) != expected:
+                raise ValueError(f"audit artifact hash differs: {name}")
+
+        coverage = payload["measured_proxy_coverage"]
+        onboard = int(coverage["formal_onboard_row_count"])
+        proxy = int(coverage["measured_proxy_row_count"])
+        if onboard != 18_448 or proxy != int(payload["eligible_row_count"]):
+            raise ValueError("state-audit coverage counts differ")
+        if not 0 < proxy <= onboard:
+            raise ValueError("state-audit measured proxy coverage is invalid")
+
+        bounds = payload["hidden_life_state_upper_bounds"]
+        fc_bound = float(bounds["max_fc_raw_life_fraction_upper_bound"])
+        battery_bound = float(bounds["max_battery_raw_life_fraction_upper_bound"])
+        if (
+            bounds["status"] != "VERIFIED_BELOW_EOL"
+            or not 0.0 <= fc_bound < 1.0
+            or not 0.0 <= battery_bound < 1.0
+        ):
+            raise ValueError("hidden cumulative-life clipping is not excluded")
+    except (KeyError, TypeError, ValueError, OSError) as exc:
+        return CalibrationStatus.NO_GO, f"formal S8 audit is invalid: {exc}"
+    return (
+        CalibrationStatus.VERIFIED,
+        f"{payload['formal_state_schema_version']} authenticated against current "
+        f"power/AIS/mode manifests; measured proxy={proxy}/{onboard}; "
+        f"conservative episode EOL bounds FC={fc_bound:.6f}, battery={battery_bound:.6f}",
+    )
+
+
+def _objective_scale_evidence() -> tuple[CalibrationStatus, str]:
+    if FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS != "GO":
+        return CalibrationStatus.NO_GO, "objective-scale model gate is not GO"
+    if not DEFAULT_OBJECTIVE_AUDIT.is_file():
+        return CalibrationStatus.NO_GO, "current objective-scale audit artifact is missing"
+    try:
+        payload = json.loads(DEFAULT_OBJECTIVE_AUDIT.read_text(encoding="utf-8"))
+        source_manifest = DEFAULT_POWER_MANIFEST.parent / "source_files.csv"
+        expected_inputs = {
+            "sample_manifest.csv": _sha256(DEFAULT_POWER_MANIFEST),
+            "source_files.csv": _sha256(source_manifest),
+        }
+        with DEFAULT_POWER_MANIFEST.open(
+            "r", encoding="utf-8-sig", newline=""
+        ) as handle:
+            rows = tuple(csv.DictReader(handle))
+        train_ids = {row["sample_id"] for row in rows if row["split"] == "train"}
+        ratio = float(payload["scale_ratio"])
+        if (
+            payload["dataset_version"] != "operating_dataset_zero_boundary_v2"
+            or payload["input_manifest_sha256"] != expected_inputs
+            or set(payload["train_segment_ids"]) != train_ids
+            or payload["train_parent_count"] != 30
+            or payload["readiness"] != "YES"
+            or payload["status"] != "GO"
+            or payload["representative_case_count"] != 6
+            or not 1.0 <= ratio <= 5.0
+            or payload["result_digest"] != EXPECTED_OBJECTIVE_AUDIT_RESULT_DIGEST
+        ):
+            raise ValueError("objective-scale audit identity or accepted result differs")
+    except (KeyError, TypeError, ValueError, OSError) as exc:
+        return CalibrationStatus.NO_GO, f"objective-scale audit is invalid: {exc}"
+    return (
+        CalibrationStatus.VERIFIED,
+        f"current 30-Train-segment audit authenticated; 216 solves; "
+        f"active-P95 scale ratio={ratio:.6f} (PASS)",
+    )
+
+
+def _failure_policy_evidence(
+    audit_path: Path = DEFAULT_FAILURE_POLICY_AUDIT,
+) -> tuple[CalibrationStatus, str]:
+    if not Path(audit_path).is_file():
+        return CalibrationStatus.NO_GO, "Train-only terminal-failure audit is missing"
+    try:
+        payload = json.loads(Path(audit_path).read_text(encoding="utf-8"))
+        supplied_digest = payload["result_digest"]
+        digest_body = dict(payload)
+        del digest_body["result_digest"]
+        calculated_digest = hashlib.sha256(
+            json.dumps(
+                digest_body,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+            ).encode("ascii")
+        ).hexdigest()
+        expected_inputs = {
+            "power": _sha256(DEFAULT_POWER_MANIFEST),
+            "ais": _sha256(DEFAULT_AIS_MANIFEST),
+            "modes": _sha256(DEFAULT_MODE_MANIFEST),
+        }
+        with DEFAULT_POWER_MANIFEST.open(
+            "r", encoding="utf-8-sig", newline=""
+        ) as handle:
+            rows = tuple(csv.DictReader(handle))
+        expected_ids = [row["sample_id"] for row in rows if row["split"] == "train"]
+        episode_results = payload["episode_results"]
+        if type(episode_results) is not list or len(episode_results) != 30:
+            raise ValueError("episode result count differs")
+        result_ids = [row["sample_id"] for row in episode_results]
+        if result_ids != expected_ids:
+            raise ValueError("episode result identities differ")
+        for row in episode_results:
+            raw_cost = row["raw_economic_cost_cny"]
+            penalty = row["failure_penalty_score"]
+            reward = row["learning_reward"]
+            if any(type(value) is not float for value in (raw_cost, penalty, reward)):
+                raise TypeError("audit score fields must be exact floats")
+            if raw_cost < 0.0 or penalty < 0.0 or reward != -raw_cost - penalty:
+                raise ValueError("episode score identity differs")
+            failed = row["episode_completed"] is False
+            if failed != (row["failure_kind"] == FORMAL_FAILURE_POLICY.failure_kind):
+                raise ValueError("episode failure identity differs")
+            expected_penalty = FORMAL_FAILURE_POLICY.penalty_score if failed else 0.0
+            if penalty != expected_penalty:
+                raise ValueError("episode penalty differs")
+        if (
+            payload["schema_version"] != "v2_terminal_failure_audit_v1"
+            or payload["dataset_version"] != "operating_dataset_zero_boundary_v2"
+            or payload["split"] != "train"
+            or payload["input_manifest_sha256"] != expected_inputs
+            or payload["train_segment_ids"] != expected_ids
+            or payload["train_segment_count"] != 30
+            or payload["reference_action_id"] != "w_8_1_1"
+            or payload["action_catalog_digest"] != ACTION_CATALOG_DIGEST
+            or payload["failure_penalty_score"] != FORMAL_FAILURE_POLICY.penalty_score
+            or payload["failure_kind"] != FORMAL_FAILURE_POLICY.failure_kind
+            or payload["evidence_status"] != FORMAL_FAILURE_POLICY.evidence_status
+            or payload["calibration_id"] != FORMAL_FAILURE_POLICY.calibration_id
+            or payload["completed_episode_count"] != 29
+            or payload["failed_episode_count"] != 1
+            or payload["failed_episode_ids"] != ["zero_boundary_015"]
+            or payload["maximum_completed_raw_economic_cost_cny"]
+            != EXPECTED_FAILURE_REFERENCE_MAX_COST_CNY
+            or payload["maximum_completed_cost_episode_id"] != "zero_boundary_046"
+            or payload["test_payloads_opened"] != 0
+            or payload["formal_training_started"] is not False
+            or supplied_digest != calculated_digest
+            or supplied_digest != EXPECTED_FAILURE_POLICY_AUDIT_RESULT_DIGEST
+        ):
+            raise ValueError("terminal-failure audit identity or accepted result differs")
+    except (KeyError, TypeError, ValueError, OSError) as exc:
+        return CalibrationStatus.NO_GO, f"terminal-failure audit is invalid: {exc}"
+    return (
+        CalibrationStatus.VERIFIED,
+        "Train-only fixed-action audit authenticated: 29/30 complete, "
+        "zero_boundary_015 physical infeasibility, completed maximum "
+        f"{EXPECTED_FAILURE_REFERENCE_MAX_COST_CNY:.9f} CNY; "
+        f"penalty={FORMAL_FAILURE_POLICY.penalty_score:.1f}; "
+        f"evidence={FORMAL_FAILURE_POLICY.evidence_status}; Test payloads opened=0",
+    )
+
+
+def _curated_dataset_release_evidence(
+    state_audit_status: CalibrationStatus,
+) -> tuple[CalibrationStatus, str]:
+    if not DEFAULT_DATASET_QA.is_file():
+        return CalibrationStatus.NO_GO, "curated dataset QA summary is missing"
+    try:
+        payload = json.loads(DEFAULT_DATASET_QA.read_text(encoding="utf-8"))
+        status = payload["formal_training_status"]
+        blockers = payload["formal_training_blockers"]
+        checks = payload["acceptance_checks"]
+        split_counts = payload["split_parent_counts"]
+        if type(status) is not str or not isinstance(blockers, list) or any(
+            type(item) is not str or not item.strip() for item in blockers
+        ):
+            raise ValueError("release fields have invalid types")
+        if not isinstance(checks, dict) or not checks or not all(
+            value is True for value in checks.values()
+        ):
+            raise ValueError("dataset acceptance checks are not all true")
+        if split_counts != {"train": 30, "validation": 8, "test": 5}:
+            raise ValueError("dataset split counts differ")
+        if payload["artifact_hashes"]["metadata/sample_manifest.csv"] != _sha256(
+            DEFAULT_POWER_MANIFEST
+        ):
+            raise ValueError("dataset QA is not bound to the current power manifest")
+    except (KeyError, TypeError, ValueError, OSError) as exc:
+        return CalibrationStatus.NO_GO, f"curated dataset QA summary is invalid: {exc}"
+    evidence = f"dataset QA status={status}; blockers=" + (
+        "; ".join(blockers) if blockers else "none"
+    )
+    discharged = {
+        "DQN state audit must be recomputed after dataset exclusion",
+        "integrated formal-training preflight must authenticate the curated manifests",
+    }
+    if status == "NO-GO" and set(blockers) == discharged:
+        if state_audit_status is not CalibrationStatus.VERIFIED:
+            return CalibrationStatus.NO_GO, evidence
+        return (
+            CalibrationStatus.VERIFIED,
+            "immutable build-time blockers discharged by authenticated current S8 audit "
+            "and integrated power/AIS/mode manifest checks",
+        )
+    if status != "GO" or blockers:
+        return CalibrationStatus.NO_GO, evidence
+    return CalibrationStatus.VERIFIED, evidence
+
+
 def assess_formal_training_preflight() -> FormalTrainingPreflight:
     """Return the repository's complete, non-overridable formal-training gate.
 
-    The source text calls this a twelve-item gate but the implemented evidence
-    boundary enumerates fifteen distinct checks.  All checks remain explicit. A unit test
-    or CLI argument cannot promote an unresolved item to ``VERIFIED``.
+    All evidence checks remain explicit. A unit test or CLI argument cannot
+    promote an unresolved item to ``VERIFIED``.
     """
 
     battery_efficiency_verified = (
         BATTERY_EFFICIENCY_CALIBRATION_STATUS == "SOURCE_BACKED"
     )
     shore_mode_status, shore_mode_evidence = _shore_mode_evidence()
+    state_audit_status, state_audit_evidence = _formal_state_audit_evidence()
+    objective_status, objective_evidence = _objective_scale_evidence()
+    failure_policy_status, failure_policy_evidence = _failure_policy_evidence()
+    dataset_release_status, dataset_release_evidence = (
+        _curated_dataset_release_evidence(state_audit_status)
+    )
     checks = (
         FormalCalibrationCheck(
             "eta_fc_curve",
@@ -278,8 +592,9 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
             "final_dqn_state",
             CalibrationStatus.VERIFIED
             if FORMAL_STATE_STATUS == "FROZEN_PROJECT_BASELINE"
+            and state_audit_status is CalibrationStatus.VERIFIED
             else CalibrationStatus.NO_GO,
-            "S8 ONBOARD-only AIS-aware state is frozen from Train-only evidence",
+            state_audit_evidence,
         ),
         FormalCalibrationCheck(
             "final_action_catalog",
@@ -290,14 +605,18 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
         ),
         FormalCalibrationCheck(
             "objective_scale_comparability",
-            CalibrationStatus.VERIFIED
-            if FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS == "GO"
-            else (
-                CalibrationStatus.NO_GO
-                if FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS == "NO-GO"
-                else CalibrationStatus.UNRESOLVED
-            ),
-            "accepted Train-only audit: active-P95 scale ratio 1.827863 (PASS)",
+            objective_status,
+            objective_evidence,
+        ),
+        FormalCalibrationCheck(
+            "terminal_failure_policy",
+            failure_policy_status,
+            failure_policy_evidence,
+        ),
+        FormalCalibrationCheck(
+            "curated_dataset_release",
+            dataset_release_status,
+            dataset_release_evidence,
         ),
         FormalCalibrationCheck(
             "shore_mode_sidecar",

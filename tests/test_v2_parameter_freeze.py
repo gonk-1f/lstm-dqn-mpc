@@ -108,10 +108,10 @@ class FrozenParameterPreflightTests(unittest.TestCase):
 
         self.assertEqual(
             tuple(check.key for check in report.checks if check.status is not CalibrationStatus.VERIFIED),
-            ("shore_mode_sidecar",),
+            (),
         )
-        self.assertFalse(report.ready)
-        self.assertEqual(report.formal_training, "NO-GO")
+        self.assertTrue(report.ready)
+        self.assertEqual(report.formal_training, "GO")
 
         data_report = assess_data_preflight(
             inventory=RawExcelInventory(root=ROOT, records=()),

@@ -23,7 +23,7 @@ from .supervisory_rules import ModeSample, OperatingMode, classify_operating_mod
 MODE_SIDECAR_SCHEMA_VERSION = "v2_shore_mode_30s_v1"
 POWER_RAW_PROVENANCE = "ALIGNED_OR_CUBIC_ANCHOR"
 POWER_PCHIP_PROVENANCE = "INTERPOLATED_COMPONENT_PCHIP"
-EXPECTED_SPLIT_COUNTS = {"train": 38, "validation": 10, "test": 5}
+EXPECTED_SPLIT_COUNTS = {"train": 30, "validation": 8, "test": 5}
 
 
 def _sha256(path: Path) -> str:
@@ -252,6 +252,12 @@ def build_shore_mode_sidecar(
             "ais_manifest_sha256": _sha256(ais_manifest_path),
             "battery_bus_sign": "positive discharge, negative charge",
             "component_interpolation": "PCHIP within bracketed reconstructed raw-component span",
+            "shore_candidate_evidence": (
+                "quality-valid AIS speed and battery-bus charging power"
+            ),
+            "recorded_fc_role": (
+                "diagnostic only; ignored for shore classification"
+            ),
             "mode_counts": dict(sorted(mode_counts.items())),
             "split_mode_counts": {
                 split: dict(sorted(values.items()))

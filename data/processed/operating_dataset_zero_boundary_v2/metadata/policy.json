@@ -26,20 +26,64 @@
     "6月11日08_00_6月11日11_00"
   ],
   "gap_interpolation": "local natural cubic on FC and raw-sign battery independently",
-  "included_parent_count": 53,
+  "included_parent_count": 43,
   "nominal_step_seconds": 30.0,
   "one_second_interpolation": "PCHIP within selected boundaries only",
-  "parent_count": 53,
-  "quartile_basis": "48 non-Test included parents only",
+  "parent_count": 43,
+  "quartile_basis": "48 non-Test boundary-eligible parents before quality exclusions",
   "raw_parent_count": 66,
   "source_power_identity": "P_source_total = P_fc_total - P_battery_raw_total",
   "source_power_status": "derived from 8 FC and 12 battery clusters; not independently measured",
+  "split_assignment_stage": "frozen 38/10/5 assignment before quality exclusions; retained sample IDs and splits are not renumbered or reassigned",
   "split_counts": {
     "test": 5,
-    "train": 38,
-    "validation": 10
+    "train": 30,
+    "validation": 8
   },
   "sustained_points": 3,
+  "unexplained_negative_power_exclusion_reason": "moving negative derived total power has no observable source in the available FC/BMS/AIS telemetry",
+  "unexplained_negative_power_exclusions": {
+    "zero_boundary_014": {
+      "parent": "4月25日08_00_4月25日18_00",
+      "split": "train"
+    },
+    "zero_boundary_023": {
+      "parent": "5月14日12_00_5月14日19_00",
+      "split": "train"
+    },
+    "zero_boundary_024": {
+      "parent": "5月15日08_00_5月15日17_00",
+      "split": "validation"
+    },
+    "zero_boundary_025": {
+      "parent": "5月17日08_00_5月17日18_00",
+      "split": "train"
+    },
+    "zero_boundary_026": {
+      "parent": "5月20日08_00_5月20日18_00",
+      "split": "train"
+    },
+    "zero_boundary_027": {
+      "parent": "5月21日05_00_5月21日11_00",
+      "split": "validation"
+    },
+    "zero_boundary_028": {
+      "parent": "5月24日08_00_5月24日19_00",
+      "split": "train"
+    },
+    "zero_boundary_030": {
+      "parent": "5月29日14_00_5月29日17_00",
+      "split": "train"
+    },
+    "zero_boundary_031": {
+      "parent": "5月30日05_00_5月30日17_00",
+      "split": "train"
+    },
+    "zero_boundary_039": {
+      "parent": "6月20日08_00_6月20日16_00",
+      "split": "train"
+    }
+  },
   "validation_selection": "greedy iterative multilabel stratification to 20 percent targets",
   "validation_tie_break": "chronological parent order then parent identifier",
   "zero_deadband_kw": 1.0

@@ -7,7 +7,7 @@ from .config import TimeScaleConfig
 METHOD_VERSION = "multiscale_dqn_wmpc_v2"
 MPC_OBJECTIVE_VERSION = "fc_base_smooth_soc_deadband_mean_v2"
 ACTION_TABLE_VERSION = "three_weight_simplex_complete36_v1"
-REWARD_VERSION = "macro_interval_real_economic_cost_v1"
+REWARD_VERSION = "macro_interval_economic_plus_terminal_failure_v2"
 FC_ENERGY_VERSION = "eta_fc_lhv_h2_v1"
 FC_DEGRADATION_VERSION = "aggregate_four_condition_voltage_loss_v1"
 BATTERY_DEGRADATION_VERSION = "soc_current_weighted_throughput_v1"

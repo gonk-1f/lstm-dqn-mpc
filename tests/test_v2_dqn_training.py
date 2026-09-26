@@ -29,6 +29,7 @@ class TestV2DqnTraining(unittest.TestCase):
         self.assertEqual(config.warmup_steps, 5_000)
         self.assertEqual(config.target_sync_steps, 1_000)
         self.assertEqual(config.gradient_clip_norm, 10.0)
+        self.assertEqual(config.rounds, 40)
         network = QNetwork(config)
         output = network(torch.zeros((3, 8), dtype=torch.float32))
         self.assertEqual(tuple(output.shape), (3, 36))
@@ -41,6 +42,17 @@ class TestV2DqnTraining(unittest.TestCase):
         self.assertEqual(epsilon_at_global_step(150_000), 0.05)
         self.assertEqual(epsilon_at_global_step(999_999), 0.05)
         self.assertAlmostEqual(1.0 - epsilon_at_global_step(75_000), 0.475)
+
+    def test_formal_round_count_matches_current_train_volume(self) -> None:
+        from v2.training.dqn import DqnTrainingConfig, epsilon_at_global_step
+
+        macro_transitions_per_round = 3_721
+        config = DqnTrainingConfig.formal_baseline()
+        total_macro_steps = macro_transitions_per_round * config.rounds
+        self.assertEqual(total_macro_steps, 148_840)
+        self.assertAlmostEqual(epsilon_at_global_step(total_macro_steps), 0.057346666666666656)
+        self.assertGreater(epsilon_at_global_step(total_macro_steps), 0.05)
+        self.assertLess(epsilon_at_global_step(total_macro_steps), 0.06)
 
     def test_replay_and_seeded_action_selection_are_reproducible(self) -> None:
         from v2.training.dqn import DqnAgent, DqnTrainingConfig, ReplayBuffer

@@ -168,6 +168,11 @@ outputs/dqn_mpc_mlp_causal_deficit_a2_formal_rounds/
 outputs/dqn_mpc_kan_causal_deficit_a2_formal_rounds/
 outputs/mpc_nominal_causal_test/
 
+# Local v2 formal-training checkpoints. Authenticated audit summaries live in
+# their own tracked output directories; model checkpoints remain machine-local.
+outputs/v2_formal_dqn/
+outputs/v2_formal_dqn_v3/
+
 # Executed-reward models and large local historical diagnostic caches.
 outputs/dqn_mpc_*_executed_reward_84_v1_*/
 outputs/mpc_fixed_grid_a0_executed_reward_v1_test/

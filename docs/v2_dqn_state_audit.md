@@ -2,7 +2,9 @@
 
 ## 审核范围
 
-本审核只使用 `operating_dataset_zero_boundary_v2/train` 的 38 个航段和 23122 个 eligible 30 s 状态点。Validation/Test 航段 CSV 打开数为 0。原始 FC/BMS 遥测由 Train parent 与时间边界双重白名单限制。本轮未运行 DQN 训练或动作筛选。
+本审核只使用 `operating_dataset_zero_boundary_v2/train` 的 30 个航段和 9846 个 eligible 30 s 状态点。Validation/Test 航段 CSV 打开数为 0。原始 FC/BMS 遥测由 Train parent 与时间边界双重白名单限制。本轮未运行 DQN 训练或动作筛选。
+
+formal ONBOARD 轴共有 18448 个点；其中 9846 个点（53.37%）具备严格因果、12 簇齐全且不复用原始行的实测 SOC proxy。无可用 proxy 行的航段为 ['zero_boundary_011', 'zero_boundary_034']。这只限制实测分布证据覆盖率，不会删除 formal 训练轴上的 ONBOARD 点；正式环境 SOC 由模型递推。
 
 ## 当前 10 维候选状态
 
@@ -13,13 +15,14 @@
 | previous_fuel_cell_power_fraction | REPLACE | q_smooth | 改为 delta P_fc；与当前 P_fc 联合可精确恢复前一时刻功率，且控制语义更直接。 |
 | battery_power_fraction | REMOVE | none independently | 环境中 P_batt=P_load-P_fc，是确定性冗余。 |
 | load_power_fraction | REPLACE | q_base / q_smooth | 用 P_base 与 P_load-P_base 分离低频基础负荷和瞬时峰谷。 |
-| recent_load_mean_fraction | REMOVE | q_base already covered | P_base 是下层控制器真实动态状态；Train Pearson=0.9983，Spearman=0.9982。 |
+| recent_load_mean_fraction | REMOVE | q_base already covered | P_base 是下层控制器真实动态状态；Train Pearson=0.9980，Spearman=0.9980。 |
 | recent_load_population_std_fraction | KEEP | q_smooth | 因果波动强度提供瞬时 residual 之外的信息。 |
 | recent_load_window_trend_fraction | KEEP | q_base / q_smooth | 区分增载、减载与稳态，决定 FC 跟随和电池缓冲需求。 |
 | causal_base_load_fraction | KEEP | q_base | 它既是 LPF 必要记忆，也是 J_base 的直接参考。 |
-| recent_delta_soc | REMOVE | q_soc already covered by SOC | 它主要是电池功率的时间积分结果；与当前电池功率的 Train Pearson=-0.9288。 |
+| recent_delta_soc | REMOVE | q_soc already covered by SOC | 它主要是电池功率的时间积分结果；与当前电池功率的 Train Pearson=-0.9252。 |
+| speed_fraction | ADD | shore interlock / operating context | AIS 航速区分在航与靠泊上下文；岸电区间不进入 DQN 决策。 |
 
-## 推荐 S7 schema
+## 冻结 S8 schema
 
 | order | feature | definition | normalization | memory |
 | --- | --- | --- | --- | --- |
@@ -30,6 +33,7 @@
 | 5 | recent_load_window_trend_fraction | [k-150 s,k] 内负荷最小二乘趋势 | trend*150 s/600 kW | 150 s 因果历史 |
 | 6 | fuel_cell_power_fraction | P_fc(k) | 除以 600 kW | 当前值 |
 | 7 | fuel_cell_delta_fraction | P_fc(k)-P_fc(k-1) | 除以 600 kW | 前一执行 FC 功率 |
+| 8 | speed_fraction | v(k) | 除以 20 kn | 当前 AIS 航速 |
 
 所有尺度都是固定物理尺度，不使用 Train min-max。600 kW 是冻结的 v2 research-simulation plant rating，不是实船技术规格中的 560 kW；归一化结果允许超出 [-1,1]，不得裁剪。
 
@@ -37,37 +41,38 @@
 
 | feature | representation | count | missing_count | min | max | mean | std | p01 | p05 | p50 | p95 | p99 | near_zero_variance |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| soc | normalized | 23122 | 0 | 0.36725 | 0.975917 | 0.703403 | 0.129718 | 0.446684 | 0.501083 | 0.697583 | 0.91875 | 0.957233 | False |
-| fuel_cell_power_fraction | normalized | 23122 | 0 | 0 | 0.728333 | 0.185903 | 0.218812 | 0 | 0 | 0.08 | 0.656667 | 0.71 | False |
-| recent_load_population_std_fraction | normalized | 23122 | 0 | 0 | 0.719936 | 0.0297593 | 0.0566685 | 2.06471e-06 | 0.000731231 | 0.00916734 | 0.149497 | 0.284263 | False |
-| recent_load_window_trend_fraction | normalized | 23122 | 0 | -1.8035 | 1.73048 | -0.000729415 | 0.144915 | -0.557643 | -0.164185 | -2.07036e-06 | 0.180048 | 0.511944 | False |
-| causal_base_load_fraction | normalized | 23122 | 0 | 2.17072e-05 | 1.83207 | 0.391682 | 0.347097 | 9.06818e-05 | 0.0555524 | 0.264721 | 1.06666 | 1.34705 | False |
-| load_residual_fraction | normalized | 23122 | 0 | -1.11909 | 0.713432 | -0.000395907 | 0.0646944 | -0.243871 | -0.0713136 | -0.000379425 | 0.0762733 | 0.215658 | False |
-| fuel_cell_delta_fraction | normalized | 23122 | 0 | -0.383333 | 0.24 | 0.000105239 | 0.01378 | -0.0233333 | -0.00333333 | 0 | 0.00333333 | 0.0383333 | False |
+| soc | normalized | 9846 | 0 | 0.4255 | 0.979333 | 0.748715 | 0.125825 | 0.464992 | 0.516271 | 0.767375 | 0.942583 | 0.96975 | False |
+| fuel_cell_power_fraction | normalized | 9846 | 0 | 0 | 0.728333 | 0.20905 | 0.255457 | 0 | 0 | 0 | 0.665 | 0.7 | False |
+| recent_load_population_std_fraction | normalized | 9846 | 0 | 0 | 0.526825 | 0.039654 | 0.065614 | 0 | 0 | 0.0132082 | 0.186599 | 0.314868 | False |
+| recent_load_window_trend_fraction | normalized | 9846 | 0 | -1.40784 | 1.86229 | 0.00169007 | 0.175599 | -0.630028 | -0.265026 | 0 | 0.268405 | 0.593844 | False |
+| causal_base_load_fraction | normalized | 9846 | 0 | 0 | 1.67311 | 0.502886 | 0.379593 | 1.75694e-66 | 7.25931e-16 | 0.501191 | 1.1551 | 1.37068 | False |
+| load_residual_fraction | normalized | 9846 | 0 | -0.692076 | 0.600927 | 0.000586349 | 0.0774187 | -0.285108 | -0.107749 | -4.0977e-39 | 0.109132 | 0.250805 | False |
+| fuel_cell_delta_fraction | normalized | 9846 | 0 | -0.3 | 0.204679 | 0.00052961 | 0.0132608 | -0.02 | -0.00333333 | 0 | 0.005 | 0.0459167 | False |
+| speed_fraction | normalized | 9846 | 0 | 0 | 0.765 | 0.287181 | 0.222741 | 0 | 0 | 0.34 | 0.605 | 0.68 | False |
 
-仿真环境中的功率平衡是精确恒等式。实测重建残差最大绝对值为 1.13687e-13 kW；该量来自同源功率重建，不能作为 battery_power 独立信息的证据。
+仿真环境中的功率平衡是精确恒等式。实测重建残差最大绝对值为 0.980549 kW；该量来自同源功率重建，不能作为 battery_power 独立信息的证据。
 
 ## 冗余分析
 
 | relationship | left_feature | right_feature | model_status | pearson | spearman | measured_max_abs_residual_kw | interpretation |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| environment_power_balance | battery_power_kw | load_power_kw-fc_power_kw | EXACT_IDENTITY |  |  | 1.13687e-13 | Battery power is deterministic in the simulated environment; measured residual reflects telemetry/alignment mismatch. |
-| recent_load_mean_vs_causal_base | recent_load_mean_kw | base_load_kw | EMPIRICAL_CORRELATION | 0.998298 | 0.998151 |  | Train-only descriptive evidence |
-| current_fc_vs_previous_fc | fc_power_kw | previous_fc_power_kw | LINEAR_REPARAMETERIZATION_WITH_DELTA | 0.998017 | 0.99731 |  | Train-only descriptive evidence |
-| recent_delta_soc_vs_battery_power | recent_delta_soc | battery_power_kw | EMPIRICAL_CORRELATION | -0.928849 | -0.947182 |  | Train-only descriptive evidence |
+| environment_power_balance | battery_power_kw | load_power_kw-fc_power_kw | EXACT_IDENTITY |  |  | 0.980549 | Battery power is deterministic in the simulated environment; measured residual reflects telemetry/alignment mismatch. |
+| recent_load_mean_vs_causal_base | recent_load_mean_kw | base_load_kw | EMPIRICAL_CORRELATION | 0.998039 | 0.997952 |  | Train-only descriptive evidence |
+| current_fc_vs_previous_fc | fc_power_kw | previous_fc_power_kw | LINEAR_REPARAMETERIZATION_WITH_DELTA | 0.998652 | 0.996756 |  | Train-only descriptive evidence |
+| recent_delta_soc_vs_battery_power | recent_delta_soc | battery_power_kw | EMPIRICAL_CORRELATION | -0.92525 | -0.930843 |  | Train-only descriptive evidence |
 
 ## 运行工况区分能力
 
 | regime | count | fraction | threshold | threshold_unit | threshold_status | mean_soc | mean_load_kw | mean_fc_kw | mean_delta_load_kw | mean_delta_fc_kw |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| steady_load | 11561 | 0.5 | 0.0500281 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.689787 | 178.717 | 91.1961 | -0.237631 | 0.101462 |
-| load_rise | 5783 | 0.250108 | 0.0500281 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.732408 | 330.082 | 132.686 | 25.6319 | 1.06 |
-| load_fall | 5778 | 0.249892 | -0.0500281 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.701617 | 251.536 | 131.088 | -26.1292 | -1.01125 |
-| high_volatility | 5781 | 0.250022 | 13.1036 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.731853 | 323.582 | 145.874 | -0.599694 | -0.0544888 |
-| low_soc | 24 | 0.00103797 | 0.4 | fraction | FROZEN_CONTROLLER_BOUND | 0.382462 | 343.802 | 63.0833 | -9.6402 | 3.04167 |
-| high_soc | 17276 | 0.747167 | 0.6 | fraction | FROZEN_CONTROLLER_BOUND | 0.758545 | 255.366 | 114.54 | 0.550969 | 0.154376 |
-| fc_low_load | 9899 | 0.42812 | 0 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.717021 | 134.597 | 0 | 0.676304 | -0.02475 |
-| fc_high_load | 5892 | 0.254822 | 189 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.706682 | 417.678 | 303.627 | -1.56458 | 0.384759 |
+| steady_load | 4923 | 0.5 | 0.0666665 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.748521 | 247.449 | 95.9598 | -0.0629149 | 0.319707 |
+| load_rise | 2555 | 0.259496 | 0.0666665 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.772259 | 400.578 | 148.362 | 34.6007 | 1.16322 |
+| load_fall | 2368 | 0.240504 | -0.0666665 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.723713 | 309.393 | 161.953 | -35.7395 | -0.598484 |
+| high_volatility | 2462 | 0.250051 | 21.4843 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.763955 | 340.519 | 152.579 | 0.119276 | 0.240085 |
+| low_soc | 0 | 0 | 0.4 | fraction | FROZEN_CONTROLLER_BOUND |  |  |  |  |  |
+| high_soc | 8515 | 0.864818 | 0.6 | fraction | FROZEN_CONTROLLER_BOUND | 0.782456 | 301.54 | 115.126 | 1.3494 | 0.396254 |
+| fc_low_load | 5136 | 0.521633 | 0 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.772715 | 166.343 | 0 | 2.18637 | -0.0215002 |
+| fc_high_load | 2482 | 0.252082 | 265 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.726072 | 515.042 | 354.724 | -3.71824 | 0.623913 |
 
 表中的 trend、volatility 和 FC 阈值仅用于 Train 描述，不是生产策略阈值，也没有利用 held-out 数据拟合。
 
@@ -76,12 +81,12 @@
 | state_id | dimension | features | purpose |
 | --- | --- | --- | --- |
 | S10 | 10 | soc<br>fuel_cell_power_fraction<br>previous_fuel_cell_power_fraction<br>battery_power_fraction<br>load_power_fraction<br>recent_load_mean_fraction<br>recent_load_population_std_fraction<br>recent_load_window_trend_fraction<br>causal_base_load_fraction<br>recent_delta_soc | current candidate |
-| S7 | 7 | soc<br>causal_base_load_fraction<br>load_residual_fraction<br>recent_load_population_std_fraction<br>recent_load_window_trend_fraction<br>fuel_cell_power_fraction<br>fuel_cell_delta_fraction | full proposed |
-| S6-A | 6 | soc<br>causal_base_load_fraction<br>load_residual_fraction<br>recent_load_population_std_fraction<br>recent_load_window_trend_fraction<br>fuel_cell_power_fraction | remove FC delta |
-| S6-B | 6 | soc<br>causal_base_load_fraction<br>load_residual_fraction<br>recent_load_window_trend_fraction<br>fuel_cell_power_fraction<br>fuel_cell_delta_fraction | remove load standard deviation |
+| S8 | 8 | soc<br>causal_base_load_fraction<br>load_residual_fraction<br>recent_load_population_std_fraction<br>recent_load_window_trend_fraction<br>fuel_cell_power_fraction<br>fuel_cell_delta_fraction<br>speed_fraction | frozen formal baseline |
+| S7-NO-SPEED | 7 | soc<br>causal_base_load_fraction<br>load_residual_fraction<br>recent_load_population_std_fraction<br>recent_load_window_trend_fraction<br>fuel_cell_power_fraction<br>fuel_cell_delta_fraction | ablation without AIS speed |
+| S7-NO-STD | 7 | soc<br>causal_base_load_fraction<br>load_residual_fraction<br>recent_load_window_trend_fraction<br>fuel_cell_power_fraction<br>fuel_cell_delta_fraction<br>speed_fraction | remove load standard deviation |
 | MINIMUM | 5 | soc<br>causal_base_load_fraction<br>load_residual_fraction<br>fuel_cell_power_fraction<br>fuel_cell_delta_fraction | minimum defensible physical state |
 
-这些比较是结构与因果信息消融。由于本轮禁止训练，不能声称 S7、S6-A 或 S6-B 的回报性能优劣。
+这些比较是结构与因果信息消融。S8 是已冻结正式 baseline；无航速版本仅作为消融，不参与当前正式训练。
 
 ## Markov 性审核
 
@@ -108,8 +113,8 @@
 
 ## 证据边界与局限性
 
-实船 Train SOC 中有 6118/23122（26.46%）位于 v2 仿真硬区间 [0.20, 0.80] 之外。这些实测 SOC/FC 数据用于判断特征覆盖与区分力，不代表未来仿真策略的 state-visitation distribution。正式环境仍将依据模型转移生成 SOC 与 FC 轨迹。功率平衡残差接近零是因为 formal load 与 FC/BMS 功率同源构造，不是独立传感器验证。
+实船 Train SOC 中有 3537/9846（35.92%）位于 v2 仿真硬区间 [0.20, 0.80] 之外。这些实测 SOC/FC 数据用于判断特征覆盖与区分力，不代表未来仿真策略的 state-visitation distribution。正式环境仍将依据模型转移生成 SOC 与 FC 轨迹。功率平衡残差接近零是因为 formal load 与 FC/BMS 功率同源构造，不是独立传感器验证。
 
-## S7 明确结论
+## S8 最终结论
 
-建议采用 proposed 7-dimensional state 作为 v2 正式 baseline：各特征均为因果、在 DQN 决策边界可获得、与 q_base/q_smooth/q_soc 有明确关系，并删除 S10 中确定性的 battery/load/FC 重复信息。S6-A 删除 delta_P_fc 后削弱 q_smooth 的直接动态信息；S6-B 删除 load_std 后失去与 trend 低相关的波动强度信息。因此二者仅作为消融，不优先于 S7。本审核不修改 `CANDIDATE_STATE_STATUS`；正式 freeze 仍需另行实现 schema，并落实 episode reset、EOL distance、terminal initial SOC 与 integrated solver robustness 合同。
+冻结的八维 S8 与生产 `FORMAL_STATE_FEATURE_NAMES` 完全一致。前七维保留 SOC、LPF 记忆、负荷残差/波动/趋势及 FC 工作点动态；`speed_fraction` 提供 AIS 在航上下文。DQN 只在 ONBOARD 决策边界读取 S8，shore_pending/shore_charging 会重置控制历史并暂停 DQN/MPC。累计退化账户逐 episode 重置；保守上界为 FC=0.770930、battery=0.034480，均低于 EOL=1，因此 clipped lifetime 在当前 formal episode 内不可达，累计退化无需进入 S8。

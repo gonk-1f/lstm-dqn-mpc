@@ -20,7 +20,9 @@ if str(SRC) not in sys.path:
 from v2.data.zero_boundary_dataset import (  # noqa: E402
     APPROVED_BOUNDARY_EXCLUSIONS,
     FIXED_TEST_PARENTS,
+    UNEXPLAINED_NEGATIVE_POWER_EXCLUSIONS,
     assign_parent_splits,
+    exclude_unexplained_negative_power_segments,
     reconstruct_one_second,
     segment_features,
     trim_to_zero_boundaries,
@@ -176,6 +178,48 @@ class ZeroBoundaryDatasetTests(unittest.TestCase):
             .to_dict("records"),
         )
 
+    def test_excludes_exact_unexplained_negative_power_segments_without_renumbering(self):
+        rows = [
+            {
+                "parent": value["parent"],
+                "split": value["split"],
+                "chronological_rank": int(sample_id.rsplit("_", 1)[1]) - 1,
+            }
+            for sample_id, value in UNEXPLAINED_NEGATIVE_POWER_EXCLUSIONS.items()
+        ]
+        rows.append(
+            {
+                "parent": "retained_parent",
+                "split": "test",
+                "chronological_rank": 0,
+            }
+        )
+
+        retained, audit = exclude_unexplained_negative_power_segments(
+            pd.DataFrame(rows)
+        )
+
+        self.assertEqual(retained.parent.tolist(), ["retained_parent"])
+        self.assertEqual(
+            audit.sample_id.tolist(),
+            sorted(UNEXPLAINED_NEGATIVE_POWER_EXCLUSIONS),
+        )
+        self.assertEqual(
+            audit.split.value_counts().to_dict(),
+            {"train": 8, "validation": 2},
+        )
+        self.assertTrue(
+            audit.reason.eq("UNEXPLAINED_MOVING_NEGATIVE_TOTAL_POWER").all()
+        )
+        fixed_test_ids = {
+            "zero_boundary_001",
+            "zero_boundary_003",
+            "zero_boundary_012",
+            "zero_boundary_018",
+            "zero_boundary_035",
+        }
+        self.assertFalse(audit["sample_id"].isin(fixed_test_ids).any())
+
     def test_extracts_split_features_from_trimmed_one_second_segment(self):
         trimmed = trim_to_zero_boundaries(
             self.frame([0, 10, 20, 30, 20, 10, 0])
@@ -278,6 +322,7 @@ class ZeroBoundaryDatasetTests(unittest.TestCase):
                 output,
                 discover_parents=lambda _: parents,
                 load_parent=lambda _, parent: self.synthetic_power_series(parent),
+                unexplained_power_exclusions={},
             )
 
             manifest = pd.read_csv(output / "metadata" / "sample_manifest.csv")
@@ -323,6 +368,7 @@ class ZeroBoundaryDatasetTests(unittest.TestCase):
                 "trim_boundary_audit.csv",
                 "interpolation_audit.csv",
                 "source_files.csv",
+                "unexplained_negative_power_exclusions.csv",
                 "policy.json",
                 "qa_summary.json",
             ):

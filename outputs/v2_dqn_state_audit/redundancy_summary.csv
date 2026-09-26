@@ -1,5 +1,5 @@
 relationship,left_feature,right_feature,model_status,pearson,spearman,measured_max_abs_residual_kw,interpretation
-environment_power_balance,battery_power_kw,load_power_kw-fc_power_kw,EXACT_IDENTITY,,,1.1368683772161603e-13,Battery power is deterministic in the simulated environment; measured residual reflects telemetry/alignment mismatch.
-recent_load_mean_vs_causal_base,recent_load_mean_kw,base_load_kw,EMPIRICAL_CORRELATION,0.9982976034975002,0.9981512451348653,,Train-only descriptive evidence
-current_fc_vs_previous_fc,fc_power_kw,previous_fc_power_kw,LINEAR_REPARAMETERIZATION_WITH_DELTA,0.9980166755696932,0.9973099415110376,,Train-only descriptive evidence
-recent_delta_soc_vs_battery_power,recent_delta_soc,battery_power_kw,EMPIRICAL_CORRELATION,-0.9288494711606268,-0.9471822175283594,,Train-only descriptive evidence
+environment_power_balance,battery_power_kw,load_power_kw-fc_power_kw,EXACT_IDENTITY,,,0.9805489999999998,Battery power is deterministic in the simulated environment; measured residual reflects telemetry/alignment mismatch.
+recent_load_mean_vs_causal_base,recent_load_mean_kw,base_load_kw,EMPIRICAL_CORRELATION,0.9980385005707747,0.997952091536544,,Train-only descriptive evidence
+current_fc_vs_previous_fc,fc_power_kw,previous_fc_power_kw,LINEAR_REPARAMETERIZATION_WITH_DELTA,0.9986520544109971,0.9967558400849015,,Train-only descriptive evidence
+recent_delta_soc_vs_battery_power,recent_delta_soc,battery_power_kw,EMPIRICAL_CORRELATION,-0.9252498886581669,-0.9308431248757161,,Train-only descriptive evidence
