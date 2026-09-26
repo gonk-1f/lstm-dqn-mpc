@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 import math
-from numbers import Real
 from typing import Protocol
 
 import numpy as np
