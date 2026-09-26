@@ -95,6 +95,7 @@ class FormalTrainingDataset:
         self._modes = modes
         self._cache: dict[str, tuple[FormalEpisode, ...]] = {}
         self._opened_test_payloads = 0
+        self._final_test_access_started = False
 
     @classmethod
     def open(
@@ -324,6 +325,39 @@ class FormalTrainingDataset:
 
     def load_validation(self) -> tuple[FormalEpisode, ...]:
         return self.load_split("validation")
+
+    def load_final_test(self, authorization: object) -> tuple[FormalEpisode, ...]:
+        """Open the authenticated Test payload exactly once, outside split loading."""
+
+        from ..evaluation.final_test import authorization_manifest_hashes
+
+        if self._final_test_access_started:
+            raise PermissionError("final Test payload access has already started")
+        expected_hashes = authorization_manifest_hashes(authorization)
+        current_hashes = {
+            "power": _sha256(self._power_root / "metadata" / "sample_manifest.csv"),
+            "ais": _sha256(self._ais_root / "metadata" / "sample_manifest.csv"),
+            "modes": _sha256(self._mode_root / "metadata" / "sample_manifest.csv"),
+        }
+        if current_hashes != expected_hashes:
+            raise PermissionError("current dataset manifests differ from model selection")
+        power = self._power[self._power["split"].eq("test")].sort_values("sample_id")
+        if len(power) != EXPECTED_SPLIT_COUNTS["test"]:
+            raise ValueError("formal Test episode count differs")
+        ais_by_id = self._ais.set_index("sample_id")
+        modes_by_id = self._modes.set_index("sample_id")
+        self._final_test_access_started = True
+        episodes: list[FormalEpisode] = []
+        for row in power.itertuples(index=False):
+            self._opened_test_payloads += 1
+            episodes.append(
+                self._load_episode(
+                    row,
+                    ais_by_id.loc[str(row.sample_id)],
+                    modes_by_id.loc[str(row.sample_id)],
+                )
+            )
+        return tuple(episodes)
 
 
 __all__ = ["FormalEpisode", "FormalTrainingDataset"]

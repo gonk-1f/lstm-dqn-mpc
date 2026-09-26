@@ -92,3 +92,25 @@ python -X utf8 -u -m v2.main.select_formal_dqn_checkpoint `
 `selection_manifest.json` 和逐字节复制的 `best_validation.pt`。manifest 绑定当前
 power/AIS/mode manifest、S8、36-action、控制/失败语义和所有候选 checkpoint
 SHA-256。此步骤只完成 Validation 选择，不授权或执行最终 Test。
+
+## 一次性最终 Test
+
+只有完整且未篡改的 Validation selection bundle 才能签发最终 Test 授权。最终评估
+使用完全相同、固定顺序的 5 个 Test 航段，依次运行所选贪婪 DQN 和固定动作
+`w_8_1_1`。不进行探索、replay 写入或优化器更新。
+
+该命令必须由用户显式执行一次：
+
+```powershell
+$env:PYTHONPATH=(Resolve-Path "src").Path
+python -X utf8 -u -m v2.main.evaluate_formal_dqn_test `
+  --selection-dir outputs/v2_formal_dqn_selection `
+  --output-dir outputs/v2_formal_dqn_test `
+  --device cpu `
+  --confirm-final-test FINAL_TEST_ONCE
+```
+
+`outputs/v2_formal_dqn_test` 必须不存在。命令在读取 Test payload 前先创建
+`TEST_ACCESS_STARTED.json`；成功后才把状态改为 `COMPLETE`。若运行中断或失败，
+锁保持 `STARTED`，程序拒绝覆盖原目录，避免无意重复查看 Test。输出包括两策略
+汇总、逐 episode 指标、动作分布和带 SHA-256/result digest 的 run manifest。
