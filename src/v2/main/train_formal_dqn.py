@@ -19,11 +19,8 @@ from ..data.formal_training_dataset import FormalEpisode, FormalTrainingDataset
 from ..data.supervisory_rules import OperatingMode, normalize_onboard_load_kw
 from ..dqn.action_space import FINAL_DQN_ACTION_CATALOG
 from ..dqn.state import OperatingHistorySample, build_formal_operating_state
-from ..envs.formal_episode import (
-    FormalEpisodeBackend,
-    build_formal_nonlinear_mpc,
-)
-from ..envs.multirate_weight_env import MultiRateWeightEnvironment
+from ..envs.formal_episode import FormalEpisodeBackend, build_formal_nonlinear_mpc
+from ..evaluation.formal_policy import build_formal_environment as _environment
 from ..preflight import assess_formal_training_preflight, require_formal_training_ready
 from ..training.checkpoint import load_checkpoint, save_checkpoint
 from ..training.dqn import DqnAgent, DqnTrainingConfig, epsilon_at_global_step
@@ -78,25 +75,6 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--log-every", type=_positive_int, default=1)
     parser.add_argument("--resume", type=Path)
     return parser
-
-
-def _environment(episode: FormalEpisode) -> tuple[FormalEpisodeBackend, MultiRateWeightEnvironment]:
-    backend = FormalEpisodeBackend(
-        load_kw=episode.load_kw,
-        speed_kn=episode.speed_kn,
-        fc_power_kw=episode.fc_power_kw,
-        battery_bus_kw=episode.battery_bus_kw,
-        operating_mode=episode.operating_mode,
-        mpc=build_formal_nonlinear_mpc(),
-    )
-    environment = MultiRateWeightEnvironment(
-        timescale=TimeScaleConfig.formal_baseline(),
-        action_catalog=FINAL_DQN_ACTION_CATALOG,
-        backend=backend,
-        state_provider=backend.state,
-        formal_training_mode=True,
-    )
-    return backend, environment
 
 
 def _validate_all_states(episodes: tuple[FormalEpisode, ...]) -> int:

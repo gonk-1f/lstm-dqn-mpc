@@ -156,6 +156,7 @@ class FormalEpisodeBackend:
         self.mode_counts = {mode: 0 for mode in OperatingMode}
         self.mpc_solve_count = 0
         self.executed_fc_power_kw: list[float] = []
+        self.executed_soc: list[float] = [self.INITIAL_SOC]
         self.observed_states: list[tuple[float, ...]] = []
         self._terminal_state: tuple[float, ...] | None = None
         self._done = False
@@ -302,6 +303,7 @@ class FormalEpisodeBackend:
 
         self.previous_fc_kw = p_fc
         self.soc = next_state
+        self.executed_soc.append(next_state)
         self.index += 1
         self.mode_counts[mode] += 1
         self.executed_fc_power_kw.append(p_fc)
