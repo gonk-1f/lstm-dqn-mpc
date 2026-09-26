@@ -220,22 +220,12 @@ class TestFormalPolicyEvaluation(unittest.TestCase):
                 GreedyDqnPolicy(Agent()).action_index(S8)
 
     def test_greedy_evaluation_calls_only_greedy_action_and_preserves_agent_state(self) -> None:
-        from v2.dqn.action_space import FINAL_DQN_ACTION_CATALOG
         from v2.evaluation.formal_policy import GreedyDqnPolicy, evaluate_formal_policy
         from v2.training.dqn import DqnAgent, DqnTrainingConfig
 
         agent = DqnAgent(DqnTrainingConfig.formal_baseline(), seed=19, device="cpu")
-        action_indices = {
-            action.action_id: index
-            for index, action in enumerate(FINAL_DQN_ACTION_CATALOG)
-        }
-        agent.greedy_action = mock.Mock(
-            side_effect=(
-                action_indices["w_8_1_1"],
-                action_indices["w_1_1_8"],
-                action_indices["w_8_1_1"],
-            )
-        )
+        original_greedy = agent.greedy_action
+        agent.greedy_action = mock.Mock(wraps=original_greedy)
         agent.select_action = mock.Mock(side_effect=AssertionError("select_action called"))
         agent.optimize = mock.Mock(side_effect=AssertionError("optimize called"))
         agent.replay.append = mock.Mock(side_effect=AssertionError("replay append called"))
@@ -244,7 +234,58 @@ class TestFormalPolicyEvaluation(unittest.TestCase):
             (
                 ((1.0, 2.0, 3.0, 4.0), False, 1),
                 ((2.0, 3.0, 4.0, 5.0), False, 1),
-                ((3.0, 4.0, 5.0, 6.0), False, 1),
+            ),
+            executed_soc=(0.60, 0.59, 0.58),
+        )
+
+        with mock.patch(
+            "v2.evaluation.formal_policy.build_formal_environment",
+            return_value=(environment.backend, environment),
+        ):
+            result = evaluate_formal_policy(
+                episodes=(_episode("greedy", steps=2),),
+                policy=GreedyDqnPolicy(agent),
+            )
+
+        after = copy.deepcopy(agent.state_dict())
+        self.assertEqual(agent.greedy_action.call_count, 2)
+        agent.select_action.assert_not_called()
+        agent.optimize.assert_not_called()
+        agent.replay.append.assert_not_called()
+        self.assert_nested_equal(before, after)
+        self.assertEqual(result.transition_count, 2)
+        self.assertEqual(sum(count for _, count in result.action_counts), 2)
+
+    def test_greedy_action_counts_follow_exact_canonical_order(self) -> None:
+        from v2.dqn.action_space import FINAL_DQN_ACTION_CATALOG
+        from v2.evaluation.formal_policy import GreedyDqnPolicy, evaluate_formal_policy
+
+        action_indices = {
+            action.action_id: index
+            for index, action in enumerate(FINAL_DQN_ACTION_CATALOG)
+        }
+
+        class AlternatingAgent:
+            def __init__(self) -> None:
+                self.indices = iter(
+                    (
+                        action_indices["w_8_1_1"],
+                        action_indices["w_1_1_8"],
+                        action_indices["w_8_1_1"],
+                    )
+                )
+                self.calls = 0
+
+            def greedy_action(self, state) -> int:
+                self.calls += 1
+                return next(self.indices)
+
+        agent = AlternatingAgent()
+        environment = _Environment(
+            (
+                ((1.0, 0.0, 0.0, 0.0), False, 1),
+                ((2.0, 0.0, 0.0, 0.0), False, 1),
+                ((3.0, 0.0, 0.0, 0.0), False, 1),
             ),
             executed_soc=(0.60, 0.59, 0.58, 0.57),
         )
@@ -254,17 +295,11 @@ class TestFormalPolicyEvaluation(unittest.TestCase):
             return_value=(environment.backend, environment),
         ):
             result = evaluate_formal_policy(
-                episodes=(_episode("greedy", steps=3),),
+                episodes=(_episode("alternating", steps=3),),
                 policy=GreedyDqnPolicy(agent),
             )
 
-        after = copy.deepcopy(agent.state_dict())
-        self.assertEqual(agent.greedy_action.call_count, 3)
-        agent.select_action.assert_not_called()
-        agent.optimize.assert_not_called()
-        agent.replay.append.assert_not_called()
-        self.assert_nested_equal(before, after)
-        self.assertEqual(result.transition_count, 3)
+        self.assertEqual(agent.calls, 3)
         self.assertEqual(
             result.action_counts,
             (("w_1_1_8", 1), ("w_8_1_1", 2)),
