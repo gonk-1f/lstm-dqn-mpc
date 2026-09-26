@@ -199,6 +199,22 @@ class FormalTrainingDataset:
     def opened_test_payloads(self) -> int:
         return self._opened_test_payloads
 
+    def split_episode_ids(self, split: str) -> tuple[str, ...]:
+        """Return authenticated manifest identities without opening payload files."""
+
+        if type(split) is not str:
+            raise TypeError("split must be an exact str")
+        if split == "test":
+            raise PermissionError("Test identities are forbidden during training/model selection")
+        if split not in {"train", "validation"}:
+            raise ValueError("split must be train or validation")
+        return tuple(
+            str(value)
+            for value in self._power.loc[
+                self._power["split"].eq(split), "sample_id"
+            ].sort_values()
+        )
+
     def _load_episode(
         self, power_row: object, ais_row: object, mode_row: object
     ) -> FormalEpisode:

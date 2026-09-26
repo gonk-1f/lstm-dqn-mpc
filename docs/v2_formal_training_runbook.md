@@ -72,3 +72,23 @@ replay、所有 RNG、当前随机排列、episode 位置和 global macro step�
 Validation 每轮按 manifest 固定顺序运行纯贪婪评估，使用同一失败评分并报告
 完成率，但不 shuffle、不写 replay、不更新优化器。Test payload 不会由此训练命令
 打开；Test 留待训练和模型选择结束后的一次最终评估。
+
+## Validation checkpoint 选择
+
+训练完成后，使用固定顺序的 8 个 Validation 航段对 40 个 round checkpoint
+逐一进行纯贪婪评估。排序依次为：完成 episode 数最多、失败惩罚最小、原始经济
+成本最小；完全相同时选择更早的 round。该过程不写 replay、不更新网络或优化器，
+也不读取 Test payload：
+
+```powershell
+$env:PYTHONPATH=(Resolve-Path "src").Path
+python -X utf8 -u -m v2.main.select_formal_dqn_checkpoint `
+  --checkpoint-dir outputs/v2_formal_dqn_v3 `
+  --output-dir outputs/v2_formal_dqn_selection `
+  --device cpu
+```
+
+输出目录必须不存在。完成后生成 `validation_checkpoint_metrics.csv`、
+`selection_manifest.json` 和逐字节复制的 `best_validation.pt`。manifest 绑定当前
+power/AIS/mode manifest、S8、36-action、控制/失败语义和所有候选 checkpoint
+SHA-256。此步骤只完成 Validation 选择，不授权或执行最终 Test。

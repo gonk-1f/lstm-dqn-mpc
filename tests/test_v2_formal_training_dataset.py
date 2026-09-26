@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+import tempfile
 import unittest
+from unittest import mock
 
 import numpy as np
 import pandas as pd
@@ -19,6 +21,33 @@ MODES = ROOT / "data" / "processed" / "operating_dataset_zero_boundary_v2_modes"
 
 
 class TestFormalTrainingDataset(unittest.TestCase):
+    def test_split_episode_ids_is_metadata_only_and_forbids_test(self) -> None:
+        from v2.data.formal_training_dataset import FormalTrainingDataset
+
+        power = pd.DataFrame(
+            {
+                "sample_id": ["train_b", "test_a", "train_a", "validation_a"],
+                "split": ["train", "test", "train", "validation"],
+            }
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            dataset = FormalTrainingDataset(root, root, root, power, power.copy(), power.copy())
+            with mock.patch.object(dataset, "_load_episode") as loader:
+                self.assertEqual(
+                    dataset.split_episode_ids("train"),
+                    ("train_a", "train_b"),
+                )
+                loader.assert_not_called()
+            self.assertEqual(dataset._cache, {})
+            self.assertEqual(dataset.opened_test_payloads, 0)
+            with self.assertRaisesRegex(PermissionError, "Test"):
+                dataset.split_episode_ids("test")
+            with self.assertRaises(ValueError):
+                dataset.split_episode_ids("unknown")
+            with self.assertRaises(TypeError):
+                dataset.split_episode_ids(1)  # type: ignore[arg-type]
+
     def test_episode_macro_count_excludes_shore_pause_intervals(self) -> None:
         from v2.data.formal_training_dataset import FormalEpisode
 
