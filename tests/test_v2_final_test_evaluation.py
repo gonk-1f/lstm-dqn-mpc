@@ -254,7 +254,7 @@ class TestFinalTestCli(unittest.TestCase):
             dataset = Dataset()
             episode_objects: list[object] = []
 
-            def evaluate(episodes, policy):
+            def evaluate(*, episodes, policy):
                 episode_objects.append(episodes)
                 if policy.policy_id == "greedy_dqn":
                     return PolicyEvaluation(

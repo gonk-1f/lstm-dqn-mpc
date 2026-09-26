@@ -73,12 +73,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     test_episodes = dataset.load_final_test(authorization)
     dqn_result = evaluate_formal_policy(
-        test_episodes,
-        GreedyDqnPolicy(agent, policy_id="greedy_dqn"),
+        episodes=test_episodes,
+        policy=GreedyDqnPolicy(agent, policy_id="greedy_dqn"),
     )
     fixed_result = evaluate_formal_policy(
-        test_episodes,
-        FixedActionPolicy("w_8_1_1"),
+        episodes=test_episodes,
+        policy=FixedActionPolicy("w_8_1_1"),
     )
     result_digest = write_final_test_results(
         output,

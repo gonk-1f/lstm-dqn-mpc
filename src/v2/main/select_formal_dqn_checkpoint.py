@@ -104,8 +104,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         if metadata.episode_position != 0:
             raise ValueError("selection requires a completed-round checkpoint")
         result = evaluate_formal_policy(
-            validation,
-            GreedyDqnPolicy(agent, policy_id=f"greedy_dqn_round_{item.round_index:03d}"),
+            episodes=validation,
+            policy=GreedyDqnPolicy(
+                agent,
+                policy_id=f"greedy_dqn_round_{item.round_index:03d}",
+            ),
         )
         candidate = ValidationCandidate(
             round_index=item.round_index,

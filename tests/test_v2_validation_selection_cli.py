@@ -76,7 +76,7 @@ class TestValidationSelectionCli(unittest.TestCase):
                 agent.round_index = round_index
                 return SimpleNamespace(round_index=round_index, episode_position=0)
 
-            def evaluate(episodes, policy):
+            def evaluate(*, episodes, policy):
                 self.assertEqual(episodes, ("validation_episode",))
                 round_index = policy.agent.round_index
                 raw = 1.0 if round_index == 7 else float(100 + round_index)
