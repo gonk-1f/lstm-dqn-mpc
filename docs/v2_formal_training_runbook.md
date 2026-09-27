@@ -2,12 +2,14 @@
 
 ## 冻结合同
 
-- 状态：ONBOARD-only S8，含当前因果 AIS 航速，不含 `shore_connected`；
+- 状态：ONBOARD-only 10 帧因果 S8 历史，按最旧到最新排列，左侧零填充并附
+  10 位有效掩码，共 90 维；每帧含当前因果 AIS 航速，不含 `shore_connected`；
 - 动作：完整、固定顺序的 36 个正十分位三权重；
 - 时间尺度：`Ts=30 s`、`N=5`、`M=5`、`tau_LPF=90 s`；
 - 数据：30 Train、8 Validation、5 Test；Train 为 23,590 个 supervisory steps、
   18,448 个 ONBOARD steps 和 3,721 个 DQN macro transitions；
-- 默认：40 轮、seed 42、epsilon 按 global macro step 从 1.0 线性降至 0.05，
+- 历史状态 pilot 默认：10 轮、seed 42；后续仅续训 Validation 排名前两名至
+  40 轮。epsilon 按 global macro step 从 1.0 线性降至 0.05，
   衰减长度 150,000；40 轮共 148,840 个 macro steps，末端 epsilon 约 0.05735；
 - 正常 reward：已执行 interval ledger 的负原始 CNY 总成本，不使用 MPC objective；
 - 物理不可行：当前 episode 终止并写入 replay，学习 reward 为
@@ -21,7 +23,77 @@
 充电功率更新 SOC、岸电成本与电池退化。岸电物理时间不增加 MPC/DQN/global/
 epsilon/replay/gradient 计数，费用归入前一个动作的 transition。
 
-## PyCharm PowerShell 命令
+## 当前推荐：90 维历史状态 H1-H4 pilot
+
+先在 PyCharm PowerShell 的仓库根目录设置环境并确认 preflight/smoke：
+
+```powershell
+$env:PYTHONPATH=(Resolve-Path "src").Path
+$env:OPENBLAS_NUM_THREADS="1"
+$env:OMP_NUM_THREADS="1"
+$env:MKL_NUM_THREADS="1"
+
+python -X utf8 -u -m v2.main.train_history_dqn_study --preflight-only --experiment H1
+python -X utf8 -u -m v2.main.train_history_dqn_study --smoke-only --experiment H1
+```
+
+Train-only reward scale 已写入
+`outputs/v2_history_dqn_study/reward_scale_calibration.json`。它使用固定动作
+`w_8_1_1` 的 23,410 个成功执行的真实 30 s interval ledger（包含零成本
+interval），算术均值为 `9.743256091681939 CNY`。50,000 失败分数不进入该均值；
+scaled profile 会把完整学习 reward（原始成本和失败分数）统一除以该尺度。
+
+四个 pilot 使用同一 90 维状态、36 动作、网络、batch、replay、warmup、target
+sync、epsilon 和 seed；只比较 reward mode 与学习率：
+
+```powershell
+python -X utf8 -u -m v2.main.train_history_dqn_study --experiment H1 --rounds 10 --seed 42 --device cpu --log-every 1 --output-dir outputs/v2_history_dqn_study/H1
+python -X utf8 -u -m v2.main.train_history_dqn_study --experiment H2 --reward-scale outputs/v2_history_dqn_study/reward_scale_calibration.json --rounds 10 --seed 42 --device cpu --log-every 1 --output-dir outputs/v2_history_dqn_study/H2
+python -X utf8 -u -m v2.main.train_history_dqn_study --experiment H3 --reward-scale outputs/v2_history_dqn_study/reward_scale_calibration.json --rounds 10 --seed 42 --device cpu --log-every 1 --output-dir outputs/v2_history_dqn_study/H3
+python -X utf8 -u -m v2.main.train_history_dqn_study --experiment H4 --reward-scale outputs/v2_history_dqn_study/reward_scale_calibration.json --rounds 10 --seed 42 --device cpu --log-every 1 --output-dir outputs/v2_history_dqn_study/H4
+```
+
+- H1：raw reward，learning rate `1e-4`；
+- H2：scaled reward，learning rate `1e-4`；
+- H3：scaled reward，learning rate `3e-4`；
+- H4：scaled reward，learning rate `1e-3`。
+
+每轮重新使用固定 seed 的 RNG 打乱 Train 航段；Validation 保持 manifest 顺序、
+纯贪婪、不写 replay、不更新参数。日志明确区分 `epsilon`（探索率）和
+`greedy_rate=1-epsilon`，并输出 `replay_reward`、TD、Q advantage/margin、裁剪前
+梯度以及 behavior/Validation greedy 动作分布。
+
+四个 pilot 全部完成后，只用 Validation 排名并生成 top-2 续训计划：
+
+```powershell
+python -X utf8 -u -m v2.main.select_history_dqn_study --study-root outputs/v2_history_dqn_study --rounds 10 --top-k 2 --output-dir outputs/v2_history_dqn_study/pilot_selection --device cpu
+```
+
+排序依次为：完成 episode 数最多、失败分数最小、原始 CNY 成本最小、profile
+ID、round。选择器不读取 Test，也不复制“最终模型”；它生成
+`profile_validation_metrics.csv`、`study_selection_manifest.json` 和
+`top_profiles.json`。
+
+仅按 `top_profiles.json` 中的两个 profile 续训至 40 轮：
+
+```powershell
+$top = Get-Content "outputs/v2_history_dqn_study/pilot_selection/top_profiles.json" -Raw | ConvertFrom-Json
+foreach ($item in $top.profiles) {
+  $id = $item.experiment_id
+  $resume = $item.resume_path
+  $out = "outputs/v2_history_dqn_study/$id"
+  if ($id -eq "H1") {
+    python -X utf8 -u -m v2.main.train_history_dqn_study --experiment $id --rounds 40 --seed 42 --device cpu --log-every 1 --output-dir $out --resume $resume
+  } else {
+    python -X utf8 -u -m v2.main.train_history_dqn_study --experiment $id --reward-scale outputs/v2_history_dqn_study/reward_scale_calibration.json --rounds 40 --seed 42 --device cpu --log-every 1 --output-dir $out --resume $resume
+  }
+}
+```
+
+本节不提供或执行 Test 命令。必须先完成 pilot、Validation-only 排名及 top-2
+续训，再另行冻结最终选择流程。
+
+## 旧 40 轮单配置入口（保留兼容，不用于本次 H1-H4 比较）
 
 先确认终端当前目录为仓库根目录，然后运行：
 
@@ -58,11 +130,12 @@ $env:PYTHONPATH=(Resolve-Path "src").Path
 python -X utf8 -u -m v2.main.train_formal_dqn --rounds 50 --seed 42 --device cpu --log-every 1 --output-dir outputs/v2_formal_dqn_v3 --resume outputs/v2_formal_dqn_v3/latest.pt
 ```
 
-检查点绑定 S8 schema digest、36-action catalog digest、控制语义、网络/优化器、
+当前检查点版本为 `v2_history_dqn_checkpoint_v1`，绑定 90 维历史 schema digest、
+36-action catalog digest、experiment/reward-scale 身份、控制语义、网络/优化器、
 replay、所有 RNG、当前随机排列、episode 位置和 global macro step。不能降低恢复时
-的总轮数，也不能载入旧 S7/S10、84-action artifact 或失败语义变更前的
-`v2_formal_dqn_checkpoint_v2`。旧 `outputs/v2_formal_dqn/latest.pt` 仅保留作诊断，
-不得用于本次正式训练恢复。
+的总轮数，也不能载入旧 8 维 S8、S7/S10、84-action artifact 或任何旧
+`v2_formal_dqn_checkpoint_v*`。旧 `outputs/v2_formal_dqn/latest.pt` 和
+`outputs/v2_formal_dqn_v3/latest.pt` 仅保留作历史诊断，不得用于本次恢复。
 
 每个 macro 日志分别输出 `raw_economic_cost_cny`、
 `failure_penalty_score`、`learning_reward`、`episode_completed` 和
@@ -90,7 +163,7 @@ python -X utf8 -u -m v2.main.select_formal_dqn_checkpoint `
 
 输出目录必须不存在。完成后生成 `validation_checkpoint_metrics.csv`、
 `selection_manifest.json` 和逐字节复制的 `best_validation.pt`。manifest 绑定当前
-power/AIS/mode manifest、S8、36-action、控制/失败语义和所有候选 checkpoint
+power/AIS/mode manifest、90 维历史状态、36-action、控制/失败语义和所有候选 checkpoint
 SHA-256。此步骤只完成 Validation 选择，不授权或执行最终 Test。
 
 ## 一次性最终 Test

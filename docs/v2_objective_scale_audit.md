@@ -6,6 +6,9 @@ Dataset: `operating_dataset_zero_boundary_v2`
 
 Result artifact: `outputs/v2_objective_scale_audit/audit_summary.json`
 
+Expanded action-behavior artifact:
+`outputs/v2_action_behavior_audit/audit_summary.json`
+
 ## Decision
 
 `OBJECTIVE_SCALE_AUDIT_READY = YES`
@@ -31,6 +34,26 @@ Thus `scale_ratio = 1.8557949056`, below the frozen PASS boundary of 5. The
 existing `600 kW / 600 kW / 0.60` normalization remains acceptable. This is a
 global magnitude-comparability result; it does not claim that every action has
 equal local influence in every state.
+
+## 36-action behavior review
+
+The expanded artifact retains all 216 case/action observations and all 630
+pairwise action comparisons per representative case. Five of the six
+deterministic Train cases produced 36 distinct first-command/SOC-path behavior
+groups. Their P95 first-step FC differences were 96.4084, 72.0081, 172.9388,
+138.8816, and 43.4885 kW; the corresponding P95 predicted-SOC-path differences
+were 0.00218452, 0.00218998, 0.00894758, 0.00496901, and 0.00173404.
+
+The remaining constrained case, at 2024-06-14 17:24:16+08:00, placed all 36
+actions in one behavior group: first-step FC/battery differences and SOC-path
+differences were all exactly zero. This is local action invariance at one
+operating point, not evidence that the catalog is globally redundant.
+
+Therefore the complete 36-action catalog is unchanged. No behavior threshold,
+group, or action was selected using Validation or Test: both held-out payload
+counters are zero. These findings are limited to the six deterministic Train
+cases and do not claim global action identifiability over every reachable
+state.
 
 ## Frozen contract
 
