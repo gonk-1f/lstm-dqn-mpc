@@ -34,6 +34,9 @@ class DqnTrainingConfig:
     target_sync_steps: int
     gradient_clip_norm: float
     rounds: int
+    experiment_id: str
+    reward_mode: str
+    reward_scaling_identity: str
 
     def __post_init__(self) -> None:
         for name in (
@@ -57,6 +60,17 @@ class DqnTrainingConfig:
             raise ValueError("learning rate and gradient clip must be positive")
         if self.state_dim != FORMAL_STATE_DIMENSION or self.action_dim != len(FINAL_DQN_ACTION_CATALOG):
             raise ValueError("DQN dimensions must match frozen history/36 contracts")
+        if type(self.experiment_id) is not str or not self.experiment_id:
+            raise ValueError("experiment_id must be a nonempty exact string")
+        if self.reward_mode not in {"raw", "scaled"}:
+            raise ValueError("reward_mode must be raw or scaled")
+        if (
+            type(self.reward_scaling_identity) is not str
+            or not self.reward_scaling_identity
+        ):
+            raise ValueError(
+                "reward_scaling_identity must be a nonempty exact string"
+            )
 
     @classmethod
     def formal_baseline(cls) -> "DqnTrainingConfig":
@@ -72,6 +86,9 @@ class DqnTrainingConfig:
             target_sync_steps=1_000,
             gradient_clip_norm=10.0,
             rounds=40,
+            experiment_id="H1",
+            reward_mode="raw",
+            reward_scaling_identity="raw_learning_reward_v1",
         )
 
 
