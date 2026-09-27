@@ -52,13 +52,13 @@ def _validated_action_counts(value: object) -> tuple[tuple[str, int], ...]:
     return tuple(checked)
 
 
-def _validated_s8(state: object) -> np.ndarray:
+def _validated_formal_state(state: object) -> np.ndarray:
     try:
         values = np.asarray(state, dtype=np.float32)
     except (TypeError, ValueError) as exc:
-        raise ValueError("state must be one finite S8 vector") from exc
+        raise ValueError("state must be one finite formal history vector") from exc
     if values.shape != (FORMAL_STATE_DIMENSION,) or not np.isfinite(values).all():
-        raise ValueError("state must be one finite S8 vector")
+        raise ValueError("state must be one finite formal history vector")
     return values.copy()
 
 
@@ -259,7 +259,7 @@ class FixedActionPolicy:
         return self.action_id
 
     def action_index(self, state: object) -> int:
-        _validated_s8(state)
+        _validated_formal_state(state)
         return _ACTION_INDEX_BY_ID[self.action_id]
 
 
@@ -275,7 +275,7 @@ class GreedyDqnPolicy:
             raise TypeError("agent must expose callable greedy_action")
 
     def action_index(self, state: object) -> int:
-        values = _validated_s8(state)
+        values = _validated_formal_state(state)
         index = self.agent.greedy_action(values)
         if type(index) is not int or not 0 <= index < len(FINAL_DQN_ACTION_CATALOG):
             raise ValueError("greedy_action must return a canonical action index")

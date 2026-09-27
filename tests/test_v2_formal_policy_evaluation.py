@@ -18,7 +18,8 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 
-S8 = (0.60, 0.20, 0.10, 0.0, 0.0, 0.0, 0.0, 0.15)
+FRAME = (0.60, 0.20, 0.10, 0.0, 0.0, 0.0, 0.0, 0.15)
+FORMAL_STATE = (0.0,) * 72 + FRAME + (0.0,) * 9 + (1.0,)
 
 
 def _episode(sample_id: str, *, steps: int = 1):
@@ -54,7 +55,7 @@ class _Environment:
 
     def reset(self):
         self._position = 0
-        return S8
+        return FORMAL_STATE
 
     def step(self, action_id: str):
         from v2.dqn.action_space import FINAL_DQN_ACTION_CATALOG
@@ -70,10 +71,10 @@ class _Environment:
         ledger = RawCnyIntervalLedger(*values)
         penalty = FORMAL_FAILURE_POLICY.penalty_score if failed else 0.0
         return MacroTransition(
-            state=S8,
+            state=FORMAL_STATE,
             action=action,
             learning_reward=ledger.reward_cny - penalty,
-            next_state=S8,
+            next_state=FORMAL_STATE,
             done=failed or self._position == len(self._rows),
             executed_mpc_steps=executed_mpc_steps,
             ledger=ledger,
@@ -148,14 +149,14 @@ class TestFormalPolicyEvaluation(unittest.TestCase):
         with self.assertRaises(FrozenInstanceError):
             result.episodes[0].completed = False
 
-    def test_policy_boundary_rejects_unknown_actions_and_nonfinite_s8(self) -> None:
+    def test_policy_boundary_rejects_unknown_actions_and_nonfinite_history(self) -> None:
         from v2.evaluation.formal_policy import FixedActionPolicy, GreedyDqnPolicy
 
         with self.assertRaisesRegex(ValueError, "unknown action"):
             FixedActionPolicy("w_0_0_0")
         fixed = FixedActionPolicy("w_8_1_1")
-        with self.assertRaisesRegex(ValueError, "finite S8"):
-            fixed.action_index(S8[:-1] + (float("nan"),))
+        with self.assertRaisesRegex(ValueError, "finite formal history"):
+            fixed.action_index(FORMAL_STATE[:-1] + (float("nan"),))
 
         class Agent:
             @staticmethod
@@ -163,8 +164,8 @@ class TestFormalPolicyEvaluation(unittest.TestCase):
                 return 0
 
         greedy = GreedyDqnPolicy(Agent())
-        with self.assertRaisesRegex(ValueError, "finite S8"):
-            greedy.action_index((0.0,) * 7)
+        with self.assertRaisesRegex(ValueError, "finite formal history"):
+            greedy.action_index((0.0,) * 89)
 
     def test_public_constructors_reject_invalid_counts_order_and_greedy_index(self) -> None:
         from v2.dqn.action_space import FINAL_DQN_ACTION_CATALOG
@@ -217,7 +218,7 @@ class TestFormalPolicyEvaluation(unittest.TestCase):
             with self.subTest(invalid_index=invalid_index), self.assertRaisesRegex(
                 ValueError, "canonical action index"
             ):
-                GreedyDqnPolicy(Agent()).action_index(S8)
+                GreedyDqnPolicy(Agent()).action_index(FORMAL_STATE)
 
     def test_greedy_evaluation_calls_only_greedy_action_and_preserves_agent_state(self) -> None:
         from v2.evaluation.formal_policy import GreedyDqnPolicy, evaluate_formal_policy
