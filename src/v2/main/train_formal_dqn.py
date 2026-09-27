@@ -430,7 +430,7 @@ def _train(
                     global_step >= config.warmup_steps
                     and len(agent.replay) >= config.batch_size
                 ):
-                    loss = agent.optimize()
+                    loss = agent.optimize().loss
                 mode_delta = {
                     mode: backend.mode_counts[mode] - before_modes[mode]
                     for mode in OperatingMode

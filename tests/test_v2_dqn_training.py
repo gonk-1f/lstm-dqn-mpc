@@ -76,6 +76,7 @@ class TestV2DqnTraining(unittest.TestCase):
         self.assertEqual(batch.actions.shape, (2,))
 
     def test_double_dqn_update_uses_huber_and_syncs_target(self) -> None:
+        from v2.training.diagnostics import DqnOptimizationDiagnostics
         from v2.training.dqn import DqnAgent, DqnTrainingConfig
 
         config = DqnTrainingConfig.formal_baseline()
@@ -87,9 +88,12 @@ class TestV2DqnTraining(unittest.TestCase):
                 dtype=np.float32,
             )
             agent.replay.append(state, index % 36, -1.0, state + 0.01, index % 13 == 0)
-        loss = agent.optimize()
-        self.assertIsInstance(loss, float)
-        self.assertTrue(np.isfinite(loss))
+        diagnostics = agent.optimize()
+        self.assertIsInstance(diagnostics, DqnOptimizationDiagnostics)
+        self.assertTrue(np.isfinite(diagnostics.loss))
+        self.assertTrue(np.isfinite(diagnostics.td_abs_p95))
+        self.assertTrue(np.isfinite(diagnostics.q_advantage_std))
+        self.assertTrue(np.isfinite(diagnostics.gradient_norm_preclip))
         self.assertEqual(agent.optimizer_steps, 1)
 
     def test_validation_greedy_action_does_not_consume_exploration_rng(self) -> None:

@@ -14,6 +14,7 @@ from torch.nn import functional as F
 
 from ..dqn.action_space import FINAL_DQN_ACTION_CATALOG
 from ..dqn.state import FORMAL_STATE_DIMENSION
+from .diagnostics import DqnOptimizationDiagnostics
 
 
 EPSILON_START = 1.0
@@ -275,27 +276,37 @@ class DqnAgent:
             tensor = torch.as_tensor(values, device=self.device).unsqueeze(0)
             return int(self.online(tensor).argmax(dim=1).item())
 
-    def optimize(self) -> float:
+    def optimize(self) -> DqnOptimizationDiagnostics:
         batch = self.replay.sample(self.config.batch_size)
         states = torch.as_tensor(batch.states, device=self.device)
         actions = torch.as_tensor(batch.actions, device=self.device).unsqueeze(1)
         rewards = torch.as_tensor(batch.rewards, device=self.device)
         next_states = torch.as_tensor(batch.next_states, device=self.device)
         dones = torch.as_tensor(batch.dones, device=self.device)
-        predicted = self.online(states).gather(1, actions).squeeze(1)
+        q_values = self.online(states)
+        predicted = q_values.gather(1, actions).squeeze(1)
         with torch.no_grad():
             next_actions = self.online(next_states).argmax(dim=1, keepdim=True)
             next_values = self.target(next_states).gather(1, next_actions).squeeze(1)
             expected = rewards + self.config.gamma * (1.0 - dones) * next_values
         loss = F.smooth_l1_loss(predicted, expected)
+        td_error = expected - predicted
         self.optimizer.zero_grad(set_to_none=True)
         loss.backward()
-        nn.utils.clip_grad_norm_(self.online.parameters(), self.config.gradient_clip_norm)
+        gradient_norm = nn.utils.clip_grad_norm_(
+            self.online.parameters(), self.config.gradient_clip_norm
+        )
+        diagnostics = DqnOptimizationDiagnostics.from_tensors(
+            loss=loss,
+            td_error=td_error,
+            q_values=q_values.detach(),
+            gradient_norm=gradient_norm,
+        )
         self.optimizer.step()
         self.optimizer_steps += 1
         if self.optimizer_steps % self.config.target_sync_steps == 0:
             self.target.load_state_dict(self.online.state_dict())
-        return float(loss.detach().cpu().item())
+        return diagnostics
 
     def state_dict(self) -> dict[str, object]:
         return {
