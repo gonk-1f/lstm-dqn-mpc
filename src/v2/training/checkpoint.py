@@ -73,6 +73,10 @@ def save_checkpoint(
     temporary = destination.with_name(f"{destination.name}.tmp-{os.getpid()}")
     if temporary.exists():
         raise FileExistsError(temporary)
+    agent_state = agent.state_dict()
+    replay_state = agent_state["replay"]
+    for name in ("states", "actions", "rewards", "next_states", "dones"):
+        replay_state[name] = torch.from_numpy(replay_state[name])
     payload = {
         "checkpoint_version": CHECKPOINT_VERSION,
         "state_schema_version": FORMAL_STATE_SCHEMA_VERSION,
@@ -83,7 +87,7 @@ def save_checkpoint(
         "failure_policy": asdict(FORMAL_FAILURE_POLICY),
         "training_config_identity": _config_identity(agent),
         "round_budget": agent.config.rounds,
-        "agent": agent.state_dict(),
+        "agent": agent_state,
         "schedule": schedule.state_dict(),
         "global_macro_step": global_macro_step,
         "round_index": round_index,

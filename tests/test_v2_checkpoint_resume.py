@@ -65,6 +65,36 @@ class TestV2CheckpointResume(unittest.TestCase):
             self.assertEqual(actual_actions, continued_actions)
             self.assertNotEqual(expected_actions, actual_actions)
 
+    def test_checkpoint_streams_replay_arrays_as_cpu_tensor_storage(self) -> None:
+        from v2.training.checkpoint import save_checkpoint
+        from v2.training.dqn import DqnAgent, DqnTrainingConfig
+        from v2.training.schedule import EpisodeShuffleSchedule
+
+        config = DqnTrainingConfig.formal_baseline()
+        agent = DqnAgent(config, seed=42, device="cpu")
+        state = np.arange(config.state_dim, dtype=np.float32)
+        agent.replay.append(state, 3, -1.0, state + 1.0, False)
+        schedule = EpisodeShuffleSchedule(("a",), seed=42)
+        permutation = schedule.next_round()
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "latest.pt"
+            save_checkpoint(
+                path,
+                agent=agent,
+                schedule=schedule,
+                global_macro_step=1,
+                round_index=0,
+                episode_position=1,
+                current_permutation=permutation,
+            )
+            payload = torch.load(path, map_location="cpu", weights_only=False)
+
+        replay = payload["agent"]["replay"]
+        for name in ("states", "actions", "rewards", "next_states", "dones"):
+            self.assertIs(type(replay[name]), torch.Tensor)
+            self.assertEqual(replay[name].device.type, "cpu")
+
     def test_resume_allows_only_a_higher_round_budget(self) -> None:
         from v2.training.checkpoint import load_checkpoint, save_checkpoint
         from v2.training.dqn import DqnAgent, DqnTrainingConfig
