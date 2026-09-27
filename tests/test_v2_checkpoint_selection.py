@@ -211,6 +211,38 @@ class TestCheckpointAuthentication(unittest.TestCase):
             with self.assertRaises(ValueError):
                 authenticate_checkpoint_candidates(root, required_rounds=range(1, 5))
 
+    def test_study_authentication_binds_profile_and_reward_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._write_bank(root)
+            for round_index in range(1, 5):
+                path = root / f"round_{round_index:03d}.pt"
+                payload = torch.load(path, map_location="cpu", weights_only=False)
+                payload["training_config_identity"] = {
+                    "experiment_id": "H2",
+                    "reward_mode": "scaled",
+                    "reward_scaling_identity": "a" * 64,
+                }
+                torch.save(payload, path)
+            expected = {
+                "experiment_id": "H2",
+                "reward_mode": "scaled",
+                "reward_scaling_identity": "a" * 64,
+            }
+            authenticated = authenticate_checkpoint_candidates(
+                root,
+                required_rounds=range(1, 5),
+                expected_training_identity=expected,
+            )
+            self.assertEqual(len(authenticated), 4)
+            expected["experiment_id"] = "H3"
+            with self.assertRaises(ValueError):
+                authenticate_checkpoint_candidates(
+                    root,
+                    required_rounds=range(1, 5),
+                    expected_training_identity=expected,
+                )
+
 
 class TestSelectionManifest(unittest.TestCase):
     def test_manifest_binds_frozen_identity_and_digest_roundtrips(self) -> None:

@@ -219,7 +219,11 @@ def _load_trusted_checkpoint_metadata(path: Path) -> object:
     return torch.load(path, map_location="cpu", weights_only=False)
 
 
-def _validate_checkpoint_metadata(value: object, expected_round: int) -> None:
+def _validate_checkpoint_metadata(
+    value: object,
+    expected_round: int,
+    expected_training_identity: dict[str, object] | None = None,
+) -> None:
     if type(value) is not dict:
         raise ValueError("checkpoint payload must be an exact dict")
     expected_scalars = {
@@ -246,6 +250,21 @@ def _validate_checkpoint_metadata(value: object, expected_round: int) -> None:
         actual = policy[key]
         if type(actual) is not type(expected) or actual != expected:
             raise ValueError("checkpoint failure policy differs")
+    if expected_training_identity is not None:
+        if type(expected_training_identity) is not dict or set(
+            expected_training_identity
+        ) != {
+            "experiment_id",
+            "reward_mode",
+            "reward_scaling_identity",
+        }:
+            raise ValueError("expected training identity keys are not exact")
+        stored = value.get("training_config_identity")
+        if type(stored) is not dict:
+            raise ValueError("checkpoint training config identity is missing")
+        for key, expected in expected_training_identity.items():
+            if type(stored.get(key)) is not type(expected) or stored.get(key) != expected:
+                raise ValueError(f"checkpoint {key} identity differs")
 
 
 def authenticate_checkpoint_candidates(
@@ -253,6 +272,7 @@ def authenticate_checkpoint_candidates(
     *,
     required_rounds: Iterable[int] = FORMAL_SELECTION_ROUNDS,
     metadata_loader: Callable[[Path], object] | None = None,
+    expected_training_identity: dict[str, object] | None = None,
 ) -> tuple[AuthenticatedCheckpoint, ...]:
     """Authenticate an exact round checkpoint bank; ``latest.pt`` is ignored."""
 
@@ -281,7 +301,11 @@ def authenticate_checkpoint_candidates(
             metadata = loader(path)
         except Exception as exc:
             raise ValueError(f"checkpoint cannot be read: {path.name}") from exc
-        _validate_checkpoint_metadata(metadata, round_index)
+        _validate_checkpoint_metadata(
+            metadata,
+            round_index,
+            expected_training_identity,
+        )
         after_hash = _sha256(path)
         if after_hash != before_hash:
             raise ValueError("checkpoint changed while it was authenticated")
