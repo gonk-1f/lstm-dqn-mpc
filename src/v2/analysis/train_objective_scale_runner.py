@@ -8,6 +8,8 @@ import math
 from numbers import Real
 from typing import Sequence
 
+import numpy as np
+
 from ..config import PlantConfig, TAU_LPF_SECONDS, TimeScaleConfig
 from ..control.causal_base_load import CausalBaseLoadFilter
 from ..control.nonlinear_mpc import (
@@ -33,6 +35,180 @@ from .objective_scale_audit import (
 
 
 AUDIT_TAU_LPF_SECONDS = TAU_LPF_SECONDS
+
+
+@dataclass(frozen=True)
+class CaseBehaviorSummary:
+    case_id: str
+    behavior_groups: tuple[tuple[str, ...], ...]
+    distinct_behavior_count: int
+    pair_count: int
+    max_first_fc_difference_kw: float
+    p95_first_fc_difference_kw: float
+    max_first_battery_difference_kw: float
+    p95_first_battery_difference_kw: float
+    max_soc_path_difference: float
+    p95_soc_path_difference: float
+
+    def __post_init__(self) -> None:
+        if type(self.case_id) is not str or not self.case_id.strip():
+            raise ValueError("case_id must be a nonempty exact string")
+        if type(self.behavior_groups) is not tuple or not self.behavior_groups:
+            raise TypeError("behavior_groups must be a nonempty exact tuple")
+        flattened: list[str] = []
+        for group in self.behavior_groups:
+            if type(group) is not tuple or not group:
+                raise TypeError("each behavior group must be a nonempty exact tuple")
+            if any(type(action_id) is not str or not action_id for action_id in group):
+                raise TypeError("behavior group IDs must be nonempty exact strings")
+            if tuple(sorted(group)) != group:
+                raise ValueError("behavior group IDs must be sorted")
+            flattened.extend(group)
+        if len(flattened) != len(set(flattened)):
+            raise ValueError("behavior groups must not repeat action IDs")
+        if type(self.distinct_behavior_count) is not int or (
+            self.distinct_behavior_count != len(self.behavior_groups)
+        ):
+            raise ValueError("distinct_behavior_count must match behavior_groups")
+        if type(self.pair_count) is not int or self.pair_count < 0:
+            raise ValueError("pair_count must be a nonnegative exact integer")
+        for name in (
+            "max_first_fc_difference_kw",
+            "p95_first_fc_difference_kw",
+            "max_first_battery_difference_kw",
+            "p95_first_battery_difference_kw",
+            "max_soc_path_difference",
+            "p95_soc_path_difference",
+        ):
+            value = getattr(self, name)
+            if type(value) is not float or not math.isfinite(value) or value < 0.0:
+                raise ValueError(f"{name} must be an exact finite nonnegative float")
+
+
+@dataclass(frozen=True)
+class ActionBehaviorSummary:
+    observation_count: int
+    case_count: int
+    action_count: int
+    cases: tuple[CaseBehaviorSummary, ...]
+
+    def __post_init__(self) -> None:
+        for name in ("observation_count", "case_count", "action_count"):
+            value = getattr(self, name)
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"{name} must be a positive exact integer")
+        if type(self.cases) is not tuple or len(self.cases) != self.case_count:
+            raise ValueError("cases must be an exact tuple matching case_count")
+        if any(type(value) is not CaseBehaviorSummary for value in self.cases):
+            raise TypeError("cases must contain exact CaseBehaviorSummary values")
+        if self.observation_count != self.case_count * self.action_count:
+            raise ValueError("observation count must equal case_count * action_count")
+
+
+def _behavior_groups(
+    action_ids: tuple[str, ...],
+    edges: tuple[tuple[str, str], ...],
+) -> tuple[tuple[str, ...], ...]:
+    adjacency = {action_id: set() for action_id in action_ids}
+    for left, right in edges:
+        if left not in adjacency or right not in adjacency:
+            raise ValueError("behavior edge references an unknown action")
+        adjacency[left].add(right)
+        adjacency[right].add(left)
+    remaining = set(action_ids)
+    groups: list[tuple[str, ...]] = []
+    while remaining:
+        root = min(remaining)
+        stack = [root]
+        members: set[str] = set()
+        while stack:
+            current = stack.pop()
+            if current in members:
+                continue
+            members.add(current)
+            stack.extend(sorted(adjacency[current] - members, reverse=True))
+        remaining -= members
+        groups.append(tuple(sorted(members)))
+    return tuple(sorted(groups, key=lambda group: group[0]))
+
+
+def _difference_statistics(values: tuple[float, ...]) -> tuple[float, float]:
+    if not values:
+        return 0.0, 0.0
+    array = np.asarray(values, dtype=float)
+    if not np.isfinite(array).all() or (array < 0.0).any():
+        raise ValueError("behavior differences must be finite and nonnegative")
+    return float(np.max(array)), float(np.percentile(array, 95))
+
+
+def summarize_action_behavior(
+    result: ObjectiveScaleAuditResult,
+) -> ActionBehaviorSummary:
+    checked = result.validate()
+    observations = checked.observations
+    case_ids = tuple(dict.fromkeys(item.case_id for item in observations))
+    all_action_ids = tuple(dict.fromkeys(item.action_id for item in observations))
+    redundancy_by_case = {
+        item.case_id: item.action_pairs for item in checked.behavioral_redundancy
+    }
+    summaries: list[CaseBehaviorSummary] = []
+    for case_id in case_ids:
+        case_observations = tuple(
+            item for item in observations if item.case_id == case_id
+        )
+        action_ids = tuple(item.action_id for item in case_observations)
+        if action_ids != all_action_ids:
+            raise ValueError("every behavior case must contain the same action order")
+        fc_differences: list[float] = []
+        battery_differences: list[float] = []
+        soc_differences: list[float] = []
+        for left_index, left in enumerate(case_observations):
+            for right in case_observations[left_index + 1 :]:
+                if len(left.predicted_soc_path) != len(right.predicted_soc_path):
+                    raise ValueError("predicted SOC paths must have equal length")
+                fc_differences.append(abs(left.p_fc_first_kw - right.p_fc_first_kw))
+                battery_differences.append(
+                    abs(left.p_batt_first_kw - right.p_batt_first_kw)
+                )
+                soc_differences.append(
+                    max(
+                        (
+                            abs(left_soc - right_soc)
+                            for left_soc, right_soc in zip(
+                                left.predicted_soc_path, right.predicted_soc_path
+                            )
+                        ),
+                        default=0.0,
+                    )
+                )
+        max_fc, p95_fc = _difference_statistics(tuple(fc_differences))
+        max_battery, p95_battery = _difference_statistics(
+            tuple(battery_differences)
+        )
+        max_soc, p95_soc = _difference_statistics(tuple(soc_differences))
+        groups = _behavior_groups(
+            action_ids, redundancy_by_case.get(case_id, ())
+        )
+        summaries.append(
+            CaseBehaviorSummary(
+                case_id=case_id,
+                behavior_groups=groups,
+                distinct_behavior_count=len(groups),
+                pair_count=len(fc_differences),
+                max_first_fc_difference_kw=max_fc,
+                p95_first_fc_difference_kw=p95_fc,
+                max_first_battery_difference_kw=max_battery,
+                p95_first_battery_difference_kw=p95_battery,
+                max_soc_path_difference=max_soc,
+                p95_soc_path_difference=p95_soc,
+            )
+        )
+    return ActionBehaviorSummary(
+        observation_count=len(observations),
+        case_count=len(case_ids),
+        action_count=len(all_action_ids),
+        cases=tuple(summaries),
+    )
 
 
 def _finite(value: object, name: str) -> float:
@@ -222,8 +398,11 @@ def run_train_objective_scale_audit(
 
 __all__ = [
     "AUDIT_TAU_LPF_SECONDS",
+    "ActionBehaviorSummary",
     "AuditReadyState",
+    "CaseBehaviorSummary",
     "run_train_objective_scale_audit",
     "select_representative_cases",
     "solve_audit_case",
+    "summarize_action_behavior",
 ]

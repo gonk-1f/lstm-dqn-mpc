@@ -156,6 +156,53 @@ class ObjectiveScaleAuditTests(unittest.TestCase):
         )
         self.assertEqual(result.validate(), result)
 
+    def test_action_behavior_summary_groups_redundant_actions_deterministically(self) -> None:
+        from v2.analysis.objective_scale_audit import (
+            BehaviorTolerance,
+            run_objective_scale_audit,
+        )
+        from v2.analysis.train_objective_scale_runner import (
+            summarize_action_behavior,
+        )
+        from v2.dqn.action_space import CANDIDATE_ACTION_BANK
+
+        def runner(case, action):
+            return self._plan(
+                action,
+                (1.0, 1.0, 1.0),
+                case_id=case.case_id,
+            )
+
+        result = run_objective_scale_audit(
+            provenance=self._provenance(),
+            cases_loader=self._cases,
+            actions=CANDIDATE_ACTION_BANK,
+            solver_runner=runner,
+            behavior_tolerance=BehaviorTolerance(1e-12, 1e-9, 1e-12),
+        )
+
+        summary = summarize_action_behavior(result)
+
+        self.assertEqual(summary.observation_count, 72)
+        self.assertEqual(summary.case_count, 2)
+        self.assertEqual(summary.action_count, 36)
+        state_a, state_b = summary.cases
+        self.assertEqual(state_a.case_id, "state-a")
+        self.assertEqual(
+            state_a.behavior_groups,
+            (tuple(action.action_id for action in CANDIDATE_ACTION_BANK),),
+        )
+        self.assertEqual(state_a.distinct_behavior_count, 1)
+        self.assertEqual(state_a.pair_count, 630)
+        self.assertEqual(state_a.max_first_fc_difference_kw, 0.0)
+        self.assertEqual(state_a.p95_first_fc_difference_kw, 0.0)
+        self.assertEqual(state_a.max_first_battery_difference_kw, 0.0)
+        self.assertEqual(state_a.max_soc_path_difference, 0.0)
+        self.assertGreater(state_b.distinct_behavior_count, 1)
+        self.assertGreater(state_b.max_first_fc_difference_kw, 0.0)
+        self.assertGreater(state_b.p95_first_battery_difference_kw, 0.0)
+        self.assertGreater(state_b.max_soc_path_difference, 0.0)
+
     def test_scale_ratio_thresholds_are_exact_project_rules(self) -> None:
         from v2.analysis.objective_scale_audit import (
             ObjectiveScaleStatus,

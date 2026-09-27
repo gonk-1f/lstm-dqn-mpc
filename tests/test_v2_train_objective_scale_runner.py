@@ -19,13 +19,91 @@ if str(MAIN) not in sys.path:
 class TrainObjectiveScaleRunnerTests(unittest.TestCase):
     def test_entrypoint_json_conversion_recurses_through_mappings_and_lists(self) -> None:
         from run_v2_objective_scale_audit import _jsonable
-        from v2.analysis.objective_scale_audit import TermStatistics
+        from v2.analysis.objective_scale_audit import BehaviorTolerance, TermStatistics
+        from v2.analysis.train_objective_scale_runner import (
+            ActionBehaviorSummary,
+            CaseBehaviorSummary,
+        )
 
         statistic = TermStatistics("base", 1, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0)
-        converted = _jsonable({"statistics": [statistic]})
+        behavior = ActionBehaviorSummary(
+            observation_count=36,
+            case_count=1,
+            action_count=36,
+            cases=(
+                CaseBehaviorSummary(
+                    case_id="case-a",
+                    behavior_groups=(("w_1_1_8",),),
+                    distinct_behavior_count=1,
+                    pair_count=630,
+                    max_first_fc_difference_kw=0.0,
+                    p95_first_fc_difference_kw=0.0,
+                    max_first_battery_difference_kw=0.0,
+                    p95_first_battery_difference_kw=0.0,
+                    max_soc_path_difference=0.0,
+                    p95_soc_path_difference=0.0,
+                ),
+            ),
+        )
+        converted = _jsonable(
+            {
+                "statistics": [statistic],
+                "behavior_tolerance": BehaviorTolerance(1e-12, 1e-6, 1e-10),
+                "action_behavior_summary": behavior,
+            }
+        )
 
         self.assertEqual(converted["statistics"][0]["term"], "base")
+        self.assertEqual(
+            converted["action_behavior_summary"]["cases"][0]["case_id"],
+            "case-a",
+        )
+        self.assertEqual(
+            converted["behavior_tolerance"]["power_kw_abs"],
+            1e-6,
+        )
         json.dumps(converted, allow_nan=False)
+
+    def test_entrypoint_behavior_payload_is_diagnostic_only(self) -> None:
+        from run_v2_objective_scale_audit import _behavior_payload
+        from v2.analysis.objective_scale_audit import BehaviorTolerance
+        from v2.analysis.train_objective_scale_runner import (
+            ActionBehaviorSummary,
+            CaseBehaviorSummary,
+        )
+
+        summary = ActionBehaviorSummary(
+            observation_count=36,
+            case_count=1,
+            action_count=36,
+            cases=(
+                CaseBehaviorSummary(
+                    case_id="case-a",
+                    behavior_groups=(("w_1_1_8",),),
+                    distinct_behavior_count=1,
+                    pair_count=630,
+                    max_first_fc_difference_kw=0.0,
+                    p95_first_fc_difference_kw=0.0,
+                    max_first_battery_difference_kw=0.0,
+                    p95_first_battery_difference_kw=0.0,
+                    max_soc_path_difference=0.0,
+                    p95_soc_path_difference=0.0,
+                ),
+            ),
+        )
+        payload = _behavior_payload(
+            observations=("observation",),
+            tolerance=BehaviorTolerance(1e-12, 1e-6, 1e-10),
+            redundancy=("pair",),
+            summary=summary,
+        )
+
+        self.assertEqual(payload["action_observations"], ("observation",))
+        self.assertEqual(payload["behavioral_redundancy"], ("pair",))
+        self.assertIs(payload["action_behavior_summary"], summary)
+        self.assertFalse(payload["action_catalog_mutated"])
+        self.assertEqual(payload["validation_payloads_opened"], 0)
+        self.assertEqual(payload["test_payloads_opened"], 0)
 
     def test_representative_selection_is_small_deterministic_and_covers_available_strata(self) -> None:
         from v2.analysis.train_objective_scale_runner import (

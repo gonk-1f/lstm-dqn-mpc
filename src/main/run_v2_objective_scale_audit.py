@@ -20,9 +20,11 @@ if str(PROJECT_ROOT / "src") not in sys.path:
 from utils.final_dataset_source import _read, collapse_channel
 from v2.analysis.action_screening import DataSplit, DatasetProvenance
 from v2.analysis.train_objective_scale_runner import (
+    ActionBehaviorSummary,
     AuditReadyState,
     run_train_objective_scale_audit,
     select_representative_cases,
+    summarize_action_behavior,
 )
 from v2.contracts import DATASET_VERSION
 from v2.data.supervisory_rules import (
@@ -200,6 +202,28 @@ def _jsonable(value: object) -> object:
     return value
 
 
+def _behavior_payload(
+    *,
+    observations: tuple[object, ...],
+    tolerance: object,
+    redundancy: tuple[object, ...],
+    summary: ActionBehaviorSummary,
+) -> dict[str, object]:
+    if type(observations) is not tuple or type(redundancy) is not tuple:
+        raise TypeError("behavior evidence collections must be exact tuples")
+    if type(summary) is not ActionBehaviorSummary:
+        raise TypeError("summary must be an exact ActionBehaviorSummary")
+    return {
+        "behavior_tolerance": tolerance,
+        "action_observations": observations,
+        "behavioral_redundancy": redundancy,
+        "action_behavior_summary": summary,
+        "action_catalog_mutated": False,
+        "validation_payloads_opened": 0,
+        "test_payloads_opened": 0,
+    }
+
+
 def run(raw_root: Path, metadata_root: Path) -> dict[str, object]:
     manifest = pd.read_csv(metadata_root / "sample_manifest.csv")
     train_manifest = manifest.loc[
@@ -269,6 +293,7 @@ def run(raw_root: Path, metadata_root: Path) -> dict[str, object]:
     if not cases:
         raise ValueError("strict Train rules produced no representative MPC cases")
     result = run_train_objective_scale_audit(tuple(ready_states), provenance)
+    behavior = summarize_action_behavior(result)
 
     mode_counts = {
         mode.value: sum(state.mode is mode for state in all_states)
@@ -308,6 +333,12 @@ def run(raw_root: Path, metadata_root: Path) -> dict[str, object]:
         "scale_ratio": result.scale_ratio,
         "status": result.status,
         "dominance_statistics": result.dominance_statistics,
+        **_behavior_payload(
+            observations=result.observations,
+            tolerance=result.behavior_tolerance,
+            redundancy=result.behavioral_redundancy,
+            summary=behavior,
+        ),
         "result_digest": result.digest,
     }
 
