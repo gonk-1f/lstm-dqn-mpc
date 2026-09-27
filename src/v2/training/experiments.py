@@ -106,8 +106,32 @@ def history_study_profiles(
     }
 
 
+def history_study_profile(
+    experiment_id: str,
+    calibration: RewardScaleCalibration | None,
+) -> DqnExperimentProfile:
+    if experiment_id not in _PROFILE_MATRIX:
+        raise ValueError("experiment_id must be one of H1, H2, H3, H4")
+    reward_mode, learning_rate = _PROFILE_MATRIX[experiment_id]
+    if reward_mode == "raw":
+        if calibration is not None:
+            raise ValueError("raw H1 must not receive a reward calibration")
+        identity = RAW_REWARD_SCALING_IDENTITY
+    else:
+        if calibration is None:
+            raise ValueError("scaled H2-H4 require a reward calibration")
+        identity = _validate_reward_scale(calibration).digest
+    return DqnExperimentProfile(
+        experiment_id=experiment_id,
+        reward_mode=reward_mode,
+        learning_rate=learning_rate,
+        reward_scaling_identity=identity,
+    )
+
+
 __all__ = [
     "DqnExperimentProfile",
     "RAW_REWARD_SCALING_IDENTITY",
     "history_study_profiles",
+    "history_study_profile",
 ]

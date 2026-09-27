@@ -126,16 +126,16 @@ class TestV2FormalTrainingCli(unittest.TestCase):
                 self.sample_id = sample_id
 
             def reset(self):
-                return (0.0,) * 8
+                return (0.0,) * 90
 
             def step(self, action_id):
                 failed = self.sample_id == "failed"
                 ledger = RawCnyIntervalLedger(10.0, 0.0, 0.0, 0.0)
                 return MacroTransition(
-                    state=(0.0,) * 8,
+                    state=(0.0,) * 90,
                     action=FINAL_DQN_ACTION_CATALOG[0],
                     learning_reward=-50_010.0 if failed else -10.0,
-                    next_state=(0.0,) * 8,
+                    next_state=(0.0,) * 90,
                     done=True,
                     executed_mpc_steps=0 if failed else 1,
                     ledger=ledger,
@@ -168,7 +168,15 @@ class TestV2FormalTrainingCli(unittest.TestCase):
             ),
             redirect_stdout(output),
         ):
-            module._train(args, episodes, ())
+            from v2.training.experiments import history_study_profile
+
+            module._train(
+                args,
+                episodes,
+                (),
+                profile=history_study_profile("H1", None),
+                calibration=None,
+            )
 
         self.assertEqual(created, ["failed", "completed"])
         self.assertEqual(len(Agent.instance.replay), 2)
@@ -207,15 +215,15 @@ class TestV2FormalTrainingCli(unittest.TestCase):
 
         class Environment:
             def reset(self):
-                return (0.0,) * 8
+                return (0.0,) * 90
 
             def step(self, action_id):
                 ledger = RawCnyIntervalLedger(12.0, 0.0, 0.0, 0.0)
                 return MacroTransition(
-                    state=(0.0,) * 8,
+                    state=(0.0,) * 90,
                     action=FINAL_DQN_ACTION_CATALOG[0],
                     learning_reward=-50_012.0,
-                    next_state=(0.0,) * 8,
+                    next_state=(0.0,) * 90,
                     done=True,
                     executed_mpc_steps=0,
                     ledger=ledger,

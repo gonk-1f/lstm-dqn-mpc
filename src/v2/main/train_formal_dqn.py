@@ -6,7 +6,7 @@ This module deliberately does not import or delegate to the legacy trainer.
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from pathlib import Path
 import time
 from typing import Sequence
@@ -20,15 +20,23 @@ from ..data.supervisory_rules import OperatingMode, normalize_onboard_load_kw
 from ..dqn.action_space import FINAL_DQN_ACTION_CATALOG
 from ..dqn.history import FormalStateHistory
 from ..dqn.state import (
+    FORMAL_FRAME_DIMENSION,
     FORMAL_STATE_DIMENSION,
+    FORMAL_STATE_HISTORY_LENGTH,
     OperatingHistorySample,
     build_formal_operating_frame,
 )
 from ..envs.formal_episode import FormalEpisodeBackend, build_formal_nonlinear_mpc
 from ..evaluation.formal_policy import build_formal_environment as _environment
 from ..preflight import assess_formal_training_preflight, require_formal_training_ready
+from ..economics import RewardScaleCalibration
 from ..training.checkpoint import load_checkpoint, save_checkpoint
+from ..training.diagnostics import (
+    DqnOptimizationDiagnostics,
+    summarize_actions,
+)
 from ..training.dqn import DqnAgent, DqnTrainingConfig, epsilon_at_global_step
+from ..training.experiments import DqnExperimentProfile, history_study_profile
 from ..training.schedule import EpisodeShuffleSchedule
 
 
@@ -47,6 +55,7 @@ class ValidationSummary:
     transitions: int
     completed_episodes: int
     failed_episodes: int
+    greedy_action_indices: tuple[int, ...] = ()
 
     @property
     def completion_rate(self) -> float:
@@ -55,7 +64,7 @@ class ValidationSummary:
 
     @classmethod
     def empty(cls) -> "ValidationSummary":
-        return cls(0.0, 0.0, 0.0, 0, 0, 0)
+        return cls(0.0, 0.0, 0.0, 0, 0, 0, ())
 
 
 def _positive_int(text: str) -> int:
@@ -288,7 +297,8 @@ def _progress_line(
     episode_raw_economic_cost_cny: float,
     episode_failure_penalty_score: float,
     episode_learning_reward: float,
-    loss: float | None,
+    replay_reward: float,
+    optimization_diagnostics: tuple[DqnOptimizationDiagnostics, ...],
     replay_size: int,
     backend: FormalEpisodeBackend,
     mode_delta: dict[OperatingMode, int],
@@ -298,8 +308,43 @@ def _progress_line(
     last_index = max(0, backend.index - 1)
     load = float(backend.load_kw[last_index])
     state = transition.next_state
+    frame_start = FORMAL_FRAME_DIMENSION * (FORMAL_STATE_HISTORY_LENGTH - 1)
+    current_frame = state[frame_start : frame_start + FORMAL_FRAME_DIMENSION]
     terminal = "episode_end" if transition.done else "continue"
-    loss_text = "NA" if loss is None else f"{loss:.9g}"
+    if optimization_diagnostics:
+        names = tuple(DqnOptimizationDiagnostics.__dataclass_fields__)
+        averaged = {
+            name: float(
+                np.mean([getattr(value, name) for value in optimization_diagnostics])
+            )
+            for name in names
+        }
+        diagnostic_text = " ".join(
+            (
+                f"loss={averaged['loss']:.9g}",
+                f"td_abs_p50={averaged['td_abs_p50']:.9g}",
+                f"td_abs_p95={averaged['td_abs_p95']:.9g}",
+                f"td_abs_max={averaged['td_abs_max']:.9g}",
+                f"q_common_mean={averaged['q_common_mean']:.9g}",
+                f"q_advantage_std={averaged['q_advantage_std']:.9g}",
+                f"q_margin_p50={averaged['q_margin_p50']:.9g}",
+                f"gradient_norm_preclip={averaged['gradient_norm_preclip']:.9g}",
+            )
+        )
+    else:
+        diagnostic_text = " ".join(
+            f"{name}=NA"
+            for name in (
+                "loss",
+                "td_abs_p50",
+                "td_abs_p95",
+                "td_abs_max",
+                "q_common_mean",
+                "q_advantage_std",
+                "q_margin_p50",
+                "gradient_norm_preclip",
+            )
+        )
     print(
         f"round={round_index + 1}/{rounds} episode={episode_position + 1}/{episode_count} "
         f"segment={episode.sample_id} macro={episode_macro} global={global_step} "
@@ -308,14 +353,15 @@ def _progress_line(
         f"raw_economic_cost_cny={transition.raw_economic_cost_cny:.9f} "
         f"failure_penalty_score={transition.failure_penalty_score:.9f} "
         f"learning_reward={transition.learning_reward:.9f} "
+        f"replay_reward={replay_reward:.9f} "
         f"episode_raw_economic_cost_cny={episode_raw_economic_cost_cny:.9f} "
         f"episode_failure_penalty_score={episode_failure_penalty_score:.9f} "
         f"episode_learning_reward={episode_learning_reward:.9f} "
         f"episode_completed={'YES' if transition.episode_completed else 'NO'} "
         f"failure_kind={transition.failure_kind or 'NONE'} "
-        f"loss={loss_text} replay={replay_size} soc={state[0]:.9f} load_kw={load:.6f} "
-        f"base_kw={state[1] * 600.0:.6f} fc_kw={backend.previous_fc_kw:.6f} "
-        f"delta_fc_kw={state[6] * 600.0:.6f} executed_steps={transition.executed_mpc_steps} "
+        f"{diagnostic_text} replay={replay_size} soc={current_frame[0]:.9f} load_kw={load:.6f} "
+        f"base_kw={current_frame[1] * 600.0:.6f} fc_kw={backend.previous_fc_kw:.6f} "
+        f"delta_fc_kw={current_frame[6] * 600.0:.6f} executed_steps={transition.executed_mpc_steps} "
         f"onboard_steps={mode_delta[OperatingMode.ONBOARD]} "
         f"shore_pending_steps={mode_delta[OperatingMode.SHORE_PENDING]} "
         f"shore_steps={mode_delta[OperatingMode.SHORE_CHARGING]} "
@@ -335,12 +381,14 @@ def _evaluate_validation(
     transitions = 0
     completed_episodes = 0
     failed_episodes = 0
+    greedy_actions: list[int] = []
     for episode in validation:  # Manifest order is fixed; never shuffled.
         _, environment = _environment(episode)
         state = environment.reset()
         done = False
         while not done:
             action_index = agent.greedy_action(np.asarray(state, dtype=np.float32))
+            greedy_actions.append(action_index)
             transition = environment.step(FINAL_DQN_ACTION_CATALOG[action_index].action_id)
             raw_economic_cost_cny += transition.raw_economic_cost_cny
             failure_penalty_score += transition.failure_penalty_score
@@ -361,6 +409,7 @@ def _evaluate_validation(
         transitions,
         completed_episodes,
         failed_episodes,
+        tuple(greedy_actions),
     )
 
 
@@ -368,8 +417,13 @@ def _train(
     args: argparse.Namespace,
     train: tuple[FormalEpisode, ...],
     validation: tuple[FormalEpisode, ...],
+    *,
+    profile: DqnExperimentProfile,
+    calibration: RewardScaleCalibration | None,
 ) -> None:
-    config = replace(DqnTrainingConfig.formal_baseline(), rounds=args.rounds)
+    if type(profile) is not DqnExperimentProfile:
+        raise TypeError("profile must be an exact DqnExperimentProfile")
+    config = profile.dqn_config(rounds=args.rounds)
     agent = DqnAgent(config, seed=args.seed, device=args.device)
     ordered_ids = tuple(episode.sample_id for episode in train)
     by_id = {episode.sample_id: episode for episode in train}
@@ -395,6 +449,8 @@ def _train(
         round_learning_reward = 0.0
         round_completed_episodes = 0
         round_failed_episodes = 0
+        round_behavior_actions: list[int] = []
+        diagnostic_window: list[DqnOptimizationDiagnostics] = []
         for position in range(episode_position, len(permutation)):
             episode = by_id[permutation[position]]
             backend, environment = _environment(episode)
@@ -413,24 +469,25 @@ def _train(
                 transition = environment.step(
                     FINAL_DQN_ACTION_CATALOG[action_index].action_id
                 )
+                replay_reward = profile.replay_reward(transition, calibration)
                 agent.replay.append(
                     np.asarray(transition.state, dtype=np.float32),
                     action_index,
-                    transition.learning_reward,
+                    replay_reward,
                     np.asarray(transition.next_state, dtype=np.float32),
                     transition.done,
                 )
                 global_step += 1
                 episode_macro += 1
+                round_behavior_actions.append(action_index)
                 episode_raw_economic_cost_cny += transition.raw_economic_cost_cny
                 episode_failure_penalty_score += transition.failure_penalty_score
                 episode_learning_reward += transition.learning_reward
-                loss: float | None = None
                 if (
                     global_step >= config.warmup_steps
                     and len(agent.replay) >= config.batch_size
                 ):
-                    loss = agent.optimize().loss
+                    diagnostic_window.append(agent.optimize())
                 mode_delta = {
                     mode: backend.mode_counts[mode] - before_modes[mode]
                     for mode in OperatingMode
@@ -450,12 +507,14 @@ def _train(
                         episode_raw_economic_cost_cny=episode_raw_economic_cost_cny,
                         episode_failure_penalty_score=episode_failure_penalty_score,
                         episode_learning_reward=episode_learning_reward,
-                        loss=loss,
+                        replay_reward=replay_reward,
+                        optimization_diagnostics=tuple(diagnostic_window),
                         replay_size=len(agent.replay),
                         backend=backend,
                         mode_delta=mode_delta,
                         elapsed_s=time.perf_counter() - started,
                     )
+                    diagnostic_window.clear()
                 state = transition.next_state
                 done = transition.done
 
@@ -485,6 +544,14 @@ def _train(
             )
 
         validation_summary = _evaluate_validation(agent, validation)
+        greedy_diagnostics = (
+            summarize_actions(
+                validation_summary.greedy_action_indices,
+                action_dim=len(FINAL_DQN_ACTION_CATALOG),
+            )
+            if validation_summary.greedy_action_indices
+            else None
+        )
         print(
             f"validation round={round_index + 1}/{config.rounds} "
             f"episodes={len(validation)} transitions={validation_summary.transitions} "
@@ -494,6 +561,9 @@ def _train(
             f"completed_episodes={validation_summary.completed_episodes} "
             f"failed_episodes={validation_summary.failed_episodes} "
             f"completion_rate={validation_summary.completion_rate:.6f} "
+            f"greedy_unique_actions={greedy_diagnostics.unique_action_count if greedy_diagnostics else 'NA'} "
+            f"greedy_max_share={f'{greedy_diagnostics.max_action_share:.9g}' if greedy_diagnostics else 'NA'} "
+            f"greedy_entropy={f'{greedy_diagnostics.shannon_entropy:.9g}' if greedy_diagnostics else 'NA'} "
             f"shuffle=NO replay_updates=0 "
             f"optimizer_updates=0 test_payloads_opened=0",
             flush=True,
@@ -521,6 +591,10 @@ def _train(
             episode_position=episode_position,
             current_permutation=permutation,
         )
+        behavior_diagnostics = summarize_actions(
+            tuple(round_behavior_actions),
+            action_dim=len(FINAL_DQN_ACTION_CATALOG),
+        )
         print(
             f"round_complete={completed_round}/{config.rounds} global={global_step} "
             f"raw_economic_cost_cny={round_raw_economic_cost_cny:.9f} "
@@ -529,6 +603,9 @@ def _train(
             f"completed_episodes={round_completed_episodes} "
             f"failed_episodes={round_failed_episodes} "
             f"completion_rate={round_completed_episodes / len(permutation):.6f} "
+            f"behavior_unique_actions={behavior_diagnostics.unique_action_count} "
+            f"behavior_max_share={behavior_diagnostics.max_action_share:.9g} "
+            f"behavior_entropy={behavior_diagnostics.shannon_entropy:.9g} "
             f"checkpoint={latest_path} periodic_checkpoint={periodic_path} "
             f"elapsed_s={time.perf_counter() - started:.1f}",
             flush=True,
@@ -546,7 +623,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         _smoke(train)
         return 0
     require_formal_training_ready()
-    _train(args, train, validation)
+    _train(
+        args,
+        train,
+        validation,
+        profile=history_study_profile("H1", None),
+        calibration=None,
+    )
     if dataset.opened_test_payloads != 0:
         raise RuntimeError("Test payload was opened by formal training")
     return 0

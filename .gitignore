@@ -175,6 +175,12 @@ outputs/v2_formal_dqn/
 outputs/v2_formal_dqn_v3/
 outputs/v2_formal_dqn_selection/
 outputs/v2_formal_dqn_test/
+outputs/v2_history_dqn_study/H1/
+outputs/v2_history_dqn_study/H2/
+outputs/v2_history_dqn_study/H3/
+outputs/v2_history_dqn_study/H4/
+outputs/v2_history_dqn_study/pilot_selection/
+outputs/v2_history_dqn_study/final_selection/
 
 # Executed-reward models and large local historical diagnostic caches.
 outputs/dqn_mpc_*_executed_reward_84_v1_*/
