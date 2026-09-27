@@ -24,6 +24,7 @@ from ..data.supervisory_rules import OperatingMode, normalize_onboard_load_kw
 from ..dqn.history import FormalStateHistory
 from ..dqn.state import OperatingHistorySample, build_formal_operating_frame
 from ..economics import (
+    RawCnyIntervalLedger,
     ShoreEnergy,
     ShoreEnergyClassification,
     build_formal_interval_ledger,
@@ -159,8 +160,16 @@ class FormalEpisodeBackend:
         self.executed_fc_power_kw: list[float] = []
         self.executed_soc: list[float] = [self.INITIAL_SOC]
         self.observed_states: list[tuple[float, ...]] = []
+        self._interval_ledgers: list[RawCnyIntervalLedger] = []
         self._terminal_state: tuple[float, ...] | None = None
         self._done = False
+
+    @property
+    def interval_ledgers(self) -> tuple[RawCnyIntervalLedger, ...]:
+        return tuple(
+            RawCnyIntervalLedger(*ledger.components_cny)
+            for ledger in self._interval_ledgers
+        )
 
     def _reset_onboard_history(self) -> None:
         self._base_filter = CausalBaseLoadFilter(
@@ -361,6 +370,9 @@ class FormalEpisodeBackend:
             battery_capacity_kwh=self.plant.battery_nominal_energy_kwh,
             battery_normalization=self.battery_normalization,
             shore_energy=shore,
+        )
+        self._interval_ledgers.append(
+            RawCnyIntervalLedger(*ledger.components_cny)
         )
         return MPCExecutionResult(
             ledger,

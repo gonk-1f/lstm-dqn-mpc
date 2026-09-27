@@ -611,6 +611,21 @@ def scaled_reward(
     return result
 
 
+def scale_learning_reward(
+    learning_reward: object,
+    *,
+    calibration: RewardScaleCalibration,
+) -> float:
+    """Scale the complete reward, including any terminal failure score."""
+
+    reward = _finite_scalar(learning_reward, "learning_reward")
+    checked = _validate_reward_scale(calibration)
+    result = reward / checked.scale_cny
+    if not math.isfinite(result):
+        raise ValueError("scaled learning reward must remain finite")
+    return result
+
+
 __all__ = [
     "BATTERY_PRICE_CNY_PER_KWH",
     "DEGRADATION_COST_STATUS",
@@ -636,6 +651,7 @@ __all__ = [
     "calibrate_reward_scale",
     "hydrogen_cost_cny",
     "scaled_reward",
+    "scale_learning_reward",
     "shore_energy_cost_cny",
     "terminal_recharge_grid_energy",
     "terminal_recharge_grid_energy_unverified",
