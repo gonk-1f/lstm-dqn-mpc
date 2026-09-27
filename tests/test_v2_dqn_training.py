@@ -16,10 +16,12 @@ if str(SRC) not in sys.path:
 
 class TestV2DqnTraining(unittest.TestCase):
     def test_frozen_defaults_and_network_shape(self) -> None:
+        from v2.dqn.state import FORMAL_STATE_DIMENSION
         from v2.training.dqn import DqnTrainingConfig, QNetwork
 
         config = DqnTrainingConfig.formal_baseline()
-        self.assertEqual(config.state_dim, 8)
+        self.assertEqual(FORMAL_STATE_DIMENSION, 90)
+        self.assertEqual(config.state_dim, 90)
         self.assertEqual(config.action_dim, 36)
         self.assertEqual(config.hidden_dims, (128, 128))
         self.assertEqual(config.gamma, 1.0)
@@ -31,8 +33,8 @@ class TestV2DqnTraining(unittest.TestCase):
         self.assertEqual(config.gradient_clip_norm, 10.0)
         self.assertEqual(config.rounds, 40)
         network = QNetwork(config)
-        output = network(torch.zeros((3, 8), dtype=torch.float32))
-        self.assertEqual(tuple(output.shape), (3, 36))
+        output = network(torch.zeros((4, 90), dtype=torch.float32))
+        self.assertEqual(tuple(output.shape), (4, 36))
 
     def test_epsilon_is_global_macro_step_linear_schedule(self) -> None:
         from v2.training.dqn import epsilon_at_global_step
@@ -60,17 +62,17 @@ class TestV2DqnTraining(unittest.TestCase):
         config = DqnTrainingConfig.formal_baseline()
         first = DqnAgent(config, seed=42, device="cpu")
         second = DqnAgent(config, seed=42, device="cpu")
-        state = np.arange(8, dtype=np.float32)
+        state = np.arange(config.state_dim, dtype=np.float32)
         sequence_a = [first.select_action(state, epsilon=1.0) for _ in range(20)]
         sequence_b = [second.select_action(state, epsilon=1.0) for _ in range(20)]
         self.assertEqual(sequence_a, sequence_b)
 
-        replay = ReplayBuffer(3, state_dim=8, seed=42)
+        replay = ReplayBuffer(3, state_dim=config.state_dim, seed=42)
         for index in range(4):
             replay.append(state + index, index % 36, -float(index), state + index + 1, False)
         self.assertEqual(len(replay), 3)
         batch = replay.sample(2)
-        self.assertEqual(batch.states.shape, (2, 8))
+        self.assertEqual(batch.states.shape, (2, config.state_dim))
         self.assertEqual(batch.actions.shape, (2,))
 
     def test_double_dqn_update_uses_huber_and_syncs_target(self) -> None:
@@ -79,7 +81,11 @@ class TestV2DqnTraining(unittest.TestCase):
         config = DqnTrainingConfig.formal_baseline()
         agent = DqnAgent(config, seed=7, device="cpu")
         for index in range(config.batch_size):
-            state = np.full(8, index / config.batch_size, dtype=np.float32)
+            state = np.full(
+                config.state_dim,
+                index / config.batch_size,
+                dtype=np.float32,
+            )
             agent.replay.append(state, index % 36, -1.0, state + 0.01, index % 13 == 0)
         loss = agent.optimize()
         self.assertIsInstance(loss, float)
@@ -90,7 +96,7 @@ class TestV2DqnTraining(unittest.TestCase):
         from v2.training.dqn import DqnAgent, DqnTrainingConfig
 
         agent = DqnAgent(DqnTrainingConfig.formal_baseline(), seed=42, device="cpu")
-        state = np.arange(8, dtype=np.float32)
+        state = np.arange(agent.config.state_dim, dtype=np.float32)
         before = agent.rng.getstate()
         action = agent.greedy_action(state)
         self.assertGreaterEqual(action, 0)

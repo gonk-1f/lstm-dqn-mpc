@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 import torch
@@ -17,11 +18,11 @@ if str(SRC) not in sys.path:
 
 
 class TestV2CheckpointResume(unittest.TestCase):
-    def test_checkpoint_version_is_v3_for_terminal_failure_semantics(self) -> None:
+    def test_checkpoint_version_binds_history_state_semantics(self) -> None:
         from v2.contracts import REWARD_VERSION
         from v2.training.checkpoint import CHECKPOINT_VERSION
 
-        self.assertEqual(CHECKPOINT_VERSION, "v2_formal_dqn_checkpoint_v3")
+        self.assertEqual(CHECKPOINT_VERSION, "v2_history_dqn_checkpoint_v1")
         self.assertEqual(REWARD_VERSION, "macro_interval_economic_plus_terminal_failure_v2")
 
     def test_round_trip_restores_agent_replay_schedule_and_counters(self) -> None:
@@ -33,7 +34,7 @@ class TestV2CheckpointResume(unittest.TestCase):
         agent = DqnAgent(config, seed=42, device="cpu")
         schedule = EpisodeShuffleSchedule(("a", "b", "c"), seed=42)
         schedule.next_round()
-        state = np.arange(8, dtype=np.float32)
+        state = np.arange(config.state_dim, dtype=np.float32)
         for index in range(10):
             agent.replay.append(state + index, index, -float(index), state + index + 1, False)
         expected_actions = [agent.select_action(state, epsilon=1.0) for _ in range(5)]
@@ -106,7 +107,7 @@ class TestV2CheckpointResume(unittest.TestCase):
                     schedule=EpisodeShuffleSchedule(("a",), seed=1),
                 )
 
-    def test_rejects_v2_checkpoint_before_mutating_runtime_state(self) -> None:
+    def test_rejects_old_s8_checkpoint_before_mutating_runtime_state(self) -> None:
         from v2.training.checkpoint import (
             IncompatibleCheckpointError,
             load_checkpoint,
@@ -132,16 +133,34 @@ class TestV2CheckpointResume(unittest.TestCase):
                 current_permutation=permutation,
             )
             payload = torch.load(current_path, map_location="cpu", weights_only=False)
-            payload["checkpoint_version"] = "v2_formal_dqn_checkpoint_v2"
-            payload["semantics"]["reward_version"] = "macro_interval_real_economic_cost_v1"
+            payload["checkpoint_version"] = "v2_formal_dqn_checkpoint_v3"
+            payload["state_schema_version"] = "v2_s8_onboard_ais_v1"
+            payload["state_schema_digest"] = (
+                "fbf38731c8567bae3ea10da3366e1ca7429b39c36f7d7183bb7a23294343cb4a"
+            )
             torch.save(payload, legacy_path)
 
             target_agent = DqnAgent(config, seed=7, device="cpu")
             target_schedule = EpisodeShuffleSchedule(("a", "b"), seed=7)
             agent_before = target_agent.state_dict()
             schedule_before = target_schedule.state_dict()
-            with self.assertRaises(IncompatibleCheckpointError):
-                load_checkpoint(legacy_path, agent=target_agent, schedule=target_schedule)
+            with patch.object(
+                target_agent,
+                "load_state_dict",
+                side_effect=AssertionError("agent mutation attempted"),
+            ) as load_agent, patch.object(
+                target_schedule,
+                "load_state_dict",
+                side_effect=AssertionError("schedule mutation attempted"),
+            ) as load_schedule:
+                with self.assertRaises(IncompatibleCheckpointError):
+                    load_checkpoint(
+                        legacy_path,
+                        agent=target_agent,
+                        schedule=target_schedule,
+                    )
+                load_agent.assert_not_called()
+                load_schedule.assert_not_called()
             self.assertEqual(target_schedule.state_dict(), schedule_before)
             self.assertEqual(target_agent.optimizer_steps, agent_before["optimizer_steps"])
             self.assertEqual(len(target_agent.replay), len(agent_before["replay"]["actions"]))

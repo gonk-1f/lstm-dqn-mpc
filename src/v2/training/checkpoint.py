@@ -16,7 +16,7 @@ from .dqn import DqnAgent
 from .schedule import EpisodeShuffleSchedule
 
 
-CHECKPOINT_VERSION = "v2_formal_dqn_checkpoint_v3"
+CHECKPOINT_VERSION = "v2_history_dqn_checkpoint_v1"
 
 
 class IncompatibleCheckpointError(ValueError):

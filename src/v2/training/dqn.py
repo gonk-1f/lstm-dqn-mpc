@@ -56,7 +56,7 @@ class DqnTrainingConfig:
         if self.learning_rate <= 0.0 or self.gradient_clip_norm <= 0.0:
             raise ValueError("learning rate and gradient clip must be positive")
         if self.state_dim != FORMAL_STATE_DIMENSION or self.action_dim != len(FINAL_DQN_ACTION_CATALOG):
-            raise ValueError("DQN dimensions must match frozen S8/36 contracts")
+            raise ValueError("DQN dimensions must match frozen history/36 contracts")
 
     @classmethod
     def formal_baseline(cls) -> "DqnTrainingConfig":
