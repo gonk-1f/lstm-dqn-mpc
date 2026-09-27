@@ -172,6 +172,8 @@ outputs/mpc_nominal_causal_test/
 # their own tracked output directories; model checkpoints remain machine-local.
 outputs/v2_formal_dqn/
 outputs/v2_formal_dqn_v3/
+outputs/v2_formal_dqn_selection/
+outputs/v2_formal_dqn_test/
 
 # Executed-reward models and large local historical diagnostic caches.
 outputs/dqn_mpc_*_executed_reward_84_v1_*/
