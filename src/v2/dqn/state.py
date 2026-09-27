@@ -1,4 +1,4 @@
-"""Candidate audit features and the frozen causal S8 formal DQN state."""
+"""Candidate audit features and the frozen causal S8 formal DQN frame."""
 
 from __future__ import annotations
 
@@ -37,8 +37,8 @@ CANDIDATE_STATE_FEATURE_NAMES = (
 )
 
 FORMAL_STATE_STATUS = "FROZEN_PROJECT_BASELINE"
-FORMAL_STATE_SCHEMA_VERSION = "v2_s8_onboard_ais_v1"
-FORMAL_STATE_FEATURE_NAMES = (
+FORMAL_FRAME_SCHEMA_VERSION = "v2_s8_onboard_ais_frame_v1"
+FORMAL_FRAME_FEATURE_NAMES = (
     "soc",
     "causal_base_load_fraction",
     "load_residual_fraction",
@@ -48,7 +48,14 @@ FORMAL_STATE_FEATURE_NAMES = (
     "fuel_cell_delta_fraction",
     "speed_fraction",
 )
-FORMAL_STATE_DIMENSION = len(FORMAL_STATE_FEATURE_NAMES)
+FORMAL_FRAME_DIMENSION = len(FORMAL_FRAME_FEATURE_NAMES)
+FORMAL_STATE_HISTORY_LENGTH = 10
+FORMAL_STATE_MASK_DIMENSION = FORMAL_STATE_HISTORY_LENGTH
+FORMAL_STATE_DIMENSION = (
+    FORMAL_FRAME_DIMENSION * FORMAL_STATE_HISTORY_LENGTH
+    + FORMAL_STATE_MASK_DIMENSION
+)
+FORMAL_STATE_SCHEMA_VERSION = "v2_s8_stack10_mask_v1"
 FORMAL_STATE_POWER_SCALE_KW = 600.0
 FORMAL_STATE_SPEED_SCALE_KN = 20.0
 FORMAL_STATE_WINDOW_SECONDS = 150.0
@@ -56,10 +63,17 @@ FORMAL_STATE_SCHEMA_DIGEST = hashlib.sha256(
     json.dumps(
         {
             "version": FORMAL_STATE_SCHEMA_VERSION,
-            "features": FORMAL_STATE_FEATURE_NAMES,
+            "frame_schema_version": FORMAL_FRAME_SCHEMA_VERSION,
+            "frame_features": FORMAL_FRAME_FEATURE_NAMES,
             "power_scale_kw": FORMAL_STATE_POWER_SCALE_KW,
             "speed_scale_kn": FORMAL_STATE_SPEED_SCALE_KN,
             "window_seconds": FORMAL_STATE_WINDOW_SECONDS,
+            "history_length": FORMAL_STATE_HISTORY_LENGTH,
+            "chronological_order": "oldest_to_newest",
+            "padding": "left_zero_frames",
+            "mask": "tail_validity_mask_after_feature_block",
+            "reset_policy": "shore_or_episode_boundary",
+            "state_dimension": FORMAL_STATE_DIMENSION,
         },
         separators=(",", ":"),
     ).encode("utf-8")
@@ -376,7 +390,7 @@ def build_candidate_operating_state(
     return state
 
 
-def build_formal_operating_state(
+def build_formal_operating_frame(
     history: tuple[OperatingHistorySample, ...],
     *,
     current_time_seconds: float,
@@ -416,7 +430,7 @@ def build_formal_operating_state(
     load_slope = (
         _least_squares_slope_per_second(selected) if len(selected) >= 2 else 0.0
     )
-    state = (
+    frame = (
         float(current.soc),
         current.causal_base_load_kw / FORMAL_STATE_POWER_SCALE_KW,
         (current.load_power_kw - current.causal_base_load_kw)
@@ -427,19 +441,23 @@ def build_formal_operating_state(
         (current.fuel_cell_power_kw - previous_fc) / FORMAL_STATE_POWER_SCALE_KW,
         speed / FORMAL_STATE_SPEED_SCALE_KN,
     )
-    if len(state) != FORMAL_STATE_DIMENSION or not all(
-        type(value) is float and math.isfinite(value) for value in state
+    if len(frame) != FORMAL_FRAME_DIMENSION or not all(
+        type(value) is float and math.isfinite(value) for value in frame
     ):
-        raise ValueError("formal S8 state must contain eight finite floats")
-    return state
+        raise ValueError("formal S8 frame must contain eight finite floats")
+    return frame
 
 
 __all__ = [
     "CANDIDATE_STATE_FEATURE_NAMES",
     "CANDIDATE_STATE_GROUP_NAMES",
     "CANDIDATE_STATE_STATUS",
+    "FORMAL_FRAME_DIMENSION",
+    "FORMAL_FRAME_FEATURE_NAMES",
+    "FORMAL_FRAME_SCHEMA_VERSION",
     "FORMAL_STATE_DIMENSION",
-    "FORMAL_STATE_FEATURE_NAMES",
+    "FORMAL_STATE_HISTORY_LENGTH",
+    "FORMAL_STATE_MASK_DIMENSION",
     "FORMAL_STATE_POWER_SCALE_KW",
     "FORMAL_STATE_SCHEMA_DIGEST",
     "FORMAL_STATE_SCHEMA_VERSION",
@@ -449,5 +467,5 @@ __all__ = [
     "OperatingHistorySample",
     "StateNormalization",
     "build_candidate_operating_state",
-    "build_formal_operating_state",
+    "build_formal_operating_frame",
 ]
