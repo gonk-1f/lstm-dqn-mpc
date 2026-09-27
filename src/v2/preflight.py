@@ -204,15 +204,20 @@ def _formal_state_audit_evidence() -> tuple[CalibrationStatus, str]:
     try:
         payload = json.loads(DEFAULT_STATE_AUDIT_MANIFEST.read_text(encoding="utf-8"))
         from .analysis.train_state_audit import ACTIVE_DATASET_VERSION
-        from .dqn.state import FORMAL_STATE_SCHEMA_DIGEST, FORMAL_STATE_SCHEMA_VERSION
+        from .dqn.state import (
+            FORMAL_FRAME_AUDIT_SCHEMA_DIGEST,
+            FORMAL_FRAME_AUDIT_SCHEMA_VERSION,
+        )
 
         if payload["dataset_version"] != ACTIVE_DATASET_VERSION:
             raise ValueError("dataset version differs")
         if (
-            payload["formal_state_schema_version"] != FORMAL_STATE_SCHEMA_VERSION
-            or payload["formal_state_schema_digest"] != FORMAL_STATE_SCHEMA_DIGEST
+            payload["formal_state_schema_version"]
+            != FORMAL_FRAME_AUDIT_SCHEMA_VERSION
+            or payload["formal_state_schema_digest"]
+            != FORMAL_FRAME_AUDIT_SCHEMA_DIGEST
         ):
-            raise ValueError("formal S8 schema differs")
+            raise ValueError("formal S8 frame-audit schema differs")
         if (
             payload["split"] != "train"
             or payload["train_segment_count"] != 30

@@ -495,12 +495,12 @@ class TrainStateAuditNumericalTests(unittest.TestCase):
             formal_s8_frame,
             normalize_feature_frame,
         )
-        from v2.dqn.state import FORMAL_STATE_FEATURE_NAMES
+        from v2.dqn.state import FORMAL_FRAME_FEATURE_NAMES
 
         normalized = normalize_feature_frame(feature_frame(self._rows()))
         formal = formal_s8_frame(normalized)
 
-        self.assertEqual(tuple(formal.columns), FORMAL_STATE_FEATURE_NAMES)
+        self.assertEqual(tuple(formal.columns), FORMAL_FRAME_FEATURE_NAMES)
 
     def test_descriptive_statistics_use_population_std_and_fixed_columns(self) -> None:
         from v2.analysis.train_state_audit import descriptive_statistics

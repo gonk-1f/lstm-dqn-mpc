@@ -428,6 +428,42 @@ class MultiRateWeightEnvironmentTests(unittest.TestCase):
                 synthetic_test_mode=True,
             )
 
+    def test_formal_mode_enforces_history_dimension_at_every_boundary(self) -> None:
+        from v2.config import TimeScaleConfig
+        from v2.dqn.action_space import FINAL_DQN_ACTION_CATALOG
+        from v2.envs.multirate_weight_env import (
+            MacroStepExecutionError,
+            MPCExecutionResult,
+            MultiRateWeightEnvironment,
+        )
+
+        ledger = self._ledgers(1)[0]
+
+        class Backend:
+            def reset(self):
+                return None
+
+            def execute_mpc_step(self, weights):
+                return MPCExecutionResult(ledger, True)
+
+        states = [(0.0,) * 90, (0.0,) * 8]
+
+        def provider():
+            return states.pop(0)
+
+        environment = MultiRateWeightEnvironment(
+            timescale=TimeScaleConfig.formal_baseline(),
+            action_catalog=FINAL_DQN_ACTION_CATALOG,
+            backend=Backend(),
+            state_provider=provider,
+            formal_training_mode=True,
+        )
+        environment.reset()
+
+        with self.assertRaisesRegex(MacroStepExecutionError, "execution failed"):
+            environment.step(FINAL_DQN_ACTION_CATALOG[0].action_id)
+        self.assertEqual(environment.transitions, ())
+
         overflowing_timescale = TimeScaleConfig(1e308, 2, 2)
         with self.assertRaises(ValueError):
             MultiRateWeightEnvironment(

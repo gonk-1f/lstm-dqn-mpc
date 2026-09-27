@@ -22,7 +22,7 @@ from ..data.train_supervisory_audit import (
     resolve_duplicates,
 )
 from ..dqn.state import (
-    FORMAL_STATE_FEATURE_NAMES,
+    FORMAL_FRAME_FEATURE_NAMES,
     FORMAL_STATE_SCHEMA_DIGEST,
     FORMAL_STATE_SCHEMA_VERSION,
     FORMAL_STATE_SPEED_SCALE_KN,
@@ -62,7 +62,7 @@ CANDIDATE_NORMALIZED_FEATURES = (
     "causal_base_load_fraction",
     "recent_delta_soc",
 )
-PROPOSED_NORMALIZED_FEATURES = FORMAL_STATE_FEATURE_NAMES
+PROPOSED_NORMALIZED_FEATURES = FORMAL_FRAME_FEATURE_NAMES
 
 
 @dataclass(frozen=True)
@@ -734,10 +734,10 @@ def normalize_feature_frame(frame: pd.DataFrame) -> pd.DataFrame:
 def formal_s8_frame(normalized: pd.DataFrame) -> pd.DataFrame:
     """Select the frozen production S8 in its exact schema order."""
 
-    missing = set(FORMAL_STATE_FEATURE_NAMES).difference(normalized.columns)
+    missing = set(FORMAL_FRAME_FEATURE_NAMES).difference(normalized.columns)
     if missing:
         raise ValueError(f"normalized frame is missing S8 columns: {sorted(missing)}")
-    return normalized.loc[:, list(FORMAL_STATE_FEATURE_NAMES)].copy()
+    return normalized.loc[:, list(FORMAL_FRAME_FEATURE_NAMES)].copy()
 
 
 def descriptive_statistics(frame: pd.DataFrame) -> pd.DataFrame:
@@ -1255,7 +1255,7 @@ def _render_report(
         f"实船 Train SOC 中有 {outside_count}/{row_count}（{outside_fraction:.2%}）位于 v2 仿真硬区间 [{SOC_HARD_MIN:.2f}, {SOC_HARD_MAX:.2f}] 之外。这些实测 SOC/FC 数据用于判断特征覆盖与区分力，不代表未来仿真策略的 state-visitation distribution。正式环境仍将依据模型转移生成 SOC 与 FC 轨迹。功率平衡残差接近零是因为 formal load 与 FC/BMS 功率同源构造，不是独立传感器验证。\n",
         "## S8 最终结论\n",
         (
-            "冻结的八维 S8 与生产 `FORMAL_STATE_FEATURE_NAMES` 完全一致。前七维保留 SOC、LPF 记忆、负荷残差/波动/趋势及 FC 工作点动态；`speed_fraction` 提供 AIS 在航上下文。DQN 只在 ONBOARD 决策边界读取 S8，shore_pending/shore_charging 会重置控制历史并暂停 DQN/MPC。"
+            "冻结的八维 S8 frame 与生产 `FORMAL_FRAME_FEATURE_NAMES` 完全一致。前七维保留 SOC、LPF 记忆、负荷残差/波动/趋势及 FC 工作点动态；`speed_fraction` 提供 AIS 在航上下文。DQN 读取由连续 S8 frame 编码的正式历史状态，shore_pending/shore_charging 会重置控制历史并暂停 DQN/MPC。"
             f"累计退化账户逐 episode 重置；保守上界为 FC={float(hidden_life_state_upper_bounds.get('max_fc_raw_life_fraction_upper_bound', float('nan'))):.6f}、battery={float(hidden_life_state_upper_bounds.get('max_battery_raw_life_fraction_upper_bound', float('nan'))):.6f}，均低于 EOL=1，因此 clipped lifetime 在当前 formal episode 内不可达，累计退化无需进入 S8。\n"
         ),
     ]

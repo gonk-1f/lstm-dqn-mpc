@@ -18,7 +18,12 @@ from ..control.causal_base_load import CausalBaseLoadFilter
 from ..data.formal_training_dataset import FormalEpisode, FormalTrainingDataset
 from ..data.supervisory_rules import OperatingMode, normalize_onboard_load_kw
 from ..dqn.action_space import FINAL_DQN_ACTION_CATALOG
-from ..dqn.state import OperatingHistorySample, build_formal_operating_state
+from ..dqn.history import FormalStateHistory
+from ..dqn.state import (
+    FORMAL_STATE_DIMENSION,
+    OperatingHistorySample,
+    build_formal_operating_frame,
+)
 from ..envs.formal_episode import FormalEpisodeBackend, build_formal_nonlinear_mpc
 from ..evaluation.formal_policy import build_formal_environment as _environment
 from ..preflight import assess_formal_training_preflight, require_formal_training_ready
@@ -81,6 +86,7 @@ def _validate_all_states(episodes: tuple[FormalEpisode, ...]) -> int:
     checked = 0
     for episode in episodes:
         history: list[OperatingHistorySample] = []
+        state_history = FormalStateHistory()
         for time_s, load_kw, speed_kn, fc_kw, mode_value in zip(
             episode.time_s,
             episode.load_kw,
@@ -91,6 +97,7 @@ def _validate_all_states(episodes: tuple[FormalEpisode, ...]) -> int:
             mode = OperatingMode(mode_value)
             if mode is not OperatingMode.ONBOARD:
                 history.clear()
+                state_history.reset()
                 continue
             normalized_load = normalize_onboard_load_kw(float(load_kw))
             sample = OperatingHistorySample(
@@ -104,13 +111,18 @@ def _validate_all_states(episodes: tuple[FormalEpisode, ...]) -> int:
             history.append(sample)
             # Only the frozen 150 s causal window can affect S8.
             history = history[-6:]
-            state = build_formal_operating_state(
+            frame = build_formal_operating_frame(
                 tuple(history),
                 current_time_seconds=float(time_s),
                 speed_kn=float(speed_kn),
             )
-            if len(state) != 8 or not np.isfinite(np.asarray(state)).all():
+            state = state_history.encode(frame)
+            if (
+                len(state) != FORMAL_STATE_DIMENSION
+                or not np.isfinite(np.asarray(state)).all()
+            ):
                 raise ValueError(f"{episode.sample_id}: nonfinite formal state")
+            state_history.commit(frame)
             checked += 1
     return checked
 

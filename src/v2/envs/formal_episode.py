@@ -21,7 +21,8 @@ from ..control.nonlinear_mpc import (
     NonlinearMPC,
 )
 from ..data.supervisory_rules import OperatingMode, normalize_onboard_load_kw
-from ..dqn.state import OperatingHistorySample, build_formal_operating_state
+from ..dqn.history import FormalStateHistory
+from ..dqn.state import OperatingHistorySample, build_formal_operating_frame
 from ..economics import (
     ShoreEnergy,
     ShoreEnergyClassification,
@@ -167,6 +168,7 @@ class FormalEpisodeBackend:
             tau_seconds=TAU_LPF_SECONDS,
         )
         self._past_samples: list[OperatingHistorySample] = []
+        self._state_history = FormalStateHistory()
 
     def _current_values(self) -> tuple[float, float, float, OperatingMode]:
         if self.index >= len(self.load_kw):
@@ -198,19 +200,22 @@ class FormalEpisodeBackend:
         )
         return sample, speed, mode
 
+    def _current_frame(self) -> tuple[float, ...]:
+        sample, speed, mode = self._current_sample()
+        if mode is not OperatingMode.ONBOARD:
+            raise ValueError("DQN state is available only at an ONBOARD decision boundary")
+        return build_formal_operating_frame(
+            tuple(self._past_samples + [sample]),
+            current_time_seconds=sample.timestamp_seconds,
+            speed_kn=speed,
+        )
+
     def state(self) -> tuple[float, ...]:
         if self._done:
             if self._terminal_state is None:
                 raise RuntimeError("terminal state is unavailable")
             return self._terminal_state
-        sample, speed, mode = self._current_sample()
-        if mode is not OperatingMode.ONBOARD:
-            raise ValueError("DQN state is available only at an ONBOARD decision boundary")
-        return build_formal_operating_state(
-            tuple(self._past_samples + [sample]),
-            current_time_seconds=sample.timestamp_seconds,
-            speed_kn=speed,
-        )
+        return self._state_history.encode(self._current_frame())
 
     def _shore_step(self, profile_bus_kw: float) -> tuple[float, float, float, float]:
         eta_chg, _ = self.efficiency.require_calibrated()
@@ -250,7 +255,12 @@ class FormalEpisodeBackend:
         mpc_executed = mode is OperatingMode.ONBOARD
 
         if mpc_executed:
-            current_state = self.state()
+            current_frame = build_formal_operating_frame(
+                tuple(self._past_samples + [sample]),
+                current_time_seconds=sample.timestamp_seconds,
+                speed_kn=speed,
+            )
+            current_state = self._state_history.encode(current_frame)
             self.observed_states.append(current_state)
             plan = self.mpc.solve(
                 observed_load_kw=load,
@@ -265,8 +275,11 @@ class FormalEpisodeBackend:
             next_state = _finite(command.predicted_next_soc, "predicted_next_soc")
             if not 0.0 <= p_fc <= self.plant.fuel_cell_rated_total_kw:
                 raise ValueError("executed FC command lies outside [0, 600]")
+            if not 0.0 <= next_state <= 1.0:
+                raise ValueError("executed interval produced invalid SOC")
             self._base_filter.commit(load)
             self._past_samples.append(sample)
+            self._state_history.commit(current_frame)
             self.mpc_solve_count += 1
         else:
             self._reset_onboard_history()
@@ -325,11 +338,12 @@ class FormalEpisodeBackend:
                 float(load),
                 float(load),
             )
-            self._terminal_state = build_formal_operating_state(
+            terminal_frame = build_formal_operating_frame(
                 (terminal_sample,),
                 current_time_seconds=terminal_sample.timestamp_seconds,
                 speed_kn=speed,
             )
+            self._terminal_state = self._state_history.encode(terminal_frame)
             self._done = True
         next_decision_ready = done or self.operating_mode[self.index] is OperatingMode.ONBOARD
         shore = (

@@ -59,6 +59,22 @@ FORMAL_STATE_SCHEMA_VERSION = "v2_s8_stack10_mask_v1"
 FORMAL_STATE_POWER_SCALE_KW = 600.0
 FORMAL_STATE_SPEED_SCALE_KN = 20.0
 FORMAL_STATE_WINDOW_SECONDS = 150.0
+# The accepted Train-only data audit predates the history encoder and validates
+# the unchanged S8 frame formula.  Its identity remains separate from the
+# 90-value state/checkpoint identity below.
+FORMAL_FRAME_AUDIT_SCHEMA_VERSION = "v2_s8_onboard_ais_v1"
+FORMAL_FRAME_AUDIT_SCHEMA_DIGEST = hashlib.sha256(
+    json.dumps(
+        {
+            "version": FORMAL_FRAME_AUDIT_SCHEMA_VERSION,
+            "features": FORMAL_FRAME_FEATURE_NAMES,
+            "power_scale_kw": FORMAL_STATE_POWER_SCALE_KW,
+            "speed_scale_kn": FORMAL_STATE_SPEED_SCALE_KN,
+            "window_seconds": FORMAL_STATE_WINDOW_SECONDS,
+        },
+        separators=(",", ":"),
+    ).encode("utf-8")
+).hexdigest()
 FORMAL_STATE_SCHEMA_DIGEST = hashlib.sha256(
     json.dumps(
         {
@@ -453,6 +469,8 @@ __all__ = [
     "CANDIDATE_STATE_GROUP_NAMES",
     "CANDIDATE_STATE_STATUS",
     "FORMAL_FRAME_DIMENSION",
+    "FORMAL_FRAME_AUDIT_SCHEMA_DIGEST",
+    "FORMAL_FRAME_AUDIT_SCHEMA_VERSION",
     "FORMAL_FRAME_FEATURE_NAMES",
     "FORMAL_FRAME_SCHEMA_VERSION",
     "FORMAL_STATE_DIMENSION",

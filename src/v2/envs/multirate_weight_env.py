@@ -314,7 +314,7 @@ class MultiRateWeightEnvironment:
             reset_backend()
         state = _validate_state(self._state_provider(), "reset state")
         if self._formal_training_mode and len(state) != FORMAL_STATE_DIMENSION:
-            raise ValueError("formal reset state must use frozen S8 dimension")
+            raise ValueError("formal reset state must use the frozen history schema")
         self._current_state = state
         self._transitions.clear()
         self._done = False
@@ -377,6 +377,10 @@ class MultiRateWeightEnvironment:
 
             macro_ledger = _aggregate_ledgers(ledgers)
             next_state = _validate_state(self._state_provider(), "boundary next_state")
+            if self._formal_training_mode and len(next_state) != FORMAL_STATE_DIMENSION:
+                raise ValueError(
+                    "formal boundary next_state must use the frozen history schema"
+                )
             transition = MacroTransition(
                 state=self._current_state,
                 action=action,
@@ -398,6 +402,13 @@ class MultiRateWeightEnvironment:
                 next_state = _validate_state(
                     self._state_provider(), "physical failure next_state"
                 )
+                if (
+                    self._formal_training_mode
+                    and len(next_state) != FORMAL_STATE_DIMENSION
+                ):
+                    raise ValueError(
+                        "formal physical failure next_state must use the frozen history schema"
+                    )
                 transition = MacroTransition(
                     state=self._current_state,
                     action=action,

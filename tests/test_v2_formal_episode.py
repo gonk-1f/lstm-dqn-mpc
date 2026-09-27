@@ -106,7 +106,7 @@ class TestFormalModeInterlock(unittest.TestCase):
 
         self.assertEqual(solver.observed_load_kw, 0.0)
 
-    def test_shore_pauses_mpc_but_updates_soc_degradation_cost_and_reentry_s8(self) -> None:
+    def test_shore_pauses_mpc_but_updates_soc_degradation_cost_and_resets_history(self) -> None:
         from v2.config import TimeScaleConfig
         from v2.data.supervisory_rules import OperatingMode
         from v2.dqn.action_space import FINAL_DQN_ACTION_CATALOG
@@ -140,7 +140,9 @@ class TestFormalModeInterlock(unittest.TestCase):
         )
 
         initial = environment.reset()
-        self.assertEqual(len(initial), 8)
+        self.assertEqual(len(initial), 90)
+        self.assertEqual(initial[80:], (0.0,) * 9 + (1.0,))
+        self.assertEqual(backend.state(), backend.state())
         transition = environment.step(FINAL_DQN_ACTION_CATALOG[0].action_id)
 
         self.assertFalse(transition.done)
@@ -153,9 +155,47 @@ class TestFormalModeInterlock(unittest.TestCase):
         self.assertGreater(transition.ledger.battery_degradation_cost_cny, 0.0)
         self.assertEqual(backend.executed_fc_power_kw[3:6], [0.0, 0.0, 0.0])
         self.assertLessEqual(backend.soc, backend.INITIAL_SOC)
-        self.assertAlmostEqual(transition.next_state[1], 100.0 / 600.0)
-        self.assertEqual(transition.next_state[2:7], (0.0, 0.0, 0.0, 0.0, 0.0))
-        self.assertAlmostEqual(transition.next_state[7], 4.0 / 20.0)
+        self.assertEqual(transition.next_state[:72], (0.0,) * 72)
+        self.assertAlmostEqual(transition.next_state[73], 100.0 / 600.0)
+        self.assertEqual(
+            transition.next_state[74:79],
+            (0.0, 0.0, 0.0, 0.0, 0.0),
+        )
+        self.assertAlmostEqual(transition.next_state[79], 4.0 / 20.0)
+        self.assertEqual(transition.next_state[80:], (0.0,) * 9 + (1.0,))
+
+    def test_every_onboard_step_commits_history_inside_one_macro_action(self) -> None:
+        from v2.config import TimeScaleConfig
+        from v2.dqn.action_space import FINAL_DQN_ACTION_CATALOG
+        from v2.envs.formal_episode import FormalEpisodeBackend
+        from v2.envs.multirate_weight_env import MultiRateWeightEnvironment
+
+        backend = FormalEpisodeBackend(
+            load_kw=np.asarray([100.0] * 7),
+            speed_kn=np.asarray([4.0] * 7),
+            fc_power_kw=np.asarray([80.0] * 7),
+            battery_bus_kw=np.asarray([20.0] * 7),
+            operating_mode=("onboard",) * 7,
+            mpc=self._solver(),
+        )
+        environment = MultiRateWeightEnvironment(
+            timescale=TimeScaleConfig.formal_baseline(),
+            action_catalog=FINAL_DQN_ACTION_CATALOG,
+            backend=backend,
+            state_provider=backend.state,
+            formal_training_mode=True,
+        )
+
+        initial = environment.reset()
+        self.assertEqual(initial[80:], (0.0,) * 9 + (1.0,))
+        self.assertEqual(backend.state(), backend.state())
+
+        transition = environment.step(FINAL_DQN_ACTION_CATALOG[0].action_id)
+
+        self.assertEqual(transition.executed_mpc_steps, 5)
+        self.assertEqual(transition.next_state[80:], (0.0,) * 4 + (1.0,) * 6)
+        self.assertEqual(len(environment.transitions), 1)
+        self.assertEqual(len(backend.observed_states), 5)
 
     def test_shore_at_target_accepts_no_power_and_does_not_charge_cost(self) -> None:
         from v2.data.supervisory_rules import OperatingMode
@@ -190,7 +230,7 @@ class TestFormalModeInterlock(unittest.TestCase):
         self.assertTrue(shore_ledgers)
         self.assertTrue(all(item.shore_cost_cny == 0.0 for item in shore_ledgers[:-1]))
 
-    def test_terminal_transition_retains_finite_s8_for_replay_storage(self) -> None:
+    def test_terminal_transition_retains_finite_history_state_for_replay_storage(self) -> None:
         from v2.config import TimeScaleConfig
         from v2.data.supervisory_rules import OperatingMode
         from v2.dqn.action_space import FINAL_DQN_ACTION_CATALOG
@@ -217,8 +257,53 @@ class TestFormalModeInterlock(unittest.TestCase):
         transition = environment.step(FINAL_DQN_ACTION_CATALOG[0].action_id)
 
         self.assertTrue(transition.done)
-        self.assertEqual(len(transition.next_state), 8)
+        self.assertEqual(len(transition.next_state), 90)
         self.assertTrue(np.isfinite(np.asarray(transition.next_state)).all())
+
+    def test_physical_failure_does_not_commit_a_fabricated_frame(self) -> None:
+        from v2.config import TimeScaleConfig
+        from v2.control.nonlinear_mpc import PhysicalInfeasibilityError
+        from v2.dqn.action_space import FINAL_DQN_ACTION_CATALOG
+        from v2.envs.formal_episode import FormalEpisodeBackend
+        from v2.envs.multirate_weight_env import MultiRateWeightEnvironment
+
+        delegate = self._solver()
+
+        class FailingSolver:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            def solve(self, **kwargs):
+                self.calls += 1
+                if self.calls == 3:
+                    raise PhysicalInfeasibilityError("fixture failure")
+                return delegate.solve(**kwargs)
+
+        backend = FormalEpisodeBackend(
+            load_kw=np.asarray([100.0] * 6),
+            speed_kn=np.asarray([4.0] * 6),
+            fc_power_kw=np.asarray([80.0] * 6),
+            battery_bus_kw=np.asarray([20.0] * 6),
+            operating_mode=("onboard",) * 6,
+            mpc=FailingSolver(),
+        )
+        environment = MultiRateWeightEnvironment(
+            timescale=TimeScaleConfig.formal_baseline(),
+            action_catalog=FINAL_DQN_ACTION_CATALOG,
+            backend=backend,
+            state_provider=backend.state,
+            formal_training_mode=True,
+        )
+        environment.reset()
+
+        transition = environment.step(FINAL_DQN_ACTION_CATALOG[0].action_id)
+
+        self.assertTrue(transition.done)
+        self.assertTrue(transition.failed)
+        self.assertEqual(transition.executed_mpc_steps, 2)
+        self.assertEqual(len(transition.next_state), 90)
+        self.assertTrue(np.isfinite(np.asarray(transition.next_state)).all())
+        self.assertEqual(transition.next_state[80:], (0.0,) * 7 + (1.0,) * 3)
 
     def test_real_train_segment_015_emits_terminal_failure_transition(self) -> None:
         from v2.data.formal_training_dataset import FormalTrainingDataset

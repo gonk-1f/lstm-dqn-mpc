@@ -16,6 +16,8 @@ if str(SRC) not in sys.path:
 class TestFormalS8Frame(unittest.TestCase):
     def test_exact_schema_order_status_and_dimension_are_frozen(self) -> None:
         from v2.dqn.state import (
+            FORMAL_FRAME_AUDIT_SCHEMA_DIGEST,
+            FORMAL_FRAME_AUDIT_SCHEMA_VERSION,
             FORMAL_FRAME_DIMENSION,
             FORMAL_FRAME_FEATURE_NAMES,
             FORMAL_FRAME_SCHEMA_VERSION,
@@ -29,6 +31,7 @@ class TestFormalS8Frame(unittest.TestCase):
 
         self.assertEqual(FORMAL_STATE_STATUS, "FROZEN_PROJECT_BASELINE")
         self.assertEqual(FORMAL_FRAME_SCHEMA_VERSION, "v2_s8_onboard_ais_frame_v1")
+        self.assertEqual(FORMAL_FRAME_AUDIT_SCHEMA_VERSION, "v2_s8_onboard_ais_v1")
         self.assertEqual(FORMAL_STATE_SCHEMA_VERSION, "v2_s8_stack10_mask_v1")
         self.assertEqual(FORMAL_FRAME_DIMENSION, 8)
         self.assertEqual(FORMAL_STATE_HISTORY_LENGTH, 10)
@@ -48,6 +51,10 @@ class TestFormalS8Frame(unittest.TestCase):
             ),
         )
         self.assertRegex(FORMAL_STATE_SCHEMA_DIGEST, r"^[0-9a-f]{64}$")
+        self.assertEqual(
+            FORMAL_FRAME_AUDIT_SCHEMA_DIGEST,
+            "fbf38731c8567bae3ea10da3366e1ca7429b39c36f7d7183bb7a23294343cb4a",
+        )
 
     def test_builds_exact_s8_and_does_not_clip_speed(self) -> None:
         from v2.dqn.state import OperatingHistorySample, build_formal_operating_frame
