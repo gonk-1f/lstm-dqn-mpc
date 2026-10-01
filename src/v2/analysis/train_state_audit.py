@@ -13,6 +13,8 @@ from typing import Callable, Sequence
 import numpy as np
 import pandas as pd
 
+from ..config import TAU_LPF_SECONDS
+from ..contracts import control_semantics
 from ..data.formal_training_dataset import FormalEpisode
 from ..data.supervisory_rules import OperatingMode, normalize_onboard_load_kw
 from ..data.train_supervisory_audit import ParentSupervisoryState
@@ -22,9 +24,9 @@ from ..data.train_supervisory_audit import (
     resolve_duplicates,
 )
 from ..dqn.state import (
+    FORMAL_FRAME_AUDIT_SCHEMA_DIGEST,
+    FORMAL_FRAME_AUDIT_SCHEMA_VERSION,
     FORMAL_FRAME_FEATURE_NAMES,
-    FORMAL_STATE_SCHEMA_DIGEST,
-    FORMAL_STATE_SCHEMA_VERSION,
     FORMAL_STATE_SPEED_SCALE_KN,
 )
 from ..models.battery_degradation import (
@@ -45,7 +47,7 @@ from ..models.fuel_cell_degradation import (
 ACTIVE_DATASET_VERSION = "operating_dataset_zero_boundary_v2"
 AUDIT_SAMPLE_SECONDS = 30.0
 AUDIT_HISTORY_SECONDS = 150.0
-AUDIT_TAU_LPF_SECONDS = 90.0
+AUDIT_TAU_LPF_SECONDS = TAU_LPF_SECONDS
 AUDIT_POWER_SCALE_KW = 600.0
 AUDIT_BATTERY_POWER_SCALE_KW = 1248.0
 NEAR_ZERO_VARIANCE_STD = 1.0e-8
@@ -1417,10 +1419,11 @@ def write_audit_artifacts(
         "sample_seconds": AUDIT_SAMPLE_SECONDS,
         "history_seconds": AUDIT_HISTORY_SECONDS,
         "tau_lpf_seconds": AUDIT_TAU_LPF_SECONDS,
+        "control_semantics": control_semantics(),
         "power_scale_kw": AUDIT_POWER_SCALE_KW,
         "battery_power_scale_kw": AUDIT_BATTERY_POWER_SCALE_KW,
-        "formal_state_schema_version": FORMAL_STATE_SCHEMA_VERSION,
-        "formal_state_schema_digest": FORMAL_STATE_SCHEMA_DIGEST,
+        "formal_state_schema_version": FORMAL_FRAME_AUDIT_SCHEMA_VERSION,
+        "formal_state_schema_digest": FORMAL_FRAME_AUDIT_SCHEMA_DIGEST,
         "segment_ids": [segment.sample_id for segment in checked_segments],
         "segment_sha256": {
             segment.sample_id: segment.sha256 for segment in checked_segments

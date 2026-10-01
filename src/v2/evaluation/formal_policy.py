@@ -8,7 +8,7 @@ from typing import Protocol
 
 import numpy as np
 
-from ..config import TimeScaleConfig
+from ..config import TAU_LPF_SECONDS, TimeScaleConfig
 from ..data.formal_training_dataset import FormalEpisode
 from ..dqn.action_space import FINAL_DQN_ACTION_CATALOG
 from ..dqn.state import FORMAL_STATE_DIMENSION
@@ -237,6 +237,59 @@ class PolicyEvaluation:
         )
 
 
+@dataclass(frozen=True)
+class EpisodePowerTrace:
+    """Executed interval powers and SOC history for one evaluated episode."""
+
+    sample_id: str
+    time_s: tuple[float, ...]
+    load_power_kw: tuple[float, ...]
+    fuel_cell_power_kw: tuple[float, ...]
+    battery_bus_power_kw: tuple[float, ...]
+    operating_mode: tuple[str, ...]
+    soc_time_s: tuple[float, ...]
+    soc: tuple[float, ...]
+    completed: bool
+    failure_kind: str | None
+
+    def __post_init__(self) -> None:
+        if type(self.sample_id) is not str or not self.sample_id:
+            raise ValueError("sample_id must be a nonempty exact string")
+        powers = (
+            self.time_s,
+            self.load_power_kw,
+            self.fuel_cell_power_kw,
+            self.battery_bus_power_kw,
+            self.operating_mode,
+        )
+        if any(type(values) is not tuple for values in powers):
+            raise TypeError("power trace series must be exact tuples")
+        interval_count = len(self.time_s)
+        if any(len(values) != interval_count for values in powers[1:]):
+            raise ValueError("power trace interval series lengths differ")
+        for values in powers[:4]:
+            if any(type(value) is not float or not math.isfinite(value) for value in values):
+                raise TypeError("power trace numeric series must contain finite floats")
+        if any(type(value) is not str or not value for value in self.operating_mode):
+            raise TypeError("operating modes must be nonempty exact strings")
+        if type(self.soc_time_s) is not tuple or type(self.soc) is not tuple:
+            raise TypeError("SOC trace series must be exact tuples")
+        if len(self.soc_time_s) != interval_count + 1 or len(self.soc) != interval_count + 1:
+            raise ValueError("SOC trace must include the initial and every post-step value")
+        if any(type(value) is not float or not math.isfinite(value) for value in self.soc_time_s):
+            raise TypeError("SOC time series must contain finite floats")
+        if any(type(value) is not float or not math.isfinite(value) or not 0.0 <= value <= 1.0 for value in self.soc):
+            raise ValueError("SOC trace must contain finite fractions in [0, 1]")
+        if type(self.completed) is not bool:
+            raise TypeError("completed must be an exact bool")
+        if self.failure_kind is not None and (
+            type(self.failure_kind) is not str or not self.failure_kind
+        ):
+            raise TypeError("failure_kind must be a nonempty exact string or None")
+        if self.completed == (self.failure_kind is not None):
+            raise ValueError("trace must have exactly one terminal outcome")
+
+
 class _FormalPolicy(Protocol):
     @property
     def policy_id(self) -> str: ...
@@ -284,6 +337,8 @@ class GreedyDqnPolicy:
 
 def build_formal_environment(
     episode: FormalEpisode,
+    *,
+    tau_lpf_seconds: float = TAU_LPF_SECONDS,
 ) -> tuple[FormalEpisodeBackend, MultiRateWeightEnvironment]:
     if type(episode) is not FormalEpisode:
         raise TypeError("episode must be an exact FormalEpisode")
@@ -294,6 +349,7 @@ def build_formal_environment(
         battery_bus_kw=episode.battery_bus_kw,
         operating_mode=episode.operating_mode,
         mpc=build_formal_nonlinear_mpc(),
+        tau_lpf_seconds=tau_lpf_seconds,
     )
     environment = MultiRateWeightEnvironment(
         timescale=TimeScaleConfig.formal_baseline(),
@@ -305,11 +361,16 @@ def build_formal_environment(
     return backend, environment
 
 
-def _episode_evaluation(
+def _episode_run(
     episode: FormalEpisode,
     policy: _FormalPolicy,
-) -> EpisodeEvaluation:
-    backend, environment = build_formal_environment(episode)
+    *,
+    tau_lpf_seconds: float,
+) -> tuple[EpisodeEvaluation, FormalEpisodeBackend]:
+    backend, environment = build_formal_environment(
+        episode,
+        tau_lpf_seconds=tau_lpf_seconds,
+    )
     state = environment.reset()
     transitions: list[MacroTransition] = []
     selected_actions: list[str] = []
@@ -359,7 +420,7 @@ def _episode_evaluation(
         for action_id in _ACTION_ORDER
         if counts[action_id] > 0
     )
-    return EpisodeEvaluation(
+    evaluation = EpisodeEvaluation(
         sample_id=episode.sample_id,
         completed=terminal.episode_completed,
         failure_kind=terminal.failure_kind,
@@ -376,12 +437,56 @@ def _episode_evaluation(
         soc_max=max(soc_values),
         action_counts=action_counts,
     )
+    return evaluation, backend
+
+
+def _episode_evaluation(
+    episode: FormalEpisode,
+    policy: _FormalPolicy,
+    *,
+    tau_lpf_seconds: float,
+) -> EpisodeEvaluation:
+    return _episode_run(
+        episode,
+        policy,
+        tau_lpf_seconds=tau_lpf_seconds,
+    )[0]
+
+
+def _power_trace(
+    episode: FormalEpisode,
+    evaluation: EpisodeEvaluation,
+    backend: FormalEpisodeBackend,
+) -> EpisodePowerTrace:
+    interval_count = len(backend.executed_fc_power_kw)
+    if len(backend.executed_battery_bus_power_kw) != interval_count:
+        raise ValueError("executed FC and battery power trace lengths differ")
+    if len(backend.executed_soc) != interval_count + 1:
+        raise ValueError("executed SOC trace length differs from power traces")
+    step = float(backend.timescale.ts_mpc_seconds)
+    return EpisodePowerTrace(
+        sample_id=episode.sample_id,
+        time_s=tuple(float(index * step) for index in range(interval_count)),
+        load_power_kw=tuple(float(value) for value in backend.load_kw[:interval_count]),
+        fuel_cell_power_kw=tuple(float(value) for value in backend.executed_fc_power_kw),
+        battery_bus_power_kw=tuple(
+            float(value) for value in backend.executed_battery_bus_power_kw
+        ),
+        operating_mode=tuple(
+            value.value for value in backend.operating_mode[:interval_count]
+        ),
+        soc_time_s=tuple(float(index * step) for index in range(interval_count + 1)),
+        soc=tuple(float(value) for value in backend.executed_soc),
+        completed=evaluation.completed,
+        failure_kind=evaluation.failure_kind,
+    )
 
 
 def evaluate_formal_policy(
     *,
     episodes: tuple[FormalEpisode, ...],
     policy: FixedActionPolicy | GreedyDqnPolicy,
+    tau_lpf_seconds: float = TAU_LPF_SECONDS,
 ) -> PolicyEvaluation:
     """Evaluate ordered formal episodes without training or exploration."""
 
@@ -392,15 +497,52 @@ def evaluate_formal_policy(
     for episode in episodes:
         if type(episode) is not FormalEpisode:
             raise TypeError("episodes must contain exact FormalEpisode values")
-    results = tuple(_episode_evaluation(episode, policy) for episode in episodes)
+    results = tuple(
+        _episode_evaluation(
+            episode,
+            policy,
+            tau_lpf_seconds=tau_lpf_seconds,
+        )
+        for episode in episodes
+    )
     return PolicyEvaluation(policy.policy_id, results)
+
+
+def evaluate_formal_policy_with_power_traces(
+    *,
+    episodes: tuple[FormalEpisode, ...],
+    policy: FixedActionPolicy | GreedyDqnPolicy,
+    tau_lpf_seconds: float = TAU_LPF_SECONDS,
+) -> tuple[PolicyEvaluation, tuple[EpisodePowerTrace, ...]]:
+    """Evaluate once and return the exact executed power traces beside metrics."""
+
+    if type(episodes) is not tuple or not episodes:
+        raise ValueError("episodes must be a nonempty immutable exact tuple")
+    if type(policy) not in (FixedActionPolicy, GreedyDqnPolicy):
+        raise TypeError("policy must be an exact formal evaluation policy")
+    runs = tuple(
+        _episode_run(
+            episode,
+            policy,
+            tau_lpf_seconds=tau_lpf_seconds,
+        )
+        for episode in episodes
+    )
+    evaluation = PolicyEvaluation(policy.policy_id, tuple(item[0] for item in runs))
+    traces = tuple(
+        _power_trace(episode, item[0], item[1])
+        for episode, item in zip(episodes, runs)
+    )
+    return evaluation, traces
 
 
 __all__ = [
     "EpisodeEvaluation",
+    "EpisodePowerTrace",
     "FixedActionPolicy",
     "GreedyDqnPolicy",
     "PolicyEvaluation",
     "build_formal_environment",
     "evaluate_formal_policy",
+    "evaluate_formal_policy_with_power_traces",
 ]

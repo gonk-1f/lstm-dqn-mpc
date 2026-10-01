@@ -190,7 +190,7 @@ class TrainStateAuditCausalFeatureTests(unittest.TestCase):
 
         self.assertEqual(len(rows), 1)
         row = rows[0]
-        alpha = math.exp(-30.0 / 90.0)
+        alpha = math.exp(-30.0 / 180.0)
         expected_base = 100.0
         for load in (120.0, 140.0, 160.0, 180.0, 200.0):
             expected_base = alpha * expected_base + (1.0 - alpha) * load
@@ -674,17 +674,17 @@ class TrainStateAuditArtifactTests(unittest.TestCase):
             self.assertEqual(manifest["train_segment_count"], 1)
             self.assertEqual(manifest["eligible_row_count"], len(rows))
             from v2.dqn.state import (
-                FORMAL_STATE_SCHEMA_DIGEST,
-                FORMAL_STATE_SCHEMA_VERSION,
+                FORMAL_FRAME_AUDIT_SCHEMA_DIGEST,
+                FORMAL_FRAME_AUDIT_SCHEMA_VERSION,
             )
 
             self.assertEqual(
                 manifest["formal_state_schema_version"],
-                FORMAL_STATE_SCHEMA_VERSION,
+                FORMAL_FRAME_AUDIT_SCHEMA_VERSION,
             )
             self.assertEqual(
                 manifest["formal_state_schema_digest"],
-                FORMAL_STATE_SCHEMA_DIGEST,
+                FORMAL_FRAME_AUDIT_SCHEMA_DIGEST,
             )
             self.assertEqual(
                 manifest["input_manifest_sha256"],

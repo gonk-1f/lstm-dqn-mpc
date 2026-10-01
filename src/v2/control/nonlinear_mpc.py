@@ -704,5 +704,4 @@ class NonlinearMPC:
             objective_value=value,
             diagnostics=diagnostics,
         )
-        base_load_filter.commit(load)
         return plan

@@ -15,7 +15,7 @@ formal ONBOARD 轴共有 18448 个点；其中 9846 个点（53.37%）具备严�
 | previous_fuel_cell_power_fraction | REPLACE | q_smooth | 改为 delta P_fc；与当前 P_fc 联合可精确恢复前一时刻功率，且控制语义更直接。 |
 | battery_power_fraction | REMOVE | none independently | 环境中 P_batt=P_load-P_fc，是确定性冗余。 |
 | load_power_fraction | REPLACE | q_base / q_smooth | 用 P_base 与 P_load-P_base 分离低频基础负荷和瞬时峰谷。 |
-| recent_load_mean_fraction | REMOVE | q_base already covered | P_base 是下层控制器真实动态状态；Train Pearson=0.9980，Spearman=0.9980。 |
+| recent_load_mean_fraction | REMOVE | q_base already covered | P_base 是下层控制器真实动态状态；Train Pearson=0.9906，Spearman=0.9908。 |
 | recent_load_population_std_fraction | KEEP | q_smooth | 因果波动强度提供瞬时 residual 之外的信息。 |
 | recent_load_window_trend_fraction | KEEP | q_base / q_smooth | 区分增载、减载与稳态，决定 FC 跟随和电池缓冲需求。 |
 | causal_base_load_fraction | KEEP | q_base | 它既是 LPF 必要记忆，也是 J_base 的直接参考。 |
@@ -45,8 +45,8 @@ formal ONBOARD 轴共有 18448 个点；其中 9846 个点（53.37%）具备严�
 | fuel_cell_power_fraction | normalized | 9846 | 0 | 0 | 0.728333 | 0.20905 | 0.255457 | 0 | 0 | 0 | 0.665 | 0.7 | False |
 | recent_load_population_std_fraction | normalized | 9846 | 0 | 0 | 0.526825 | 0.039654 | 0.065614 | 0 | 0 | 0.0132082 | 0.186599 | 0.314868 | False |
 | recent_load_window_trend_fraction | normalized | 9846 | 0 | -1.40784 | 1.86229 | 0.00169007 | 0.175599 | -0.630028 | -0.265026 | 0 | 0.268405 | 0.593844 | False |
-| causal_base_load_fraction | normalized | 9846 | 0 | 0 | 1.67311 | 0.502886 | 0.379593 | 1.75694e-66 | 7.25931e-16 | 0.501191 | 1.1551 | 1.37068 | False |
-| load_residual_fraction | normalized | 9846 | 0 | -0.692076 | 0.600927 | 0.000586349 | 0.0774187 | -0.285108 | -0.107749 | -4.0977e-39 | 0.109132 | 0.250805 | False |
+| causal_base_load_fraction | normalized | 9846 | 0 | 0 | 1.60891 | 0.50064 | 0.37153 | 3.51987e-34 | 6.51146e-09 | 0.489473 | 1.12834 | 1.34743 | False |
+| load_residual_fraction | normalized | 9846 | 0 | -0.893081 | 0.709091 | 0.00283168 | 0.113982 | -0.388058 | -0.189545 | 3.88482e-07 | 0.182905 | 0.359568 | False |
 | fuel_cell_delta_fraction | normalized | 9846 | 0 | -0.3 | 0.204679 | 0.00052961 | 0.0132608 | -0.02 | -0.00333333 | 0 | 0.005 | 0.0459167 | False |
 | speed_fraction | normalized | 9846 | 0 | 0 | 0.765 | 0.287181 | 0.222741 | 0 | 0 | 0.34 | 0.605 | 0.68 | False |
 
@@ -57,7 +57,7 @@ formal ONBOARD 轴共有 18448 个点；其中 9846 个点（53.37%）具备严�
 | relationship | left_feature | right_feature | model_status | pearson | spearman | measured_max_abs_residual_kw | interpretation |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | environment_power_balance | battery_power_kw | load_power_kw-fc_power_kw | EXACT_IDENTITY |  |  | 0.980549 | Battery power is deterministic in the simulated environment; measured residual reflects telemetry/alignment mismatch. |
-| recent_load_mean_vs_causal_base | recent_load_mean_kw | base_load_kw | EMPIRICAL_CORRELATION | 0.998039 | 0.997952 |  | Train-only descriptive evidence |
+| recent_load_mean_vs_causal_base | recent_load_mean_kw | base_load_kw | EMPIRICAL_CORRELATION | 0.990561 | 0.990792 |  | Train-only descriptive evidence |
 | current_fc_vs_previous_fc | fc_power_kw | previous_fc_power_kw | LINEAR_REPARAMETERIZATION_WITH_DELTA | 0.998652 | 0.996756 |  | Train-only descriptive evidence |
 | recent_delta_soc_vs_battery_power | recent_delta_soc | battery_power_kw | EMPIRICAL_CORRELATION | -0.92525 | -0.930843 |  | Train-only descriptive evidence |
 
@@ -65,14 +65,14 @@ formal ONBOARD 轴共有 18448 个点；其中 9846 个点（53.37%）具备严�
 
 | regime | count | fraction | threshold | threshold_unit | threshold_status | mean_soc | mean_load_kw | mean_fc_kw | mean_delta_load_kw | mean_delta_fc_kw |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| steady_load | 4923 | 0.5 | 0.0666665 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.748521 | 247.449 | 95.9598 | -0.0629149 | 0.319707 |
-| load_rise | 2555 | 0.259496 | 0.0666665 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.772259 | 400.578 | 148.362 | 34.6007 | 1.16322 |
-| load_fall | 2368 | 0.240504 | -0.0666665 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.723713 | 309.393 | 161.953 | -35.7395 | -0.598484 |
-| high_volatility | 2462 | 0.250051 | 21.4843 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.763955 | 340.519 | 152.579 | 0.119276 | 0.240085 |
+| steady_load | 4923 | 0.5 | 0.0666665 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.748521 | 247.449 | 95.9598 | 1.33349 | 0.319707 |
+| load_rise | 2555 | 0.259496 | 0.0666665 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.772259 | 400.578 | 148.362 | 53.6615 | 1.16322 |
+| load_fall | 2368 | 0.240504 | -0.0666665 | kW/s | DESCRIPTIVE_TRAIN_ONLY | 0.723713 | 309.393 | 161.953 | -53.6071 | -0.598484 |
+| high_volatility | 2462 | 0.250051 | 21.4843 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.763955 | 340.519 | 152.579 | 0.91789 | 0.240085 |
 | low_soc | 0 | 0 | 0.4 | fraction | FROZEN_CONTROLLER_BOUND |  |  |  |  |  |
-| high_soc | 8515 | 0.864818 | 0.6 | fraction | FROZEN_CONTROLLER_BOUND | 0.782456 | 301.54 | 115.126 | 1.3494 | 0.396254 |
-| fc_low_load | 5136 | 0.521633 | 0 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.772715 | 166.343 | 0 | 2.18637 | -0.0215002 |
-| fc_high_load | 2482 | 0.252082 | 265 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.726072 | 515.042 | 354.724 | -3.71824 | 0.623913 |
+| high_soc | 8515 | 0.864818 | 0.6 | fraction | FROZEN_CONTROLLER_BOUND | 0.782456 | 301.54 | 115.126 | 3.72356 | 0.396254 |
+| fc_low_load | 5136 | 0.521633 | 0 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.772715 | 166.343 | 0 | 4.59677 | -0.0215002 |
+| fc_high_load | 2482 | 0.252082 | 265 | kW | DESCRIPTIVE_TRAIN_ONLY | 0.726072 | 515.042 | 354.724 | -5.91405 | 0.623913 |
 
 表中的 trend、volatility 和 FC 阈值仅用于 Train 描述，不是生产策略阈值，也没有利用 held-out 数据拟合。
 
@@ -117,4 +117,4 @@ formal ONBOARD 轴共有 18448 个点；其中 9846 个点（53.37%）具备严�
 
 ## S8 最终结论
 
-冻结的八维 S8 与生产 `FORMAL_STATE_FEATURE_NAMES` 完全一致。前七维保留 SOC、LPF 记忆、负荷残差/波动/趋势及 FC 工作点动态；`speed_fraction` 提供 AIS 在航上下文。DQN 只在 ONBOARD 决策边界读取 S8，shore_pending/shore_charging 会重置控制历史并暂停 DQN/MPC。累计退化账户逐 episode 重置；保守上界为 FC=0.770930、battery=0.034480，均低于 EOL=1，因此 clipped lifetime 在当前 formal episode 内不可达，累计退化无需进入 S8。
+冻结的八维 S8 frame 与生产 `FORMAL_FRAME_FEATURE_NAMES` 完全一致。前七维保留 SOC、LPF 记忆、负荷残差/波动/趋势及 FC 工作点动态；`speed_fraction` 提供 AIS 在航上下文。DQN 读取由连续 S8 frame 编码的正式历史状态，shore_pending/shore_charging 会重置控制历史并暂停 DQN/MPC。累计退化账户逐 episode 重置；保守上界为 FC=0.770930、battery=0.034480，均低于 EOL=1，因此 clipped lifetime 在当前 formal episode 内不可达，累计退化无需进入 S8。

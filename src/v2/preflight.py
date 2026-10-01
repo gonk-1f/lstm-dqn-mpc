@@ -11,6 +11,7 @@ import re
 from typing import TypeVar
 
 from .analysis.objective_scale_audit import FORMAL_OBJECTIVE_SCALE_AUDIT_STATUS
+from .contracts import BASE_LOAD_FILTER_UPDATE_VERSION, control_semantics
 from .config import (
     DQN_SWITCH_STEPS,
     DQN_SWITCH_STEPS_EVIDENCE_STATUS,
@@ -81,7 +82,7 @@ DEFAULT_OBJECTIVE_AUDIT = (
     / "audit_summary.json"
 )
 EXPECTED_OBJECTIVE_AUDIT_RESULT_DIGEST = (
-    "3a7243751169a118ec62079a4f76c9b6391413777ebbc42f24a117bc9a47605e"
+    "0f8276ec1b59ebdb1297c6df71795fdda154406dd75aea1b0e4adf9321c0f19c"
 )
 DEFAULT_FAILURE_POLICY_AUDIT = (
     Path(__file__).resolve().parents[2]
@@ -90,9 +91,9 @@ DEFAULT_FAILURE_POLICY_AUDIT = (
     / "audit_summary.json"
 )
 EXPECTED_FAILURE_POLICY_AUDIT_RESULT_DIGEST = (
-    "112c25d23474f09f71013386e91571f37894a66579d8899debde807a170c9801"
+    "ae7ec81538f75de955d17e457746a0151506fe618f6b370806b14008c758b3ce"
 )
-EXPECTED_FAILURE_REFERENCE_MAX_COST_CNY = 20_779.575664249034
+EXPECTED_FAILURE_REFERENCE_MAX_COST_CNY = 20_099.49737944536
 
 
 def _sha256(path: Path) -> str:
@@ -226,7 +227,8 @@ def _formal_state_audit_evidence() -> tuple[CalibrationStatus, str]:
             or payload["formal_training_started"] is not False
             or payload["action_catalog_modified"] is not False
             or payload["sample_seconds"] != 30.0
-            or payload["tau_lpf_seconds"] != 90.0
+            or payload["tau_lpf_seconds"] != TAU_LPF_SECONDS
+            or payload["control_semantics"] != control_semantics()
         ):
             raise ValueError("formal audit boundary fields differ")
 
@@ -309,6 +311,7 @@ def _objective_scale_evidence() -> tuple[CalibrationStatus, str]:
         ratio = float(payload["scale_ratio"])
         if (
             payload["dataset_version"] != "operating_dataset_zero_boundary_v2"
+            or payload["control_semantics"] != control_semantics()
             or payload["input_manifest_sha256"] != expected_inputs
             or set(payload["train_segment_ids"]) != train_ids
             or payload["train_parent_count"] != 30
@@ -377,7 +380,8 @@ def _failure_policy_evidence(
             if penalty != expected_penalty:
                 raise ValueError("episode penalty differs")
         if (
-            payload["schema_version"] != "v2_terminal_failure_audit_v1"
+            payload["schema_version"] != "v2_terminal_failure_audit_v2"
+            or payload["control_semantics"] != control_semantics()
             or payload["dataset_version"] != "operating_dataset_zero_boundary_v2"
             or payload["split"] != "train"
             or payload["input_manifest_sha256"] != expected_inputs
@@ -569,13 +573,18 @@ def assess_formal_training_preflight() -> FormalTrainingPreflight:
             "tau_lpf",
             CalibrationStatus.VERIFIED
             if FORMAL_TIMESCALE_CONFIGURATION_STATUS == "FROZEN_PROJECT_DESIGN"
-            and TAU_LPF_SECONDS == 90.0
+            and TAU_LPF_SECONDS == 180.0
+            and BASE_LOAD_FILTER_UPDATE_VERSION
+            == "causal_single_commit_per_executed_interval_v1"
             else CalibrationStatus.NO_GO,
             (
                 f"configuration={FORMAL_TIMESCALE_CONFIGURATION_STATUS}; "
-                f"evidence={TAU_LPF_EVIDENCE_STATUS}; tau=90 s project control "
-                "design with LPF/FC-low-frequency literature structure support; "
-                "not vessel-measured and not a unique optimum"
+                f"evidence={TAU_LPF_EVIDENCE_STATUS}; tau=180 s project control "
+                "design with "
+                f"update_contract={BASE_LOAD_FILTER_UPDATE_VERSION}, applied once per "
+                "executed 30 s interval; "
+                "LPF/FC-low-frequency literature structure support; not vessel-measured "
+                "and not a unique optimum"
             ),
         ),
         FormalCalibrationCheck(

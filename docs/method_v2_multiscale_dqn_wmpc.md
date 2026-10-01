@@ -26,6 +26,9 @@
 `P_base(k) = alpha P_base(k-1) + (1-alpha) P_load(k)`。
 
 预测域内可在持久性负载上递推同一个滤波方程，得到 `P_base_hat`。初次观测时以当前负载初始化滤波状态，避免凭空引入历史值。
+`NonlinearMPC.solve()` 只预览该参考且不修改滤波状态；只有通过校验并真实执行的
+ONBOARD interval 才由 episode backend 提交一次当前观测。因此每个真实 30 s
+interval 恰好应用一次 `alpha=exp(-30/tau_LPF)`，不得在 solver 和 backend 重复提交。
 
 ## 三项目标函数
 
@@ -82,20 +85,22 @@ SOC 递推只调用 `v2.models.battery_energy.next_soc`，并要求经过来源�
 研究仿真 MPC 配置，不得表述成 12 簇、约 1806 kWh 原船硬件边界；原船技术规格
 本身仍只给出系统额定输出不低于 900 kW。
 
-正式 baseline 冻结 `tau_LPF=90 s`。在固定 `Ts_MPC=30 s` 下对应
-`alpha=exp(-30/90)=0.7165313106`。其配置状态为
+正式 baseline 冻结 `tau_LPF=180 s`。在固定 `Ts_MPC=30 s` 下对应
+`alpha=exp(-30/180)=0.8464817249`。其配置状态为
 `FROZEN_PROJECT_DESIGN`，evidence classification 为 `PROJECT_DESIGN`：LPF/FC
-低频分配结构有文献支持，但 90 s 不是 Three Gorges Hydrogen Boat 1 实船标定值，
-也不声明为唯一最优值。未来论文可做 sensitivity，但不再阻塞 formal training。
+低频分配结构有文献支持，180 s 是项目控制设计值，但不是 Three Gorges Hydrogen
+Boat 1 实船标定值，也不声明为唯一最优值。控制身份另外冻结
+`causal_single_commit_per_executed_interval_v1`；重复提交条件下产生的旧训练和
+180/300 s 筛选产物不再作为正式证据。
 
-`Ts_MPC=30 s`、`N_MPC=5`、`M=5` 和 `tau_LPF=90 s` 均已冻结为项目设计配置，
+`Ts_MPC=30 s`、`N_MPC=5`、`M=5` 和 `tau_LPF=180 s` 均已冻结为项目设计配置，
 不再是正式训练 blocker。`N=5` 产生 150 s prediction horizon；`M=5` 产生
 150 s macro interval。该冻结不声称 N/M/tau 是由文献或全局优化证明的唯一最优值。
 当前 dataset/episode payload、最终 S8、完整 36-action catalog 与集成
 preflight/solver robustness 均已关闭，正式训练门禁为 **GO**。
 
 真实 Train objective-scale audit 已在 6 个代表 case、完整 36 个候选 action 上完成
-216 次求解，active-P95 `scale_ratio=1.855794906`，其独立 gate 为
+216 次求解，active-P95 `scale_ratio=1.525889971`，其独立 gate 为
 **PASS / VERIFIED**。结果已绑定当前 30 个 Train segment 与 raw-source inventory。
 
 未来对这些冻结参数的 sensitivity 或证据审计只能使用 Train 切分；Validation/Test

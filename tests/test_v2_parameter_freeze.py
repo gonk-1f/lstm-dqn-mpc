@@ -42,7 +42,7 @@ class FrozenTimeScaleTests(unittest.TestCase):
         self.assertEqual(model.TS_MPC_SECONDS, 30.0)
         self.assertEqual(model.N_MPC, 5)
         self.assertEqual(model.DQN_SWITCH_STEPS, 5)
-        self.assertEqual(model.TAU_LPF_SECONDS, 90.0)
+        self.assertEqual(model.TAU_LPF_SECONDS, 180.0)
         self.assertEqual(
             model.FORMAL_TIMESCALE_CONFIGURATION_STATUS,
             "FROZEN_PROJECT_DESIGN",
@@ -66,14 +66,14 @@ class FrozenTimeScaleTests(unittest.TestCase):
             baseline.dqn_switch_steps_semantics,
         )
 
-    def test_lpf_alpha_uses_frozen_thirty_over_ninety_ratio(self) -> None:
+    def test_lpf_alpha_uses_frozen_thirty_over_one_eighty_ratio(self) -> None:
         import math
 
         from v2.config import TAU_LPF_SECONDS, TS_MPC_SECONDS
 
         self.assertAlmostEqual(
             math.exp(-TS_MPC_SECONDS / TAU_LPF_SECONDS),
-            math.exp(-30.0 / 90.0),
+            math.exp(-30.0 / 180.0),
         )
 
 
@@ -103,6 +103,11 @@ class FrozenParameterPreflightTests(unittest.TestCase):
         self.assertIn("FROZEN_PROJECT_DESIGN", by_key["n_mpc"].evidence)
         self.assertIn("FROZEN_PROJECT_DESIGN", by_key["dqn_switch_steps"].evidence)
         self.assertIn("FROZEN_PROJECT_DESIGN", by_key["tau_lpf"].evidence)
+        self.assertIn(
+            "causal_single_commit_per_executed_interval_v1",
+            by_key["tau_lpf"].evidence,
+        )
+        self.assertIn("once per executed 30 s interval", by_key["tau_lpf"].evidence)
         self.assertIn("not vessel-measured", by_key["tau_lpf"].evidence)
         self.assertIn("not a unique optimum", by_key["tau_lpf"].evidence)
 

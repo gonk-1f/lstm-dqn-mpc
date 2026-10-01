@@ -2,18 +2,21 @@
 
 ## 当前结论
 
-正式 baseline 已冻结以下项目设计配置，但正式训练仍为 **NO-GO**：
+正式 baseline 已冻结以下项目设计配置，当前集成 preflight 为 **GO**：
 
 - `Ts_MPC = 30 s`；
 - 下层预测长度 `N_MPC = 5`；
 - 上层动作保持步数 `M = 5`；
-- `tau_LPF = 90 s`。
+- `tau_LPF = 180 s`。
 
 `N_MPC` 与 `M` 的语义不同。前者是一次滚动优化向未来预测的步数，后者是一个
 DQN 权重动作实际保持并执行的 MPC 周期数。在 `Ts=30 s` 下，两者数值都为 5，
 分别形成 150 s prediction horizon 和 150 s macro interval。配置状态为
 `FROZEN_PROJECT_DESIGN`；证据状态为 `PROJECT_DESIGN`，不声称数据优选、文献全局
-最优或实船标定。既有审计接口只保留为非阻塞诊断快照。
+最优或实船标定。180 s 采用更新合同
+`causal_single_commit_per_executed_interval_v1`：solver 预览不修改滤波状态，只有
+成功执行的 ONBOARD 30 s interval 提交一次。重复提交条件下产生的旧 180/300 s
+筛选不再作为正式证据；未来 tau sensitivity 只能作为重新登记的独立研究。
 
 ## Train-only 边界
 
@@ -85,10 +88,10 @@ digest 证明的是同一序列化内容得到同一标识，不是数据真实�
 - `N_MPC=5` 已由数据选定；
 - `M=5` 优于 `M=10`；
 - warm start 在正式案例上更可靠或更快；
-- `N=5`、`M=5` 或 `tau_LPF=90 s` 是唯一最优值或实船标定值；
+- `N=5`、`M=5` 或 `tau_LPF=180 s` 是唯一最优值或实船标定值；
 - state、action catalog、reward scale 或 objective normalization 已完成全部
   Train-only 审计（SOC deadband 已由方法定义固定，但未因此解除其他 gate）。
 
 N、M 与 tau 的 frozen configuration 已通过 preflight，未升级其 evidence 等级。
-正式训练因 dataset/episode payload、最终 state、最终 action catalog/K 和最终集成
-solver robustness 仍保持 **NO-GO**。
+当前 dataset/episode payload、最终 state、36-action catalog 和集成 solver
+robustness 已由 live preflight 验证，正式训练门禁为 **GO**。

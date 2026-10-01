@@ -181,6 +181,14 @@ outputs/v2_history_dqn_study/H3/
 outputs/v2_history_dqn_study/H4/
 outputs/v2_history_dqn_study/pilot_selection/
 outputs/v2_history_dqn_study/final_selection/
+outputs/v2_history_dqn_study/H4_formal_selection_40/
+outputs/v2_history_dqn_study/H4_round20_test/
+outputs/v2_history_dqn_study/H4_round20_test_power_plots/
+outputs/v2_history_dqn_study/H4_tau180/
+outputs/v2_history_dqn_study/H4_tau180_selection_40/
+outputs/v2_history_dqn_study/H4_tau180_test/
+outputs/v2_history_dqn_study/H4_tau180_test_power_plots/
+outputs/v2_history_dqn_study/reward_scale_calibration_tau90_backup.json
 
 # Executed-reward models and large local historical diagnostic caches.
 outputs/dqn_mpc_*_executed_reward_84_v1_*/

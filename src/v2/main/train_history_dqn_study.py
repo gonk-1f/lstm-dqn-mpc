@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from typing import Sequence
 
+from ..config import TAU_LPF_SECONDS
 from ..dqn.state import FORMAL_STATE_DIMENSION
 from ..preflight import require_formal_training_ready
 from ..training.experiments import (
@@ -105,7 +106,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(
         f"HISTORY_STUDY experiment={profile.experiment_id} "
         f"state_dimension={FORMAL_STATE_DIMENSION} reward_mode={profile.reward_mode} "
-        f"learning_rate={profile.learning_rate:.9g} rounds={args.rounds}",
+        f"learning_rate={profile.learning_rate:.9g} rounds={args.rounds} "
+        f"tau_lpf_seconds={TAU_LPF_SECONDS:g}",
         flush=True,
     )
     if args.preflight_only:

@@ -17,7 +17,11 @@ from v2.evaluation.checkpoint_selection import (
     make_selection_manifest,
     write_selection_outputs,
 )
-from v2.evaluation.formal_policy import EpisodeEvaluation, PolicyEvaluation
+from v2.evaluation.formal_policy import (
+    EpisodeEvaluation,
+    EpisodePowerTrace,
+    PolicyEvaluation,
+)
 
 
 def _sha256(path: Path) -> str:
@@ -74,6 +78,21 @@ def _episode_result(sample_id: str, *, failed: bool, raw: float, action_id: str)
         soc_min=0.50,
         soc_max=0.60,
         action_counts=((action_id, 1),),
+    )
+
+
+def _power_trace(sample_id: str) -> EpisodePowerTrace:
+    return EpisodePowerTrace(
+        sample_id=sample_id,
+        time_s=(0.0,),
+        load_power_kw=(10.0,),
+        fuel_cell_power_kw=(8.0,),
+        battery_bus_power_kw=(2.0,),
+        operating_mode=("onboard",),
+        soc_time_s=(0.0, 30.0),
+        soc=(0.60, 0.599),
+        completed=True,
+        failure_kind=None,
     )
 
 
@@ -354,6 +373,55 @@ class TestFinalTestCli(unittest.TestCase):
             marker = json.loads((output / "TEST_ACCESS_STARTED.json").read_text("ascii"))
             self.assertEqual(marker["status"], "STARTED")
             self.assertTrue(output.is_dir())
+
+    def test_optional_plot_directory_uses_same_greedy_test_execution_traces(self) -> None:
+        from v2.main import evaluate_formal_dqn_test as module
+
+        episodes = (SimpleNamespace(sample_id="test_a"),)
+        dataset = SimpleNamespace(
+            opened_test_payloads=0,
+            split_episode_ids=lambda split: ("train",),
+            load_final_test=lambda authorization: episodes,
+        )
+        greedy = PolicyEvaluation(
+            "greedy_dqn",
+            (_episode_result("test_a", failed=False, raw=10.0, action_id="w_8_1_1"),),
+        )
+        fixed = PolicyEvaluation(
+            "w_8_1_1",
+            (_episode_result("test_a", failed=False, raw=12.0, action_id="w_8_1_1"),),
+        )
+        traces = (_power_trace("test_a"),)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            hashes, _ = _write_current_manifests(root)
+            selection = _write_selection(root, hashes)
+            output = root / "test_output"
+            plot_output = root / "plots"
+            with (
+                mock.patch.object(module.FormalTrainingDataset, "open", return_value=dataset),
+                mock.patch.object(module, "DqnAgent", return_value=SimpleNamespace(greedy_action=lambda state: 0)),
+                mock.patch.object(module, "EpisodeShuffleSchedule", return_value=SimpleNamespace()),
+                mock.patch.object(module, "load_checkpoint", return_value=SimpleNamespace(round_index=1, episode_position=0)),
+                mock.patch.object(module, "evaluate_formal_policy_with_power_traces", return_value=(greedy, traces)) as traced,
+                mock.patch.object(module, "evaluate_formal_policy", return_value=fixed) as aggregate,
+                mock.patch.object(module, "write_power_trace_plots") as writer,
+                redirect_stdout(io.StringIO()),
+            ):
+                code = module.main(
+                    [
+                        "--selection-dir", str(selection),
+                        "--output-dir", str(output),
+                        "--plot-dir", str(plot_output),
+                        "--confirm-final-test", "FINAL_TEST_ONCE",
+                    ]
+                )
+
+        self.assertEqual(code, 0)
+        self.assertIs(traced.call_args.kwargs["episodes"], episodes)
+        self.assertIs(aggregate.call_args.kwargs["episodes"], episodes)
+        writer.assert_called_once_with(plot_output, traces, policy_id="H1_round_001")
 
 
 if __name__ == "__main__":

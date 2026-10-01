@@ -26,7 +26,7 @@ from v2.analysis.train_objective_scale_runner import (
     select_representative_cases,
     summarize_action_behavior,
 )
-from v2.contracts import DATASET_VERSION
+from v2.contracts import DATASET_VERSION, control_semantics
 from v2.data.supervisory_rules import (
     FRESHNESS_CAP_SECONDS,
     LONG_GAP_SECONDS,
@@ -306,6 +306,7 @@ def run(raw_root: Path, metadata_root: Path) -> dict[str, object]:
     }
     return {
         "dataset_version": "operating_dataset_zero_boundary_v2",
+        "control_semantics": control_semantics(),
         "train_segment_ids": tuple(train_manifest["sample_id"].astype(str)),
         "input_manifest_sha256": {
             "sample_manifest.csv": hashlib.sha256(

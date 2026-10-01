@@ -541,7 +541,7 @@ class NonlinearMPCTests(unittest.TestCase):
             )
         self.assertEqual(caught.exception.status, -3)
 
-    def test_failed_solves_do_not_consume_filter_observation_and_success_commits_once(self) -> None:
+    def test_solve_never_consumes_filter_observation(self) -> None:
         from v2.control.nonlinear_mpc import MPCWeights, NonlinearMPC, NumericalSolverError
 
         weights = MPCWeights(0.5, 0.25, 0.25)
@@ -586,8 +586,7 @@ class NonlinearMPCTests(unittest.TestCase):
         self.assertEqual(estimator.observed_base_kw, before)
 
         result = controller.solve(200.0, 0.5, 100.0, weights, estimator)
-        expected_once = estimator.alpha * float(before) + (1.0 - estimator.alpha) * 200.0
-        self.assertAlmostEqual(float(estimator.observed_base_kw), expected_once)
+        self.assertEqual(estimator.observed_base_kw, before)
         self.assertEqual(len(result.p_fc_kw), 5)
 
     def test_plan_defensively_copies_vectors_and_validates_nested_results(self) -> None:

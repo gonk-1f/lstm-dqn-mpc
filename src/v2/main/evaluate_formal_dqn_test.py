@@ -17,10 +17,13 @@ from ..evaluation.formal_policy import (
     FixedActionPolicy,
     GreedyDqnPolicy,
     evaluate_formal_policy,
+    evaluate_formal_policy_with_power_traces,
 )
+from ..evaluation.power_trace_plots import write_power_trace_plots
 from ..training.checkpoint import load_checkpoint
-from ..training.dqn import DqnAgent, DqnTrainingConfig
+from ..training.dqn import DqnAgent
 from ..training.schedule import EpisodeShuffleSchedule
+from .history_dqn_evaluation import load_evaluation_profile
 from .select_formal_dqn_checkpoint import DEFAULT_SELECTION_ROOT
 from .train_formal_dqn import (
     DEFAULT_AIS_ROOT,
@@ -43,6 +46,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--ais-root", type=Path, default=DEFAULT_AIS_ROOT)
     parser.add_argument("--mode-root", type=Path, default=DEFAULT_MODE_ROOT)
     parser.add_argument("--device", default="cpu")
+    parser.add_argument("--experiment", choices=("H1", "H2", "H3", "H4"), default="H1")
+    parser.add_argument("--reward-scale", type=Path)
+    parser.add_argument("--plot-dir", type=Path)
     parser.add_argument("--confirm-final-test", required=True)
     return parser
 
@@ -56,13 +62,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     output = Path(args.output_dir)
     if output.exists() or output.is_symlink():
         raise FileExistsError(output)
+    if args.plot_dir is not None and (
+        Path(args.plot_dir).exists() or Path(args.plot_dir).is_symlink()
+    ):
+        raise FileExistsError(args.plot_dir)
 
     authorization = authenticate_final_test_selection(args.selection_dir)
     create_final_test_lock(output, authorization)
 
     dataset = FormalTrainingDataset.open(args.power_root, args.ais_root, args.mode_root)
     train_ids = dataset.split_episode_ids("train")
-    agent = DqnAgent(DqnTrainingConfig.formal_baseline(), seed=42, device=args.device)
+    profile, config, _ = load_evaluation_profile(
+        experiment_id=args.experiment,
+        reward_scale_path=args.reward_scale,
+        expected_manifest_hashes=dict(authorization.input_manifest_hashes),
+        rounds=40,
+    )
+    agent = DqnAgent(config, seed=42, device=args.device)
     schedule = EpisodeShuffleSchedule(train_ids, seed=42)
     best_path = Path(args.selection_dir) / "best_validation.pt"
     metadata = load_checkpoint(best_path, agent=agent, schedule=schedule)
@@ -72,10 +88,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         raise ValueError("final Test requires a completed-round checkpoint")
 
     test_episodes = dataset.load_final_test(authorization)
-    dqn_result = evaluate_formal_policy(
-        episodes=test_episodes,
-        policy=GreedyDqnPolicy(agent, policy_id="greedy_dqn"),
-    )
+    traces = None
+    if args.plot_dir is None:
+        dqn_result = evaluate_formal_policy(
+            episodes=test_episodes,
+            policy=GreedyDqnPolicy(agent, policy_id="greedy_dqn"),
+        )
+    else:
+        dqn_result, traces = evaluate_formal_policy_with_power_traces(
+            episodes=test_episodes,
+            policy=GreedyDqnPolicy(agent, policy_id="greedy_dqn"),
+        )
     fixed_result = evaluate_formal_policy(
         episodes=test_episodes,
         policy=FixedActionPolicy("w_8_1_1"),
@@ -85,8 +108,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         authorization,
         (dqn_result, fixed_result),
     )
+    if traces is not None:
+        write_power_trace_plots(
+            Path(args.plot_dir),
+            traces,
+            policy_id=f"{profile.experiment_id}_round_{authorization.selected_round:03d}",
+        )
     print(
-        f"FINAL_TEST=COMPLETE selected_round={authorization.selected_round} "
+        f"FINAL_TEST=COMPLETE experiment={profile.experiment_id} "
+        f"selected_round={authorization.selected_round} "
         f"episodes={len(test_episodes)} "
         f"dqn_completed={dqn_result.completed_episodes} "
         f"dqn_failed={dqn_result.failed_episodes} "

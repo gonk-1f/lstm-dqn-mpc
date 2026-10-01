@@ -23,6 +23,9 @@ class V2ContractTests(unittest.TestCase):
             "FC_DEGRADATION_VERSION": "aggregate_four_condition_voltage_loss_v1",
             "BATTERY_DEGRADATION_VERSION": "soc_current_weighted_throughput_v1",
             "DATASET_VERSION": "mode_aware_operating_cycle_v2",
+            "BASE_LOAD_FILTER_UPDATE_VERSION": (
+                "causal_single_commit_per_executed_interval_v1"
+            ),
         }
 
         self.assertEqual(
@@ -154,6 +157,36 @@ class V2ContractTests(unittest.TestCase):
         self.assertEqual(semantics["n_mpc"], 5)
         self.assertEqual(semantics["dqn_switch_steps"], 5)
         self.assertEqual(semantics["ts_mpc_seconds"], 30.0)
+        self.assertEqual(semantics["tau_lpf_seconds"], 180.0)
+        self.assertEqual(
+            semantics["base_load_filter_update_version"],
+            "causal_single_commit_per_executed_interval_v1",
+        )
+
+    def test_lpf_tau_is_part_of_checkpoint_control_identity(self) -> None:
+        from v2.contracts import (
+            IncompatibleArtifactError,
+            control_semantics,
+            require_v2_semantics,
+        )
+
+        old_tau = control_semantics()
+        old_tau["tau_lpf_seconds"] = 90.0
+        with self.assertRaises(IncompatibleArtifactError):
+            require_v2_semantics(old_tau)
+
+    def test_missing_single_commit_contract_is_rejected(self) -> None:
+        from v2.contracts import (
+            IncompatibleArtifactError,
+            control_semantics,
+            require_v2_semantics,
+        )
+
+        legacy = control_semantics()
+        legacy.pop("base_load_filter_update_version", None)
+
+        with self.assertRaises(IncompatibleArtifactError):
+            require_v2_semantics(legacy)
 
 
 if __name__ == "__main__":

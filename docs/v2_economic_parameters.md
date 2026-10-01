@@ -8,7 +8,7 @@ Formal training is **GO** under the authenticated integrated preflight. The
 dataset, S8 state, 36-action catalog, objective-scale audit, and terminal
 failure policy are frozen for this baseline.
 
-The formal baseline now freezes `N=5`, `M=5`, and `tau_LPF=90 s` as project
+The formal baseline now freezes `N=5`, `M=5`, and `tau_LPF=180 s` as project
 design configuration. Their evidence classification is kept separate and does
 not claim vessel measurement or global optimality.
 

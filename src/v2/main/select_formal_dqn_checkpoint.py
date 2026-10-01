@@ -17,8 +17,9 @@ from ..evaluation.checkpoint_selection import (
 )
 from ..evaluation.formal_policy import GreedyDqnPolicy, evaluate_formal_policy
 from ..training.checkpoint import load_checkpoint
-from ..training.dqn import DqnAgent, DqnTrainingConfig
+from ..training.dqn import DqnAgent
 from ..training.schedule import EpisodeShuffleSchedule
+from .history_dqn_evaluation import load_evaluation_profile
 from .train_formal_dqn import (
     DEFAULT_AIS_ROOT,
     DEFAULT_MODE_ROOT,
@@ -50,6 +51,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--first-round", type=_positive_int, default=1)
     parser.add_argument("--last-round", type=_positive_int, default=40)
     parser.add_argument("--device", default="cpu")
+    parser.add_argument("--experiment", choices=("H1", "H2", "H3", "H4"), default="H1")
+    parser.add_argument("--reward-scale", type=Path)
     return parser
 
 
@@ -81,14 +84,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         raise ValueError("first round must not exceed last round")
     required_rounds = tuple(range(args.first_round, args.last_round + 1))
 
-    checkpoints = authenticate_checkpoint_candidates(
-        args.checkpoint_dir,
-        required_rounds=required_rounds,
-    )
     dataset = FormalTrainingDataset.open(args.power_root, args.ais_root, args.mode_root)
     train_ids = dataset.split_episode_ids("train")
     validation = dataset.load_validation()
     input_hashes = _input_manifest_hashes(args)
+    profile, config, expected_identity = load_evaluation_profile(
+        experiment_id=args.experiment,
+        reward_scale_path=args.reward_scale,
+        expected_manifest_hashes=input_hashes,
+        rounds=args.last_round,
+    )
+    checkpoints = authenticate_checkpoint_candidates(
+        args.checkpoint_dir,
+        required_rounds=required_rounds,
+        expected_training_identity=expected_identity,
+    )
     if dataset.opened_test_payloads != 0:
         raise RuntimeError("Test payload was opened during Validation selection")
 
@@ -96,7 +106,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     candidates: list[ValidationCandidate] = []
     by_round = {item.round_index: item for item in checkpoints}
     for item in checkpoints:
-        agent = DqnAgent(DqnTrainingConfig.formal_baseline(), seed=42, device=args.device)
+        agent = DqnAgent(config, seed=42, device=args.device)
         schedule = EpisodeShuffleSchedule(train_ids, seed=42)
         metadata = load_checkpoint(item.path, agent=agent, schedule=schedule)
         if metadata.round_index != item.round_index:
@@ -141,7 +151,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     selected = by_round[manifest.selected_round]
     write_selection_outputs(output, manifest, selected.path)
     print(
-        f"selection_complete selected_round={manifest.selected_round} "
+        f"selection_complete experiment={profile.experiment_id} "
+        f"selected_round={manifest.selected_round} "
         f"completed_episodes={next(value.completed_episodes for value in candidates if value.round_index == manifest.selected_round)} "
         f"failed_episodes={next(value.failed_episodes for value in candidates if value.round_index == manifest.selected_round)} "
         f"result_digest={manifest.result_digest} "

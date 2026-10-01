@@ -1,6 +1,6 @@
 # v2 Train-only objective-scale audit
 
-Audit date: 2026-09-26
+Audit date: 2026-09-29
 
 Dataset: `operating_dataset_zero_boundary_v2`
 
@@ -26,23 +26,26 @@ actions, yielding 216 accepted MPC solves.
 
 The active P95 objective magnitudes are:
 
-- `J_base = 0.0317947064`
-- `J_smooth = 0.0393886386`
-- active `J_SOC = 0.0590044542`
+- `J_base = 0.0394824488`
+- `J_smooth = 0.0461459357`
+- active `J_SOC = 0.0602458727`
 
-Thus `scale_ratio = 1.8557949056`, below the frozen PASS boundary of 5. The
+Thus `scale_ratio = 1.5258899707`, below the frozen PASS boundary of 5. The
 existing `600 kW / 600 kW / 0.60` normalization remains acceptable. This is a
 global magnitude-comparability result; it does not claim that every action has
 equal local influence in every state.
 
+This rerun uses the frozen `tau_LPF=180 s` control identity selected by the
+Validation-only screening. Validation and Test payloads remain unopened.
+
 ## 36-action behavior review
 
 The expanded artifact retains all 216 case/action observations and all 630
-pairwise action comparisons per representative case. Five of the six
-deterministic Train cases produced 36 distinct first-command/SOC-path behavior
-groups. Their P95 first-step FC differences were 96.4084, 72.0081, 172.9388,
-138.8816, and 43.4885 kW; the corresponding P95 predicted-SOC-path differences
-were 0.00218452, 0.00218998, 0.00894758, 0.00496901, and 0.00173404.
+pairwise action comparisons per representative case. The five non-invariant
+Train cases produced 35, 36, 36, 33, and 36 distinct behavior groups. Their P95
+first-step FC differences were 146.0955, 89.4034, 172.9533, 166.2642, and
+44.1413 kW; the corresponding P95 predicted-SOC-path differences were
+0.00425363, 0.00339165, 0.00894840, 0.00632742, and 0.00175576.
 
 The remaining constrained case, at 2024-06-14 17:24:16+08:00, placed all 36
 actions in one behavior group: first-step FC/battery differences and SOC-path
@@ -79,7 +82,7 @@ changed by this audit.
 - Provenance digest:
   `sha256:8439717d3a3ad0d257cb4e22291077d71cffb6d08d538bf2278a495e6859cdaa`
 - Accepted result digest:
-  `3a7243751169a118ec62079a4f76c9b6391413777ebbc42f24a117bc9a47605e`
+  `0f8276ec1b59ebdb1297c6df71795fdda154406dd75aea1b0e4adf9321c0f19c`
 
 The integrated preflight requires these identities to remain exact. Any change
 to the dataset manifests, raw-source inventory, result digest, objective model,

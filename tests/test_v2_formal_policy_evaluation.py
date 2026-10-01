@@ -368,6 +368,106 @@ class TestFormalPolicyEvaluation(unittest.TestCase):
             frozen_bounds,
         )
 
+    def test_trace_evaluation_returns_exact_executed_power_and_soc_history(self) -> None:
+        from v2.config import TimeScaleConfig
+        from v2.dqn.action_space import FINAL_DQN_ACTION_CATALOG
+        from v2.envs.formal_episode import FormalEpisodeBackend
+        from v2.envs.multirate_weight_env import MultiRateWeightEnvironment
+        from v2.evaluation.formal_policy import (
+            FixedActionPolicy,
+            evaluate_formal_policy_with_power_traces,
+        )
+
+        class Solver:
+            @staticmethod
+            def solve(**kwargs):
+                load = float(kwargs["observed_load_kw"])
+                soc = float(kwargs["current_soc"])
+
+                class Command:
+                    p_fc_kw = 30.0
+                    p_batt_bus_kw = load - 30.0
+                    predicted_next_soc = soc - 0.001
+
+                class Plan:
+                    @staticmethod
+                    def first_command():
+                        return Command()
+
+                return Plan()
+
+        episode = _episode("trace", steps=2)
+        backend = FormalEpisodeBackend(
+            load_kw=episode.load_kw,
+            speed_kn=episode.speed_kn,
+            fc_power_kw=episode.fc_power_kw,
+            battery_bus_kw=episode.battery_bus_kw,
+            operating_mode=episode.operating_mode,
+            mpc=Solver(),
+        )
+        environment = MultiRateWeightEnvironment(
+            timescale=TimeScaleConfig.formal_baseline(),
+            action_catalog=FINAL_DQN_ACTION_CATALOG,
+            backend=backend,
+            state_provider=backend.state,
+            formal_training_mode=True,
+        )
+
+        with mock.patch(
+            "v2.evaluation.formal_policy.build_formal_environment",
+            return_value=(backend, environment),
+        ):
+            evaluation, traces = evaluate_formal_policy_with_power_traces(
+                episodes=(episode,), policy=FixedActionPolicy("w_8_1_1")
+            )
+
+        self.assertEqual(evaluation.episode_ids, ("trace",))
+        self.assertEqual(len(traces), 1)
+        trace = traces[0]
+        self.assertEqual(trace.sample_id, "trace")
+        self.assertEqual(trace.time_s, (0.0, 30.0))
+        self.assertEqual(trace.load_power_kw, (40.0, 40.0))
+        self.assertEqual(trace.fuel_cell_power_kw, (30.0, 30.0))
+        self.assertEqual(trace.battery_bus_power_kw, (10.0, 10.0))
+        self.assertEqual(trace.soc_time_s, (0.0, 30.0, 60.0))
+        self.assertEqual(trace.soc, (0.60, 0.599, 0.598))
+        self.assertEqual(trace.operating_mode, ("onboard", "onboard"))
+        self.assertTrue(trace.completed)
+        self.assertIsNone(trace.failure_kind)
+
+    def test_trace_evaluation_propagates_validation_tau_override(self) -> None:
+        from v2.evaluation.formal_policy import (
+            FixedActionPolicy,
+            evaluate_formal_policy_with_power_traces,
+        )
+
+        episode = _episode("tau-override", steps=1)
+        environment = _Environment(
+            (((1.0, 2.0, 3.0, 4.0), False, 1),),
+            executed_soc=(0.60, 0.59),
+        )
+        environment.backend.executed_fc_power_kw = [20.0]
+        environment.backend.executed_battery_bus_power_kw = [20.0]
+        environment.backend.load_kw = np.asarray([40.0])
+        environment.backend.operating_mode = tuple(
+            type("Mode", (), {"value": "onboard"})() for _ in range(1)
+        )
+        environment.backend.timescale = type(
+            "TimeScale", (), {"ts_mpc_seconds": 30.0}
+        )()
+
+        with mock.patch(
+            "v2.evaluation.formal_policy.build_formal_environment",
+            return_value=(environment.backend, environment),
+        ) as build:
+            evaluate_formal_policy_with_power_traces(
+                episodes=(episode,),
+                policy=FixedActionPolicy("w_8_1_1"),
+                tau_lpf_seconds=300.0,
+            )
+
+        build.assert_called_once_with(episode, tau_lpf_seconds=300.0)
+
 
 if __name__ == "__main__":
     unittest.main()

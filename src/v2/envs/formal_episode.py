@@ -109,6 +109,7 @@ class FormalEpisodeBackend:
         battery_bus_kw: np.ndarray,
         operating_mode: tuple[str, ...],
         mpc: object,
+        tau_lpf_seconds: float = TAU_LPF_SECONDS,
     ) -> None:
         load = np.asarray(load_kw, dtype=float)
         speed = np.asarray(speed_kn, dtype=float)
@@ -140,6 +141,9 @@ class FormalEpisodeBackend:
         self.battery_capacity_profile_kw = battery.copy()
         self.operating_mode = modes
         self.mpc = mpc
+        self.tau_lpf_seconds = _finite(tau_lpf_seconds, "tau_lpf_seconds")
+        if self.tau_lpf_seconds <= 0.0:
+            raise ValueError("tau_lpf_seconds must be positive")
         self.timescale = TimeScaleConfig.formal_baseline()
         self.plant = PlantConfig.research_simulation()
         self.efficiency = formal_battery_efficiency()
@@ -158,6 +162,7 @@ class FormalEpisodeBackend:
         self.mode_counts = {mode: 0 for mode in OperatingMode}
         self.mpc_solve_count = 0
         self.executed_fc_power_kw: list[float] = []
+        self.executed_battery_bus_power_kw: list[float] = []
         self.executed_soc: list[float] = [self.INITIAL_SOC]
         self.observed_states: list[tuple[float, ...]] = []
         self._interval_ledgers: list[RawCnyIntervalLedger] = []
@@ -174,7 +179,7 @@ class FormalEpisodeBackend:
     def _reset_onboard_history(self) -> None:
         self._base_filter = CausalBaseLoadFilter(
             sample_seconds=self.timescale.ts_mpc_seconds,
-            tau_seconds=TAU_LPF_SECONDS,
+            tau_seconds=self.tau_lpf_seconds,
         )
         self._past_samples: list[OperatingHistorySample] = []
         self._state_history = FormalStateHistory()
@@ -329,6 +334,7 @@ class FormalEpisodeBackend:
         self.index += 1
         self.mode_counts[mode] += 1
         self.executed_fc_power_kw.append(p_fc)
+        self.executed_battery_bus_power_kw.append(p_batt)
         done = self.index >= len(self.load_kw)
         if done:
             terminal = terminal_recharge_grid_energy(

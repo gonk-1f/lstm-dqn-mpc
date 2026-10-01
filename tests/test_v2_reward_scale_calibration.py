@@ -59,15 +59,28 @@ class TestRewardScaleCalibration(unittest.TestCase):
         )
 
     def test_document_round_trip_and_held_out_rejection(self) -> None:
+        from v2.contracts import control_semantics
         from v2.analysis.action_screening import HeldOutSelectionError
         from v2.training.reward_scaling import load_reward_scale_document
 
         document = self._document()
+        self.assertEqual(document["control_semantics"], control_semantics())
         loaded = load_reward_scale_document(document)
         self.assertEqual(loaded.digest, self._calibration().digest)
 
         document["split"] = "validation"
         with self.assertRaises(HeldOutSelectionError):
+            load_reward_scale_document(document)
+
+    def test_document_rejects_reward_scale_from_old_lpf_tau(self) -> None:
+        from v2.evaluation.checkpoint_selection import canonical_result_digest
+        from v2.training.reward_scaling import load_reward_scale_document
+
+        document = self._document()
+        document["control_semantics"]["tau_lpf_seconds"] = 90.0
+        body = {key: value for key, value in document.items() if key != "result_digest"}
+        document["result_digest"] = canonical_result_digest(body)
+        with self.assertRaises(ValueError):
             load_reward_scale_document(document)
 
     def test_document_rejects_cost_digest_manifest_and_action_mutation(self) -> None:

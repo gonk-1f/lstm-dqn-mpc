@@ -106,6 +106,54 @@ class TestFormalModeInterlock(unittest.TestCase):
 
         self.assertEqual(solver.observed_load_kw, 0.0)
 
+    def test_validation_screen_can_override_lpf_tau_without_changing_baseline(self) -> None:
+        from v2.config import TAU_LPF_SECONDS
+        from v2.envs.formal_episode import FormalEpisodeBackend
+
+        backend = FormalEpisodeBackend(
+            load_kw=np.asarray([120.0]),
+            speed_kn=np.asarray([5.0]),
+            fc_power_kw=np.asarray([100.0]),
+            battery_bus_kw=np.asarray([20.0]),
+            operating_mode=("onboard",),
+            mpc=self._solver(),
+            tau_lpf_seconds=180.0,
+        )
+
+        self.assertEqual(backend._base_filter.tau_seconds, 180.0)
+        self.assertAlmostEqual(backend._base_filter.alpha, np.exp(-30.0 / 180.0))
+        self.assertEqual(TAU_LPF_SECONDS, 180.0)
+
+    def test_onboard_interval_commits_base_filter_exactly_once(self) -> None:
+        from v2.dqn.action_space import FINAL_DQN_ACTION_CATALOG
+        from v2.envs.formal_episode import (
+            FormalEpisodeBackend,
+            build_formal_nonlinear_mpc,
+        )
+
+        backend = FormalEpisodeBackend(
+            load_kw=np.asarray([200.0, 250.0]),
+            speed_kn=np.asarray([4.0, 4.0]),
+            fc_power_kw=np.asarray([180.0, 220.0]),
+            battery_bus_kw=np.asarray([20.0, 30.0]),
+            operating_mode=("onboard", "onboard"),
+            mpc=build_formal_nonlinear_mpc(),
+        )
+        backend._base_filter.commit(100.0)
+        before = float(backend._base_filter.observed_base_kw)
+        alpha = backend._base_filter.alpha
+        weights = FINAL_DQN_ACTION_CATALOG[0].to_mpc_weights()
+
+        backend.execute_mpc_step(weights)
+
+        expected = alpha * before + (1.0 - alpha) * 200.0
+        self.assertAlmostEqual(float(backend._base_filter.observed_base_kw), expected)
+
+        backend.execute_mpc_step(weights)
+
+        expected = alpha * expected + (1.0 - alpha) * 250.0
+        self.assertAlmostEqual(float(backend._base_filter.observed_base_kw), expected)
+
     def test_shore_pauses_mpc_but_updates_soc_degradation_cost_and_resets_history(self) -> None:
         from v2.config import TimeScaleConfig
         from v2.data.supervisory_rules import OperatingMode
@@ -154,6 +202,13 @@ class TestFormalModeInterlock(unittest.TestCase):
         self.assertGreater(transition.ledger.shore_cost_cny, 0.0)
         self.assertGreater(transition.ledger.battery_degradation_cost_cny, 0.0)
         self.assertEqual(backend.executed_fc_power_kw[3:6], [0.0, 0.0, 0.0])
+        self.assertEqual(
+            backend.executed_battery_bus_power_kw[:5],
+            [60.0, 60.0, 60.0, -70.0, -70.0],
+        )
+        self.assertEqual(len(backend.executed_battery_bus_power_kw), 6)
+        self.assertLess(backend.executed_battery_bus_power_kw[5], 0.0)
+        self.assertGreater(backend.executed_battery_bus_power_kw[5], -70.0)
         self.assertLessEqual(backend.soc, backend.INITIAL_SOC)
         self.assertEqual(transition.next_state[:72], (0.0,) * 72)
         self.assertAlmostEqual(transition.next_state[73], 100.0 / 600.0)

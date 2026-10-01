@@ -322,7 +322,10 @@ Expected: current control semantics include the single-commit field and `test_pa
 Run:
 
 ```powershell
-python -X utf8 -u src/main/run_v2_objective_scale_audit.py
+python -X utf8 -u src/main/run_v2_objective_scale_audit.py `
+  --raw-root "C:/Users/20883/OneDrive/Desktop/氢舟一号" `
+  --metadata-root data/processed/operating_dataset_zero_boundary_v2/metadata `
+  --output-path outputs/v2_objective_scale_audit/audit_summary.json
 ```
 
 Expected: status GO/VERIFIED, finite objective components, and current control semantics.

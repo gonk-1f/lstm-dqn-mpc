@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from .config import TimeScaleConfig
+from .config import TAU_LPF_SECONDS, TimeScaleConfig
 
 METHOD_VERSION = "multiscale_dqn_wmpc_v2"
 MPC_OBJECTIVE_VERSION = "fc_base_smooth_soc_deadband_mean_v2"
@@ -12,6 +12,9 @@ FC_ENERGY_VERSION = "eta_fc_lhv_h2_v1"
 FC_DEGRADATION_VERSION = "aggregate_four_condition_voltage_loss_v1"
 BATTERY_DEGRADATION_VERSION = "soc_current_weighted_throughput_v1"
 DATASET_VERSION = "mode_aware_operating_cycle_v2"
+BASE_LOAD_FILTER_UPDATE_VERSION = (
+    "causal_single_commit_per_executed_interval_v1"
+)
 
 
 class IncompatibleArtifactError(ValueError):
@@ -36,6 +39,8 @@ def control_semantics(
         "dqn_switch_steps": scale.dqn_switch_steps,
         "prediction_seconds": scale.prediction_seconds,
         "switch_seconds": scale.switch_seconds,
+        "tau_lpf_seconds": TAU_LPF_SECONDS,
+        "base_load_filter_update_version": BASE_LOAD_FILTER_UPDATE_VERSION,
     }
 
 

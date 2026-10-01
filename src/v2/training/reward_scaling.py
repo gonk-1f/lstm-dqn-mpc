@@ -14,9 +14,10 @@ from ..economics import (
     calibrate_reward_scale,
 )
 from ..evaluation.checkpoint_selection import canonical_result_digest
+from ..contracts import control_semantics, require_v2_semantics
 
 
-REWARD_SCALE_DOCUMENT_VERSION = "v2_train_interval_reward_scale_v1"
+REWARD_SCALE_DOCUMENT_VERSION = "v2_train_interval_reward_scale_v2"
 REFERENCE_ACTION_ID = "w_8_1_1"
 _MANIFEST_KEYS = ("power", "ais", "modes")
 
@@ -71,6 +72,7 @@ def build_reward_scale_document(
         "provenance_id": checked.provenance.provenance_id,
         "split": "train",
         "reference_action_id": reference_action_id,
+        "control_semantics": control_semantics(),
         "input_manifest_sha256": hashes,
         "train_segment_ids": list(segment_ids),
         "train_raw_interval_costs_cny": list(checked.train_raw_costs_cny),
@@ -106,6 +108,7 @@ def load_reward_scale_document(
             raise ValueError("reward-scale document schema differs")
         if document["reference_action_id"] != REFERENCE_ACTION_ID:
             raise ValueError("reward-scale reference action differs")
+        require_v2_semantics(document["control_semantics"])
         hashes = _manifest_hashes(document["input_manifest_sha256"])
         if expected_manifest_hashes is not None:
             expected = _manifest_hashes(expected_manifest_hashes)

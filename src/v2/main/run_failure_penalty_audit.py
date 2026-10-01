@@ -12,6 +12,7 @@ from typing import Sequence
 from ..data.formal_training_dataset import FormalTrainingDataset
 from ..dqn.action_space import ACTION_CATALOG_DIGEST
 from ..failure_policy import FORMAL_FAILURE_POLICY
+from ..contracts import control_semantics
 from .train_formal_dqn import (
     DEFAULT_AIS_ROOT,
     DEFAULT_MODE_ROOT,
@@ -21,7 +22,7 @@ from .train_formal_dqn import (
 )
 
 
-AUDIT_SCHEMA_VERSION = "v2_terminal_failure_audit_v1"
+AUDIT_SCHEMA_VERSION = "v2_terminal_failure_audit_v2"
 REFERENCE_ACTION_ID = "w_8_1_1"
 DEFAULT_OUTPUT = (
     REPOSITORY_ROOT / "outputs" / "v2_failure_penalty_audit" / "audit_summary.json"
@@ -107,6 +108,7 @@ def generate_audit(args: argparse.Namespace) -> dict[str, object]:
         "schema_version": AUDIT_SCHEMA_VERSION,
         "dataset_version": "operating_dataset_zero_boundary_v2",
         "split": "train",
+        "control_semantics": control_semantics(),
         "input_manifest_sha256": _manifest_hashes(
             args.power_root, args.ais_root, args.mode_root
         ),

@@ -1,5 +1,9 @@
 # v2 remaining work before formal training
 
+> Historical planning snapshot. Superseded by `docs/v2_formal_training_runbook.md`
+> and the live integrated preflight, which now reports formal training **GO**
+> for the H4 baseline with `tau_LPF=180 s`.
+
 The economic interval contracts are closed for the approved model assumptions,
 but formal training remains **NO-GO**. The remaining work is deliberately not
 executed by the economic-model closure change.
@@ -23,7 +27,7 @@ This change does not run dataset construction or splitting, action screening,
 DQN state audits, lifetime-factor sensitivity, formal training, or held-out
 evaluation.
 
-`N=5`, `M=5`, `tau_LPF=90 s`, and the battery lifetime factor `15000` are
+`N=5`, `M=5`, `tau_LPF=180 s`, and the battery lifetime factor `15000` are
 frozen project-baseline configuration and no longer training blockers. Their
 non-measured evidence classifications remain explicit; future sensitivity is
 optional and non-blocking.
