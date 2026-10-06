@@ -1,5 +1,7 @@
 # Experimental persistence DQN–MPC path
 
+Archive note: the generated `outputs/v3_persistence_calibration` artifacts remain in commit `2e70008` on branch `refactor/multiscale-dqn-wmpc-v2`. Artifact paths below describe that archived revision and are absent from the direct-power branch.
+
 The active v3 control path uses 30 s observations and a five-step economic MPC. At decision boundary `k`, it forecasts `(L_k, L_k, L_k, L_k, L_k)` and previews the LPF reference without changing the committed LPF state. The FC command is the first MPC output; the following real load is revealed later, so the battery carries its forecast error. No LSTM checkpoint is loaded on this path. The earlier LSTM study remains in `v3_predictive_control.md` as diagnostic evidence.
 
 ## DQN timing and state

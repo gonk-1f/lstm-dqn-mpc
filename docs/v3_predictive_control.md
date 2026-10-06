@@ -1,5 +1,7 @@
 # Earlier experimental LSTM–LPF–economic MPC–Double DQN chain
 
+Archive note: this v3 experiment and its generated `outputs/v3_lstm*` artifacts remain in commit `2e70008` on branch `refactor/multiscale-dqn-wmpc-v2`. Artifact paths below describe that archived revision and are absent from the direct-power branch.
+
 The active v3 path now uses current-load persistence. See `v3_persistence_dqn_mpc.md`. This file preserves the earlier LSTM experiment and its diagnostics.
 
 This is a new experimental `v3` path. The existing `v2` method and its checkpoints remain frozen. The `v3` path currently handles a contiguous ONBOARD interval; formal shore-mode training/evaluation is not wired to it.
