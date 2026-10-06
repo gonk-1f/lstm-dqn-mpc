@@ -43,7 +43,8 @@ python -X utf8 -u -m v2.main.train_history_dqn_study --smoke-only --experiment H
 Train-only reward scale 已在单次提交修复后重新写入
 `outputs/v2_history_dqn_study/reward_scale_calibration.json`。它使用真实 180 s LPF、
 固定动作 `w_8_1_1` 的 23,408 个实际执行 30 s interval ledger（包含零成本
-interval），算术均值为 `9.36834363589 CNY`。50,000 失败分数不进入该均值；
+interval），在氢价 21.9 CNY/kg、FC replacement fraction 0.5 和 OFF→ON
+启动计数修正后，算术均值为 `4.42374585960071 CNY`。50,000 失败分数不进入该均值；
 scaled profile 会把完整学习 reward（原始成本和失败分数）统一除以该尺度。
 
 正式新基线采用 H4：scaled reward、learning rate `1e-3`、90 维状态和 36 动作。
@@ -52,7 +53,7 @@ identity 同时包含 `tau_lpf_seconds=180.0` 和单次提交版本。旧 `H4_ta
 Validation selection 与 Test 结果均不得作为修复后模型的正式证据。
 
 ```powershell
-python -X utf8 -u -m v2.main.train_history_dqn_study --experiment H4 --reward-scale outputs/v2_history_dqn_study/reward_scale_calibration.json --rounds 40 --seed 42 --device cpu --log-every 50 --output-dir outputs/v2_history_dqn_study/H4_tau180
+python -X utf8 -u -m v2.main.train_history_dqn_study --experiment H4 --reward-scale outputs/v2_history_dqn_study/reward_scale_calibration.json --rounds 40 --seed 42 --device cpu --log-every 50 --output-dir outputs/v2_m10_dqn_study/M5_control
 ```
 
 每轮重新使用固定 seed 的 RNG 打乱 Train 航段；Validation 保持 manifest 顺序、
@@ -63,11 +64,47 @@ python -X utf8 -u -m v2.main.train_history_dqn_study --experiment H4 --reward-sc
 安全暂停后，必须从新目录自己的 `latest.pt` 恢复：
 
 ```powershell
-python -X utf8 -u -m v2.main.train_history_dqn_study --experiment H4 --reward-scale outputs/v2_history_dqn_study/reward_scale_calibration.json --rounds 40 --seed 42 --device cpu --log-every 50 --output-dir outputs/v2_history_dqn_study/H4_tau180 --resume outputs/v2_history_dqn_study/H4_tau180/latest.pt
+python -X utf8 -u -m v2.main.train_history_dqn_study --experiment H4 --reward-scale outputs/v2_history_dqn_study/reward_scale_calibration.json --rounds 40 --seed 42 --device cpu --log-every 50 --output-dir outputs/v2_m10_dqn_study/M5_control --resume outputs/v2_m10_dqn_study/M5_control/latest.pt
 ```
 
 本节不提供或执行 Test 命令。必须先完成 40 轮训练，再仅用 Validation 选择
 round checkpoint；冻结后才允许进行一次 Test evaluation。
+
+旧 H4 checkpoint 绑定旧 reward/economic semantics，不能作为新经济模型的
+M=5 对照。
+
+## M=10 动作保持时间消融（仅 Train + Validation）
+
+M=10 保持 `Ts=30 s`、`N=5`、`gamma=1.0`，每个动作最多覆盖十次实际 MPC
+solve，即 300 s。每轮 Train 的估计 macro transition 从 M=5 的 3,721 降为
+1,881；40 轮分别约为 148,840 与 75,240。为匹配物理训练量，M=10 使用
+warmup 2,500、epsilon decay 75,000、replay capacity 100,000。target sync 仍为
+1,000 macro steps，属于本次“其余参数不变”的限制，因此对应物理时间是 M=5
+的两倍。
+
+M=10 的 Train-only reward scale 已独立重算并绑定 `M=10/300 s`：
+
+```powershell
+python -X utf8 -u -m v2.main.run_m10_reward_scale_calibration
+python -X utf8 -u -m v2.main.train_m10_dqn_study --preflight-only
+python -X utf8 -u -m v2.main.train_m10_dqn_study --smoke-only
+python -X utf8 -u -m v2.main.train_m10_dqn_study --rounds 40 --seed 42 --device cpu --log-every 50
+```
+
+中断恢复：
+
+```powershell
+python -X utf8 -u -m v2.main.train_m10_dqn_study --rounds 40 --seed 42 --device cpu --log-every 50 --resume outputs/v2_m10_dqn_study/M10/latest.pt
+```
+
+M=5 control 与 M=10 都训练完后，下面的命令只读取 Train 身份和 Validation
+payload，分别按“完成数最多、失败分数最小、经济成本最小、较早 round”选择
+checkpoint，再输出两者及固定 `w_8_1_1` 的成本、动作分布、动作熵和最大动作
+占比。它不读取 Test：
+
+```powershell
+python -X utf8 -u -m v2.main.compare_m5_m10_validation --m5-rounds 40 --m10-rounds 40 --device cpu
+```
 
 ## 旧 40 轮单配置入口（保留兼容，不用于本次 H1-H4 比较）
 

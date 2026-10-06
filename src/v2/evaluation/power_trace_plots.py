@@ -28,6 +28,9 @@ _MANIFEST_FIELDS = (
     "failure_kind",
     "interval_count",
     "duration_s",
+    "terminal_boundary_time_s",
+    "terminal_boundary_load_kw",
+    "unexecuted_tail_seconds",
     "minimum_load_kw",
     "maximum_load_kw",
     "image_path",
@@ -63,6 +66,23 @@ def _shore_spans(trace: EpisodePowerTrace) -> tuple[tuple[float, float], ...]:
     return tuple(spans)
 
 
+def _terminal_boundary_curve(
+    trace: EpisodePowerTrace,
+) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    """Return a visual-only connector from the executed horizon to recorded zero."""
+
+    if (
+        not trace.load_power_kw
+        or trace.terminal_boundary_time_s is None
+        or trace.terminal_boundary_load_kw is None
+    ):
+        return (), ()
+    return (
+        (trace.soc_time_s[-1], trace.terminal_boundary_time_s),
+        (trace.load_power_kw[-1], trace.terminal_boundary_load_kw),
+    )
+
+
 def _plot(path: Path, trace: EpisodePowerTrace, policy_id: str) -> None:
     figure, axis = plt.subplots(figsize=(12.0, 5.2), constrained_layout=True)
     if trace.time_s:
@@ -76,6 +96,18 @@ def _plot(path: Path, trace: EpisodePowerTrace, policy_id: str) -> None:
                 color="#7AA6C2",
                 alpha=0.16,
                 label="Shore interval" if index == 0 else None,
+            )
+        terminal_time, terminal_load = _terminal_boundary_curve(trace)
+        if terminal_time:
+            axis.plot(
+                terminal_time,
+                terminal_load,
+                color="#16324F",
+                linewidth=1.1,
+                linestyle="--",
+                marker="o",
+                markersize=3.5,
+                label="Recorded terminal zero boundary (not executed)",
             )
     axis.axhline(0.0, color="#666666", linewidth=0.8, linestyle="--")
     axis.set_xlabel("Elapsed time (s)")
@@ -159,6 +191,8 @@ def write_power_trace_plots(
         for trace, filename in zip(traces, names):
             _plot(plot_root / filename, trace, policy_id)
             loads = trace.load_power_kw
+            terminal_time = trace.terminal_boundary_time_s
+            terminal_load = trace.terminal_boundary_load_kw
             rows.append(
                 {
                     "policy_id": policy_id,
@@ -167,6 +201,17 @@ def write_power_trace_plots(
                     "failure_kind": trace.failure_kind or "",
                     "interval_count": len(trace.time_s),
                     "duration_s": trace.soc_time_s[-1],
+                    "terminal_boundary_time_s": (
+                        terminal_time if terminal_time is not None else ""
+                    ),
+                    "terminal_boundary_load_kw": (
+                        terminal_load if terminal_load is not None else ""
+                    ),
+                    "unexecuted_tail_seconds": (
+                        terminal_time - trace.soc_time_s[-1]
+                        if terminal_time is not None
+                        else ""
+                    ),
                     "minimum_load_kw": min(loads) if loads else math.nan,
                     "maximum_load_kw": max(loads) if loads else math.nan,
                     "image_path": f"plots/{filename}",

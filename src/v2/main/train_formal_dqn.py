@@ -174,11 +174,21 @@ def _solver_reproducibility_check(train: tuple[FormalEpisode, ...]) -> int:
     return checked
 
 
-def _live_preflight(args: argparse.Namespace) -> tuple[object, FormalTrainingDataset, tuple[FormalEpisode, ...], tuple[FormalEpisode, ...]]:
+def _live_preflight(
+    args: argparse.Namespace,
+    *,
+    timescale: TimeScaleConfig | None = None,
+) -> tuple[object, FormalTrainingDataset, tuple[FormalEpisode, ...], tuple[FormalEpisode, ...]]:
     report = assess_formal_training_preflight()
     dataset = FormalTrainingDataset.open(args.power_root, args.ais_root, args.mode_root)
     train = dataset.load_train()
     validation = dataset.load_validation()
+    scale = TimeScaleConfig.formal_baseline() if timescale is None else timescale
+    if type(scale) is not TimeScaleConfig:
+        raise TypeError("timescale must be an exact TimeScaleConfig or None")
+    train_macro_transitions = dataset.train_macro_transition_count(
+        scale.dqn_switch_steps
+    )
     state_count = _validate_all_states(train)
     solver_cases = _solver_reproducibility_check(train)
     mode_counts = {mode: 0 for mode in OperatingMode}
@@ -191,7 +201,7 @@ def _live_preflight(args: argparse.Namespace) -> tuple[object, FormalTrainingDat
         f"FORMAL_TRAINING={report.formal_training} "
         f"train_episodes={len(train)} validation_episodes={len(validation)} "
         f"train_steps={dataset.train_supervisory_steps} "
-        f"train_macro_transitions={dataset.train_macro_transitions} "
+        f"train_macro_transitions={train_macro_transitions} "
         f"finite_states={state_count} solver_reproducibility_cases={solver_cases} "
         f"train_onboard_steps={mode_counts[OperatingMode.ONBOARD]} "
         f"train_shore_pending_steps={mode_counts[OperatingMode.SHORE_PENDING]} "
@@ -204,7 +214,11 @@ def _live_preflight(args: argparse.Namespace) -> tuple[object, FormalTrainingDat
     return report, dataset, train, validation
 
 
-def _smoke(train: tuple[FormalEpisode, ...]) -> None:
+def _smoke(
+    train: tuple[FormalEpisode, ...],
+    *,
+    timescale: TimeScaleConfig | None = None,
+) -> None:
     selected: tuple[FormalEpisode, int, int] | None = None
     for episode in train:
         modes = tuple(OperatingMode(value) for value in episode.operating_mode)
@@ -244,7 +258,10 @@ def _smoke(train: tuple[FormalEpisode, ...]) -> None:
         episode.operating_mode[start:stop],
         episode.mode_reason[start:stop],
     )
-    backend, environment = _environment(bounded)
+    if timescale is None:
+        backend, environment = _environment(bounded)
+    else:
+        backend, environment = _environment(bounded, timescale=timescale)
     environment.reset()
     transition = environment.step(FINAL_DQN_ACTION_CATALOG[0].action_id)
     if (
@@ -374,6 +391,8 @@ def _progress_line(
 def _evaluate_validation(
     agent: DqnAgent,
     validation: tuple[FormalEpisode, ...],
+    *,
+    timescale: TimeScaleConfig | None = None,
 ) -> ValidationSummary:
     raw_economic_cost_cny = 0.0
     failure_penalty_score = 0.0
@@ -383,7 +402,10 @@ def _evaluate_validation(
     failed_episodes = 0
     greedy_actions: list[int] = []
     for episode in validation:  # Manifest order is fixed; never shuffled.
-        _, environment = _environment(episode)
+        if timescale is None:
+            _, environment = _environment(episode)
+        else:
+            _, environment = _environment(episode, timescale=timescale)
         state = environment.reset()
         done = False
         while not done:
@@ -420,9 +442,16 @@ def _train(
     *,
     profile: DqnExperimentProfile,
     calibration: RewardScaleCalibration | None,
+    timescale: TimeScaleConfig | None = None,
 ) -> None:
     if type(profile) is not DqnExperimentProfile:
         raise TypeError("profile must be an exact DqnExperimentProfile")
+    explicit_timescale = timescale is not None
+    scale = profile.timescale if timescale is None else timescale
+    if type(scale) is not TimeScaleConfig:
+        raise TypeError("timescale must be an exact TimeScaleConfig or None")
+    if scale != profile.timescale:
+        raise ValueError("timescale differs from the experiment profile")
     config = profile.dqn_config(rounds=args.rounds)
     agent = DqnAgent(config, seed=args.seed, device=args.device)
     ordered_ids = tuple(episode.sample_id for episode in train)
@@ -434,7 +463,19 @@ def _train(
     permutation = schedule.next_round()
 
     if args.resume is not None:
-        metadata = load_checkpoint(args.resume, agent=agent, schedule=schedule)
+        if explicit_timescale:
+            metadata = load_checkpoint(
+                args.resume,
+                agent=agent,
+                schedule=schedule,
+                timescale=scale,
+            )
+        else:
+            metadata = load_checkpoint(
+                args.resume,
+                agent=agent,
+                schedule=schedule,
+            )
         global_step = metadata.global_macro_step
         round_index = metadata.round_index
         episode_position = metadata.episode_position
@@ -453,7 +494,10 @@ def _train(
         diagnostic_window: list[DqnOptimizationDiagnostics] = []
         for position in range(episode_position, len(permutation)):
             episode = by_id[permutation[position]]
-            backend, environment = _environment(episode)
+            if explicit_timescale:
+                backend, environment = _environment(episode, timescale=scale)
+            else:
+                backend, environment = _environment(episode)
             state = environment.reset()
             done = False
             episode_macro = 0
@@ -461,7 +505,7 @@ def _train(
             episode_failure_penalty_score = 0.0
             episode_learning_reward = 0.0
             while not done:
-                epsilon = epsilon_at_global_step(global_step)
+                epsilon = epsilon_at_global_step(global_step, config=config)
                 action_index = agent.select_action(
                     np.asarray(state, dtype=np.float32), epsilon=epsilon
                 )
@@ -536,6 +580,7 @@ def _train(
                 round_index=round_index,
                 episode_position=position + 1,
                 current_permutation=permutation,
+                timescale=scale,
             )
             print(
                 f"checkpoint={latest_path} round={round_index + 1} "
@@ -543,7 +588,14 @@ def _train(
                 flush=True,
             )
 
-        validation_summary = _evaluate_validation(agent, validation)
+        if explicit_timescale:
+            validation_summary = _evaluate_validation(
+                agent,
+                validation,
+                timescale=scale,
+            )
+        else:
+            validation_summary = _evaluate_validation(agent, validation)
         greedy_diagnostics = (
             summarize_actions(
                 validation_summary.greedy_action_indices,
@@ -580,6 +632,7 @@ def _train(
             round_index=round_index,
             episode_position=episode_position,
             current_permutation=permutation,
+            timescale=scale,
         )
         periodic_path = args.output_dir / f"round_{completed_round:03d}.pt"
         save_checkpoint(
@@ -590,6 +643,7 @@ def _train(
             round_index=round_index,
             episode_position=episode_position,
             current_permutation=permutation,
+            timescale=scale,
         )
         behavior_diagnostics = summarize_actions(
             tuple(round_behavior_actions),

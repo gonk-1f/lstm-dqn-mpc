@@ -74,9 +74,9 @@ class FuelCellIntervalCostTests(unittest.TestCase):
             interval_cost(
                 69_990.0,
                 70_010.0,
-                replacement_cost_cny=3_500.0 * 600.0,
+                replacement_cost_cny=3_500.0 * 600.0 * 0.5,
             ),
-            300.0,
+            150.0,
         )
 
     def test_post_eol_increment_is_zero_and_cost_is_not_multiplied_by_eight(
@@ -103,7 +103,7 @@ class FuelCellIntervalCostTests(unittest.TestCase):
             interval_cost(
                 80_000.0,
                 90_000.0,
-                replacement_cost_cny=3_500.0 * 600.0,
+                replacement_cost_cny=3_500.0 * 600.0 * 0.5,
             ),
             0.0,
         )
@@ -111,15 +111,15 @@ class FuelCellIntervalCostTests(unittest.TestCase):
         full_life_cost = interval_cost(
             0.0,
             70_000.0,
-            replacement_cost_cny=3_500.0 * 600.0,
+            replacement_cost_cny=3_500.0 * 600.0 * 0.5,
         )
-        self.assertEqual(full_life_cost, 2_100_000.0)
+        self.assertEqual(full_life_cost, 1_050_000.0)
         self.assertNotEqual(full_life_cost, 3_500.0 * 600.0 * 8.0)
         with self.assertRaises(ValueError):
             interval_cost(
                 0.0,
                 70_000.0,
-                replacement_cost_cny=3_500.0 * 600.0 * 8.0,
+                replacement_cost_cny=3_500.0 * 600.0,
             )
 
 

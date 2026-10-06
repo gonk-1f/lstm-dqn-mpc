@@ -2,7 +2,7 @@
 
 ## Version, scope, and evidence
 
-The exact model version is `aggregate_four_condition_voltage_loss_v1`. The
+The exact model version is `aggregate_four_condition_start_cycle_voltage_loss_v2`. The
 four-condition structure is retained for the aggregate controller, but the
 numerical voltage-loss coefficients are per-cell values whose transient term
 uses the individual fuel-cell/reference-unit power reported in Table 3 of DOI
@@ -13,7 +13,7 @@ uses the individual fuel-cell/reference-unit power reported in Table 3 of DOI
 | Low-load runtime | 10.17 | microvolt/hour |
 | High-load runtime | 11.74 | microvolt/hour |
 | Transient | 0.0441 | microvolt per absolute delta-kW |
-| Start/stop | 23.91 | microvolt per aggregate cycle |
+| Start | 23.91 | microvolt per aggregate OFF-to-ON cycle |
 
 DOI `10.3390/jmse13010034` supports the four-condition accounting structure;
 it is not represented as the independent source of the numerical
@@ -33,7 +33,7 @@ the raw single-cell voltage loss is
 
 \[
 \Delta V_{\mu V}=\Delta V_{low}+\Delta V_{high}
- +0.0441\left|P_{ref,t}-P_{ref,t-1}\right|+23.91N_{start/stop}.
+ +0.0441\left|P_{ref,t}-P_{ref,t-1}\right|+23.91N_{start}.
 \]
 
 While the aggregate fuel cell is ON, exactly one runtime term applies:
@@ -51,6 +51,11 @@ in executed source-compatible reference-unit power; it is distinct from any
 MPC smoothing objective and is not suppressed merely because the new ON/OFF
 state is OFF. All returned components and cumulative values remain in
 microvolts of single-cell voltage loss.
+
+At the aggregate formal-episode boundary, a cycle charge is emitted only for
+an OFF-to-ON transition. ON-to-OFF is not charged as a second cycle. This
+prevents one physical start/stop sequence from being counted twice while the
+raw transient term continues to account for the executed power change.
 
 The raw API is named `reference_unit_voltage_loss_step_uv`, and its power
 arguments carry `reference_` names. Negative power, power above the explicit
@@ -121,13 +126,16 @@ the clipped cumulative economic fraction cannot, and EOL is reported from
 `D_raw_after >= 1`. The current interval cost is
 
 \[
-C_{FC,interval}=\Delta D_{econ}\times3500\times600\;CNY.
+C_{FC,interval}=\Delta D_{econ}\times3500\times600\times0.5\;CNY.
 \]
 
 Crossing EOL charges only the remaining uncharged fraction. Further raw loss
 after EOL has zero economic increment. Without a modeled replacement/reset,
-the sum of all interval charges is bounded by `2,100,000 CNY`; the model never
+the sum of all interval charges is bounded by `1,050,000 CNY`; the model never
 multiplies cost by eight stacks and never recharges a cumulative fraction.
+The 0.5 replacement-value factor is supported by DOI
+`10.1016/j.ijhydene.2024.10.235`; it is an economic replacement assumption,
+not a degradation-rate calibration.
 
 The normalization status is `VERIFIED` for this aggregate-equivalent model.
 The separate aggregate-power-to-reference-unit coefficient mapping remains an

@@ -19,19 +19,47 @@ class FuelCellDegradationTests(unittest.TestCase):
             FC_ACCOUNTING_STRUCTURE_SOURCE_DOI,
             FC_DEGRADATION_MODEL_VERSION,
             FC_DEGRADATION_SOURCE_DOI,
+            FC_AGGREGATE_REPLACEMENT_COST_CNY,
             FC_HIGH_RUNTIME_LOSS_UV_PER_HOUR,
             FC_LOW_RUNTIME_LOSS_UV_PER_HOUR,
+            FC_REPLACEMENT_FRACTION,
+            FC_REPLACEMENT_FRACTION_SOURCE_DOI,
             FC_START_STOP_LOSS_UV_PER_CYCLE,
             FC_TRANSIENT_LOSS_UV_PER_DELTA_KW,
         )
 
-        self.assertEqual(FC_DEGRADATION_MODEL_VERSION, "aggregate_four_condition_voltage_loss_v1")
+        self.assertEqual(
+            FC_DEGRADATION_MODEL_VERSION,
+            "aggregate_four_condition_start_cycle_voltage_loss_v2",
+        )
         self.assertEqual(FC_LOW_RUNTIME_LOSS_UV_PER_HOUR, 10.17)
         self.assertEqual(FC_HIGH_RUNTIME_LOSS_UV_PER_HOUR, 11.74)
         self.assertEqual(FC_TRANSIENT_LOSS_UV_PER_DELTA_KW, 0.0441)
         self.assertEqual(FC_START_STOP_LOSS_UV_PER_CYCLE, 23.91)
         self.assertEqual(FC_DEGRADATION_SOURCE_DOI, "10.1016/j.ijhydene.2024.02.349")
         self.assertEqual(FC_ACCOUNTING_STRUCTURE_SOURCE_DOI, "10.3390/jmse13010034")
+        self.assertEqual(FC_REPLACEMENT_FRACTION, 0.5)
+        self.assertEqual(
+            FC_REPLACEMENT_FRACTION_SOURCE_DOI,
+            "10.1016/j.ijhydene.2024.10.235",
+        )
+        self.assertEqual(FC_AGGREGATE_REPLACEMENT_COST_CNY, 1_050_000.0)
+
+    def test_start_stop_cycle_is_counted_only_when_fuel_cell_starts(self) -> None:
+        from v2.models.fuel_cell_degradation import aggregate_start_cycle_count
+
+        cases = (
+            (0.0, 0.0, 0),
+            (0.0, 10.0, 1),
+            (10.0, 10.0, 0),
+            (10.0, 0.0, 0),
+        )
+        for previous_kw, current_kw, expected in cases:
+            with self.subTest(previous_kw=previous_kw, current_kw=current_kw):
+                self.assertEqual(
+                    aggregate_start_cycle_count(previous_kw, current_kw),
+                    expected,
+                )
 
     def test_runtime_boundary_is_high_at_exactly_eighty_percent_rated(self) -> None:
         from v2.models.fuel_cell_degradation import reference_unit_voltage_loss_step_uv

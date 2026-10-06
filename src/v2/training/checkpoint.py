@@ -9,6 +9,7 @@ from pathlib import Path
 import torch
 
 from ..contracts import control_semantics
+from ..config import TimeScaleConfig
 from ..dqn.action_space import ACTION_CATALOG_DIGEST, FINAL_DQN_ACTION_CATALOG
 from ..dqn.state import FORMAL_STATE_SCHEMA_DIGEST, FORMAL_STATE_SCHEMA_VERSION
 from ..failure_policy import FORMAL_FAILURE_POLICY
@@ -39,6 +40,26 @@ def _config_identity(agent: DqnAgent) -> dict[str, object]:
     return identity
 
 
+_LEGACY_EPSILON_IDENTITY = {
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay_steps": 150_000,
+}
+
+
+def _training_identity_matches(stored: object, expected: dict[str, object]) -> bool:
+    if type(stored) is not dict:
+        return False
+    if stored == expected:
+        return True
+    if any(expected.get(key) != value for key, value in _LEGACY_EPSILON_IDENTITY.items()):
+        return False
+    legacy_expected = dict(expected)
+    for key in _LEGACY_EPSILON_IDENTITY:
+        legacy_expected.pop(key)
+    return stored == legacy_expected
+
+
 def save_checkpoint(
     path: Path,
     *,
@@ -48,6 +69,7 @@ def save_checkpoint(
     round_index: int,
     episode_position: int,
     current_permutation: tuple[str, ...],
+    timescale: TimeScaleConfig | None = None,
 ) -> None:
     if type(agent) is not DqnAgent or type(schedule) is not EpisodeShuffleSchedule:
         raise TypeError("agent and schedule must use exact v2 types")
@@ -83,7 +105,7 @@ def save_checkpoint(
         "state_schema_digest": FORMAL_STATE_SCHEMA_DIGEST,
         "action_catalog_digest": ACTION_CATALOG_DIGEST,
         "action_dim": len(FINAL_DQN_ACTION_CATALOG),
-        "semantics": control_semantics(),
+        "semantics": control_semantics(timescale),
         "failure_policy": asdict(FORMAL_FAILURE_POLICY),
         "training_config_identity": _config_identity(agent),
         "round_budget": agent.config.rounds,
@@ -107,6 +129,7 @@ def load_checkpoint(
     *,
     agent: DqnAgent,
     schedule: EpisodeShuffleSchedule,
+    timescale: TimeScaleConfig | None = None,
 ) -> ResumeMetadata:
     try:
         payload = torch.load(Path(path), map_location=agent.device, weights_only=False)
@@ -120,11 +143,14 @@ def load_checkpoint(
         "state_schema_digest": FORMAL_STATE_SCHEMA_DIGEST,
         "action_catalog_digest": ACTION_CATALOG_DIGEST,
         "action_dim": len(FINAL_DQN_ACTION_CATALOG),
-        "semantics": control_semantics(),
+        "semantics": control_semantics(timescale),
         "failure_policy": asdict(FORMAL_FAILURE_POLICY),
-        "training_config_identity": _config_identity(agent),
     }
     if any(payload.get(key) != value for key, value in expected.items()):
+        raise IncompatibleCheckpointError("checkpoint state/action/config identity differs")
+    if not _training_identity_matches(
+        payload.get("training_config_identity"), _config_identity(agent)
+    ):
         raise IncompatibleCheckpointError("checkpoint state/action/config identity differs")
     saved_round_budget = payload.get("round_budget")
     if type(saved_round_budget) is not int or agent.config.rounds < saved_round_budget:

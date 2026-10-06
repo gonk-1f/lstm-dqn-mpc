@@ -1,5 +1,10 @@
 # Multi-rate DQN adaptive nonlinear MPC (v2)
 
+An experimental [v3 persistence DQN–MPC path](docs/v3_persistence_dqn_mpc.md)
+uses five-step current-load persistence and a 30 s two-weight DQN cadence.
+The earlier [LSTM diagnostic](docs/v3_predictive_control.md) did not improve
+Validation WAPE over persistence. The formal baseline described below remains v2.
+
 当前正式基线为 `METHOD_VERSION = multiscale_dqn_wmpc_v2`。下层非线性
 MPC 每 30 s 滚动求解，预测步数 `N=5`；上层 DQN 的同一权重动作保持
 `M=5` 个真实 supervisory steps。`N` 与 `M` 都对应 150 s，但语义独立。
@@ -11,9 +16,8 @@ FC delta 和当前 AIS 航速。岸电不是交给 DQN 猜测：独立 mode side
 `SHORE_CHARGING` 均暂停 DQN/MPC，但 SOC、岸电费用与电池退化继续更新并归入
 前一个尚未闭合的 DQN transition。
 
-正式数据为 38/10/5 个 Train/Validation/Test 航段。每轮 Train 有 30,909 个
-30 s 物理 steps；当前 sidecar 在排除岸电和 unresolved 后给出 5,652 个诊断性
-ONBOARD macro 候选。该数量会随 unresolved 审核结论变化，尚不是最终训练量。
+当前冻结 manifest 为 30/8/5 个 Train/Validation/Test 航段。每轮 Train 有 23,590 个
+30 s 物理 steps；按当前 mode sidecar 与 M=5 统计有 3,721 个 ONBOARD macro 候选。
 默认训练设计为 30 轮。Train 每轮使用固定
 seed 重新打乱，Validation 顺序固定且不写 replay、不更新网络；训练入口不打开
 Test payload。

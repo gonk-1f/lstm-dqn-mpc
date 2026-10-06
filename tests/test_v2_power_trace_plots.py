@@ -20,6 +20,8 @@ class TestPowerTracePlots(unittest.TestCase):
             operating_mode=("onboard", "onboard", "shore_charging"),
             soc_time_s=(0.0, 30.0, 60.0, 90.0),
             soc=(0.60, 0.59, 0.585, 0.592),
+            terminal_boundary_time_s=95.0,
+            terminal_boundary_load_kw=0.0,
             completed=completed,
             failure_kind=None if completed else "physical_infeasibility",
         )
@@ -48,10 +50,20 @@ class TestPowerTracePlots(unittest.TestCase):
             self.assertEqual([row["sample_id"] for row in rows], ["test_a", "test_b"])
             self.assertEqual([row["status"] for row in rows], ["COMPLETE", "FAILED"])
             self.assertEqual([row["policy_id"] for row in rows], ["H4_round_020"] * 2)
+            self.assertEqual([row["terminal_boundary_time_s"] for row in rows], ["95.0"] * 2)
+            self.assertEqual([row["terminal_boundary_load_kw"] for row in rows], ["0.0"] * 2)
+            self.assertEqual([row["unexecuted_tail_seconds"] for row in rows], ["5.0"] * 2)
             html = (output / "index.html").read_text(encoding="utf-8")
             self.assertIn("test_a", html)
             self.assertIn("physical_infeasibility", html)
             self.assertIn("plots/test_b.png", html)
+
+    def test_terminal_boundary_curve_starts_after_last_executed_interval(self) -> None:
+        from v2.evaluation.power_trace_plots import _terminal_boundary_curve
+
+        time_s, load_kw = _terminal_boundary_curve(self._trace("test_a"))
+        self.assertEqual(time_s, (90.0, 95.0))
+        self.assertEqual(load_kw, (-60.0, 0.0))
 
     def test_validation_title_does_not_mislabel_plots_as_test(self) -> None:
         from v2.evaluation.power_trace_plots import write_power_trace_plots

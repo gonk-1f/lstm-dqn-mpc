@@ -18,8 +18,14 @@ EXPECTED_SPLIT_COUNTS = {"train": 30, "validation": 8, "test": 5}
 EXPECTED_TRAIN_STEPS = 23_590
 
 
-def _onboard_macro_transition_count(values: tuple[str, ...]) -> int:
-    """Count M=5 decisions across contiguous ONBOARD runs only."""
+def _onboard_macro_transition_count(
+    values: tuple[str, ...],
+    dqn_switch_steps: int = 5,
+) -> int:
+    """Count decisions across contiguous ONBOARD runs for an explicit M."""
+
+    if type(dqn_switch_steps) is not int or dqn_switch_steps <= 0:
+        raise ValueError("dqn_switch_steps must be a positive exact integer")
 
     total = 0
     run = 0
@@ -28,9 +34,9 @@ def _onboard_macro_transition_count(values: tuple[str, ...]) -> int:
         if mode is OperatingMode.ONBOARD:
             run += 1
             continue
-        total += math.ceil(run / 5) if run else 0
+        total += math.ceil(run / dqn_switch_steps) if run else 0
         run = 0
-    total += math.ceil(run / 5) if run else 0
+    total += math.ceil(run / dqn_switch_steps) if run else 0
     return int(total)
 
 
@@ -67,6 +73,8 @@ class FormalEpisode:
     battery_bus_kw: np.ndarray
     operating_mode: tuple[str, ...]
     mode_reason: tuple[str, ...]
+    terminal_boundary_time_s: float | None = None
+    terminal_boundary_load_kw: float | None = None
 
     @property
     def step_count(self) -> int:
@@ -75,6 +83,12 @@ class FormalEpisode:
     @property
     def macro_transition_count(self) -> int:
         return _onboard_macro_transition_count(self.operating_mode)
+
+    def macro_transition_count_for(self, dqn_switch_steps: int) -> int:
+        return _onboard_macro_transition_count(
+            self.operating_mode,
+            dqn_switch_steps,
+        )
 
 
 class FormalTrainingDataset:
@@ -176,13 +190,16 @@ class FormalTrainingDataset:
 
     @property
     def train_macro_transitions(self) -> int:
+        return self.train_macro_transition_count(5)
+
+    def train_macro_transition_count(self, dqn_switch_steps: int) -> int:
         total = 0
         for row in self._modes[self._modes["split"].eq("train")].itertuples(index=False):
             path = _contained(self._mode_root, str(row.relative_path))
             if _sha256(path) != str(row.sha256):
                 raise ValueError(f"{row.sample_id}: mode SHA-256 mismatch")
             values = tuple(pd.read_csv(path, encoding="utf-8-sig")["mode"].astype(str))
-            total += _onboard_macro_transition_count(values)
+            total += _onboard_macro_transition_count(values, dqn_switch_steps)
         return int(total)
 
     @property
@@ -243,6 +260,26 @@ class FormalTrainingDataset:
             raise ValueError("mode payload schema mismatch")
         duration = float(power_row.duration_s)
         time = pd.to_numeric(power["time_s"], errors="coerce")
+        full_load = pd.to_numeric(power["load_total_kw"], errors="coerce")
+        terminal_boundary_time_s = float(time.iloc[-1])
+        terminal_boundary_load_kw = float(full_load.iloc[-1])
+        if (
+            not math.isfinite(terminal_boundary_time_s)
+            or not math.isfinite(terminal_boundary_load_kw)
+            or not math.isclose(
+                terminal_boundary_time_s,
+                duration,
+                rel_tol=0.0,
+                abs_tol=1e-9,
+            )
+            or not math.isclose(
+                terminal_boundary_load_kw,
+                0.0,
+                rel_tol=0.0,
+                abs_tol=1e-9,
+            )
+        ):
+            raise ValueError("formal power payload terminal zero boundary differs")
         selected = power.loc[
             time.mod(30.0).eq(0.0) & time.add(30.0).le(duration),
             ["timestamp", "time_s", "load_total_kw"],
@@ -295,6 +332,8 @@ class FormalTrainingDataset:
             str(power_row.parent), str(power_row.sample_id), str(power_row.split),
             tuple(power_timestamp), selected_time, load, velocity, provenance,
             fc, battery, operating_mode, mode_reason,
+            terminal_boundary_time_s=terminal_boundary_time_s,
+            terminal_boundary_load_kw=0.0,
         )
 
     def load_split(self, split: str) -> tuple[FormalEpisode, ...]:

@@ -2,7 +2,7 @@
 
 ## Status
 
-`REWARD_VERSION` is `macro_interval_economic_plus_terminal_failure_v2`.
+`REWARD_VERSION` is `macro_interval_economic_plus_terminal_failure_v3`.
 
 Formal training is **GO** under the authenticated integrated preflight. The
 dataset, S8 state, 36-action catalog, objective-scale audit, and terminal
@@ -59,13 +59,16 @@ The fixed values are:
 
 | Quantity | Value | Source and role |
 |---|---:|---|
-| Hydrogen | 35 CNY/kg | DOI `10.3390/jmse13010034`, unit-price source only |
+| Hydrogen | 21.9 CNY/kg | DOI `10.1016/j.oceaneng.2026.125687`, Table 6, unit-price source only |
 | Fuel-cell equipment | 3500 CNY/kW | DOI `10.3390/jmse13010034`, unit-price source only |
+| Fuel-cell replacement fraction | 0.5 of FC CAPEX | DOI `10.1016/j.ijhydene.2024.10.235`, replacement-value assumption |
 | Battery equipment | 2000 CNY/kWh | DOI `10.3390/jmse13010034`, unit-price source only |
 | Shore electricity | 1.10 CNY/kWh | DOI `10.11930/j.issn.1004-9649.202507065`, Table 2 |
 
-The first DOI is not the source for a 600 kW fuel-cell rating or a 624 kWh
-battery capacity. Those plant values must retain their own provenance.
+The price-source DOIs are not the source for a 600 kW fuel-cell rating or a
+624 kWh battery capacity. Those plant values must retain their own provenance.
+The 0.5 factor represents stack-focused replacement value rather than full
+fuel-cell-system CAPEX; it does not change the raw voltage-loss model.
 
 The shore price has the fixed provenance classification
 `scenario_not_measured`: it is a user-approved **peak-tariff scenario**, not a
@@ -111,7 +114,7 @@ physical MPC infeasibility terminates only the current episode and uses
 Fuel-cell and battery degradation charges are the difference between clipped
 cumulative economic fractions at the interval's before/after boundaries. They
 are not the cumulative fractions themselves. FC cost uses
-`delta_D_fc_econ * 3500 CNY/kW * 600 kW`; battery cost uses
+`delta_D_fc_econ * 3500 CNY/kW * 600 kW * 0.5`; battery cost uses
 `delta_D_batt_econ * 2000 CNY/kWh * 624 kWh`. Crossing EOL charges only the
 remaining fraction, and post-EOL intervals charge zero without a modeled
 replacement/reset.

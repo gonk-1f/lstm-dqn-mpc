@@ -251,6 +251,8 @@ class EpisodePowerTrace:
     soc: tuple[float, ...]
     completed: bool
     failure_kind: str | None
+    terminal_boundary_time_s: float | None = None
+    terminal_boundary_load_kw: float | None = None
 
     def __post_init__(self) -> None:
         if type(self.sample_id) is not str or not self.sample_id:
@@ -288,6 +290,24 @@ class EpisodePowerTrace:
             raise TypeError("failure_kind must be a nonempty exact string or None")
         if self.completed == (self.failure_kind is not None):
             raise ValueError("trace must have exactly one terminal outcome")
+        if (self.terminal_boundary_time_s is None) != (
+            self.terminal_boundary_load_kw is None
+        ):
+            raise ValueError("terminal boundary time and load must be provided together")
+        if self.terminal_boundary_time_s is not None:
+            boundary_time = _exact_finite_float(
+                self.terminal_boundary_time_s,
+                "terminal_boundary_time_s",
+                nonnegative=True,
+            )
+            boundary_load = _exact_finite_float(
+                self.terminal_boundary_load_kw,
+                "terminal_boundary_load_kw",
+            )
+            if boundary_time < self.soc_time_s[-1]:
+                raise ValueError("terminal boundary precedes the executed trace")
+            if boundary_load != 0.0:
+                raise ValueError("terminal boundary load must be exactly zero")
 
 
 class _FormalPolicy(Protocol):
@@ -339,20 +359,25 @@ def build_formal_environment(
     episode: FormalEpisode,
     *,
     tau_lpf_seconds: float = TAU_LPF_SECONDS,
+    timescale: TimeScaleConfig | None = None,
 ) -> tuple[FormalEpisodeBackend, MultiRateWeightEnvironment]:
     if type(episode) is not FormalEpisode:
         raise TypeError("episode must be an exact FormalEpisode")
+    scale = TimeScaleConfig.formal_baseline() if timescale is None else timescale
+    if type(scale) is not TimeScaleConfig:
+        raise TypeError("timescale must be an exact TimeScaleConfig or None")
     backend = FormalEpisodeBackend(
         load_kw=episode.load_kw,
         speed_kn=episode.speed_kn,
         fc_power_kw=episode.fc_power_kw,
         battery_bus_kw=episode.battery_bus_kw,
         operating_mode=episode.operating_mode,
-        mpc=build_formal_nonlinear_mpc(),
+        mpc=build_formal_nonlinear_mpc(scale),
         tau_lpf_seconds=tau_lpf_seconds,
+        timescale=scale,
     )
     environment = MultiRateWeightEnvironment(
-        timescale=TimeScaleConfig.formal_baseline(),
+        timescale=scale,
         action_catalog=FINAL_DQN_ACTION_CATALOG,
         backend=backend,
         state_provider=backend.state,
@@ -366,11 +391,19 @@ def _episode_run(
     policy: _FormalPolicy,
     *,
     tau_lpf_seconds: float,
+    timescale: TimeScaleConfig | None = None,
 ) -> tuple[EpisodeEvaluation, FormalEpisodeBackend]:
-    backend, environment = build_formal_environment(
-        episode,
-        tau_lpf_seconds=tau_lpf_seconds,
-    )
+    if timescale is None:
+        backend, environment = build_formal_environment(
+            episode,
+            tau_lpf_seconds=tau_lpf_seconds,
+        )
+    else:
+        backend, environment = build_formal_environment(
+            episode,
+            tau_lpf_seconds=tau_lpf_seconds,
+            timescale=timescale,
+        )
     state = environment.reset()
     transitions: list[MacroTransition] = []
     selected_actions: list[str] = []
@@ -445,11 +478,13 @@ def _episode_evaluation(
     policy: _FormalPolicy,
     *,
     tau_lpf_seconds: float,
+    timescale: TimeScaleConfig | None = None,
 ) -> EpisodeEvaluation:
     return _episode_run(
         episode,
         policy,
         tau_lpf_seconds=tau_lpf_seconds,
+        timescale=timescale,
     )[0]
 
 
@@ -479,6 +514,8 @@ def _power_trace(
         soc=tuple(float(value) for value in backend.executed_soc),
         completed=evaluation.completed,
         failure_kind=evaluation.failure_kind,
+        terminal_boundary_time_s=episode.terminal_boundary_time_s,
+        terminal_boundary_load_kw=episode.terminal_boundary_load_kw,
     )
 
 
@@ -487,6 +524,7 @@ def evaluate_formal_policy(
     episodes: tuple[FormalEpisode, ...],
     policy: FixedActionPolicy | GreedyDqnPolicy,
     tau_lpf_seconds: float = TAU_LPF_SECONDS,
+    timescale: TimeScaleConfig | None = None,
 ) -> PolicyEvaluation:
     """Evaluate ordered formal episodes without training or exploration."""
 
@@ -502,6 +540,7 @@ def evaluate_formal_policy(
             episode,
             policy,
             tau_lpf_seconds=tau_lpf_seconds,
+            timescale=timescale,
         )
         for episode in episodes
     )
@@ -513,6 +552,7 @@ def evaluate_formal_policy_with_power_traces(
     episodes: tuple[FormalEpisode, ...],
     policy: FixedActionPolicy | GreedyDqnPolicy,
     tau_lpf_seconds: float = TAU_LPF_SECONDS,
+    timescale: TimeScaleConfig | None = None,
 ) -> tuple[PolicyEvaluation, tuple[EpisodePowerTrace, ...]]:
     """Evaluate once and return the exact executed power traces beside metrics."""
 
@@ -525,6 +565,7 @@ def evaluate_formal_policy_with_power_traces(
             episode,
             policy,
             tau_lpf_seconds=tau_lpf_seconds,
+            timescale=timescale,
         )
         for episode in episodes
     )

@@ -31,6 +31,9 @@ class TestV2DqnTraining(unittest.TestCase):
         self.assertEqual(config.warmup_steps, 5_000)
         self.assertEqual(config.target_sync_steps, 1_000)
         self.assertEqual(config.gradient_clip_norm, 10.0)
+        self.assertEqual(config.epsilon_start, 1.0)
+        self.assertEqual(config.epsilon_end, 0.05)
+        self.assertEqual(config.epsilon_decay_steps, 150_000)
         self.assertEqual(config.rounds, 40)
         network = QNetwork(config)
         output = network(torch.zeros((4, 90), dtype=torch.float32))
@@ -44,6 +47,22 @@ class TestV2DqnTraining(unittest.TestCase):
         self.assertEqual(epsilon_at_global_step(150_000), 0.05)
         self.assertEqual(epsilon_at_global_step(999_999), 0.05)
         self.assertAlmostEqual(1.0 - epsilon_at_global_step(75_000), 0.475)
+
+    def test_epsilon_schedule_can_be_bound_to_training_config(self) -> None:
+        from dataclasses import replace
+
+        from v2.training.dqn import DqnTrainingConfig, epsilon_at_global_step
+
+        config = replace(
+            DqnTrainingConfig.formal_baseline(),
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay_steps=100_000,
+        )
+        self.assertEqual(epsilon_at_global_step(0, config=config), 1.0)
+        self.assertAlmostEqual(epsilon_at_global_step(50_000, config=config), 0.525)
+        self.assertEqual(epsilon_at_global_step(100_000, config=config), 0.05)
+        self.assertEqual(epsilon_at_global_step(200_000, config=config), 0.05)
 
     def test_formal_round_count_matches_current_train_volume(self) -> None:
         from v2.training.dqn import DqnTrainingConfig, epsilon_at_global_step

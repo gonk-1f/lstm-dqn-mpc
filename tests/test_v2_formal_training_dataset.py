@@ -91,6 +91,15 @@ class TestFormalTrainingDataset(unittest.TestCase):
         episodes = dataset.load_train()
         self.assertEqual(len(episodes), 30)
         self.assertEqual(sum(item.step_count for item in episodes), 23_590)
+        durations = {
+            str(row.sample_id): float(row.duration_s)
+            for row in pd.read_csv(DATASET / "metadata" / "sample_manifest.csv").itertuples(index=False)
+            if str(row.split) == "train"
+        }
+        self.assertTrue(
+            all(item.terminal_boundary_time_s == durations[item.sample_id] for item in episodes)
+        )
+        self.assertTrue(all(item.terminal_boundary_load_kw == 0.0 for item in episodes))
         self.assertTrue(all(item.speed_kn.shape == item.load_kw.shape for item in episodes))
         self.assertTrue(all(item.fc_power_kw.shape == item.load_kw.shape for item in episodes))
         self.assertTrue(all(item.battery_bus_kw.shape == item.load_kw.shape for item in episodes))

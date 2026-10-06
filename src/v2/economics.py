@@ -23,16 +23,18 @@ from .models.battery_degradation import (
 )
 from .models.battery_energy import BatteryEfficiency
 from .models.fuel_cell_degradation import (
+    FC_REPLACEMENT_FRACTION,
     formal_fuel_cell_degradation_cost_cny,
 )
 
 
-HYDROGEN_PRICE_CNY_PER_KG = 35.0
+HYDROGEN_PRICE_CNY_PER_KG = 21.9
 FUEL_CELL_PRICE_CNY_PER_KW = 3500.0
 BATTERY_PRICE_CNY_PER_KWH = 2000.0
 SHORE_TARIFF_CNY_PER_KWH = 1.10
 
 EQUIPMENT_PRICE_SOURCE_DOI = "10.3390/jmse13010034"
+HYDROGEN_PRICE_SOURCE_DOI = "10.1016/j.oceaneng.2026.125687"
 SHORE_TARIFF_SOURCE_DOI = "10.11930/j.issn.1004-9649.202507065"
 SHORE_CONVERTER_CALIBRATION_STATUS = "NO-GO"
 SHORE_CHARGING_EFFICIENCY_STATUS = "VERIFIED"
@@ -99,9 +101,15 @@ class PriceSource:
         )
         approved = {
             (
+                HYDROGEN_PRICE_SOURCE_DOI,
+                "Table 6",
+                "hydrogen unit-price source only",
+                "published economic assumptions",
+            ),
+            (
                 EQUIPMENT_PRICE_SOURCE_DOI,
                 "economic parameter table",
-                "hydrogen and equipment unit-price source only",
+                "fuel-cell and battery unit-price source only",
                 "published economic assumptions",
             ),
             (
@@ -115,10 +123,16 @@ class PriceSource:
             raise ValueError("price provenance must exactly match an approved source role")
 
 
+HYDROGEN_PRICE_SOURCE = PriceSource(
+    source_doi=HYDROGEN_PRICE_SOURCE_DOI,
+    source_location="Table 6",
+    role="hydrogen unit-price source only",
+    classification="published economic assumptions",
+)
 EQUIPMENT_PRICE_SOURCE = PriceSource(
     source_doi=EQUIPMENT_PRICE_SOURCE_DOI,
     source_location="economic parameter table",
-    role="hydrogen and equipment unit-price source only",
+    role="fuel-cell and battery unit-price source only",
     classification="published economic assumptions",
 )
 SHORE_TARIFF_SOURCE = PriceSource(
@@ -412,7 +426,7 @@ def build_formal_interval_ledger(
         fuel_cell_cumulative_voltage_loss_before_uv,
         fuel_cell_cumulative_voltage_loss_after_uv,
         replacement_cost_cny=(
-            fc_rated * catalog.fuel_cell_cny_per_kw
+            fc_rated * catalog.fuel_cell_cny_per_kw * FC_REPLACEMENT_FRACTION
         ),
     )
     battery_cost = formal_battery_degradation_cost_cny(
@@ -633,6 +647,7 @@ __all__ = [
     "EconomicPriceCatalog",
     "FORMAL_PRICE_CATALOG",
     "FUEL_CELL_PRICE_CNY_PER_KW",
+    "HYDROGEN_PRICE_SOURCE",
     "HYDROGEN_PRICE_CNY_PER_KG",
     "PriceSource",
     "REWARD_VERSION",

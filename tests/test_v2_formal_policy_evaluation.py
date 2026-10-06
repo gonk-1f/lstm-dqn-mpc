@@ -39,6 +39,8 @@ def _episode(sample_id: str, *, steps: int = 1):
         np.zeros(steps),
         (OperatingMode.ONBOARD.value,) * steps,
         ("synthetic",) * steps,
+        terminal_boundary_time_s=float(steps * 30 + 7),
+        terminal_boundary_load_kw=0.0,
     )
 
 
@@ -431,6 +433,8 @@ class TestFormalPolicyEvaluation(unittest.TestCase):
         self.assertEqual(trace.battery_bus_power_kw, (10.0, 10.0))
         self.assertEqual(trace.soc_time_s, (0.0, 30.0, 60.0))
         self.assertEqual(trace.soc, (0.60, 0.599, 0.598))
+        self.assertEqual(trace.terminal_boundary_time_s, 67.0)
+        self.assertEqual(trace.terminal_boundary_load_kw, 0.0)
         self.assertEqual(trace.operating_mode, ("onboard", "onboard"))
         self.assertTrue(trace.completed)
         self.assertIsNone(trace.failure_kind)

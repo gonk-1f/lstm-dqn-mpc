@@ -7,7 +7,9 @@ import math
 from numbers import Integral, Real
 
 
-FC_DEGRADATION_MODEL_VERSION = "aggregate_four_condition_voltage_loss_v1"
+FC_DEGRADATION_MODEL_VERSION = (
+    "aggregate_four_condition_start_cycle_voltage_loss_v2"
+)
 FC_DEGRADATION_SOURCE_DOI = "10.1016/j.ijhydene.2024.02.349"
 FC_ACCOUNTING_STRUCTURE_SOURCE_DOI = "10.3390/jmse13010034"
 
@@ -20,7 +22,9 @@ FC_SOURCE_POWER_BASIS = "source-compatible reference-unit power"
 FC_SINGLE_CELL_VOLTAGE_BASIS = "single-cell voltage"
 
 FC_EOL_VOLTAGE_LOSS_UV = 70_000.0
-FC_AGGREGATE_REPLACEMENT_COST_CNY = 3_500.0 * 600.0
+FC_REPLACEMENT_FRACTION = 0.5
+FC_REPLACEMENT_FRACTION_SOURCE_DOI = "10.1016/j.ijhydene.2024.10.235"
+FC_AGGREGATE_REPLACEMENT_COST_CNY = 3_500.0 * 600.0 * FC_REPLACEMENT_FRACTION
 FC_LIFETIME_NORMALIZATION_STATUS = "VERIFIED"
 FC_LIFETIME_EVIDENCE_CLASS = "literature/model verified; not vessel-measured"
 FC_AGGREGATE_POWER_MAPPING_STATUS = "FROZEN_PROJECT_MODEL"
@@ -56,6 +60,22 @@ def _exact_nonnegative_float(value: object, name: str) -> float:
     if value < 0.0:
         raise ValueError(f"{name} must be non-negative")
     return value
+
+
+def aggregate_start_cycle_count(
+    previous_aggregate_power_kw: float,
+    aggregate_power_kw: float,
+) -> int:
+    """Count one start/stop cycle when the aggregate plant starts."""
+
+    previous = _strict_scalar(
+        previous_aggregate_power_kw,
+        "previous_aggregate_power_kw",
+    )
+    power = _strict_scalar(aggregate_power_kw, "aggregate_power_kw")
+    if previous < 0.0 or power < 0.0:
+        raise ValueError("aggregate fuel-cell powers must be non-negative")
+    return int(previous <= 0.0 and power > 0.0)
 
 
 def _validated_voltage_loss_components(
@@ -554,7 +574,8 @@ def formal_fuel_cell_degradation_cost_cny(
         raise ValueError("replacement_cost_cny must be non-negative")
     if price != FC_AGGREGATE_REPLACEMENT_COST_CNY:
         raise ValueError(
-            "replacement_cost_cny must equal 3500 CNY/kW * 600 kW"
+            "replacement_cost_cny must equal "
+            "3500 CNY/kW * 600 kW * 0.5 replacement fraction"
         )
     result = increment.delta_economic_fraction * price
     if not math.isfinite(result):

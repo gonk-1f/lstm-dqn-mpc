@@ -34,6 +34,9 @@ class DqnTrainingConfig:
     warmup_steps: int
     target_sync_steps: int
     gradient_clip_norm: float
+    epsilon_start: float
+    epsilon_end: float
+    epsilon_decay_steps: int
     rounds: int
     experiment_id: str
     reward_mode: str
@@ -42,7 +45,7 @@ class DqnTrainingConfig:
     def __post_init__(self) -> None:
         for name in (
             "state_dim", "action_dim", "batch_size", "replay_capacity",
-            "warmup_steps", "target_sync_steps", "rounds",
+            "warmup_steps", "target_sync_steps", "epsilon_decay_steps", "rounds",
         ):
             value = getattr(self, name)
             if type(value) is not int or value <= 0:
@@ -51,7 +54,10 @@ class DqnTrainingConfig:
             type(value) is not int or value <= 0 for value in self.hidden_dims
         ):
             raise ValueError("hidden_dims must contain two positive exact integers")
-        for name in ("gamma", "learning_rate", "gradient_clip_norm"):
+        for name in (
+            "gamma", "learning_rate", "gradient_clip_norm",
+            "epsilon_start", "epsilon_end",
+        ):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(float(value)):
                 raise ValueError(f"{name} must be a finite real scalar")
@@ -59,6 +65,8 @@ class DqnTrainingConfig:
             raise ValueError("gamma must lie in (0, 1]")
         if self.learning_rate <= 0.0 or self.gradient_clip_norm <= 0.0:
             raise ValueError("learning rate and gradient clip must be positive")
+        if not 0.0 <= self.epsilon_end <= self.epsilon_start <= 1.0:
+            raise ValueError("epsilon schedule must satisfy 0 <= end <= start <= 1")
         if self.state_dim != FORMAL_STATE_DIMENSION or self.action_dim != len(FINAL_DQN_ACTION_CATALOG):
             raise ValueError("DQN dimensions must match frozen history/36 contracts")
         if type(self.experiment_id) is not str or not self.experiment_id:
@@ -86,6 +94,9 @@ class DqnTrainingConfig:
             warmup_steps=5_000,
             target_sync_steps=1_000,
             gradient_clip_norm=10.0,
+            epsilon_start=EPSILON_START,
+            epsilon_end=EPSILON_END,
+            epsilon_decay_steps=EPSILON_DECAY_STEPS,
             rounds=40,
             experiment_id="H1",
             reward_mode="raw",
@@ -93,13 +104,22 @@ class DqnTrainingConfig:
         )
 
 
-def epsilon_at_global_step(global_macro_step: int) -> float:
+def epsilon_at_global_step(
+    global_macro_step: int,
+    *,
+    config: DqnTrainingConfig | None = None,
+) -> float:
     if type(global_macro_step) is not int or global_macro_step < 0:
         raise ValueError("global_macro_step must be a nonnegative exact integer")
-    if global_macro_step >= EPSILON_DECAY_STEPS:
-        return EPSILON_END
-    fraction = global_macro_step / EPSILON_DECAY_STEPS
-    return float(EPSILON_START + fraction * (EPSILON_END - EPSILON_START))
+    if config is not None and type(config) is not DqnTrainingConfig:
+        raise TypeError("config must be an exact DqnTrainingConfig or None")
+    start = EPSILON_START if config is None else config.epsilon_start
+    end = EPSILON_END if config is None else config.epsilon_end
+    decay_steps = EPSILON_DECAY_STEPS if config is None else config.epsilon_decay_steps
+    if global_macro_step >= decay_steps:
+        return end
+    fraction = global_macro_step / decay_steps
+    return float(start + fraction * (end - start))
 
 
 class QNetwork(nn.Module):

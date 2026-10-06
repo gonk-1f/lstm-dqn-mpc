@@ -194,6 +194,5 @@ class TestHistoryStudyCli(unittest.TestCase):
                 self.assertIn("failure_penalty_score=50000.000000000", rendered)
                 self.assertIn(f"replay_reward={expected:.9f}", rendered)
 
-
 if __name__ == "__main__":
     unittest.main()

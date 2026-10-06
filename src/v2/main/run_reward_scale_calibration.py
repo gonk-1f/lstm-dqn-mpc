@@ -11,6 +11,7 @@ from typing import Sequence
 
 from ..analysis.action_screening import DataSplit, DatasetProvenance
 from ..analysis.train_state_audit import ACTIVE_DATASET_VERSION
+from ..config import TimeScaleConfig
 from ..data.formal_training_dataset import FormalTrainingDataset
 from ..economics import calibrate_reward_scale
 from ..evaluation.checkpoint_selection import canonical_result_digest
@@ -69,12 +70,19 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def generate_calibration(args: argparse.Namespace) -> dict[str, object]:
+def generate_calibration(
+    args: argparse.Namespace,
+    *,
+    timescale: TimeScaleConfig | None = None,
+) -> dict[str, object]:
     dataset = FormalTrainingDataset.open(args.power_root, args.ais_root, args.mode_root)
     train = dataset.load_train()
     costs: list[float] = []
     for position, episode in enumerate(train, start=1):
-        backend, environment = _environment(episode)
+        if timescale is None:
+            backend, environment = _environment(episode)
+        else:
+            backend, environment = _environment(episode, timescale=timescale)
         environment.reset()
         while True:
             transition = environment.step(REFERENCE_ACTION_ID)
@@ -111,6 +119,7 @@ def generate_calibration(args: argparse.Namespace) -> dict[str, object]:
         manifest_hashes=hashes,
         train_segment_ids=tuple(episode.sample_id for episode in train),
         test_payloads_opened=dataset.opened_test_payloads,
+        timescale=timescale,
     )
 
 

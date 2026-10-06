@@ -300,19 +300,29 @@ class EconomicCostTests(unittest.TestCase):
             BATTERY_PRICE_CNY_PER_KWH,
             EQUIPMENT_PRICE_SOURCE,
             FUEL_CELL_PRICE_CNY_PER_KW,
+            HYDROGEN_PRICE_SOURCE,
             HYDROGEN_PRICE_CNY_PER_KG,
             SHORE_TARIFF_CNY_PER_KWH,
             SHORE_TARIFF_SOURCE,
             PriceSource,
         )
 
-        self.assertEqual(HYDROGEN_PRICE_CNY_PER_KG, 35.0)
+        self.assertEqual(HYDROGEN_PRICE_CNY_PER_KG, 21.9)
         self.assertEqual(FUEL_CELL_PRICE_CNY_PER_KW, 3500.0)
         self.assertEqual(BATTERY_PRICE_CNY_PER_KWH, 2000.0)
+        self.assertEqual(
+            HYDROGEN_PRICE_SOURCE.source_doi,
+            "10.1016/j.oceaneng.2026.125687",
+        )
+        self.assertEqual(HYDROGEN_PRICE_SOURCE.source_location, "Table 6")
+        self.assertEqual(
+            HYDROGEN_PRICE_SOURCE.role,
+            "hydrogen unit-price source only",
+        )
         self.assertEqual(EQUIPMENT_PRICE_SOURCE.source_doi, "10.3390/jmse13010034")
         self.assertEqual(
             EQUIPMENT_PRICE_SOURCE.role,
-            "hydrogen and equipment unit-price source only",
+            "fuel-cell and battery unit-price source only",
         )
         self.assertNotIn("600", EQUIPMENT_PRICE_SOURCE.role)
         self.assertNotIn("624", EQUIPMENT_PRICE_SOURCE.role)
@@ -334,7 +344,7 @@ class EconomicCostTests(unittest.TestCase):
             shore_energy_cost_cny,
         )
 
-        self.assertEqual(hydrogen_cost_cny(2.0), 70.0)
+        self.assertEqual(hydrogen_cost_cny(2.0), 43.8)
         modeled = ShoreEnergy(10.0, ShoreEnergyClassification.MODELED)
         measured = ShoreEnergy(10.0, ShoreEnergyClassification.MEASURED)
         self.assertEqual(shore_energy_cost_cny(modeled), 11.0)
@@ -390,7 +400,7 @@ class EconomicCostTests(unittest.TestCase):
         )
 
         missing = EconomicPriceCatalog(
-            hydrogen_cny_per_kg=35.0,
+            hydrogen_cny_per_kg=21.9,
             fuel_cell_cny_per_kw=3500.0,
             battery_cny_per_kwh=2000.0,
             shore_cny_per_kwh=None,
@@ -476,8 +486,8 @@ class EconomicCostTests(unittest.TestCase):
             battery_normalization=normalization,
             shore_energy=None,
         )
-        self.assertEqual(ledger.h2_cost_cny, 35.0)
-        self.assertEqual(ledger.fuel_cell_degradation_cost_cny, 1_050_000.0)
+        self.assertEqual(ledger.h2_cost_cny, 21.9)
+        self.assertEqual(ledger.fuel_cell_degradation_cost_cny, 525_000.0)
         self.assertEqual(ledger.battery_degradation_cost_cny, 312_000.0)
         self.assertEqual(ledger.shore_cost_cny, 0.0)
 

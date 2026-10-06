@@ -39,6 +39,7 @@ from ..models.battery_degradation import (
 from ..models.battery_energy import formal_battery_efficiency
 from ..models.fuel_cell_degradation import (
     FuelCellVoltageLossAccount,
+    aggregate_start_cycle_count,
     formal_aggregate_fc_power_mapping,
     formal_aggregate_fc_voltage_loss_step_uv,
 )
@@ -54,11 +55,16 @@ SHORE_MODES = frozenset(
 )
 
 
-def build_formal_nonlinear_mpc() -> NonlinearMPC:
+def build_formal_nonlinear_mpc(
+    timescale: TimeScaleConfig | None = None,
+) -> NonlinearMPC:
+    scale = TimeScaleConfig.formal_baseline() if timescale is None else timescale
+    if type(scale) is not TimeScaleConfig:
+        raise TypeError("timescale must be an exact TimeScaleConfig or None")
     plant = PlantConfig.research_simulation()
     return NonlinearMPC(
         MPCConfig(
-            timescale=TimeScaleConfig.formal_baseline(),
+            timescale=scale,
             fuel_cell_rated_kw=plant.fuel_cell_rated_total_kw,
             battery_capacity_kwh=plant.battery_nominal_energy_kwh,
             battery_efficiency=formal_battery_efficiency(),
@@ -110,6 +116,7 @@ class FormalEpisodeBackend:
         operating_mode: tuple[str, ...],
         mpc: object,
         tau_lpf_seconds: float = TAU_LPF_SECONDS,
+        timescale: TimeScaleConfig | None = None,
     ) -> None:
         load = np.asarray(load_kw, dtype=float)
         speed = np.asarray(speed_kn, dtype=float)
@@ -144,7 +151,11 @@ class FormalEpisodeBackend:
         self.tau_lpf_seconds = _finite(tau_lpf_seconds, "tau_lpf_seconds")
         if self.tau_lpf_seconds <= 0.0:
             raise ValueError("tau_lpf_seconds must be positive")
-        self.timescale = TimeScaleConfig.formal_baseline()
+        self.timescale = (
+            TimeScaleConfig.formal_baseline() if timescale is None else timescale
+        )
+        if type(self.timescale) is not TimeScaleConfig:
+            raise TypeError("timescale must be an exact TimeScaleConfig or None")
         self.plant = PlantConfig.research_simulation()
         self.efficiency = formal_battery_efficiency()
         self.battery_normalization = formal_battery_lifetime_normalization()
@@ -304,7 +315,7 @@ class FormalEpisodeBackend:
         if not 0.0 <= next_state <= 1.0:
             raise ValueError("executed interval produced invalid SOC")
         fc_before = self.fc_account.total_uv
-        cycle = int((previous_fc > 0.0) != (p_fc > 0.0))
+        cycle = aggregate_start_cycle_count(previous_fc, p_fc)
         fc_step = formal_aggregate_fc_voltage_loss_step_uv(
             previous_fc,
             p_fc,

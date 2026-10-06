@@ -303,6 +303,10 @@ class MultiRateWeightEnvironment:
         return tuple(self._transitions)
 
     @property
+    def timescale(self) -> TimeScaleConfig:
+        return self._timescale
+
+    @property
     def current_state(self) -> tuple[float, ...] | None:
         return self._current_state
 

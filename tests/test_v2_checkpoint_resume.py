@@ -23,7 +23,7 @@ class TestV2CheckpointResume(unittest.TestCase):
         from v2.training.checkpoint import CHECKPOINT_VERSION
 
         self.assertEqual(CHECKPOINT_VERSION, "v2_history_dqn_checkpoint_v1")
-        self.assertEqual(REWARD_VERSION, "macro_interval_economic_plus_terminal_failure_v2")
+        self.assertEqual(REWARD_VERSION, "macro_interval_economic_plus_terminal_failure_v3")
 
     def test_round_trip_restores_agent_replay_schedule_and_counters(self) -> None:
         from v2.training.checkpoint import load_checkpoint, save_checkpoint
@@ -121,6 +121,78 @@ class TestV2CheckpointResume(unittest.TestCase):
                 schedule=EpisodeShuffleSchedule(("a", "b"), seed=999),
             )
             self.assertEqual(metadata.current_permutation, permutation)
+
+    def test_resume_rejects_epsilon_schedule_change(self) -> None:
+        from v2.training.checkpoint import (
+            IncompatibleCheckpointError,
+            load_checkpoint,
+            save_checkpoint,
+        )
+        from v2.training.dqn import DqnAgent, DqnTrainingConfig
+        from v2.training.schedule import EpisodeShuffleSchedule
+
+        source = DqnTrainingConfig.formal_baseline()
+        schedule = EpisodeShuffleSchedule(("a",), seed=42)
+        permutation = schedule.next_round()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "latest.pt"
+            save_checkpoint(
+                path,
+                agent=DqnAgent(source, seed=42, device="cpu"),
+                schedule=schedule,
+                global_macro_step=1,
+                round_index=0,
+                episode_position=1,
+                current_permutation=permutation,
+            )
+            changed = replace(source, epsilon_decay_steps=100_000, rounds=50)
+            with self.assertRaises(IncompatibleCheckpointError):
+                load_checkpoint(
+                    path,
+                    agent=DqnAgent(changed, seed=7, device="cpu"),
+                    schedule=EpisodeShuffleSchedule(("a",), seed=7),
+                )
+
+    def test_legacy_identity_maps_only_to_historical_epsilon_schedule(self) -> None:
+        from v2.training.checkpoint import (
+            IncompatibleCheckpointError,
+            load_checkpoint,
+            save_checkpoint,
+        )
+        from v2.training.dqn import DqnAgent, DqnTrainingConfig
+        from v2.training.schedule import EpisodeShuffleSchedule
+
+        historical = DqnTrainingConfig.formal_baseline()
+        schedule = EpisodeShuffleSchedule(("a",), seed=42)
+        permutation = schedule.next_round()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "legacy.pt"
+            save_checkpoint(
+                path,
+                agent=DqnAgent(historical, seed=42, device="cpu"),
+                schedule=schedule,
+                global_macro_step=1,
+                round_index=0,
+                episode_position=1,
+                current_permutation=permutation,
+            )
+            payload = torch.load(path, map_location="cpu", weights_only=False)
+            for key in ("epsilon_start", "epsilon_end", "epsilon_decay_steps"):
+                payload["training_config_identity"].pop(key)
+            torch.save(payload, path)
+
+            load_checkpoint(
+                path,
+                agent=DqnAgent(historical, seed=7, device="cpu"),
+                schedule=EpisodeShuffleSchedule(("a",), seed=7),
+            )
+            changed = replace(historical, epsilon_decay_steps=100_000, rounds=50)
+            with self.assertRaises(IncompatibleCheckpointError):
+                load_checkpoint(
+                    path,
+                    agent=DqnAgent(changed, seed=7, device="cpu"),
+                    schedule=EpisodeShuffleSchedule(("a",), seed=7),
+                )
 
     def test_rejects_legacy_state_or_action_identity(self) -> None:
         from v2.training.checkpoint import IncompatibleCheckpointError, load_checkpoint

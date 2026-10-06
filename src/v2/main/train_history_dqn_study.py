@@ -37,7 +37,11 @@ def _parser() -> argparse.ArgumentParser:
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument("--preflight-only", action="store_true")
     modes.add_argument("--smoke-only", action="store_true")
-    parser.add_argument("--experiment", choices=("H1", "H2", "H3", "H4"), default="H1")
+    parser.add_argument(
+        "--experiment",
+        choices=("H1", "H2", "H3", "H4"),
+        default="H1",
+    )
     parser.add_argument("--power-root", type=Path, default=DEFAULT_POWER_ROOT)
     parser.add_argument("--ais-root", type=Path, default=DEFAULT_AIS_ROOT)
     parser.add_argument("--mode-root", type=Path, default=DEFAULT_MODE_ROOT)
@@ -107,6 +111,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         f"HISTORY_STUDY experiment={profile.experiment_id} "
         f"state_dimension={FORMAL_STATE_DIMENSION} reward_mode={profile.reward_mode} "
         f"learning_rate={profile.learning_rate:.9g} rounds={args.rounds} "
+        f"replay_capacity={profile.replay_capacity} "
+        f"epsilon_decay_steps={profile.epsilon_decay_steps} "
         f"tau_lpf_seconds={TAU_LPF_SECONDS:g}",
         flush=True,
     )

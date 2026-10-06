@@ -15,6 +15,7 @@ from ..economics import (
 )
 from ..evaluation.checkpoint_selection import canonical_result_digest
 from ..contracts import control_semantics, require_v2_semantics
+from ..config import TimeScaleConfig
 
 
 REWARD_SCALE_DOCUMENT_VERSION = "v2_train_interval_reward_scale_v2"
@@ -58,6 +59,7 @@ def build_reward_scale_document(
     manifest_hashes: dict[str, str],
     train_segment_ids: tuple[str, ...],
     test_payloads_opened: int,
+    timescale: TimeScaleConfig | None = None,
 ) -> dict[str, object]:
     checked = _validate_reward_scale(calibration)
     if reference_action_id != REFERENCE_ACTION_ID:
@@ -72,7 +74,7 @@ def build_reward_scale_document(
         "provenance_id": checked.provenance.provenance_id,
         "split": "train",
         "reference_action_id": reference_action_id,
-        "control_semantics": control_semantics(),
+        "control_semantics": control_semantics(timescale),
         "input_manifest_sha256": hashes,
         "train_segment_ids": list(segment_ids),
         "train_raw_interval_costs_cny": list(checked.train_raw_costs_cny),
@@ -92,6 +94,7 @@ def load_reward_scale_document(
     document: object,
     *,
     expected_manifest_hashes: dict[str, str] | None = None,
+    timescale: TimeScaleConfig | None = None,
 ) -> RewardScaleCalibration:
     if type(document) is not dict:
         raise TypeError("reward-scale document must be an exact dict")
@@ -108,7 +111,7 @@ def load_reward_scale_document(
             raise ValueError("reward-scale document schema differs")
         if document["reference_action_id"] != REFERENCE_ACTION_ID:
             raise ValueError("reward-scale reference action differs")
-        require_v2_semantics(document["control_semantics"])
+        require_v2_semantics(document["control_semantics"], timescale)
         hashes = _manifest_hashes(document["input_manifest_sha256"])
         if expected_manifest_hashes is not None:
             expected = _manifest_hashes(expected_manifest_hashes)
