@@ -1,0 +1,57 @@
+{
+  "selection_rule": "minimum equal-origin Validation five-step MAE",
+  "history_candidates": [
+    6,
+    12,
+    24
+  ],
+  "horizon_steps": 5,
+  "sample_seconds": 30,
+  "selected_history_steps": 24,
+  "train_mean_kw": 228.8827012681241,
+  "train_scale_kw": 226.95417855592777,
+  "results": [
+    {
+      "history_steps": 6,
+      "train_windows": 17782,
+      "validation_windows": 2683,
+      "best_epoch": 1,
+      "validation_mae_kw": 36.68306350708008,
+      "validation_horizon_mae_kw": [
+        19.020488739013672,
+        28.450382232666016,
+        37.5086555480957,
+        45.629241943359375,
+        52.806549072265625
+      ]
+    },
+    {
+      "history_steps": 12,
+      "train_windows": 17411,
+      "validation_windows": 2683,
+      "best_epoch": 1,
+      "validation_mae_kw": 37.02384567260742,
+      "validation_horizon_mae_kw": [
+        18.777938842773438,
+        28.698043823242188,
+        37.835025787353516,
+        46.19170379638672,
+        53.616554260253906
+      ]
+    },
+    {
+      "history_steps": 24,
+      "train_windows": 16690,
+      "validation_windows": 2683,
+      "best_epoch": 1,
+      "validation_mae_kw": 36.53120040893555,
+      "validation_horizon_mae_kw": [
+        18.910737991333008,
+        28.581941604614258,
+        37.406349182128906,
+        45.310081481933594,
+        52.446922302246094
+      ]
+    }
+  ]
+}

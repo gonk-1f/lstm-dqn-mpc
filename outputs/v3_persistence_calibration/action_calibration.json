@@ -1,0 +1,5171 @@
+{
+  "actions": [
+    {
+      "action_id": 0,
+      "lambda_ref": 0.0,
+      "lambda_soc": 0.0
+    },
+    {
+      "action_id": 1,
+      "lambda_ref": 0.0,
+      "lambda_soc": 0.05000000000000002
+    },
+    {
+      "action_id": 2,
+      "lambda_ref": 0.0,
+      "lambda_soc": 0.20000000000000007
+    },
+    {
+      "action_id": 3,
+      "lambda_ref": 0.0,
+      "lambda_soc": 0.8000000000000003
+    },
+    {
+      "action_id": 4,
+      "lambda_ref": 4.13616998080572,
+      "lambda_soc": 0.0
+    },
+    {
+      "action_id": 5,
+      "lambda_ref": 4.13616998080572,
+      "lambda_soc": 0.05000000000000002
+    },
+    {
+      "action_id": 6,
+      "lambda_ref": 4.13616998080572,
+      "lambda_soc": 0.20000000000000007
+    },
+    {
+      "action_id": 7,
+      "lambda_ref": 4.13616998080572,
+      "lambda_soc": 0.8000000000000003
+    },
+    {
+      "action_id": 8,
+      "lambda_ref": 16.54467992322288,
+      "lambda_soc": 0.0
+    },
+    {
+      "action_id": 9,
+      "lambda_ref": 16.54467992322288,
+      "lambda_soc": 0.05000000000000002
+    },
+    {
+      "action_id": 10,
+      "lambda_ref": 16.54467992322288,
+      "lambda_soc": 0.20000000000000007
+    },
+    {
+      "action_id": 11,
+      "lambda_ref": 16.54467992322288,
+      "lambda_soc": 0.8000000000000003
+    },
+    {
+      "action_id": 12,
+      "lambda_ref": 66.17871969289152,
+      "lambda_soc": 0.0
+    },
+    {
+      "action_id": 13,
+      "lambda_ref": 66.17871969289152,
+      "lambda_soc": 0.05000000000000002
+    },
+    {
+      "action_id": 14,
+      "lambda_ref": 66.17871969289152,
+      "lambda_soc": 0.20000000000000007
+    },
+    {
+      "action_id": 15,
+      "lambda_ref": 66.17871969289152,
+      "lambda_soc": 0.8000000000000003
+    }
+  ],
+  "base_lambda_ref": 16.54467992322288,
+  "base_lambda_soc": 0.20000000000000007,
+  "calibration_assumptions": {
+    "axis_multipliers": [
+      0.0,
+      0.25,
+      1.0,
+      4.0
+    ],
+    "forecast": "hold current ONBOARD load for five 30 s steps",
+    "material_reference_rule": "five times squared Train p95 absolute one-step load change divided by 600 kW",
+    "material_soc_rule": "median positive five-step SOC penalty at SOC 0.4 and 0.6 under reference policy",
+    "nominal_cost_rule": "median positive five-step optimizer economic numerator over quantile-sampled Train origins",
+    "nominal_soc": 0.5,
+    "pilot_soc_scenarios": [
+      0.4,
+      0.5,
+      0.6
+    ],
+    "reference": "causal 180 s LPF preview; reset at each ONBOARD run",
+    "reference_policy": "clip each LPF reference to 0..600 kW FC",
+    "reference_previous_fc": "previous observed LPF value; not a replayed MPC command",
+    "status": "candidate calibration and open-loop response screen; no DQN training or Validation selection"
+  },
+  "calibration_origin_count": 240,
+  "calibration_origin_ids": [
+    "zero_boundary_002:0",
+    "zero_boundary_029:417",
+    "zero_boundary_029:494",
+    "zero_boundary_029:572",
+    "zero_boundary_029:649",
+    "zero_boundary_029:726",
+    "zero_boundary_029:803",
+    "zero_boundary_033:376",
+    "zero_boundary_033:453",
+    "zero_boundary_034:43",
+    "zero_boundary_034:120",
+    "zero_boundary_034:197",
+    "zero_boundary_034:274",
+    "zero_boundary_034:351",
+    "zero_boundary_034:429",
+    "zero_boundary_034:506",
+    "zero_boundary_034:583",
+    "zero_boundary_034:660",
+    "zero_boundary_034:737",
+    "zero_boundary_034:814",
+    "zero_boundary_034:1217",
+    "zero_boundary_034:1294",
+    "zero_boundary_034:1371",
+    "zero_boundary_034:1448",
+    "zero_boundary_034:1525",
+    "zero_boundary_034:1603",
+    "zero_boundary_037:1068",
+    "zero_boundary_037:3811",
+    "zero_boundary_033:686",
+    "zero_boundary_033:679",
+    "zero_boundary_033:545",
+    "zero_boundary_033:368",
+    "zero_boundary_037:3787",
+    "zero_boundary_044:812",
+    "zero_boundary_034:1617",
+    "zero_boundary_011:2",
+    "zero_boundary_016:701",
+    "zero_boundary_034:1638",
+    "zero_boundary_038:8",
+    "zero_boundary_033:892",
+    "zero_boundary_037:1796",
+    "zero_boundary_037:1618",
+    "zero_boundary_037:1585",
+    "zero_boundary_037:1581",
+    "zero_boundary_037:1510",
+    "zero_boundary_045:20",
+    "zero_boundary_046:1866",
+    "zero_boundary_021:25",
+    "zero_boundary_011:519",
+    "zero_boundary_008:303",
+    "zero_boundary_029:343",
+    "zero_boundary_037:382",
+    "zero_boundary_008:279",
+    "zero_boundary_020:100",
+    "zero_boundary_022:153",
+    "zero_boundary_015:321",
+    "zero_boundary_011:458",
+    "zero_boundary_008:365",
+    "zero_boundary_037:1833",
+    "zero_boundary_041:634",
+    "zero_boundary_029:204",
+    "zero_boundary_037:2926",
+    "zero_boundary_041:389",
+    "zero_boundary_006:342",
+    "zero_boundary_029:57",
+    "zero_boundary_044:347",
+    "zero_boundary_013:39",
+    "zero_boundary_016:327",
+    "zero_boundary_044:267",
+    "zero_boundary_029:214",
+    "zero_boundary_044:427",
+    "zero_boundary_044:514",
+    "zero_boundary_041:348",
+    "zero_boundary_041:305",
+    "zero_boundary_037:1208",
+    "zero_boundary_037:835",
+    "zero_boundary_041:291",
+    "zero_boundary_002:30",
+    "zero_boundary_045:626",
+    "zero_boundary_046:1343",
+    "zero_boundary_046:1423",
+    "zero_boundary_045:656",
+    "zero_boundary_046:1094",
+    "zero_boundary_037:954",
+    "zero_boundary_037:503",
+    "zero_boundary_037:505",
+    "zero_boundary_016:350",
+    "zero_boundary_016:52",
+    "zero_boundary_037:732",
+    "zero_boundary_044:390",
+    "zero_boundary_016:418",
+    "zero_boundary_046:1071",
+    "zero_boundary_049:234",
+    "zero_boundary_046:1428",
+    "zero_boundary_045:683",
+    "zero_boundary_046:962",
+    "zero_boundary_037:574",
+    "zero_boundary_037:551",
+    "zero_boundary_017:378",
+    "zero_boundary_037:801",
+    "zero_boundary_037:715",
+    "zero_boundary_017:531",
+    "zero_boundary_007:158",
+    "zero_boundary_051:121",
+    "zero_boundary_037:845",
+    "zero_boundary_017:464",
+    "zero_boundary_017:328",
+    "zero_boundary_045:558",
+    "zero_boundary_053:234",
+    "zero_boundary_051:117",
+    "zero_boundary_017:542",
+    "zero_boundary_017:321",
+    "zero_boundary_011:65",
+    "zero_boundary_045:823",
+    "zero_boundary_045:729",
+    "zero_boundary_013:187",
+    "zero_boundary_034:944",
+    "zero_boundary_033:214",
+    "zero_boundary_050:904",
+    "zero_boundary_050:994",
+    "zero_boundary_045:791",
+    "zero_boundary_006:323",
+    "zero_boundary_006:80",
+    "zero_boundary_033:164",
+    "zero_boundary_045:772",
+    "zero_boundary_029:1116",
+    "zero_boundary_029:1083",
+    "zero_boundary_017:22",
+    "zero_boundary_017:420",
+    "zero_boundary_022:109",
+    "zero_boundary_029:237",
+    "zero_boundary_005:265",
+    "zero_boundary_029:229",
+    "zero_boundary_037:132",
+    "zero_boundary_034:1030",
+    "zero_boundary_013:227",
+    "zero_boundary_029:290",
+    "zero_boundary_037:126",
+    "zero_boundary_017:417",
+    "zero_boundary_041:570",
+    "zero_boundary_044:701",
+    "zero_boundary_044:745",
+    "zero_boundary_046:44",
+    "zero_boundary_015:181",
+    "zero_boundary_046:807",
+    "zero_boundary_046:815",
+    "zero_boundary_045:712",
+    "zero_boundary_008:529",
+    "zero_boundary_015:246",
+    "zero_boundary_044:638",
+    "zero_boundary_044:627",
+    "zero_boundary_050:832",
+    "zero_boundary_029:1067",
+    "zero_boundary_011:635",
+    "zero_boundary_041:459",
+    "zero_boundary_029:1055",
+    "zero_boundary_021:62",
+    "zero_boundary_041:445",
+    "zero_boundary_041:523",
+    "zero_boundary_042:572",
+    "zero_boundary_049:109",
+    "zero_boundary_049:85",
+    "zero_boundary_049:90",
+    "zero_boundary_020:83",
+    "zero_boundary_020:33",
+    "zero_boundary_011:582",
+    "zero_boundary_015:265",
+    "zero_boundary_007:195",
+    "zero_boundary_038:523",
+    "zero_boundary_021:203",
+    "zero_boundary_050:845",
+    "zero_boundary_008:715",
+    "zero_boundary_045:283",
+    "zero_boundary_053:38",
+    "zero_boundary_038:498",
+    "zero_boundary_005:38",
+    "zero_boundary_037:283",
+    "zero_boundary_045:285",
+    "zero_boundary_016:599",
+    "zero_boundary_038:135",
+    "zero_boundary_041:41",
+    "zero_boundary_041:37",
+    "zero_boundary_041:60",
+    "zero_boundary_041:63",
+    "zero_boundary_044:44",
+    "zero_boundary_008:635",
+    "zero_boundary_008:663",
+    "zero_boundary_045:120",
+    "zero_boundary_040:408",
+    "zero_boundary_011:290",
+    "zero_boundary_046:295",
+    "zero_boundary_046:280",
+    "zero_boundary_050:383",
+    "zero_boundary_050:330",
+    "zero_boundary_021:155",
+    "zero_boundary_021:87",
+    "zero_boundary_002:55",
+    "zero_boundary_038:194",
+    "zero_boundary_021:90",
+    "zero_boundary_040:293",
+    "zero_boundary_002:299",
+    "zero_boundary_029:65",
+    "zero_boundary_007:138",
+    "zero_boundary_033:111",
+    "zero_boundary_011:95",
+    "zero_boundary_033:171",
+    "zero_boundary_033:323",
+    "zero_boundary_033:172",
+    "zero_boundary_040:60",
+    "zero_boundary_045:1042",
+    "zero_boundary_011:160",
+    "zero_boundary_046:87",
+    "zero_boundary_045:270",
+    "zero_boundary_037:330",
+    "zero_boundary_008:187",
+    "zero_boundary_050:171",
+    "zero_boundary_050:52",
+    "zero_boundary_008:186",
+    "zero_boundary_041:106",
+    "zero_boundary_040:155",
+    "zero_boundary_042:399",
+    "zero_boundary_042:148",
+    "zero_boundary_042:153",
+    "zero_boundary_041:185",
+    "zero_boundary_013:154",
+    "zero_boundary_011:237",
+    "zero_boundary_045:221",
+    "zero_boundary_052:71",
+    "zero_boundary_017:245",
+    "zero_boundary_045:184",
+    "zero_boundary_048:49",
+    "zero_boundary_050:233",
+    "zero_boundary_044:139",
+    "zero_boundary_044:172",
+    "zero_boundary_044:192",
+    "zero_boundary_017:88",
+    "zero_boundary_050:265",
+    "zero_boundary_044:242",
+    "zero_boundary_041:119",
+    "zero_boundary_015:113"
+  ],
+  "economic_cost_cny_distribution": {
+    "count": 240,
+    "max": 43.445810463908046,
+    "min": 0.0,
+    "p10": 1.9265427110686304,
+    "p50": 8.73291448177686,
+    "p90": 32.106402712134134,
+    "p95": 36.92085592118533
+  },
+  "lambda_ref_axis": [
+    0.0,
+    4.13616998080572,
+    16.54467992322288,
+    66.17871969289152
+  ],
+  "lambda_soc_axis": [
+    0.0,
+    0.05000000000000002,
+    0.20000000000000007,
+    0.8000000000000003
+  ],
+  "manifest_sha256": {
+    "ais": "e7853ea68f3bad5c302c36e92522b01a83b736c8b48f2d54541ffd35f0d2829d",
+    "modes": "2a44ade715a3094f883867b70e99acfbe5b0cd4a64de2a9c5631a379e0191f8f",
+    "power": "413f2c8e60487ab43f5d24d179d0cbe20697eb1204ab6521151044a03dddf029"
+  },
+  "material_reference_penalty": 0.06044239022094067,
+  "material_soc_penalty": 4.999999999999998,
+  "nominal_cost_cny": 8.927633172298517,
+  "pilot_screen": {
+    "case_count": 20,
+    "cases": [
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.25
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.0
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 4.0
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.25
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.0
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 4.0
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.25
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.0
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 4.0
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.25
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.0
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.4,
+              0.4,
+              0.4,
+              0.4,
+              0.4
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 4.0
+          }
+        ],
+        "case_id": "zero_boundary_002:0",
+        "load_change_kw": 0.0,
+        "load_kw": 0.0,
+        "sample_id": "zero_boundary_002",
+        "soc": 0.4
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          }
+        ],
+        "case_id": "zero_boundary_002:0",
+        "load_change_kw": 0.0,
+        "load_kw": 0.0,
+        "sample_id": "zero_boundary_002",
+        "soc": 0.5
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.25
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.0
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 4.0
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.25
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.0
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 4.0
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.25
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.0
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 4.0
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.25
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.0
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 0.0,
+            "first_fc_kw": 0.0,
+            "soc_path": [
+              0.6,
+              0.6,
+              0.6,
+              0.6,
+              0.6
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 4.0
+          }
+        ],
+        "case_id": "zero_boundary_002:0",
+        "load_change_kw": 0.0,
+        "load_kw": 0.0,
+        "sample_id": "zero_boundary_002",
+        "soc": 0.6
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.2724233866517344,
+            "first_fc_kw": 31.04268987937965,
+            "soc_path": [
+              0.3999795019031522,
+              0.39992007167111543,
+              0.39982982342282597,
+              0.39973495584484214,
+              0.39963943928669743
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.27279120086965464,
+            "first_fc_kw": 31.6429300460206,
+            "soc_path": [
+              0.39998793982722214,
+              0.39993783568335384,
+              0.39987932156890327,
+              0.39981800626533515,
+              0.3997545710917773
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.25062288521441944
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.2738680495661268,
+            "first_fc_kw": 32.500744220878275,
+            "soc_path": [
+              0.3999999986184791,
+              0.39998993363594193,
+              0.3999743391535316,
+              0.3999536582303988,
+              0.39992973996781367
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.000609478452189
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.2780305280870137,
+            "first_fc_kw": 35.010343389357104,
+            "soc_path": [
+              0.4000318379520296,
+              0.40005083259901875,
+              0.4000601315949821,
+              0.400060135050449,
+              0.40005131276585815
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 3.9959330776138997
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.2732462156594493,
+            "first_fc_kw": 32.169309731103866,
+            "soc_path": [
+              0.39999533945167504,
+              0.399963456398778,
+              0.3999263346881761,
+              0.3998876774057437,
+              0.3998479426250577
+            ],
+            "weighted_reference": 0.0006698118220267433,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.27393778238474237,
+            "first_fc_kw": 32.07683433535638,
+            "soc_path": [
+              0.39999403947141543,
+              0.39998056522338127,
+              0.39996362671289126,
+              0.3999436684063272,
+              0.3999223569888324
+            ],
+            "weighted_reference": 0.00030009738121976993,
+            "weighted_soc": 0.2501957978868529
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.2739765637401809,
+            "first_fc_kw": 32.58006145208762,
+            "soc_path": [
+              0.40000100504817804,
+              0.3999923850181454,
+              0.3999783653954513,
+              0.3999593897863655,
+              0.39993723391032365
+            ],
+            "weighted_reference": 0.0002514237649656938,
+            "weighted_soc": 1.0005266056826578
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 0.2780304511505348,
+            "first_fc_kw": 35.00777551594176,
+            "soc_path": [
+              0.4000318053735074,
+              0.4000507968116687,
+              0.4000601085633751,
+              0.40006014340617385,
+              0.40005138025989806
+            ],
+            "weighted_reference": 4.635619940016874e-05,
+            "weighted_soc": 3.9959333263338443
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 0.2742607239912976,
+            "first_fc_kw": 32.5005063277592,
+            "soc_path": [
+              0.3999999952742776,
+              0.3999940447357584,
+              0.39998520173205965,
+              0.39997391129089915,
+              0.39996147602802345
+            ],
+            "weighted_reference": 0.0006850116746558234,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 0.2741906475197133,
+            "first_fc_kw": 32.50202044879029,
+            "soc_path": [
+              0.40000001494463727,
+              0.39999338013352714,
+              0.3999833954573837,
+              0.39997050645931775,
+              0.39995610915461854
+            ],
+            "weighted_reference": 0.0007482797329886577,
+            "weighted_soc": 0.25009660942956036
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 0.2746691524727019,
+            "first_fc_kw": 33.05367309491499,
+            "soc_path": [
+              0.40000701374289876,
+              0.4000070137745822,
+              0.4000023891868439,
+              0.39999358312212097,
+              0.39998193588436115
+            ],
+            "weighted_reference": 0.0004761473690362081,
+            "weighted_soc": 1.0000322665884211
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 0.2780639159122333,
+            "first_fc_kw": 34.749122098060404,
+            "soc_path": [
+              0.4000285238464376,
+              0.4000469941808408,
+              0.40005779089319105,
+              0.4000613170202935,
+              0.4000583312981614
+            ],
+            "weighted_reference": 9.488564206743487e-05,
+            "weighted_soc": 3.9959537661106124
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 0.2750719214542123,
+            "first_fc_kw": 33.06706272449845,
+            "soc_path": [
+              0.40000718361667154,
+              0.40000980177177536,
+              0.4000098017784947,
+              0.40000734582734593,
+              0.4000034094295982
+            ],
+            "weighted_reference": 0.001141536563114292,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 0.27509948992289635,
+            "first_fc_kw": 33.114117387402175,
+            "soc_path": [
+              0.4000077805975711,
+              0.4000106652913092,
+              0.4000106762937992,
+              0.40000795110820625,
+              0.40000349406807767
+            ],
+            "weighted_reference": 0.001138314556781638,
+            "weighted_soc": 0.24995943445952679
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 0.27540974347353714,
+            "first_fc_kw": 33.350000913323505,
+            "soc_path": [
+              0.4000107732438,
+              0.40001480230583975,
+              0.4000148006482388,
+              0.40001547490811007,
+              0.40001387558134055
+            ],
+            "weighted_reference": 0.00085589381558608,
+            "weighted_soc": 0.999721112975379
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 0.2780985103292606,
+            "first_fc_kw": 34.6154422741742,
+            "soc_path": [
+              0.4000268278550822,
+              0.4000450290953011,
+              0.4000565934180759,
+              0.40006192327391427,
+              0.40006192172525107
+            ],
+            "weighted_reference": 0.00023953107726584744,
+            "weighted_soc": 3.9959643636348177
+          }
+        ],
+        "case_id": "zero_boundary_011:471",
+        "load_change_kw": -0.7320115009871557,
+        "load_kw": 32.50084249674905,
+        "sample_id": "zero_boundary_011",
+        "soc": 0.4
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.27110009490260917,
+            "first_fc_kw": 30.324545282504587,
+            "soc_path": [
+              0.4999694065281398,
+              0.4998922115467793,
+              0.49977772517949137,
+              0.4996574868735926,
+              0.49953665379461815
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.2711000430502777,
+            "first_fc_kw": 30.32665972435221,
+            "soc_path": [
+              0.49996943625207496,
+              0.4998922914482648,
+              0.49977786276375863,
+              0.4996576803731059,
+              0.4995369008056852
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.9676190863051673e-06
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.27109991485044105,
+            "first_fc_kw": 30.333162235887745,
+            "soc_path": [
+              0.49996952766165004,
+              0.4998925353661588,
+              0.49977830520222183,
+              0.49965832086114575,
+              0.4995377316123134
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 7.841249809511672e-06
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.2710996388061143,
+            "first_fc_kw": 30.359040804835242,
+            "soc_path": [
+              0.49996989145169934,
+              0.4998935087620791,
+              0.49978004678580323,
+              0.4996608256021392,
+              0.49954096883131144
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 3.0910016868960554e-05
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.2723406606851677,
+            "first_fc_kw": 31.720338018694072,
+            "soc_path": [
+              0.4999890279959788,
+              0.4999459472762325,
+              0.4998968751498776,
+              0.49984656071211225,
+              0.4997951272820444
+            ],
+            "weighted_reference": 0.0010043222845272795,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.2723411257954319,
+            "first_fc_kw": 31.7209283405088,
+            "soc_path": [
+              0.49998903629447483,
+              0.49994596950497033,
+              0.4998969125679073,
+              0.4998466126899502,
+              0.49979519335925837
+            ],
+            "weighted_reference": 0.0010038629010310541,
+            "weighted_soc": 3.956997143182551e-07
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.27234241642310203,
+            "first_fc_kw": 31.722755507993472,
+            "soc_path": [
+              0.4999890619800276,
+              0.4999460340408277,
+              0.4998970179322036,
+              0.49984675857032307,
+              0.4997953781856981
+            ],
+            "weighted_reference": 0.0010025874287340507,
+            "weighted_soc": 1.5798058795112847e-06
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 0.2723481140276037,
+            "first_fc_kw": 31.730385014422975,
+            "soc_path": [
+              0.4999891692324234,
+              0.49994631257614897,
+              0.4998974777141549,
+              0.499847396726225,
+              0.4997961894741461
+            ],
+            "weighted_reference": 0.0009969791007110823,
+            "weighted_soc": 6.266956297331595e-06
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 0.27412613984778766,
+            "first_fc_kw": 32.4986285892536,
+            "soc_path": [
+              0.4999999688778186,
+              0.4999938017851042,
+              0.49998474192450976,
+              0.4999732366130204,
+              0.49996065332032374
+            ],
+            "weighted_reference": 0.0006944960711587518,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 0.27412624023858684,
+            "first_fc_kw": 32.49870609788397,
+            "soc_path": [
+              0.49999996996740237,
+              0.4999938044021913,
+              0.49998474620920996,
+              0.499973242629857,
+              0.4999606612987637
+            ],
+            "weighted_reference": 0.0006944050184650519,
+            "weighted_soc": 1.267277369779285e-08
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 0.2741264545049676,
+            "first_fc_kw": 32.49883652385596,
+            "soc_path": [
+              0.4999999718008759,
+              0.4999938089155539,
+              0.49998475389884783,
+              0.4999732541573932,
+              0.49996067747717426
+            ],
+            "weighted_reference": 0.0006942202738650327,
+            "weighted_soc": 5.064749640560734e-08
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 0.2741273355772449,
+            "first_fc_kw": 32.49938131234107,
+            "soc_path": [
+              0.49999997945928354,
+              0.4999938278562642,
+              0.4999847862032869,
+              0.49997330255922984,
+              0.4999607442139841
+            ],
+            "weighted_reference": 0.0006934581768118655,
+            "weighted_soc": 2.0186603760360589e-07
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 0.275020236492321,
+            "first_fc_kw": 33.07382427742674,
+            "soc_path": [
+              0.5000072694002623,
+              0.5000098815331764,
+              0.5000098760607191,
+              0.5000074160366559,
+              0.5000035134804006
+            ],
+            "weighted_reference": 0.0011384930274401703,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 0.27502023577079654,
+            "first_fc_kw": 33.07381699659652,
+            "soc_path": [
+              0.5000072693078907,
+              0.5000098813970314,
+              0.5000098758871834,
+              0.5000074158814196,
+              0.5000035136314571
+            ],
+            "weighted_reference": 0.0011384890023756666,
+            "weighted_soc": 1.5767944770377024e-09
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 0.2750202136407823,
+            "first_fc_kw": 33.07376476910319,
+            "soc_path": [
+              0.5000072686452822,
+              0.5000098803508686,
+              0.5000098747356269,
+              0.5000074150712562,
+              0.5000035138239861
+            ],
+            "weighted_reference": 0.001138485579666459,
+            "weighted_soc": 6.305903639312606e-09
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 0.2750201146864647,
+            "first_fc_kw": 33.0735530472311,
+            "soc_path": [
+              0.5000072659591741,
+              0.5000098761707021,
+              0.5000098701940643,
+              0.5000074119149717,
+              0.5000035139045108
+            ],
+            "weighted_reference": 0.001138491476244068,
+            "weighted_soc": 2.5203011982607232e-08
+          }
+        ],
+        "case_id": "zero_boundary_011:471",
+        "load_change_kw": -0.7320115009871557,
+        "load_kw": 32.50084249674905,
+        "sample_id": "zero_boundary_011",
+        "soc": 0.5
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.26952663875177063,
+            "first_fc_kw": 29.790880946044602,
+            "soc_path": [
+              0.5999619044991185,
+              0.5998702635152618,
+              0.5997407258516873,
+              0.5995848761788489,
+              0.599425301208678
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.2696612818939094,
+            "first_fc_kw": 29.083326157907802,
+            "soc_path": [
+              0.5999519579911881,
+              0.5998441731863681,
+              0.5996952678910997,
+              0.599518703184932,
+              0.5993403160068353
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.24835434966684167
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.2713797963589734,
+            "first_fc_kw": 26.87832467036517,
+            "soc_path": [
+              0.5999209610067141,
+              0.5997643545890928,
+              0.5995566712975148,
+              0.5993192174576799,
+              0.5990686984869448
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.9905513934245606
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.2524541232575514,
+            "first_fc_kw": 19.055478949777022,
+            "soc_path": [
+              0.5998109907283657,
+              0.5994758069966528,
+              0.59905834674863,
+              0.5986014635601354,
+              0.5981792299288768
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 3.9225308731210444
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.27141870466533713,
+            "first_fc_kw": 31.356347748669847,
+            "soc_path": [
+              0.5999839111736943,
+              0.5999316144558066,
+              0.5998726041423333,
+              0.5998126300901526,
+              0.5997514839938586
+            ],
+            "weighted_reference": 0.0013321170939378925,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.27124469881334873,
+            "first_fc_kw": 30.860243908510554,
+            "soc_path": [
+              0.5999769371543489,
+              0.5999143129540024,
+              0.5998466280530306,
+              0.5997798201038488,
+              0.5997130023138367
+            ],
+            "weighted_reference": 0.001649186295342826,
+            "weighted_soc": 0.24923151179895423
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.2703544151093996,
+            "first_fc_kw": 29.655224342143402,
+            "soc_path": [
+              0.5999599974955774,
+              0.5998768510389302,
+              0.5997660283115055,
+              0.5996590263056605,
+              0.599556682327787
+            ],
+            "weighted_reference": 0.003370203402791555,
+            "weighted_soc": 0.9952820279625768
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 0.27462475140743986,
+            "first_fc_kw": 24.078451314484845,
+            "soc_path": [
+              0.5998816015634522,
+              0.5996830035266124,
+              0.5994489991589232,
+              0.5992059006761901,
+              0.5989648547504371
+            ],
+            "weighted_reference": 0.01508457069136737,
+            "weighted_soc": 3.9551193729142056
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 0.2737824429668663,
+            "first_fc_kw": 32.27370872870849,
+            "soc_path": [
+              0.5999968070489198,
+              0.5999869302265636,
+              0.5999741674671011,
+              0.5999589631979412,
+              0.5999428932568288
+            ],
+            "weighted_reference": 0.0009114299020069742,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 0.2736098466901067,
+            "first_fc_kw": 31.955704849889784,
+            "soc_path": [
+              0.5999923366840016,
+              0.5999783610150329,
+              0.5999620765399201,
+              0.5999439273476876,
+              0.5999255630075057
+            ],
+            "weighted_reference": 0.0011507618294638508,
+            "weighted_soc": 0.24980231784499346
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 0.27265922451934393,
+            "first_fc_kw": 31.64024642791984,
+            "soc_path": [
+              0.5999879021020463,
+              0.5999535471819165,
+              0.5999184757144451,
+              0.599885518504642,
+              0.5998540491020473
+            ],
+            "weighted_reference": 0.0024838471630000366,
+            "weighted_soc": 0.998398837582589
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 0.2719957925726287,
+            "first_fc_kw": 28.49999934538147,
+            "soc_path": [
+              0.5999437578279441,
+              0.5998542911744505,
+              0.5997562892918238,
+              0.5996747251248808,
+              0.5996054098134783
+            ],
+            "weighted_reference": 0.01083251243656648,
+            "weighted_soc": 3.9813791952662605
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 0.27497940078671507,
+            "first_fc_kw": 33.080745414558855,
+            "soc_path": [
+              0.6000073572084925,
+              0.6000099748021672,
+              0.6000099753007133,
+              0.6000075214625245,
+              0.6000036597401788
+            ],
+            "weighted_reference": 0.0011341752448524632,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 0.27494704816151144,
+            "first_fc_kw": 33.02459308885579,
+            "soc_path": [
+              0.6000066448058561,
+              0.6000088821036017,
+              0.6000087505400161,
+              0.6000064516163521,
+              0.6000030015533395
+            ],
+            "weighted_reference": 0.0011563010833631324,
+            "weighted_soc": 0.25003373187041483
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 0.27469910931370717,
+            "first_fc_kw": 32.78392727698302,
+            "soc_path": [
+              0.6000035914869287,
+              0.6000035789062332,
+              0.6000017608585209,
+              0.5999985838033911,
+              0.5999950326961865
+            ],
+            "weighted_reference": 0.001427564582894903,
+            "weighted_soc": 1.000010192114796
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 0.27413021899852746,
+            "first_fc_kw": 31.345065856260902,
+            "soc_path": [
+              0.599983752577591,
+              0.5999670888197935,
+              0.5999523798639047,
+              0.5999400850505441,
+              0.5999312442280961
+            ],
+            "weighted_reference": 0.0044722859078397395,
+            "weighted_soc": 3.9963937631956084
+          }
+        ],
+        "case_id": "zero_boundary_011:471",
+        "load_change_kw": -0.7320115009871557,
+        "load_kw": 32.50084249674905,
+        "sample_id": "zero_boundary_011",
+        "soc": 0.6
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.34400676154591703,
+            "first_fc_kw": 50.24462914291831,
+            "soc_path": [
+              0.3997934578084595,
+              0.3995131095614675,
+              0.3991808829088617,
+              0.3988155305810555,
+              0.3984339425955698
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.3441091282345526,
+            "first_fc_kw": 50.87817026798906,
+            "soc_path": [
+              0.39980236386341156,
+              0.39953609113476063,
+              0.3992204748004872,
+              0.3988725620122837,
+              0.398508403735867
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.25408189398741865
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.3455889039818023,
+            "first_fc_kw": 52.41810440031633,
+            "soc_path": [
+              0.39982401161043596,
+              0.39959395691469957,
+              0.39932321511882324,
+              0.39902707272555243,
+              0.39872787651184455
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.014079843801102
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.36721401042698315,
+            "first_fc_kw": 59.480405746046785,
+            "soc_path": [
+              0.3999232904755075,
+              0.3998538547609701,
+              0.3997589631574273,
+              0.39963759205336186,
+              0.3995028179566602
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 4.021212815220811
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.34918040345020684,
+            "first_fc_kw": 53.22502514098186,
+            "soc_path": [
+              0.3998353549631781,
+              0.3996354158273731,
+              0.3994143049408899,
+              0.3991832892971742,
+              0.39895926042443824
+            ],
+            "weighted_reference": 0.007141688228259595,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.3499056559266725,
+            "first_fc_kw": 53.640990004156514,
+            "soc_path": [
+              0.39984120242245574,
+              0.3996497410399105,
+              0.3994379301304,
+              0.3992159419543566,
+              0.39899903360996075
+            ],
+            "weighted_reference": 0.006437863087656087,
+            "weighted_soc": 0.2528665533493214
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.3526395518902463,
+            "first_fc_kw": 54.780530429313565,
+            "soc_path": [
+              0.3998572216029714,
+              0.3996867580693601,
+              0.39950061810873344,
+              0.3993128863088856,
+              0.399119284509537
+            ],
+            "weighted_reference": 0.004495830164876606,
+            "weighted_soc": 1.010125239071065
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 0.3754064467838517,
+            "first_fc_kw": 60.75378495624011,
+            "soc_path": [
+              0.3999411911054304,
+              0.3998953362897168,
+              0.3998390574769543,
+              0.39977098629816965,
+              0.3996819921755002
+            ],
+            "weighted_reference": 0.00021084575530287298,
+            "weighted_soc": 4.013958497805748
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 0.36007838131652076,
+            "first_fc_kw": 55.90992189004988,
+            "soc_path": [
+              0.3998730981136092,
+              0.3997385717497443,
+              0.39960415694375656,
+              0.39947847381993823,
+              0.3993561393114153
+            ],
+            "weighted_reference": 0.006367102562486467,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 0.3606885665117859,
+            "first_fc_kw": 56.16782213602235,
+            "soc_path": [
+              0.39987672356690956,
+              0.3997469314625022,
+              0.39961718103180205,
+              0.39949468667070237,
+              0.3993746119115628
+            ],
+            "weighted_reference": 0.005762089290706879,
+            "weighted_soc": 0.2518942265712608
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 0.363006100415164,
+            "first_fc_kw": 56.72432994207501,
+            "soc_path": [
+              0.39988454671982865,
+              0.3997655184405803,
+              0.3996571631040628,
+              0.3995470819788374,
+              0.39943551062637367
+            ],
+            "weighted_reference": 0.003944093852127914,
+            "weighted_soc": 1.006854909144982
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 0.3753813699829009,
+            "first_fc_kw": 60.401749984054305,
+            "soc_path": [
+              0.39993624234569997,
+              0.3998850394911954,
+              0.3998293792959685,
+              0.39976784968494805,
+              0.39969362940070424
+            ],
+            "weighted_reference": 0.0004197751550232457,
+            "weighted_soc": 4.01422128843131
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 0.3699784294085049,
+            "first_fc_kw": 57.94930392670722,
+            "soc_path": [
+              0.3999017668894282,
+              0.39981232694054675,
+              0.3997342212471293,
+              0.3996632583233865,
+              0.39959727279009466
+            ],
+            "weighted_reference": 0.0028798950549838256,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 0.3702707451979633,
+            "first_fc_kw": 58.06948571268155,
+            "soc_path": [
+              0.3999034563544807,
+              0.3998159203358429,
+              0.3997392291845535,
+              0.3996691999524007,
+              0.3996037660319699
+            ],
+            "weighted_reference": 0.002593402119456141,
+            "weighted_soc": 0.25127031632797914
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 0.3714793096567909,
+            "first_fc_kw": 58.1380918103077,
+            "soc_path": [
+              0.3999044207901761,
+              0.3998261578491533,
+              0.3997555159172078,
+              0.399691035704904,
+              0.39962855593090546
+            ],
+            "weighted_reference": 0.001653003380683565,
+            "weighted_soc": 1.0047839064021657
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 0.37568420239875444,
+            "first_fc_kw": 59.94647338096244,
+            "soc_path": [
+              0.3999298422584995,
+              0.3998717332411153,
+              0.3998168614440457,
+              0.39976376907549854,
+              0.3997086186548398
+            ],
+            "weighted_reference": 0.0003570603475304819,
+            "weighted_soc": 4.014562455003124
+          }
+        ],
+        "case_id": "zero_boundary_037:517",
+        "load_change_kw": 7.061237909166302,
+        "load_kw": 64.93721448034458,
+        "sample_id": "zero_boundary_037",
+        "soc": 0.4
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.3388050026632246,
+            "first_fc_kw": 49.6006678791646,
+            "soc_path": [
+              0.49978440527157586,
+              0.49948812325179087,
+              0.4991349568314915,
+              0.4987454082231325,
+              0.498338098320418
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.3388050169008143,
+            "first_fc_kw": 49.60779597876585,
+            "soc_path": [
+              0.49978450547540515,
+              0.4994883918975865,
+              0.49913543466886773,
+              0.49874611406739605,
+              0.49833903673100427
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 2.6933414326582176e-05
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.33880523794923956,
+            "first_fc_kw": 49.62894274378668,
+            "soc_path": [
+              0.49978480274774295,
+              0.4994891881371786,
+              0.4991368501799889,
+              0.49874820515880375,
+              0.49834181798340266
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.00010737648305951384
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.3388087576362491,
+            "first_fc_kw": 49.71474594343607,
+            "soc_path": [
+              0.4997860089330731,
+              0.4994923982016549,
+              0.49914253597551445,
+              0.4987565522627248,
+              0.4983526860612326
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.00042388014431093843
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.34479133656287064,
+            "first_fc_kw": 52.84443267298126,
+            "soc_path": [
+              0.49983000475417,
+              0.4996212287023831,
+              0.4993889925580086,
+              0.4991455118475662,
+              0.49890914968563965
+            ],
+            "weighted_reference": 0.008117891829852874,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.34479787870810713,
+            "first_fc_kw": 52.84763724346147,
+            "soc_path": [
+              0.49983004980267537,
+              0.4996213434588559,
+              0.4993891869869663,
+              0.499145785134929,
+              0.4989094928848454
+            ],
+            "weighted_reference": 0.008111158338572207,
+            "weighted_soc": 1.2321225932621356e-05
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.3448166303832991,
+            "first_fc_kw": 52.856822482530035,
+            "soc_path": [
+              0.499830178924907,
+              0.4996216710206822,
+              0.4993897416606656,
+              0.49914656800251767,
+              0.4989104759916111
+            ],
+            "weighted_reference": 0.008091876464618366,
+            "weighted_soc": 4.919591988094213e-05
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 0.3448920243410449,
+            "first_fc_kw": 52.89368814367591,
+            "soc_path": [
+              0.49983069716688217,
+              0.49962298750524814,
+              0.49939196996118723,
+              0.4991497027576929,
+              0.49891440840046963
+            ],
+            "weighted_reference": 0.008015037818260216,
+            "weighted_soc": 0.00019536135358763157
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 0.3571877469748936,
+            "first_fc_kw": 55.70756751460421,
+            "soc_path": [
+              0.499870253500819,
+              0.4997314177783025,
+              0.4995919223581926,
+              0.49946121914165686,
+              0.4993338753271982
+            ],
+            "weighted_reference": 0.007170646543446741,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 0.35719106334483036,
+            "first_fc_kw": 55.70866625774467,
+            "soc_path": [
+              0.4998702689464884,
+              0.4997314546202493,
+              0.4995919820261911,
+              0.49946129733333144,
+              0.4993339687496738
+            ],
+            "weighted_reference": 0.007167250056539446,
+            "weighted_soc": 4.9461181183435505e-06
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 0.35720117579147276,
+            "first_fc_kw": 55.71210733843288,
+            "soc_path": [
+              0.49987031731975495,
+              0.49973157042912925,
+              0.49959216592914735,
+              0.49946153688872347,
+              0.4993342543471141
+            ],
+            "weighted_reference": 0.007156899182406375,
+            "weighted_soc": 1.9767209159274595e-05
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 0.3572416630716992,
+            "first_fc_kw": 55.725792511961046,
+            "soc_path": [
+              0.49987050970017455,
+              0.4997320296275722,
+              0.4995928981586277,
+              0.4994624926316337,
+              0.49933539517471887
+            ],
+            "weighted_reference": 0.0071156036803865655,
+            "weighted_soc": 7.879372098653858e-05
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 0.36833350412048577,
+            "first_fc_kw": 57.866331773900924,
+            "soc_path": [
+              0.499900600501765,
+              0.4998096007314811,
+              0.49972994695437245,
+              0.4996574346815716,
+              0.4995899059699239
+            ],
+            "weighted_reference": 0.0032320836324979604,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 0.3683346175265478,
+            "first_fc_kw": 57.86660145571235,
+            "soc_path": [
+              0.4999006042928386,
+              0.4998096110400195,
+              0.4997299625447734,
+              0.49965745463016004,
+              0.49958992899400073
+            ],
+            "weighted_reference": 0.0032309585221106485,
+            "weighted_soc": 2.022716251349375e-06
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 0.3683375216747605,
+            "first_fc_kw": 57.86763858317294,
+            "soc_path": [
+              0.4999006188723407,
+              0.4998096412199622,
+              0.4997300061247795,
+              0.49965750822956195,
+              0.4995899896757569
+            ],
+            "weighted_reference": 0.003228022487017475,
+            "weighted_soc": 8.088376902651983e-06
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 0.36834939591095334,
+            "first_fc_kw": 57.87160418017982,
+            "soc_path": [
+              0.49990067461903726,
+              0.49980976184987735,
+              0.49973018159659643,
+              0.499657725905309,
+              0.499590237186111
+            ],
+            "weighted_reference": 0.003216038079861473,
+            "weighted_soc": 3.2313214033880335e-05
+          }
+        ],
+        "case_id": "zero_boundary_037:517",
+        "load_change_kw": 7.061237909166302,
+        "load_kw": 64.93721448034458,
+        "sample_id": "zero_boundary_037",
+        "soc": 0.5
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.3343107472436136,
+            "first_fc_kw": 49.06533368752926,
+            "soc_path": [
+              0.5997768797684321,
+              0.599467313919008,
+              0.5990966543704053,
+              0.59868683649332,
+              0.5982578533085704
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.3344134954709296,
+            "first_fc_kw": 48.42291408795894,
+            "soc_path": [
+              0.5997678489036158,
+              0.5994439258895351,
+              0.5990562278925102,
+              0.5986284355110363,
+              0.5981814455717759
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.24511009450694615
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.33598622729572786,
+            "first_fc_kw": 46.46567646109212,
+            "soc_path": [
+              0.5997403348793965,
+              0.5993725232639766,
+              0.5989325877660624,
+              0.5984495218495184,
+              0.5979469534371402
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.9779320748761898
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.3626574527035466,
+            "first_fc_kw": 38.26309226861932,
+            "soc_path": [
+              0.5996250263971585,
+              0.5990717186025237,
+              0.5984093958545615,
+              0.5976896159665779,
+              0.5969482895621587
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 3.8693593936542108
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.34102341909492406,
+            "first_fc_kw": 52.53038879001166,
+            "soc_path": [
+              0.5998255900572097,
+              0.5996095108908498,
+              0.5993680790756164,
+              0.5991143115534088,
+              0.5988677593772247
+            ],
+            "weighted_reference": 0.008971401820430915,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.3402860418837631,
+            "first_fc_kw": 52.1158746425276,
+            "soc_path": [
+              0.5998197629914837,
+              0.5995951862617702,
+              0.599344416305421,
+              0.5990815465422893,
+              0.5988277292798267
+            ],
+            "weighted_reference": 0.009806539044627912,
+            "weighted_soc": 0.2466828610053803
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.3379687471478465,
+            "first_fc_kw": 50.98589970630506,
+            "soc_path": [
+              0.5998038782785925,
+              0.5995555760211081,
+              0.5992795051790445,
+              0.5989908319287971,
+              0.5986982760630222
+            ],
+            "weighted_reference": 0.012851102706169678,
+            "weighted_soc": 0.9853816297741315
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 0.3368090456886967,
+            "first_fc_kw": 45.78402273383565,
+            "soc_path": [
+              0.5997307524776975,
+              0.5993756883436533,
+              0.5989835051217134,
+              0.598582133595858,
+              0.598183285261218
+            ],
+            "weighted_reference": 0.02862957624763937,
+            "weighted_soc": 3.9182303422976195
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 0.3547313764841213,
+            "first_fc_kw": 55.541578001372336,
+            "soc_path": [
+              0.5998679200899829,
+              0.5997255475512395,
+              0.5995818835597566,
+              0.5994470582630089,
+              0.5993156007641149
+            ],
+            "weighted_reference": 0.00786595266887108,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 0.35408479190164327,
+            "first_fc_kw": 55.286650803910305,
+            "soc_path": [
+              0.5998643364305495,
+              0.5997172902119182,
+              0.5995689877291577,
+              0.5994309723140762,
+              0.5992972363515435
+            ],
+            "weighted_reference": 0.008570194300774207,
+            "weighted_soc": 0.2478843318885397
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 0.35230724576735484,
+            "first_fc_kw": 54.5218738658247,
+            "soc_path": [
+              0.5998535855176771,
+              0.5996925188358664,
+              0.5995304270801989,
+              0.5993828470613679,
+              0.5992422369105419
+            ],
+            "weighted_reference": 0.010877848997051333,
+            "weighted_soc": 0.990832292887476
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 0.3463665905367754,
+            "first_fc_kw": 51.55639305378754,
+            "soc_path": [
+              0.599811898034377,
+              0.5995989926410917,
+              0.599387854094759,
+              0.5991888532803461,
+              0.599009236115235
+            ],
+            "weighted_reference": 0.023888132635007654,
+            "weighted_soc": 3.95212618536789
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 0.3669545973276964,
+            "first_fc_kw": 57.79855485674756,
+            "soc_path": [
+              0.5998996477223403,
+              0.5998073696951408,
+              0.5997264473870405,
+              0.5996526655092038,
+              0.599583872308774
+            ],
+            "weighted_reference": 0.0035357598374516066,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 0.3666383417437363,
+            "first_fc_kw": 57.67945815908076,
+            "soc_path": [
+              0.5998979735110034,
+              0.5998038035558183,
+              0.59972147542865,
+              0.5996467665195013,
+              0.5995774229449963
+            ],
+            "weighted_reference": 0.0038698158153307096,
+            "weighted_soc": 0.24864959107819518
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 0.36572151993037716,
+            "first_fc_kw": 57.32328105998179,
+            "soc_path": [
+              0.5998929665229931,
+              0.5997931356756542,
+              0.5997065981677656,
+              0.599629110941541,
+              0.5995581069243783
+            ],
+            "weighted_reference": 0.004976267167475562,
+            "weighted_soc": 0.9943291361659892
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 0.36252267406967553,
+            "first_fc_kw": 55.900206146340246,
+            "soc_path": [
+              0.5998729615337662,
+              0.5997507111146216,
+              0.5996474492189411,
+              0.5995589164855858,
+              0.5994812263582439
+            ],
+            "weighted_reference": 0.010950229425029333,
+            "weighted_soc": 3.9730335359010645
+          }
+        ],
+        "case_id": "zero_boundary_037:517",
+        "load_change_kw": 7.061237909166302,
+        "load_kw": 64.93721448034458,
+        "sample_id": "zero_boundary_037",
+        "soc": 0.6
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.8083183011819216,
+            "first_fc_kw": 98.4978453889162,
+            "soc_path": [
+              0.3978770024374286,
+              0.39555159645157173,
+              0.3930790776916358,
+              0.3905134588773771,
+              0.38790468452550986
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.8084248204379825,
+            "first_fc_kw": 99.17800914580337,
+            "soc_path": [
+              0.39788656389375004,
+              0.39557563569092263,
+              0.3931188201333581,
+              0.3905673714836642,
+              0.3879717080427586
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.2864051334365842
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.8103471787576776,
+            "first_fc_kw": 101.4547793299999,
+            "soc_path": [
+              0.3979185697724078,
+              0.395657803636301,
+              0.3932583488498763,
+              0.3907632953821065,
+              0.38821868622161293
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.1425882435073074
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.8519254198537968,
+            "first_fc_kw": 112.67397283571198,
+            "soc_path": [
+              0.3980762844809339,
+              0.3960761476320607,
+              0.3939972162735499,
+              0.3918511708449534,
+              0.38966413665130956
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 4.503629841797573
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.9782536906709393,
+            "first_fc_kw": 121.15886875173317,
+            "soc_path": [
+              0.3981955615827673,
+              0.39646136140867133,
+              0.3947949420184459,
+              0.39318309130522383,
+              0.3916031722735127
+            ],
+            "weighted_reference": 0.14717987349042566,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.9832151610401326,
+            "first_fc_kw": 121.71275186923742,
+            "soc_path": [
+              0.39820334783891753,
+              0.3964809157876792,
+              0.39482774283489014,
+              0.39322915729609537,
+              0.3916620661106138
+            ],
+            "weighted_reference": 0.14230613929105387,
+            "weighted_soc": 0.27638541817844475
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.9986316118933903,
+            "first_fc_kw": 123.3733301889511,
+            "soc_path": [
+              0.3982266915512392,
+              0.39653953032552974,
+              0.39492603376584084,
+              0.39336718083654604,
+              0.39183850954170124
+            ],
+            "weighted_reference": 0.12820331011668548,
+            "weighted_soc": 1.1034375923790467
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 1.0676302599169452,
+            "first_fc_kw": 129.9487810382165,
+            "soc_path": [
+              0.39831912647658313,
+              0.3967712339963427,
+              0.3953140143566556,
+              0.39391181346213566,
+              0.3925346358172355
+            ],
+            "weighted_reference": 0.07985354413132302,
+            "weighted_soc": 4.3806273266454685
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 1.2059609879669055,
+            "first_fc_kw": 135.67259315873036,
+            "soc_path": [
+              0.3983995894224968,
+              0.397013291172534,
+              0.39579707735777936,
+              0.39470647527702296,
+              0.39368899031578597
+            ],
+            "weighted_reference": 0.09119454969253375,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 1.2089792177544925,
+            "first_fc_kw": 135.9685038783933,
+            "soc_path": [
+              0.398403749211066,
+              0.39702290073459623,
+              0.39581199527186833,
+              0.3947259899609795,
+              0.39371241620866937
+            ],
+            "weighted_reference": 0.0882139682578904,
+            "weighted_soc": 0.2708044456730445
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 1.218119056474854,
+            "first_fc_kw": 136.8521726080436,
+            "soc_path": [
+              0.39841617145479147,
+              0.39705159695456016,
+              0.39585653339273125,
+              0.3947842114586307,
+              0.3937822817708361
+            ],
+            "weighted_reference": 0.07963395160229243,
+            "weighted_soc": 1.0823215074536034
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 1.2566749983948649,
+            "first_fc_kw": 139.97341284512623,
+            "soc_path": [
+              0.3984600485386461,
+              0.39715376821194115,
+              0.39601820630406714,
+              0.3950033409479687,
+              0.39406173185624793
+            ],
+            "weighted_reference": 0.04939953517521879,
+            "weighted_soc": 4.315771010030946
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 1.3446748535748927,
+            "first_fc_kw": 145.45230720089774,
+            "soc_path": [
+              0.39853706853352594,
+              0.39732652886758807,
+              0.396303712035951,
+              0.3954286459023138,
+              0.3946475798764599
+            ],
+            "weighted_reference": 0.03764774566434917,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 1.345853700770749,
+            "first_fc_kw": 145.58014139951672,
+            "soc_path": [
+              0.3985388655729802,
+              0.3973302913566004,
+              0.3963091182242072,
+              0.39543516712555377,
+              0.3946548156782247
+            ],
+            "weighted_reference": 0.036474036259516035,
+            "weighted_soc": 0.2680932098471474
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 1.3494178609047864,
+            "first_fc_kw": 145.96350772759888,
+            "soc_path": [
+              0.3985442547757479,
+              0.3973415851723,
+              0.396325346263298,
+              0.39545474263971075,
+              0.39467653434888905
+            ],
+            "weighted_reference": 0.03308061963607375,
+            "weighted_soc": 1.0720639090931883
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 1.3640945425968007,
+            "first_fc_kw": 147.50265684281504,
+            "soc_path": [
+              0.39856589148733157,
+              0.39738689633950874,
+              0.3963903745407634,
+              0.3955331525645327,
+              0.3947635114350973
+            ],
+            "weighted_reference": 0.021426109956424872,
+            "weighted_soc": 4.283305811118233
+          }
+        ],
+        "case_id": "zero_boundary_017:23",
+        "load_change_kw": 64.9641,
+        "load_kw": 249.5194,
+        "sample_id": "zero_boundary_017",
+        "soc": 0.4
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.7646900731227672,
+            "first_fc_kw": 97.74668614366982,
+            "soc_path": [
+              0.4978664429563606,
+              0.49552330219889806,
+              0.4930292473919888,
+              0.49044169070452287,
+              0.48781057647437265
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.7646908159546542,
+            "first_fc_kw": 97.79919772937131,
+            "soc_path": [
+              0.49786718114216955,
+              0.4955252296428186,
+              0.4930325393034161,
+              0.4904462904819305,
+              0.48781645067602003
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.001564151171368862
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.7647019520498322,
+            "first_fc_kw": 97.96054831052595,
+            "soc_path": [
+              0.4978694493408475,
+              0.4955311113401619,
+              0.49304252724770453,
+              0.49046012906362124,
+              0.4878339481202032
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.006238771897777
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.7648764686195313,
+            "first_fc_kw": 98.5937347059711,
+            "soc_path": [
+              0.4978783504091595,
+              0.49555422547517936,
+              0.49308178073728937,
+              0.49051451142614627,
+              0.4879027506574419
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.024675680081562484
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.9421488237160113,
+            "first_fc_kw": 120.58301338700184,
+            "soc_path": [
+              0.49818746644999723,
+              0.49643955838773407,
+              0.4947557039551399,
+              0.4931241995449602,
+              0.4915235825435446
+            ],
+            "weighted_reference": 0.15408787483222192,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.9424690130839635,
+            "first_fc_kw": 120.61463934126229,
+            "soc_path": [
+              0.4981879110343745,
+              0.4964407116290802,
+              0.4947576928886812,
+              0.4931270574618221,
+              0.49152729313148963
+            ],
+            "weighted_reference": 0.1537680738120997,
+            "weighted_soc": 0.0008122904239444403
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.9434218728772334,
+            "first_fc_kw": 120.70938095324051,
+            "soc_path": [
+              0.4981892428721497,
+              0.4964441615027089,
+              0.4947636319010824,
+              0.49313556602190917,
+              0.49153832305422307
+            ],
+            "weighted_reference": 0.15282030672279792,
+            "weighted_soc": 0.003241256204730008
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 0.9472271459300511,
+            "first_fc_kw": 121.08520508652488,
+            "soc_path": [
+              0.49819452604991177,
+              0.4964578461716339,
+              0.4947871790970001,
+              0.49316929390014985,
+              0.4915820401744553
+            ],
+            "weighted_reference": 0.1490932407348656,
+            "weighted_soc": 0.012840054811361872
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 1.180593299591408,
+            "first_fc_kw": 135.41420146641744,
+            "soc_path": [
+              0.49839595706065026,
+              0.49700415622075944,
+              0.4957814995241972,
+              0.4946840085028396,
+              0.4936594539425501
+            ],
+            "weighted_reference": 0.0951085662814073,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 1.1807316003509285,
+            "first_fc_kw": 135.42628788319348,
+            "soc_path": [
+              0.49839612696641916,
+              0.49700456391792835,
+              0.49578214853532376,
+              0.4946848729901885,
+              0.4936605051990556
+            ],
+            "weighted_reference": 0.09497033767080329,
+            "weighted_soc": 0.0004888754323466265
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 1.1811885727275235,
+            "first_fc_kw": 135.4648935461367,
+            "soc_path": [
+              0.4983966696686085,
+              0.4970058666850579,
+              0.4957842439324796,
+              0.4946876939470473,
+              0.4936639683390438
+            ],
+            "weighted_reference": 0.09451461386483268,
+            "weighted_soc": 0.001953479889778363
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 1.1829623974761707,
+            "first_fc_kw": 135.61590451721216,
+            "soc_path": [
+              0.4983987925173922,
+              0.49701096894892977,
+              0.4957924294710588,
+              0.4946986761656862,
+              0.4936773939870838
+            ],
+            "weighted_reference": 0.09276040202362777,
+            "weighted_soc": 0.007782496237877068
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 1.3252874509442645,
+            "first_fc_kw": 145.35431414558056,
+            "soc_path": [
+              0.4985356909883263,
+              0.4973233778475658,
+              0.49629869005155364,
+              0.49542179127555114,
+              0.494638906536409
+            ],
+            "weighted_reference": 0.0390292066764645,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 1.325337925859915,
+            "first_fc_kw": 145.35904733251684,
+            "soc_path": [
+              0.4985357575254796,
+              0.4973235232578426,
+              0.4962989076755822,
+              0.4954220624015911,
+              0.4946392157550848
+            ],
+            "weighted_reference": 0.038978521387358425,
+            "weighted_soc": 0.0003635056927241019
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 1.3254821418901381,
+            "first_fc_kw": 145.37264070990125,
+            "soc_path": [
+              0.4985359486154676,
+              0.49732394355103826,
+              0.49629953434362495,
+              0.49542284177835355,
+              0.4946400994957017
+            ],
+            "weighted_reference": 0.03883391336634604,
+            "weighted_soc": 0.0014535416290111026
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 1.3260644752477992,
+            "first_fc_kw": 145.4274051239639,
+            "soc_path": [
+              0.49853671847059106,
+              0.4973256330257767,
+              0.49630205832655333,
+              0.4954259821538511,
+              0.4946436649139392
+            ],
+            "weighted_reference": 0.03825366599245445,
+            "weighted_soc": 0.005806413518271528
+          }
+        ],
+        "case_id": "zero_boundary_017:23",
+        "load_change_kw": 64.9641,
+        "load_kw": 249.5194,
+        "sample_id": "zero_boundary_017",
+        "soc": 0.5
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 0.7286358832149499,
+            "first_fc_kw": 97.12037063039622,
+            "soc_path": [
+              0.5978576384760234,
+              0.5954996760333984,
+              0.5929875452040666,
+              0.5903814534817952,
+              0.5877314104693627
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 0.7287130656645816,
+            "first_fc_kw": 96.52359870500132,
+            "soc_path": [
+              0.5978492493070316,
+              0.5954785280008604,
+              0.5929523784943324,
+              0.5903332792848877,
+              0.5876709536002939
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.21588533509230376
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 0.7297718707846486,
+            "first_fc_kw": 94.83327750345217,
+            "soc_path": [
+              0.5978254874817737,
+              0.5954193085610575,
+              0.5928554032600027,
+              0.5902001535253112,
+              0.5875032191787448
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.8617935484905573
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 0.7475070808337378,
+            "first_fc_kw": 88.1300404555998,
+            "soc_path": [
+              0.5977312561917397,
+              0.5951846201536288,
+              0.5924713711034691,
+              0.5896663579232031,
+              0.5868231806366881
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 3.4192628210755633
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 0.9121389688256485,
+            "first_fc_kw": 120.10685459298747,
+            "soc_path": [
+              0.5981807728097305,
+              0.5964215095319862,
+              0.5947231801865412,
+              0.5930752886898577,
+              0.5914574468482535
+            ],
+            "weighted_reference": 0.15995215165381685,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 0.9076418488954563,
+            "first_fc_kw": 119.61351889762486,
+            "soc_path": [
+              0.5981738377038015,
+              0.5964041475666993,
+              0.5946941218370628,
+              0.5930344935468769,
+              0.591405331051993
+            ],
+            "weighted_reference": 0.1645170141189712,
+            "weighted_soc": 0.22454595161147564
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 0.8945372807330878,
+            "first_fc_kw": 118.13475683656286,
+            "soc_path": [
+              0.5981530498880533,
+              0.5963520824927024,
+              0.5946069018389615,
+              0.5929119794802247,
+              0.5912486048158458
+            ],
+            "weighted_reference": 0.178643760953125,
+            "weighted_soc": 0.8965430938069242
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 0.8492888489866844,
+            "first_fc_kw": 112.2893938829369,
+            "soc_path": [
+              0.5980708782315978,
+              0.5961465420557713,
+              0.5942630387377092,
+              0.5924294235915627,
+              0.5906315974911158
+            ],
+            "weighted_reference": 0.23995455104888827,
+            "weighted_soc": 3.5603887990180905
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 1.1596744553725433,
+            "first_fc_kw": 135.20256321217434,
+            "soc_path": [
+              0.5983929819389925,
+              0.5969966754446815,
+              0.5957687421209334,
+              0.5946656068413945,
+              0.5936352620232087
+            ],
+            "weighted_reference": 0.0983775862965412,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 1.156857546937452,
+            "first_fc_kw": 134.9317739447325,
+            "soc_path": [
+              0.5983891752972438,
+              0.5969879064292622,
+              0.5957551662726375,
+              0.5946478992306855,
+              0.5936140524839991
+            ],
+            "weighted_reference": 0.10122543800871212,
+            "weighted_soc": 0.2298897566418125
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 1.148569399984245,
+            "first_fc_kw": 134.1235896214695,
+            "soc_path": [
+              0.5983778141815883,
+              0.5969617559408552,
+              0.5957146891013484,
+              0.594595096375306,
+              0.5935507828992804
+            ],
+            "weighted_reference": 0.10997444277900295,
+            "weighted_soc": 0.9188211877474124
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 1.117134309222935,
+            "first_fc_kw": 130.87879765503828,
+            "soc_path": [
+              0.5983322002594331,
+              0.596856872431693,
+              0.595552474129283,
+              0.594383622985741,
+              0.5932975247922676
+            ],
+            "weighted_reference": 0.14878447060072839,
+            "weighted_soc": 3.6634757662092894
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 1.3093676347794283,
+            "first_fc_kw": 145.27406851036437,
+            "soc_path": [
+              0.5985345629289018,
+              0.5973207981590224,
+              0.5962945783484591,
+              0.5954161776971488,
+              0.594631803174614
+            ],
+            "weighted_reference": 0.0401816612587408,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 1.3082485941300694,
+            "first_fc_kw": 145.15542825595676,
+            "soc_path": [
+              0.5985328951340525,
+              0.5973173162478503,
+              0.596289588711889,
+              0.5954101728525939,
+              0.5946251524460551
+            ],
+            "weighted_reference": 0.041319388898683355,
+            "weighted_soc": 0.23254048459344032
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 1.30491917346436,
+            "first_fc_kw": 144.80016264258015,
+            "soc_path": [
+              0.5985279009593255,
+              0.5973068899360628,
+              0.5962746424708122,
+              0.5953921855500229,
+              0.5946052295070404
+            ],
+            "weighted_reference": 0.044836376025091884,
+            "weighted_soc": 0.9299000678690447
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 1.2919484612986147,
+            "first_fc_kw": 143.38159136205147,
+            "soc_path": [
+              0.5985079592802808,
+              0.5972652667548779,
+              0.5962149469752398,
+              0.5953203198847148,
+              0.5945255936552799
+            ],
+            "weighted_reference": 0.060524412146125896,
+            "weighted_soc": 3.7154173934974946
+          }
+        ],
+        "case_id": "zero_boundary_017:23",
+        "load_change_kw": 64.9641,
+        "load_kw": 249.5194,
+        "sample_id": "zero_boundary_017",
+        "soc": 0.6
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 3.731448059796694,
+            "first_fc_kw": 542.7283516142572,
+            "soc_path": [
+              0.40125625741230697,
+              0.40212771720571766,
+              0.4027126543325555,
+              0.40310702154886957,
+              0.40340619640528935
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 3.731567809302035,
+            "first_fc_kw": 543.5220896537903,
+            "soc_path": [
+              0.40126632753967817,
+              0.40215453852533567,
+              0.4027602853941027,
+              0.4031775278178273,
+              0.4035002231577085
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.23732216277704085
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 3.733337329875678,
+            "first_fc_kw": 545.8627887745292,
+            "soc_path": [
+              0.4012960239093991,
+              0.40223354323399885,
+              0.4029004654470712,
+              0.40338487083743985,
+              0.4037767400449093
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.9464494702910171
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 3.757324768177269,
+            "first_fc_kw": 554.4426925270695,
+            "soc_path": [
+              0.40140487685497755,
+              0.402520097284058,
+              0.4034042755367411,
+              0.4041240623559776,
+              0.404755980487076
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 3.7454145918537782
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 3.739141409697001,
+            "first_fc_kw": 547.8167393739616,
+            "soc_path": [
+              0.40132081361385236,
+              0.40231897956181717,
+              0.4030753472760078,
+              0.4036631046963033,
+              0.4041579919377408
+            ],
+            "weighted_reference": 0.005633601090655265,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 3.740383951116136,
+            "first_fc_kw": 548.3983813539708,
+            "soc_path": [
+              0.40132819288576754,
+              0.40233775683987977,
+              0.4031072686716825,
+              0.40370821548145325,
+              0.40421517868778734
+            ],
+            "weighted_reference": 0.004820164212507597,
+            "weighted_soc": 0.23554540201047514
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 3.7445409534758163,
+            "first_fc_kw": 549.9566728008184,
+            "soc_path": [
+              0.40134796287607877,
+              0.4023885768047925,
+              0.4031954822504445,
+              0.40383647606024087,
+              0.40438280343427363
+            ],
+            "weighted_reference": 0.002907768082621623,
+            "weighted_soc": 0.9404280127843765
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 3.755408018261252,
+            "first_fc_kw": 553.1418290557353,
+            "soc_path": [
+              0.40138837284459067,
+              0.4024899074289354,
+              0.40336689152803457,
+              0.4040837269375095,
+              0.40472891494606417
+            ],
+            "weighted_reference": 0.0016376795442515357,
+            "weighted_soc": 3.7477551921569776
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 3.747105153203138,
+            "first_fc_kw": 547.8837577654432,
+            "soc_path": [
+              0.40132166387389384,
+              0.40235088216370646,
+              0.40317227989391613,
+              0.40385009731623456,
+              0.4044469030271823
+            ],
+            "weighted_reference": 0.005725811351689323,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 3.7475405066688787,
+            "first_fc_kw": 548.154975306614,
+            "soc_path": [
+              0.4013251048015663,
+              0.4023588732800492,
+              0.40318473944517086,
+              0.40386637143140697,
+              0.40446617287480163
+            ],
+            "weighted_reference": 0.005367105439264416,
+            "weighted_soc": 0.2350605295640716
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 3.7500541445824784,
+            "first_fc_kw": 549.0151638498605,
+            "soc_path": [
+              0.4013360179842063,
+              0.4023889582954039,
+              0.4032347115911241,
+              0.4039308796479779,
+              0.40455727895147736
+            ],
+            "weighted_reference": 0.00399647224980743,
+            "weighted_soc": 0.9392921347415925
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 3.754334631401432,
+            "first_fc_kw": 551.3601176635511,
+            "soc_path": [
+              0.40136576833307125,
+              0.40245279064745554,
+              0.40333020696401023,
+              0.4040562316741162,
+              0.40470345564277943
+            ],
+            "weighted_reference": 0.004427739323627358,
+            "weighted_soc": 3.7500685313291355
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 3.755553560340823,
+            "first_fc_kw": 546.4062524034938,
+            "soc_path": [
+              0.4013029188138798,
+              0.4023496644917891,
+              0.40321417121463116,
+              0.4039469856042165,
+              0.4045909953467342
+            ],
+            "weighted_reference": 0.005186093171695723,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 3.75560340606756,
+            "first_fc_kw": 546.4929154679746,
+            "soc_path": [
+              0.40130401830521606,
+              0.4023518579054317,
+              0.403217490000788,
+              0.4039510234850004,
+              0.4045954207958848
+            ],
+            "weighted_reference": 0.005171249344745865,
+            "weighted_soc": 0.23485175160829475
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 3.755741661543127,
+            "first_fc_kw": 546.7523538647293,
+            "soc_path": [
+              0.401307309791286,
+              0.40235838885557756,
+              0.4032271928779529,
+              0.4039627650046897,
+              0.40460827096525553
+            ],
+            "weighted_reference": 0.005204453511925082,
+            "weighted_soc": 0.9392367999915061
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 3.756178587624197,
+            "first_fc_kw": 547.8640274332918,
+            "soc_path": [
+              0.4013214135558444,
+              0.4023862954944834,
+              0.4032655257586201,
+              0.40400801212875487,
+              0.40465750871590805
+            ],
+            "weighted_reference": 0.006456405673114209,
+            "weighted_soc": 3.7542487693114897
+          }
+        ],
+        "case_id": "zero_boundary_045:180",
+        "load_change_kw": 6.983879999999999,
+        "load_kw": 443.70882,
+        "sample_id": "zero_boundary_045",
+        "soc": 0.4
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 3.7185464327245654,
+            "first_fc_kw": 543.765323950568,
+            "soc_path": [
+              0.5012694134448856,
+              0.5021643944573092,
+              0.5027806500317864,
+              0.5032115691246963,
+              0.5035498709893145
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 3.7185465691429185,
+            "first_fc_kw": 543.740376166493,
+            "soc_path": [
+              0.501269096933202,
+              0.5021635414784493,
+              0.5027791269311904,
+              0.503209315584938,
+              0.5035468772487237
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.00018447554997870488
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 3.7185483157336234,
+            "first_fc_kw": 543.6716294034958,
+            "soc_path": [
+              0.5012682247453702,
+              0.502161170048392,
+              0.5027748424612473,
+              0.503202881233607,
+              0.5035381950718071
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0007351214646065761
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 3.718576340440806,
+            "first_fc_kw": 543.3867862104545,
+            "soc_path": [
+              0.5012646109495184,
+              0.5021513855227349,
+              0.5027572594532705,
+              0.5031766392289322,
+              0.5035029937237846
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0028953745626711853
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 3.724986891540699,
+            "first_fc_kw": 548.427059112005,
+            "soc_path": [
+              0.5013285567195033,
+              0.5023398193447376,
+              0.5031129843982709,
+              0.5037197705825129,
+              0.5042343531786473
+            ],
+            "weighted_reference": 0.004475728220652704,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 3.72495121391757,
+            "first_fc_kw": 548.4082756784967,
+            "soc_path": [
+              0.5013283184147245,
+              0.502339219060473,
+              0.5031119590304398,
+              0.5037182963754617,
+              0.5042325107661526
+            ],
+            "weighted_reference": 0.0044994541309465895,
+            "weighted_soc": 0.00024330269976140817
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 3.7248387971281223,
+            "first_fc_kw": 548.3492227486929,
+            "soc_path": [
+              0.501327569212223,
+              0.5023372871794951,
+              0.5031086636342629,
+              0.5037136283818497,
+              0.504226599749632
+            ],
+            "weighted_reference": 0.004576225459143747,
+            "weighted_soc": 0.000970886443314649
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 3.724368138942519,
+            "first_fc_kw": 548.1056319275648,
+            "soc_path": [
+              0.5013244787838033,
+              0.5023292486533364,
+              0.5030947438092276,
+              0.5036936805760581,
+              0.5042010400010658
+            ],
+            "weighted_reference": 0.004926791189288827,
+            "weighted_soc": 0.00384392766968567
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 3.7311230090889222,
+            "first_fc_kw": 548.1535225301807,
+            "soc_path": [
+              0.5013250863702413,
+              0.5023594603025211,
+              0.50318688005313,
+              0.5038710804019912,
+              0.504474271039778
+            ],
+            "weighted_reference": 0.005106844320150952,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 3.7311088535966723,
+            "first_fc_kw": 548.1445267391222,
+            "soc_path": [
+              0.5013249722409477,
+              0.5023591915815505,
+              0.5031864451754116,
+              0.5038704979676897,
+              0.504473581142434
+            ],
+            "weighted_reference": 0.005119316320937804,
+            "weighted_soc": 0.0002623422598473782
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 3.731066415592063,
+            "first_fc_kw": 548.1170359579344,
+            "soc_path": [
+              0.5013246234663467,
+              0.5023583518415231,
+              0.5031851075820127,
+              0.503868728964872,
+              0.5044714685089172
+            ],
+            "weighted_reference": 0.005157154267301082,
+            "weighted_soc": 0.0010484491094976938
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 3.730884174783663,
+            "first_fc_kw": 548.0045831088215,
+            "soc_path": [
+              0.5013231967808945,
+              0.5023549204334364,
+              0.5031795837362916,
+              0.5038613109908017,
+              0.5044624732326698
+            ],
+            "weighted_reference": 0.005329267925416206,
+            "weighted_soc": 0.004178371409988495
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 3.7385544724280155,
+            "first_fc_kw": 546.475927765602,
+            "soc_path": [
+              0.5013038027828168,
+              0.5023516152985964,
+              0.5032177285494408,
+              0.5039519404777912,
+              0.504597191133339
+            ],
+            "weighted_reference": 0.005079647976891824,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 3.738551828668659,
+            "first_fc_kw": 546.4732833753625,
+            "soc_path": [
+              0.5013037692335283,
+              0.5023515431904031,
+              0.5032176101136587,
+              0.5039517905707472,
+              0.5045970243070587
+            ],
+            "weighted_reference": 0.005081320410011814,
+            "weighted_soc": 0.0002716593281443997
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 3.7385452436053885,
+            "first_fc_kw": 546.4649900743973,
+            "soc_path": [
+              0.5013036640167025,
+              0.5023513205263995,
+              0.5032172569692274,
+              0.5039513476366002,
+              0.5045965290680146
+            ],
+            "weighted_reference": 0.0050850561373241236,
+            "weighted_soc": 0.0010864043622144683
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 3.7385176276948076,
+            "first_fc_kw": 546.431814309823,
+            "soc_path": [
+              0.5013032431169114,
+              0.5023504317918983,
+              0.5032158323502531,
+              0.5039495545967488,
+              0.5045945245425627
+            ],
+            "weighted_reference": 0.005102635291654048,
+            "weighted_soc": 0.004341854977599109
+          }
+        ],
+        "case_id": "zero_boundary_045:180",
+        "load_change_kw": 6.983879999999999,
+        "load_kw": 443.70882,
+        "sample_id": "zero_boundary_045",
+        "soc": 0.5
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 3.707594340405504,
+            "first_fc_kw": 544.6104131871192,
+            "soc_path": [
+              0.6012801350631378,
+              0.6021942843937684,
+              0.6028360653754935,
+              0.6032967724795799,
+              0.6036670133598923
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 3.707730291120163,
+            "first_fc_kw": 543.7736628482437,
+            "soc_path": [
+              0.6012695192401953,
+              0.602165990899202,
+              0.6027857981561107,
+              0.6032223522178493,
+              0.60356770126692
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.2631972413462229
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 3.709772374766321,
+            "first_fc_kw": 541.2591069000505,
+            "soc_path": [
+              0.6012376171548484,
+              0.6020808677143109,
+              0.6026344233805616,
+              0.6029980561134574,
+              0.603268169911974
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.0495259604655582
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 3.7388018530844738,
+            "first_fc_kw": 531.661692730382,
+            "soc_path": [
+              0.6011158550893945,
+              0.6017579393484499,
+              0.602063672097092,
+              0.6021579425760527,
+              0.6021579433237965
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 4.149486251869204
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 3.7131011778082144,
+            "first_fc_kw": 548.9093593293331,
+            "soc_path": [
+              0.6013346756458716,
+              0.6023564455333709,
+              0.6031433742726406,
+              0.6037660846092461,
+              0.6042975819801163
+            ],
+            "weighted_reference": 0.0036411553234787434,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 3.712079915839151,
+            "first_fc_kw": 548.3063196252008,
+            "soc_path": [
+              0.601327024901762,
+              0.6023368755920074,
+              0.6031098091915763,
+              0.6037180974280588,
+              0.6042359881180107
+            ],
+            "weighted_reference": 0.004380789746414397,
+            "weighted_soc": 0.2649710989296699
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 3.7098627333954144,
+            "first_fc_kw": 546.3649211850434,
+            "soc_path": [
+              0.6013023944461243,
+              0.6022747205915031,
+              0.6030059237560215,
+              0.6035743099995379,
+              0.604057267465492
+            ],
+            "weighted_reference": 0.007050641132566131,
+            "weighted_soc": 1.0577613305136968
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 3.711080475127919,
+            "first_fc_kw": 539.8995038011951,
+            "soc_path": [
+              0.6012203679168153,
+              0.6020699599291754,
+              0.602667520269916,
+              0.6031090392636338,
+              0.6034763243147652
+            ],
+            "weighted_reference": 0.022106443875221274,
+            "weighted_soc": 4.203462639287729
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 3.7179205436349974,
+            "first_fc_kw": 548.3721414624671,
+            "soc_path": [
+              0.6013278599811611,
+              0.6023664260180849,
+              0.6031987814437741,
+              0.6038882609589458,
+              0.604496795742774
+            ],
+            "weighted_reference": 0.004660974858465212,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 3.7175726752587215,
+            "first_fc_kw": 548.0838386779661,
+            "soc_path": [
+              0.6013242022935906,
+              0.602357894863733,
+              0.6031853956416682,
+              0.6038706516407255,
+              0.6044757629855727
+            ],
+            "weighted_reference": 0.0049897647073272955,
+            "weighted_soc": 0.26547627904390814
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 3.716735164505228,
+            "first_fc_kw": 547.205265751611,
+            "soc_path": [
+              0.6013130558689106,
+              0.6023320115370832,
+              0.6031451733294405,
+              0.6038184654758675,
+              0.6044143842902812
+            ],
+            "weighted_reference": 0.006207876190805123,
+            "weighted_soc": 1.0611148015273095
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 3.716093735070796,
+            "first_fc_kw": 543.7091001689487,
+            "soc_path": [
+              0.6012687001356904,
+              0.6022296492623757,
+              0.6029892840168111,
+              0.6036213210852737,
+              0.6041856276767759
+            ],
+            "weighted_reference": 0.014425337701307616,
+            "weighted_soc": 4.232405330850982
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 3.724615294149651,
+            "first_fc_kw": 546.5329719022363,
+            "soc_path": [
+              0.601304526499828,
+              0.6023531972685607,
+              0.6032205733264864,
+              0.6039558912912506,
+              0.6046021295662786
+            ],
+            "weighted_reference": 0.005011623281918648,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 3.724598363446073,
+            "first_fc_kw": 546.4411916115952,
+            "soc_path": [
+              0.6013033620864184,
+              0.6023508782518634,
+              0.6032170907553036,
+              0.60395166346944,
+              0.6045975032354841
+            ],
+            "weighted_reference": 0.005011707009047712,
+            "weighted_soc": 0.26569213647044587
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 3.724536859603952,
+            "first_fc_kw": 546.1645605758088,
+            "soc_path": [
+              0.601299852477925,
+              0.6023438199235588,
+              0.6032062958983649,
+              0.6039384884176217,
+              0.6045830657126327
+            ],
+            "weighted_reference": 0.005105213066121521,
+            "weighted_soc": 1.0625656822009795
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 3.724543547635485,
+            "first_fc_kw": 544.5788828699876,
+            "soc_path": [
+              0.6012797350390824,
+              0.6023017000847826,
+              0.603147572699489,
+              0.603862537971464,
+              0.6044947938637618
+            ],
+            "weighted_reference": 0.007657733085488634,
+            "weighted_soc": 4.245538644969905
+          }
+        ],
+        "case_id": "zero_boundary_045:180",
+        "load_change_kw": 6.983879999999999,
+        "load_kw": 443.70882,
+        "sample_id": "zero_boundary_045",
+        "soc": 0.6
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 4.885589033154881,
+            "first_fc_kw": 577.1717248387167,
+            "soc_path": [
+              0.39259572972888934,
+              0.384938081784073,
+              0.37709318232602995,
+              0.3691250167899121,
+              0.3610957347994792
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 4.885827476217372,
+            "first_fc_kw": 578.2538738315199,
+            "soc_path": [
+              0.3926109421247621,
+              0.38497833396983616,
+              0.37716404511301077,
+              0.36922901019503823,
+              0.3612335154156387
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.381041271195777
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 4.889450566624368,
+            "first_fc_kw": 581.5345832300476,
+            "soc_path": [
+              0.39265706095908687,
+              0.38510047625716753,
+              0.3773793117695481,
+              0.36954521604027035,
+              0.36165262181892793
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 1.5183737601587386
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 4.950114185507895,
+            "first_fc_kw": 595.0341627795259,
+            "soc_path": [
+              0.3928468323765053,
+              0.38560869755971416,
+              0.37827828802148167,
+              0.3708685495603173,
+              0.36341350361375147
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 5.977131924835361
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 0.3700482463826847
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 1.4801929855307387
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 5.920771942122955
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 0.3700482463826847
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 1.4801929855307387
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 5.920771942122955
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 0.3700482463826847
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 1.4801929855307387
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 5.02320982685264,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.39291664002973964,
+              0.38583328005947926,
+              0.37874992008921887,
+              0.3716665601189585,
+              0.3645832001486981
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 5.920771942122955
+          }
+        ],
+        "case_id": "zero_boundary_015:113",
+        "load_change_kw": 5.337932918518845,
+        "load_kw": 1103.8818948444443,
+        "sample_id": "zero_boundary_015",
+        "soc": 0.4
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 4.707611541149521,
+            "first_fc_kw": 575.530207734294,
+            "soc_path": [
+              0.4925726539711236,
+              0.48487394566476394,
+              0.4769748473833588,
+              0.4689438905898992,
+              0.4608474328088846
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 4.707624136950451,
+            "first_fc_kw": 575.7674116193147,
+            "soc_path": [
+              0.49257598848367734,
+              0.4848829376751633,
+              0.47699092191365816,
+              0.46896776093729187,
+              0.46087943827223155
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.01653238702926039
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 4.707812137165386,
+            "first_fc_kw": 576.477477479617,
+            "soc_path": [
+              0.4925859702912052,
+              0.48490984815977317,
+              0.47703900703664215,
+              0.46903911298067785,
+              0.4609747014582268
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.06582876336490243
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 4.710797766133073,
+            "first_fc_kw": 579.3110386122659,
+            "soc_path": [
+              0.4926258033030789,
+              0.4850173295275517,
+              0.4772312109923175,
+              0.46932445610890317,
+              0.46135569372753155
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.25853186756657376
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 0.013797846828778977
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 0.05519138731511591
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 0.22076554926046363
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 0.013797846828778977
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 0.05519138731511591
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 0.22076554926046363
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 0.013797846828778977
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 0.05519138731511591
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 4.866442160584701,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.4929166400297396,
+              0.48583328005947923,
+              0.47874992008921885,
+              0.47166656011895847,
+              0.4645832001486981
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 0.22076554926046363
+          }
+        ],
+        "case_id": "zero_boundary_015:113",
+        "load_change_kw": 5.337932918518845,
+        "load_kw": 1103.8818948444443,
+        "sample_id": "zero_boundary_015",
+        "soc": 0.5
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 4.559967750548753,
+            "first_fc_kw": 574.1794152999717,
+            "soc_path": [
+              0.5925536650986213,
+              0.5848211738978866,
+              0.5768774976872193,
+              0.5687949476019563,
+              0.5606435946114892
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 4.560036333133452,
+            "first_fc_kw": 573.5793776034336,
+            "soc_path": [
+              0.592545230020791,
+              0.5847992349590164,
+              0.5768394049203696,
+              0.5687396052323365,
+              0.5605707013315757
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.15026883592524254
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 4.561071865577291,
+            "first_fc_kw": 571.7758723703223,
+            "soc_path": [
+              0.592519877101972,
+              0.584733219127026,
+              0.5767246638168705,
+              0.5685727814779263,
+              0.5603509389936977
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.5994156463488974
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 4.577630909919635,
+            "first_fc_kw": 564.5803682419402,
+            "soc_path": [
+              0.5924187257281475,
+              0.5844694427724456,
+              0.5762650840226079,
+              0.5679024176797972,
+              0.5594656069165105
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 2.3711653920950435
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 0.15754744727487258
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 0.6301897890994903
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 8.440525213717407,
+            "weighted_soc": 2.520759156397961
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 0.15754744727487258
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 0.6301897890994903
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 33.76210085486963,
+            "weighted_soc": 2.520759156397961
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 0.15754744727487258
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 0.6301897890994903
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 4.737461965772802,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5929166400297395,
+              0.5858332800594791,
+              0.5787499200892187,
+              0.5716665601189582,
+              0.5645832001486978
+            ],
+            "weighted_reference": 135.04840341947852,
+            "weighted_soc": 2.520759156397961
+          }
+        ],
+        "case_id": "zero_boundary_015:113",
+        "load_change_kw": 5.337932918518845,
+        "load_kw": 1103.8818948444443,
+        "sample_id": "zero_boundary_015",
+        "soc": 0.6
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 2.477220313277801,
+            "first_fc_kw": 274.4750673228689,
+            "soc_path": [
+              0.4933055565019522,
+              0.48637233276704606,
+              0.4792609916153938,
+              0.4720314884805515,
+              0.4647431209440898
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 2.477231278641407,
+            "first_fc_kw": 274.7061706927113,
+            "soc_path": [
+              0.49330880525602666,
+              0.4863811500351128,
+              0.47927676009917025,
+              0.47205480184237597,
+              0.4647742532048743
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.013407425853992046
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 2.477399900439887,
+            "first_fc_kw": 275.3966625933341,
+            "soc_path": [
+              0.4933185119010534,
+              0.48640752945381427,
+              0.4793243380350909,
+              0.4721260676440413,
+              0.46486997515929573
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.053359105734910824
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 2.480049364262012,
+            "first_fc_kw": 278.1373526052091,
+            "soc_path": [
+              0.49335703936973135,
+              0.48651221163684644,
+              0.4795127872265518,
+              0.4724075011286848,
+              0.4652475076786295
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.20918855716796067
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 3.498240746063729,
+            "first_fc_kw": 334.8119899867745,
+            "soc_path": [
+              0.4941537476100255,
+              0.4887866612286719,
+              0.4838090265239812,
+              0.47911416242779137,
+              0.4745745400887499
+            ],
+            "weighted_reference": 0.8801706921280038,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 3.5005298451008464,
+            "first_fc_kw": 334.9075210706022,
+            "soc_path": [
+              0.4941550905458643,
+              0.48879012931162336,
+              0.483814995055287,
+              0.47912272921302373,
+              0.47458566653486123
+            ],
+            "weighted_reference": 0.8778845122197484,
+            "weighted_soc": 0.0075176366671377975
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 3.5073718836145464,
+            "first_fc_kw": 335.1928641806417,
+            "soc_path": [
+              0.49415910177941746,
+              0.48880048804480564,
+              0.48383280573157333,
+              0.47914827946400257,
+              0.4746188410055435
+            ],
+            "weighted_reference": 0.8710871718635768,
+            "weighted_soc": 0.0299984162356802
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 3.5349797092708335,
+            "first_fc_kw": 336.33147147016126,
+            "soc_path": [
+              0.49417510784230434,
+              0.4888418354322936,
+              0.48390392021176565,
+              0.4792503212816765,
+              0.4747513740378426
+            ],
+            "weighted_reference": 0.8441950269430171,
+            "weighted_soc": 0.11884480556868682
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 4.849944978634892,
+            "first_fc_kw": 371.5114482576484,
+            "soc_path": [
+              0.49466965317501194,
+              0.4901601919174515,
+              0.4862820278678992,
+              0.4828584642903149,
+              0.47969475800078654
+            ],
+            "weighted_reference": 0.5547544765361881,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 4.851125090572814,
+            "first_fc_kw": 371.5494580302912,
+            "soc_path": [
+              0.4946701875004258,
+              0.49016148132021864,
+              0.48628413222423805,
+              0.48286138813023877,
+              0.479698480121858
+            ],
+            "weighted_reference": 0.553575215120383,
+            "weighted_soc": 0.005096060530600624
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 4.854486862395852,
+            "first_fc_kw": 371.67330728078286,
+            "soc_path": [
+              0.4946719285211536,
+              0.49016566446293935,
+              0.4862908057834256,
+              0.4828702395355557,
+              0.47970916972179606
+            ],
+            "weighted_reference": 0.5502262069603393,
+            "weighted_soc": 0.0203638198831013
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 4.868145312329952,
+            "first_fc_kw": 372.1650821076738,
+            "soc_path": [
+              0.4946788416850494,
+              0.4901822725106777,
+              0.4863173933155957,
+              0.48290577376102917,
+              0.4797524077056147
+            ],
+            "weighted_reference": 0.536772467765198,
+            "weighted_soc": 0.08112750311809898
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 5.688477601086501,
+            "first_fc_kw": 397.98471268159557,
+            "soc_path": [
+              0.49504180320346375,
+              0.4909732353200088,
+              0.4875524229511272,
+              0.4846253222904177,
+              0.4820283252555553
+            ],
+            "weighted_reference": 0.25883157285033026,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 5.688871397266947,
+            "first_fc_kw": 397.9997191874463,
+            "soc_path": [
+              0.4950420141586179,
+              0.49097369590460166,
+              0.4875531081408999,
+              0.48462618017751197,
+              0.48202930179022724
+            ],
+            "weighted_reference": 0.25843684099236025,
+            "weighted_soc": 0.00410140618129569
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 5.6900842939321015,
+            "first_fc_kw": 398.0455440049211,
+            "soc_path": [
+              0.49504265834464856,
+              0.4909751069524321,
+              0.4875552097794836,
+              0.4846288189242465,
+              0.48203231261375035
+            ],
+            "weighted_reference": 0.25722386318831475,
+            "weighted_soc": 0.016400154642283622
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 5.69494297035341,
+            "first_fc_kw": 398.2291445807973,
+            "soc_path": [
+              0.4950452393244039,
+              0.4909807515052146,
+              0.48756361737200143,
+              0.4846393768915187,
+              0.4820443570336645
+            ],
+            "weighted_reference": 0.2524059756519676,
+            "weighted_soc": 0.06551311729987444
+          }
+        ],
+        "case_id": "zero_boundary_038:545",
+        "load_change_kw": 631.068392,
+        "load_kw": 750.691,
+        "sample_id": "zero_boundary_038",
+        "soc": 0.5
+      },
+      {
+        "actions": [
+          {
+            "action_id": 0,
+            "economic_normalized": 4.320956466311612,
+            "first_fc_kw": 559.6124250530087,
+            "soc_path": [
+              0.505152418882239,
+              0.5099021916192272,
+              0.5143536405021144,
+              0.518607154816389,
+              0.5227619118026798
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 1,
+            "economic_normalized": 4.320960507302323,
+            "first_fc_kw": 559.4771288405783,
+            "soc_path": [
+              0.5051507023838174,
+              0.5098975413233757,
+              0.5143452589859338,
+              0.5185946198009644,
+              0.5227450706406246
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.005966878193287637
+          },
+          {
+            "action_id": 2,
+            "economic_normalized": 4.321020233532495,
+            "first_fc_kw": 559.0717871431759,
+            "soc_path": [
+              0.5051455598275604,
+              0.5098835885229633,
+              0.5143200856555958,
+              0.5185569129390124,
+              0.5226943667254704
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.02377240520220166
+          },
+          {
+            "action_id": 3,
+            "economic_normalized": 4.3219609176004505,
+            "first_fc_kw": 557.4618304939949,
+            "soc_path": [
+              0.5051251343625934,
+              0.5098281733247422,
+              0.5142200640663728,
+              0.518407079597913,
+              0.5224928614464585
+            ],
+            "weighted_reference": 0.0,
+            "weighted_soc": 0.09358556884488303
+          },
+          {
+            "action_id": 4,
+            "economic_normalized": 4.55742712101191,
+            "first_fc_kw": 599.9999608314921,
+            "soc_path": [
+              0.5056648141678902,
+              0.5111444815514844,
+              0.5163716847519831,
+              0.5213632547621732,
+              0.5262058188521211
+            ],
+            "weighted_reference": 0.8654309398899999,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 5,
+            "economic_normalized": 4.557225366651848,
+            "first_fc_kw": 599.9999402681632,
+            "soc_path": [
+              0.505664813907004,
+              0.5111439527961145,
+              0.5163705759272632,
+              0.5213616454910734,
+              0.5262038920300006
+            ],
+            "weighted_reference": 0.8656248727768735,
+            "weighted_soc": 0.00783618706159766
+          },
+          {
+            "action_id": 6,
+            "economic_normalized": 4.556620146480857,
+            "first_fc_kw": 599.9998388471064,
+            "soc_path": [
+              0.5056648126202785,
+              0.5111423517136263,
+              0.516367247004698,
+              0.5213568133596123,
+              0.526198115982198
+            ],
+            "weighted_reference": 0.8662103251996501,
+            "weighted_soc": 0.03133167272279655
+          },
+          {
+            "action_id": 7,
+            "economic_normalized": 4.55117077778981,
+            "first_fc_kw": 599.62208506521,
+            "soc_path": [
+              0.5056600200709622,
+              0.511127163539105,
+              0.5163447770085214,
+              0.5213271576790282,
+              0.5261654287034013
+            ],
+            "weighted_reference": 0.8716326013668372,
+            "weighted_soc": 0.12499829159895061
+          },
+          {
+            "action_id": 8,
+            "economic_normalized": 4.687470483836797,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5056648146648197,
+              0.5113296293296394,
+              0.5167851906120516,
+              0.5218773557356862,
+              0.5266853984388529
+            ],
+            "weighted_reference": 3.1737480055940313,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 9,
+            "economic_normalized": 4.687419083058111,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5056648146648197,
+              0.5113296293296394,
+              0.5167847950289,
+              0.5218764731296381,
+              0.5266840567635738
+            ],
+            "weighted_reference": 3.173799744891043,
+            "weighted_soc": 0.008163994660246874
+          },
+          {
+            "action_id": 10,
+            "economic_normalized": 4.687275907888222,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5056648146648197,
+              0.5113296293296394,
+              0.5167835597028461,
+              0.5218736672745423,
+              0.5266797458094475
+            ],
+            "weighted_reference": 3.1739479045763828,
+            "weighted_soc": 0.03264809317453797
+          },
+          {
+            "action_id": 11,
+            "economic_normalized": 4.686725363269956,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5056648146648197,
+              0.5113296293296394,
+              0.516778621569168,
+              0.5218624767508345,
+              0.52666255031845
+            ],
+            "weighted_reference": 3.1745775029076846,
+            "weighted_soc": 0.13046657974878323
+          },
+          {
+            "action_id": 12,
+            "economic_normalized": 4.9006944882870025,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5056648146648197,
+              0.5113296293296394,
+              0.5169944439944592,
+              0.5221159575482761,
+              0.5267329121030162
+            ],
+            "weighted_reference": 12.283791725434652,
+            "weighted_soc": 0.0
+          },
+          {
+            "action_id": 13,
+            "economic_normalized": 4.900771731307604,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5056648146648197,
+              0.5113296293296394,
+              0.5169944439944592,
+              0.5221157828225614,
+              0.5267325689816703
+            ],
+            "weighted_reference": 12.283714610076496,
+            "weighted_soc": 0.008264999234145285
+          },
+          {
+            "action_id": 14,
+            "economic_normalized": 4.900901764742123,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5056648146648197,
+              0.5113296293296394,
+              0.5169944439944592,
+              0.5221154740100936,
+              0.5267319743112323
+            ],
+            "weighted_reference": 12.283585224461305,
+            "weighted_soc": 0.03305908787764204
+          },
+          {
+            "action_id": 15,
+            "economic_normalized": 4.901573234771612,
+            "first_fc_kw": 600.0,
+            "soc_path": [
+              0.5056648146648197,
+              0.5113296293296394,
+              0.5169944439944592,
+              0.5221139135884115,
+              0.5267289474406082
+            ],
+            "weighted_reference": 12.282925389118487,
+            "weighted_soc": 0.1322178846474494
+          }
+        ],
+        "case_id": "zero_boundary_015:174",
+        "load_change_kw": -921.5015047272702,
+        "load_kw": 153.49334515610258,
+        "sample_id": "zero_boundary_015",
+        "soc": 0.5
+      }
+    ],
+    "first_fc_spread_kw": {
+      "count": 20,
+      "max": 123.75407725792843,
+      "min": 0.0,
+      "p10": 0.0,
+      "p50": 15.63646653186648,
+      "p90": 49.818733113985424,
+      "p95": 60.47453051492282
+    },
+    "near_identical_action_pairs_5kw_0p005soc": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        4,
+        5
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        5,
+        6
+      ],
+      [
+        8,
+        9
+      ],
+      [
+        8,
+        10
+      ],
+      [
+        8,
+        11
+      ],
+      [
+        9,
+        10
+      ],
+      [
+        9,
+        11
+      ],
+      [
+        10,
+        11
+      ],
+      [
+        12,
+        13
+      ],
+      [
+        12,
+        14
+      ],
+      [
+        12,
+        15
+      ],
+      [
+        13,
+        14
+      ],
+      [
+        13,
+        15
+      ],
+      [
+        14,
+        15
+      ]
+    ],
+    "solver_successes_per_action": [
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20,
+      20
+    ]
+  },
+  "positive_economic_cost_cny_distribution": {
+    "count": 239,
+    "max": 43.445810463908046,
+    "min": 1.9263861971143417,
+    "p10": 1.9265635732264996,
+    "p50": 8.927633172298517,
+    "p90": 32.109885953327094,
+    "p95": 36.92623293329746
+  },
+  "schema_version": "v3_persistence_action_calibration_v1",
+  "soc_penalty_distribution": {
+    "count": 480,
+    "max": 7.400964927653691,
+    "min": 3.1509489454974506,
+    "p10": 4.845382908973352,
+    "p50": 4.999999999999998,
+    "p90": 5.157418679363324,
+    "p95": 5.31830155569043
+  },
+  "split_used": "train",
+  "test_payloads_opened": 0,
+  "train_abs_load_change_p95_kw": 65.96856899999975,
+  "train_episode_count": 30,
+  "train_onboard_origin_count": 18448,
+  "zero_economic_cost_count": 1
+}
