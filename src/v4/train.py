@@ -22,11 +22,13 @@ def _summarize(results: list[DirectReplay], requested: int, failures: list[str])
         for item in results
     )
     soc = [value for item in results for value in item.soc_by_row]
+    completed_cost = sum(item.total_cost_cny for item in results)
     return {
         "episodes": requested,
         "completed": len(results),
         "failed": failures,
-        "cost_cny": sum(item.total_cost_cny for item in results) if not failures else None,
+        "cost_cny": completed_cost if not failures else None,
+        "completed_cost_cny": completed_cost,
         "transitions": sum(len(item.transitions) for item in results),
         "fc_starts": starts,
         "soc_min": min(soc) if soc else None,
@@ -124,6 +126,13 @@ def run_train_validation(
         raise RuntimeError("Test payload was opened during Train/Validation selection")
     terminal_onboard_train = sum(item.operating_mode[-1] == "onboard" for item in train)
     terminal_onboard_validation = sum(item.operating_mode[-1] == "onboard" for item in validation)
+    ineligibility_reasons: list[str] = []
+    if not agent.replay:
+        ineligibility_reasons.append("no_training_experience")
+    if validation_failures or not validation_results:
+        ineligibility_reasons.append("validation_incomplete")
+    if terminal_onboard_train or terminal_onboard_validation:
+        ineligibility_reasons.append("unsettled_terminal_energy")
     report: dict[str, object] = {
         "controller": "MLP_Double_DQN_direct_FC_power",
         "sample_seconds": 30,
@@ -137,14 +146,8 @@ def run_train_validation(
         "unsettled_terminal_onboard_episodes": {
             "train": terminal_onboard_train, "validation": terminal_onboard_validation,
         },
-        "selection_eligible": (
-            not bootstrap_failures
-            and all(not item["failed"] for item in training_rounds)
-            and not validation_failures
-            and bool(validation_results)
-            and terminal_onboard_train == 0
-            and terminal_onboard_validation == 0
-        ),
+        "selection_eligible": not ineligibility_reasons,
+        "selection_ineligibility_reasons": ineligibility_reasons,
         "test_payloads_opened": dataset.opened_test_payloads,
         "hyperparameters": {
             "seed": seed, "rounds": rounds, "batch_size": batch_size,

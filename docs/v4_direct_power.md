@@ -23,12 +23,14 @@ $env:PYTHONPATH=(Resolve-Path src).Path
 python -m v4.train --rounds 1 --max-train-episodes 1 --max-validation-episodes 1 --updates-per-episode 1
 ```
 
-The runner loads authenticated Train and Validation payloads only; it checks that Test-open count remains zero. It writes `report.json` and writes `selected_agent.pt` only when bootstrap, every training round, and Validation complete **and** the economic horizon is settled. Failed episodes are listed, excluded from comparable aggregate cost, and never assigned a made-up penalty.
+The runner loads authenticated Train and Validation payloads only; it checks that Test-open count remains zero. It writes `report.json` and writes `selected_agent.pt` only when there is training experience, every Validation episode completes, and the economic horizon is settled. Failed Train episodes are listed and skipped; the next Train episode still runs. `completed_cost_cny` sums finished episodes for diagnostics, while comparable `cost_cny` is `null` when any episode failed. Failed episodes never receive a made-up penalty. Train completion need not be 100%.
 
 ## Current limits of the dataset and reward
 
 On the current formal split, all 30 Train and 8 Validation samples end in ONBOARD mode. Their remaining battery energy has no observed later shore charge in the sample. Under the requested actual-cost-only reward, a terminal low SOC can look artificially cheap. The runner reports the count of unsettled terminal ONBOARD samples and blocks checkpoint selection. A later design must either join samples into complete voyage-to-shore economic horizons, or explicitly define an economic terminal energy valuation/constraint before comparing policies.
 
 A one-episode Train/Validation pilot found a no-feasible-action state during exploratory training at Train row 113. The causal one-step feasibility mask cannot prevent a previous action from making a later high-load row impossible. This is recorded as a failed rollout rather than silently changing the FC action or adding a non-economic penalty. A future viability rule or complete-horizon dataset is needed before claiming a trained deployable policy.
+
+In a two-Train-episode pilot, `zero_boundary_002` failed but the runner continued to `zero_boundary_005`, which completed with 298 DQN transitions. Train completion is reported as 1/2; the validation trajectory completed. The model remained ineligible because these dataset samples end in ONBOARD mode with unsettled terminal energy, not because Train completion was below 100%.
 
 Historical v3 forecast and calibration outputs were archived in commit `2e70008` on `refactor/multiscale-dqn-wmpc-v2` before removing superseded generated output files from this branch.
