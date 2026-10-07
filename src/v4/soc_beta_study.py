@@ -45,11 +45,23 @@ def _profile(
     fc = [item.action_kw for item in transitions]
     battery = [item.actual_battery_kw for item in transitions]
     soc = [item.actual_soc for item in transitions]
+    component_names = (
+        "h2_cost_cny", "fuel_cell_degradation_cost_cny",
+        "battery_degradation_cost_cny", "shore_cost_cny",
+    )
     return {
         "sample_id": str(episode.sample_id),
         "completed": result is not None,
         "failure": failure,
         "observed_cost_cny": result.total_cost_cny if result is not None else None,
+        "observed_components_cny": {
+            name: getattr(result.total_ledger, name) for name in component_names
+        } if result is not None else None,
+        "modeled_components_cny": {
+            name: getattr(result.modeled_terminal_settlement.ledger, name)
+            if result.modeled_terminal_settlement is not None else 0.0
+            for name in component_names
+        } if result is not None else None,
         "modeled_terminal_cost_cny": (
             result.modeled_terminal_settlement.ledger.total_cost_cny
             if result is not None and result.modeled_terminal_settlement is not None else 0.0

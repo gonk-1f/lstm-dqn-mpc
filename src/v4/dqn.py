@@ -68,6 +68,9 @@ class DirectPowerDDQN:
         torch.manual_seed(seed)
         self.online = MLPQNetwork(STATE_DIM, len(ACTION_KW), hidden_dims)
         self.target = MLPQNetwork(STATE_DIM, len(ACTION_KW), hidden_dims)
+        self.target_sync_calls = 0
+        self.economic_optimizer_updates = 0
+        self.outcome_optimizer_updates = 0
         self.sync_target()
         self.target.eval()
         self.optimizer = torch.optim.Adam(self.online.parameters(), lr=learning_rate)
@@ -189,6 +192,7 @@ class DirectPowerDDQN:
         loss.backward()
         nn.utils.clip_grad_norm_(self.outcome_model.parameters(), 10.0)
         self.outcome_optimizer.step()
+        self.outcome_optimizer_updates += 1
         return float(loss.item())
 
     def learn(self, *, batch_size: int = 64) -> float | None:
@@ -216,7 +220,9 @@ class DirectPowerDDQN:
         loss.backward()
         nn.utils.clip_grad_norm_(self.online.parameters(), 10.0)
         self.optimizer.step()
+        self.economic_optimizer_updates += 1
         return float(loss.item())
 
     def sync_target(self) -> None:
         self.target.load_state_dict(self.online.state_dict())
+        self.target_sync_calls += 1

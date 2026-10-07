@@ -13,17 +13,22 @@ import torch
 from v2.data.formal_training_dataset import FormalTrainingDataset
 from v3.control import EconomicMPC
 
-from .control import ACTION_KW, DirectReplay, ReplayExecutionError, replay_episode
+from .control import ACTION_KW, DirectReplay, DirectTransition, ReplayExecutionError, replay_episode
 from .dqn import DirectPowerDDQN
+from .telemetry import soc_time_occupancy
 
 
-def _summarize(results: list[DirectReplay], requested: int, failures: list[str]) -> dict[str, object]:
+def _summarize(
+    results: list[DirectReplay], requested: int, failures: list[str],
+    failed_transitions: Sequence[DirectTransition] = (),
+) -> dict[str, object]:
     starts = sum(
         sum(left == 0 and right > 0 for left, right in zip((0.0, *item.fc_power_kw_by_row[:-1]), item.fc_power_kw_by_row))
         for item in results
     )
     soc = [value for item in results for value in item.soc_by_row]
     onboard_soc = [transition.actual_soc for item in results for transition in item.transitions]
+    all_onboard_soc = [*onboard_soc, *(transition.actual_soc for transition in failed_transitions)]
     terminal_onboard_soc = [item.transitions[-1].actual_soc for item in results if item.transitions]
     observed_cost = sum(item.total_cost_cny for item in results)
     modeled_cost = sum(
@@ -42,11 +47,18 @@ def _summarize(results: list[DirectReplay], requested: int, failures: list[str])
         "completed_modeled_terminal_cost_cny": modeled_cost,
         "completed_soc_soft_penalty_cny": sum(item.soc_soft_penalty_cny for item in results),
         "transitions": sum(len(item.transitions) for item in results),
+        "executed_onboard_transitions": len(all_onboard_soc),
+        "executed_soc_soft_penalty_cny": (
+            sum(item.soc_soft_penalty_cny for item in results)
+            + sum(item.soc_soft_penalty_cny for item in failed_transitions)
+        ),
+        "soc_time_occupancy": soc_time_occupancy(all_onboard_soc),
         "fc_starts": starts,
         "soc_min": min(soc) if soc else None,
         "soc_max": max(soc) if soc else None,
         "onboard_soc_min": min(onboard_soc) if onboard_soc else None,
         "onboard_soc_max": max(onboard_soc) if onboard_soc else None,
+        "onboard_soc_min_including_failed_prefix": min(all_onboard_soc) if all_onboard_soc else None,
         "terminal_onboard_soc_mean": (
             sum(terminal_onboard_soc) / len(terminal_onboard_soc) if terminal_onboard_soc else None
         ),
@@ -110,9 +122,11 @@ def run_train_validation(
     agent = DirectPowerDDQN(seed=seed)
     bootstrap_failed_prefixes = 0
     bootstrap_completed_prefixes = 0
+    bootstrap_failed_transitions: list[DirectTransition] = []
 
     def remember_bootstrap_failure(exc: ReplayExecutionError) -> None:
         nonlocal bootstrap_failed_prefixes, bootstrap_completed_prefixes
+        bootstrap_failed_transitions.extend(exc.executed_transitions)
         if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
             bootstrap_completed_prefixes += agent.remember_completed_prefix(exc.executed_transitions)
             agent.remember_outcome_trajectory(exc.executed_transitions, failed=True)
@@ -159,15 +173,16 @@ def run_train_validation(
         outcome_losses: list[float] = []
         failed_prefix_transitions = 0
         completed_prefix_transitions = 0
+        round_failed_transitions: list[DirectTransition] = []
         for episode_index, episode in enumerate(train, start=1):
             episode_steps = 0
 
             def training_policy(state, feasible):
                 nonlocal selected_steps, episode_steps
                 action = agent.select_power(state, feasible, epsilon=epsilon)
+                selected_steps += 1
+                episode_steps += 1
                 if progress_every_steps:
-                    selected_steps += 1
-                    episode_steps += 1
                     if selected_steps % progress_every_steps == 0:
                         load_kw = state[1] * accountant.plant.fuel_cell_rated_total_kw
                         print(
@@ -188,6 +203,7 @@ def run_train_validation(
                 )
             except ReplayExecutionError as exc:
                 failures.append(f"{episode.sample_id}: {exc}")
+                round_failed_transitions.extend(exc.executed_transitions)
                 if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
                     completed_prefix_transitions += agent.remember_completed_prefix(exc.executed_transitions)
                     agent.remember_outcome_trajectory(exc.executed_transitions, failed=True)
@@ -212,10 +228,15 @@ def run_train_validation(
                 if outcome_loss is not None:
                     outcome_losses.append(outcome_loss)
         agent.sync_target()
-        summary = _summarize(completed, len(train), failures)
+        summary = _summarize(completed, len(train), failures, round_failed_transitions)
         summary.update({
             "round": round_index + 1, "epsilon": epsilon,
             "mean_loss": sum(losses) / len(losses) if losses else None,
+            "loss_min": min(losses) if losses else None,
+            "loss_max": max(losses) if losses else None,
+            "economic_q_optimizer_updates": len(losses),
+            "economic_q_optimizer_updates_cumulative": agent.economic_optimizer_updates,
+            "target_sync_calls_cumulative": agent.target_sync_calls,
             "failed_prefix_transitions": failed_prefix_transitions,
             "completed_prefix_transitions": completed_prefix_transitions,
             "outcome_replay_size": len(agent.outcome_replay),
@@ -232,11 +253,13 @@ def run_train_validation(
             )
     if progress_every_steps:
         print(f"train greedy evaluation start episodes={len(train)} epsilon=0", flush=True)
+    train_greedy_failed_transitions: list[DirectTransition] = []
     train_greedy_results, train_greedy_failures = _run_episodes(
         train,
         lambda state, feasible: agent.select_power(state, feasible),
         accountant,
         beta_soc=beta_soc,
+        on_failure=lambda exc: train_greedy_failed_transitions.extend(exc.executed_transitions),
     )
     if progress_every_steps:
         print(
@@ -244,11 +267,13 @@ def run_train_validation(
             f"failed={len(train_greedy_failures)}", flush=True,
         )
         print(f"validation start episodes={len(validation)} epsilon=0", flush=True)
+    validation_failed_transitions: list[DirectTransition] = []
     validation_results, validation_failures = _run_episodes(
         validation,
         lambda state, feasible: agent.select_power(state, feasible),
         accountant,
         beta_soc=beta_soc,
+        on_failure=lambda exc: validation_failed_transitions.extend(exc.executed_transitions),
     )
     if progress_every_steps:
         print(f"validation completed={len(validation_results)}/{len(validation)} failed={len(validation_failures)}", flush=True)
@@ -269,14 +294,38 @@ def run_train_validation(
         "action_kw": list(ACTION_KW),
         "state_dim": 8,
         "reward_definition": "negative_observed_plus_modeled_terminal_four_component_CNY_minus_beta_soc_phi",
-        "bootstrap": _summarize(bootstrap, len(train), bootstrap_failures),
+        "bootstrap": _summarize(bootstrap, len(train), bootstrap_failures, bootstrap_failed_transitions),
+        "bootstrap_economic_q_optimizer_updates": len(bootstrap_losses),
         "bootstrap_mean_loss": sum(bootstrap_losses) / len(bootstrap_losses) if bootstrap_losses else None,
         "bootstrap_failed_prefix_transitions": bootstrap_failed_prefixes,
         "bootstrap_completed_prefix_transitions": bootstrap_completed_prefixes,
         "bootstrap_outcome_training_updates": len(bootstrap_outcome_losses),
         "training_rounds": training_rounds,
-        "train_greedy_evaluation": _summarize(train_greedy_results, len(train), train_greedy_failures),
-        "validation": _summarize(validation_results, len(validation), validation_failures),
+        "train_greedy_evaluation": _summarize(
+            train_greedy_results, len(train), train_greedy_failures, train_greedy_failed_transitions,
+        ),
+        "validation": _summarize(
+            validation_results, len(validation), validation_failures, validation_failed_transitions,
+        ),
+        "execution_counts": {
+            "training_onboard_selected_actions": selected_steps,
+            "training_onboard_executed_transitions": sum(
+                row["executed_onboard_transitions"] for row in training_rounds
+            ),
+            "bootstrap_onboard_executed_transitions": (
+                sum(len(item.transitions) for item in bootstrap) + len(bootstrap_failed_transitions)
+            ),
+            "greedy_evaluation_onboard_executed_transitions": (
+                sum(len(item.transitions) for item in (*train_greedy_results, *validation_results))
+                + len(train_greedy_failed_transitions) + len(validation_failed_transitions)
+            ),
+            "economic_q_optimizer_updates": agent.economic_optimizer_updates,
+            "training_economic_q_optimizer_updates": agent.economic_optimizer_updates - len(bootstrap_losses),
+            "outcome_optimizer_updates": agent.outcome_optimizer_updates,
+            "target_sync_calls_including_initial_copy": agent.target_sync_calls,
+            "target_sync_calls_after_initialization": agent.target_sync_calls - 1,
+            "scope": "ONBOARD decision transitions; excludes SHORE accounting and virtual modeled charging",
+        },
         "last_executed_onboard_episodes": {
             "train": last_executed_onboard_train, "validation": last_executed_onboard_validation,
         },
@@ -290,6 +339,8 @@ def run_train_validation(
             "learning_rate": 1e-4, "replay_capacity": 100_000,
             "hidden_dims": [128, 64], "epsilon_start": epsilon_start, "epsilon_end": epsilon_end,
             "beta_soc": beta_soc,
+            "target_sync_schedule": "initial hard copy; once after bootstrap; once after each round",
+            "economic_update_schedule": "16 by default per completed sample, unchanged",
         },
     }
     return agent, report
