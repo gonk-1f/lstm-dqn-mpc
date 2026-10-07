@@ -59,6 +59,29 @@ def _contained(root: Path, relative: str) -> Path:
     return path
 
 
+def require_test_zero_boundaries(
+    time_s: np.ndarray,
+    load_kw: np.ndarray,
+    *,
+    sample_id: str,
+) -> None:
+    """Validate raw Test endpoints, including the nonexecuted final row."""
+    if len(time_s) == 0 or len(load_kw) == 0 or len(time_s) != len(load_kw):
+        raise ValueError(f"{sample_id}: Test power payload has no aligned boundaries")
+    if not (
+        math.isfinite(float(time_s[0]))
+        and math.isclose(float(time_s[0]), 0.0, rel_tol=0.0, abs_tol=1e-9)
+        and math.isfinite(float(load_kw[0]))
+        and math.isclose(float(load_kw[0]), 0.0, rel_tol=0.0, abs_tol=1e-9)
+    ):
+        raise ValueError(f"{sample_id}: Test power payload initial zero boundary differs")
+    if not (
+        math.isfinite(float(load_kw[-1]))
+        and math.isclose(float(load_kw[-1]), 0.0, rel_tol=0.0, abs_tol=1e-9)
+    ):
+        raise ValueError(f"{sample_id}: Test power payload terminal zero boundary differs")
+
+
 @dataclass(frozen=True)
 class FormalEpisode:
     parent: str
@@ -261,6 +284,11 @@ class FormalTrainingDataset:
         duration = float(power_row.duration_s)
         time = pd.to_numeric(power["time_s"], errors="coerce")
         full_load = pd.to_numeric(power["load_total_kw"], errors="coerce")
+        if str(power_row.split) == "test":
+            require_test_zero_boundaries(
+                time.to_numpy(dtype=float), full_load.to_numpy(dtype=float),
+                sample_id=str(power_row.sample_id),
+            )
         terminal_boundary_time_s = float(time.iloc[-1])
         terminal_boundary_load_kw = float(full_load.iloc[-1])
         if (

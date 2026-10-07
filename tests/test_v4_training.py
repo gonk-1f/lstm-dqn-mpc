@@ -38,10 +38,9 @@ def test_training_uses_only_train_validation_and_reports_raw_costs():
     assert report["validation"]["episodes"] == 1
     assert report["validation"]["cost_cny"] > 0
     assert report["reward_definition"] == "negative_actual_four_component_CNY"
-    assert report["unsettled_terminal_onboard_episodes"] == {"train": 0, "validation": 1}
-    assert report["selection_eligible"] is False
-    assert report["selection_ineligibility_reasons"] == ["unsettled_terminal_energy"]
-
+    assert report["last_executed_onboard_episodes"] == {"train": 0, "validation": 1}
+    assert report["selection_eligible"] is True
+    assert report["selection_ineligibility_reasons"] == []
 
 def test_failed_training_episode_is_reported_and_next_episode_runs():
     class InfeasibleDataset(FakeDataset):
@@ -87,3 +86,35 @@ def test_train_failure_does_not_block_selection_when_later_train_and_validation_
     assert report["validation"]["completed"] == 1
     assert report["selection_eligible"] is True
     assert report["selection_ineligibility_reasons"] == []
+
+
+def test_training_progress_reports_every_50_selected_actions(capsys):
+    class LongDataset(FakeDataset):
+        def load_train(self):
+            source = super().load_train()[0]
+            source.operating_mode = ("onboard",) * 51
+            source.load_kw = (100.0,) * 51
+            source.battery_bus_kw = (0.0,) * 51
+            return (source,)
+
+    _, report = run_train_validation(
+        LongDataset(), rounds=1, batch_size=1, updates_per_episode=1,
+        seed=1, progress_every_steps=50,
+    )
+    lines = capsys.readouterr().out.splitlines()
+    progress = [line for line in lines if line.startswith("progress ")]
+    assert len(progress) == 1
+    assert "step=50 " in progress[0] and "phase=train " in progress[0]
+    assert any(line.startswith("round 1/1 ") for line in lines)
+    assert report["training_rounds"][0]["episodes"] == 1
+
+
+def test_epsilon_schedule_can_be_compared_without_changing_reward():
+    _, report = run_train_validation(
+        FakeDataset(), rounds=2, batch_size=1, updates_per_episode=1,
+        seed=1, epsilon_start=1.0, epsilon_end=0.05,
+    )
+    assert [item["epsilon"] for item in report["training_rounds"]] == [1.0, 0.05]
+    assert report["hyperparameters"]["epsilon_start"] == 1.0
+    assert report["hyperparameters"]["epsilon_end"] == 0.05
+    assert report["reward_definition"] == "negative_actual_four_component_CNY"

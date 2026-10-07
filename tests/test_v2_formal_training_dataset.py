@@ -21,6 +21,27 @@ MODES = ROOT / "data" / "processed" / "operating_dataset_zero_boundary_v2_modes"
 
 
 class TestFormalTrainingDataset(unittest.TestCase):
+    def test_final_test_requires_zero_load_at_both_raw_boundaries(self) -> None:
+        from v2.data.formal_training_dataset import require_test_zero_boundaries
+
+        require_test_zero_boundaries(
+            np.array([0.0, 30.0, 60.0]),
+            np.array([0.0, 80.0, 0.0]),
+            sample_id="test_ok",
+        )
+        with self.assertRaisesRegex(ValueError, "initial zero boundary"):
+            require_test_zero_boundaries(
+                np.array([0.0, 30.0, 60.0]),
+                np.array([1.0, 80.0, 0.0]),
+                sample_id="test_bad_initial",
+            )
+        with self.assertRaisesRegex(ValueError, "terminal zero boundary"):
+            require_test_zero_boundaries(
+                np.array([0.0, 30.0, 60.0]),
+                np.array([0.0, 80.0, 1.0]),
+                sample_id="test_bad_terminal",
+            )
+
     def test_split_episode_ids_is_metadata_only_and_forbids_test(self) -> None:
         from v2.data.formal_training_dataset import FormalTrainingDataset
 
