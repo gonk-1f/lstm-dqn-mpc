@@ -38,7 +38,7 @@ def test_training_uses_only_train_validation_and_separates_observed_costs():
     assert report["validation"]["episodes"] == 1
     assert report["validation"]["cost_cny"] > 0
     assert report["train_greedy_evaluation"]["completed"] == 1
-    assert report["reward_definition"] == "negative_observed_plus_modeled_terminal_four_component_CNY"
+    assert report["reward_definition"] == "negative_observed_plus_modeled_terminal_four_component_CNY_minus_beta_soc_phi"
     assert report["last_executed_onboard_episodes"] == {"train": 0, "validation": 1}
     assert report["selection_eligible"] is True
     assert report["selection_ineligibility_reasons"] == []
@@ -119,7 +119,20 @@ def test_epsilon_schedule_can_be_compared_without_changing_reward():
     assert [item["epsilon"] for item in report["training_rounds"]] == [1.0, 0.05]
     assert report["hyperparameters"]["epsilon_start"] == 1.0
     assert report["hyperparameters"]["epsilon_end"] == 0.05
-    assert report["reward_definition"] == "negative_observed_plus_modeled_terminal_four_component_CNY"
+    assert report["reward_definition"] == "negative_observed_plus_modeled_terminal_four_component_CNY_minus_beta_soc_phi"
+
+
+def test_beta_soc_is_configurable_and_reported_separately_from_economic_cost():
+    _, report = run_train_validation(
+        FakeDataset(), rounds=1, batch_size=1, updates_per_episode=1,
+        seed=1, beta_soc=1000.0,
+    )
+    assert report["hyperparameters"]["beta_soc"] == 1000.0
+    assert report["validation"]["completed_soc_soft_penalty_cny"] >= 0.0
+    assert report["validation"]["completed_cost_cny"] == (
+        report["validation"]["completed_observed_cost_cny"]
+        + report["validation"]["completed_modeled_terminal_cost_cny"]
+    )
 
 
 def test_training_retains_failed_prefix_for_outcome_and_separates_modeled_cost():

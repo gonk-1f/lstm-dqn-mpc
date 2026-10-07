@@ -19,6 +19,17 @@ from v3.shore import settle_shore_segment
 ACTION_KW = tuple(range(0, 601, 10))
 
 
+def soc_deviation_squared(soc: float) -> float:
+    """Squared distance from the onboard SOC working interval [0.4, 0.6]."""
+    if not isfinite(soc):
+        raise ValueError("SOC must be finite")
+    if soc < 0.4:
+        return (0.4 - soc) ** 2
+    if soc > 0.6:
+        return (soc - 0.6) ** 2
+    return 0.0
+
+
 class ReplayExecutionError(RuntimeError):
     def __init__(
         self, row_index: int, mode: OperatingMode, cause: Exception, *,
@@ -50,6 +61,7 @@ class DirectTransition:
     next_feasible_actions: tuple[int, ...]
     shore_ledger: RawCnyIntervalLedger | None = None
     modeled_terminal_ledger: RawCnyIntervalLedger | None = None
+    soc_soft_penalty_cny: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -84,6 +96,10 @@ class DirectReplay:
     def comparable_cost_cny(self) -> float:
         modeled = self.modeled_terminal_settlement
         return self.total_cost_cny + (0.0 if modeled is None else modeled.ledger.total_cost_cny)
+
+    @property
+    def soc_soft_penalty_cny(self) -> float:
+        return fsum(item.soc_soft_penalty_cny for item in self.transitions)
 
 
 def modeled_terminal_settlement(
@@ -164,6 +180,7 @@ def feasible_fc_actions(
 def replay_episode(
     episode: object, policy: Callable[[tuple[float, ...], tuple[int, ...]], int], *,
     accountant: EconomicMPC, initial_state: AccountState | None = None,
+    beta_soc: float = 0.0,
 ) -> DirectReplay:
     """Execute ONBOARD FC actions; route shore rows outside the DQN policy.
 
@@ -178,6 +195,8 @@ def replay_episode(
         raise TypeError("accountant must supply the formal v3 interval ledger")
     if initial_state is not None and type(initial_state) is not AccountState:
         raise TypeError("initial_state must be an AccountState")
+    if not isfinite(beta_soc) or beta_soc < 0.0:
+        raise ValueError("beta_soc must be finite and nonnegative")
     physical = initial_state or AccountState()
     transitions: list[DirectTransition] = []
     shore_blocks: list[ShoreBlock] = []
@@ -247,7 +266,8 @@ def replay_episode(
             last_onboard = index + 1 == len(modes) or modes[index + 1] is not OperatingMode.ONBOARD
             shore_ledger = None
             modeled_ledger = None
-            reward = ledger.reward_cny
+            soc_penalty = beta_soc * soc_deviation_squared(next_physical.soc)
+            reward = ledger.reward_cny - soc_penalty
             if last_onboard and index + 1 < len(modes):
                 shore_start = index + 1
                 shore_end = shore_start
@@ -292,7 +312,7 @@ def replay_episode(
             transitions.append(DirectTransition(
                 decision_state, fc_kw, reward, next_state, ledger,
                 battery_kw, next_physical.soc, last_onboard, next_feasible,
-                shore_ledger, modeled_ledger,
+                shore_ledger, modeled_ledger, soc_penalty,
             ))
             if last_onboard and shore_ledger is not None:
                 index = shore_end

@@ -23,6 +23,8 @@ def _summarize(results: list[DirectReplay], requested: int, failures: list[str])
         for item in results
     )
     soc = [value for item in results for value in item.soc_by_row]
+    onboard_soc = [transition.actual_soc for item in results for transition in item.transitions]
+    terminal_onboard_soc = [item.transitions[-1].actual_soc for item in results if item.transitions]
     observed_cost = sum(item.total_cost_cny for item in results)
     modeled_cost = sum(
         0.0 if item.modeled_terminal_settlement is None
@@ -38,19 +40,27 @@ def _summarize(results: list[DirectReplay], requested: int, failures: list[str])
         "completed_cost_cny": comparable_cost,
         "completed_observed_cost_cny": observed_cost,
         "completed_modeled_terminal_cost_cny": modeled_cost,
+        "completed_soc_soft_penalty_cny": sum(item.soc_soft_penalty_cny for item in results),
         "transitions": sum(len(item.transitions) for item in results),
         "fc_starts": starts,
         "soc_min": min(soc) if soc else None,
         "soc_max": max(soc) if soc else None,
+        "onboard_soc_min": min(onboard_soc) if onboard_soc else None,
+        "onboard_soc_max": max(onboard_soc) if onboard_soc else None,
+        "terminal_onboard_soc_mean": (
+            sum(terminal_onboard_soc) / len(terminal_onboard_soc) if terminal_onboard_soc else None
+        ),
+        "terminal_onboard_soc_min": min(terminal_onboard_soc) if terminal_onboard_soc else None,
+        "terminal_onboard_soc_max": max(terminal_onboard_soc) if terminal_onboard_soc else None,
     }
 
 
-def _run_episodes(episodes, policy, accountant, *, on_failure=None):
+def _run_episodes(episodes, policy, accountant, *, on_failure=None, beta_soc: float = 0.0):
     results: list[DirectReplay] = []
     failures: list[str] = []
     for episode in episodes:
         try:
-            results.append(replay_episode(episode, policy, accountant=accountant))
+            results.append(replay_episode(episode, policy, accountant=accountant, beta_soc=beta_soc))
         except ReplayExecutionError as exc:
             failures.append(f"{episode.sample_id}: {exc}")
             if on_failure is not None:
@@ -65,6 +75,7 @@ def run_train_validation(
     max_validation_episodes: int | None = None,
     progress_every_steps: int = 0,
     epsilon_start: float = 0.15, epsilon_end: float = 0.02,
+    beta_soc: float = 0.0,
 ) -> tuple[DirectPowerDDQN, dict[str, object]]:
     """Fit off-policy from causal load-following rollouts, then DQN rollouts.
 
@@ -82,6 +93,8 @@ def run_train_validation(
     if not (math.isfinite(epsilon_start) and math.isfinite(epsilon_end)
             and 0.0 <= epsilon_end <= epsilon_start <= 1.0):
         raise ValueError("epsilon schedule must satisfy 0 <= end <= start <= 1")
+    if not math.isfinite(beta_soc) or beta_soc < 0.0:
+        raise ValueError("beta_soc must be finite and nonnegative")
     before_test = dataset.opened_test_payloads
     train = dataset.load_train()
     validation = dataset.load_validation()
@@ -112,6 +125,7 @@ def run_train_validation(
         lambda state, feasible: min(feasible, key=lambda power: abs(power - state[1] * 600.0)),
         accountant,
         on_failure=remember_bootstrap_failure,
+        beta_soc=beta_soc,
     )
     if progress_every_steps:
         print(f"bootstrap completed={len(bootstrap)}/{len(train)} failed={len(bootstrap_failures)}", flush=True)
@@ -170,6 +184,7 @@ def run_train_validation(
                     episode,
                     training_policy,
                     accountant=accountant,
+                    beta_soc=beta_soc,
                 )
             except ReplayExecutionError as exc:
                 failures.append(f"{episode.sample_id}: {exc}")
@@ -221,6 +236,7 @@ def run_train_validation(
         train,
         lambda state, feasible: agent.select_power(state, feasible),
         accountant,
+        beta_soc=beta_soc,
     )
     if progress_every_steps:
         print(
@@ -232,6 +248,7 @@ def run_train_validation(
         validation,
         lambda state, feasible: agent.select_power(state, feasible),
         accountant,
+        beta_soc=beta_soc,
     )
     if progress_every_steps:
         print(f"validation completed={len(validation_results)}/{len(validation)} failed={len(validation_failures)}", flush=True)
@@ -251,7 +268,7 @@ def run_train_validation(
         "sample_seconds": 30,
         "action_kw": list(ACTION_KW),
         "state_dim": 8,
-        "reward_definition": "negative_observed_plus_modeled_terminal_four_component_CNY",
+        "reward_definition": "negative_observed_plus_modeled_terminal_four_component_CNY_minus_beta_soc_phi",
         "bootstrap": _summarize(bootstrap, len(train), bootstrap_failures),
         "bootstrap_mean_loss": sum(bootstrap_losses) / len(bootstrap_losses) if bootstrap_losses else None,
         "bootstrap_failed_prefix_transitions": bootstrap_failed_prefixes,
@@ -272,6 +289,7 @@ def run_train_validation(
             "updates_per_episode": updates_per_episode, "gamma": agent.gamma,
             "learning_rate": 1e-4, "replay_capacity": 100_000,
             "hidden_dims": [128, 64], "epsilon_start": epsilon_start, "epsilon_end": epsilon_end,
+            "beta_soc": beta_soc,
         },
     }
     return agent, report
@@ -300,6 +318,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--progress-every-steps", type=int, default=50)
     parser.add_argument("--epsilon-start", type=float, default=0.15)
     parser.add_argument("--epsilon-end", type=float, default=0.02)
+    parser.add_argument("--beta-soc", type=float, default=0.0)
     args = parser.parse_args(argv)
     power = args.power_root or _default_data_root("operating_dataset_zero_boundary_v2")
     ais = args.ais_root or _default_data_root("operating_dataset_zero_boundary_v2_ais")
@@ -312,6 +331,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         max_validation_episodes=args.max_validation_episodes, seed=args.seed,
         progress_every_steps=args.progress_every_steps,
         epsilon_start=args.epsilon_start, epsilon_end=args.epsilon_end,
+        beta_soc=args.beta_soc,
     )
     args.output_dir.mkdir(parents=True, exist_ok=True)
     (args.output_dir / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

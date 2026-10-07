@@ -4,7 +4,7 @@ import pytest
 
 from v2.economics import ShoreEnergyClassification
 from v3.control import AccountState, EconomicMPC
-from v4.control import ACTION_KW, ReplayExecutionError, build_state, replay_episode
+from v4.control import ACTION_KW, ReplayExecutionError, build_state, replay_episode, soc_deviation_squared
 
 
 def episode(modes, loads, shore):
@@ -164,3 +164,39 @@ def test_supply_failure_exposes_only_executed_prefix_and_failure_outcome():
     assert executed.actual_soc >= 0.2
     assert executed.done is False
     assert executed.next_feasible_actions == ()
+
+
+@pytest.mark.parametrize(("soc", "expected"), (
+    (0.2, 0.04), (0.3, 0.01), (0.4, 0.0), (0.5, 0.0),
+    (0.6, 0.0), (0.7, 0.01), (0.8, 0.04),
+))
+def test_soc_soft_penalty_has_exact_piecewise_boundaries(soc, expected):
+    assert soc_deviation_squared(soc) == pytest.approx(expected)
+
+
+def test_soc_soft_penalty_is_onboard_only_and_preserves_actual_shore_cost():
+    data = episode(("onboard", "shore_charging"), (100.0, 0.0), (0.0, -100.0))
+    kwargs = dict(accountant=NoSolveAccountant(), initial_state=AccountState(soc=0.35))
+    baseline = replay_episode(data, lambda _state, _actions: 0, beta_soc=0.0, **kwargs)
+    shaped = replay_episode(data, lambda _state, _actions: 0, beta_soc=1000.0, **kwargs)
+    onboard_soc = shaped.transitions[0].actual_soc
+    expected_penalty = 1000.0 * (0.4 - onboard_soc) ** 2
+    assert shaped.transitions[0].soc_soft_penalty_cny == pytest.approx(expected_penalty)
+    assert shaped.transitions[0].reward_cny == pytest.approx(
+        baseline.transitions[0].reward_cny - expected_penalty
+    )
+    assert shaped.total_cost_cny == pytest.approx(baseline.total_cost_cny)
+    assert shaped.shore_blocks[0].end_soc == pytest.approx(baseline.shore_blocks[0].end_soc)
+    assert shaped.soc_soft_penalty_cny == pytest.approx(expected_penalty)
+
+
+def test_soc_soft_penalty_does_not_replace_modeled_terminal_settlement():
+    data = episode(("onboard",), (100.0,), (0.0,))
+    result = replay_episode(
+        data, lambda _state, _actions: 0, accountant=NoSolveAccountant(),
+        initial_state=AccountState(soc=0.35), beta_soc=1000.0,
+    )
+    assert result.modeled_terminal_settlement is not None
+    assert result.transitions[-1].reward_cny == pytest.approx(
+        -result.comparable_cost_cny - result.soc_soft_penalty_cny
+    )
