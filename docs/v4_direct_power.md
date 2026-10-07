@@ -14,7 +14,7 @@ The eight state features, in order, are: `SOC`, current measured load / 600, cur
 
 The reward is the negative actual CNY ledger sum: hydrogen + FC degradation + battery degradation + shore grid electricity. There is no `Cscale`, LPF tracking term, SOC target term, or MPC objective. FC start and shutdown costs are already inside the formal FC degradation component. The final ONBOARD reward includes the immediately following actual shore block once. Leading shore intervals have no preceding DQN action and remain in the total accounting ledger.
 
-The MLP has hidden widths 128 and 64, ReLU activations, and 61 Q outputs. The agent uses masked Double-DQN targets, Adam at `1e-4`, replay capacity 100,000, default batch 64, target sync each training round, gradient norm cap 10, and `gamma=1.0` so the undiscounted Q return represents total CNY cost across a complete episode. Training begins with causal load-following trajectories in the replay buffer, then uses epsilon-greedy direct-power rollouts. Epsilon goes from 0.15 to 0.02 across rounds; for one round it is 0.15. These are initial experimental settings, not tuned hyperparameters.
+The MLP has hidden widths 128 and 64, ReLU activations, and 61 Q outputs. The agent uses masked Double-DQN targets, Adam at `1e-4`, replay capacity 100,000, default batch 64, target sync each training round, gradient norm cap 10, and `gamma=1.0` so the undiscounted Q return represents total CNY cost across a complete episode. Training begins with causal load-following trajectories in the replay buffer, then uses epsilon-greedy direct-power rollouts. The default epsilon schedule goes from 0.15 to 0.02 across rounds; for one round it is 0.15. `--epsilon-start` and `--epsilon-end` allow controlled comparisons without changing the reward. These are initial experimental settings, not tuned hyperparameters.
 
 Run a bounded pilot from the repository root or this worktree:
 
@@ -23,14 +23,26 @@ $env:PYTHONPATH=(Resolve-Path src).Path
 python -m v4.train --rounds 1 --max-train-episodes 1 --max-validation-episodes 1 --updates-per-episode 1
 ```
 
-The runner loads authenticated Train and Validation payloads only; it checks that Test-open count remains zero. It writes `report.json` and writes `selected_agent.pt` only when there is training experience, every Validation episode completes, and the economic horizon is settled. Failed Train episodes are listed and skipped; the next Train episode still runs. `completed_cost_cny` sums finished episodes for diagnostics, while comparable `cost_cny` is `null` when any episode failed. Failed episodes never receive a made-up penalty. Train completion need not be 100%.
+To run the 40-round full Train/Validation experiment from the PyCharm PowerShell terminal, set its working directory to this worktree and run:
+
+```powershell
+$env:PYTHONPATH=(Resolve-Path .\src).Path
+New-Item -ItemType Directory -Force .\outputs\v4_direct_power_40r_u16_seed42_pycharm | Out-Null
+python -u -m v4.train --rounds 40 --updates-per-episode 16 --batch-size 64 --seed 42 --progress-every-steps 50 --output-dir .\outputs\v4_direct_power_40r_u16_seed42_pycharm 2>&1 | Tee-Object -FilePath .\outputs\v4_direct_power_40r_u16_seed42_pycharm\train.log
+```
+
+The progress counter counts selected ONBOARD actions during DQN rollouts, not gradient updates. It prints every 50 selected actions, immediate failure locations, and one summary per round. Validation is run greedily after round 40. The full JSON report is saved in the output directory; Test is not opened.
+
+The runner loads authenticated Train and Validation payloads only; it checks that Test-open count remains zero. It writes `report.json` and writes `selected_agent.pt` only when there is training experience and every Validation episode completes. Failed Train episodes are listed and skipped; the next Train episode still runs. `completed_cost_cny` sums finished episodes for diagnostics, while comparable `cost_cny` is `null` when any episode failed. Failed episodes never receive a made-up penalty. Train completion need not be 100%.
 
 ## Current limits of the dataset and reward
 
-On the current formal split, all 30 Train and 8 Validation samples end in ONBOARD mode. Their remaining battery energy has no observed later shore charge in the sample. Under the requested actual-cost-only reward, a terminal low SOC can look artificially cheap. The runner reports the count of unsettled terminal ONBOARD samples and blocks checkpoint selection. A later design must either join samples into complete voyage-to-shore economic horizons, or explicitly define an economic terminal energy valuation/constraint before comparing policies.
+On the current formal split, the last *executed 30 s interval* in all 30 Train and 8 Validation samples is ONBOARD. The raw power payload also has a separate terminal 0 kW boundary row that is not an executable interval. Therefore the last operating mode cannot establish that the physical load trace has no terminal boundary. The runner reports the last executed mode as a diagnostic and does not block checkpoint selection based on it. Terminal 0 kW does not by itself restore SOC or price remaining battery energy; compare final SOC and observed shore charging alongside cost, and define an energy-equivalent terminal condition before claiming complete lifetime-economic optimality.
+
+Final Test payloads are opened only after authorized model selection. The loader rejects a Test trace unless its raw first and last load rows are both 0 kW. Train/Validation endpoint loads are not checkpoint-selection criteria.
 
 A one-episode Train/Validation pilot found a no-feasible-action state during exploratory training at Train row 113. The causal one-step feasibility mask cannot prevent a previous action from making a later high-load row impossible. This is recorded as a failed rollout rather than silently changing the FC action or adding a non-economic penalty. A future viability rule or complete-horizon dataset is needed before claiming a trained deployable policy.
 
-In a two-Train-episode pilot, `zero_boundary_002` failed but the runner continued to `zero_boundary_005`, which completed with 298 DQN transitions. Train completion is reported as 1/2; the validation trajectory completed. The model remained ineligible because these dataset samples end in ONBOARD mode with unsettled terminal energy, not because Train completion was below 100%.
+In a two-Train-episode pilot, `zero_boundary_002` failed but the runner continued to `zero_boundary_005`, which completed with 298 DQN transitions. Train completion is reported as 1/2; the validation trajectory completed. The current code gate allows selection for that bounded pilot because Validation completed; this does not establish a usable full-split policy.
 
 Historical v3 forecast and calibration outputs were archived in commit `2e70008` on `refactor/multiscale-dqn-wmpc-v2` before removing superseded generated output files from this branch.

@@ -1,11 +1,18 @@
-# Multi-rate DQN adaptive nonlinear MPC (v2)
+# 船舶燃料电池与锂电池能量管理研究
+
+当前开发分支 `feat/direct-power-mlp-ddqn` 是 **30 s 直接功率 MLP Double-DQN**
+实验。实现、参数、40 轮训练对照和未解决问题见
+[v4 项目状态（2026-10-07）](docs/v4_status_2026-10-07.md)。当前验证仅完成
+4/8 个航段，尚无可选的正式模型；Test 未用于训练或选模。
+
+## 历史 v2/v3 路线（下文为旧阶段记录）
 
 An experimental [v3 persistence DQN–MPC path](docs/v3_persistence_dqn_mpc.md)
 uses five-step current-load persistence and a 30 s two-weight DQN cadence.
 The earlier [LSTM diagnostic](docs/v3_predictive_control.md) did not improve
-Validation WAPE over persistence. The formal baseline described below remains v2.
+Validation WAPE over persistence. The former formal baseline described below was v2.
 
-当前正式基线为 `METHOD_VERSION = multiscale_dqn_wmpc_v2`。下层非线性
+v2 阶段的正式基线为 `METHOD_VERSION = multiscale_dqn_wmpc_v2`。下层非线性
 MPC 每 30 s 滚动求解，预测步数 `N=5`；上层 DQN 的同一权重动作保持
 `M=5` 个真实 supervisory steps。`N` 与 `M` 都对应 150 s，但语义独立。
 
