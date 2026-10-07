@@ -47,6 +47,15 @@ The runner loads authenticated Train and Validation payloads only; it checks tha
 
 ## Current limits of the dataset and reward
 
+The fixed beta=250 40-round review is implemented by `v4.review`. Run it from the active v4 worktree, with a fresh output directory:
+
+```powershell
+$env:PYTHONPATH=(Resolve-Path .\src).Path
+python -X utf8 -u -m v4.review --output-dir .\outputs\v4_beta250_40r_seed42_repeat
+```
+
+Its configuration is fixed at seed 42, epsilon 1.0 to 0.05, batch 64 and 16 updates per completed sample. It adds executed-transition, optimizer and target-copy counters and post-action SOC time bins without changing decisions or training order. Counts include failed executed prefixes; SHORE and modeled charging have no DQN transition. It retains a diagnostic final model even if selection fails and profiles Train/Validation only. Economic cost excludes the separately reported SOC penalty. The completed 40-round review returned greedy Train 10/30 and Validation 4/8; see the [formal report](v4_beta250_40r_review_2026-10-07.md). It has not changed the optimizer or target synchronization schedule.
+
 On the current formal split, the last *executed 30 s interval* in all 30 Train and 8 Validation samples is ONBOARD. The raw power payload also has a separate terminal 0 kW boundary row that is not an executable interval. Therefore the last operating mode cannot establish that the physical load trace has no terminal boundary. The runner reports the last executed mode as a diagnostic and does not block checkpoint selection based on it. Terminal 0 kW does not by itself restore SOC; the accounting-only terminal settlement above supplies one explicit common valuation rule. It does not establish actual post-voyage charging behavior or guarantee a complete policy.
 
 Final Test payloads are opened only after authorized model selection. The loader rejects a Test trace unless its raw first and last load rows are both 0 kW. Train/Validation endpoint loads are not checkpoint-selection criteria.

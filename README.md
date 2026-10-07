@@ -2,9 +2,10 @@
 
 当前开发分支 `feat/direct-power-mlp-ddqn` 是 **30 s 直接功率 MLP Double-DQN**
 实验。实现、参数、40 轮训练对照和未解决问题见
-[v4 项目状态（2026-10-07）](docs/v4_status_2026-10-07.md)。SOC 软惩罚初筛中
-β=250 的单种子 5 轮完成率为 Train 30/30、Validation 8/8，但 SOC 经常接近 0.8。
-下一步固定该配置复核 40 轮；Test 未用于训练或选模。
+[v4 项目状态（2026-10-07）](docs/v4_status_2026-10-07.md)。β=250 已完成
+[固定配置 40 轮复核](docs/v4_beta250_40r_review_2026-10-07.md)：最终 greedy Train
+10/30、Validation 4/8，未保住 5 轮初筛的完成率提升；最终低 SOC 问题仍严重。
+Test 未用于训练或选模，没有可选的正式模型。
 清理范围及保留依赖见 [v4 清理清单](docs/v4_cleanup_2026-10-07.md)。
 `outputs/` 仅放本地生成结果，正式结论保存在 `docs/`。
 

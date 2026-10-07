@@ -2,116 +2,185 @@
   {
     "directory": "v2_action_behavior_audit",
     "files": 1,
-    "bytes": 213667.0
+    "bytes": 213667.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 1,
+    "action": "DELETE"
   },
   {
     "directory": "v2_dqn_state_audit",
     "files": 13,
-    "bytes": 3955341.0
+    "bytes": 3955341.0,
+    "retained_required_files": 13,
+    "removed_generated_files": 0,
+    "action": "RETAIN_REQUIRED_MPC_INPUTS_ONLY"
   },
   {
     "directory": "v2_failure_penalty_audit",
     "files": 1,
-    "bytes": 11390.0
+    "bytes": 11390.0,
+    "retained_required_files": 1,
+    "removed_generated_files": 0,
+    "action": "RETAIN_REQUIRED_MPC_INPUTS_ONLY"
   },
   {
     "directory": "v2_history_dqn_study",
     "files": 1,
-    "bytes": 507489.0
+    "bytes": 507489.0,
+    "retained_required_files": 1,
+    "removed_generated_files": 0,
+    "action": "RETAIN_REQUIRED_MPC_INPUTS_ONLY"
   },
   {
     "directory": "v2_literature_train_ablation",
     "files": 2,
-    "bytes": 108488.0
+    "bytes": 108488.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 2,
+    "action": "DELETE"
   },
   {
     "directory": "v2_m10_dqn_study",
     "files": 2,
-    "bytes": 549527.0
+    "bytes": 549527.0,
+    "retained_required_files": 1,
+    "removed_generated_files": 1,
+    "action": "RETAIN_REQUIRED_MPC_INPUTS_ONLY"
   },
   {
     "directory": "v2_moving_negative_power_review",
     "files": 16,
-    "bytes": 3026510.0
+    "bytes": 3026510.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 16,
+    "action": "DELETE"
   },
   {
     "directory": "v2_objective_scale_audit",
     "files": 1,
-    "bytes": 212007.0
+    "bytes": 212007.0,
+    "retained_required_files": 1,
+    "removed_generated_files": 0,
+    "action": "RETAIN_REQUIRED_MPC_INPUTS_ONLY"
   },
   {
     "directory": "v2_zero_boundary_power_review",
     "files": 45,
-    "bytes": 4286861.0
+    "bytes": 4286861.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 45,
+    "action": "DELETE"
   },
   {
     "directory": "v4_direct_power_40r_u1_seed42",
     "files": 1,
-    "bytes": 52847.0
+    "bytes": 52847.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 1,
+    "action": "DELETE"
   },
   {
     "directory": "v4_direct_power_40r_u1_seed42_greedy",
     "files": 1,
-    "bytes": 54170.0
+    "bytes": 54170.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 1,
+    "action": "DELETE"
   },
   {
     "directory": "v4_direct_power_40r_u16_eps1_to_005_seed42",
     "files": 2,
-    "bytes": 1459515.0
+    "bytes": 1459515.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 2,
+    "action": "DELETE"
   },
   {
     "directory": "v4_direct_power_40r_u16_eps1_to_005_terminal_v1_seed42",
     "files": 3,
-    "bytes": 1568611.0
+    "bytes": 1568611.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 3,
+    "action": "DELETE"
   },
   {
     "directory": "v4_direct_power_40r_u16_seed42",
     "files": 2,
-    "bytes": 1300864.0
+    "bytes": 1300864.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 2,
+    "action": "DELETE"
   },
   {
     "directory": "v4_direct_power_pilot",
     "files": 1,
-    "bytes": 2178.0
+    "bytes": 2178.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 1,
+    "action": "DELETE"
   },
   {
     "directory": "v4_direct_power_two_train",
     "files": 1,
-    "bytes": 2298.0
+    "bytes": 2298.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 1,
+    "action": "DELETE"
   },
   {
     "directory": "v4_failure_terminal_smoke",
     "files": 1,
-    "bytes": 3673.0
+    "bytes": 3673.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 1,
+    "action": "DELETE"
   },
   {
     "directory": "v4_failure_terminal_smoke_final",
     "files": 1,
-    "bytes": 3763.0
+    "bytes": 3763.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 1,
+    "action": "DELETE"
   },
   {
     "directory": "v4_outcome_diag_smoke",
     "files": 3,
-    "bytes": 120758.0
+    "bytes": 120758.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 3,
+    "action": "DELETE"
   },
   {
     "directory": "v4_outcome_diagnostic_40r_seed42",
     "files": 1,
-    "bytes": 1079927.0
+    "bytes": 1079927.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 1,
+    "action": "DELETE"
   },
   {
     "directory": "v4_progress_smoke",
     "files": 2,
-    "bytes": 59986.0
+    "bytes": 59986.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 2,
+    "action": "DELETE"
   },
   {
     "directory": "v4_soc_beta_study_5r_seed42",
     "files": 19,
-    "bytes": 6623542.0
+    "bytes": 6623542.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 19,
+    "action": "DELETE"
   },
   {
     "directory": "v4_soc_beta_study_smoke",
     "files": 6,
-    "bytes": 219670.0
+    "bytes": 219670.0,
+    "retained_required_files": 0,
+    "removed_generated_files": 6,
+    "action": "DELETE"
   }
 ]
