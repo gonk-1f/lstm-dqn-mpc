@@ -192,6 +192,8 @@ outputs/v2_history_dqn_study/reward_scale_calibration_tau90_backup.json
 outputs/v2_m10_dqn_study/M5_control/
 outputs/v2_m10_dqn_study/M10/
 outputs/v4_direct_power*/
+# Generated experiments are local; reviewed results belong in docs.
+outputs/
 
 # Executed-reward models and large local historical diagnostic caches.
 outputs/dqn_mpc_*_executed_reward_84_v1_*/

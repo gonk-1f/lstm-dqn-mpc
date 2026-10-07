@@ -1,0 +1,117 @@
+[
+  {
+    "directory": "v2_action_behavior_audit",
+    "files": 1,
+    "bytes": 213667.0
+  },
+  {
+    "directory": "v2_dqn_state_audit",
+    "files": 13,
+    "bytes": 3955341.0
+  },
+  {
+    "directory": "v2_failure_penalty_audit",
+    "files": 1,
+    "bytes": 11390.0
+  },
+  {
+    "directory": "v2_history_dqn_study",
+    "files": 1,
+    "bytes": 507489.0
+  },
+  {
+    "directory": "v2_literature_train_ablation",
+    "files": 2,
+    "bytes": 108488.0
+  },
+  {
+    "directory": "v2_m10_dqn_study",
+    "files": 2,
+    "bytes": 549527.0
+  },
+  {
+    "directory": "v2_moving_negative_power_review",
+    "files": 16,
+    "bytes": 3026510.0
+  },
+  {
+    "directory": "v2_objective_scale_audit",
+    "files": 1,
+    "bytes": 212007.0
+  },
+  {
+    "directory": "v2_zero_boundary_power_review",
+    "files": 45,
+    "bytes": 4286861.0
+  },
+  {
+    "directory": "v4_direct_power_40r_u1_seed42",
+    "files": 1,
+    "bytes": 52847.0
+  },
+  {
+    "directory": "v4_direct_power_40r_u1_seed42_greedy",
+    "files": 1,
+    "bytes": 54170.0
+  },
+  {
+    "directory": "v4_direct_power_40r_u16_eps1_to_005_seed42",
+    "files": 2,
+    "bytes": 1459515.0
+  },
+  {
+    "directory": "v4_direct_power_40r_u16_eps1_to_005_terminal_v1_seed42",
+    "files": 3,
+    "bytes": 1568611.0
+  },
+  {
+    "directory": "v4_direct_power_40r_u16_seed42",
+    "files": 2,
+    "bytes": 1300864.0
+  },
+  {
+    "directory": "v4_direct_power_pilot",
+    "files": 1,
+    "bytes": 2178.0
+  },
+  {
+    "directory": "v4_direct_power_two_train",
+    "files": 1,
+    "bytes": 2298.0
+  },
+  {
+    "directory": "v4_failure_terminal_smoke",
+    "files": 1,
+    "bytes": 3673.0
+  },
+  {
+    "directory": "v4_failure_terminal_smoke_final",
+    "files": 1,
+    "bytes": 3763.0
+  },
+  {
+    "directory": "v4_outcome_diag_smoke",
+    "files": 3,
+    "bytes": 120758.0
+  },
+  {
+    "directory": "v4_outcome_diagnostic_40r_seed42",
+    "files": 1,
+    "bytes": 1079927.0
+  },
+  {
+    "directory": "v4_progress_smoke",
+    "files": 2,
+    "bytes": 59986.0
+  },
+  {
+    "directory": "v4_soc_beta_study_5r_seed42",
+    "files": 19,
+    "bytes": 6623542.0
+  },
+  {
+    "directory": "v4_soc_beta_study_smoke",
+    "files": 6,
+    "bytes": 219670.0
+  }
+]

@@ -26,7 +26,7 @@
 
 ## 本次已执行的 Train 消融
 
-数据：正式划分的 30 个 Train 航段；先在 3 个 Train 航段上扫描全部 36 组固定权重及两个现有 DQN，再选择两组候选固定权重，在全部 30 个 Train 航段上复算。现有 DQN 使用已经按 Validation 选出的 M5 round 18 和 M10 round 38，未重新训练新的经济 MPC 架构。本次没有打开 Test payload。完整逐航段记录见 [`train_pilot_3_episodes.json`](../outputs/v2_literature_train_ablation/train_pilot_3_episodes.json) 和 [`train_full_30_episodes.json`](../outputs/v2_literature_train_ablation/train_full_30_episodes.json)。
+数据：正式划分的 30 个 Train 航段；先在 3 个 Train 航段上扫描全部 36 组固定权重及两个现有 DQN，再选择两组候选固定权重，在全部 30 个 Train 航段上复算。现有 DQN 使用已经按 Validation 选出的 M5 round 18 和 M10 round 38，未重新训练新的经济 MPC 架构。本次没有打开 Test payload。完整逐航段记录见 [`train_pilot_3_episodes.json`](https://github.com/gonk-1f/lstm-dqn-mpc/blob/ab817598cd0977c817f173aca0679362bb54ced8/outputs/v2_literature_train_ablation/train_pilot_3_episodes.json) 和 [`train_full_30_episodes.json`](https://github.com/gonk-1f/lstm-dqn-mpc/blob/ab817598cd0977c817f173aca0679362bb54ced8/outputs/v2_literature_train_ablation/train_full_30_episodes.json)。
 
 五种策略都在 `zero_boundary_015` 出现物理 MPC 不可行，故经济与控制量只在其余**共同完成的 29 个航段**上成对比较，不把失败航段的截断成本误当完整航程成本。`w_1_8_1` 是在 3 个 Train 试点航段上选出的，因此其完整 Train 表现仍是样本内证据。
 
