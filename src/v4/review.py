@@ -38,7 +38,7 @@ def _manifest_hashes(roots: Sequence[Path]) -> dict[str, str]:
     }
 
 
-def _trajectory_plot(row: dict[str, object], destination: Path) -> None:
+def _trajectory_plot(row: dict[str, object], destination: Path, beta_soc: float = 250.0) -> None:
     minutes = [step * 0.5 for step in row["onboard_step"]]
     fig, axes = plt.subplots(3, 1, figsize=(10, 7), sharex=True)
     axes[0].plot(minutes, row["load_kw"], color="black", alpha=0.5, label="Load")
@@ -53,7 +53,7 @@ def _trajectory_plot(row: dict[str, object], destination: Path) -> None:
     axes[2].axhline(0.79, linestyle="--", color="orange", linewidth=0.8)
     axes[2].set_ylim(0.18, 0.82)
     axes[2].set_xlabel("Executed ONBOARD time (min); SHORE excluded")
-    fig.suptitle(f"{row['sample_id']} | beta=250 | {'completed' if row['completed'] else 'failed'}")
+    fig.suptitle(f"{row['sample_id']} | beta={beta_soc:g} | {'completed' if row['completed'] else 'failed'}")
     fig.tight_layout()
     fig.savefig(destination, dpi=150)
     plt.close(fig)

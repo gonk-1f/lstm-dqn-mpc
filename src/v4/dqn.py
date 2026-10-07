@@ -70,6 +70,7 @@ class DirectPowerDDQN:
         self.target = MLPQNetwork(STATE_DIM, len(ACTION_KW), hidden_dims)
         self.target_sync_calls = 0
         self.economic_optimizer_updates = 0
+        self.economic_replay_insertions = 0
         self.outcome_optimizer_updates = 0
         self.sync_target()
         self.target.eval()
@@ -129,6 +130,7 @@ class DirectPowerDDQN:
             self._state(state), ACTION_KW.index(action_kw), float(reward_cny),
             self._state(next_state), done, next_indices,
         ))
+        self.economic_replay_insertions += 1
 
     def remember_transition(self, transition: DirectTransition) -> None:
         self.remember(

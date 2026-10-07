@@ -29,6 +29,8 @@ def _summarize(
     soc = [value for item in results for value in item.soc_by_row]
     onboard_soc = [transition.actual_soc for item in results for transition in item.transitions]
     all_onboard_soc = [*onboard_soc, *(transition.actual_soc for transition in failed_transitions)]
+    all_fc = [transition.action_kw for item in results for transition in item.transitions]
+    all_fc.extend(transition.action_kw for transition in failed_transitions)
     terminal_onboard_soc = [item.transitions[-1].actual_soc for item in results if item.transitions]
     observed_cost = sum(item.total_cost_cny for item in results)
     modeled_cost = sum(
@@ -53,6 +55,8 @@ def _summarize(
             + sum(item.soc_soft_penalty_cny for item in failed_transitions)
         ),
         "soc_time_occupancy": soc_time_occupancy(all_onboard_soc),
+        "onboard_soc_mean": math.fsum(all_onboard_soc) / len(all_onboard_soc) if all_onboard_soc else None,
+        "fc_zero_fraction": sum(value == 0 for value in all_fc) / len(all_fc) if all_fc else None,
         "fc_starts": starts,
         "soc_min": min(soc) if soc else None,
         "soc_max": max(soc) if soc else None,
