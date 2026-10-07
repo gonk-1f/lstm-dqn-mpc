@@ -1,5 +1,10 @@
 # v4 direct-power training failure audit (2026-10-06)
 
+Historical snapshot: these measurements and statements about discarded failure
+prefixes describe the code before the 2026-10-07 failure-outcome and terminal
+settlement changes. See [current v4 status](v4_status_2026-10-07.md) for the
+implemented semantics. These numbers are not results for the revised code.
+
 ## Reproduction
 
 All runs used the frozen Train/Validation split, seed 42, 30 s control, the

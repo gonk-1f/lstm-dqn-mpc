@@ -45,6 +45,16 @@ class ReplayItem:
     next_feasible_indices: tuple[int, ...]
 
 
+@dataclass(frozen=True)
+class OutcomeItem:
+    """Observed rollout result; the label is not an economic cost."""
+
+    state: tuple[float, ...]
+    action_index: int
+    actual_reward_cny: float
+    failed: bool
+
+
 class DirectPowerDDQN:
     def __init__(
         self, *, seed: int = 42, gamma: float = 1.0,
@@ -62,6 +72,10 @@ class DirectPowerDDQN:
         self.target.eval()
         self.optimizer = torch.optim.Adam(self.online.parameters(), lr=learning_rate)
         self.replay: deque[ReplayItem] = deque(maxlen=replay_capacity)
+        self.outcome_model = MLPQNetwork(STATE_DIM, len(ACTION_KW), hidden_dims)
+        self.outcome_optimizer = torch.optim.Adam(self.outcome_model.parameters(), lr=learning_rate)
+        self.outcome_random = random.Random(seed + 1)
+        self.outcome_replay: deque[OutcomeItem] = deque(maxlen=replay_capacity)
 
     @staticmethod
     def _state(value: Sequence[float]) -> tuple[float, ...]:
@@ -119,6 +133,63 @@ class DirectPowerDDQN:
             transition.next_state, done=transition.done,
             next_feasible_actions=transition.next_feasible_actions,
         )
+
+    def remember_completed_prefix(self, transitions: Sequence[DirectTransition]) -> int:
+        """Retain only fully ended voyages before a later failed voyage."""
+        values = tuple(transitions)
+        last_completed_index = max(
+            (index for index, transition in enumerate(values) if transition.done),
+            default=-1,
+        )
+        for transition in values[:last_completed_index + 1]:
+            self.remember_transition(transition)
+        return last_completed_index + 1
+
+    def remember_outcome_trajectory(
+        self, transitions: Sequence[DirectTransition], *, failed: bool,
+    ) -> None:
+        """Retain all executed actions with their eventual observed outcome.
+
+        A failed suffix is never converted to a zero-cost economic terminal.
+        Labels describe the sampled behavior trajectory, not causal blame for
+        every earlier action or a guaranteed future safety certificate.
+        """
+        values = tuple(transitions)
+        if not values or type(failed) is not bool:
+            raise ValueError("outcome trajectory needs executed transitions and a bool label")
+        if failed and (values[-1].done or values[-1].next_feasible_actions):
+            raise ValueError("failed outcome requires a nonterminal infeasible next state")
+        if not failed and not values[-1].done:
+            raise ValueError("completed outcome must end at a completed transition")
+        last_completed_index = max(
+            (index for index, transition in enumerate(values) if transition.done),
+            default=-1,
+        )
+        for index, transition in enumerate(values):
+            observed_cost = transition.executed_ledger.total_cost_cny
+            if transition.shore_ledger is not None:
+                observed_cost += transition.shore_ledger.total_cost_cny
+            self.outcome_replay.append(OutcomeItem(
+                self._state(transition.state), ACTION_KW.index(transition.action_kw),
+                -observed_cost, failed and index > last_completed_index,
+            ))
+
+    def learn_outcome(self, *, batch_size: int = 64) -> float | None:
+        if batch_size < 1:
+            raise ValueError("batch_size must be positive")
+        if len(self.outcome_replay) < batch_size:
+            return None
+        batch = self.outcome_random.sample(tuple(self.outcome_replay), batch_size)
+        states = torch.tensor([item.state for item in batch], dtype=torch.float32)
+        actions = torch.tensor([[item.action_index] for item in batch], dtype=torch.long)
+        failed = torch.tensor([[float(item.failed)] for item in batch], dtype=torch.float32)
+        logits = self.outcome_model(states).gather(1, actions)
+        loss = nn.functional.binary_cross_entropy_with_logits(logits, failed)
+        self.outcome_optimizer.zero_grad()
+        loss.backward()
+        nn.utils.clip_grad_norm_(self.outcome_model.parameters(), 10.0)
+        self.outcome_optimizer.step()
+        return float(loss.item())
 
     def learn(self, *, batch_size: int = 64) -> float | None:
         if batch_size < 1:

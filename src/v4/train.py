@@ -23,13 +23,21 @@ def _summarize(results: list[DirectReplay], requested: int, failures: list[str])
         for item in results
     )
     soc = [value for item in results for value in item.soc_by_row]
-    completed_cost = sum(item.total_cost_cny for item in results)
+    observed_cost = sum(item.total_cost_cny for item in results)
+    modeled_cost = sum(
+        0.0 if item.modeled_terminal_settlement is None
+        else item.modeled_terminal_settlement.ledger.total_cost_cny
+        for item in results
+    )
+    comparable_cost = observed_cost + modeled_cost
     return {
         "episodes": requested,
         "completed": len(results),
         "failed": failures,
-        "cost_cny": completed_cost if not failures else None,
-        "completed_cost_cny": completed_cost,
+        "cost_cny": comparable_cost if not failures else None,
+        "completed_cost_cny": comparable_cost,
+        "completed_observed_cost_cny": observed_cost,
+        "completed_modeled_terminal_cost_cny": modeled_cost,
         "transitions": sum(len(item.transitions) for item in results),
         "fc_starts": starts,
         "soc_min": min(soc) if soc else None,
@@ -37,7 +45,7 @@ def _summarize(results: list[DirectReplay], requested: int, failures: list[str])
     }
 
 
-def _run_episodes(episodes, policy, accountant):
+def _run_episodes(episodes, policy, accountant, *, on_failure=None):
     results: list[DirectReplay] = []
     failures: list[str] = []
     for episode in episodes:
@@ -45,6 +53,8 @@ def _run_episodes(episodes, policy, accountant):
             results.append(replay_episode(episode, policy, accountant=accountant))
         except ReplayExecutionError as exc:
             failures.append(f"{episode.sample_id}: {exc}")
+            if on_failure is not None:
+                on_failure(exc)
     return results, failures
 
 
@@ -85,21 +95,38 @@ def run_train_validation(
     validation = validation[:max_validation_episodes]
     accountant = EconomicMPC(nominal_cost_cny=1.0)  # only interval accounting; MPC solve is never called
     agent = DirectPowerDDQN(seed=seed)
+    bootstrap_failed_prefixes = 0
+    bootstrap_completed_prefixes = 0
+
+    def remember_bootstrap_failure(exc: ReplayExecutionError) -> None:
+        nonlocal bootstrap_failed_prefixes, bootstrap_completed_prefixes
+        if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
+            bootstrap_completed_prefixes += agent.remember_completed_prefix(exc.executed_transitions)
+            agent.remember_outcome_trajectory(exc.executed_transitions, failed=True)
+            bootstrap_failed_prefixes += len(exc.executed_transitions)
+
     if progress_every_steps:
         print(f"bootstrap start episodes={len(train)}", flush=True)
     bootstrap, bootstrap_failures = _run_episodes(
         train,
         lambda state, feasible: min(feasible, key=lambda power: abs(power - state[1] * 600.0)),
         accountant,
+        on_failure=remember_bootstrap_failure,
     )
     if progress_every_steps:
         print(f"bootstrap completed={len(bootstrap)}/{len(train)} failed={len(bootstrap_failures)}", flush=True)
     for result in bootstrap:
         for transition in result.transitions:
             agent.remember_transition(transition)
+        if result.transitions:
+            agent.remember_outcome_trajectory(result.transitions, failed=False)
     bootstrap_losses = [
         loss for _ in range(updates_per_episode * len(bootstrap))
         if (loss := agent.learn(batch_size=batch_size)) is not None
+    ]
+    bootstrap_outcome_losses = [
+        loss for _ in range(updates_per_episode * (len(bootstrap) + len(bootstrap_failures)))
+        if (loss := agent.learn_outcome(batch_size=batch_size)) is not None
     ]
     agent.sync_target()
     training_rounds: list[dict[str, object]] = []
@@ -115,6 +142,9 @@ def run_train_validation(
         completed: list[DirectReplay] = []
         failures: list[str] = []
         losses: list[float] = []
+        outcome_losses: list[float] = []
+        failed_prefix_transitions = 0
+        completed_prefix_transitions = 0
         for episode_index, episode in enumerate(train, start=1):
             episode_steps = 0
 
@@ -143,19 +173,40 @@ def run_train_validation(
                 )
             except ReplayExecutionError as exc:
                 failures.append(f"{episode.sample_id}: {exc}")
+                if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
+                    completed_prefix_transitions += agent.remember_completed_prefix(exc.executed_transitions)
+                    agent.remember_outcome_trajectory(exc.executed_transitions, failed=True)
+                    failed_prefix_transitions += len(exc.executed_transitions)
+                    for _ in range(updates_per_episode):
+                        loss = agent.learn_outcome(batch_size=batch_size)
+                        if loss is not None:
+                            outcome_losses.append(loss)
                 if progress_every_steps:
                     print(f"failure phase=train round={round_index + 1}/{rounds} sample={episode.sample_id} {exc}", flush=True)
                 continue
             completed.append(result)
             for transition in result.transitions:
                 agent.remember_transition(transition)
+            if result.transitions:
+                agent.remember_outcome_trajectory(result.transitions, failed=False)
             for _ in range(updates_per_episode):
                 loss = agent.learn(batch_size=batch_size)
                 if loss is not None:
                     losses.append(loss)
+                outcome_loss = agent.learn_outcome(batch_size=batch_size)
+                if outcome_loss is not None:
+                    outcome_losses.append(outcome_loss)
         agent.sync_target()
         summary = _summarize(completed, len(train), failures)
-        summary.update({"round": round_index + 1, "epsilon": epsilon, "mean_loss": sum(losses) / len(losses) if losses else None})
+        summary.update({
+            "round": round_index + 1, "epsilon": epsilon,
+            "mean_loss": sum(losses) / len(losses) if losses else None,
+            "failed_prefix_transitions": failed_prefix_transitions,
+            "completed_prefix_transitions": completed_prefix_transitions,
+            "outcome_replay_size": len(agent.outcome_replay),
+            "outcome_training_updates": len(outcome_losses),
+            "outcome_mean_loss": sum(outcome_losses) / len(outcome_losses) if outcome_losses else None,
+        })
         training_rounds.append(summary)
         if progress_every_steps:
             print(
@@ -165,6 +216,17 @@ def run_train_validation(
                 flush=True,
             )
     if progress_every_steps:
+        print(f"train greedy evaluation start episodes={len(train)} epsilon=0", flush=True)
+    train_greedy_results, train_greedy_failures = _run_episodes(
+        train,
+        lambda state, feasible: agent.select_power(state, feasible),
+        accountant,
+    )
+    if progress_every_steps:
+        print(
+            f"train greedy evaluation completed={len(train_greedy_results)}/{len(train)} "
+            f"failed={len(train_greedy_failures)}", flush=True,
+        )
         print(f"validation start episodes={len(validation)} epsilon=0", flush=True)
     validation_results, validation_failures = _run_episodes(
         validation,
@@ -180,6 +242,8 @@ def run_train_validation(
     ineligibility_reasons: list[str] = []
     if not agent.replay:
         ineligibility_reasons.append("no_training_experience")
+    if train_greedy_failures or len(train_greedy_results) != len(train):
+        ineligibility_reasons.append("train_greedy_incomplete")
     if validation_failures or not validation_results:
         ineligibility_reasons.append("validation_incomplete")
     report: dict[str, object] = {
@@ -187,10 +251,14 @@ def run_train_validation(
         "sample_seconds": 30,
         "action_kw": list(ACTION_KW),
         "state_dim": 8,
-        "reward_definition": "negative_actual_four_component_CNY",
+        "reward_definition": "negative_observed_plus_modeled_terminal_four_component_CNY",
         "bootstrap": _summarize(bootstrap, len(train), bootstrap_failures),
         "bootstrap_mean_loss": sum(bootstrap_losses) / len(bootstrap_losses) if bootstrap_losses else None,
+        "bootstrap_failed_prefix_transitions": bootstrap_failed_prefixes,
+        "bootstrap_completed_prefix_transitions": bootstrap_completed_prefixes,
+        "bootstrap_outcome_training_updates": len(bootstrap_outcome_losses),
         "training_rounds": training_rounds,
+        "train_greedy_evaluation": _summarize(train_greedy_results, len(train), train_greedy_failures),
         "validation": _summarize(validation_results, len(validation), validation_failures),
         "last_executed_onboard_episodes": {
             "train": last_executed_onboard_train, "validation": last_executed_onboard_validation,
@@ -198,6 +266,7 @@ def run_train_validation(
         "selection_eligible": not ineligibility_reasons,
         "selection_ineligibility_reasons": ineligibility_reasons,
         "test_payloads_opened": dataset.opened_test_payloads,
+        "outcome_model_role": "diagnostic_observed_rollout_failure_only_no_action_filter",
         "hyperparameters": {
             "seed": seed, "rounds": rounds, "batch_size": batch_size,
             "updates_per_episode": updates_per_episode, "gamma": agent.gamma,

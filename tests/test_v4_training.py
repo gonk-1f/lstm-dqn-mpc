@@ -27,7 +27,7 @@ class FakeDataset:
         raise AssertionError("Test must remain closed")
 
 
-def test_training_uses_only_train_validation_and_reports_raw_costs():
+def test_training_uses_only_train_validation_and_separates_observed_costs():
     dataset = FakeDataset()
     _, report = run_train_validation(
         dataset, rounds=1, batch_size=1, updates_per_episode=1, seed=1,
@@ -37,7 +37,8 @@ def test_training_uses_only_train_validation_and_reports_raw_costs():
     assert report["bootstrap"]["completed"] == 1
     assert report["validation"]["episodes"] == 1
     assert report["validation"]["cost_cny"] > 0
-    assert report["reward_definition"] == "negative_actual_four_component_CNY"
+    assert report["train_greedy_evaluation"]["completed"] == 1
+    assert report["reward_definition"] == "negative_observed_plus_modeled_terminal_four_component_CNY"
     assert report["last_executed_onboard_episodes"] == {"train": 0, "validation": 1}
     assert report["selection_eligible"] is True
     assert report["selection_ineligibility_reasons"] == []
@@ -57,7 +58,7 @@ def test_failed_training_episode_is_reported_and_next_episode_runs():
     assert report["selection_eligible"] is False
 
 
-def test_train_failure_does_not_block_selection_when_later_train_and_validation_complete():
+def test_incomplete_greedy_train_is_ineligible_even_when_validation_completes():
     class MixedDataset(FakeDataset):
         def load_train(self):
             good = super().load_train()[0]
@@ -84,8 +85,9 @@ def test_train_failure_does_not_block_selection_when_later_train_and_validation_
     assert report["training_rounds"][0]["completed_cost_cny"] > 0
     assert report["training_rounds"][0]["cost_cny"] is None
     assert report["validation"]["completed"] == 1
-    assert report["selection_eligible"] is True
-    assert report["selection_ineligibility_reasons"] == []
+    assert report["train_greedy_evaluation"]["completed"] == 1
+    assert report["selection_eligible"] is False
+    assert report["selection_ineligibility_reasons"] == ["train_greedy_incomplete"]
 
 
 def test_training_progress_reports_every_50_selected_actions(capsys):
@@ -117,4 +119,35 @@ def test_epsilon_schedule_can_be_compared_without_changing_reward():
     assert [item["epsilon"] for item in report["training_rounds"]] == [1.0, 0.05]
     assert report["hyperparameters"]["epsilon_start"] == 1.0
     assert report["hyperparameters"]["epsilon_end"] == 0.05
-    assert report["reward_definition"] == "negative_actual_four_component_CNY"
+    assert report["reward_definition"] == "negative_observed_plus_modeled_terminal_four_component_CNY"
+
+
+def test_training_retains_failed_prefix_for_outcome_and_separates_modeled_cost():
+    class MixedDataset(FakeDataset):
+        def load_train(self):
+            good = super().load_train()[0]
+            bad = SimpleNamespace(
+                sample_id="train_failed_after_one_action", split="train",
+                operating_mode=("onboard", "onboard"),
+                load_kw=(230.0, 2000.0), battery_bus_kw=(0.0, 0.0),
+            )
+            return bad, good
+
+        def load_validation(self):
+            source = super().load_validation()[0]
+            source.load_kw = (1000.0,)
+            return (source,)
+
+    agent, report = run_train_validation(
+        MixedDataset(), rounds=1, batch_size=1, updates_per_episode=1, seed=1,
+    )
+    round_one = report["training_rounds"][0]
+    assert round_one["failed_prefix_transitions"] == 1
+    assert any(item.failed and item.state[1] == 230.0 / 600.0 for item in agent.outcome_replay)
+    assert all(item.state[1] != 230.0 / 600.0 for item in agent.replay)
+    assert report["validation"]["completed_modeled_terminal_cost_cny"] > 0
+    assert report["validation"]["completed_cost_cny"] == (
+        report["validation"]["completed_observed_cost_cny"]
+        + report["validation"]["completed_modeled_terminal_cost_cny"]
+    )
+    assert report["test_payloads_opened"] == 0

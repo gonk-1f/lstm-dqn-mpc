@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import isfinite
+from math import ceil, fsum, isfinite
 from typing import Callable
 
 from v2.data.supervisory_rules import OperatingMode, normalize_onboard_load_kw
-from v2.economics import RawCnyIntervalLedger
+from v2.economics import RawCnyIntervalLedger, ShoreEnergyClassification
 from v2.models.battery_energy import next_soc
 from v2.models.battery_degradation import battery_life_state
 from v2.models.fuel_cell_degradation import fuel_cell_life_state
@@ -20,11 +20,21 @@ ACTION_KW = tuple(range(0, 601, 10))
 
 
 class ReplayExecutionError(RuntimeError):
-    def __init__(self, row_index: int, mode: OperatingMode, cause: Exception):
+    def __init__(
+        self, row_index: int, mode: OperatingMode, cause: Exception, *,
+        executed_transitions: tuple[DirectTransition, ...] = (),
+        failure_kind: str = "execution_error",
+    ):
         self.row_index = row_index
         self.mode = mode
         self.cause = cause
+        self.executed_transitions = executed_transitions
+        self.failure_kind = failure_kind
         super().__init__(f"row {row_index} ({mode.value}): {cause}")
+
+
+class NoFeasibleFCActionError(RuntimeError):
+    """No grid action can satisfy the present battery power and SOC bounds."""
 
 
 @dataclass(frozen=True)
@@ -39,6 +49,18 @@ class DirectTransition:
     done: bool
     next_feasible_actions: tuple[int, ...]
     shore_ledger: RawCnyIntervalLedger | None = None
+    modeled_terminal_ledger: RawCnyIntervalLedger | None = None
+
+
+@dataclass(frozen=True)
+class ModeledTerminalSettlement:
+    """Accounting-only recharge scenario; the actual vessel state is unchanged."""
+
+    start_soc: float
+    reference_soc: float
+    grid_energy_kwh: float
+    ledger: RawCnyIntervalLedger
+    classification: ShoreEnergyClassification = ShoreEnergyClassification.MODELED
 
 
 @dataclass(frozen=True)
@@ -52,10 +74,40 @@ class DirectReplay:
     fc_power_kw_by_row: tuple[float, ...]
     battery_bus_kw_by_row: tuple[float, ...]
     soc_by_row: tuple[float, ...]
+    modeled_terminal_settlement: ModeledTerminalSettlement | None = None
 
     @property
     def total_cost_cny(self) -> float:
         return self.total_ledger.total_cost_cny
+
+    @property
+    def comparable_cost_cny(self) -> float:
+        modeled = self.modeled_terminal_settlement
+        return self.total_cost_cny + (0.0 if modeled is None else modeled.ledger.total_cost_cny)
+
+
+def modeled_terminal_settlement(
+    physical: AccountState, accountant: EconomicMPC,
+) -> ModeledTerminalSettlement | None:
+    """Value missing recharge to SOC 0.6 at the bounded 624 kW charge rate."""
+    reference_soc = 0.6
+    if physical.soc >= reference_soc:
+        return None
+    charge_kw = -accountant.plant.battery_charge_min_kw
+    duration = 30.0
+    energy_kwh = (reference_soc - physical.soc) * accountant.plant.battery_nominal_energy_kwh
+    steps = max(1, ceil(energy_kwh * 3600.0 / (charge_kw * duration)))
+    modeled_start = AccountState(
+        soc=physical.soc, previous_fc_kw=0.0,
+        fc_loss_uv=physical.fc_loss_uv,
+        battery_weighted_ah=physical.battery_weighted_ah,
+    )
+    settlement = settle_shore_segment(accountant, modeled_start, (-charge_kw,) * steps)
+    eta_chg, _ = accountant.efficiency.require_calibrated()
+    grid_kwh = fsum(-power * duration / 3600.0 / eta_chg for power in settlement.accepted_battery_bus_kw)
+    return ModeledTerminalSettlement(
+        physical.soc, reference_soc, grid_kwh, settlement.ledger,
+    )
 
 
 def build_state(
@@ -133,6 +185,7 @@ def replay_episode(
     fc_trace = [0.0] * len(modes)
     battery_trace = [0.0] * len(modes)
     soc_trace = [0.0] * len(modes)
+    terminal_settlement: ModeledTerminalSettlement | None = None
     index = 0
     while index < len(modes):
         if modes[index] in SHORE_MODES:
@@ -143,7 +196,9 @@ def replay_episode(
             try:
                 shore = settle_shore_segment(accountant, physical, requests[index:end])
             except (RuntimeError, ValueError) as exc:
-                raise ReplayExecutionError(index, modes[index], exc) from exc
+                raise ReplayExecutionError(
+                    index, modes[index], exc, executed_transitions=tuple(transitions),
+                ) from exc
             physical = shore.end_state
             block = ShoreBlock(
                 index, end, start_soc, physical.soc, shore.ledger,
@@ -166,7 +221,9 @@ def replay_episode(
                 decision_state = build_state(physical, current_history, accountant, departure=len(history) == 1)
                 feasible_actions = feasible_fc_actions(physical, actual_load, accountant)
                 if not feasible_actions:
-                    raise RuntimeError("no feasible FC action for actual battery power and SOC bounds")
+                    raise NoFeasibleFCActionError(
+                        "no feasible FC action for actual battery power and SOC bounds"
+                    )
                 fc_kw = _checked_action(policy(decision_state, feasible_actions), feasible_actions)
                 next_physical, ledger, battery_kw = accountant.interval(physical, fc_kw, actual_load)
                 if not accountant.plant.battery_charge_min_kw <= battery_kw <= accountant.plant.battery_discharge_max_kw:
@@ -174,7 +231,13 @@ def replay_episode(
                 if not SOC_MIN <= next_physical.soc <= SOC_MAX:
                     raise RuntimeError("actual SOC exceeded physical bounds")
             except (RuntimeError, ValueError, TypeError) as exc:
-                raise ReplayExecutionError(index, modes[index], exc) from exc
+                raise ReplayExecutionError(
+                    index, modes[index], exc, executed_transitions=tuple(transitions),
+                    failure_kind=(
+                        "no_feasible_action" if isinstance(exc, NoFeasibleFCActionError)
+                        else "execution_error"
+                    ),
+                ) from exc
             physical = next_physical
             ledgers.append(ledger)
             fc_trace[index] = float(fc_kw)
@@ -183,6 +246,7 @@ def replay_episode(
             history = current_history
             last_onboard = index + 1 == len(modes) or modes[index + 1] is not OperatingMode.ONBOARD
             shore_ledger = None
+            modeled_ledger = None
             reward = ledger.reward_cny
             if last_onboard and index + 1 < len(modes):
                 shore_start = index + 1
@@ -192,7 +256,10 @@ def replay_episode(
                 try:
                     shore = settle_shore_segment(accountant, physical, requests[shore_start:shore_end])
                 except (RuntimeError, ValueError) as exc:
-                    raise ReplayExecutionError(shore_start, modes[shore_start], exc) from exc
+                    raise ReplayExecutionError(
+                        shore_start, modes[shore_start], exc,
+                        executed_transitions=tuple(transitions),
+                    ) from exc
                 block = ShoreBlock(
                     shore_start, shore_end, physical.soc, shore.end_state.soc,
                     shore.ledger, shore.requested_battery_bus_kw,
@@ -206,6 +273,11 @@ def replay_episode(
                 physical = shore.end_state
                 shore_ledger = shore.ledger
                 reward += shore_ledger.reward_cny
+            elif last_onboard and index + 1 == len(modes):
+                terminal_settlement = modeled_terminal_settlement(physical, accountant)
+                if terminal_settlement is not None:
+                    modeled_ledger = terminal_settlement.ledger
+                    reward += modeled_ledger.reward_cny
             if shore_ledger is not None:
                 successor_history = (0.0, normalize_onboard_load_kw(loads[shore_end])) if shore_end < len(modes) else (0.0,)
             elif index + 1 < len(modes) and modes[index + 1] is OperatingMode.ONBOARD:
@@ -219,7 +291,8 @@ def replay_episode(
             )
             transitions.append(DirectTransition(
                 decision_state, fc_kw, reward, next_state, ledger,
-                battery_kw, next_physical.soc, last_onboard, next_feasible, shore_ledger,
+                battery_kw, next_physical.soc, last_onboard, next_feasible,
+                shore_ledger, modeled_ledger,
             ))
             if last_onboard and shore_ledger is not None:
                 index = shore_end
@@ -229,4 +302,5 @@ def replay_episode(
         str(episode.sample_id), str(episode.split), tuple(transitions),
         tuple(shore_blocks), _ledger_total(ledgers), physical,
         tuple(fc_trace), tuple(battery_trace), tuple(soc_trace),
+        terminal_settlement,
     )

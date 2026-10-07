@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from v2.economics import ShoreEnergyClassification
 from v3.control import AccountState, EconomicMPC
 from v4.control import ACTION_KW, ReplayExecutionError, build_state, replay_episode
 
@@ -109,3 +110,57 @@ def test_partial_shore_charge_carries_actual_soc_without_forcing_target():
     assert 0.5 < result.shore_blocks[0].end_soc < 0.6
     assert result.transitions[0].state[0] == pytest.approx(result.shore_blocks[0].end_soc)
     assert result.fc_power_kw_by_row[0] == 0.0
+
+
+def test_terminal_deficit_has_separate_modeled_grid_and_battery_degradation():
+    data = episode(("onboard",), (100.0,), (0.0,))
+    result = replay_episode(data, lambda _state, _actions: 0, accountant=NoSolveAccountant())
+
+    settlement = result.modeled_terminal_settlement
+    assert settlement is not None
+    assert settlement.classification is ShoreEnergyClassification.MODELED
+    assert result.final_state.soc == pytest.approx(result.transitions[-1].actual_soc)
+    assert settlement.grid_energy_kwh == pytest.approx(
+        (0.6 - result.final_state.soc) * 624.0 / 0.95
+    )
+    assert settlement.ledger.shore_cost_cny == pytest.approx(settlement.grid_energy_kwh * 1.10)
+    assert settlement.ledger.battery_degradation_cost_cny > 0
+    assert settlement.ledger.fuel_cell_degradation_cost_cny == 0
+    assert result.total_ledger.shore_cost_cny == 0
+    assert result.comparable_cost_cny == pytest.approx(
+        result.total_cost_cny + settlement.ledger.total_cost_cny
+    )
+    assert result.transitions[-1].reward_cny == pytest.approx(-result.comparable_cost_cny)
+
+
+def test_actual_shore_and_terminal_surplus_never_get_modeled_recharge():
+    actual = episode(("onboard", "shore_charging"), (100.0, 0.0), (0.0, -100.0))
+    actual_result = replay_episode(actual, lambda _state, _actions: 0, accountant=NoSolveAccountant())
+    assert actual_result.shore_blocks
+    assert actual_result.modeled_terminal_settlement is None
+    assert actual_result.final_state.soc < 0.6
+    assert actual_result.total_ledger.shore_cost_cny > 0
+    assert actual_result.comparable_cost_cny == pytest.approx(actual_result.total_cost_cny)
+
+    surplus = episode(("onboard",), (100.0,), (0.0,))
+    surplus_result = replay_episode(surplus, lambda _state, _actions: 600, accountant=NoSolveAccountant())
+    assert surplus_result.final_state.soc > 0.6
+    assert surplus_result.modeled_terminal_settlement is None
+
+
+def test_supply_failure_exposes_only_executed_prefix_and_failure_outcome():
+    data = episode(("onboard", "onboard"), (1000.0, 1000.0), (0.0, 0.0))
+    with pytest.raises(ReplayExecutionError, match="row 1") as captured:
+        replay_episode(
+            data, lambda _state, _actions: 0,
+            accountant=NoSolveAccountant(), initial_state=AccountState(soc=0.215),
+        )
+    failure = captured.value
+    assert failure.failure_kind == "no_feasible_action"
+    assert len(failure.executed_transitions) == 1
+    executed = failure.executed_transitions[0]
+    assert executed.action_kw == 0
+    assert executed.reward_cny == pytest.approx(-executed.executed_ledger.total_cost_cny)
+    assert executed.actual_soc >= 0.2
+    assert executed.done is False
+    assert executed.next_feasible_actions == ()
