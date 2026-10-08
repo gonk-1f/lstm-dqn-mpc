@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import math
+from dataclasses import asdict
 from pathlib import Path
 import subprocess
 import time
@@ -19,21 +20,38 @@ from .train import _run_episodes, _summarize
 from .diagnostics import fixed_q_diagnostics, trajectory_record
 from .reward_feedback import BatteryEnergyValue
 from .experiment_paths import unarchived_output_path
+from .failure_replay import FailurePenalty, prepare_failure_replay
 
 
 def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
-                    redistribute_battery_energy: bool = False, trajectory_path: Path | None = None) -> dict:
+                    redistribute_battery_energy: bool = False, trajectory_path: Path | None = None,
+                    learn_no_feasible_failures: bool = False, failure_penalty: FailurePenalty | None = None) -> dict:
     """Preserve all training RNG streams; never add replay or run optimizers."""
     random_state = agent.random.getstate()
     outcome_random_state = agent.outcome_random.getstate()
     torch_state = torch.random.get_rng_state()
     failed_transitions = []
     failure_profiles = []
+    reason_counts={'soc_limited':0,'structural_power':0,'execution_error':0}
+    event_only_count=0
     def on_failure(exc):
-        failed_transitions.extend(exc.executed_transitions)
-        failure_profiles.append(trajectory_record(
+        nonlocal event_only_count
+        cause=exc.failure_cause if exc.failure_kind=='no_feasible_action' else 'execution_error'
+        reason_counts[cause]+=1
+        transitions=exc.executed_transitions
+        if learn_no_feasible_failures and exc.failure_kind=='no_feasible_action':
+            preview=prepare_failure_replay(exc,penalty=failure_penalty or FailurePenalty.from_reference(),
+                energy_value=BatteryEnergyValue.from_accountant(accountant),
+                redistribute_battery_energy=redistribute_battery_energy)
+            transitions=preview.transitions
+            event_only_count+=int(preview.event_only)
+        failed_transitions.extend(transitions)
+        profile=trajectory_record(
             exc.sample_id,
-            exc.executed_transitions, completed=False, failure=str(exc)))
+            transitions, completed=False, failure=str(exc))
+        profile.update(failure_cause=cause,failed_observed_state=exc.failed_state,
+                       controllable_by_power_policy=False if cause=='structural_power' else None)
+        failure_profiles.append(profile)
     try:
         results, failures = _run_episodes(
             episodes, lambda state, feasible: agent.select_power(state, feasible, epsilon=0.0),
@@ -41,6 +59,7 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             on_failure=on_failure, redistribute_battery_energy=redistribute_battery_energy,
         )
         summary = _summarize(results, len(episodes), failures, failed_transitions)
+        summary.update(failure_reason_counts=reason_counts,event_only_failures=event_only_count)
         if trajectory_path is not None:
             _write_json(trajectory_path, {
                 'completed': [trajectory_record(r.sample_id,r.transitions,completed=True) for r in results],
@@ -68,6 +87,7 @@ def run_monitored_training(
     redistribute_battery_energy: bool = False, n_step: int = 1,
     episode_credit_scope: str = 'sample', required_split_sizes: tuple[int,int] | None = None,
     capture_trajectories: bool = False,
+    learn_no_feasible_failures: bool = True, failure_penalty_scale: float = 1.0,
 ):
     if not 1 <= rounds <= 40 or updates_per_episode != 16 or batch_size < 1:
         raise ValueError("study permits at most 40 rounds and fixes episode cadence at 16")
@@ -92,6 +112,7 @@ def run_monitored_training(
     agent = DirectPowerDDQN(seed=seed,n_step=n_step)
     accountant = EconomicMPC(nominal_cost_cny=1.0)
     schedule = EconomicUpdateSchedule(cadence, target_mode=target_mode, target_interval=target_interval)
+    failure_penalty=FailurePenalty.from_reference(scale=failure_penalty_scale)
     selector = BestCheckpoint()
     bootstrap_failed = []
     bootstrap_prefix = 0
@@ -99,17 +120,42 @@ def run_monitored_training(
     failure_suffix_count = 0
     no_suffix_failure_events = 0
     initial_q_diagnostics = fixed_q_diagnostics(agent,accountant)
+    bootstrap_reason_counts={'soc_limited':0,'structural_power':0,'execution_error':0}
+
+    def replay_counts():
+        n=agent.economic_replay_insertions
+        return {
+            'success':agent.economic_success_replay_insertions,'failure':agent.economic_failure_replay_insertions,
+            'failure_terminals':agent.economic_failure_terminal_insertions,
+            'success_fraction':agent.economic_success_replay_insertions/n if n else None,
+            'failure_fraction':agent.economic_failure_replay_insertions/n if n else None,
+        }
+
+    def failure_view(exc):
+        if learn_no_feasible_failures and exc.failure_kind=='no_feasible_action':
+            return prepare_failure_replay(exc,penalty=failure_penalty,
+                energy_value=BatteryEnergyValue.from_accountant(accountant),
+                redistribute_battery_energy=redistribute_battery_energy)
+        return None
 
     def bootstrap_failure(exc):
         nonlocal bootstrap_prefix, bootstrap_completed_voyages, failure_suffix_count, no_suffix_failure_events
-        bootstrap_failed.extend(exc.executed_transitions)
+        cause=exc.failure_cause if exc.failure_kind=='no_feasible_action' else 'execution_error'
+        bootstrap_reason_counts[cause]+=1
+        view=failure_view(exc)
+        bootstrap_failed.extend(view.transitions if view else exc.executed_transitions)
         if exc.failure_kind == 'no_feasible_action' and (
                 not exc.executed_transitions or exc.executed_transitions[-1].done):
             no_suffix_failure_events += 1
         if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
-            retained = agent.remember_completed_prefix(exc.executed_transitions)
+            if view is not None:
+                retained=agent.remember_trajectory(view.transitions)
+                prefix=exc.executed_transitions[:view.successful_prefix_transitions]
+            else:
+                retained=agent.remember_completed_prefix(exc.executed_transitions)
+                prefix=exc.executed_transitions[:retained]
             bootstrap_prefix += retained
-            bootstrap_completed_voyages += sum(t.done for t in exc.executed_transitions[:retained])
+            bootstrap_completed_voyages += sum(t.is_successful_terminal for t in prefix)
             failure_suffix_count += len(exc.executed_transitions)-retained
             agent.remember_outcome_trajectory(exc.executed_transitions,
                                               failed=not exc.executed_transitions[-1].done)
@@ -134,6 +180,7 @@ def run_monitored_training(
     if target_mode == "round":
         agent.sync_target()
     bootstrap_summary = _summarize(bootstrap, len(train), bootstrap_errors, bootstrap_failed)
+    bootstrap_summary['failure_reason_counts']=bootstrap_reason_counts
     print(f"bootstrap completed={len(bootstrap)}/{len(train)} economic_updates={agent.economic_optimizer_updates}", flush=True)
     history = []
     selected_steps = 0
@@ -152,6 +199,8 @@ def run_monitored_training(
         'redistribute_battery_energy': redistribute_battery_energy, 'n_step': n_step,
         'episode_credit_scope': episode_credit_scope,
         'required_split_sizes': list(required_split_sizes) if required_split_sizes is not None else None,
+        'learn_no_feasible_failures':learn_no_feasible_failures,
+        'failure_penalty':asdict(failure_penalty)|{'amount_equivalent_cny':failure_penalty.amount},
         'battery_energy_value': {
             'coefficient_cny': BatteryEnergyValue.from_accountant(accountant).coefficient_cny,
             'reference_soc': BatteryEnergyValue.from_accountant(accountant).reference_soc,
@@ -169,6 +218,7 @@ def run_monitored_training(
             'formal_training_optimizer_updates': agent.economic_optimizer_updates-len(bootstrap_losses),
             'bootstrap_td_statistics': bootstrap_td_statistics,
             'initial_fixed_state_q_diagnostics': initial_q_diagnostics,
+            'economic_replay_outcome_counts':replay_counts(),
             "bootstrap_economic_replay_insertions": sum(len(x.transitions) for x in bootstrap)+bootstrap_prefix,
             "rounds": history, "best_checkpoint": best_record,
             "first_qualification": first_qualification, "eligible_rounds": selector.eligible_rounds,
@@ -187,11 +237,15 @@ def run_monitored_training(
                 'formal_training_economic_optimizer_updates': agent.economic_optimizer_updates-len(bootstrap_losses),
                 'failed_suffix_transitions_excluded_from_economic_replay': failure_suffix_count,
                 'no_feasible_action_events_without_executed_suffix': no_suffix_failure_events,
+                'economic_success_replay_insertions':agent.economic_success_replay_insertions,
+                'economic_failure_replay_insertions':agent.economic_failure_replay_insertions,
+                'economic_failure_terminal_insertions':agent.economic_failure_terminal_insertions,
             },
             "elapsed_seconds": time.monotonic()-started,
             "cost_rule": "Actual plus modeled terminal settlement; SOC shaping excluded; incomplete split cost is null",
             "monitoring_rng_isolation": True,
-            'failure_training_semantics': 'Completed voyage prefixes enter economic Q; unfinished failure suffixes are outcome-only, without economic terminal or correction',
+            'failure_training_semantics': ('Genuine no-feasible-action suffixes enter economic Q with a tagged terminal, once-only training penalty and potential correction; ledgers unchanged'
+                if learn_no_feasible_failures else 'Historical outcome-only unfinished suffix protocol'),
             'dataset_class': type(dataset).__name__,
         }
 
@@ -202,10 +256,14 @@ def run_monitored_training(
         print(f"round {round_index}/{rounds} start epsilon={epsilon:.4f}",flush=True)
         results, failures, failed_transitions, losses = [], [], [], []
         failure_profiles = []
+        reason_counts={'soc_limited':0,'structural_power':0,'execution_error':0}
         completed_voyages = 0
         agent.reset_td_statistics()
         before_insertions = agent.economic_replay_insertions
         before_updates = agent.economic_optimizer_updates
+        before_success=agent.economic_success_replay_insertions
+        before_failure=agent.economic_failure_replay_insertions
+        before_failure_terminals=agent.economic_failure_terminal_insertions
         for episode_index, episode in enumerate(train, start=1):
             def training_policy(state, feasible):
                 nonlocal selected_steps
@@ -221,16 +279,27 @@ def run_monitored_training(
                                          redistribute_battery_energy=redistribute_battery_energy)
             except ReplayExecutionError as exc:
                 failures.append(f"{episode.sample_id}: {exc}")
-                failed_transitions.extend(exc.executed_transitions)
-                failure_profiles.append(trajectory_record(episode.sample_id,exc.executed_transitions,
-                                                          completed=False,failure=str(exc)))
+                cause=exc.failure_cause if exc.failure_kind=='no_feasible_action' else 'execution_error'
+                reason_counts[cause]+=1
+                view=failure_view(exc)
+                transitions=view.transitions if view else exc.executed_transitions
+                failed_transitions.extend(transitions)
+                profile=trajectory_record(episode.sample_id,transitions,completed=False,failure=str(exc))
+                profile.update(failure_cause=cause,failed_observed_state=exc.failed_state,
+                               controllable_by_power_policy=False if cause=='structural_power' else None)
+                failure_profiles.append(profile)
                 prefix_voyages = 0
                 if exc.failure_kind == 'no_feasible_action' and (
                         not exc.executed_transitions or exc.executed_transitions[-1].done):
                     no_suffix_failure_events += 1
                 if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
-                    retained = agent.remember_completed_prefix(exc.executed_transitions)
-                    prefix_voyages = sum(t.done for t in exc.executed_transitions[:retained])
+                    if view is not None:
+                        retained=agent.remember_trajectory(view.transitions)
+                        prefix=exc.executed_transitions[:view.successful_prefix_transitions]
+                    else:
+                        retained=agent.remember_completed_prefix(exc.executed_transitions)
+                        prefix=exc.executed_transitions[:retained]
+                    prefix_voyages = sum(t.is_successful_terminal for t in prefix)
                     completed_voyages += prefix_voyages
                     failure_suffix_count += len(exc.executed_transitions)-retained
                     agent.remember_outcome_trajectory(exc.executed_transitions,
@@ -256,6 +325,7 @@ def run_monitored_training(
         if target_mode == "round":
             agent.sync_target()
         explore = _summarize(results,len(train),failures,failed_transitions)
+        explore['failure_reason_counts']=reason_counts
         executed_training_steps += explore['executed_onboard_transitions']
         if capture_trajectories:
             path = output_dir/f'round_{round_index:03d}_exploratory_trajectories.json'
@@ -265,14 +335,16 @@ def run_monitored_training(
         print(f"round {round_index}/{rounds} exploratory={len(results)}/{len(train)} greedy_train start",flush=True)
         greedy_train = greedy_evaluate(train,agent,accountant,beta_soc,
             redistribute_battery_energy=redistribute_battery_energy,
-            trajectory_path=output_dir/f'round_{round_index:03d}_train_trajectories.json' if capture_trajectories else None)
+            trajectory_path=output_dir/f'round_{round_index:03d}_train_trajectories.json' if capture_trajectories else None,
+            learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty)
         evaluation_steps += greedy_train["executed_onboard_transitions"]
         greedy_validation = None
         if fully_completed(greedy_train):
             print(f"round {round_index}/{rounds} greedy_train={len(train)}/{len(train)} validation start",flush=True)
             greedy_validation = greedy_evaluate(validation,agent,accountant,beta_soc,
                 redistribute_battery_energy=redistribute_battery_energy,
-                trajectory_path=output_dir/f'round_{round_index:03d}_validation_trajectories.json' if capture_trajectories else None)
+                trajectory_path=output_dir/f'round_{round_index:03d}_validation_trajectories.json' if capture_trajectories else None,
+                learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty)
             evaluation_steps += greedy_validation["executed_onboard_transitions"]
         row = {
             "round":round_index,"epsilon":epsilon,"exploratory_train":explore,
@@ -290,6 +362,11 @@ def run_monitored_training(
             'td_statistics': agent.td_statistics(),
             'fixed_state_q_diagnostics': fixed_q_diagnostics(agent,accountant),
             'completed_voyages_entering_economic_replay': completed_voyages,
+            'failed_sample_count':len(failures),'failure_reason_counts':reason_counts,
+            'economic_success_replay_insertions':agent.economic_success_replay_insertions-before_success,
+            'economic_failure_replay_insertions':agent.economic_failure_replay_insertions-before_failure,
+            'economic_failure_terminal_insertions':agent.economic_failure_terminal_insertions-before_failure_terminals,
+            'economic_replay_outcome_counts_cumulative':replay_counts(),
         }
         improved = selector.consider(round_index,greedy_train,greedy_validation)
         row["qualified_checkpoint"] = fully_completed(greedy_train) and fully_completed(greedy_validation)

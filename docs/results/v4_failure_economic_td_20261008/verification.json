@@ -1,0 +1,418 @@
+{
+  "scope": "Implementation and synthetic verification only; no formal training; no Test payload access",
+  "base_commit": "3c6d59bf370177a63c503c4abf778a1bff9e6149",
+  "regression_suite": {
+    "passed": 170,
+    "subtests_passed": 330,
+    "elapsed_seconds": 121.45,
+    "test_files": [
+      "test_v4_failure_td.py",
+      "test_v4_control.py",
+      "test_v4_dqn.py",
+      "test_v4_training.py",
+      "test_v4_review_metrics.py",
+      "test_v4_experiment_schedule.py",
+      "test_v4_monitored_training.py",
+      "test_v4_feedback_monitoring.py",
+      "test_v4_n_step.py",
+      "test_v4_reward_feedback.py",
+      "test_v3_shore_settlement.py",
+      "test_v2_energy_models.py",
+      "test_v2_degradation_models.py",
+      "test_v2_state_and_economics.py",
+      "test_v2_formal_preflight.py"
+    ]
+  },
+  "failure_penalty": {
+    "reference_amount": 10132.660087898294,
+    "scale": 1.0,
+    "reference_split": "train",
+    "reference_count": 30,
+    "reference_statistic": "nearest_rank_p95_comparable_economic_cost",
+    "unit": "CNY-equivalent reward units; not actual expenditure",
+    "source_file": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_profiles.json",
+    "source_sha256": "3e1fae46266d99629116b52156840541a33136be92f9f4e68e1e8b03256a0642",
+    "amount_equivalent_cny": 10132.660087898294
+  },
+  "arithmetic_sensitivity_checks": [
+    {
+      "scale": 0,
+      "failure_penalty_equivalent_cny": 0.0,
+      "original_executed_prefix_reward": -21.8750495902633,
+      "original_penalized_return": -21.8750495902633,
+      "redistributed_penalized_return": -21.8750495902633,
+      "terminal_correction": 6.094182825484836,
+      "absolute_equality_error": 0.0,
+      "unchanged_real_ledgers": true,
+      "normal_shore_or_modeled_settlement_at_failure": false,
+      "scope": "fixed synthetic trajectory arithmetic only; no optimization"
+    },
+    {
+      "scale": 0.5,
+      "failure_penalty_equivalent_cny": 5066.330043949147,
+      "original_executed_prefix_reward": -21.8750495902633,
+      "original_penalized_return": -5088.20509353941,
+      "redistributed_penalized_return": -5088.20509353941,
+      "terminal_correction": 6.094182825484836,
+      "absolute_equality_error": 0.0,
+      "unchanged_real_ledgers": true,
+      "normal_shore_or_modeled_settlement_at_failure": false,
+      "scope": "fixed synthetic trajectory arithmetic only; no optimization"
+    },
+    {
+      "scale": 1.0,
+      "failure_penalty_equivalent_cny": 10132.660087898294,
+      "original_executed_prefix_reward": -21.8750495902633,
+      "original_penalized_return": -10154.535137488558,
+      "redistributed_penalized_return": -10154.535137488558,
+      "terminal_correction": 6.094182825484836,
+      "absolute_equality_error": 0.0,
+      "unchanged_real_ledgers": true,
+      "normal_shore_or_modeled_settlement_at_failure": false,
+      "scope": "fixed synthetic trajectory arithmetic only; no optimization"
+    },
+    {
+      "scale": 2.0,
+      "failure_penalty_equivalent_cny": 20265.320175796587,
+      "original_executed_prefix_reward": -21.8750495902633,
+      "original_penalized_return": -20287.19522538685,
+      "redistributed_penalized_return": -20287.19522538685,
+      "terminal_correction": 6.094182825484836,
+      "absolute_equality_error": 0.0,
+      "unchanged_real_ledgers": true,
+      "normal_shore_or_modeled_settlement_at_failure": false,
+      "scope": "fixed synthetic trajectory arithmetic only; no optimization"
+    }
+  ],
+  "normal_contracts": {
+    "case_count": 10,
+    "reward_modes": 2,
+    "real_and_modeled_ledgers_exactly_equal": true,
+    "original_and_redistributed_reward_sums_exactly_equal_to_previous_archive": true,
+    "source": "docs/results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json",
+    "previous_control_source": "git show 3c6d59bf370177a63c503c4abf778a1bff9e6149:src/v4/control.py",
+    "live_previous_controller_comparisons": [
+      {
+        "case": "A_modeled",
+        "redistributed": false,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "A_modeled",
+        "redistributed": true,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "B_high_terminal",
+        "redistributed": false,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "B_high_terminal",
+        "redistributed": true,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "C_actual_shore",
+        "redistributed": false,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "C_actual_shore",
+        "redistributed": true,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "D_two_voyages",
+        "redistributed": false,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "D_two_voyages",
+        "redistributed": true,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "E_fc_charging",
+        "redistributed": false,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "E_fc_charging",
+        "redistributed": true,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "F_cross_working_band",
+        "redistributed": false,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "F_cross_working_band",
+        "redistributed": true,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "G_unchanged",
+        "redistributed": false,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "G_unchanged",
+        "redistributed": true,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "H_length1_soc0.3",
+        "redistributed": false,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "H_length1_soc0.3",
+        "redistributed": true,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "H_length9_soc0.5",
+        "redistributed": false,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "H_length9_soc0.5",
+        "redistributed": true,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "H_length37_soc0.7",
+        "redistributed": false,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      },
+      {
+        "case": "H_length37_soc0.7",
+        "redistributed": true,
+        "all_previous_transition_fields_strictly_equal": true,
+        "all_physical_and_accounting_result_fields_strictly_equal": true
+      }
+    ]
+  },
+  "synthetic_pipeline": {
+    "hyperparameters": {
+      "beta_soc": 500,
+      "rounds": 1,
+      "seed": 42,
+      "batch_size": 64,
+      "gamma": 1.0,
+      "learning_rate": 0.0001,
+      "hidden_dims": [
+        128,
+        64
+      ],
+      "action_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170,
+        180,
+        190,
+        200,
+        210,
+        220,
+        230,
+        240,
+        250,
+        260,
+        270,
+        280,
+        290,
+        300,
+        310,
+        320,
+        330,
+        340,
+        350,
+        360,
+        370,
+        380,
+        390,
+        400,
+        410,
+        420,
+        430,
+        440,
+        450,
+        460,
+        470,
+        480,
+        490,
+        500,
+        510,
+        520,
+        530,
+        540,
+        550,
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "replay_capacity": 100000,
+      "epsilon_start": 1.0,
+      "epsilon_end": 0.05,
+      "cadence": "replay32",
+      "updates_per_completed_episode": 16,
+      "target_mode": "optimizer",
+      "target_interval_optimizer_updates": 500,
+      "bootstrap_uses_same_cadence": true,
+      "torch_threads": 16,
+      "redistribute_battery_energy": true,
+      "n_step": 1,
+      "episode_credit_scope": "sample",
+      "required_split_sizes": null,
+      "learn_no_feasible_failures": true,
+      "failure_penalty": {
+        "reference_amount": 10132.660087898294,
+        "scale": 1.0,
+        "reference_split": "train",
+        "reference_count": 30,
+        "reference_statistic": "nearest_rank_p95_comparable_economic_cost",
+        "unit": "CNY-equivalent reward units; not actual expenditure",
+        "source_file": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_profiles.json",
+        "source_sha256": "3e1fae46266d99629116b52156840541a33136be92f9f4e68e1e8b03256a0642",
+        "amount_equivalent_cny": 10132.660087898294
+      },
+      "battery_energy_value": {
+        "coefficient_cny": 722.5263157894739,
+        "reference_soc": 0.6
+      }
+    },
+    "execution_counts": {
+      "training_environment_transitions": 41,
+      "training_policy_calls": 41,
+      "bootstrap_environment_transitions": 69,
+      "greedy_evaluation_environment_transitions": 36,
+      "economic_replay_insertions": 110,
+      "economic_optimizer_updates": 3,
+      "outcome_optimizer_updates": 32,
+      "target_sync_calls_including_initial_copy": 1,
+      "remaining_transition_credit": 14,
+      "bootstrap_economic_optimizer_updates": 2,
+      "formal_training_economic_optimizer_updates": 1,
+      "failed_suffix_transitions_excluded_from_economic_replay": 0,
+      "no_feasible_action_events_without_executed_suffix": 0,
+      "economic_success_replay_insertions": 69,
+      "economic_failure_replay_insertions": 41,
+      "economic_failure_terminal_insertions": 1
+    },
+    "round_failure_reason_counts": {
+      "soc_limited": 1,
+      "structural_power": 0,
+      "execution_error": 0
+    },
+    "economic_replay_outcome_counts": {
+      "success": 69,
+      "failure": 41,
+      "failure_terminals": 1,
+      "success_fraction": 0.6272727272727273,
+      "failure_fraction": 0.37272727272727274
+    },
+    "test_payloads_opened": 0,
+    "scope": "one small synthetic route, not a Train/Validation performance estimate"
+  },
+  "controlled_economic_learning": {
+    "economic_replay_insertions": 19270,
+    "successful_insertions": 14022,
+    "failed_insertions": 5248,
+    "optimizer_updates": 602,
+    "initial_target_copies": 2,
+    "cadence_target_syncs": 1,
+    "remaining_transition_credit": 6,
+    "initial_greedy_kw": 0,
+    "final_greedy_kw": 330,
+    "actual_greedy_power_kw": [
+      330,
+      330,
+      330
+    ],
+    "greedy_completed_synthetic_voyage": true,
+    "outcome_optimizer_updates": 0,
+    "outcome_weights_unchanged_asserted": true,
+    "q_fc0_before": 0.7418578863143921,
+    "q_fc600_before": -0.1029864177107811,
+    "q_fc0_after": -18.46065330505371,
+    "q_fc600_after": -18.244091033935547,
+    "failure_terminal_td_statistics": {
+      "sample_count": 10488,
+      "mean_td_error": -10424.546335320723,
+      "mean_absolute_td_error": 10424.546335320723,
+      "root_mean_square_td_error": 10425.722970027058,
+      "max_absolute_td_error": 10518.033203125
+    },
+    "scope": "fixed synthetic corpus; FC0 starting preference +1 bias exists only in test; ranking proof, not convergence"
+  },
+  "independent_review": {
+    "findings": 0,
+    "reference_and_rewards_verified_readonly": true,
+    "optimizer_calls": 0,
+    "test_payloads_opened": 0
+  },
+  "preservation": {
+    "old_raw_archive_files_sha256_verified": 93,
+    "old_archive_physics_and_data_git_diff_empty": true,
+    "manifest_sha256_verified": {
+      "operating_dataset_zero_boundary_v2/excluded_parent_manifest.csv": "d3319adbbe79d3cca742906039982f14b9054a2f06465e1bedef93732c7bafdc",
+      "operating_dataset_zero_boundary_v2/parent_split_manifest.csv": "36d44abab31a36c1bd6ab62c14a5a7cee2869cbfab451518c8ea921a53bb9623",
+      "operating_dataset_zero_boundary_v2/sample_manifest.csv": "413f2c8e60487ab43f5d24d179d0cbe20697eb1204ab6521151044a03dddf029",
+      "operating_dataset_zero_boundary_v2_ais/sample_manifest.csv": "e7853ea68f3bad5c302c36e92522b01a83b736c8b48f2d54541ffd35f0d2829d",
+      "operating_dataset_zero_boundary_v2_modes/sample_manifest.csv": "2a44ade715a3094f883867b70e99acfbe5b0cd4a64de2a9c5631a379e0191f8f"
+    },
+    "test_payloads_opened": 0
+  },
+  "source_hash_format": "SHA256 of file bytes with CRLF normalized to LF",
+  "source_sha256": {
+    "src/v4/control.py": "64acf721ebe3e646279f1036786049d6b3c405194143abb4d2eff463d1d1a24f",
+    "src/v4/dqn.py": "58b75d9cda62a7c1ea4de4eef299154ae8481871b9c727d5e2ddded5ee14b1a6",
+    "src/v4/diagnostics.py": "89c148ae42e74f153ae20e1f4a723f76db91aad5fae2a25e43b80b0289f1bf8d",
+    "src/v4/failure_replay.py": "0db71906dbcb0f84f31c19b742652e50883f2f819fe8078117047671d724f4dd",
+    "src/v4/failure_penalty_reference.json": "164fac2fc9074cf508b34e529c132849192262a38e23579f4ff12fe428f8b2a3",
+    "src/v4/feedback_study.py": "9a08a1a57916004c35e798857cf944d4280f68fadac773f94be8e675d422eb86",
+    "src/v4/monitored_training.py": "4e44f94882d4c94f04f7260bd9c54592210dd48fad0a4360c6045f9669ef180b",
+    "src/v4/reward_feedback.py": "150972a80740fb33d430aa1420f7fc7d40ae3ee4c86af30101090b6ef2c79872",
+    "src/v4/staged_study.py": "21ef859bd093c5f57d47ddb3ae33be9f2960c48b16fe22135e7ddff902ab5523",
+    "src/v4/train.py": "66cd0b4edd4a90b969cd77234dc42afb3ce0319d27b93f0962a0ff90a9bb1266",
+    "tests/test_v4_failure_td.py": "7ae6955d0542510a1bd5f3e390db7c28bf8eb4cb8220bde6c2330f145ae5136d"
+  }
+}

@@ -85,6 +85,7 @@ def _worker(args) -> int:
         dataset, output_dir=args.output_dir, rounds=args.rounds, beta_soc=args.beta,
         cadence=args.cadence, target_mode=args.target_mode, target_interval=1000,
         seed=42, batch_size=64, epsilon_start=1.0, epsilon_end=0.05, progress_every_steps=50,
+        learn_no_feasible_failures=False,
     )
     report["manifest_sha256"] = before
     report["best_checkpoint_replay_verified"] = False

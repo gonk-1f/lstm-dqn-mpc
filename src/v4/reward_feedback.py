@@ -24,3 +24,6 @@ class BatteryEnergyValue:
         if not isfinite(soc):
             raise ValueError('SOC must be finite')
         return self.coefficient_cny * (self.reference_soc - soc)
+
+    def terminal_correction(self, start_soc: float, actual_end_soc: float) -> float:
+        return self(actual_end_soc)-self(start_soc)

@@ -42,7 +42,7 @@ def _summarize(
     comparable_cost = observed_cost + modeled_cost
     completed_transitions = [t for item in results for t in item.transitions]
     executed_transitions = [*completed_transitions, *failed_transitions]
-    voyage_terminal_soc = [t.actual_soc for t in executed_transitions if t.done]
+    voyage_terminal_soc = [t.actual_soc for t in executed_transitions if t.is_successful_terminal]
     executed_components = {
         name: math.fsum(getattr(item.total_ledger,name) for item in results)
               + math.fsum(getattr(t.original_economic_ledger,name) for t in failed_transitions)
@@ -82,7 +82,9 @@ def _summarize(
         "fc_starts": starts,
         "executed_fc_starts_including_failed_prefix": sum(
             t.state[4] == 0 and t.action_kw > 0 for t in executed_transitions),
-        "completed_voyages": sum(t.done for t in completed_transitions),
+        "completed_voyages": sum(t.is_successful_terminal for t in executed_transitions),
+        'failed_samples':len(failures),
+        'failure_terminal_count':sum(t.done and not t.is_successful_terminal for t in failed_transitions),
         'voyage_terminal_soc_mean': math.fsum(voyage_terminal_soc)/len(voyage_terminal_soc) if voyage_terminal_soc else None,
         'voyage_terminal_soc_min': min(voyage_terminal_soc) if voyage_terminal_soc else None,
         'voyage_terminal_soc_max': max(voyage_terminal_soc) if voyage_terminal_soc else None,

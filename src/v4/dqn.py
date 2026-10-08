@@ -14,6 +14,7 @@ from torch import nn
 from dqn.networks.mlp_qnet import MLPQNetwork
 
 from .control import ACTION_KW, DirectTransition
+from .failure_replay import FAILURE_TERMINALS
 
 
 STATE_DIM = 8
@@ -37,7 +38,9 @@ def masked_double_dqn_targets(
         if bootstrap_steps.shape != rewards.shape or (bootstrap_steps < 1).any():
             raise ValueError('bootstrap_steps must be positive column vectors')
     discount = gamma if bootstrap_steps is None else gamma ** bootstrap_steps
-    return rewards + discount * (1.0 - done) * target_next_q.gather(1, selected)
+    # A terminal never uses next-Q, even when that unused value is NaN/Inf.
+    continuation=torch.where(done==0,discount*target_next_q.gather(1,selected),torch.zeros_like(rewards))
+    return rewards+continuation
 
 
 @dataclass(frozen=True)
@@ -49,6 +52,9 @@ class ReplayItem:
     done: bool
     next_feasible_indices: tuple[int, ...]
     bootstrap_steps: int = 1
+    experience_outcome: str = 'success'
+    terminal_reason: str | None = None
+    failure_penalty_equivalent_cny: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -81,6 +87,9 @@ class DirectPowerDDQN:
         self.target_sync_calls = 0
         self.economic_optimizer_updates = 0
         self.economic_replay_insertions = 0
+        self.economic_success_replay_insertions = 0
+        self.economic_failure_replay_insertions = 0
+        self.economic_failure_terminal_insertions = 0
         self.outcome_optimizer_updates = 0
         self.sync_target()
         self.target.eval()
@@ -92,6 +101,8 @@ class DirectPowerDDQN:
         self.outcome_replay: deque[OutcomeItem] = deque(maxlen=replay_capacity)
         self._td_updates = self._td_samples = 0
         self._td_loss_sum = self._td_sum = self._td_abs_sum = self._td_square_sum = self._td_abs_max = 0.0
+        self._failure_td_samples = 0
+        self._failure_td_sum = self._failure_td_abs_sum = self._failure_td_square_sum = self._failure_td_abs_max = 0.0
 
     @staticmethod
     def _state(value: Sequence[float]) -> tuple[float, ...]:
@@ -122,6 +133,8 @@ class DirectPowerDDQN:
             return ACTION_KW[self.random.choice(indices)]
         with torch.no_grad():
             q = self.online(torch.tensor([values], dtype=torch.float32))[0]
+        if not torch.isfinite(q).all():
+            raise ValueError('online Q model produced non-finite values')
         mask = torch.full_like(q, -torch.inf)
         mask[list(indices)] = q[list(indices)]
         return ACTION_KW[int(mask.argmax().item())]
@@ -131,6 +144,8 @@ class DirectPowerDDQN:
         next_state: Sequence[float], *, done: bool,
         next_feasible_actions: Sequence[int],
         bootstrap_steps: int = 1,
+        experience_outcome: str = 'success', terminal_reason: str | None = None,
+        failure_penalty_equivalent_cny: float = 0.0,
     ) -> None:
         if type(action_kw) is not int or action_kw not in ACTION_KW:
             raise ValueError("action must use the FC grid")
@@ -141,11 +156,25 @@ class DirectPowerDDQN:
         next_indices = self._indices(next_feasible_actions)
         if (done and next_indices) or (not done and not next_indices):
             raise ValueError("next feasible actions do not match terminal flag")
+        reason=('completed' if done else None) if terminal_reason is None else terminal_reason
+        if (experience_outcome not in ('success','failure') or
+                (reason not in (None,'completed') and reason not in FAILURE_TERMINALS) or
+                bool(reason) != done or (reason in FAILURE_TERMINALS and experience_outcome!='failure') or
+                (reason=='completed' and experience_outcome!='success') or
+                not math.isfinite(failure_penalty_equivalent_cny) or failure_penalty_equivalent_cny<0 or
+                (failure_penalty_equivalent_cny and reason not in FAILURE_TERMINALS)):
+            raise ValueError('invalid economic experience outcome or terminal reason')
         self.replay.append(ReplayItem(
             self._state(state), ACTION_KW.index(action_kw), float(reward_cny),
             self._state(next_state), done, next_indices, bootstrap_steps,
+            experience_outcome,reason,failure_penalty_equivalent_cny,
         ))
         self.economic_replay_insertions += 1
+        if experience_outcome=='failure':
+            self.economic_failure_replay_insertions += 1
+        else:
+            self.economic_success_replay_insertions += 1
+        self.economic_failure_terminal_insertions += int(reason in FAILURE_TERMINALS)
 
     def remember_transition(self, transition: DirectTransition) -> None:
         if self.n_step != 1:
@@ -154,6 +183,9 @@ class DirectPowerDDQN:
             transition.state, transition.action_kw, transition.reward_cny,
             transition.next_state, done=transition.done,
             next_feasible_actions=transition.next_feasible_actions,
+            experience_outcome='failure' if transition.terminal_reason in FAILURE_TERMINALS else 'success',
+            terminal_reason=transition.terminal_reason,
+            failure_penalty_equivalent_cny=transition.failure_penalty_equivalent_cny,
         )
 
     def remember_trajectory(self, transitions: Sequence[DirectTransition]) -> int:
@@ -162,7 +194,7 @@ class DirectPowerDDQN:
         if not values:
             return 0
         if not values[-1].done:
-            raise ValueError('economic replay requires completed voyages')
+            raise ValueError('economic replay requires completed or explicitly failure-terminated voyages')
         # Validate the whole input before modifying the replay buffer.
         for transition in values:
             self._state(transition.state)
@@ -189,7 +221,10 @@ class DirectPowerDDQN:
                 self.remember(values[index].state, values[index].action_kw, reward,
                               tail.next_state, done=tail.done,
                               next_feasible_actions=tail.next_feasible_actions,
-                              bootstrap_steps=end-index)
+                              bootstrap_steps=end-index,
+                              experience_outcome='failure' if transition.terminal_reason in FAILURE_TERMINALS else 'success',
+                              terminal_reason=tail.terminal_reason,
+                              failure_penalty_equivalent_cny=tail.failure_penalty_equivalent_cny)
             segment_start = segment_end
         return len(values)
 
@@ -197,7 +232,7 @@ class DirectPowerDDQN:
         """Retain only fully ended voyages before a later failed voyage."""
         values = tuple(transitions)
         last_completed_index = max(
-            (index for index, transition in enumerate(values) if transition.done),
+            (index for index, transition in enumerate(values) if transition.is_successful_terminal),
             default=-1,
         )
         self.remember_trajectory(values[:last_completed_index + 1])
@@ -217,10 +252,10 @@ class DirectPowerDDQN:
             raise ValueError("outcome trajectory needs executed transitions and a bool label")
         if failed and (values[-1].done or values[-1].next_feasible_actions):
             raise ValueError("failed outcome requires a nonterminal infeasible next state")
-        if not failed and not values[-1].done:
+        if not failed and not values[-1].is_successful_terminal:
             raise ValueError("completed outcome must end at a completed transition")
         last_completed_index = max(
-            (index for index, transition in enumerate(values) if transition.done),
+            (index for index, transition in enumerate(values) if transition.is_successful_terminal),
             default=-1,
         )
         for index, transition in enumerate(values):
@@ -273,6 +308,8 @@ class DirectPowerDDQN:
                                  if self.n_step != 1 else None),
             )
         loss = nn.functional.smooth_l1_loss(q, target)
+        if not torch.isfinite(loss):
+            raise FloatingPointError('non-finite economic TD loss; optimizer was not updated')
         self.optimizer.zero_grad()
         loss.backward()
         nn.utils.clip_grad_norm_(self.online.parameters(), 10.0)
@@ -287,12 +324,22 @@ class DirectPowerDDQN:
             self._td_abs_sum += float(error.abs().sum().item())
             self._td_square_sum += float(error.square().sum().item())
             self._td_abs_max = max(self._td_abs_max, float(error.abs().max().item()))
+            failure_mask=torch.tensor([item.terminal_reason in FAILURE_TERMINALS for item in batch],dtype=torch.bool)
+            failure_error=error.flatten()[failure_mask]
+            if failure_error.numel():
+                self._failure_td_samples += failure_error.numel()
+                self._failure_td_sum += float(failure_error.sum().item())
+                self._failure_td_abs_sum += float(failure_error.abs().sum().item())
+                self._failure_td_square_sum += float(failure_error.square().sum().item())
+                self._failure_td_abs_max=max(self._failure_td_abs_max,float(failure_error.abs().max().item()))
         return float(loss.item())
 
     def reset_td_statistics(self) -> None:
         """Reset diagnostic accumulators, without changing training state."""
         self._td_updates = self._td_samples = 0
         self._td_loss_sum = self._td_sum = self._td_abs_sum = self._td_square_sum = self._td_abs_max = 0.0
+        self._failure_td_samples = 0
+        self._failure_td_sum = self._failure_td_abs_sum = self._failure_td_square_sum = self._failure_td_abs_max = 0.0
 
     def td_statistics(self) -> dict:
         n = self._td_samples
@@ -303,6 +350,13 @@ class DirectPowerDDQN:
             'mean_absolute_td_error': self._td_abs_sum / n if n else None,
             'root_mean_square_td_error': math.sqrt(self._td_square_sum / n) if n else None,
             'max_absolute_td_error': self._td_abs_max if n else None,
+            'failure_terminal': {
+                'sample_count':self._failure_td_samples,
+                'mean_td_error':self._failure_td_sum/self._failure_td_samples if self._failure_td_samples else None,
+                'mean_absolute_td_error':self._failure_td_abs_sum/self._failure_td_samples if self._failure_td_samples else None,
+                'root_mean_square_td_error':math.sqrt(self._failure_td_square_sum/self._failure_td_samples) if self._failure_td_samples else None,
+                'max_absolute_td_error':self._failure_td_abs_max if self._failure_td_samples else None,
+            },
         }
 
     def sync_target(self) -> None:

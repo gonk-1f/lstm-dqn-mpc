@@ -23,6 +23,7 @@ def reward_totals(transitions) -> dict:
         'immediate_battery_energy_adjustment': fsum(t.immediate_battery_energy_adjustment for t in values),
         'terminal_correction': fsum(t.terminal_correction for t in values),
         'new_reward': fsum(t.reward_cny for t in values),
+        'failure_penalty_equivalent_cny':fsum(t.failure_penalty_equivalent_cny for t in values),
     }
 
 
@@ -41,6 +42,9 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None) -> dic
             'actual_shore_ledger': ledger_components(item.shore_ledger),
             'modeled_terminal_settlement': ledger_components(item.modeled_terminal_ledger),
             'done': item.done, 'next_feasible_actions_kw': list(item.next_feasible_actions),
+            'terminal_reason':item.terminal_reason or ('completed' if item.done else None),
+            'successful_terminal':item.is_successful_terminal,
+            'failure_penalty_equivalent_cny':item.failure_penalty_equivalent_cny,
         })
         voyage += int(item.done)
     return {'sample_id': str(sample_id), 'completed': completed, 'failure': failure,

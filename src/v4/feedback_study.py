@@ -30,6 +30,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument('--cadence',choices=('episode16','replay32','replay16'),default='replay32')
     parser.add_argument('--target-interval',type=int,choices=(250,500,1000),default=500)
     parser.add_argument('--n-step',type=int,choices=(1,8),default=1)
+    parser.add_argument('--failure-penalty-scale',type=float,default=1.,
+                        help='multiplier of frozen Train-only P95 economic cost, in reward-equivalent CNY')
     parser.add_argument('--episode-credit-scope',choices=('sample','voyage'),default='voyage',
                         help='voyage counts completed ONBOARD segments; sample reproduces legacy credit')
     args = parser.parse_args(argv)
@@ -46,7 +48,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         target_interval=args.target_interval,seed=42,batch_size=64,epsilon_start=1.,epsilon_end=.05,
         redistribute_battery_energy=args.reward_feedback == 'redistributed',
         episode_credit_scope=args.episode_credit_scope,n_step=args.n_step,
-        required_split_sizes=(30,8),capture_trajectories=True,progress_every_steps=50)
+        required_split_sizes=(30,8),capture_trajectories=True,progress_every_steps=50,
+        learn_no_feasible_failures=True,failure_penalty_scale=args.failure_penalty_scale)
     if dataset.opened_test_payloads != 0 or _manifest_hashes(roots) != before:
         raise RuntimeError('Test opened or dataset manifests changed')
     report['manifest_sha256'] = before

@@ -37,12 +37,15 @@ class ReplayExecutionError(RuntimeError):
         self, row_index: int, mode: OperatingMode, cause: Exception, *,
         executed_transitions: tuple[DirectTransition, ...] = (),
         failure_kind: str = "execution_error",
+        failure_cause: str | None = None, failed_state: tuple[float,...] | None = None,
     ):
         self.row_index = row_index
         self.mode = mode
         self.cause = cause
         self.executed_transitions = executed_transitions
         self.failure_kind = failure_kind
+        self.failure_cause = failure_cause
+        self.failed_state = failed_state
         super().__init__(f"row {row_index} ({mode.value}): {cause}")
 
 
@@ -67,6 +70,12 @@ class DirectTransition:
     original_reward: float | None = None
     immediate_battery_energy_adjustment: float = 0.0
     terminal_correction: float = 0.0
+    terminal_reason: str | None = None
+    failure_penalty_equivalent_cny: float = 0.0
+
+    @property
+    def is_successful_terminal(self) -> bool:
+        return self.done and self.terminal_reason in (None,'completed')
 
     @property
     def new_reward(self) -> float:
@@ -193,6 +202,15 @@ def feasible_fc_actions(
     return tuple(feasible)
 
 
+def infeasibility_cause(measured_load_kw: float, accountant: EconomicMPC) -> str:
+    """Diagnose an empty physical mask without changing its definition."""
+    load = normalize_onboard_load_kw(measured_load_kw)
+    plant = accountant.plant
+    power_only = any(plant.battery_charge_min_kw <= load-power <= plant.battery_discharge_max_kw
+                     for power in ACTION_KW)
+    return 'soc_limited' if power_only else 'structural_power'
+
+
 def replay_episode(
     episode: object, policy: Callable[[tuple[float, ...], tuple[int, ...]], int], *,
     accountant: EconomicMPC, initial_state: AccountState | None = None,
@@ -256,12 +274,14 @@ def replay_episode(
         history = (0.0,)  # virtual departure boundary, never a physical row
         voyage_initial_soc = physical.soc
         while index < len(modes) and modes[index] is OperatingMode.ONBOARD:
+            empty_physical_mask=False
             try:
                 actual_load = normalize_onboard_load_kw(loads[index])
                 current_history = (*history[-2:], actual_load)
                 decision_state = build_state(physical, current_history, accountant, departure=len(history) == 1)
                 feasible_actions = feasible_fc_actions(physical, actual_load, accountant)
                 if not feasible_actions:
+                    empty_physical_mask=True
                     raise NoFeasibleFCActionError(
                         "no feasible FC action for actual battery power and SOC bounds"
                     )
@@ -275,9 +295,12 @@ def replay_episode(
                 raise ReplayExecutionError(
                     index, modes[index], exc, executed_transitions=tuple(transitions),
                     failure_kind=(
-                        "no_feasible_action" if isinstance(exc, NoFeasibleFCActionError)
+                        "no_feasible_action" if empty_physical_mask and isinstance(exc, NoFeasibleFCActionError)
                         else "execution_error"
                     ),
+                    failure_cause=(infeasibility_cause(actual_load,accountant)
+                                   if empty_physical_mask and isinstance(exc,NoFeasibleFCActionError) else None),
+                    failed_state=(decision_state if empty_physical_mask and isinstance(exc,NoFeasibleFCActionError) else None),
                 ) from exc
             physical = next_physical
             ledgers.append(ledger)
@@ -327,7 +350,7 @@ def replay_episode(
             if redistribute_battery_energy:
                 adjustment = -(energy_value(next_physical.soc) - energy_value(decision_state[0]))
                 if last_onboard:
-                    correction = energy_value(next_physical.soc) - energy_value(voyage_initial_soc)
+                    correction = energy_value.terminal_correction(voyage_initial_soc,next_physical.soc)
                 reward = original_reward + adjustment + correction
             if shore_ledger is not None:
                 successor_history = (0.0, normalize_onboard_load_kw(loads[shore_end])) if shore_end < len(modes) else (0.0,)
@@ -345,6 +368,7 @@ def replay_episode(
                 battery_kw, next_physical.soc, last_onboard, next_feasible,
                 shore_ledger, modeled_ledger, soc_penalty,
                 original_reward, adjustment, correction,
+                'completed' if last_onboard else None,
             ))
             if last_onboard and shore_ledger is not None:
                 index = shore_end
