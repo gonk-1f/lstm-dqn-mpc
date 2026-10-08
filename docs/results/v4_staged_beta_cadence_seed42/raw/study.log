@@ -1,0 +1,100 @@
+START beta_250 pid=32860
+START beta_500 pid=21112
+START beta_1000 pid=35468
+START beta_2000 pid=620
+ERROR beta_250: exit 1; see C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\outputs\v4_staged_beta_cadence_seed42\stage1\beta_250\train.log
+ERROR beta_1000: exit 1; see C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\outputs\v4_staged_beta_cadence_seed42\stage1\beta_1000\train.log
+STATUS beta_500 round=1 exploratory=20/30 greedy_train=11/30 validation=SKIPPED cost=None updates=784 best=None
+STATUS beta_2000 round=1 exploratory=20/30 greedy_train=11/30 validation=SKIPPED cost=None updates=784 best=None
+STATUS beta_500 round=2 exploratory=19/30 greedy_train=13/30 validation=SKIPPED cost=None updates=1088 best=None
+STATUS beta_2000 round=2 exploratory=19/30 greedy_train=13/30 validation=SKIPPED cost=None updates=1088 best=None
+STATUS beta_500 round=3 exploratory=20/30 greedy_train=25/30 validation=SKIPPED cost=None updates=1408 best=None
+STATUS beta_2000 round=3 exploratory=20/30 greedy_train=25/30 validation=SKIPPED cost=None updates=1408 best=None
+STATUS beta_500 round=4 exploratory=20/30 greedy_train=30/30 validation=8/8 cost=87111.88844520542 updates=1728 best=4
+STATUS beta_2000 round=4 exploratory=20/30 greedy_train=30/30 validation=8/8 cost=87111.88844520542 updates=1728 best=4
+STATUS beta_500 round=5 exploratory=20/30 greedy_train=30/30 validation=8/8 cost=77229.05827758154 updates=2048 best=5
+STATUS beta_2000 round=5 exploratory=20/30 greedy_train=30/30 validation=8/8 cost=72212.70725360853 updates=2048 best=5
+STATUS beta_500 round=6 exploratory=20/30 greedy_train=30/30 validation=8/8 cost=49120.8476842764 updates=2368 best=6
+STATUS beta_2000 round=6 exploratory=20/30 greedy_train=30/30 validation=8/8 cost=40650.36295033912 updates=2368 best=6
+STATUS beta_2000 round=7 exploratory=20/30 greedy_train=28/30 validation=SKIPPED cost=None updates=2688 best=6
+STATUS beta_500 round=7 exploratory=20/30 greedy_train=30/30 validation=8/8 cost=36553.63166943515 updates=2688 best=7
+STATUS beta_2000 round=8 exploratory=20/30 greedy_train=23/30 validation=SKIPPED cost=None updates=3008 best=6
+STATUS beta_500 round=8 exploratory=20/30 greedy_train=25/30 validation=SKIPPED cost=None updates=3008 best=7
+STATUS beta_2000 round=9 exploratory=20/30 greedy_train=20/30 validation=SKIPPED cost=None updates=3328 best=6
+STATUS beta_500 round=9 exploratory=20/30 greedy_train=22/30 validation=SKIPPED cost=None updates=3328 best=7
+STATUS beta_2000 round=10 exploratory=20/30 greedy_train=20/30 validation=SKIPPED cost=None updates=3648 best=6
+STATUS beta_500 round=10 exploratory=20/30 greedy_train=22/30 validation=SKIPPED cost=None updates=3648 best=7
+STATUS beta_2000 round=11 exploratory=20/30 greedy_train=20/30 validation=SKIPPED cost=None updates=3968 best=6
+STATUS beta_500 round=11 exploratory=20/30 greedy_train=20/30 validation=SKIPPED cost=None updates=3968 best=7
+STATUS beta_2000 round=12 exploratory=20/30 greedy_train=17/30 validation=SKIPPED cost=None updates=4288 best=6
+STATUS beta_500 round=12 exploratory=20/30 greedy_train=20/30 validation=SKIPPED cost=None updates=4288 best=7
+STATUS beta_2000 round=13 exploratory=20/30 greedy_train=20/30 validation=SKIPPED cost=None updates=4608 best=6
+STATUS beta_500 round=13 exploratory=20/30 greedy_train=20/30 validation=SKIPPED cost=None updates=4608 best=7
+STATUS beta_2000 round=14 exploratory=20/30 greedy_train=19/30 validation=SKIPPED cost=None updates=4928 best=6
+STATUS beta_500 round=14 exploratory=20/30 greedy_train=20/30 validation=SKIPPED cost=None updates=4928 best=7
+STATUS beta_2000 round=15 exploratory=20/30 greedy_train=20/30 validation=SKIPPED cost=None updates=5248 best=6
+STATUS beta_500 round=15 exploratory=20/30 greedy_train=19/30 validation=SKIPPED cost=None updates=5248 best=7
+STATUS beta_2000 round=16 exploratory=20/30 greedy_train=17/30 validation=SKIPPED cost=None updates=5568 best=6
+STATUS beta_500 round=16 exploratory=20/30 greedy_train=20/30 validation=SKIPPED cost=None updates=5568 best=7
+STATUS beta_2000 round=17 exploratory=18/30 greedy_train=15/30 validation=SKIPPED cost=None updates=5856 best=6
+STATUS beta_500 round=17 exploratory=20/30 greedy_train=19/30 validation=SKIPPED cost=None updates=5888 best=7
+STATUS beta_2000 round=18 exploratory=18/30 greedy_train=19/30 validation=SKIPPED cost=None updates=6144 best=6
+STATUS beta_500 round=18 exploratory=19/30 greedy_train=20/30 validation=SKIPPED cost=None updates=6192 best=7
+STATUS beta_2000 round=19 exploratory=19/30 greedy_train=15/30 validation=SKIPPED cost=None updates=6448 best=6
+STATUS beta_500 round=19 exploratory=20/30 greedy_train=17/30 validation=SKIPPED cost=None updates=6512 best=7
+STATUS beta_2000 round=20 exploratory=18/30 greedy_train=15/30 validation=SKIPPED cost=None updates=6736 best=6
+STATUS beta_500 round=20 exploratory=19/30 greedy_train=18/30 validation=SKIPPED cost=None updates=6816 best=7
+STATUS beta_2000 round=21 exploratory=19/30 greedy_train=15/30 validation=SKIPPED cost=None updates=7040 best=6
+STATUS beta_500 round=21 exploratory=19/30 greedy_train=17/30 validation=SKIPPED cost=None updates=7120 best=7
+STATUS beta_2000 round=22 exploratory=18/30 greedy_train=15/30 validation=SKIPPED cost=None updates=7328 best=6
+STATUS beta_500 round=22 exploratory=19/30 greedy_train=19/30 validation=SKIPPED cost=None updates=7424 best=7
+STATUS beta_2000 round=23 exploratory=18/30 greedy_train=15/30 validation=SKIPPED cost=None updates=7616 best=6
+STATUS beta_500 round=23 exploratory=19/30 greedy_train=19/30 validation=SKIPPED cost=None updates=7728 best=7
+STATUS beta_2000 round=24 exploratory=18/30 greedy_train=15/30 validation=SKIPPED cost=None updates=7904 best=6
+STATUS beta_500 round=24 exploratory=19/30 greedy_train=20/30 validation=SKIPPED cost=None updates=8032 best=7
+STATUS beta_2000 round=25 exploratory=18/30 greedy_train=15/30 validation=SKIPPED cost=None updates=8192 best=6
+STATUS beta_500 round=25 exploratory=20/30 greedy_train=19/30 validation=SKIPPED cost=None updates=8352 best=7
+STATUS beta_2000 round=26 exploratory=19/30 greedy_train=15/30 validation=SKIPPED cost=None updates=8496 best=6
+STATUS beta_500 round=26 exploratory=19/30 greedy_train=19/30 validation=SKIPPED cost=None updates=8656 best=7
+STATUS beta_2000 round=27 exploratory=17/30 greedy_train=15/30 validation=SKIPPED cost=None updates=8768 best=6
+STATUS beta_500 round=27 exploratory=20/30 greedy_train=19/30 validation=SKIPPED cost=None updates=8976 best=7
+STATUS beta_2000 round=28 exploratory=17/30 greedy_train=15/30 validation=SKIPPED cost=None updates=9040 best=6
+STATUS beta_500 round=28 exploratory=20/30 greedy_train=19/30 validation=SKIPPED cost=None updates=9296 best=7
+STATUS beta_2000 round=29 exploratory=18/30 greedy_train=15/30 validation=SKIPPED cost=None updates=9328 best=6
+STATUS beta_2000 round=30 exploratory=17/30 greedy_train=15/30 validation=SKIPPED cost=None updates=9600 best=6
+STATUS beta_500 round=29 exploratory=19/30 greedy_train=19/30 validation=SKIPPED cost=None updates=9600 best=7
+STATUS beta_2000 round=31 exploratory=16/30 greedy_train=15/30 validation=SKIPPED cost=None updates=9856 best=6
+STATUS beta_500 round=30 exploratory=19/30 greedy_train=19/30 validation=SKIPPED cost=None updates=9904 best=7
+STATUS beta_2000 round=32 exploratory=15/30 greedy_train=15/30 validation=SKIPPED cost=None updates=10096 best=6
+STATUS beta_500 round=31 exploratory=19/30 greedy_train=19/30 validation=SKIPPED cost=None updates=10208 best=7
+STATUS beta_2000 round=33 exploratory=16/30 greedy_train=15/30 validation=SKIPPED cost=None updates=10352 best=6
+STATUS beta_500 round=32 exploratory=19/30 greedy_train=20/30 validation=SKIPPED cost=None updates=10512 best=7
+STATUS beta_2000 round=34 exploratory=16/30 greedy_train=15/30 validation=SKIPPED cost=None updates=10608 best=6
+STATUS beta_500 round=33 exploratory=20/30 greedy_train=19/30 validation=SKIPPED cost=None updates=10832 best=7
+STATUS beta_2000 round=35 exploratory=15/30 greedy_train=15/30 validation=SKIPPED cost=None updates=10848 best=6
+STATUS beta_500 round=34 exploratory=19/30 greedy_train=20/30 validation=SKIPPED cost=None updates=11136 best=7
+STATUS beta_2000 round=36 exploratory=15/30 greedy_train=15/30 validation=SKIPPED cost=None updates=11088 best=6
+STATUS beta_500 round=35 exploratory=20/30 greedy_train=19/30 validation=SKIPPED cost=None updates=11456 best=7
+STATUS beta_2000 round=37 exploratory=15/30 greedy_train=15/30 validation=SKIPPED cost=None updates=11328 best=6
+STATUS beta_500 round=36 exploratory=19/30 greedy_train=19/30 validation=SKIPPED cost=None updates=11760 best=7
+STATUS beta_2000 round=38 exploratory=16/30 greedy_train=15/30 validation=SKIPPED cost=None updates=11584 best=6
+STATUS beta_2000 round=39 exploratory=15/30 greedy_train=15/30 validation=SKIPPED cost=None updates=11824 best=6
+STATUS beta_500 round=37 exploratory=19/30 greedy_train=19/30 validation=SKIPPED cost=None updates=12064 best=7
+STATUS beta_2000 round=40 exploratory=16/30 greedy_train=15/30 validation=SKIPPED cost=None updates=12080 best=6
+STATUS beta_500 round=38 exploratory=19/30 greedy_train=19/30 validation=SKIPPED cost=None updates=12368 best=7
+DONE beta_2000
+STATUS beta_500 round=39 exploratory=19/30 greedy_train=19/30 validation=SKIPPED cost=None updates=12672 best=7
+STATUS beta_500 round=40 exploratory=19/30 greedy_train=19/30 validation=SKIPPED cost=None updates=12976 best=7
+DONE beta_500
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\src\v4\staged_study.py", line 270, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\src\v4\staged_study.py", line 247, in main
+    stage1=_parallel_jobs(jobs,args.workers,args.rounds,args.resume)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\src\v4\staged_study.py", line 172, in _parallel_jobs
+    raise RuntimeError("; ".join(errors))
+RuntimeError: beta_250: exit 1; see C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\outputs\v4_staged_beta_cadence_seed42\stage1\beta_250\train.log; beta_1000: exit 1; see C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\outputs\v4_staged_beta_cadence_seed42\stage1\beta_1000\train.log

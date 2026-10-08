@@ -1,0 +1,8 @@
+{
+  "completed": true,
+  "executed_onboard_transitions": true,
+  "completed_observed_cost_cny": true,
+  "completed_modeled_terminal_cost_cny": true,
+  "executed_soc_soft_penalty_cny": true,
+  "soc_time_occupancy": true
+}

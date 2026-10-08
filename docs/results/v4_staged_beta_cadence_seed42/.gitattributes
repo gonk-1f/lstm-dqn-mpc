@@ -1,0 +1,2 @@
+# Keep raw evidence byte-identical to the SHA256 inventory on every platform.
+raw/** -text -diff

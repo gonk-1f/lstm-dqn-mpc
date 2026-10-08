@@ -1,0 +1,38 @@
+[
+  {
+    "process_id": 24484,
+    "archive_path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_staged_beta_cadence_seed42\\interruptions\\stage1_beta_250",
+    "policy": "Deterministic prefix reconstruction from original seed; logical model budget remains 40 rounds",
+    "source_commit": "b35c8408ad1258c089dcc72df9a7c0e5e285d4f5",
+    "beta": 250,
+    "archived_rounds": 14,
+    "archived_execution_counts": {
+      "training_environment_transitions": 172314,
+      "bootstrap_environment_transitions": 18273,
+      "greedy_evaluation_environment_transitions": 191048,
+      "economic_replay_insertions": 169136,
+      "economic_optimizer_updates": 4720,
+      "outcome_optimizer_updates": 7200,
+      "target_sync_calls_including_initial_copy": 16,
+      "remaining_transition_credit": 0
+    }
+  },
+  {
+    "process_id": 30036,
+    "archive_path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_staged_beta_cadence_seed42\\interruptions\\stage1_beta_1000",
+    "policy": "Deterministic prefix reconstruction from original seed; logical model budget remains 40 rounds",
+    "source_commit": "b35c8408ad1258c089dcc72df9a7c0e5e285d4f5",
+    "beta": 1000,
+    "archived_rounds": 11,
+    "archived_execution_counts": {
+      "training_environment_transitions": 138733,
+      "bootstrap_environment_transitions": 18273,
+      "greedy_evaluation_environment_transitions": 174619,
+      "economic_replay_insertions": 140893,
+      "economic_optimizer_updates": 3968,
+      "outcome_optimizer_updates": 5760,
+      "target_sync_calls_including_initial_copy": 13,
+      "remaining_transition_credit": 0
+    }
+  }
+]

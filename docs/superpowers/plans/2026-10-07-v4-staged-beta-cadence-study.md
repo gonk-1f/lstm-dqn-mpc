@@ -11,7 +11,13 @@
 - [x] 在 `src/v4/experiment_schedule.py` 实现调度与 checkpoint 资格判断；在 `src/v4/monitored_training.py` 实现共享训练/greedy监控/保存。
 - [x] 在 `src/v4/staged_study.py` 实现阶段屏障、独立配置运行、曲线与表；记录源码提交和 manifest 哈希，输出每轮报告。
 - [x] 验证阶段1 beta250 的训练权重/回放/RNG轨迹与原训练相同；监控只新增诊断与最佳轮次选模。
-- [ ] 阶段1：250/500/1000/2000，各40轮，保留资格正确的最低 Validation 可比费用 checkpoint；输出全部每轮曲线/表。
+- [x] 阶段1：250/500/1000/2000，各40轮，保留资格正确的最低 Validation 可比费用 checkpoint；输出全部每轮曲线/表。
 - [ ] 若存在合格 beta，选择最低合格费用者；阶段2从相同seed新初始化执行 A/B/C，target统一1000经济更新。额度包含 bootstrap 新入 replay 条目，单列 bootstrap 和探索更新；失败未完成 suffix 不进入 economic replay 的语义保持。
 - [ ] 若阶段1无合格 beta，阶段2不运行，明确未满足前提，不能推荐未经实验的 cadence。
-- [ ] 核验 best checkpoint 实际重放、费用口径、计数与 Test0；报告首次资格训练量、后期退化及 KAN 前提，提交推送并核实Git状态。
+- [x] 核验阶段1 best checkpoint 实际重放、费用口径、计数与 Test0；阶段2仅保留已有合格checkpoint，未在暂停后追加模型评估。
+
+## 用户暂停（2026-10-08）
+
+按最新指令停止全部训练并归档所有现存结果。阶段1已完整结束，选择beta500；阶段2 A完成18个监控轮次，在第19轮停止，B完成19个监控轮次，在第20轮停止，C未运行。完整三组cadence对照仍未完成，不再执行。六份保存模型只有online权重，没有optimizer/replay/RNG续训状态。
+
+归档保留完整/部分轮次、原始日志、中断及资源错误证据、权重和已有轨迹；报告中单列中断轮次计数未知的限制。此次不推荐未经完整对照的cadence或KAN进入条件。

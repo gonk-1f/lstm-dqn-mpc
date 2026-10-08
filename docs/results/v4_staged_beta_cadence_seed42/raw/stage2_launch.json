@@ -1,0 +1,20 @@
+[
+  {
+    "rounds": 40,
+    "target_interval": 1000,
+    "source_commit": "b35c8408ad1258c089dcc72df9a7c0e5e285d4f5",
+    "cadence": "episode16",
+    "label": "A",
+    "process_id": 20124,
+    "beta": 500
+  },
+  {
+    "rounds": 40,
+    "target_interval": 1000,
+    "source_commit": "b35c8408ad1258c089dcc72df9a7c0e5e285d4f5",
+    "cadence": "replay16",
+    "label": "B",
+    "process_id": 13632,
+    "beta": 500
+  }
+]

@@ -1,0 +1,27 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\src\v4\staged_study.py", line 270, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\src\v4\staged_study.py", line 241, in main
+    return _worker(args)
+           ^^^^^^^^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\src\v4\staged_study.py", line 76, in _worker
+    dataset = FormalTrainingDataset.open(*roots)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\src\v2\data\formal_training_dataset.py", line 195, in open
+    if not 0 < result.train_macro_transitions <= math.ceil(EXPECTED_TRAIN_STEPS / 5):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\src\v2\data\formal_training_dataset.py", line 216, in train_macro_transitions
+    return self.train_macro_transition_count(5)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\src\v2\data\formal_training_dataset.py", line 222, in train_macro_transition_count
+    if _sha256(path) != str(row.sha256):
+       ^^^^^^^^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\src\v2\data\formal_training_dataset.py", line 46, in _sha256
+    for block in iter(lambda: handle.read(1024 * 1024), b""):
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\direct-power-mlp\src\v2\data\formal_training_dataset.py", line 46, in <lambda>
+    for block in iter(lambda: handle.read(1024 * 1024), b""):
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+MemoryError

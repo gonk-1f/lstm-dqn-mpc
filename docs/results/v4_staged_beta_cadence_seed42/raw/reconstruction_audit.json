@@ -1,0 +1,14 @@
+{
+  "stage1_beta_1000": {
+    "checked_rounds": 11,
+    "interrupted_completed_rounds": 11,
+    "all_round_rows_exactly_equal": true,
+    "matching_best_checkpoint_bytes_equal": true
+  },
+  "stage1_beta_250": {
+    "checked_rounds": 14,
+    "interrupted_completed_rounds": 14,
+    "all_round_rows_exactly_equal": true,
+    "matching_best_checkpoint_bytes_equal": true
+  }
+}
