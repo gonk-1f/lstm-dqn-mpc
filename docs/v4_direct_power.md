@@ -88,6 +88,6 @@ python -m v4.feedback_study --help
 
 正式训练必须显式指定轮数和新目录。每轮完整 greedy Train 全完成后才评估 Validation；不写 replay、不更新网络，恢复训练 RNG。
 只有 Train30/30、Validation8/8 的 checkpoint 才按 Validation 可比经济费用选模，Test 封存。
-尚无本次失败 TD 修复后的正式性能结论；旧 beta/cadence 结果只作为 [历史记录](history/v4/README.md)。
+最新[reward_scale0.001正式40轮结果](v4_scaled_reward_40r_2026-10-08.md)已完成：greedy Train最高22/30、末轮12/30，Validation因门槛全部跳过，无合格checkpoint。旧 beta/cadence 结果只作为 [历史记录](history/v4/README.md)。
 
 源码：[入口](../src/v4/feedback_study.py)、[控制](../src/v4/control.py)、[经济 Q](../src/v4/dqn.py)、[失败视图](../src/v4/failure_replay.py)、[更新额度](../src/v4/experiment_schedule.py)。
