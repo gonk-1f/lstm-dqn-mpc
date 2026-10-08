@@ -181,13 +181,16 @@ def run_monitored_training(
     episode_credit_scope: str = 'sample', required_split_sizes: tuple[int,int] | None = None,
     capture_trajectories: bool = False,
     learn_no_feasible_failures: bool = True, failure_penalty_scale: float = 1.0,
-    reward_scale: float = 1.0, manifest_sha256: dict[str,str] | None = None,
+    reward_scale: float = 1.0, failure_terminal_quota: int = 0,
+    manifest_sha256: dict[str,str] | None = None,
     dataset_roots: tuple[str,...] | None = None,
     abort_on_execution_error: bool = False, capture_log: bool = False,
 ):
     """Start fresh; persist provenance and complete rounds before any exception."""
     if not math.isfinite(reward_scale) or reward_scale <= 0:
         raise ValueError('reward_scale must be finite and positive')
+    if type(failure_terminal_quota) is not int or failure_terminal_quota < 0:
+        raise ValueError('failure_terminal_quota must be a nonnegative integer')
     output_dir = unarchived_output_path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     if any((output_dir/name).exists() for name in
@@ -215,7 +218,7 @@ def run_monitored_training(
             'scaled_training_unit':'scaled_reward_equivalent_cny'},
         'battery_energy_value':{'coefficient_cny':energy_value.coefficient_cny,
                                 'reference_soc':energy_value.reference_soc},
-        'reward_scale':float(reward_scale),
+        'reward_scale':float(reward_scale),'failure_terminal_quota':failure_terminal_quota,
     }
     metadata = {
         'source_commit':source_commit,'source_worktree_dirty':dirty,
@@ -247,6 +250,7 @@ def run_monitored_training(
                 episode_credit_scope=episode_credit_scope,required_split_sizes=required_split_sizes,
                 capture_trajectories=capture_trajectories,learn_no_feasible_failures=learn_no_feasible_failures,
                 failure_penalty_scale=failure_penalty_scale,reward_scale=reward_scale,
+                failure_terminal_quota=failure_terminal_quota,
                 run_metadata=metadata,runtime=runtime,abort_on_execution_error=abort_on_execution_error)
             report['learning_curve_artifacts'] = write_learning_curves(report,output_dir)
             _persist_report(report,output_dir)
@@ -285,7 +289,8 @@ def _run_monitored_training(
     episode_credit_scope: str, required_split_sizes: tuple[int,int] | None,
     capture_trajectories: bool,
     learn_no_feasible_failures: bool, failure_penalty_scale: float,
-    reward_scale: float, run_metadata: dict, runtime: dict, abort_on_execution_error: bool,
+    reward_scale: float, failure_terminal_quota: int,
+    run_metadata: dict, runtime: dict, abort_on_execution_error: bool,
 ):
     if not 1 <= rounds <= 40 or updates_per_episode != 16 or batch_size < 1:
         raise ValueError("study permits at most 40 rounds and fixes episode cadence at 16")
@@ -304,7 +309,8 @@ def _run_monitored_training(
         raise ValueError("dataset split identity differs")
     if required_split_sizes is not None and (len(train),len(validation)) != required_split_sizes:
         raise ValueError('dataset sizes differ from the required checkpoint qualification set')
-    agent = DirectPowerDDQN(seed=seed,n_step=n_step,reward_scale=reward_scale)
+    agent = DirectPowerDDQN(seed=seed,n_step=n_step,reward_scale=reward_scale,
+                            failure_terminal_quota=failure_terminal_quota)
     runtime.update(agent=agent,phase='bootstrap')
     accountant = EconomicMPC(nominal_cost_cny=1.0)
     schedule = EconomicUpdateSchedule(cadence, target_mode=target_mode, target_interval=target_interval)
@@ -323,6 +329,7 @@ def _run_monitored_training(
         return {
             'success':agent.economic_success_replay_insertions,'failure':agent.economic_failure_replay_insertions,
             'failure_terminals':agent.economic_failure_terminal_insertions,
+            'failure_terminals_in_pool':agent.failure_terminal_replay_count,
             'success_fraction':agent.economic_success_replay_insertions/n if n else None,
             'failure_fraction':agent.economic_failure_replay_insertions/n if n else None,
         }
@@ -432,6 +439,7 @@ def _run_monitored_training(
                 'economic_success_replay_insertions':agent.economic_success_replay_insertions,
                 'economic_failure_replay_insertions':agent.economic_failure_replay_insertions,
                 'economic_failure_terminal_insertions':agent.economic_failure_terminal_insertions,
+                'economic_failure_terminal_replay_size':agent.failure_terminal_replay_count,
             },
             "elapsed_seconds": time.monotonic()-started,
             "cost_rule": "Actual plus modeled terminal settlement; SOC shaping excluded; incomplete split cost is null",
@@ -572,6 +580,7 @@ def _run_monitored_training(
             'economic_success_replay_insertions':agent.economic_success_replay_insertions-before_success,
             'economic_failure_replay_insertions':agent.economic_failure_replay_insertions-before_failure,
             'economic_failure_terminal_insertions':agent.economic_failure_terminal_insertions-before_failure_terminals,
+            'economic_failure_terminal_replay_size':agent.failure_terminal_replay_count,
             'economic_replay_outcome_counts_cumulative':replay_counts(),
         }
         improved = selector.consider(round_index,greedy_train,greedy_validation)

@@ -21,6 +21,17 @@ def test_invalid_reward_scale_is_rejected_before_dataset_open(tmp_path, monkeypa
     assert not (tmp_path/'invalid').exists()
 
 
+def test_negative_failure_terminal_quota_is_rejected_before_dataset_open(tmp_path, monkeypatch, capsys):
+    from v4 import feedback_study
+    monkeypatch.setattr(feedback_study.FormalTrainingDataset, 'open',
+                        lambda *args: pytest.fail('invalid quota must precede dataset opening'))
+    with pytest.raises(SystemExit):
+        feedback_study.main(['--output-dir', str(tmp_path/'invalid'), '--rounds', '1',
+                             '--failure-terminal-quota', '-1'])
+    assert 'failure-terminal-quota must be nonnegative' in capsys.readouterr().err
+    assert not (tmp_path/'invalid').exists()
+
+
 @pytest.mark.parametrize('n_step', [1, 8])
 def test_monitored_scale_only_changes_replay_rewards_and_metadata(tmp_path, n_step):
     from v4.monitored_training import run_monitored_training
@@ -107,11 +118,13 @@ def test_formal_cli_scale_metadata_logging_and_fixed_configuration_with_syntheti
     assert feedback_study.main(['--output-dir', str(output), '--rounds', '1',
         '--reward-scale', '0.001', '--reward-feedback', 'redistributed', '--beta-soc', '500',
         '--failure-penalty-scale', '1', '--cadence', 'replay32', '--target-interval', '500',
-        '--n-step', '1']) == 0
+        '--n-step', '1', '--failure-terminal-quota', '2']) == 0
     report = json.loads((output/'report.json').read_text(encoding='utf-8'))
     hp = report['hyperparameters']
     assert (hp['reward_scale'], hp['learning_rate'], hp['gamma'], hp['batch_size']) == (.001, .0001, 1., 64)
     assert hp['hidden_dims'] == [128, 64] and hp['replay_capacity'] == 100000
+    assert hp['failure_terminal_quota'] == 2
+    assert report['rounds'][0]['economic_failure_terminal_replay_size'] == 0
     assert hp['epsilon_start'] == 1 and hp['epsilon_end'] == .05
     assert report['execution_counts']['economic_optimizer_updates'] == 7
     assert report['test_payloads_opened'] == 0 and report['dataset_manifests_unchanged']
@@ -124,6 +137,7 @@ def test_formal_cli_scale_metadata_logging_and_fixed_configuration_with_syntheti
     assert row['reward_scale'] == '0.001'
     assert float(row['economic_optimizer_updates']) == 7
     assert 'td_error_mae_original_reward_units' in row
+    assert row['economic_failure_terminal_replay_size'] == '0'
 
 
 def test_strict_entry_aborts_model_error_instead_of_creating_physical_failure(tmp_path, monkeypatch):

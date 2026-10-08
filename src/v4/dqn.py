@@ -74,6 +74,7 @@ class DirectPowerDDQN:
         hidden_dims: tuple[int, ...] = (128, 64),
         n_step: int = 1,
         reward_scale: float = 1.0,
+        failure_terminal_quota: int = 0,
     ) -> None:
         if not 0 <= gamma <= 1 or learning_rate <= 0 or replay_capacity < 1:
             raise ValueError("invalid Double-DQN hyperparameters")
@@ -81,7 +82,10 @@ class DirectPowerDDQN:
             raise ValueError('n_step must be 1 or 8')
         if not math.isfinite(reward_scale) or reward_scale <= 0:
             raise ValueError('reward_scale must be finite and positive')
+        if type(failure_terminal_quota) is not int or failure_terminal_quota < 0:
+            raise ValueError('failure_terminal_quota must be a nonnegative integer')
         self.reward_scale = float(reward_scale)
+        self.failure_terminal_quota = failure_terminal_quota
         self.n_step = n_step
         self.gamma = float(gamma)
         self.random = random.Random(seed)
@@ -99,6 +103,13 @@ class DirectPowerDDQN:
         self.target.eval()
         self.optimizer = torch.optim.Adam(self.online.parameters(), lr=learning_rate)
         self.replay: deque[ReplayItem] = deque(maxlen=replay_capacity)
+        # Track live FIFO entries in disjoint pools without rescanning replay at each update.
+        self._replay_ids: deque[int] = deque()
+        self._next_replay_id = 0
+        self._failure_terminal_pool: list[tuple[int, ReplayItem]] = []
+        self._ordinary_pool: list[tuple[int, ReplayItem]] = []
+        self._failure_terminal_positions: dict[int, int] = {}
+        self._ordinary_positions: dict[int, int] = {}
         self.outcome_model = MLPQNetwork(STATE_DIM, len(ACTION_KW), hidden_dims)
         self.outcome_optimizer = torch.optim.Adam(self.outcome_model.parameters(), lr=learning_rate)
         self.outcome_random = random.Random(seed + 1)
@@ -178,11 +189,32 @@ class DirectPowerDDQN:
                 not math.isfinite(failure_penalty_equivalent_cny) or failure_penalty_equivalent_cny<0 or
                 (failure_penalty_equivalent_cny and reason not in FAILURE_TERMINALS)):
             raise ValueError('invalid economic experience outcome or terminal reason')
-        self.replay.append(ReplayItem(
+        item = ReplayItem(
             self._state(state), ACTION_KW.index(action_kw), scaled_reward,
             self._state(next_state), done, next_indices, bootstrap_steps,
             experience_outcome,reason,failure_penalty_equivalent_cny,
-        ))
+        )
+        if len(self.replay) == self.replay.maxlen:
+            expired_id = self._replay_ids.popleft()
+            if expired_id in self._failure_terminal_positions:
+                pool, positions = self._failure_terminal_pool, self._failure_terminal_positions
+            else:
+                pool, positions = self._ordinary_pool, self._ordinary_positions
+            expired_position = positions.pop(expired_id)
+            last_entry = pool.pop()
+            if expired_position < len(pool):
+                pool[expired_position] = last_entry
+                positions[last_entry[0]] = expired_position
+        entry_id = self._next_replay_id
+        self._next_replay_id += 1
+        self.replay.append(item)
+        self._replay_ids.append(entry_id)
+        if reason in FAILURE_TERMINALS:
+            pool, positions = self._failure_terminal_pool, self._failure_terminal_positions
+        else:
+            pool, positions = self._ordinary_pool, self._ordinary_positions
+        positions[entry_id] = len(pool)
+        pool.append((entry_id, item))
         self.economic_replay_insertions += 1
         if experience_outcome=='failure':
             self.economic_failure_replay_insertions += 1
@@ -304,7 +336,7 @@ class DirectPowerDDQN:
             raise ValueError("batch_size must be positive")
         if len(self.replay) < batch_size:
             return None
-        batch = self.random.sample(tuple(self.replay), batch_size)
+        batch = self._sample_replay_batch(batch_size)
         states = torch.tensor([item.state for item in batch], dtype=torch.float32)
         next_states = torch.tensor([item.next_state for item in batch], dtype=torch.float32)
         actions = torch.tensor([[item.action_index] for item in batch], dtype=torch.long)
@@ -359,6 +391,22 @@ class DirectPowerDDQN:
                 self._failure_td_square_sum += float(failure_error.square().sum().item())
                 self._failure_td_abs_max=max(self._failure_td_abs_max,float(failure_error.abs().max().item()))
         return float(loss.item())
+
+    @property
+    def failure_terminal_replay_count(self) -> int:
+        return len(self._failure_terminal_pool)
+
+    def _sample_replay_batch(self, batch_size: int) -> list[ReplayItem]:
+        """Draw a fixed terminal quota, falling back when either pool is short."""
+        if self.failure_terminal_quota == 0:
+            return self.random.sample(tuple(self.replay), batch_size)
+        failure_count = min(self.failure_terminal_quota, len(self._failure_terminal_pool), batch_size)
+        failure_count = max(failure_count, batch_size - len(self._ordinary_pool))
+        ordinary_count = batch_size - failure_count
+        batch = [item for _, item in self.random.sample(self._failure_terminal_pool, failure_count)]
+        batch.extend(item for _, item in self.random.sample(self._ordinary_pool, ordinary_count))
+        self.random.shuffle(batch)
+        return batch
 
     def reset_td_statistics(self) -> None:
         """Reset diagnostic accumulators, without changing training state."""

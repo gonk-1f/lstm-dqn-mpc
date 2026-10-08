@@ -31,6 +31,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument('--reward-feedback',choices=('original','redistributed'),default='redistributed')
     parser.add_argument('--reward-scale',type=float,default=1.,
                         help='uniform multiplier applied once to final economic-Q replay rewards; ledgers remain CNY')
+    parser.add_argument('--failure-terminal-quota',type=int,default=0,
+                        help='failure terminal samples per economic Q batch; 0 preserves uniform replay')
     parser.add_argument('--cadence',choices=('episode16','replay32','replay16'),default='replay32')
     parser.add_argument('--target-interval',type=int,choices=(250,500,1000),default=500)
     parser.add_argument('--n-step',type=int,choices=(1,8),default=1)
@@ -43,6 +45,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error('rounds must be explicitly chosen in [1,40]')
     if not math.isfinite(args.reward_scale) or args.reward_scale <= 0:
         parser.error('reward-scale must be finite and positive')
+    if args.failure_terminal_quota < 0:
+        parser.error('failure-terminal-quota must be nonnegative')
     output = fresh_output_path(args.output_dir)
     roots = tuple(_default_data_root(name) for name in (
         'operating_dataset_zero_boundary_v2','operating_dataset_zero_boundary_v2_ais',
@@ -56,7 +60,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         episode_credit_scope=args.episode_credit_scope,n_step=args.n_step,
         required_split_sizes=(30,8),capture_trajectories=True,progress_every_steps=50,
         learn_no_feasible_failures=True,failure_penalty_scale=args.failure_penalty_scale,
-        reward_scale=args.reward_scale,manifest_sha256=before,
+        reward_scale=args.reward_scale,failure_terminal_quota=args.failure_terminal_quota,
+        manifest_sha256=before,
         dataset_roots=tuple(str(root.resolve()) for root in roots),
         abort_on_execution_error=True,capture_log=True)
     try:

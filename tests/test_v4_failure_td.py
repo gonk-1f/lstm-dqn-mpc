@@ -320,17 +320,26 @@ def test_failure_insertion_drives_replay32_budget_and_readonly_greedy(tmp_path):
                 operating_mode=('onboard',)*69,load_kw=(1000.,)*67+(1800.,0.),battery_bus_kw=(0.,)*69),)
     agent,report=run_monitored_training(FeasibleHighLoad(),output_dir=tmp_path,rounds=1,
         beta_soc=500,cadence='replay32',target_mode='optimizer',target_interval=500,batch_size=64,
-        n_step=1,redistribute_battery_energy=True,capture_trajectories=True)
+        n_step=1,redistribute_battery_energy=True,capture_trajectories=True,
+        failure_terminal_quota=2)
     assert report['bootstrap']['completed']==1
     assert report['rounds'][0]['exploratory_train']['failed']
     counts=report['execution_counts']
     assert counts['economic_failure_replay_insertions']>0
     assert counts['economic_success_replay_insertions']==69
     assert counts['economic_failure_terminal_insertions']==1
+    assert counts['economic_failure_terminal_replay_size']==1
     assert counts['failed_suffix_transitions_excluded_from_economic_replay']==0
     assert counts['economic_optimizer_updates']==counts['economic_replay_insertions']//32
     assert counts['target_sync_calls_including_initial_copy']==1+counts['economic_optimizer_updates']//500
     assert report['rounds'][0]['failure_reason_counts']['soc_limited']==1
+    row=report['rounds'][0]
+    assert row['economic_failure_terminal_replay_size']==1
+    assert row['td_statistics']['sample_outcomes']['failure_terminal']>0
+    assert row['td_statistics']['sample_outcomes']['failure_terminal_fraction']==pytest.approx(
+        row['td_statistics']['sample_outcomes']['failure_terminal']/row['td_statistics']['sample_count'])
+    assert row['td_statistics']['failure_terminal']['original_units']['mean_absolute_td_error']==pytest.approx(
+        row['td_statistics']['failure_terminal']['mean_absolute_td_error']/row['reward_scale'])
     assert report['test_payloads_opened']==0
     import json
     profile=json.loads((tmp_path/'round_001_exploratory_trajectories.json').read_text())['failed'][0]
