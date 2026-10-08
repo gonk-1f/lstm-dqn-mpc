@@ -9,7 +9,7 @@ FC 动作为 0–600 kW、间隔 10 kW，电池承担剩余负载；单步物理
 - [文档总索引](docs/README.md)：当前方法、实施报告、模型依据及历史资料分类。
 - [v4 方法与默认配置](docs/v4_direct_power.md)：奖励、失败终止、经济账本与选模资格。
 - [失败经验进入经济 Q 的实施验证](docs/v4_failure_economic_td_2026-10-08.md)：d111c99 的修复与合成证据。
-- 当前单配置入口为 [feedback_study.py](src/v4/feedback_study.py)，默认 beta500、redistributed、replay32、target500、batch64、γ1、n1、epsilon 1→0.05。奖励缩放仍为 1。
+- 当前单配置入口为 [feedback_study.py](src/v4/feedback_study.py)，默认 beta500、redistributed、replay32、target500、batch64、γ1、n1、epsilon 1→0.05。`--reward-scale` 默认 1；[本次训练准备与PyCharm命令](docs/v4_reward_scale_training_2026-10-08.md)显式选0.001。
 
 查看入口帮助不加载正式轨迹、不运行训练：
 

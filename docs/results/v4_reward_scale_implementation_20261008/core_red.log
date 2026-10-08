@@ -1,0 +1,347 @@
+FFFFFFFFFFFFFFFFF                                                        [100%]
+================================== FAILURES ===================================
+________________________ test_bad_scale_rejected[0.0] _________________________
+
+scale = 0.0
+
+    @pytest.mark.parametrize('scale', [0., -1., float('nan'), float('inf')])
+    def test_bad_scale_rejected(scale):
+        with pytest.raises(ValueError, match='reward_scale'):
+>           DirectPowerDDQN(reward_scale=scale)
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:25: TypeError
+________________________ test_bad_scale_rejected[-1.0] ________________________
+
+scale = -1.0
+
+    @pytest.mark.parametrize('scale', [0., -1., float('nan'), float('inf')])
+    def test_bad_scale_rejected(scale):
+        with pytest.raises(ValueError, match='reward_scale'):
+>           DirectPowerDDQN(reward_scale=scale)
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:25: TypeError
+________________________ test_bad_scale_rejected[nan] _________________________
+
+scale = nan
+
+    @pytest.mark.parametrize('scale', [0., -1., float('nan'), float('inf')])
+    def test_bad_scale_rejected(scale):
+        with pytest.raises(ValueError, match='reward_scale'):
+>           DirectPowerDDQN(reward_scale=scale)
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:25: TypeError
+________________________ test_bad_scale_rejected[inf] _________________________
+
+scale = inf
+
+    @pytest.mark.parametrize('scale', [0., -1., float('nan'), float('inf')])
+    def test_bad_scale_rejected(scale):
+        with pytest.raises(ValueError, match='reward_scale'):
+>           DirectPowerDDQN(reward_scale=scale)
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:25: TypeError
+_ test_complete_shore_settlement_feedback_and_n_step_scale_once[1-modes0-loads0-None-powers0] _
+
+modes = ('onboard', 'onboard', 'onboard'), loads = (0.0, 100.0, 0.0)
+shore = None, powers = (0, 0, 0), n = 1
+
+    @pytest.mark.parametrize('modes,loads,shore,powers', [
+        (('onboard',)*3, (0.,100.,0.), None, (0,0,0)),
+        (('onboard',)*3, (0.,100.,0.), None, (600,600,600)),
+        (('onboard','onboard','shore_charging'), (100.,0.,0.), (0.,0.,-100.), (0,0)),
+        (('onboard','shore_charging','onboard'), (100.,0.,100.), (0.,-100.,0.), (0,600)),
+    ])
+    @pytest.mark.parametrize('n', [1,8])
+    def test_complete_shore_settlement_feedback_and_n_step_scale_once(modes,loads,shore,powers,n):
+        accountant=EconomicMPC(nominal_cost_cny=1)
+        data=episode(modes,loads,shore)
+        original=[]
+        for feedback in (False,True):
+            actions=iter(powers)
+            result=replay_episode(data,lambda *args:next(actions),accountant=accountant,
+                beta_soc=500,redistribute_battery_energy=feedback)
+            normal=DirectPowerDDQN(seed=42,n_step=n)
+>           scaled=DirectPowerDDQN(seed=42,n_step=n,reward_scale=.001)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:44: TypeError
+_ test_complete_shore_settlement_feedback_and_n_step_scale_once[1-modes1-loads1-None-powers1] _
+
+modes = ('onboard', 'onboard', 'onboard'), loads = (0.0, 100.0, 0.0)
+shore = None, powers = (600, 600, 600), n = 1
+
+    @pytest.mark.parametrize('modes,loads,shore,powers', [
+        (('onboard',)*3, (0.,100.,0.), None, (0,0,0)),
+        (('onboard',)*3, (0.,100.,0.), None, (600,600,600)),
+        (('onboard','onboard','shore_charging'), (100.,0.,0.), (0.,0.,-100.), (0,0)),
+        (('onboard','shore_charging','onboard'), (100.,0.,100.), (0.,-100.,0.), (0,600)),
+    ])
+    @pytest.mark.parametrize('n', [1,8])
+    def test_complete_shore_settlement_feedback_and_n_step_scale_once(modes,loads,shore,powers,n):
+        accountant=EconomicMPC(nominal_cost_cny=1)
+        data=episode(modes,loads,shore)
+        original=[]
+        for feedback in (False,True):
+            actions=iter(powers)
+            result=replay_episode(data,lambda *args:next(actions),accountant=accountant,
+                beta_soc=500,redistribute_battery_energy=feedback)
+            normal=DirectPowerDDQN(seed=42,n_step=n)
+>           scaled=DirectPowerDDQN(seed=42,n_step=n,reward_scale=.001)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:44: TypeError
+_ test_complete_shore_settlement_feedback_and_n_step_scale_once[1-modes2-loads2-shore2-powers2] _
+
+modes = ('onboard', 'onboard', 'shore_charging'), loads = (100.0, 0.0, 0.0)
+shore = (0.0, 0.0, -100.0), powers = (0, 0), n = 1
+
+    @pytest.mark.parametrize('modes,loads,shore,powers', [
+        (('onboard',)*3, (0.,100.,0.), None, (0,0,0)),
+        (('onboard',)*3, (0.,100.,0.), None, (600,600,600)),
+        (('onboard','onboard','shore_charging'), (100.,0.,0.), (0.,0.,-100.), (0,0)),
+        (('onboard','shore_charging','onboard'), (100.,0.,100.), (0.,-100.,0.), (0,600)),
+    ])
+    @pytest.mark.parametrize('n', [1,8])
+    def test_complete_shore_settlement_feedback_and_n_step_scale_once(modes,loads,shore,powers,n):
+        accountant=EconomicMPC(nominal_cost_cny=1)
+        data=episode(modes,loads,shore)
+        original=[]
+        for feedback in (False,True):
+            actions=iter(powers)
+            result=replay_episode(data,lambda *args:next(actions),accountant=accountant,
+                beta_soc=500,redistribute_battery_energy=feedback)
+            normal=DirectPowerDDQN(seed=42,n_step=n)
+>           scaled=DirectPowerDDQN(seed=42,n_step=n,reward_scale=.001)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:44: TypeError
+_ test_complete_shore_settlement_feedback_and_n_step_scale_once[1-modes3-loads3-shore3-powers3] _
+
+modes = ('onboard', 'shore_charging', 'onboard'), loads = (100.0, 0.0, 100.0)
+shore = (0.0, -100.0, 0.0), powers = (0, 600), n = 1
+
+    @pytest.mark.parametrize('modes,loads,shore,powers', [
+        (('onboard',)*3, (0.,100.,0.), None, (0,0,0)),
+        (('onboard',)*3, (0.,100.,0.), None, (600,600,600)),
+        (('onboard','onboard','shore_charging'), (100.,0.,0.), (0.,0.,-100.), (0,0)),
+        (('onboard','shore_charging','onboard'), (100.,0.,100.), (0.,-100.,0.), (0,600)),
+    ])
+    @pytest.mark.parametrize('n', [1,8])
+    def test_complete_shore_settlement_feedback_and_n_step_scale_once(modes,loads,shore,powers,n):
+        accountant=EconomicMPC(nominal_cost_cny=1)
+        data=episode(modes,loads,shore)
+        original=[]
+        for feedback in (False,True):
+            actions=iter(powers)
+            result=replay_episode(data,lambda *args:next(actions),accountant=accountant,
+                beta_soc=500,redistribute_battery_energy=feedback)
+            normal=DirectPowerDDQN(seed=42,n_step=n)
+>           scaled=DirectPowerDDQN(seed=42,n_step=n,reward_scale=.001)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:44: TypeError
+_ test_complete_shore_settlement_feedback_and_n_step_scale_once[8-modes0-loads0-None-powers0] _
+
+modes = ('onboard', 'onboard', 'onboard'), loads = (0.0, 100.0, 0.0)
+shore = None, powers = (0, 0, 0), n = 8
+
+    @pytest.mark.parametrize('modes,loads,shore,powers', [
+        (('onboard',)*3, (0.,100.,0.), None, (0,0,0)),
+        (('onboard',)*3, (0.,100.,0.), None, (600,600,600)),
+        (('onboard','onboard','shore_charging'), (100.,0.,0.), (0.,0.,-100.), (0,0)),
+        (('onboard','shore_charging','onboard'), (100.,0.,100.), (0.,-100.,0.), (0,600)),
+    ])
+    @pytest.mark.parametrize('n', [1,8])
+    def test_complete_shore_settlement_feedback_and_n_step_scale_once(modes,loads,shore,powers,n):
+        accountant=EconomicMPC(nominal_cost_cny=1)
+        data=episode(modes,loads,shore)
+        original=[]
+        for feedback in (False,True):
+            actions=iter(powers)
+            result=replay_episode(data,lambda *args:next(actions),accountant=accountant,
+                beta_soc=500,redistribute_battery_energy=feedback)
+            normal=DirectPowerDDQN(seed=42,n_step=n)
+>           scaled=DirectPowerDDQN(seed=42,n_step=n,reward_scale=.001)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:44: TypeError
+_ test_complete_shore_settlement_feedback_and_n_step_scale_once[8-modes1-loads1-None-powers1] _
+
+modes = ('onboard', 'onboard', 'onboard'), loads = (0.0, 100.0, 0.0)
+shore = None, powers = (600, 600, 600), n = 8
+
+    @pytest.mark.parametrize('modes,loads,shore,powers', [
+        (('onboard',)*3, (0.,100.,0.), None, (0,0,0)),
+        (('onboard',)*3, (0.,100.,0.), None, (600,600,600)),
+        (('onboard','onboard','shore_charging'), (100.,0.,0.), (0.,0.,-100.), (0,0)),
+        (('onboard','shore_charging','onboard'), (100.,0.,100.), (0.,-100.,0.), (0,600)),
+    ])
+    @pytest.mark.parametrize('n', [1,8])
+    def test_complete_shore_settlement_feedback_and_n_step_scale_once(modes,loads,shore,powers,n):
+        accountant=EconomicMPC(nominal_cost_cny=1)
+        data=episode(modes,loads,shore)
+        original=[]
+        for feedback in (False,True):
+            actions=iter(powers)
+            result=replay_episode(data,lambda *args:next(actions),accountant=accountant,
+                beta_soc=500,redistribute_battery_energy=feedback)
+            normal=DirectPowerDDQN(seed=42,n_step=n)
+>           scaled=DirectPowerDDQN(seed=42,n_step=n,reward_scale=.001)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:44: TypeError
+_ test_complete_shore_settlement_feedback_and_n_step_scale_once[8-modes2-loads2-shore2-powers2] _
+
+modes = ('onboard', 'onboard', 'shore_charging'), loads = (100.0, 0.0, 0.0)
+shore = (0.0, 0.0, -100.0), powers = (0, 0), n = 8
+
+    @pytest.mark.parametrize('modes,loads,shore,powers', [
+        (('onboard',)*3, (0.,100.,0.), None, (0,0,0)),
+        (('onboard',)*3, (0.,100.,0.), None, (600,600,600)),
+        (('onboard','onboard','shore_charging'), (100.,0.,0.), (0.,0.,-100.), (0,0)),
+        (('onboard','shore_charging','onboard'), (100.,0.,100.), (0.,-100.,0.), (0,600)),
+    ])
+    @pytest.mark.parametrize('n', [1,8])
+    def test_complete_shore_settlement_feedback_and_n_step_scale_once(modes,loads,shore,powers,n):
+        accountant=EconomicMPC(nominal_cost_cny=1)
+        data=episode(modes,loads,shore)
+        original=[]
+        for feedback in (False,True):
+            actions=iter(powers)
+            result=replay_episode(data,lambda *args:next(actions),accountant=accountant,
+                beta_soc=500,redistribute_battery_energy=feedback)
+            normal=DirectPowerDDQN(seed=42,n_step=n)
+>           scaled=DirectPowerDDQN(seed=42,n_step=n,reward_scale=.001)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:44: TypeError
+_ test_complete_shore_settlement_feedback_and_n_step_scale_once[8-modes3-loads3-shore3-powers3] _
+
+modes = ('onboard', 'shore_charging', 'onboard'), loads = (100.0, 0.0, 100.0)
+shore = (0.0, -100.0, 0.0), powers = (0, 600), n = 8
+
+    @pytest.mark.parametrize('modes,loads,shore,powers', [
+        (('onboard',)*3, (0.,100.,0.), None, (0,0,0)),
+        (('onboard',)*3, (0.,100.,0.), None, (600,600,600)),
+        (('onboard','onboard','shore_charging'), (100.,0.,0.), (0.,0.,-100.), (0,0)),
+        (('onboard','shore_charging','onboard'), (100.,0.,100.), (0.,-100.,0.), (0,600)),
+    ])
+    @pytest.mark.parametrize('n', [1,8])
+    def test_complete_shore_settlement_feedback_and_n_step_scale_once(modes,loads,shore,powers,n):
+        accountant=EconomicMPC(nominal_cost_cny=1)
+        data=episode(modes,loads,shore)
+        original=[]
+        for feedback in (False,True):
+            actions=iter(powers)
+            result=replay_episode(data,lambda *args:next(actions),accountant=accountant,
+                beta_soc=500,redistribute_battery_energy=feedback)
+            normal=DirectPowerDDQN(seed=42,n_step=n)
+>           scaled=DirectPowerDDQN(seed=42,n_step=n,reward_scale=.001)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:44: TypeError
+___________ test_failure_once_only_penalty_identity_no_bootstrap[1] ___________
+
+n = 1
+
+    @pytest.mark.parametrize('n', [1,8])
+    def test_failure_once_only_penalty_identity_no_bootstrap(n):
+        accountant=EconomicMPC(nominal_cost_cny=1)
+        data=episode(('onboard',)*3,(600.,1000.,0.))
+        totals=[]
+        for feedback in (False,True):
+            with pytest.raises(ReplayExecutionError) as caught:
+                replay_episode(data,lambda *args:0,accountant=accountant,
+                    initial_state=AccountState(soc=.2135),beta_soc=500,
+                    redistribute_battery_energy=feedback)
+            exc=caught.value
+            view=prepare_failure_replay(exc,penalty=FailurePenalty.from_reference(),
+                energy_value=BatteryEnergyValue.from_accountant(accountant),
+                redistribute_battery_energy=feedback)
+            plain=DirectPowerDDQN(seed=42,n_step=n)
+>           scaled=DirectPowerDDQN(seed=42,n_step=n,reward_scale=.001)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:77: TypeError
+___________ test_failure_once_only_penalty_identity_no_bootstrap[8] ___________
+
+n = 8
+
+    @pytest.mark.parametrize('n', [1,8])
+    def test_failure_once_only_penalty_identity_no_bootstrap(n):
+        accountant=EconomicMPC(nominal_cost_cny=1)
+        data=episode(('onboard',)*3,(600.,1000.,0.))
+        totals=[]
+        for feedback in (False,True):
+            with pytest.raises(ReplayExecutionError) as caught:
+                replay_episode(data,lambda *args:0,accountant=accountant,
+                    initial_state=AccountState(soc=.2135),beta_soc=500,
+                    redistribute_battery_energy=feedback)
+            exc=caught.value
+            view=prepare_failure_replay(exc,penalty=FailurePenalty.from_reference(),
+                energy_value=BatteryEnergyValue.from_accountant(accountant),
+                redistribute_battery_energy=feedback)
+            plain=DirectPowerDDQN(seed=42,n_step=n)
+>           scaled=DirectPowerDDQN(seed=42,n_step=n,reward_scale=.001)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:77: TypeError
+_____ test_capacity_insertion_and_direct_transition_share_only_one_scale ______
+
+    def test_capacity_insertion_and_direct_transition_share_only_one_scale():
+        data=episode(('onboard',),(100.,))
+        result=replay_episode(data,lambda *args:0,accountant=EconomicMPC(nominal_cost_cny=1),beta_soc=500)
+>       a=DirectPowerDDQN(reward_scale=.001,replay_capacity=1)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:99: TypeError
+_____ test_real_optimizer_statistics_units_sampling_and_clip_observation ______
+
+    def test_real_optimizer_statistics_units_sampling_and_clip_observation():
+>       a=DirectPowerDDQN(reward_scale=.001)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:107: TypeError
+________ test_default_one_is_exact_explicit_one_for_optimizer_and_rng _________
+
+    def test_default_one_is_exact_explicit_one_for_optimizer_and_rng():
+>       a,b=DirectPowerDDQN(seed=42),DirectPowerDDQN(seed=42,reward_scale=1)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: DirectPowerDDQN.__init__() got an unexpected keyword argument 'reward_scale'
+
+tests\test_v4_reward_scaling.py:135: TypeError
+=========================== short test summary info ===========================
+FAILED tests/test_v4_reward_scaling.py::test_bad_scale_rejected[0.0] - TypeEr...
+FAILED tests/test_v4_reward_scaling.py::test_bad_scale_rejected[-1.0] - TypeE...
+FAILED tests/test_v4_reward_scaling.py::test_bad_scale_rejected[nan] - TypeEr...
+FAILED tests/test_v4_reward_scaling.py::test_bad_scale_rejected[inf] - TypeEr...
+FAILED tests/test_v4_reward_scaling.py::test_complete_shore_settlement_feedback_and_n_step_scale_once[1-modes0-loads0-None-powers0]
+FAILED tests/test_v4_reward_scaling.py::test_complete_shore_settlement_feedback_and_n_step_scale_once[1-modes1-loads1-None-powers1]
+FAILED tests/test_v4_reward_scaling.py::test_complete_shore_settlement_feedback_and_n_step_scale_once[1-modes2-loads2-shore2-powers2]
+FAILED tests/test_v4_reward_scaling.py::test_complete_shore_settlement_feedback_and_n_step_scale_once[1-modes3-loads3-shore3-powers3]
+FAILED tests/test_v4_reward_scaling.py::test_complete_shore_settlement_feedback_and_n_step_scale_once[8-modes0-loads0-None-powers0]
+FAILED tests/test_v4_reward_scaling.py::test_complete_shore_settlement_feedback_and_n_step_scale_once[8-modes1-loads1-None-powers1]
+FAILED tests/test_v4_reward_scaling.py::test_complete_shore_settlement_feedback_and_n_step_scale_once[8-modes2-loads2-shore2-powers2]
+FAILED tests/test_v4_reward_scaling.py::test_complete_shore_settlement_feedback_and_n_step_scale_once[8-modes3-loads3-shore3-powers3]
+FAILED tests/test_v4_reward_scaling.py::test_failure_once_only_penalty_identity_no_bootstrap[1]
+FAILED tests/test_v4_reward_scaling.py::test_failure_once_only_penalty_identity_no_bootstrap[8]
+FAILED tests/test_v4_reward_scaling.py::test_capacity_insertion_and_direct_transition_share_only_one_scale
+FAILED tests/test_v4_reward_scaling.py::test_real_optimizer_statistics_units_sampling_and_clip_observation
+FAILED tests/test_v4_reward_scaling.py::test_default_one_is_exact_explicit_one_for_optimizer_and_rng
+17 failed in 4.87s

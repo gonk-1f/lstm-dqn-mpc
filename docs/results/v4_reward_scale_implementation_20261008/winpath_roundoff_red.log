@@ -1,0 +1,253 @@
+FFFFFFF                                                                  [100%]
+================================== FAILURES ===================================
+_ test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[110] _
+
+steady_kw = 110
+
+    @pytest.mark.parametrize('steady_kw',[110,220,230,310,440,460])
+    def test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change(steady_kw):
+        from v4.diagnostics import executed_transition_statistics
+        result=executed_transition_statistics((transition(fc=steady_kw,prior_fc=steady_kw),))
+        change=result['fc_change_statistics_kw']
+>       assert change['nonzero_fraction']==0
+E       assert 1.0 == 0
+
+tests\test_v4_scaled_diagnostics.py:77: AssertionError
+_ test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[220] _
+
+steady_kw = 220
+
+    @pytest.mark.parametrize('steady_kw',[110,220,230,310,440,460])
+    def test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change(steady_kw):
+        from v4.diagnostics import executed_transition_statistics
+        result=executed_transition_statistics((transition(fc=steady_kw,prior_fc=steady_kw),))
+        change=result['fc_change_statistics_kw']
+>       assert change['nonzero_fraction']==0
+E       assert 1.0 == 0
+
+tests\test_v4_scaled_diagnostics.py:77: AssertionError
+_ test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[230] _
+
+steady_kw = 230
+
+    @pytest.mark.parametrize('steady_kw',[110,220,230,310,440,460])
+    def test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change(steady_kw):
+        from v4.diagnostics import executed_transition_statistics
+        result=executed_transition_statistics((transition(fc=steady_kw,prior_fc=steady_kw),))
+        change=result['fc_change_statistics_kw']
+>       assert change['nonzero_fraction']==0
+E       assert 1.0 == 0
+
+tests\test_v4_scaled_diagnostics.py:77: AssertionError
+_ test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[310] _
+
+steady_kw = 310
+
+    @pytest.mark.parametrize('steady_kw',[110,220,230,310,440,460])
+    def test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change(steady_kw):
+        from v4.diagnostics import executed_transition_statistics
+        result=executed_transition_statistics((transition(fc=steady_kw,prior_fc=steady_kw),))
+        change=result['fc_change_statistics_kw']
+>       assert change['nonzero_fraction']==0
+E       assert 1.0 == 0
+
+tests\test_v4_scaled_diagnostics.py:77: AssertionError
+_ test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[440] _
+
+steady_kw = 440
+
+    @pytest.mark.parametrize('steady_kw',[110,220,230,310,440,460])
+    def test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change(steady_kw):
+        from v4.diagnostics import executed_transition_statistics
+        result=executed_transition_statistics((transition(fc=steady_kw,prior_fc=steady_kw),))
+        change=result['fc_change_statistics_kw']
+>       assert change['nonzero_fraction']==0
+E       assert 1.0 == 0
+
+tests\test_v4_scaled_diagnostics.py:77: AssertionError
+_ test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[460] _
+
+steady_kw = 460
+
+    @pytest.mark.parametrize('steady_kw',[110,220,230,310,440,460])
+    def test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change(steady_kw):
+        from v4.diagnostics import executed_transition_statistics
+        result=executed_transition_statistics((transition(fc=steady_kw,prior_fc=steady_kw),))
+        change=result['fc_change_statistics_kw']
+>       assert change['nonzero_fraction']==0
+E       assert 1.0 == 0
+
+tests\test_v4_scaled_diagnostics.py:77: AssertionError
+___________ test_representative_curve_saves_long_windows_image_path ___________
+
+tmp_path = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/direct-power-mlp/outputs/v4_formal_reward_scale_implementation_20261008/winpath_roundoff_red/test_representative_curve_save0')
+
+    @pytest.mark.skipif(os.name!='nt',reason='Windows MAX_PATH regression')
+    def test_representative_curve_saves_long_windows_image_path(tmp_path):
+        from v4.learning_curves import write_learning_curves
+        # Keep the directory/JSON names under260; the representative PNG exceeds it.
+        suffix_length=max(1,210-len(str(tmp_path.resolve()))-1)
+        output=tmp_path/('long-output-'+ 'x'*suffix_length)
+        output.mkdir()
+        assert len(str(output.resolve()))<233
+        profile={'sample_id':'long-path','transitions':[
+            {'voyage_index':0,'soc_before':.55,'soc_after':.54,'fc_kw':100,
+             'battery_bus_kw':200,'load_kw':300}]}
+        source=output/'trajectories.json'
+        source.write_text(json.dumps({'completed':[profile],'failed':[]}),encoding='utf-8')
+        report=synthetic_report()
+        report['rounds'][1]['greedy_validation']=summary()
+        report['rounds'][1]['greedy_validation']['trajectory_file']=source.name
+        expected=output/'final_round_002_greedy_validation_completed_trajectory.png'
+        assert len(str(expected.resolve()))>=260
+>       result=write_learning_curves(report,output)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_v4_scaled_diagnostics.py:235: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\v4\learning_curves.py:249: in write_learning_curves
+    save(fig,selected['figure'])
+src\v4\learning_curves.py:156: in save
+    fig.savefig(output/name,dpi=160)
+D:\py\Python3\Lib\site-packages\matplotlib\figure.py:3490: in savefig
+    self.canvas.print_figure(fname, **kwargs)
+D:\py\Python3\Lib\site-packages\matplotlib\backend_bases.py:2186: in print_figure
+    result = print_method(
+D:\py\Python3\Lib\site-packages\matplotlib\backend_bases.py:2042: in <lambda>
+    print_method = functools.wraps(meth)(lambda *args, **kwargs: meth(
+D:\py\Python3\Lib\site-packages\matplotlib\backends\backend_agg.py:481: in print_png
+    self._print_pil(filename_or_obj, "png", pil_kwargs, metadata)
+D:\py\Python3\Lib\site-packages\matplotlib\backends\backend_agg.py:430: in _print_pil
+    mpl.image.imsave(
+D:\py\Python3\Lib\site-packages\matplotlib\image.py:1657: in imsave
+    image.save(fname, **pil_kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <PIL.Image.Image image mode=RGBA size=1600x1120 at 0x16775A08ED0>
+fp = 'C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_formal_rew...t_representative_curve_save0\\long-output-xxxxxxxxxxxxxxxx\\final_round_002_greedy_validation_completed_trajectory.png'
+format = 'png'
+params = {'pnginfo': <PIL.PngImagePlugin.PngInfo object at 0x00000167759A58D0>, 'dpi': (160, 160)}
+
+    def save(
+        self, fp: StrOrBytesPath | IO[bytes], format: str | None = None, **params: Any
+    ) -> None:
+        """
+        Saves this image under the given filename.  If no format is
+        specified, the format to use is determined from the filename
+        extension, if possible.
+    
+        Keyword options can be used to provide additional instructions
+        to the writer. If a writer doesn't recognise an option, it is
+        silently ignored. The available options are described in the
+        :doc:`image format documentation
+        <../handbook/image-file-formats>` for each writer.
+    
+        You can use a file object instead of a filename. In this case,
+        you must always specify the format. The file object must
+        implement the ``seek``, ``tell``, and ``write``
+        methods, and be opened in binary mode.
+    
+        :param fp: A filename (string), os.PathLike object or file object.
+        :param format: Optional format override.  If omitted, the
+           format to use is determined from the filename extension.
+           If a file object was used instead of a filename, this
+           parameter should always be used.
+        :param params: Extra parameters to the image writer. These can also be
+           set on the image itself through ``encoderinfo``. This is useful when
+           saving multiple images::
+    
+             # Saving XMP data to a single image
+             from PIL import Image
+             red = Image.new("RGB", (1, 1), "#f00")
+             red.save("out.mpo", xmp=b"test")
+    
+             # Saving XMP data to the second frame of an image
+             from PIL import Image
+             black = Image.new("RGB", (1, 1))
+             red = Image.new("RGB", (1, 1), "#f00")
+             red.encoderinfo = {"xmp": b"test"}
+             black.save("out.mpo", save_all=True, append_images=[red])
+        :returns: None
+        :exception ValueError: If the output format could not be determined
+           from the file name.  Use the format option to solve this.
+        :exception OSError: If the file could not be written.  The file
+           may have been created, and may contain partial data.
+        """
+    
+        filename: str | bytes = ""
+        open_fp = False
+        if is_path(fp):
+            filename = os.fspath(fp)
+            open_fp = True
+        elif fp == sys.stdout:
+            try:
+                fp = sys.stdout.buffer
+            except AttributeError:
+                pass
+        if not filename and hasattr(fp, "name") and is_path(fp.name):
+            # only set the name for metadata purposes
+            filename = os.fspath(fp.name)
+    
+        preinit()
+    
+        filename_ext = os.path.splitext(filename)[1].lower()
+        ext = filename_ext.decode() if isinstance(filename_ext, bytes) else filename_ext
+    
+        if not format:
+            if ext not in EXTENSION:
+                init()
+            try:
+                format = EXTENSION[ext]
+            except KeyError as e:
+                msg = f"unknown file extension: {ext}"
+                raise ValueError(msg) from e
+    
+        from . import ImageFile
+    
+        # may mutate self!
+        if isinstance(self, ImageFile.ImageFile) and os.path.abspath(
+            filename
+        ) == os.path.abspath(self.filename):
+            self._ensure_mutable()
+        else:
+            self.load()
+    
+        save_all = params.pop("save_all", None)
+        self._default_encoderinfo = params
+        encoderinfo = getattr(self, "encoderinfo", {})
+        self._attach_default_encoderinfo(self)
+        self.encoderconfig: tuple[Any, ...] = ()
+    
+        if format.upper() not in SAVE:
+            init()
+        if save_all or (
+            save_all is None
+            and params.get("append_images")
+            and format.upper() in SAVE_ALL
+        ):
+            save_handler = SAVE_ALL[format.upper()]
+        else:
+            save_handler = SAVE[format.upper()]
+    
+        created = False
+        if open_fp:
+            created = not os.path.exists(filename)
+            if params.get("append", False):
+                # Open also for reading ("+"), because TIFF save_all
+                # writer needs to go back and edit the written data.
+                fp = builtins.open(filename, "r+b")
+            else:
+>               fp = builtins.open(filename, "w+b")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_formal_reward_scale_implementation_20261008\\winpath_roundoff_red\\test_representative_curve_save0\\long-output-xxxxxxxxxxxxxxxx\\final_round_002_greedy_validation_completed_trajectory.png'
+
+D:\py\Python3\Lib\site-packages\PIL\Image.py:2566: FileNotFoundError
+=========================== short test summary info ===========================
+FAILED tests/test_v4_scaled_diagnostics.py::test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[110]
+FAILED tests/test_v4_scaled_diagnostics.py::test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[220]
+FAILED tests/test_v4_scaled_diagnostics.py::test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[230]
+FAILED tests/test_v4_scaled_diagnostics.py::test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[310]
+FAILED tests/test_v4_scaled_diagnostics.py::test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[440]
+FAILED tests/test_v4_scaled_diagnostics.py::test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_change[460]
+FAILED tests/test_v4_scaled_diagnostics.py::test_representative_curve_saves_long_windows_image_path
+7 failed, 13 deselected in 5.30s

@@ -63,7 +63,7 @@ r^{shift}_k=r^{old}_k-\left[B(SOC_{k+1})-B(SOC_k)\right].
 |---|---|
 | 网络 / 动作 | MLP 8–128–64–61、ReLU / 0:10:600 kW |
 | beta_soc / reward-feedback | 500 / redistributed |
-| failure-penalty-scale / reward scaling | 1 / 1，正式入口不自动缩放 |
+| failure-penalty-scale / reward-scale | 1 / 1，`--reward-scale` 可显式配置 |
 | γ / n-step | 1 / 1 |
 | Adam 学习率 / batch | 1e-4 / 64 |
 | replay capacity | 100000 |
@@ -74,6 +74,8 @@ r^{shift}_k=r^{old}_k-\left[B(SOC_{k+1})-B(SOC_k)\right].
 
 成功/失败经验均按实际插入数给额度，FIFO 满后插入继续累计。
 下一状态 mask、Double-DQN 在线选动作/目标网络估值保持原实现。
+
+统一缩放在经济replay插入处执行一次，默认1；原reward组成、终端校正和n-step回报先按原奖励单位计算。outcome与真实经济账本不缩放。Q/TD同时记录训练单位和除以reward_scale后的原单位，详见[接入验证与40轮命令](v4_reward_scale_training_2026-10-08.md)。本次实现验证没有执行正式40轮。
 
 ## 运行与选模边界
 

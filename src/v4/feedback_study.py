@@ -6,13 +6,15 @@ explicit command and user authorization; this change was verified synthetically.
 from __future__ import annotations
 
 import argparse
+import math
 from pathlib import Path
+import sys
+import traceback
 from typing import Sequence
 
 from v2.data.formal_training_dataset import FormalTrainingDataset
 from .monitored_training import _write_json, run_monitored_training
 from .review import _manifest_hashes
-from .staged_study import _csv_history
 from .train import _default_data_root
 from .experiment_paths import unarchived_output_path
 
@@ -27,6 +29,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument('--rounds',type=int,required=True)
     parser.add_argument('--beta-soc',type=float,default=500.)
     parser.add_argument('--reward-feedback',choices=('original','redistributed'),default='redistributed')
+    parser.add_argument('--reward-scale',type=float,default=1.,
+                        help='uniform multiplier applied once to final economic-Q replay rewards; ledgers remain CNY')
     parser.add_argument('--cadence',choices=('episode16','replay32','replay16'),default='replay32')
     parser.add_argument('--target-interval',type=int,choices=(250,500,1000),default=500)
     parser.add_argument('--n-step',type=int,choices=(1,8),default=1)
@@ -37,6 +41,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if not 1 <= args.rounds <= 40:
         parser.error('rounds must be explicitly chosen in [1,40]')
+    if not math.isfinite(args.reward_scale) or args.reward_scale <= 0:
+        parser.error('reward-scale must be finite and positive')
     output = fresh_output_path(args.output_dir)
     roots = tuple(_default_data_root(name) for name in (
         'operating_dataset_zero_boundary_v2','operating_dataset_zero_boundary_v2_ais',
@@ -49,13 +55,39 @@ def main(argv: Sequence[str] | None = None) -> int:
         redistribute_battery_energy=args.reward_feedback == 'redistributed',
         episode_credit_scope=args.episode_credit_scope,n_step=args.n_step,
         required_split_sizes=(30,8),capture_trajectories=True,progress_every_steps=50,
-        learn_no_feasible_failures=True,failure_penalty_scale=args.failure_penalty_scale)
-    if dataset.opened_test_payloads != 0 or _manifest_hashes(roots) != before:
-        raise RuntimeError('Test opened or dataset manifests changed')
+        learn_no_feasible_failures=True,failure_penalty_scale=args.failure_penalty_scale,
+        reward_scale=args.reward_scale,manifest_sha256=before,
+        dataset_roots=tuple(str(root.resolve()) for root in roots),
+        abort_on_execution_error=True,capture_log=True)
+    try:
+        after = _manifest_hashes(roots)
+        if dataset.opened_test_payloads != 0 or after != before:
+            raise RuntimeError('Test opened or dataset manifests changed')
+    except BaseException as exc:
+        report.update(completed_training=False,run_status='aborted',
+                      dataset_manifests_unchanged=False,checkpoint_selection_valid=False)
+        report['test_payloads_opened'] = dataset.opened_test_payloads
+        if 'after' in locals():
+            report['final_manifest_sha256'] = after
+        report['abort'] = {'exception_type':type(exc).__name__,'message':str(exc),
+            'phase':'final_dataset_guard','completed_rounds_retained':len(report['rounds']),
+            'automatic_resume':False,'checkpoint_artifact_preserved_as_invalid_evidence':True}
+        if report['best_checkpoint'] is not None:
+            report['best_checkpoint']['selection_valid'] = False
+            report['best_checkpoint']['invalidation_reason'] = 'final_dataset_guard_failed'
+        _write_json(output/'report.json',report)
+        _write_json(output/'round_history.json',report)
+        detail = traceback.format_exc()
+        with (output/'train.log').open('a',encoding='utf-8') as handle:
+            handle.write(detail)
+        sys.stderr.write(detail)
+        raise
     report['manifest_sha256'] = before
+    report['final_manifest_sha256'] = after
     report['dataset_manifests_unchanged'] = True
+    report['checkpoint_selection_valid'] = report['best_checkpoint'] is not None
     _write_json(output/'report.json',report)
-    _csv_history(report,output/'round_metrics.csv')
+    _write_json(output/'round_history.json',report)
     return 0
 
 

@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import json
 import math
+import csv
+from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from dataclasses import asdict
 from pathlib import Path
 import subprocess
+import sys
 import time
+import traceback
 
 import torch
 
@@ -17,7 +21,8 @@ from .control import ACTION_KW, ReplayExecutionError, replay_episode
 from .dqn import DirectPowerDDQN
 from .experiment_schedule import BestCheckpoint, EconomicUpdateSchedule, fully_completed
 from .train import _run_episodes, _summarize
-from .diagnostics import fixed_q_diagnostics, trajectory_record
+from .diagnostics import fixed_q_diagnostics, trajectory_record, executed_transition_statistics
+from .learning_curves import write_learning_curves
 from .reward_feedback import BatteryEnergyValue
 from .experiment_paths import unarchived_output_path
 from .failure_replay import FailurePenalty, prepare_failure_replay
@@ -25,7 +30,8 @@ from .failure_replay import FailurePenalty, prepare_failure_replay
 
 def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
                     redistribute_battery_energy: bool = False, trajectory_path: Path | None = None,
-                    learn_no_feasible_failures: bool = False, failure_penalty: FailurePenalty | None = None) -> dict:
+                    learn_no_feasible_failures: bool = False, failure_penalty: FailurePenalty | None = None,
+                    abort_on_execution_error: bool = False) -> dict:
     """Preserve all training RNG streams; never add replay or run optimizers."""
     random_state = agent.random.getstate()
     outcome_random_state = agent.outcome_random.getstate()
@@ -36,6 +42,8 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
     event_only_count=0
     def on_failure(exc):
         nonlocal event_only_count
+        if abort_on_execution_error and exc.failure_kind != 'no_feasible_action':
+            raise exc
         cause=exc.failure_cause if exc.failure_kind=='no_feasible_action' else 'execution_error'
         reason_counts[cause]+=1
         transitions=exc.executed_transitions
@@ -48,7 +56,7 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
         failed_transitions.extend(transitions)
         profile=trajectory_record(
             exc.sample_id,
-            transitions, completed=False, failure=str(exc))
+            transitions, completed=False, failure=str(exc), reward_scale=agent.reward_scale)
         profile.update(failure_cause=cause,failed_observed_state=exc.failed_state,
                        controllable_by_power_policy=False if cause=='structural_power' else None)
         failure_profiles.append(profile)
@@ -59,10 +67,13 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             on_failure=on_failure, redistribute_battery_energy=redistribute_battery_energy,
         )
         summary = _summarize(results, len(episodes), failures, failed_transitions)
+        summary.update(executed_transition_statistics(
+            (*[t for result in results for t in result.transitions], *failed_transitions)))
         summary.update(failure_reason_counts=reason_counts,event_only_failures=event_only_count)
         if trajectory_path is not None:
             _write_json(trajectory_path, {
-                'completed': [trajectory_record(r.sample_id,r.transitions,completed=True) for r in results],
+                'completed': [trajectory_record(r.sample_id,r.transitions,completed=True,
+                    reward_scale=agent.reward_scale) for r in results],
                 'failed': failure_profiles,
             })
             summary['trajectory_file'] = trajectory_path.name
@@ -79,6 +90,88 @@ def _write_json(path: Path, payload: dict) -> None:
     temporary.replace(path)
 
 
+def _flatten_metrics(values: dict, prefix: str = '') -> dict:
+    """Keep captured monetary, failure and numerical metrics in a portable CSV."""
+    flattened = {}
+    for key, value in values.items():
+        name = f'{prefix}{key}'
+        if isinstance(value, dict):
+            flattened.update(_flatten_metrics(value, f'{name}_'))
+        elif isinstance(value, (list, tuple)):
+            flattened[name] = json.dumps(value, ensure_ascii=False)
+        else:
+            flattened[name] = value
+    return flattened
+
+
+def _write_round_metrics(report: dict, path: Path) -> None:
+    records = []
+    for row in report['rounds']:
+        validation = row['greedy_validation']
+        td = row['td_statistics']
+        scale = report['hyperparameters']['reward_scale']
+        record = {
+            'round': row['round'], 'epsilon': row['epsilon'], 'reward_scale': scale,
+            'exploratory_completed': row['exploratory_train']['completed'],
+            'greedy_train_completed': row['greedy_train']['completed'],
+            'greedy_validation_completed': None if validation is None else validation['completed'],
+            'validation_cost_cny': None if validation is None else validation['cost_cny'],
+            'qualified': row['qualified_checkpoint'],
+            'economic_optimizer_updates': row['economic_optimizer_updates_cumulative'],
+            'economic_replay_insertions': row['economic_replay_insertions_cumulative'],
+            'environment_transitions': row['training_environment_transitions_cumulative'],
+            'td_error_mae_scaled_reward_units': td.get('mean_absolute_td_error'),
+            'td_error_mae_original_reward_units': (
+                None if td.get('mean_absolute_td_error') is None
+                else td['mean_absolute_td_error']/scale),
+        }
+        for label, summary in (('exploratory', row['exploratory_train']),
+                               ('train', row['greedy_train']), ('validation', validation)):
+            if summary is not None:
+                record.update(_flatten_metrics(summary, f'{label}_'))
+        record.update(_flatten_metrics(td, 'td_'))
+        record.update({key:value for key,value in row.items()
+                       if not isinstance(value,(dict,list)) and key not in
+                       ('economic_optimizer_updates','economic_replay_insertions')})
+        record['economic_optimizer_updates_this_round'] = row['economic_optimizer_updates']
+        record['economic_replay_insertions_this_round'] = row['economic_replay_insertions']
+        records.append(record)
+    fields = list(dict.fromkeys(key for record in records for key in record))
+    if not fields:
+        fields = ['round', 'epsilon', 'reward_scale', 'td_error_mae_original_reward_units']
+    temporary = path.with_suffix(path.suffix+'.tmp')
+    with temporary.open('w', encoding='utf-8', newline='') as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(records)
+    temporary.replace(path)
+
+
+def _persist_report(report: dict, output_dir: Path) -> None:
+    _write_json(output_dir/'round_history.json', report)
+    _write_json(output_dir/'report.json', report)
+    _write_round_metrics(report, output_dir/'round_metrics.csv')
+
+
+class _ConsoleLog:
+    """Mirror output to the PyCharm terminal and its independent run log."""
+    def __init__(self, stream, log):
+        self.stream, self.log = stream, log
+
+    def write(self, value):
+        self.stream.write(value)
+        self.log.write(value)
+        self.log.flush()
+        return len(value)
+
+    def flush(self):
+        self.stream.flush()
+        self.log.flush()
+
+    def __getattr__(self, name):
+        return getattr(self.stream, name)
+
+
 def run_monitored_training(
     dataset, *, output_dir: Path, rounds: int = 40, beta_soc: float,
     cadence: str = "episode16", target_mode: str = "round", target_interval: int = 1000,
@@ -88,6 +181,111 @@ def run_monitored_training(
     episode_credit_scope: str = 'sample', required_split_sizes: tuple[int,int] | None = None,
     capture_trajectories: bool = False,
     learn_no_feasible_failures: bool = True, failure_penalty_scale: float = 1.0,
+    reward_scale: float = 1.0, manifest_sha256: dict[str,str] | None = None,
+    dataset_roots: tuple[str,...] | None = None,
+    abort_on_execution_error: bool = False, capture_log: bool = False,
+):
+    """Start fresh; persist provenance and complete rounds before any exception."""
+    if not math.isfinite(reward_scale) or reward_scale <= 0:
+        raise ValueError('reward_scale must be finite and positive')
+    output_dir = unarchived_output_path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if any((output_dir/name).exists() for name in
+           ('report.json','round_history.json','best_agent.pt','run_metadata.json')):
+        raise FileExistsError('training requires a fresh result directory')
+    source_root = Path(__file__).resolve().parents[2]
+    source_commit = subprocess.check_output(['git','rev-parse','HEAD'],cwd=source_root,text=True).strip()
+    dirty = bool(subprocess.check_output(['git','status','--porcelain'],cwd=source_root,text=True).strip())
+    failure_penalty = FailurePenalty.from_reference(scale=failure_penalty_scale)
+    energy_value = BatteryEnergyValue.from_accountant(EconomicMPC(nominal_cost_cny=1.0))
+    parameters = {
+        'beta_soc':beta_soc,'rounds':rounds,'seed':seed,'batch_size':batch_size,
+        'gamma':1.0,'learning_rate':1e-4,'hidden_dims':[128,64],
+        'state_dim':8,'action_kw':list(ACTION_KW),'replay_capacity':100000,
+        'epsilon_start':epsilon_start,'epsilon_end':epsilon_end,
+        'cadence':cadence,'updates_per_completed_episode':16,'target_mode':target_mode,
+        'target_interval_optimizer_updates':target_interval if target_mode=='optimizer' else None,
+        'bootstrap_uses_same_cadence':True,'torch_threads':torch.get_num_threads(),
+        'redistribute_battery_energy':redistribute_battery_energy,'n_step':n_step,
+        'episode_credit_scope':episode_credit_scope,
+        'required_split_sizes':list(required_split_sizes) if required_split_sizes is not None else None,
+        'learn_no_feasible_failures':learn_no_feasible_failures,
+        'failure_penalty':asdict(failure_penalty)|{'amount_equivalent_cny':failure_penalty.amount,
+            'scaled_training_amount':failure_penalty.amount*reward_scale,
+            'scaled_training_unit':'scaled_reward_equivalent_cny'},
+        'battery_energy_value':{'coefficient_cny':energy_value.coefficient_cny,
+                                'reference_soc':energy_value.reference_soc},
+        'reward_scale':float(reward_scale),
+    }
+    metadata = {
+        'source_commit':source_commit,'source_worktree_dirty':dirty,
+        'hyperparameters':parameters,'manifest_sha256':dict(manifest_sha256 or {}),
+        'dataset_roots':list(dataset_roots or ()),
+        'reward_units':{'economic_q':'scaled_reward_equivalent_cny',
+            'stored_reward':'reward_scale * final_unscaled_reward',
+            'original_rewards':'reward_equivalent_cny','economic_ledger':'actual_cny',
+            'td_original_unit_conversion':'native_td_error / reward_scale'},
+        'initialization':'new seeded weights; empty replay; new optimizer; no checkpoint loaded',
+        'dataset_class':type(dataset).__name__,
+    }
+    _write_json(output_dir/'run_metadata.json',metadata)
+    initial = metadata | {'completed_training':False,'run_status':'starting','rounds':[],
+                          'best_checkpoint':None,'test_payloads_opened':dataset.opened_test_payloads}
+    _persist_report(initial,output_dir)
+    runtime = {'phase':'initialization','round':None,'episode':None}
+    with ExitStack() as stack:
+        if capture_log:
+            log = stack.enter_context((output_dir/'train.log').open('x',encoding='utf-8'))
+            stack.enter_context(redirect_stdout(_ConsoleLog(sys.stdout,log)))
+            stack.enter_context(redirect_stderr(_ConsoleLog(sys.stderr,log)))
+        try:
+            agent, report = _run_monitored_training(dataset,output_dir=output_dir,rounds=rounds,
+                beta_soc=beta_soc,cadence=cadence,target_mode=target_mode,target_interval=target_interval,
+                seed=seed,batch_size=batch_size,updates_per_episode=updates_per_episode,
+                epsilon_start=epsilon_start,epsilon_end=epsilon_end,progress_every_steps=progress_every_steps,
+                redistribute_battery_energy=redistribute_battery_energy,n_step=n_step,
+                episode_credit_scope=episode_credit_scope,required_split_sizes=required_split_sizes,
+                capture_trajectories=capture_trajectories,learn_no_feasible_failures=learn_no_feasible_failures,
+                failure_penalty_scale=failure_penalty_scale,reward_scale=reward_scale,
+                run_metadata=metadata,runtime=runtime,abort_on_execution_error=abort_on_execution_error)
+            report['learning_curve_artifacts'] = write_learning_curves(report,output_dir)
+            _persist_report(report,output_dir)
+            return agent, report
+        except BaseException as exc:
+            report = json.loads((output_dir/'report.json').read_text(encoding='utf-8'))
+            report.update(completed_training=False,run_status='aborted')
+            report['abort'] = {'exception_type':type(exc).__name__,'message':str(exc),
+                'phase':runtime['phase'],'round':runtime['round'],'episode':runtime['episode'],
+                'completed_rounds_retained':len(report['rounds']),
+                'automatic_resume':False,'partial_round_is_not_a_completed_round':True}
+            if 'agent' in runtime:
+                agent = runtime['agent']
+                report['abort']['actual_partial_execution_counts'] = {
+                    'economic_replay_insertions':agent.economic_replay_insertions,
+                    'economic_optimizer_updates':agent.economic_optimizer_updates,
+                    'target_sync_calls_including_initial_copy':agent.target_sync_calls,
+                    'outcome_optimizer_updates':agent.outcome_optimizer_updates}
+            _persist_report(report,output_dir)
+            try:
+                report['learning_curve_artifacts'] = write_learning_curves(report,output_dir)
+            except Exception as plot_error:
+                report['abort']['plot_preservation_error'] = str(plot_error)
+            _persist_report(report,output_dir)
+            if capture_log:
+                traceback.print_exc()
+            raise
+
+
+def _run_monitored_training(
+    dataset, *, output_dir: Path, rounds: int, beta_soc: float,
+    cadence: str, target_mode: str, target_interval: int,
+    seed: int, batch_size: int, updates_per_episode: int,
+    epsilon_start: float, epsilon_end: float, progress_every_steps: int,
+    redistribute_battery_energy: bool, n_step: int,
+    episode_credit_scope: str, required_split_sizes: tuple[int,int] | None,
+    capture_trajectories: bool,
+    learn_no_feasible_failures: bool, failure_penalty_scale: float,
+    reward_scale: float, run_metadata: dict, runtime: dict, abort_on_execution_error: bool,
 ):
     if not 1 <= rounds <= 40 or updates_per_episode != 16 or batch_size < 1:
         raise ValueError("study permits at most 40 rounds and fixes episode cadence at 16")
@@ -96,11 +294,8 @@ def run_monitored_training(
         raise ValueError("invalid beta or epsilon schedule")
     if dataset.opened_test_payloads != 0:
         raise RuntimeError("Test must be closed before the study")
-    output_dir = unarchived_output_path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    if any((output_dir / name).exists() for name in ("report.json", "round_history.json", "best_agent.pt")):
-        raise FileExistsError("training requires a fresh result directory")
     started = time.monotonic()
+    runtime['phase']='dataset_loading'
     train = dataset.load_train()
     validation = dataset.load_validation()
     if not train or not validation:
@@ -109,7 +304,8 @@ def run_monitored_training(
         raise ValueError("dataset split identity differs")
     if required_split_sizes is not None and (len(train),len(validation)) != required_split_sizes:
         raise ValueError('dataset sizes differ from the required checkpoint qualification set')
-    agent = DirectPowerDDQN(seed=seed,n_step=n_step)
+    agent = DirectPowerDDQN(seed=seed,n_step=n_step,reward_scale=reward_scale)
+    runtime.update(agent=agent,phase='bootstrap')
     accountant = EconomicMPC(nominal_cost_cny=1.0)
     schedule = EconomicUpdateSchedule(cadence, target_mode=target_mode, target_interval=target_interval)
     failure_penalty=FailurePenalty.from_reference(scale=failure_penalty_scale)
@@ -140,6 +336,8 @@ def run_monitored_training(
 
     def bootstrap_failure(exc):
         nonlocal bootstrap_prefix, bootstrap_completed_voyages, failure_suffix_count, no_suffix_failure_events
+        if abort_on_execution_error and exc.failure_kind != 'no_feasible_action':
+            raise exc
         cause=exc.failure_cause if exc.failure_kind=='no_feasible_action' else 'execution_error'
         bootstrap_reason_counts[cause]+=1
         view=failure_view(exc)
@@ -161,8 +359,16 @@ def run_monitored_training(
                                               failed=not exc.executed_transitions[-1].done)
 
     print(f"bootstrap beta={beta_soc:g} cadence={cadence} target={target_mode} start", flush=True)
+    bootstrap_policy_calls = 0
+    def bootstrap_policy(state, feasible):
+        nonlocal bootstrap_policy_calls
+        power = min(feasible, key=lambda value: abs(value-state[1]*600))
+        bootstrap_policy_calls += 1
+        if progress_every_steps and bootstrap_policy_calls % progress_every_steps == 0:
+            print(f'bootstrap progress step={bootstrap_policy_calls} soc={state[0]:.4f} fc={power}',flush=True)
+        return power
     bootstrap, bootstrap_errors = _run_episodes(
-        train, lambda state, feasible: min(feasible, key=lambda power: abs(power-state[1]*600)),
+        train, bootstrap_policy,
         accountant, beta_soc=beta_soc, on_failure=bootstrap_failure,
         redistribute_battery_energy=redistribute_battery_energy,
     )
@@ -180,6 +386,8 @@ def run_monitored_training(
     if target_mode == "round":
         agent.sync_target()
     bootstrap_summary = _summarize(bootstrap, len(train), bootstrap_errors, bootstrap_failed)
+    bootstrap_summary.update(executed_transition_statistics(
+        (*[t for result in bootstrap for t in result.transitions], *bootstrap_failed)))
     bootstrap_summary['failure_reason_counts']=bootstrap_reason_counts
     print(f"bootstrap completed={len(bootstrap)}/{len(train)} economic_updates={agent.economic_optimizer_updates}", flush=True)
     history = []
@@ -188,30 +396,14 @@ def run_monitored_training(
     evaluation_steps = 0
     best_record = None
     first_qualification = None
-    hyperparameters = {
-        "beta_soc": beta_soc, "rounds": rounds, "seed": seed, "batch_size": batch_size,
-        "gamma": agent.gamma, "learning_rate": 1e-4, "hidden_dims": [128,64],
-        "action_kw": list(ACTION_KW), "replay_capacity": 100000,
-        "epsilon_start": epsilon_start, "epsilon_end": epsilon_end,
-        "cadence": cadence, "updates_per_completed_episode": 16,
-        "target_mode": target_mode, "target_interval_optimizer_updates": target_interval if target_mode == "optimizer" else None,
-        "bootstrap_uses_same_cadence": True, "torch_threads": torch.get_num_threads(),
-        'redistribute_battery_energy': redistribute_battery_energy, 'n_step': n_step,
-        'episode_credit_scope': episode_credit_scope,
-        'required_split_sizes': list(required_split_sizes) if required_split_sizes is not None else None,
-        'learn_no_feasible_failures':learn_no_feasible_failures,
-        'failure_penalty':asdict(failure_penalty)|{'amount_equivalent_cny':failure_penalty.amount},
-        'battery_energy_value': {
-            'coefficient_cny': BatteryEnergyValue.from_accountant(accountant).coefficient_cny,
-            'reference_soc': BatteryEnergyValue.from_accountant(accountant).reference_soc,
-        },
-    }
-    source_commit = subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
-    source_worktree_dirty = bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
+    hyperparameters = run_metadata['hyperparameters']
+    source_commit = run_metadata['source_commit']
+    source_worktree_dirty = run_metadata['source_worktree_dirty']
 
     def snapshot_report(completed_training=False):
-        return {
+        return run_metadata | {
             "completed_training": completed_training, "source_commit": source_commit,
+            'run_status':'completed' if completed_training else 'running',
             'source_worktree_dirty': source_worktree_dirty,
             "hyperparameters": hyperparameters, "bootstrap": bootstrap_summary,
             "bootstrap_optimizer_updates": len(bootstrap_losses),
@@ -249,7 +441,9 @@ def run_monitored_training(
             'dataset_class': type(dataset).__name__,
         }
 
+    _persist_report(snapshot_report(),output_dir)
     for round_index in range(1, rounds+1):
+        runtime.update(phase='exploratory_training',round=round_index,episode=None)
         epsilon = epsilon_start if rounds == 1 else epsilon_end if round_index == rounds else (
             epsilon_start+(epsilon_end-epsilon_start)*(round_index-1)/(rounds-1)
         )
@@ -265,6 +459,7 @@ def run_monitored_training(
         before_failure=agent.economic_failure_replay_insertions
         before_failure_terminals=agent.economic_failure_terminal_insertions
         for episode_index, episode in enumerate(train, start=1):
+            runtime['episode']=episode_index
             def training_policy(state, feasible):
                 nonlocal selected_steps
                 action = agent.select_power(state, feasible, epsilon=epsilon)
@@ -278,13 +473,16 @@ def run_monitored_training(
                 result = replay_episode(episode,training_policy,accountant=accountant,beta_soc=beta_soc,
                                          redistribute_battery_energy=redistribute_battery_energy)
             except ReplayExecutionError as exc:
+                if abort_on_execution_error and exc.failure_kind != 'no_feasible_action':
+                    raise
                 failures.append(f"{episode.sample_id}: {exc}")
                 cause=exc.failure_cause if exc.failure_kind=='no_feasible_action' else 'execution_error'
                 reason_counts[cause]+=1
                 view=failure_view(exc)
                 transitions=view.transitions if view else exc.executed_transitions
                 failed_transitions.extend(transitions)
-                profile=trajectory_record(episode.sample_id,transitions,completed=False,failure=str(exc))
+                profile=trajectory_record(episode.sample_id,transitions,completed=False,failure=str(exc),
+                    reward_scale=reward_scale)
                 profile.update(failure_cause=cause,failed_observed_state=exc.failed_state,
                                controllable_by_power_policy=False if cause=='structural_power' else None)
                 failure_profiles.append(profile)
@@ -325,26 +523,33 @@ def run_monitored_training(
         if target_mode == "round":
             agent.sync_target()
         explore = _summarize(results,len(train),failures,failed_transitions)
+        explore.update(executed_transition_statistics(
+            (*[t for result in results for t in result.transitions], *failed_transitions)))
         explore['failure_reason_counts']=reason_counts
         executed_training_steps += explore['executed_onboard_transitions']
         if capture_trajectories:
             path = output_dir/f'round_{round_index:03d}_exploratory_trajectories.json'
-            _write_json(path,{'completed':[trajectory_record(r.sample_id,r.transitions,completed=True) for r in results],
+            _write_json(path,{'completed':[trajectory_record(r.sample_id,r.transitions,completed=True,
+                                reward_scale=reward_scale) for r in results],
                               'failed':failure_profiles})
             explore['trajectory_file'] = path.name
         print(f"round {round_index}/{rounds} exploratory={len(results)}/{len(train)} greedy_train start",flush=True)
+        runtime['phase']='greedy_train'
         greedy_train = greedy_evaluate(train,agent,accountant,beta_soc,
             redistribute_battery_energy=redistribute_battery_energy,
             trajectory_path=output_dir/f'round_{round_index:03d}_train_trajectories.json' if capture_trajectories else None,
-            learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty)
+            learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty,
+            abort_on_execution_error=abort_on_execution_error)
         evaluation_steps += greedy_train["executed_onboard_transitions"]
         greedy_validation = None
         if fully_completed(greedy_train):
+            runtime['phase']='greedy_validation'
             print(f"round {round_index}/{rounds} greedy_train={len(train)}/{len(train)} validation start",flush=True)
             greedy_validation = greedy_evaluate(validation,agent,accountant,beta_soc,
                 redistribute_battery_energy=redistribute_battery_energy,
                 trajectory_path=output_dir/f'round_{round_index:03d}_validation_trajectories.json' if capture_trajectories else None,
-                learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty)
+                learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty,
+                abort_on_execution_error=abort_on_execution_error)
             evaluation_steps += greedy_validation["executed_onboard_transitions"]
         row = {
             "round":round_index,"epsilon":epsilon,"exploratory_train":explore,
@@ -358,6 +563,7 @@ def run_monitored_training(
             "training_environment_transitions_cumulative":executed_training_steps,
             'training_policy_calls_cumulative': selected_steps,
             "target_sync_calls_cumulative":agent.target_sync_calls,
+            'reward_scale':reward_scale,
             "remaining_transition_credit":schedule.remaining_transition_credit,
             'td_statistics': agent.td_statistics(),
             'fixed_state_q_diagnostics': fixed_q_diagnostics(agent,accountant),
@@ -390,15 +596,21 @@ def run_monitored_training(
                 "model_state":{key:value.detach().cpu().clone() for key,value in agent.online.state_dict().items()},
                 "hyperparameters":hyperparameters,"selection":best_record,
                 "source_commit":source_commit,"test_payloads_opened":0,
+                'source_worktree_dirty':source_worktree_dirty,'reward_scale':reward_scale,
+                'reward_units':run_metadata['reward_units'],
+                'manifest_sha256':run_metadata['manifest_sha256'],
+                'dataset_roots':run_metadata['dataset_roots'],
             },temporary)
             temporary.replace(output_dir/"best_agent.pt")
         history.append(row)
         if dataset.opened_test_payloads != 0:
             raise RuntimeError("Test opened during monitored training")
-        _write_json(output_dir/"round_history.json",snapshot_report())
+        runtime['phase']='persisting_completed_round'
+        _persist_report(snapshot_report(),output_dir)
         val = "SKIPPED" if greedy_validation is None else f"{greedy_validation['completed']}/{len(validation)}"
         cost = None if greedy_validation is None else greedy_validation["cost_cny"]
         print(f"MONITOR round={round_index} exploratory={len(results)}/{len(train)} greedy_train={greedy_train['completed']}/{len(train)} validation={val} cost={cost} updates={agent.economic_optimizer_updates} best_round={selector.round}",flush=True)
     report = snapshot_report(completed_training=True)
-    _write_json(output_dir/"report.json",report)
+    _persist_report(report,output_dir)
+    runtime['phase']='completed'
     return agent, report

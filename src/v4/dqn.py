@@ -1,4 +1,4 @@
-"""Masked MLP Double-DQN for direct FC power and raw-CNY rewards."""
+"""Masked direct-power Double-DQN; scale fully composed rewards at insertion."""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ def masked_double_dqn_targets(
 class ReplayItem:
     state: tuple[float, ...]
     action_index: int
-    reward_cny: float
+    reward_cny: float  # Legacy name: economic training reward in reward_scale units.
     next_state: tuple[float, ...]
     done: bool
     next_feasible_indices: tuple[int, ...]
@@ -73,11 +73,15 @@ class DirectPowerDDQN:
         learning_rate: float = 1e-4, replay_capacity: int = 100_000,
         hidden_dims: tuple[int, ...] = (128, 64),
         n_step: int = 1,
+        reward_scale: float = 1.0,
     ) -> None:
         if not 0 <= gamma <= 1 or learning_rate <= 0 or replay_capacity < 1:
             raise ValueError("invalid Double-DQN hyperparameters")
         if type(n_step) is not int or n_step not in (1, 8):
             raise ValueError('n_step must be 1 or 8')
+        if not math.isfinite(reward_scale) or reward_scale <= 0:
+            raise ValueError('reward_scale must be finite and positive')
+        self.reward_scale = float(reward_scale)
         self.n_step = n_step
         self.gamma = float(gamma)
         self.random = random.Random(seed)
@@ -103,6 +107,7 @@ class DirectPowerDDQN:
         self._td_loss_sum = self._td_sum = self._td_abs_sum = self._td_square_sum = self._td_abs_max = 0.0
         self._failure_td_samples = 0
         self._failure_td_sum = self._failure_td_abs_sum = self._failure_td_square_sum = self._failure_td_abs_max = 0.0
+        self._reset_extended_statistics()
 
     @staticmethod
     def _state(value: Sequence[float]) -> tuple[float, ...]:
@@ -147,10 +152,19 @@ class DirectPowerDDQN:
         experience_outcome: str = 'success', terminal_reason: str | None = None,
         failure_penalty_equivalent_cny: float = 0.0,
     ) -> None:
+        """Insert an original-unit, fully composed reward; scale exactly once.
+
+        Callers assemble economic/shaping/redistribution/terminal/failure and
+        n-step components before this boundary. Penalty metadata and outcome
+        rewards remain original units, independently of this training scale.
+        """
         if type(action_kw) is not int or action_kw not in ACTION_KW:
             raise ValueError("action must use the FC grid")
         if not math.isfinite(reward_cny) or type(done) is not bool:
             raise ValueError("reward must be finite and done must be bool")
+        scaled_reward = float(reward_cny) * self.reward_scale
+        if not math.isfinite(scaled_reward):
+            raise ValueError('scaled reward must be finite')
         if type(bootstrap_steps) is not int or not 1 <= bootstrap_steps <= self.n_step:
             raise ValueError('bootstrap_steps outside configured n-step horizon')
         next_indices = self._indices(next_feasible_actions)
@@ -165,7 +179,7 @@ class DirectPowerDDQN:
                 (failure_penalty_equivalent_cny and reason not in FAILURE_TERMINALS)):
             raise ValueError('invalid economic experience outcome or terminal reason')
         self.replay.append(ReplayItem(
-            self._state(state), ACTION_KW.index(action_kw), float(reward_cny),
+            self._state(state), ACTION_KW.index(action_kw), scaled_reward,
             self._state(next_state), done, next_indices, bootstrap_steps,
             experience_outcome,reason,failure_penalty_equivalent_cny,
         ))
@@ -312,7 +326,7 @@ class DirectPowerDDQN:
             raise FloatingPointError('non-finite economic TD loss; optimizer was not updated')
         self.optimizer.zero_grad()
         loss.backward()
-        nn.utils.clip_grad_norm_(self.online.parameters(), 10.0)
+        preclip_norm = nn.utils.clip_grad_norm_(self.online.parameters(), 10.0)
         self.optimizer.step()
         self.economic_optimizer_updates += 1
         with torch.no_grad():
@@ -324,6 +338,18 @@ class DirectPowerDDQN:
             self._td_abs_sum += float(error.abs().sum().item())
             self._td_square_sum += float(error.square().sum().item())
             self._td_abs_max = max(self._td_abs_max, float(error.abs().max().item()))
+            norm = float(preclip_norm.item())
+            self._gradient_norm_sum += norm
+            self._gradient_norm_max = max(self._gradient_norm_max, norm)
+            self._gradient_clipped_updates += int(norm > 10.0)
+            self._sample_success += sum(item.experience_outcome == 'success' for item in batch)
+            self._sample_failure += sum(item.experience_outcome == 'failure' for item in batch)
+            for name, values in (('q', q), ('target', target)):
+                values = values.double()
+                self._distribution_sum[name] += float(values.sum().item())
+                self._distribution_square_sum[name] += float(values.square().sum().item())
+                self._distribution_min[name] = min(self._distribution_min[name], float(values.min().item()))
+                self._distribution_max[name] = max(self._distribution_max[name], float(values.max().item()))
             failure_mask=torch.tensor([item.terminal_reason in FAILURE_TERMINALS for item in batch],dtype=torch.bool)
             failure_error=error.flatten()[failure_mask]
             if failure_error.numel():
@@ -340,10 +366,35 @@ class DirectPowerDDQN:
         self._td_loss_sum = self._td_sum = self._td_abs_sum = self._td_square_sum = self._td_abs_max = 0.0
         self._failure_td_samples = 0
         self._failure_td_sum = self._failure_td_abs_sum = self._failure_td_square_sum = self._failure_td_abs_max = 0.0
+        self._reset_extended_statistics()
+
+    def _reset_extended_statistics(self) -> None:
+        self._gradient_norm_sum = self._gradient_norm_max = 0.0
+        self._gradient_clipped_updates = 0
+        self._sample_success = self._sample_failure = 0
+        self._distribution_sum = dict.fromkeys(('q', 'target'), 0.0)
+        self._distribution_square_sum = dict.fromkeys(('q', 'target'), 0.0)
+        self._distribution_min = dict.fromkeys(('q', 'target'), math.inf)
+        self._distribution_max = dict.fromkeys(('q', 'target'), -math.inf)
+
+    def _distribution_statistics(self, name: str) -> dict:
+        n = self._td_samples
+        mean = self._distribution_sum[name] / n if n else None
+        values = {
+            'mean': mean,
+            'std': math.sqrt(max(0.0, self._distribution_square_sum[name] / n - mean**2)) if n else None,
+            'min': self._distribution_min[name] if n else None,
+            'max': self._distribution_max[name] if n else None,
+        }
+        return {'sample_count': n, **values, 'original_units': self._original_units(values),
+                'scope': 'sampled state-action Q before update' if name == 'q' else 'sampled masked Double-DQN targets'}
+
+    def _original_units(self, values: dict) -> dict:
+        return {key: None if value is None else value / self.reward_scale for key, value in values.items()}
 
     def td_statistics(self) -> dict:
         n = self._td_samples
-        return {
+        result = {
             'optimizer_updates': self._td_updates, 'sample_count': n,
             'mean_smooth_l1_loss': self._td_loss_sum / self._td_updates if self._td_updates else None,
             'mean_td_error': self._td_sum / n if n else None,
@@ -358,6 +409,34 @@ class DirectPowerDDQN:
                 'max_absolute_td_error':self._failure_td_abs_max if self._failure_td_samples else None,
             },
         }
+        error_names = ('mean_td_error', 'mean_absolute_td_error',
+                       'root_mean_square_td_error', 'max_absolute_td_error')
+        result.update({
+            'reward_scale': self.reward_scale,
+            'reward_units': 'reward_scale * original CNY-equivalent training reward; not actual expenditure',
+            'original_reward_units': 'original CNY-equivalent training reward; shaping/failure are not expenditure',
+            'loss_units': 'native Smooth L1 beta=1 in scaled training units; not an unscaled loss divided by alpha',
+            'original_units': self._original_units({key: result[key] for key in error_names}),
+            'q_distribution': self._distribution_statistics('q'),
+            'target_distribution': self._distribution_statistics('target'),
+            'gradient_statistics': {
+                'update_count': self._td_updates,
+                'mean_preclip_norm': self._gradient_norm_sum / self._td_updates if self._td_updates else None,
+                'max_preclip_norm': self._gradient_norm_max if self._td_updates else None,
+                'clip_threshold': 10.0, 'clipped_updates': self._gradient_clipped_updates,
+                'clipped_fraction': self._gradient_clipped_updates / self._td_updates if self._td_updates else None,
+            },
+            'sample_outcomes': {
+                'success': self._sample_success, 'failure': self._sample_failure,
+                'failure_terminal': self._failure_td_samples,
+                'success_fraction': self._sample_success / n if n else None,
+                'failure_fraction': self._sample_failure / n if n else None,
+                'failure_terminal_fraction': self._failure_td_samples / n if n else None,
+            },
+        })
+        result['failure_terminal']['original_units'] = self._original_units(
+            {key: result['failure_terminal'][key] for key in error_names})
+        return result
 
     def sync_target(self) -> None:
         self.target.load_state_dict(self.online.state_dict())
