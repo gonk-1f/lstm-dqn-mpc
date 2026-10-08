@@ -1,0 +1,4760 @@
+{
+  "base_commit": "d111c99c142c47b643c7d7eb31338aa321b14fef",
+  "recorded_utc": "2026-10-08T08:17:54.228670+00:00",
+  "scopes": {
+    "docs": {
+      "file_count": 221,
+      "bytes": 28002144,
+      "files": [
+        {
+          "path": "docs/method_v2_multiscale_dqn_wmpc.md",
+          "bytes": 9273
+        },
+        {
+          "path": "docs/v2_action_space_design.md",
+          "bytes": 8717
+        },
+        {
+          "path": "docs/v2_battery_degradation_model.md",
+          "bytes": 3454
+        },
+        {
+          "path": "docs/v2_cleanup_manifest.md",
+          "bytes": 4208
+        },
+        {
+          "path": "docs/v2_data_provenance.md",
+          "bytes": 3080
+        },
+        {
+          "path": "docs/v2_dqn_state_audit.md",
+          "bytes": 13514
+        },
+        {
+          "path": "docs/v2_economic_parameters.md",
+          "bytes": 7384
+        },
+        {
+          "path": "docs/v2_failure_penalty_calibration.md",
+          "bytes": 1704
+        },
+        {
+          "path": "docs/v2_fc_degradation_model.md",
+          "bytes": 6540
+        },
+        {
+          "path": "docs/v2_fc_efficiency_model.md",
+          "bytes": 5234
+        },
+        {
+          "path": "docs/v2_formal_training_runbook.md",
+          "bytes": 10940
+        },
+        {
+          "path": "docs/v2_objective_scale_audit.md",
+          "bytes": 3602
+        },
+        {
+          "path": "docs/v2_plant_configuration.md",
+          "bytes": 2327
+        },
+        {
+          "path": "docs/v2_preflight_report.md",
+          "bytes": 3928
+        },
+        {
+          "path": "docs/v2_raw_excel_inventory.md",
+          "bytes": 4250
+        },
+        {
+          "path": "docs/v2_remaining_training_work.md",
+          "bytes": 1630
+        },
+        {
+          "path": "docs/v2_rl_mpc_literature_and_train_ablation_2026-10-05.md",
+          "bytes": 8827
+        },
+        {
+          "path": "docs/v2_timescale_selection.md",
+          "bytes": 6044
+        },
+        {
+          "path": "docs/v3_persistence_dqn_mpc.md",
+          "bytes": 12321
+        },
+        {
+          "path": "docs/v3_predictive_control.md",
+          "bytes": 7777
+        },
+        {
+          "path": "docs/v4_beta250_40r_review_2026-10-07.md",
+          "bytes": 10261
+        },
+        {
+          "path": "docs/v4_cleanup_2026-10-07.md",
+          "bytes": 3470
+        },
+        {
+          "path": "docs/v4_cleanup_inventory_2026-10-07.json",
+          "bytes": 4623
+        },
+        {
+          "path": "docs/v4_direct_power.md",
+          "bytes": 11041
+        },
+        {
+          "path": "docs/v4_failure_economic_td_2026-10-08.md",
+          "bytes": 13634
+        },
+        {
+          "path": "docs/v4_reward_feedback_implementation_2026-10-08.md",
+          "bytes": 9524
+        },
+        {
+          "path": "docs/v4_staged_beta_cadence_2026-10-08.md",
+          "bytes": 10078
+        },
+        {
+          "path": "docs/v4_status_2026-10-07.md",
+          "bytes": 17302
+        },
+        {
+          "path": "docs/v4_training_failure_audit_2026-10-06.md",
+          "bytes": 7360
+        },
+        {
+          "path": "docs/archive_v1/CLUSTER_BASED_TOTAL_LOAD_REBUILD.md",
+          "bytes": 7452
+        },
+        {
+          "path": "docs/archive_v1/diagnostic_cleanup_20260913.json",
+          "bytes": 11460
+        },
+        {
+          "path": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+          "bytes": 9659
+        },
+        {
+          "path": "docs/archive_v1/dqn_runtime_robustness.md",
+          "bytes": 5257
+        },
+        {
+          "path": "docs/archive_v1/executed_reward_references_20260913.md",
+          "bytes": 3971
+        },
+        {
+          "path": "docs/archive_v1/executed_reward_verification_20260913.md",
+          "bytes": 2856
+        },
+        {
+          "path": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+          "bytes": 34008
+        },
+        {
+          "path": "docs/archive_v1/superpowers/plans/2026-09-08-final-dataset.md",
+          "bytes": 5579
+        },
+        {
+          "path": "docs/archive_v1/superpowers/plans/2026-09-11-dqn-mpc-unified-objective.md",
+          "bytes": 2015
+        },
+        {
+          "path": "docs/archive_v1/superpowers/plans/2026-09-13-executed-reward.md",
+          "bytes": 2228
+        },
+        {
+          "path": "docs/archive_v1/superpowers/specs/2026-09-11-dqn-mpc-unified-objective-design.md",
+          "bytes": 2831
+        },
+        {
+          "path": "docs/figures/v4_beta250_40r_seed42/training_curves.png",
+          "bytes": 161019
+        },
+        {
+          "path": "docs/figures/v4_beta250_40r_seed42/train_zero_boundary_008_power_soc.png",
+          "bytes": 89168
+        },
+        {
+          "path": "docs/figures/v4_beta250_40r_seed42/train_zero_boundary_015_power_soc.png",
+          "bytes": 93576
+        },
+        {
+          "path": "docs/figures/v4_beta250_40r_seed42/zero_boundary_004_power_soc.png",
+          "bytes": 150124
+        },
+        {
+          "path": "docs/figures/v4_beta250_40r_seed42/zero_boundary_009_power_soc.png",
+          "bytes": 177927
+        },
+        {
+          "path": "docs/figures/v4_beta250_40r_seed42/zero_boundary_010_power_soc.png",
+          "bytes": 105663
+        },
+        {
+          "path": "docs/figures/v4_beta250_40r_seed42/zero_boundary_019_power_soc.png",
+          "bytes": 128076
+        },
+        {
+          "path": "docs/figures/v4_beta250_40r_seed42/zero_boundary_032_power_soc.png",
+          "bytes": 160399
+        },
+        {
+          "path": "docs/figures/v4_beta250_40r_seed42/zero_boundary_036_power_soc.png",
+          "bytes": 91911
+        },
+        {
+          "path": "docs/figures/v4_beta250_40r_seed42/zero_boundary_043_power_soc.png",
+          "bytes": 127626
+        },
+        {
+          "path": "docs/figures/v4_beta250_40r_seed42/zero_boundary_047_power_soc.png",
+          "bytes": 92094
+        },
+        {
+          "path": "docs/figures/v4_staged_beta_cadence_seed42/stage1_completion.png",
+          "bytes": 135305
+        },
+        {
+          "path": "docs/figures/v4_staged_beta_cadence_seed42/stage1_optimizer_axis.png",
+          "bytes": 103808
+        },
+        {
+          "path": "docs/figures/v4_staged_beta_cadence_seed42/stage1_soc_fc_cost.png",
+          "bytes": 211090
+        },
+        {
+          "path": "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png",
+          "bytes": 92734
+        },
+        {
+          "path": "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_optimizer_axis.png",
+          "bytes": 81849
+        },
+        {
+          "path": "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_soc_fc_cost.png",
+          "bytes": 154784
+        },
+        {
+          "path": "docs/results/v4_beta250_40r_seed42.json",
+          "bytes": 164282
+        },
+        {
+          "path": "docs/results/v4_beta250_40r_seed42_rounds.csv",
+          "bytes": 5934
+        },
+        {
+          "path": "docs/results/v4_failure_economic_td_20261008/learning_order_evidence.json",
+          "bytes": 4884
+        },
+        {
+          "path": "docs/results/v4_failure_economic_td_20261008/verification.json",
+          "bytes": 15596
+        },
+        {
+          "path": "docs/results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json",
+          "bytes": 10047
+        },
+        {
+          "path": "docs/results/v4_reward_feedback_implementation_20261008/verification.json",
+          "bytes": 8903
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/.gitattributes",
+          "bytes": 97
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/baseline_40r_consistency.json",
+          "bytes": 227
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json",
+          "bytes": 16754
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/README.md",
+          "bytes": 1899
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/reconstruction_audit.json",
+          "bytes": 386
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_1000.json",
+          "bytes": 280961
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_1000_rounds.csv",
+          "bytes": 9828
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_2000.json",
+          "bytes": 294875
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_2000_rounds.csv",
+          "bytes": 9851
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_250.json",
+          "bytes": 328030
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_250_rounds.csv",
+          "bytes": 9070
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_500.json",
+          "bytes": 278429
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_500_rounds.csv",
+          "bytes": 10014
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage1_comparison.csv",
+          "bytes": 592
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage1_summary.json",
+          "bytes": 41255
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage2_A_paused.json",
+          "bytes": 124836
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage2_A_rounds.csv",
+          "bytes": 5184
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage2_B_paused.json",
+          "bytes": 144223
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/stage2_B_rounds.csv",
+          "bytes": 5317
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/study_summary.json",
+          "bytes": 71901
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/archive_paused.py",
+          "bytes": 5483
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/baseline_40r_consistency.json",
+          "bytes": 227
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/interim_stage1.png",
+          "bytes": 75313
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/monitor.py",
+          "bytes": 2405
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/reconstruction_audit.json",
+          "bytes": 386
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/recovery_launch.json",
+          "bytes": 1771
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/resource_failure_beta1000.log",
+          "bytes": 3189
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/resource_failure_beta250.log",
+          "bytes": 2083
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_comparison.csv",
+          "bytes": 592
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_completion.png",
+          "bytes": 135305
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_optimizer_axis.png",
+          "bytes": 103808
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_soc_fc_cost.png",
+          "bytes": 211090
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_summary.json",
+          "bytes": 41255
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2_launch.json",
+          "bytes": 438
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/study.log",
+          "bytes": 10749
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/study_summary.json",
+          "bytes": 71901
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/summarize_stage1.py",
+          "bytes": 2236
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_1000/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_1000/round_history.json",
+          "bytes": 80403
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_1000/train.log",
+          "bytes": 251590
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_250/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_250/round_history.json",
+          "bytes": 108718
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_250/train.log",
+          "bytes": 330179
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_profiles.json",
+          "bytes": 2330463
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_004_power_soc.png",
+          "bytes": 166465
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_009_power_soc.png",
+          "bytes": 180637
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_010_power_soc.png",
+          "bytes": 157221
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_019_power_soc.png",
+          "bytes": 176481
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_032_power_soc.png",
+          "bytes": 173653
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_036_power_soc.png",
+          "bytes": 123586
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_043_power_soc.png",
+          "bytes": 162080
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_047_power_soc.png",
+          "bytes": 122859
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/report.json",
+          "bytes": 280961
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/round_history.json",
+          "bytes": 280109
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/round_metrics.csv",
+          "bytes": 9828
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/train.log",
+          "bytes": 895540
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/train.stderr.log",
+          "bytes": 0
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_profiles.json",
+          "bytes": 2330675
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_004_power_soc.png",
+          "bytes": 158673
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_009_power_soc.png",
+          "bytes": 171668
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_010_power_soc.png",
+          "bytes": 156399
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_019_power_soc.png",
+          "bytes": 172515
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_032_power_soc.png",
+          "bytes": 163910
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_036_power_soc.png",
+          "bytes": 125120
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_043_power_soc.png",
+          "bytes": 163513
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_047_power_soc.png",
+          "bytes": 123159
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/report.json",
+          "bytes": 294875
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/round_history.json",
+          "bytes": 294024
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/round_metrics.csv",
+          "bytes": 9851
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/train.log",
+          "bytes": 868652
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_profiles.json",
+          "bytes": 2334927
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_004_power_soc.png",
+          "bytes": 139706
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_009_power_soc.png",
+          "bytes": 168396
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_010_power_soc.png",
+          "bytes": 153459
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_019_power_soc.png",
+          "bytes": 168148
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_032_power_soc.png",
+          "bytes": 143377
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_036_power_soc.png",
+          "bytes": 121414
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_043_power_soc.png",
+          "bytes": 153080
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_047_power_soc.png",
+          "bytes": 125746
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/report.json",
+          "bytes": 328030
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/round_history.json",
+          "bytes": 327179
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/round_metrics.csv",
+          "bytes": 9070
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/train.log",
+          "bytes": 741489
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/train.stderr.log",
+          "bytes": 0
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_profiles.json",
+          "bytes": 2337020
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_004_power_soc.png",
+          "bytes": 131321
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_009_power_soc.png",
+          "bytes": 171098
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_010_power_soc.png",
+          "bytes": 148729
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_019_power_soc.png",
+          "bytes": 166199
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_032_power_soc.png",
+          "bytes": 152707
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_036_power_soc.png",
+          "bytes": 121566
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_043_power_soc.png",
+          "bytes": 142454
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_047_power_soc.png",
+          "bytes": 121971
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/report.json",
+          "bytes": 278429
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/round_history.json",
+          "bytes": 277578
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/round_metrics.csv",
+          "bytes": 10014
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/train.log",
+          "bytes": 902785
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/paused_report.json",
+          "bytes": 124836
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/round_history.json",
+          "bytes": 124234
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/round_metrics.csv",
+          "bytes": 5184
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/train.log",
+          "bytes": 429501
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/train.stderr.log",
+          "bytes": 0
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/paused_report.json",
+          "bytes": 144223
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/round_history.json",
+          "bytes": 143621
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/round_metrics.csv",
+          "bytes": 5317
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/train.log",
+          "bytes": 441638
+        },
+        {
+          "path": "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/train.stderr.log",
+          "bytes": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-14-multiscale-dqn-wmpc-v2.md",
+          "bytes": 11156
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-21-objective-scale-audit.md",
+          "bytes": 3239
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-22-economic-model-closure.md",
+          "bytes": 18680
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-22-objective-audit-data-rules.md",
+          "bytes": 3653
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-22-v2-parameter-freeze.md",
+          "bytes": 2418
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-23-segment-power-cubic-spline.md",
+          "bytes": 18112
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-23-zero-boundary-dataset.md",
+          "bytes": 32515
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-24-v2-dqn-state-audit.md",
+          "bytes": 11796
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-24-v2-formal-training-readiness.md",
+          "bytes": 7254
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-24-zero-boundary-power-review.md",
+          "bytes": 25513
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-25-fc-independent-shore-classification.md",
+          "bytes": 6404
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-25-final-s8-state-audit.md",
+          "bytes": 4926
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-25-v2-shore-event-s8.md",
+          "bytes": 13698
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-26-v2-terminal-failure-learning.md",
+          "bytes": 14057
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-26-v2-validation-selection-final-test.md",
+          "bytes": 18658
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-27-v2-dqn-history-action-hyperparameter-study.md",
+          "bytes": 44124
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-29-h4-final-evaluation.md",
+          "bytes": 4113
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-29-tau-lpf-validation-screen.md",
+          "bytes": 1157
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-30-v2-lpf-single-commit.md",
+          "bytes": 15254
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-02-v2-economic-cycle-correction.md",
+          "bytes": 3744
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-03-v2-m10-action-hold-ablation.md",
+          "bytes": 981
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-06-direct-power-mlp.md",
+          "bytes": 3514
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-06-v3-economic-action-calibration.md",
+          "bytes": 2484
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-06-v3-mode-gated-episode-replay.md",
+          "bytes": 2114
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-07-v4-beta250-review.md",
+          "bytes": 1800
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-07-v4-failure-terminal-settlement.md",
+          "bytes": 4024
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-07-v4-staged-beta-cadence-study.md",
+          "bytes": 2987
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-08-v4-failure-economic-td.md",
+          "bytes": 4008
+        },
+        {
+          "path": "docs/superpowers/plans/2026-10-08-v4-reward-feedback.md",
+          "bytes": 4660
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-21-objective-scale-audit-design.md",
+          "bytes": 2922
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-22-economic-model-closure-design.md",
+          "bytes": 11298
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-22-objective-audit-data-rules-design.md",
+          "bytes": 2562
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-23-segment-power-cubic-spline-design.md",
+          "bytes": 4839
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-23-zero-boundary-dataset-design.md",
+          "bytes": 10583
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-24-v2-dqn-state-audit-design.md",
+          "bytes": 10112
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-24-v2-formal-training-readiness-design.md",
+          "bytes": 15107
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-24-zero-boundary-power-review-design.md",
+          "bytes": 3439
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-25-shore-classification-without-fc-gate-design.md",
+          "bytes": 3385
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-25-v2-shore-event-s8-design.md",
+          "bytes": 6560
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-26-v2-terminal-failure-learning-design.md",
+          "bytes": 7514
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-26-v2-validation-selection-final-test-design.md",
+          "bytes": 6896
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-27-v2-dqn-history-action-hyperparameter-design.md",
+          "bytes": 17936
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-30-v2-lpf-single-commit-design.md",
+          "bytes": 6004
+        },
+        {
+          "path": "docs/superpowers/specs/2026-10-02-v2-economic-cycle-correction-design.md",
+          "bytes": 1370
+        },
+        {
+          "path": "docs/superpowers/specs/2026-10-03-v2-m10-action-hold-ablation-design.md",
+          "bytes": 2287
+        }
+      ]
+    },
+    "outputs": {
+      "file_count": 367,
+      "bytes": 57064238,
+      "files": [
+        {
+          "path": "outputs/v2_dqn_state_audit/audit_manifest.json",
+          "bytes": 7482
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/candidate_correlation_heatmap.png",
+          "bytes": 179842
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/feature_distributions.png",
+          "bytes": 167276
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/feature_rows.csv",
+          "bytes": 2459330
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/feature_statistics.csv",
+          "bytes": 4871
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/markov_inventory.csv",
+          "bytes": 2965
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/pearson_correlation.csv",
+          "bytes": 3809
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/power_balance_residuals.csv",
+          "bytes": 1051740
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/redundancy_summary.csv",
+          "bytes": 830
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/regime_discrimination.png",
+          "bytes": 70967
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/regime_summary.csv",
+          "bytes": 1364
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/spearman_correlation.csv",
+          "bytes": 3781
+        },
+        {
+          "path": "outputs/v2_dqn_state_audit/state_comparison.csv",
+          "bytes": 1084
+        },
+        {
+          "path": "outputs/v2_failure_penalty_audit/audit_summary.json",
+          "bytes": 11390
+        },
+        {
+          "path": "outputs/v2_history_dqn_study/reward_scale_calibration.json",
+          "bytes": 507489
+        },
+        {
+          "path": "outputs/v2_m10_dqn_study/reward_scale_calibration.json",
+          "bytes": 507490
+        },
+        {
+          "path": "outputs/v2_objective_scale_audit/audit_summary.json",
+          "bytes": 212007
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/diagnostic_final_agent.pt",
+          "bytes": 58207
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/episode_metrics.csv",
+          "bytes": 3937
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/profiles.json",
+          "bytes": 579991
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/report.json",
+          "bytes": 164282
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/train.log",
+          "bytes": 1329273
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/training_curves.png",
+          "bytes": 161019
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/train_zero_boundary_008_power_soc.png",
+          "bytes": 89168
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/train_zero_boundary_015_power_soc.png",
+          "bytes": 93576
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/zero_boundary_004_power_soc.png",
+          "bytes": 150124
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/zero_boundary_009_power_soc.png",
+          "bytes": 177927
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/zero_boundary_010_power_soc.png",
+          "bytes": 105663
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/zero_boundary_019_power_soc.png",
+          "bytes": 128076
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/zero_boundary_032_power_soc.png",
+          "bytes": 160399
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/zero_boundary_036_power_soc.png",
+          "bytes": 91911
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/zero_boundary_043_power_soc.png",
+          "bytes": 127626
+        },
+        {
+          "path": "outputs/v4_beta250_40r_seed42/zero_boundary_047_power_soc.png",
+          "bytes": 92094
+        },
+        {
+          "path": "outputs/v4_failure_q_order_20261008/test_controlled_repeated_failu0/learning_order_evidence.json",
+          "bytes": 4818
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_controlled_repeated_failu0/learning_order_evidence.json",
+          "bytes": 4818
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_failed_greedy_train_skips0/report.json",
+          "bytes": 76229
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_failed_greedy_train_skips0/round_history.json",
+          "bytes": 76230
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_failed_greedy_trajectory_0/failed.json",
+          "bytes": 70222
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_failure_insertion_drives_0/report.json",
+          "bytes": 50649
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_failure_insertion_drives_0/round_001_exploratory_trajectories.json",
+          "bytes": 101445
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_failure_insertion_drives_0/round_001_train_trajectories.json",
+          "bytes": 88878
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_failure_insertion_drives_0/round_history.json",
+          "bytes": 50651
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_feedback_greedy_preserves0/greedy.json",
+          "bytes": 279963
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_first_step_infeasible_aft0/report.json",
+          "bytes": 50056
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_first_step_infeasible_aft0/round_history.json",
+          "bytes": 50057
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_historical_resume_cannot_0/v4_staged_beta_cadence_seed42/stage1_summary.json",
+          "bytes": 17
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_new_episode_credit_counts0/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_new_episode_credit_counts0/report.json",
+          "bytes": 61557
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_new_episode_credit_counts0/round_history.json",
+          "bytes": 61558
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_optimizer_target_mode_has0/replay16/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_optimizer_target_mode_has0/replay16/report.json",
+          "bytes": 61436
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_optimizer_target_mode_has0/replay16/round_history.json",
+          "bytes": 61437
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_optimizer_target_mode_has0/replay8/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_optimizer_target_mode_has0/replay8/report.json",
+          "bytes": 61434
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_optimizer_target_mode_has0/replay8/round_history.json",
+          "bytes": 61435
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_round_monitoring_does_not0/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_round_monitoring_does_not0/report.json",
+          "bytes": 124290
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_round_monitoring_does_not0/round_history.json",
+          "bytes": 124292
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_single_run_cli_end_to_end0/new_run/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_single_run_cli_end_to_end0/new_run/report.json",
+          "bytes": 62242
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_single_run_cli_end_to_end0/new_run/round_001_exploratory_trajectories.json",
+          "bytes": 279677
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_single_run_cli_end_to_end0/new_run/round_001_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_single_run_cli_end_to_end0/new_run/round_001_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_single_run_cli_end_to_end0/new_run/round_history.json",
+          "bytes": 62177
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_single_run_cli_end_to_end0/new_run/round_metrics.csv",
+          "bytes": 845
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_stage1_gate_selects_lowes0/worker/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_stage1_gate_selects_lowes0/worker/best_profiles.json",
+          "bytes": 45320
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_stage1_gate_selects_lowes0/worker/report.json",
+          "bytes": 61472
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_stage1_gate_selects_lowes0/worker/round_history.json",
+          "bytes": 61307
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_stage1_gate_selects_lowes0/worker/round_metrics.csv",
+          "bytes": 843
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb0/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb0/report.json",
+          "bytes": 61954
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb0/round_001_exploratory_trajectories.json",
+          "bytes": 279582
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb0/round_001_train_trajectories.json",
+          "bytes": 279453
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb0/round_001_validation_trajectories.json",
+          "bytes": 54603
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb0/round_history.json",
+          "bytes": 61955
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb1/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb1/report.json",
+          "bytes": 93956
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb1/round_001_exploratory_trajectories.json",
+          "bytes": 279677
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb1/round_001_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb1/round_001_validation_trajectories.json",
+          "bytes": 54635
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb1/round_002_exploratory_trajectories.json",
+          "bytes": 279931
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb1/round_002_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb1/round_002_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb1/round_history.json",
+          "bytes": 93957
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb2/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb2/report.json",
+          "bytes": 93925
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb2/round_001_exploratory_trajectories.json",
+          "bytes": 279601
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb2/round_001_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb2/round_001_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb2/round_002_exploratory_trajectories.json",
+          "bytes": 279921
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb2/round_002_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb2/round_002_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_failure_td_contracts_20261008/test_synthetic_schedules_feedb2/round_history.json",
+          "bytes": 93926
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_controlled_repeated_failu0/learning_order_evidence.json",
+          "bytes": 4884
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_failed_greedy_train_skips0/report.json",
+          "bytes": 76243
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_failed_greedy_train_skips0/round_history.json",
+          "bytes": 76243
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_failed_greedy_trajectory_0/failed.json",
+          "bytes": 70222
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_failure_insertion_drives_0/report.json",
+          "bytes": 50634
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_failure_insertion_drives_0/round_001_exploratory_trajectories.json",
+          "bytes": 101445
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_failure_insertion_drives_0/round_001_train_trajectories.json",
+          "bytes": 88878
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_failure_insertion_drives_0/round_history.json",
+          "bytes": 50650
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_feedback_greedy_preserves0/greedy.json",
+          "bytes": 279963
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_first_step_infeasible_aft0/report.json",
+          "bytes": 50055
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_first_step_infeasible_aft0/round_history.json",
+          "bytes": 50056
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_fixed_review_keeps_diagno0/output/diagnostic_final_agent.pt",
+          "bytes": 58207
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_fixed_review_keeps_diagno0/output/episode_metrics.csv",
+          "bytes": 302
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_fixed_review_keeps_diagno0/output/profiles.json",
+          "bytes": 2375
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_fixed_review_keeps_diagno0/output/report.json",
+          "bytes": 16085
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_greedy_failure_preview_is0/readonly.json",
+          "bytes": 70292
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_historical_resume_cannot_0/v4_staged_beta_cadence_seed42/stage1_summary.json",
+          "bytes": 17
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_new_episode_credit_counts0/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_new_episode_credit_counts0/report.json",
+          "bytes": 61556
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_new_episode_credit_counts0/round_history.json",
+          "bytes": 61557
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_optimizer_target_mode_has0/replay16/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_optimizer_target_mode_has0/replay16/report.json",
+          "bytes": 61434
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_optimizer_target_mode_has0/replay16/round_history.json",
+          "bytes": 61435
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_optimizer_target_mode_has0/replay8/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_optimizer_target_mode_has0/replay8/report.json",
+          "bytes": 61447
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_optimizer_target_mode_has0/replay8/round_history.json",
+          "bytes": 61448
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_round_monitoring_does_not0/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_round_monitoring_does_not0/report.json",
+          "bytes": 124290
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_round_monitoring_does_not0/round_history.json",
+          "bytes": 124290
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_single_run_cli_end_to_end0/new_run/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_single_run_cli_end_to_end0/new_run/report.json",
+          "bytes": 62242
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_single_run_cli_end_to_end0/new_run/round_001_exploratory_trajectories.json",
+          "bytes": 279677
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_single_run_cli_end_to_end0/new_run/round_001_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_single_run_cli_end_to_end0/new_run/round_001_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_single_run_cli_end_to_end0/new_run/round_history.json",
+          "bytes": 62177
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_single_run_cli_end_to_end0/new_run/round_metrics.csv",
+          "bytes": 845
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_stage1_gate_selects_lowes0/worker/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_stage1_gate_selects_lowes0/worker/best_profiles.json",
+          "bytes": 45320
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_stage1_gate_selects_lowes0/worker/report.json",
+          "bytes": 61471
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_stage1_gate_selects_lowes0/worker/round_history.json",
+          "bytes": 61306
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_stage1_gate_selects_lowes0/worker/round_metrics.csv",
+          "bytes": 843
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb0/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb0/report.json",
+          "bytes": 61968
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb0/round_001_exploratory_trajectories.json",
+          "bytes": 279582
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb0/round_001_train_trajectories.json",
+          "bytes": 279453
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb0/round_001_validation_trajectories.json",
+          "bytes": 54603
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb0/round_history.json",
+          "bytes": 61955
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb1/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb1/report.json",
+          "bytes": 93957
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb1/round_001_exploratory_trajectories.json",
+          "bytes": 279677
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb1/round_001_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb1/round_001_validation_trajectories.json",
+          "bytes": 54635
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb1/round_002_exploratory_trajectories.json",
+          "bytes": 279931
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb1/round_002_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb1/round_002_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb1/round_history.json",
+          "bytes": 93944
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb2/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb2/report.json",
+          "bytes": 93939
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb2/round_001_exploratory_trajectories.json",
+          "bytes": 279601
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb2/round_001_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb2/round_001_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb2/round_002_exploratory_trajectories.json",
+          "bytes": 279921
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb2/round_002_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb2/round_002_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_failure_td_verification_20261008/test_synthetic_schedules_feedb2/round_history.json",
+          "bytes": 93939
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_failed_greedy_train_skips0/report.json",
+          "bytes": 69621
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_failed_greedy_train_skips0/round_history.json",
+          "bytes": 69621
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_failed_greedy_trajectory_0/failed.json",
+          "bytes": 64885
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_feedback_greedy_preserves0/greedy.json",
+          "bytes": 263103
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_fixed_review_keeps_diagno0/output/diagnostic_final_agent.pt",
+          "bytes": 58207
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_fixed_review_keeps_diagno0/output/episode_metrics.csv",
+          "bytes": 302
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_fixed_review_keeps_diagno0/output/profiles.json",
+          "bytes": 2375
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_fixed_review_keeps_diagno0/output/report.json",
+          "bytes": 13675
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_new_episode_credit_counts0/best_agent.pt",
+          "bytes": 60641
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_new_episode_credit_counts0/report.json",
+          "bytes": 54737
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_new_episode_credit_counts0/round_history.json",
+          "bytes": 54738
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_optimizer_target_mode_has0/replay16/best_agent.pt",
+          "bytes": 60641
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_optimizer_target_mode_has0/replay16/report.json",
+          "bytes": 54554
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_optimizer_target_mode_has0/replay16/round_history.json",
+          "bytes": 54554
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_optimizer_target_mode_has0/replay8/best_agent.pt",
+          "bytes": 60641
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_optimizer_target_mode_has0/replay8/report.json",
+          "bytes": 54565
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_optimizer_target_mode_has0/replay8/round_history.json",
+          "bytes": 54567
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_round_monitoring_does_not0/best_agent.pt",
+          "bytes": 60641
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_round_monitoring_does_not0/report.json",
+          "bytes": 110835
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_round_monitoring_does_not0/round_history.json",
+          "bytes": 110836
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_single_run_cli_end_to_end0/new_run/best_agent.pt",
+          "bytes": 60769
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_single_run_cli_end_to_end0/new_run/report.json",
+          "bytes": 55392
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_single_run_cli_end_to_end0/new_run/round_001_exploratory_trajectories.json",
+          "bytes": 262817
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_single_run_cli_end_to_end0/new_run/round_001_train_trajectories.json",
+          "bytes": 263073
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_single_run_cli_end_to_end0/new_run/round_001_validation_trajectories.json",
+          "bytes": 51171
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_single_run_cli_end_to_end0/new_run/round_history.json",
+          "bytes": 55315
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_single_run_cli_end_to_end0/new_run/round_metrics.csv",
+          "bytes": 845
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_stage1_gate_selects_lowes0/worker/best_agent.pt",
+          "bytes": 60641
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_stage1_gate_selects_lowes0/worker/best_profiles.json",
+          "bytes": 45320
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_stage1_gate_selects_lowes0/worker/report.json",
+          "bytes": 54716
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_stage1_gate_selects_lowes0/worker/round_history.json",
+          "bytes": 54550
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_stage1_gate_selects_lowes0/worker/round_metrics.csv",
+          "bytes": 843
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb0/best_agent.pt",
+          "bytes": 60769
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb0/report.json",
+          "bytes": 55091
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb0/round_001_exploratory_trajectories.json",
+          "bytes": 262722
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb0/round_001_train_trajectories.json",
+          "bytes": 262593
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb0/round_001_validation_trajectories.json",
+          "bytes": 51123
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb0/round_history.json",
+          "bytes": 55093
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb1/best_agent.pt",
+          "bytes": 60769
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb1/report.json",
+          "bytes": 83831
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb1/round_001_exploratory_trajectories.json",
+          "bytes": 262817
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb1/round_001_train_trajectories.json",
+          "bytes": 263073
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb1/round_001_validation_trajectories.json",
+          "bytes": 51155
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb1/round_002_exploratory_trajectories.json",
+          "bytes": 263071
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb1/round_002_train_trajectories.json",
+          "bytes": 263073
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb1/round_002_validation_trajectories.json",
+          "bytes": 51171
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb1/round_history.json",
+          "bytes": 83832
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb2/best_agent.pt",
+          "bytes": 60769
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb2/report.json",
+          "bytes": 83817
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb2/round_001_exploratory_trajectories.json",
+          "bytes": 262741
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb2/round_001_train_trajectories.json",
+          "bytes": 263073
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb2/round_001_validation_trajectories.json",
+          "bytes": 51171
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb2/round_002_exploratory_trajectories.json",
+          "bytes": 263061
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb2/round_002_train_trajectories.json",
+          "bytes": 263073
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb2/round_002_validation_trajectories.json",
+          "bytes": 51171
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_20261008/test_synthetic_schedules_feedb2/round_history.json",
+          "bytes": 83818
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_failed_greedy_train_skips0/report.json",
+          "bytes": 71988
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_failed_greedy_train_skips0/round_history.json",
+          "bytes": 71989
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_failed_greedy_trajectory_0/failed.json",
+          "bytes": 66169
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_feedback_greedy_preserves0/greedy.json",
+          "bytes": 263103
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_first_step_infeasible_aft0/report.json",
+          "bytes": 47223
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_first_step_infeasible_aft0/round_history.json",
+          "bytes": 47224
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_fixed_review_keeps_diagno0/output/diagnostic_final_agent.pt",
+          "bytes": 58207
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_fixed_review_keeps_diagno0/output/episode_metrics.csv",
+          "bytes": 302
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_fixed_review_keeps_diagno0/output/profiles.json",
+          "bytes": 2375
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_fixed_review_keeps_diagno0/output/report.json",
+          "bytes": 15470
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_historical_resume_cannot_0/v4_staged_beta_cadence_seed42/stage1_summary.json",
+          "bytes": 17
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_new_episode_credit_counts0/best_agent.pt",
+          "bytes": 61025
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_new_episode_credit_counts0/report.json",
+          "bytes": 57726
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_new_episode_credit_counts0/round_history.json",
+          "bytes": 57726
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_optimizer_target_mode_has0/replay16/best_agent.pt",
+          "bytes": 61025
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_optimizer_target_mode_has0/replay16/report.json",
+          "bytes": 57598
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_optimizer_target_mode_has0/replay16/round_history.json",
+          "bytes": 57599
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_optimizer_target_mode_has0/replay8/best_agent.pt",
+          "bytes": 61025
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_optimizer_target_mode_has0/replay8/report.json",
+          "bytes": 57610
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_optimizer_target_mode_has0/replay8/round_history.json",
+          "bytes": 57611
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_round_monitoring_does_not0/best_agent.pt",
+          "bytes": 61025
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_round_monitoring_does_not0/report.json",
+          "bytes": 116935
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_round_monitoring_does_not0/round_history.json",
+          "bytes": 116937
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_single_run_cli_end_to_end0/new_run/best_agent.pt",
+          "bytes": 61153
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_single_run_cli_end_to_end0/new_run/report.json",
+          "bytes": 58391
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_single_run_cli_end_to_end0/new_run/round_001_exploratory_trajectories.json",
+          "bytes": 262817
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_single_run_cli_end_to_end0/new_run/round_001_train_trajectories.json",
+          "bytes": 263073
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_single_run_cli_end_to_end0/new_run/round_001_validation_trajectories.json",
+          "bytes": 51171
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_single_run_cli_end_to_end0/new_run/round_history.json",
+          "bytes": 58338
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_single_run_cli_end_to_end0/new_run/round_metrics.csv",
+          "bytes": 845
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_stage1_gate_selects_lowes0/worker/best_agent.pt",
+          "bytes": 61025
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_stage1_gate_selects_lowes0/worker/best_profiles.json",
+          "bytes": 45320
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_stage1_gate_selects_lowes0/worker/report.json",
+          "bytes": 57733
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_stage1_gate_selects_lowes0/worker/round_history.json",
+          "bytes": 57568
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_stage1_gate_selects_lowes0/worker/round_metrics.csv",
+          "bytes": 843
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb0/best_agent.pt",
+          "bytes": 61153
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb0/report.json",
+          "bytes": 58130
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb0/round_001_exploratory_trajectories.json",
+          "bytes": 262722
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb0/round_001_train_trajectories.json",
+          "bytes": 262593
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb0/round_001_validation_trajectories.json",
+          "bytes": 51123
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb0/round_history.json",
+          "bytes": 58131
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb1/best_agent.pt",
+          "bytes": 61153
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb1/report.json",
+          "bytes": 88353
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb1/round_001_exploratory_trajectories.json",
+          "bytes": 262817
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb1/round_001_train_trajectories.json",
+          "bytes": 263073
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb1/round_001_validation_trajectories.json",
+          "bytes": 51155
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb1/round_002_exploratory_trajectories.json",
+          "bytes": 263071
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb1/round_002_train_trajectories.json",
+          "bytes": 263073
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb1/round_002_validation_trajectories.json",
+          "bytes": 51171
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb1/round_history.json",
+          "bytes": 88353
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb2/best_agent.pt",
+          "bytes": 61153
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb2/report.json",
+          "bytes": 88335
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb2/round_001_exploratory_trajectories.json",
+          "bytes": 262741
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb2/round_001_train_trajectories.json",
+          "bytes": 263073
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb2/round_001_validation_trajectories.json",
+          "bytes": 51171
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb2/round_002_exploratory_trajectories.json",
+          "bytes": 263061
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb2/round_002_train_trajectories.json",
+          "bytes": 263073
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb2/round_002_validation_trajectories.json",
+          "bytes": 51171
+        },
+        {
+          "path": "outputs/v4_reward_feedback_verification_final_20261008/test_synthetic_schedules_feedb2/round_history.json",
+          "bytes": 88336
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/archive_paused.py",
+          "bytes": 5483
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/baseline_40r_consistency.json",
+          "bytes": 227
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/interim_stage1.png",
+          "bytes": 75313
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/monitor.py",
+          "bytes": 2405
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/reconstruction_audit.json",
+          "bytes": 386
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/recovery_launch.json",
+          "bytes": 1771
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/resource_failure_beta1000.log",
+          "bytes": 3189
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/resource_failure_beta250.log",
+          "bytes": 2083
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1_comparison.csv",
+          "bytes": 592
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1_completion.png",
+          "bytes": 135305
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1_optimizer_axis.png",
+          "bytes": 103808
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1_soc_fc_cost.png",
+          "bytes": 211090
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1_summary.json",
+          "bytes": 41255
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2_launch.json",
+          "bytes": 438
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/study.log",
+          "bytes": 10749
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/study_summary.json",
+          "bytes": 71901
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/summarize_stage1.py",
+          "bytes": 2236
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/interruptions/stage1_beta_1000/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/interruptions/stage1_beta_1000/round_history.json",
+          "bytes": 80403
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/interruptions/stage1_beta_1000/train.log",
+          "bytes": 251590
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/interruptions/stage1_beta_250/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/interruptions/stage1_beta_250/round_history.json",
+          "bytes": 108718
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/interruptions/stage1_beta_250/train.log",
+          "bytes": 330179
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/best_profiles.json",
+          "bytes": 2330463
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/best_zero_boundary_004_power_soc.png",
+          "bytes": 166465
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/best_zero_boundary_009_power_soc.png",
+          "bytes": 180637
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/best_zero_boundary_010_power_soc.png",
+          "bytes": 157221
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/best_zero_boundary_019_power_soc.png",
+          "bytes": 176481
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/best_zero_boundary_032_power_soc.png",
+          "bytes": 173653
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/best_zero_boundary_036_power_soc.png",
+          "bytes": 123586
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/best_zero_boundary_043_power_soc.png",
+          "bytes": 162080
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/best_zero_boundary_047_power_soc.png",
+          "bytes": 122859
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/report.json",
+          "bytes": 280961
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/round_history.json",
+          "bytes": 280109
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/round_metrics.csv",
+          "bytes": 9828
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/train.log",
+          "bytes": 895540
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_1000/train.stderr.log",
+          "bytes": 0
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/best_profiles.json",
+          "bytes": 2330675
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/best_zero_boundary_004_power_soc.png",
+          "bytes": 158673
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/best_zero_boundary_009_power_soc.png",
+          "bytes": 171668
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/best_zero_boundary_010_power_soc.png",
+          "bytes": 156399
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/best_zero_boundary_019_power_soc.png",
+          "bytes": 172515
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/best_zero_boundary_032_power_soc.png",
+          "bytes": 163910
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/best_zero_boundary_036_power_soc.png",
+          "bytes": 125120
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/best_zero_boundary_043_power_soc.png",
+          "bytes": 163513
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/best_zero_boundary_047_power_soc.png",
+          "bytes": 123159
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/report.json",
+          "bytes": 294875
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/round_history.json",
+          "bytes": 294024
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/round_metrics.csv",
+          "bytes": 9851
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_2000/train.log",
+          "bytes": 868652
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/best_profiles.json",
+          "bytes": 2334927
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/best_zero_boundary_004_power_soc.png",
+          "bytes": 139706
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/best_zero_boundary_009_power_soc.png",
+          "bytes": 168396
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/best_zero_boundary_010_power_soc.png",
+          "bytes": 153459
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/best_zero_boundary_019_power_soc.png",
+          "bytes": 168148
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/best_zero_boundary_032_power_soc.png",
+          "bytes": 143377
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/best_zero_boundary_036_power_soc.png",
+          "bytes": 121414
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/best_zero_boundary_043_power_soc.png",
+          "bytes": 153080
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/best_zero_boundary_047_power_soc.png",
+          "bytes": 125746
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/report.json",
+          "bytes": 328030
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/round_history.json",
+          "bytes": 327179
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/round_metrics.csv",
+          "bytes": 9070
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/train.log",
+          "bytes": 741489
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_250/train.stderr.log",
+          "bytes": 0
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/best_profiles.json",
+          "bytes": 2337020
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/best_zero_boundary_004_power_soc.png",
+          "bytes": 131321
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/best_zero_boundary_009_power_soc.png",
+          "bytes": 171098
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/best_zero_boundary_010_power_soc.png",
+          "bytes": 148729
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/best_zero_boundary_019_power_soc.png",
+          "bytes": 166199
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/best_zero_boundary_032_power_soc.png",
+          "bytes": 152707
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/best_zero_boundary_036_power_soc.png",
+          "bytes": 121566
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/best_zero_boundary_043_power_soc.png",
+          "bytes": 142454
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/best_zero_boundary_047_power_soc.png",
+          "bytes": 121971
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/report.json",
+          "bytes": 278429
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/round_history.json",
+          "bytes": 277578
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/round_metrics.csv",
+          "bytes": 10014
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage1/beta_500/train.log",
+          "bytes": 902785
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/A_episode16/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/A_episode16/paused_report.json",
+          "bytes": 124836
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/A_episode16/round_history.json",
+          "bytes": 124234
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/A_episode16/round_metrics.csv",
+          "bytes": 5184
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/A_episode16/train.log",
+          "bytes": 429501
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/A_episode16/train.stderr.log",
+          "bytes": 0
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/B_replay16/best_agent.pt",
+          "bytes": 59489
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/B_replay16/paused_report.json",
+          "bytes": 144223
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/B_replay16/round_history.json",
+          "bytes": 143621
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/B_replay16/round_metrics.csv",
+          "bytes": 5317
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/B_replay16/train.log",
+          "bytes": 441638
+        },
+        {
+          "path": "outputs/v4_staged_beta_cadence_seed42/stage2/B_replay16/train.stderr.log",
+          "bytes": 0
+        }
+      ]
+    },
+    "src": {
+      "file_count": 300,
+      "bytes": 4195814,
+      "files": [
+        {
+          "path": "src/dqn/__init__.py",
+          "bytes": 34
+        },
+        {
+          "path": "src/dqn/agents/dqn_agent.py",
+          "bytes": 15943
+        },
+        {
+          "path": "src/dqn/agents/__pycache__/dqn_agent.cpython-311.pyc",
+          "bytes": 26230
+        },
+        {
+          "path": "src/dqn/memory/replay_buffer.py",
+          "bytes": 6285
+        },
+        {
+          "path": "src/dqn/memory/__pycache__/replay_buffer.cpython-311.pyc",
+          "bytes": 12163
+        },
+        {
+          "path": "src/dqn/networks/factory.py",
+          "bytes": 1248
+        },
+        {
+          "path": "src/dqn/networks/kan_qnet.py",
+          "bytes": 6739
+        },
+        {
+          "path": "src/dqn/networks/mlp_qnet.py",
+          "bytes": 1972
+        },
+        {
+          "path": "src/dqn/networks/__init__.py",
+          "bytes": 330
+        },
+        {
+          "path": "src/dqn/networks/__pycache__/factory.cpython-311.pyc",
+          "bytes": 2436
+        },
+        {
+          "path": "src/dqn/networks/__pycache__/kan_qnet.cpython-311.pyc",
+          "bytes": 13906
+        },
+        {
+          "path": "src/dqn/networks/__pycache__/mlp_qnet.cpython-311.pyc",
+          "bytes": 4947
+        },
+        {
+          "path": "src/dqn/networks/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 577
+        },
+        {
+          "path": "src/dqn/policies/epsilon_greedy.py",
+          "bytes": 886
+        },
+        {
+          "path": "src/dqn/policies/__pycache__/epsilon_greedy.cpython-311.pyc",
+          "bytes": 2123
+        },
+        {
+          "path": "src/dqn/utils/action_mapper.py",
+          "bytes": 2919
+        },
+        {
+          "path": "src/dqn/utils/legacy_reward.py",
+          "bytes": 2530
+        },
+        {
+          "path": "src/dqn/utils/reward.py",
+          "bytes": 1825
+        },
+        {
+          "path": "src/dqn/utils/state_builder.py",
+          "bytes": 2592
+        },
+        {
+          "path": "src/dqn/utils/training_metrics.py",
+          "bytes": 2052
+        },
+        {
+          "path": "src/dqn/utils/__pycache__/action_mapper.cpython-311.pyc",
+          "bytes": 5421
+        },
+        {
+          "path": "src/dqn/utils/__pycache__/legacy_reward.cpython-311.pyc",
+          "bytes": 4349
+        },
+        {
+          "path": "src/dqn/utils/__pycache__/reward.cpython-311.pyc",
+          "bytes": 2632
+        },
+        {
+          "path": "src/dqn/utils/__pycache__/state_builder.cpython-311.pyc",
+          "bytes": 3639
+        },
+        {
+          "path": "src/dqn/utils/__pycache__/training_metrics.cpython-311.pyc",
+          "bytes": 4742
+        },
+        {
+          "path": "src/dqn/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 252
+        },
+        {
+          "path": "src/envs/dqn_mpc_weight_env.py",
+          "bytes": 17096
+        },
+        {
+          "path": "src/envs/__init__.py",
+          "bytes": 71
+        },
+        {
+          "path": "src/envs/__pycache__/dqn_mpc_weight_env.cpython-311.pyc",
+          "bytes": 19643
+        },
+        {
+          "path": "src/envs/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 290
+        },
+        {
+          "path": "src/main/audit_fixed_physical_l2_84_train.py",
+          "bytes": 23674
+        },
+        {
+          "path": "src/main/audit_ideal_reference_84_train.py",
+          "bytes": 36682
+        },
+        {
+          "path": "src/main/audit_rms_l2_84_train.py",
+          "bytes": 15251
+        },
+        {
+          "path": "src/main/audit_rms_marginals_84_train.py",
+          "bytes": 21294
+        },
+        {
+          "path": "src/main/build_final_operating_dataset.py",
+          "bytes": 38922
+        },
+        {
+          "path": "src/main/build_operating_segment_dataset.py",
+          "bytes": 358
+        },
+        {
+          "path": "src/main/build_rebuilt_operating_segment_dataset.py",
+          "bytes": 44971
+        },
+        {
+          "path": "src/main/build_spline_1s_diagnostics.py",
+          "bytes": 20903
+        },
+        {
+          "path": "src/main/build_total_load_dataset_721.py",
+          "bytes": 56940
+        },
+        {
+          "path": "src/main/build_zero_boundary_operating_dataset.py",
+          "bytes": 21942
+        },
+        {
+          "path": "src/main/build_zero_boundary_power_review.py",
+          "bytes": 1985
+        },
+        {
+          "path": "src/main/calibrate_unified_mpc_actions_train.py",
+          "bytes": 34147
+        },
+        {
+          "path": "src/main/compare_mpc_vs_dqn.py",
+          "bytes": 11332
+        },
+        {
+          "path": "src/main/formal_paths.py",
+          "bytes": 2276
+        },
+        {
+          "path": "src/main/refine_operating_segment_split.py",
+          "bytes": 1008
+        },
+        {
+          "path": "src/main/run_dqn_mpc_causal_training.py",
+          "bytes": 12749
+        },
+        {
+          "path": "src/main/run_v2_objective_scale_audit.py",
+          "bytes": 13710
+        },
+        {
+          "path": "src/main/test_dqn_mpc_causal.py",
+          "bytes": 10195
+        },
+        {
+          "path": "src/main/test_mpc_nominal_causal.py",
+          "bytes": 9516
+        },
+        {
+          "path": "src/main/train_dqn_mpc_mlp.py",
+          "bytes": 55061
+        },
+        {
+          "path": "src/main/zero_residual_numerical_negative_loads.py",
+          "bytes": 4266
+        },
+        {
+          "path": "src/main/mpc_solvers/dqn_mpc_solver_bank.py",
+          "bytes": 7675
+        },
+        {
+          "path": "src/main/mpc_solvers/formal_config.py",
+          "bytes": 1828
+        },
+        {
+          "path": "src/main/mpc_solvers/mpc_qp_formulation.py",
+          "bytes": 21024
+        },
+        {
+          "path": "src/main/mpc_solvers/n6_qp_scaling.py",
+          "bytes": 6312
+        },
+        {
+          "path": "src/main/mpc_solvers/osqp_runtime.py",
+          "bytes": 3500
+        },
+        {
+          "path": "src/main/mpc_solvers/__init__.py",
+          "bytes": 48
+        },
+        {
+          "path": "src/main/mpc_solvers/__pycache__/dqn_mpc_solver_bank.cpython-311.pyc",
+          "bytes": 9667
+        },
+        {
+          "path": "src/main/mpc_solvers/__pycache__/formal_config.cpython-311.pyc",
+          "bytes": 2688
+        },
+        {
+          "path": "src/main/mpc_solvers/__pycache__/mpc_qp_formulation.cpython-311.pyc",
+          "bytes": 28793
+        },
+        {
+          "path": "src/main/mpc_solvers/__pycache__/n6_qp_scaling.cpython-311.pyc",
+          "bytes": 9035
+        },
+        {
+          "path": "src/main/mpc_solvers/__pycache__/osqp_runtime.cpython-311.pyc",
+          "bytes": 5099
+        },
+        {
+          "path": "src/main/mpc_solvers/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 281
+        },
+        {
+          "path": "src/main/__pycache__/audit_ideal_reference_84_train.cpython-311.pyc",
+          "bytes": 74766
+        },
+        {
+          "path": "src/main/__pycache__/build_final_operating_dataset.cpython-311.pyc",
+          "bytes": 71581
+        },
+        {
+          "path": "src/main/__pycache__/build_rebuilt_operating_segment_dataset.cpython-311.pyc",
+          "bytes": 89160
+        },
+        {
+          "path": "src/main/__pycache__/build_spline_1s_diagnostics.cpython-311.pyc",
+          "bytes": 33572
+        },
+        {
+          "path": "src/main/__pycache__/build_zero_boundary_operating_dataset.cpython-311.pyc",
+          "bytes": 29843
+        },
+        {
+          "path": "src/main/__pycache__/build_zero_boundary_power_review.cpython-311.pyc",
+          "bytes": 3540
+        },
+        {
+          "path": "src/main/__pycache__/calibrate_unified_mpc_actions_train.cpython-311.pyc",
+          "bytes": 45204
+        },
+        {
+          "path": "src/main/__pycache__/compare_mpc_vs_dqn.cpython-311.pyc",
+          "bytes": 16778
+        },
+        {
+          "path": "src/main/__pycache__/formal_paths.cpython-311.pyc",
+          "bytes": 3364
+        },
+        {
+          "path": "src/main/__pycache__/refine_operating_segment_split.cpython-311.pyc",
+          "bytes": 2204
+        },
+        {
+          "path": "src/main/__pycache__/run_dqn_mpc_causal_training.cpython-311.pyc",
+          "bytes": 17339
+        },
+        {
+          "path": "src/main/__pycache__/run_v2_objective_scale_audit.cpython-311.pyc",
+          "bytes": 21420
+        },
+        {
+          "path": "src/main/__pycache__/test_dqn_mpc_causal.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 14894
+        },
+        {
+          "path": "src/main/__pycache__/test_mpc_nominal_causal.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 13573
+        },
+        {
+          "path": "src/main/__pycache__/train_dqn_mpc_mlp.cpython-311.pyc",
+          "bytes": 72958
+        },
+        {
+          "path": "src/main/__pycache__/zero_residual_numerical_negative_loads.cpython-311.pyc",
+          "bytes": 6977
+        },
+        {
+          "path": "src/mpc/__init__.py",
+          "bytes": 34
+        },
+        {
+          "path": "src/mpc/solvers/fc_dp0_curve.py",
+          "bytes": 5300
+        },
+        {
+          "path": "src/mpc/solvers/__pycache__/fc_dp0_curve.cpython-311.pyc",
+          "bytes": 8745
+        },
+        {
+          "path": "src/mpc/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 252
+        },
+        {
+          "path": "src/utils/common_types.py",
+          "bytes": 1085
+        },
+        {
+          "path": "src/utils/data_aligner.py",
+          "bytes": 26869
+        },
+        {
+          "path": "src/utils/data_loader.py",
+          "bytes": 1178
+        },
+        {
+          "path": "src/utils/final_dataset_feasibility.py",
+          "bytes": 9837
+        },
+        {
+          "path": "src/utils/final_dataset_semantics.py",
+          "bytes": 15154
+        },
+        {
+          "path": "src/utils/final_dataset_source.py",
+          "bytes": 14470
+        },
+        {
+          "path": "src/utils/final_dataset_split.py",
+          "bytes": 10014
+        },
+        {
+          "path": "src/utils/final_dataset_verification.py",
+          "bytes": 11036
+        },
+        {
+          "path": "src/utils/formal_operating_dataset.py",
+          "bytes": 13474
+        },
+        {
+          "path": "src/utils/operating_segment_dataset.py",
+          "bytes": 806
+        },
+        {
+          "path": "src/utils/physical_config.py",
+          "bytes": 523
+        },
+        {
+          "path": "src/utils/rebuilt_operating_dataset.py",
+          "bytes": 14343
+        },
+        {
+          "path": "src/utils/__pycache__/common_types.cpython-311.pyc",
+          "bytes": 2287
+        },
+        {
+          "path": "src/utils/__pycache__/data_aligner.cpython-311.pyc",
+          "bytes": 35083
+        },
+        {
+          "path": "src/utils/__pycache__/data_loader.cpython-311.pyc",
+          "bytes": 2504
+        },
+        {
+          "path": "src/utils/__pycache__/final_dataset_feasibility.cpython-311.pyc",
+          "bytes": 14838
+        },
+        {
+          "path": "src/utils/__pycache__/final_dataset_semantics.cpython-311.pyc",
+          "bytes": 24809
+        },
+        {
+          "path": "src/utils/__pycache__/final_dataset_source.cpython-311.pyc",
+          "bytes": 27718
+        },
+        {
+          "path": "src/utils/__pycache__/final_dataset_split.cpython-311.pyc",
+          "bytes": 16142
+        },
+        {
+          "path": "src/utils/__pycache__/final_dataset_verification.cpython-311.pyc",
+          "bytes": 21710
+        },
+        {
+          "path": "src/utils/__pycache__/formal_operating_dataset.cpython-311.pyc",
+          "bytes": 22257
+        },
+        {
+          "path": "src/utils/__pycache__/operating_segment_dataset.cpython-311.pyc",
+          "bytes": 946
+        },
+        {
+          "path": "src/utils/__pycache__/physical_config.cpython-311.pyc",
+          "bytes": 902
+        },
+        {
+          "path": "src/utils/__pycache__/rebuilt_operating_dataset.cpython-311.pyc",
+          "bytes": 25193
+        },
+        {
+          "path": "src/v2/config.py",
+          "bytes": 4247
+        },
+        {
+          "path": "src/v2/contracts.py",
+          "bytes": 2478
+        },
+        {
+          "path": "src/v2/economics.py",
+          "bytes": 25339
+        },
+        {
+          "path": "src/v2/failure_policy.py",
+          "bytes": 2129
+        },
+        {
+          "path": "src/v2/preflight.py",
+          "bytes": 31961
+        },
+        {
+          "path": "src/v2/__init__.py",
+          "bytes": 126
+        },
+        {
+          "path": "src/v2/analysis/action_screening.py",
+          "bytes": 53016
+        },
+        {
+          "path": "src/v2/analysis/objective_scale_audit.py",
+          "bytes": 29007
+        },
+        {
+          "path": "src/v2/analysis/solver_audit.py",
+          "bytes": 17328
+        },
+        {
+          "path": "src/v2/analysis/timescale_audit.py",
+          "bytes": 25588
+        },
+        {
+          "path": "src/v2/analysis/train_objective_scale_runner.py",
+          "bytes": 15883
+        },
+        {
+          "path": "src/v2/analysis/train_state_audit.py",
+          "bytes": 61282
+        },
+        {
+          "path": "src/v2/analysis/__init__.py",
+          "bytes": 2485
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/action_screening.cpython-311.pyc",
+          "bytes": 84134
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/objective_scale_audit.cpython-311.pyc",
+          "bytes": 47278
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/solver_audit.cpython-311.pyc",
+          "bytes": 27900
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/timescale_audit.cpython-311.pyc",
+          "bytes": 42153
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/train_objective_scale_runner.cpython-311.pyc",
+          "bytes": 26403
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/train_state_audit.cpython-311.pyc",
+          "bytes": 85043
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 2330
+        },
+        {
+          "path": "src/v2/control/causal_base_load.py",
+          "bytes": 4690
+        },
+        {
+          "path": "src/v2/control/nonlinear_mpc.py",
+          "bytes": 28393
+        },
+        {
+          "path": "src/v2/control/__init__.py",
+          "bytes": 1362
+        },
+        {
+          "path": "src/v2/control/__pycache__/causal_base_load.cpython-311.pyc",
+          "bytes": 7485
+        },
+        {
+          "path": "src/v2/control/__pycache__/nonlinear_mpc.cpython-311.pyc",
+          "bytes": 38784
+        },
+        {
+          "path": "src/v2/control/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 1462
+        },
+        {
+          "path": "src/v2/data/ais_speed_sidecar.py",
+          "bytes": 14598
+        },
+        {
+          "path": "src/v2/data/formal_training_dataset.py",
+          "bytes": 18684
+        },
+        {
+          "path": "src/v2/data/power_gap_interpolation.py",
+          "bytes": 5495
+        },
+        {
+          "path": "src/v2/data/raw_inventory.py",
+          "bytes": 8096
+        },
+        {
+          "path": "src/v2/data/segment_power_source.py",
+          "bytes": 13286
+        },
+        {
+          "path": "src/v2/data/shore_mode_sidecar.py",
+          "bytes": 13151
+        },
+        {
+          "path": "src/v2/data/supervisory_aggregation.py",
+          "bytes": 5127
+        },
+        {
+          "path": "src/v2/data/supervisory_rules.py",
+          "bytes": 6202
+        },
+        {
+          "path": "src/v2/data/train_supervisory_audit.py",
+          "bytes": 12450
+        },
+        {
+          "path": "src/v2/data/zero_boundary_dataset.py",
+          "bytes": 23202
+        },
+        {
+          "path": "src/v2/data/zero_boundary_power_review.py",
+          "bytes": 9721
+        },
+        {
+          "path": "src/v2/data/__init__.py",
+          "bytes": 62
+        },
+        {
+          "path": "src/v2/data/__pycache__/ais_speed_sidecar.cpython-311.pyc",
+          "bytes": 23965
+        },
+        {
+          "path": "src/v2/data/__pycache__/formal_training_dataset.cpython-311.pyc",
+          "bytes": 31306
+        },
+        {
+          "path": "src/v2/data/__pycache__/power_gap_interpolation.cpython-311.pyc",
+          "bytes": 10304
+        },
+        {
+          "path": "src/v2/data/__pycache__/raw_inventory.cpython-311.pyc",
+          "bytes": 13495
+        },
+        {
+          "path": "src/v2/data/__pycache__/segment_power_source.cpython-311.pyc",
+          "bytes": 22924
+        },
+        {
+          "path": "src/v2/data/__pycache__/shore_mode_sidecar.cpython-311.pyc",
+          "bytes": 21720
+        },
+        {
+          "path": "src/v2/data/__pycache__/supervisory_aggregation.cpython-311.pyc",
+          "bytes": 9503
+        },
+        {
+          "path": "src/v2/data/__pycache__/supervisory_rules.cpython-311.pyc",
+          "bytes": 9786
+        },
+        {
+          "path": "src/v2/data/__pycache__/train_supervisory_audit.cpython-311.pyc",
+          "bytes": 22938
+        },
+        {
+          "path": "src/v2/data/__pycache__/zero_boundary_dataset.cpython-311.pyc",
+          "bytes": 32431
+        },
+        {
+          "path": "src/v2/data/__pycache__/zero_boundary_power_review.cpython-311.pyc",
+          "bytes": 15770
+        },
+        {
+          "path": "src/v2/data/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 286
+        },
+        {
+          "path": "src/v2/dqn/action_space.py",
+          "bytes": 3030
+        },
+        {
+          "path": "src/v2/dqn/history.py",
+          "bytes": 2048
+        },
+        {
+          "path": "src/v2/dqn/state.py",
+          "bytes": 17971
+        },
+        {
+          "path": "src/v2/dqn/__init__.py",
+          "bytes": 1996
+        },
+        {
+          "path": "src/v2/dqn/__pycache__/action_space.cpython-311.pyc",
+          "bytes": 6100
+        },
+        {
+          "path": "src/v2/dqn/__pycache__/history.cpython-311.pyc",
+          "bytes": 4104
+        },
+        {
+          "path": "src/v2/dqn/__pycache__/state.cpython-311.pyc",
+          "bytes": 25201
+        },
+        {
+          "path": "src/v2/dqn/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 1863
+        },
+        {
+          "path": "src/v2/envs/formal_episode.py",
+          "bytes": 16384
+        },
+        {
+          "path": "src/v2/envs/multirate_weight_env.py",
+          "bytes": 21307
+        },
+        {
+          "path": "src/v2/envs/__init__.py",
+          "bytes": 490
+        },
+        {
+          "path": "src/v2/envs/__pycache__/formal_episode.cpython-311.pyc",
+          "bytes": 21615
+        },
+        {
+          "path": "src/v2/envs/__pycache__/multirate_weight_env.cpython-311.pyc",
+          "bytes": 28880
+        },
+        {
+          "path": "src/v2/envs/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 639
+        },
+        {
+          "path": "src/v2/evaluation/checkpoint_selection.py",
+          "bytes": 25943
+        },
+        {
+          "path": "src/v2/evaluation/final_test.py",
+          "bytes": 14632
+        },
+        {
+          "path": "src/v2/evaluation/formal_policy.py",
+          "bytes": 23781
+        },
+        {
+          "path": "src/v2/evaluation/power_trace_plots.py",
+          "bytes": 8996
+        },
+        {
+          "path": "src/v2/evaluation/study_selection.py",
+          "bytes": 10616
+        },
+        {
+          "path": "src/v2/evaluation/tau_lpf_screen.py",
+          "bytes": 5053
+        },
+        {
+          "path": "src/v2/evaluation/__init__.py",
+          "bytes": 572
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/checkpoint_selection.cpython-311.pyc",
+          "bytes": 37768
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/final_test.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 22565
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/formal_policy.cpython-311.pyc",
+          "bytes": 40942
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/power_trace_plots.cpython-311.pyc",
+          "bytes": 12974
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/study_selection.cpython-311.pyc",
+          "bytes": 17303
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/tau_lpf_screen.cpython-311.pyc",
+          "bytes": 9778
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 701
+        },
+        {
+          "path": "src/v2/main/build_ais_speed_sidecar.py",
+          "bytes": 846
+        },
+        {
+          "path": "src/v2/main/build_shore_mode_sidecar.py",
+          "bytes": 917
+        },
+        {
+          "path": "src/v2/main/compare_m5_m10_validation.py",
+          "bytes": 12549
+        },
+        {
+          "path": "src/v2/main/evaluate_formal_dqn_test.py",
+          "bytes": 5392
+        },
+        {
+          "path": "src/v2/main/history_dqn_evaluation.py",
+          "bytes": 1850
+        },
+        {
+          "path": "src/v2/main/run_failure_penalty_audit.py",
+          "bytes": 6549
+        },
+        {
+          "path": "src/v2/main/run_m10_reward_scale_calibration.py",
+          "bytes": 1761
+        },
+        {
+          "path": "src/v2/main/run_preflight.py",
+          "bytes": 596
+        },
+        {
+          "path": "src/v2/main/run_reward_scale_calibration.py",
+          "bytes": 5495
+        },
+        {
+          "path": "src/v2/main/run_tau_lpf_validation_screen.py",
+          "bytes": 9444
+        },
+        {
+          "path": "src/v2/main/run_train_only_timescale_audit.py",
+          "bytes": 3803
+        },
+        {
+          "path": "src/v2/main/run_train_state_audit.py",
+          "bytes": 7907
+        },
+        {
+          "path": "src/v2/main/select_formal_dqn_checkpoint.py",
+          "bytes": 7181
+        },
+        {
+          "path": "src/v2/main/select_history_dqn_study.py",
+          "bytes": 8322
+        },
+        {
+          "path": "src/v2/main/train_formal_dqn.py",
+          "bytes": 29696
+        },
+        {
+          "path": "src/v2/main/train_history_dqn_study.py",
+          "bytes": 5156
+        },
+        {
+          "path": "src/v2/main/train_m10_dqn_study.py",
+          "bytes": 4435
+        },
+        {
+          "path": "src/v2/main/__init__.py",
+          "bytes": 42
+        },
+        {
+          "path": "src/v2/main/__pycache__/compare_m5_m10_validation.cpython-311.pyc",
+          "bytes": 16432
+        },
+        {
+          "path": "src/v2/main/__pycache__/evaluate_formal_dqn_test.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 7788
+        },
+        {
+          "path": "src/v2/main/__pycache__/history_dqn_evaluation.cpython-311.pyc",
+          "bytes": 2390
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_m10_reward_scale_calibration.cpython-311.pyc",
+          "bytes": 3051
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_preflight.cpython-311.pyc",
+          "bytes": 1291
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_reward_scale_calibration.cpython-311.pyc",
+          "bytes": 9323
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_tau_lpf_validation_screen.cpython-311.pyc",
+          "bytes": 14106
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_train_only_timescale_audit.cpython-311.pyc",
+          "bytes": 5977
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_train_state_audit.cpython-311.pyc",
+          "bytes": 11099
+        },
+        {
+          "path": "src/v2/main/__pycache__/select_formal_dqn_checkpoint.cpython-311.pyc",
+          "bytes": 11544
+        },
+        {
+          "path": "src/v2/main/__pycache__/select_history_dqn_study.cpython-311.pyc",
+          "bytes": 10824
+        },
+        {
+          "path": "src/v2/main/__pycache__/train_formal_dqn.cpython-311.pyc",
+          "bytes": 35903
+        },
+        {
+          "path": "src/v2/main/__pycache__/train_history_dqn_study.cpython-311.pyc",
+          "bytes": 8293
+        },
+        {
+          "path": "src/v2/main/__pycache__/train_m10_dqn_study.cpython-311.pyc",
+          "bytes": 6925
+        },
+        {
+          "path": "src/v2/main/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 266
+        },
+        {
+          "path": "src/v2/models/battery_degradation.py",
+          "bytes": 14299
+        },
+        {
+          "path": "src/v2/models/battery_energy.py",
+          "bytes": 4545
+        },
+        {
+          "path": "src/v2/models/fuel_cell_degradation.py",
+          "bytes": 21808
+        },
+        {
+          "path": "src/v2/models/fuel_cell_efficiency.py",
+          "bytes": 13692
+        },
+        {
+          "path": "src/v2/models/__init__.py",
+          "bytes": 754
+        },
+        {
+          "path": "src/v2/models/__pycache__/battery_degradation.cpython-311.pyc",
+          "bytes": 17949
+        },
+        {
+          "path": "src/v2/models/__pycache__/battery_energy.cpython-311.pyc",
+          "bytes": 6367
+        },
+        {
+          "path": "src/v2/models/__pycache__/fuel_cell_degradation.cpython-311.pyc",
+          "bytes": 27278
+        },
+        {
+          "path": "src/v2/models/__pycache__/fuel_cell_efficiency.cpython-311.pyc",
+          "bytes": 20545
+        },
+        {
+          "path": "src/v2/models/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 900
+        },
+        {
+          "path": "src/v2/training/artifacts.py",
+          "bytes": 26587
+        },
+        {
+          "path": "src/v2/training/checkpoint.py",
+          "bytes": 7095
+        },
+        {
+          "path": "src/v2/training/diagnostics.py",
+          "bytes": 6561
+        },
+        {
+          "path": "src/v2/training/dqn.py",
+          "bytes": 16089
+        },
+        {
+          "path": "src/v2/training/experiments.py",
+          "bytes": 7939
+        },
+        {
+          "path": "src/v2/training/reward_scaling.py",
+          "bytes": 6547
+        },
+        {
+          "path": "src/v2/training/schedule.py",
+          "bytes": 1941
+        },
+        {
+          "path": "src/v2/training/__init__.py",
+          "bytes": 606
+        },
+        {
+          "path": "src/v2/training/__pycache__/artifacts.cpython-311.pyc",
+          "bytes": 35800
+        },
+        {
+          "path": "src/v2/training/__pycache__/checkpoint.cpython-311.pyc",
+          "bytes": 11391
+        },
+        {
+          "path": "src/v2/training/__pycache__/diagnostics.cpython-311.pyc",
+          "bytes": 11732
+        },
+        {
+          "path": "src/v2/training/__pycache__/dqn.cpython-311.pyc",
+          "bytes": 27255
+        },
+        {
+          "path": "src/v2/training/__pycache__/experiments.cpython-311.pyc",
+          "bytes": 8247
+        },
+        {
+          "path": "src/v2/training/__pycache__/reward_scaling.cpython-311.pyc",
+          "bytes": 9362
+        },
+        {
+          "path": "src/v2/training/__pycache__/schedule.cpython-311.pyc",
+          "bytes": 4007
+        },
+        {
+          "path": "src/v2/training/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 746
+        },
+        {
+          "path": "src/v2/__pycache__/config.cpython-311.pyc",
+          "bytes": 6666
+        },
+        {
+          "path": "src/v2/__pycache__/contracts.cpython-311.pyc",
+          "bytes": 3618
+        },
+        {
+          "path": "src/v2/__pycache__/economics.cpython-311.pyc",
+          "bytes": 32618
+        },
+        {
+          "path": "src/v2/__pycache__/failure_policy.cpython-311.pyc",
+          "bytes": 3270
+        },
+        {
+          "path": "src/v2/__pycache__/preflight.cpython-311.pyc",
+          "bytes": 42755
+        },
+        {
+          "path": "src/v2/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 367
+        },
+        {
+          "path": "src/v3/action_calibration.py",
+          "bytes": 16377
+        },
+        {
+          "path": "src/v3/closed_loop_screen.py",
+          "bytes": 13022
+        },
+        {
+          "path": "src/v3/control.py",
+          "bytes": 22591
+        },
+        {
+          "path": "src/v3/dqn.py",
+          "bytes": 6376
+        },
+        {
+          "path": "src/v3/episode_replay.py",
+          "bytes": 9091
+        },
+        {
+          "path": "src/v3/forecasting.py",
+          "bytes": 4853
+        },
+        {
+          "path": "src/v3/metrics.py",
+          "bytes": 2373
+        },
+        {
+          "path": "src/v3/shore.py",
+          "bytes": 1563
+        },
+        {
+          "path": "src/v3/test_diagnostic.py",
+          "bytes": 11693
+        },
+        {
+          "path": "src/v3/training.py",
+          "bytes": 9121
+        },
+        {
+          "path": "src/v3/__init__.py",
+          "bytes": 79
+        },
+        {
+          "path": "src/v3/__pycache__/action_calibration.cpython-311.pyc",
+          "bytes": 28237
+        },
+        {
+          "path": "src/v3/__pycache__/closed_loop_screen.cpython-311.pyc",
+          "bytes": 22863
+        },
+        {
+          "path": "src/v3/__pycache__/control.cpython-311.pyc",
+          "bytes": 32800
+        },
+        {
+          "path": "src/v3/__pycache__/dqn.cpython-311.pyc",
+          "bytes": 13762
+        },
+        {
+          "path": "src/v3/__pycache__/episode_replay.cpython-311.pyc",
+          "bytes": 15412
+        },
+        {
+          "path": "src/v3/__pycache__/shore.cpython-311.pyc",
+          "bytes": 3099
+        },
+        {
+          "path": "src/v3/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 298
+        },
+        {
+          "path": "src/v4/control.py",
+          "bytes": 17385
+        },
+        {
+          "path": "src/v4/diagnostics.py",
+          "bytes": 3993
+        },
+        {
+          "path": "src/v4/dqn.py",
+          "bytes": 19415
+        },
+        {
+          "path": "src/v4/experiment_paths.py",
+          "bytes": 772
+        },
+        {
+          "path": "src/v4/experiment_schedule.py",
+          "bytes": 3128
+        },
+        {
+          "path": "src/v4/failure_penalty_reference.json",
+          "bytes": 2077
+        },
+        {
+          "path": "src/v4/failure_replay.py",
+          "bytes": 4754
+        },
+        {
+          "path": "src/v4/feedback_study.py",
+          "bytes": 3264
+        },
+        {
+          "path": "src/v4/monitored_training.py",
+          "bytes": 25382
+        },
+        {
+          "path": "src/v4/review.py",
+          "bytes": 9216
+        },
+        {
+          "path": "src/v4/reward_feedback.py",
+          "bytes": 1073
+        },
+        {
+          "path": "src/v4/soc_beta_study.py",
+          "bytes": 10502
+        },
+        {
+          "path": "src/v4/staged_study.py",
+          "bytes": 16111
+        },
+        {
+          "path": "src/v4/telemetry.py",
+          "bytes": 1021
+        },
+        {
+          "path": "src/v4/train.py",
+          "bytes": 23927
+        },
+        {
+          "path": "src/v4/__init__.py",
+          "bytes": 57
+        },
+        {
+          "path": "src/v4/__pycache__/control.cpython-311.pyc",
+          "bytes": 23091
+        },
+        {
+          "path": "src/v4/__pycache__/diagnostics.cpython-311.pyc",
+          "bytes": 7265
+        },
+        {
+          "path": "src/v4/__pycache__/dqn.cpython-311.pyc",
+          "bytes": 32812
+        },
+        {
+          "path": "src/v4/__pycache__/experiment_paths.cpython-311.pyc",
+          "bytes": 2094
+        },
+        {
+          "path": "src/v4/__pycache__/experiment_schedule.cpython-311.pyc",
+          "bytes": 5439
+        },
+        {
+          "path": "src/v4/__pycache__/failure_replay.cpython-311.pyc",
+          "bytes": 8516
+        },
+        {
+          "path": "src/v4/__pycache__/feedback_study.cpython-311.pyc",
+          "bytes": 5483
+        },
+        {
+          "path": "src/v4/__pycache__/monitored_training.cpython-311.pyc",
+          "bytes": 31919
+        },
+        {
+          "path": "src/v4/__pycache__/outcome_diagnostic.cpython-311.pyc",
+          "bytes": 18616
+        },
+        {
+          "path": "src/v4/__pycache__/review.cpython-311.pyc",
+          "bytes": 18691
+        },
+        {
+          "path": "src/v4/__pycache__/reward_feedback.cpython-311.pyc",
+          "bytes": 2324
+        },
+        {
+          "path": "src/v4/__pycache__/soc_beta_study.cpython-311.pyc",
+          "bytes": 19631
+        },
+        {
+          "path": "src/v4/__pycache__/staged_study.cpython-311.pyc",
+          "bytes": 28703
+        },
+        {
+          "path": "src/v4/__pycache__/telemetry.cpython-311.pyc",
+          "bytes": 1988
+        },
+        {
+          "path": "src/v4/__pycache__/train.cpython-311.pyc",
+          "bytes": 37063
+        },
+        {
+          "path": "src/v4/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 277
+        }
+      ]
+    },
+    "tests": {
+      "file_count": 190,
+      "bytes": 2847363,
+      "files": [
+        {
+          "path": "tests/test_dqn_mpc_mlp_smoke.py",
+          "bytes": 10617
+        },
+        {
+          "path": "tests/test_dqn_mpc_mlp_training.py",
+          "bytes": 20405
+        },
+        {
+          "path": "tests/test_dqn_mpc_reward.py",
+          "bytes": 4039
+        },
+        {
+          "path": "tests/test_dqn_mpc_solver_bank.py",
+          "bytes": 16269
+        },
+        {
+          "path": "tests/test_dqn_mpc_weight_env.py",
+          "bytes": 11494
+        },
+        {
+          "path": "tests/test_dqn_network_backends.py",
+          "bytes": 2313
+        },
+        {
+          "path": "tests/test_dqn_round_boundary_training.py",
+          "bytes": 10577
+        },
+        {
+          "path": "tests/test_dqn_runtime_robustness.py",
+          "bytes": 23156
+        },
+        {
+          "path": "tests/test_dqn_state_builder.py",
+          "bytes": 3602
+        },
+        {
+          "path": "tests/test_dqn_training_state_resume.py",
+          "bytes": 6940
+        },
+        {
+          "path": "tests/test_dqn_weight_action_table.py",
+          "bytes": 1823
+        },
+        {
+          "path": "tests/test_executed_reward_contract.py",
+          "bytes": 7902
+        },
+        {
+          "path": "tests/test_fc_dp0_curve.py",
+          "bytes": 2708
+        },
+        {
+          "path": "tests/test_final_dataset_builder.py",
+          "bytes": 3313
+        },
+        {
+          "path": "tests/test_final_dataset_feasibility.py",
+          "bytes": 5926
+        },
+        {
+          "path": "tests/test_final_dataset_semantics.py",
+          "bytes": 4755
+        },
+        {
+          "path": "tests/test_final_dataset_source.py",
+          "bytes": 2402
+        },
+        {
+          "path": "tests/test_formal_checkpoint_paths.py",
+          "bytes": 3850
+        },
+        {
+          "path": "tests/test_formal_operating_dataset.py",
+          "bytes": 5960
+        },
+        {
+          "path": "tests/test_ideal_reference_84_audit.py",
+          "bytes": 2443
+        },
+        {
+          "path": "tests/test_mpc_soc_reference.py",
+          "bytes": 4694
+        },
+        {
+          "path": "tests/test_operating_segment_dataset.py",
+          "bytes": 876
+        },
+        {
+          "path": "tests/test_operating_segment_repartition.py",
+          "bytes": 1117
+        },
+        {
+          "path": "tests/test_rebuilt_operating_dataset.py",
+          "bytes": 20596
+        },
+        {
+          "path": "tests/test_spline_1s_diagnostics.py",
+          "bytes": 8584
+        },
+        {
+          "path": "tests/test_total_load_dataset_721.py",
+          "bytes": 4192
+        },
+        {
+          "path": "tests/test_unified_objective_calibration.py",
+          "bytes": 1585
+        },
+        {
+          "path": "tests/test_v2_action_space.py",
+          "bytes": 36260
+        },
+        {
+          "path": "tests/test_v2_ais_speed_sidecar.py",
+          "bytes": 6038
+        },
+        {
+          "path": "tests/test_v2_artifacts.py",
+          "bytes": 18349
+        },
+        {
+          "path": "tests/test_v2_checkpoint_resume.py",
+          "bytes": 12240
+        },
+        {
+          "path": "tests/test_v2_checkpoint_selection.py",
+          "bytes": 17199
+        },
+        {
+          "path": "tests/test_v2_contracts.py",
+          "bytes": 7420
+        },
+        {
+          "path": "tests/test_v2_data_guards.py",
+          "bytes": 21094
+        },
+        {
+          "path": "tests/test_v2_degradation_models.py",
+          "bytes": 28583
+        },
+        {
+          "path": "tests/test_v2_dqn_diagnostics.py",
+          "bytes": 3190
+        },
+        {
+          "path": "tests/test_v2_dqn_experiments.py",
+          "bytes": 5768
+        },
+        {
+          "path": "tests/test_v2_dqn_training.py",
+          "bytes": 5980
+        },
+        {
+          "path": "tests/test_v2_economic_interval_semantics.py",
+          "bytes": 16379
+        },
+        {
+          "path": "tests/test_v2_energy_models.py",
+          "bytes": 17103
+        },
+        {
+          "path": "tests/test_v2_failure_policy.py",
+          "bytes": 2322
+        },
+        {
+          "path": "tests/test_v2_final_test_evaluation.py",
+          "bytes": 18199
+        },
+        {
+          "path": "tests/test_v2_formal_episode.py",
+          "bytes": 16290
+        },
+        {
+          "path": "tests/test_v2_formal_policy_evaluation.py",
+          "bytes": 18705
+        },
+        {
+          "path": "tests/test_v2_formal_preflight.py",
+          "bytes": 7991
+        },
+        {
+          "path": "tests/test_v2_formal_state.py",
+          "bytes": 4558
+        },
+        {
+          "path": "tests/test_v2_formal_training_cli.py",
+          "bytes": 9494
+        },
+        {
+          "path": "tests/test_v2_formal_training_dataset.py",
+          "bytes": 6740
+        },
+        {
+          "path": "tests/test_v2_history_evaluation_profile.py",
+          "bytes": 4035
+        },
+        {
+          "path": "tests/test_v2_history_state.py",
+          "bytes": 3326
+        },
+        {
+          "path": "tests/test_v2_history_study_cli.py",
+          "bytes": 7305
+        },
+        {
+          "path": "tests/test_v2_history_study_selection.py",
+          "bytes": 7936
+        },
+        {
+          "path": "tests/test_v2_m10_ablation.py",
+          "bytes": 7626
+        },
+        {
+          "path": "tests/test_v2_multirate_env.py",
+          "bytes": 21324
+        },
+        {
+          "path": "tests/test_v2_nonlinear_mpc.py",
+          "bytes": 30476
+        },
+        {
+          "path": "tests/test_v2_objective_scale_audit.py",
+          "bytes": 11981
+        },
+        {
+          "path": "tests/test_v2_parameter_freeze.py",
+          "bytes": 5008
+        },
+        {
+          "path": "tests/test_v2_power_gap_interpolation.py",
+          "bytes": 3371
+        },
+        {
+          "path": "tests/test_v2_power_trace_plots.py",
+          "bytes": 4674
+        },
+        {
+          "path": "tests/test_v2_reward_scale_calibration.py",
+          "bytes": 8370
+        },
+        {
+          "path": "tests/test_v2_segment_power_source.py",
+          "bytes": 3933
+        },
+        {
+          "path": "tests/test_v2_shore_mode_sidecar.py",
+          "bytes": 7559
+        },
+        {
+          "path": "tests/test_v2_state_and_economics.py",
+          "bytes": 27175
+        },
+        {
+          "path": "tests/test_v2_supervisory_aggregation.py",
+          "bytes": 3048
+        },
+        {
+          "path": "tests/test_v2_supervisory_rules.py",
+          "bytes": 6866
+        },
+        {
+          "path": "tests/test_v2_tau_lpf_validation_screen.py",
+          "bytes": 6454
+        },
+        {
+          "path": "tests/test_v2_train_objective_scale_runner.py",
+          "bytes": 6007
+        },
+        {
+          "path": "tests/test_v2_train_only_audits.py",
+          "bytes": 16676
+        },
+        {
+          "path": "tests/test_v2_train_state_audit.py",
+          "bytes": 34793
+        },
+        {
+          "path": "tests/test_v2_train_supervisory_audit.py",
+          "bytes": 4269
+        },
+        {
+          "path": "tests/test_v2_validation_selection_cli.py",
+          "bytes": 6181
+        },
+        {
+          "path": "tests/test_v2_zero_boundary_dataset.py",
+          "bytes": 15115
+        },
+        {
+          "path": "tests/test_v2_zero_boundary_power_review.py",
+          "bytes": 6988
+        },
+        {
+          "path": "tests/test_v3_action_calibration.py",
+          "bytes": 2333
+        },
+        {
+          "path": "tests/test_v3_closed_loop_screen.py",
+          "bytes": 2485
+        },
+        {
+          "path": "tests/test_v3_double_dqn.py",
+          "bytes": 1265
+        },
+        {
+          "path": "tests/test_v3_episode_replay.py",
+          "bytes": 4006
+        },
+        {
+          "path": "tests/test_v3_persistence_control.py",
+          "bytes": 6094
+        },
+        {
+          "path": "tests/test_v3_shore_settlement.py",
+          "bytes": 2494
+        },
+        {
+          "path": "tests/test_v4_control.py",
+          "bytes": 9198
+        },
+        {
+          "path": "tests/test_v4_dqn.py",
+          "bytes": 2917
+        },
+        {
+          "path": "tests/test_v4_experiment_schedule.py",
+          "bytes": 2918
+        },
+        {
+          "path": "tests/test_v4_failure_td.py",
+          "bytes": 18331
+        },
+        {
+          "path": "tests/test_v4_feedback_monitoring.py",
+          "bytes": 10575
+        },
+        {
+          "path": "tests/test_v4_monitored_training.py",
+          "bytes": 5863
+        },
+        {
+          "path": "tests/test_v4_n_step.py",
+          "bytes": 4335
+        },
+        {
+          "path": "tests/test_v4_review_metrics.py",
+          "bytes": 4065
+        },
+        {
+          "path": "tests/test_v4_reward_feedback.py",
+          "bytes": 8149
+        },
+        {
+          "path": "tests/test_v4_training.py",
+          "bytes": 6886
+        },
+        {
+          "path": "tests/test_validation_q_diagnostics.py",
+          "bytes": 2856
+        },
+        {
+          "path": "tests/test_zero_residual_numerical_negative_loads.py",
+          "bytes": 2666
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_mpc_mlp_smoke.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 17466
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_mpc_mlp_training.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 31902
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_mpc_reward.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 8588
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_mpc_solver_bank.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 24714
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_mpc_weight_env.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 17358
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_network_backends.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 5404
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_round_boundary_training.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 14588
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_runtime_robustness.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 46678
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_state_builder.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6834
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_training_state_resume.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 13344
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_weight_action_table.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 5251
+        },
+        {
+          "path": "tests/__pycache__/test_executed_reward_contract.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 18797
+        },
+        {
+          "path": "tests/__pycache__/test_fc_dp0_curve.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6414
+        },
+        {
+          "path": "tests/__pycache__/test_final_dataset_builder.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 9224
+        },
+        {
+          "path": "tests/__pycache__/test_final_dataset_feasibility.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 14256
+        },
+        {
+          "path": "tests/__pycache__/test_final_dataset_semantics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 12089
+        },
+        {
+          "path": "tests/__pycache__/test_final_dataset_source.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 5923
+        },
+        {
+          "path": "tests/__pycache__/test_formal_checkpoint_paths.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 7818
+        },
+        {
+          "path": "tests/__pycache__/test_formal_operating_dataset.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 12131
+        },
+        {
+          "path": "tests/__pycache__/test_ideal_reference_84_audit.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 7460
+        },
+        {
+          "path": "tests/__pycache__/test_mpc_soc_reference.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 9697
+        },
+        {
+          "path": "tests/__pycache__/test_operating_segment_dataset.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 2245
+        },
+        {
+          "path": "tests/__pycache__/test_operating_segment_repartition.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 2577
+        },
+        {
+          "path": "tests/__pycache__/test_rebuilt_operating_dataset.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 32651
+        },
+        {
+          "path": "tests/__pycache__/test_spline_1s_diagnostics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11648
+        },
+        {
+          "path": "tests/__pycache__/test_total_load_dataset_721.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6100
+        },
+        {
+          "path": "tests/__pycache__/test_unified_objective_calibration.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 4152
+        },
+        {
+          "path": "tests/__pycache__/test_v2_action_space.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 55331
+        },
+        {
+          "path": "tests/__pycache__/test_v2_ais_speed_sidecar.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11903
+        },
+        {
+          "path": "tests/__pycache__/test_v2_artifacts.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 30403
+        },
+        {
+          "path": "tests/__pycache__/test_v2_checkpoint_resume.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 18105
+        },
+        {
+          "path": "tests/__pycache__/test_v2_checkpoint_selection.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 34191
+        },
+        {
+          "path": "tests/__pycache__/test_v2_contracts.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 12383
+        },
+        {
+          "path": "tests/__pycache__/test_v2_data_guards.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 29606
+        },
+        {
+          "path": "tests/__pycache__/test_v2_degradation_models.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 49094
+        },
+        {
+          "path": "tests/__pycache__/test_v2_dqn_diagnostics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 7255
+        },
+        {
+          "path": "tests/__pycache__/test_v2_dqn_experiments.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 10823
+        },
+        {
+          "path": "tests/__pycache__/test_v2_dqn_training.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11694
+        },
+        {
+          "path": "tests/__pycache__/test_v2_economic_interval_semantics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 22691
+        },
+        {
+          "path": "tests/__pycache__/test_v2_energy_models.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 30200
+        },
+        {
+          "path": "tests/__pycache__/test_v2_failure_policy.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 4227
+        },
+        {
+          "path": "tests/__pycache__/test_v2_final_test_evaluation.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 35906
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_episode.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 27417
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_policy_evaluation.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 33710
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_preflight.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 14179
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_state.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6528
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_training_cli.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 21835
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_training_dataset.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 15989
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_training_dataset.cpython-311.pyc",
+          "bytes": 15853
+        },
+        {
+          "path": "tests/__pycache__/test_v2_history_evaluation_profile.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6600
+        },
+        {
+          "path": "tests/__pycache__/test_v2_history_state.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 9022
+        },
+        {
+          "path": "tests/__pycache__/test_v2_history_study_cli.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 16466
+        },
+        {
+          "path": "tests/__pycache__/test_v2_history_study_selection.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 15024
+        },
+        {
+          "path": "tests/__pycache__/test_v2_m10_ablation.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 13081
+        },
+        {
+          "path": "tests/__pycache__/test_v2_multirate_env.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 40677
+        },
+        {
+          "path": "tests/__pycache__/test_v2_nonlinear_mpc.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 49118
+        },
+        {
+          "path": "tests/__pycache__/test_v2_objective_scale_audit.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 20326
+        },
+        {
+          "path": "tests/__pycache__/test_v2_parameter_freeze.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 9431
+        },
+        {
+          "path": "tests/__pycache__/test_v2_power_gap_interpolation.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 8337
+        },
+        {
+          "path": "tests/__pycache__/test_v2_power_trace_plots.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 10362
+        },
+        {
+          "path": "tests/__pycache__/test_v2_reward_scale_calibration.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 17175
+        },
+        {
+          "path": "tests/__pycache__/test_v2_segment_power_source.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 8375
+        },
+        {
+          "path": "tests/__pycache__/test_v2_shore_mode_sidecar.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 12092
+        },
+        {
+          "path": "tests/__pycache__/test_v2_state_and_economics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 38002
+        },
+        {
+          "path": "tests/__pycache__/test_v2_supervisory_aggregation.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 7069
+        },
+        {
+          "path": "tests/__pycache__/test_v2_supervisory_rules.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11294
+        },
+        {
+          "path": "tests/__pycache__/test_v2_tau_lpf_validation_screen.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 12016
+        },
+        {
+          "path": "tests/__pycache__/test_v2_train_objective_scale_runner.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11114
+        },
+        {
+          "path": "tests/__pycache__/test_v2_train_only_audits.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 32975
+        },
+        {
+          "path": "tests/__pycache__/test_v2_train_state_audit.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 53480
+        },
+        {
+          "path": "tests/__pycache__/test_v2_train_supervisory_audit.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 9740
+        },
+        {
+          "path": "tests/__pycache__/test_v2_validation_selection_cli.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 13795
+        },
+        {
+          "path": "tests/__pycache__/test_v2_zero_boundary_dataset.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 27804
+        },
+        {
+          "path": "tests/__pycache__/test_v2_zero_boundary_power_review.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11628
+        },
+        {
+          "path": "tests/__pycache__/test_v3_action_calibration.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 18058
+        },
+        {
+          "path": "tests/__pycache__/test_v3_closed_loop_screen.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11016
+        },
+        {
+          "path": "tests/__pycache__/test_v3_double_dqn.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 3245
+        },
+        {
+          "path": "tests/__pycache__/test_v3_episode_replay.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 27140
+        },
+        {
+          "path": "tests/__pycache__/test_v3_persistence_control.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 13177
+        },
+        {
+          "path": "tests/__pycache__/test_v3_shore_settlement.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 4782
+        },
+        {
+          "path": "tests/__pycache__/test_v4_control.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 75470
+        },
+        {
+          "path": "tests/__pycache__/test_v4_control.cpython-311.pyc",
+          "bytes": 18877
+        },
+        {
+          "path": "tests/__pycache__/test_v4_dqn.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 18389
+        },
+        {
+          "path": "tests/__pycache__/test_v4_experiment_schedule.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 23937
+        },
+        {
+          "path": "tests/__pycache__/test_v4_experiment_schedule.cpython-311.pyc",
+          "bytes": 5578
+        },
+        {
+          "path": "tests/__pycache__/test_v4_failure_td.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 114366
+        },
+        {
+          "path": "tests/__pycache__/test_v4_failure_td.cpython-311.pyc",
+          "bytes": 39789
+        },
+        {
+          "path": "tests/__pycache__/test_v4_feedback_monitoring.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 66244
+        },
+        {
+          "path": "tests/__pycache__/test_v4_monitored_training.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 36531
+        },
+        {
+          "path": "tests/__pycache__/test_v4_monitored_training.cpython-311.pyc",
+          "bytes": 13857
+        },
+        {
+          "path": "tests/__pycache__/test_v4_n_step.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 33641
+        },
+        {
+          "path": "tests/__pycache__/test_v4_outcome_diagnostic.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6214
+        },
+        {
+          "path": "tests/__pycache__/test_v4_review_metrics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 25143
+        },
+        {
+          "path": "tests/__pycache__/test_v4_reward_feedback.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 67838
+        },
+        {
+          "path": "tests/__pycache__/test_v4_reward_feedback.cpython-311.pyc",
+          "bytes": 14253
+        },
+        {
+          "path": "tests/__pycache__/test_v4_training.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 33538
+        },
+        {
+          "path": "tests/__pycache__/test_v4_training.cpython-311.pyc",
+          "bytes": 14326
+        },
+        {
+          "path": "tests/__pycache__/test_validation_q_diagnostics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6144
+        },
+        {
+          "path": "tests/__pycache__/test_zero_residual_numerical_negative_loads.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6203
+        }
+      ]
+    },
+    ".pytest_cache": {
+      "file_count": 5,
+      "bytes": 21554,
+      "files": [
+        {
+          "path": ".pytest_cache/.gitignore",
+          "bytes": 37
+        },
+        {
+          "path": ".pytest_cache/CACHEDIR.TAG",
+          "bytes": 191
+        },
+        {
+          "path": ".pytest_cache/README.md",
+          "bytes": 302
+        },
+        {
+          "path": ".pytest_cache/v/cache/lastfailed",
+          "bytes": 2
+        },
+        {
+          "path": ".pytest_cache/v/cache/nodeids",
+          "bytes": 21022
+        }
+      ]
+    }
+  },
+  "protected_sha256": {
+    "docs/figures/v4_beta250_40r_seed42/train_zero_boundary_008_power_soc.png": "de442065337a141a8bed80cc4d118b805ef4c4b145f0a8513ef74f60214a7423",
+    "docs/figures/v4_beta250_40r_seed42/train_zero_boundary_015_power_soc.png": "770fb5c7cf065be4b46e6819aa4dc631683a0738bc089d114997e4e8077d78fb",
+    "docs/figures/v4_beta250_40r_seed42/training_curves.png": "88883beac7bcc70e3e2e8f40c58f5df62ce20be1b55ff401e6d0de1192bf7622",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_004_power_soc.png": "4edab6038a1a2de235f3ac5e1cae57fffef797a5027d234a9ae4064ba71c7743",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_009_power_soc.png": "b72edc2e40d77606e852dcc89a5d80e73f63a7f6853d4fe24a5b2c1f257f9a3d",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_010_power_soc.png": "dddbbe771fc94cab7f127fdc8c58faf2adb39ab9630813f09e1217ae811ebedd",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_019_power_soc.png": "312c63f8688ac2875d93a545a7b53e53e60db84713fb0261e738c1aa80a49f92",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_032_power_soc.png": "ea89442310905ef5dfe07ecac4bc280834e9b75931230a431da817db6d35c09f",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_036_power_soc.png": "263fe29c3c73702084e393b2e0bc743fdcdc0c809f9f977a9d0f9a784e907108",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_043_power_soc.png": "b423b31db6fda745d6f4920943fcedd41b14e52b68c88a3c27c4b7eba6ee83b5",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_047_power_soc.png": "4298f6f0d03be6ef512cfcd53e5edeab4a6b16ffbb5b89a9b0c3134378aea384",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage1_completion.png": "748498bce619adf962d1b7b02eea2f3a62e383a006a9312dae38f4ddb2b6cf07",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage1_optimizer_axis.png": "aad47cabf21856d40f8804c3dffcee36a4c62a3f685809b8bda16310dae0875e",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage1_soc_fc_cost.png": "ed418c312cae16dd8143fec06da30bc11168f81966a2ef6e3e61188e4d860f96",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png": "29cecf0c59509c72de5d788454daa1209ed05ec3bd241a424a0d7c4f428881ef",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_optimizer_axis.png": "eb40d817d7ef21aa84f197018ab1d9f939b423de45aa8999a689aa1d4595f113",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_soc_fc_cost.png": "006addafa170616fe88f3269126ce88798a3ee44a0bb8b03bfb6ef87d508a92e",
+    "docs/results/v4_beta250_40r_seed42.json": "bfc99ed697ed7248b4190255cb69bb34178bca1fc7c487bc177620168b9bdfe6",
+    "docs/results/v4_beta250_40r_seed42_rounds.csv": "c85536a2dfa9df65d5f4419126764facfc5a39dcf3f6f2ec7826e3854e8e8172",
+    "docs/results/v4_failure_economic_td_20261008/learning_order_evidence.json": "2d44cd07d678cd74ac72ccc179d754e3441ea04139547261da0a4980c96c8373",
+    "docs/results/v4_failure_economic_td_20261008/verification.json": "10c0edb8a0df9d36886dbc83806e1d19f9bc4c69c4bd46d00bc35a59576fe263",
+    "docs/results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json": "6a4b2cb8a7d6b86fd33c89e7c5428bf7595a0db92195d409b54ac1f29c2eabdc",
+    "docs/results/v4_reward_feedback_implementation_20261008/verification.json": "6d548c17d73dd40815ddf957e70ebf9913d9f0089bdbef6d2272feeeefa14d25",
+    "docs/results/v4_staged_beta_cadence_seed42/.gitattributes": "4a42b6c1e5540f77a111ea2c015139c07d06a63b830177a5f868f5c37e050f1c",
+    "docs/results/v4_staged_beta_cadence_seed42/README.md": "5520253b68dc8f649e78b69eccc6539077a1104a5f1ff2b5a0b5ea76cd2ac613",
+    "docs/results/v4_staged_beta_cadence_seed42/baseline_40r_consistency.json": "9c15b76b4b330b7f244731ccc4424a29fdaed90495e7c787daa0ff65688c5334",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/archive_paused.py": "2c5e7b83bc781c263b53a757f5b85a87fc099764705d3f963fac944167bf7eb8",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/baseline_40r_consistency.json": "9c15b76b4b330b7f244731ccc4424a29fdaed90495e7c787daa0ff65688c5334",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interim_stage1.png": "cc7aa940ae7d2bc4c62ab7518c066a7385fd0bc3165e97257253259a83bd05e3",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_1000/best_agent.pt": "49e0b1bd73e8368ed16ed7c9d0db9fa47aae075e80a5732a5e355eedc839b1d2",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_1000/round_history.json": "ad5b69ded6e630582c34c9faeac08010a804ff2c0016fa87d7abbbdcee76ef69",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_1000/train.log": "d2c0270a22815f8cdbdef8422187c282d3f6160d034c74e4ede32085773507a0",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_250/best_agent.pt": "8c1152ec9edcc8107701f75ef0effbc048fb88510853add591094a3da2ff16f8",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_250/round_history.json": "cbf516b51d9ce6de8346c476832e664f83f4acf0084fc91382efe7d957f67a06",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_250/train.log": "99e183abd26a4584eec041a1d9ba8336952cac13f42dbbe4fc20a4e7bd0fde2a",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/monitor.py": "586e119d2066822e78b6593c626db0462dbd215369b360fc8d1ba4b493754168",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/reconstruction_audit.json": "1723b79f7d24155e82d33bdb7de6eefe98bff4b425dfeb1e6212edd0a26c3de3",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/recovery_launch.json": "04b043114add5462f7c9e4d5138df0bbfd656d8c07594889264d902b7df252a4",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/resource_failure_beta1000.log": "9023fcea8065939a5d58fb270c29a4cd902f8164abeab073a553df138ad5f0d2",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/resource_failure_beta250.log": "18d3b1b9a95d7e56f76f0cfdc9e5ad91b25a4a23698e7c3597cb4cb713b19681",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_agent.pt": "49e0b1bd73e8368ed16ed7c9d0db9fa47aae075e80a5732a5e355eedc839b1d2",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_profiles.json": "607033a825b3afe42c744333314bacbf7655fa9a511b23824c3b91018bbcfc39",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_004_power_soc.png": "00b9033a812392c87c19dc59c8a98f8c1b6074704f1f2b36bc6c48143924f1de",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_009_power_soc.png": "4d3b8e489aac39b2f78217b8c9b363f318bfb5b20e9ff8be2c5cf0b0db1be0de",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_010_power_soc.png": "c3624081db106ebb8c72422f3176241a51097a2fe74965dd527e453ea8d72665",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_019_power_soc.png": "b704328961bcfb63b84d20eabcbc2d16a77f3c9e2b16dc737dda889ee0efcade",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_032_power_soc.png": "c2decf806e0acdcc6bfb3ac1a20df5930ccdb74f1a620059018dbbc5a29dcfe3",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_036_power_soc.png": "7655bfa6eda9b5aefb40986d4e313e1b22c8879d624e7eca577bea1bc23736e6",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_043_power_soc.png": "9d8c250045ca9d4e24d4f59c3f163376440e3c3a1e09bb85931e52ffa41d5a89",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_047_power_soc.png": "3a65a389b578607b6b2b982915627a476062b4fc12cdabfa677c9a3fb4b89132",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/report.json": "abd4554fd757eb1c9f843fb1898ac06665630972d8038c45d951eb8577345189",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/round_history.json": "787e21f4415ed4a4909f5a4100ef55b3c0acfb4c9c44319a21b1aaaa3e9ddd37",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/round_metrics.csv": "e4ecdaa04cd06bacf79271ee57cb5bf904c974536acc4ca38d389bd67ad8c531",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/train.log": "c851a91e75617f0bd1d5e8dfb5f74923601ae9d90f2608bf7b52c3a104d46936",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/train.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_agent.pt": "60216dabdc640a3912f74d217202cfb0e0a6bb41e96b98cc9b693e57d806bcbe",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_profiles.json": "cead1ef498ece679ec2d870d93bfdcf01f56e3f585561315dc5685de7a6ed8a4",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_004_power_soc.png": "5556aca3747f26e6cbc24fdc4826b7592b46536aef6206fb8920a1d683493072",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_009_power_soc.png": "761b7705f67ef6b6544ece5ee8768dd6e0d487a810b69536c4883a828e048c63",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_010_power_soc.png": "194444486bd9d226386bbe53deb15e6bfc65c2df64e070f4a872557e6036e284",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_019_power_soc.png": "dd551beb646eb470d3e6ffc5a0454a098a49e1c3a1a90d533d2648fb405474e6",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_032_power_soc.png": "eb2b0db9b764e03b03d8b446cfb8d065fe380e683a130453c41c7e83dc8b18ea",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_036_power_soc.png": "44007046400d83f21b2a1124ce53f5b739f671706bb9d1f52e5e95222904cefe",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_043_power_soc.png": "f4a1515f79d85fc8f468715e9ac26fdc9ab0b9d3227f036c2fc621786647668b",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_047_power_soc.png": "c2072b694334343f8f929023b70bc4ca3b82abcfc2f628701fcc846677b1a848",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/report.json": "d2d8c02d44e6928bba0dca5e1e94b796cfd97b7b4eea1184f3936b50fc0bd93e",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/round_history.json": "f546302d4b16c23403b13c9f42999eee4f3e77e00a5977083540f25a0ac5f9e1",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/round_metrics.csv": "85e40b529acbcdc18a04d27edbfe1e92168da2649ea3719f57f24eae2b40922d",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/train.log": "664b12da38cb4848a012dc3943017a3d686c88ae90c7872756852be72515bf66",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_agent.pt": "8c1152ec9edcc8107701f75ef0effbc048fb88510853add591094a3da2ff16f8",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_profiles.json": "07c943fbf9961ebbcdc10740238409259e034b8878fe52e5c015eadba2fed6a3",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_004_power_soc.png": "52d76af8b8c39d93bf55072e0b5913e4aabe56ba86b8d131c7a0f589b98d70aa",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_009_power_soc.png": "1df3e48fe3165c89e2a61bcb4513b4ce5e479313326d4ab60af6bfb7f6528286",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_010_power_soc.png": "b3c92c3fe4fc4d8fa8067a32eb305b7f87a844469b92603487762af136de4f29",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_019_power_soc.png": "05519da5f7a3da33d5812c2abc6f77eb43a9e74374d0a55ecca45835ce4b1baa",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_032_power_soc.png": "f28393a306cb5d66eba255fdbd23b3c6785603068d51e03d898b6d7d7bc40a95",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_036_power_soc.png": "93c7107b21021203308528b75bfc291b9d511bc910763a78cc930304aeebde2f",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_043_power_soc.png": "601e3e0ba972fbcc3226a77674148015ca0bfbf9f733555616aa1d1dc6a68348",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_047_power_soc.png": "86a7469e50947bebe15706e7dfe625ec24fef361f6c226c339011c215eb10465",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/report.json": "e19831bd0e2897af37b767d02ffdb3dfe0022807905cc8750cb432577367373b",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/round_history.json": "62efba08e55f36869b942a5d1e2b1cd15ed0a3f0e542f90d64695a3eb07f6a96",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/round_metrics.csv": "391c7bf1d589756a8a59ac0c58bb5968a4de2834efd9feb5195820c3db99b1e8",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/train.log": "0d62accf266e8a88e6f359829b5967a6eb2f8be64e953dd94c43b4aaeb3946d9",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/train.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_agent.pt": "85f086df469d56ef9efe057bf82374db1e61ff474bd4fb86db3e7a905a7fc46a",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_profiles.json": "3e1fae46266d99629116b52156840541a33136be92f9f4e68e1e8b03256a0642",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_004_power_soc.png": "bff7715d7a354fe6f7900553ad2bf4a5c7e7dab2615d2eeff18887272ab81739",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_009_power_soc.png": "a5dbe542e2fe666a98036842310a2afcf96d010e29c495ab25224d0f1c77328a",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_010_power_soc.png": "ba2110454ffecccbb3fe915a9ea42ef11d8f06f78445e78cbf9248791d3b146b",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_019_power_soc.png": "847e1164988aa4c6bd8b54b513e885759e14b94f91b20062699d70ab53a6e3e9",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_032_power_soc.png": "42b4fba210d232763f3b243d01568672a2c52594504cd56478a8f47d9796fb62",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_036_power_soc.png": "ee54bc349e4be8ad34a13a4bc1258f6a71d9ac558810366a5f4d5f68b430ba00",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_043_power_soc.png": "a53426ea49d587672723231226870657488924013d722f4cb745b9260bd7a6e1",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_047_power_soc.png": "60991cff634e0bf73983b1cc61103970b6c57b419555fe032d736f7d14e18f7f",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/report.json": "7e1ad158e0430a8e1c5683ceefe7bbdd2d2d8c24e66f11f55bef84ecdd231282",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/round_history.json": "27ebe4346f3d61c76b44737f550a27e773a53290863b8283dc3629f092df8ab0",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/round_metrics.csv": "164d1e1ffd6d077f4bb99e17f59c6db03dd4f783d7c8b1ca7bbcffbce2d5d543",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/train.log": "daa7cdb7f052e05b963dd2371b0239aa19f616ddfd484a1353d655347927c4f9",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_comparison.csv": "36990e737bb9137986aaf97346e801581ac0d9ba98d86e83c1907ac937a64b83",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_completion.png": "748498bce619adf962d1b7b02eea2f3a62e383a006a9312dae38f4ddb2b6cf07",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_optimizer_axis.png": "aad47cabf21856d40f8804c3dffcee36a4c62a3f685809b8bda16310dae0875e",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_soc_fc_cost.png": "ed418c312cae16dd8143fec06da30bc11168f81966a2ef6e3e61188e4d860f96",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_summary.json": "671a8861d5d205aa4873b9d63f857f9115d1fd603242d030074ab111b1b3348c",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/best_agent.pt": "62bb4229f4f2eccf1faa27b0335bf99a1b76d920e91045e13da0ee5c9163d776",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/paused_report.json": "9ab69d2ea66be6e15c2da834374f0e73f67714bbd7e6b6f393cdb05e876055ee",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/round_history.json": "6e84ed8bef0943f1cd1bc03d610ce66525a0ae4005d712322602f7b8074ac55d",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/round_metrics.csv": "04fe7b3fcfd98f11be6c26a33ddcb04618a196f0fe5eb036ae63d6e35827e787",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/train.log": "48bc65af6fc947941b2431a724aa6d6e056948e83225a2fb9b315e65940da5bb",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/train.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/best_agent.pt": "d1f094f860e2011258d74bacf9478f1a3adf6084e78c2fa3a624b34124f132e3",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/paused_report.json": "8aee9b08f8d41e8c18e1cccd815589293e0d71a2358a4b4733edfc6bc1f242a4",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/round_history.json": "e822b5a098d5d7c54e92f477335673234d0744c221b21727934f2f22667ae0d6",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/round_metrics.csv": "66d43d5ead7a7ac5a7f09cd23125ea7d2145a5f90f50ded0c2e455ed9c1f34db",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/train.log": "bdee5665c1a2b78a41915664bc00e409975aa43fa329574464b60e9d149f3f74",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/train.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2_launch.json": "1aa56893a2c36963e4a3b65fefdd42560b63009f1f956dafe8ea8825799f7248",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/study.log": "3340e675b5db5b088a4f5dd94407ddda79bfa46ddbeb6b615cf3f5039c35b6cc",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/study_summary.json": "6632827b79a61d9d5101f83e27aab81640c8e7580cd6a54d31f1772c1d3573d6",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/summarize_stage1.py": "8d7c71b8f2a0ac54b24fa7649f644ca08763841bcb9d362ffe23448f5e8095b1",
+    "docs/results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json": "ee7153b5af6c61fccda8df35d8ee0694f7a7c8f22052c3245182b199b0a9dee9",
+    "docs/results/v4_staged_beta_cadence_seed42/reconstruction_audit.json": "1723b79f7d24155e82d33bdb7de6eefe98bff4b425dfeb1e6212edd0a26c3de3",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_1000.json": "abd4554fd757eb1c9f843fb1898ac06665630972d8038c45d951eb8577345189",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_1000_rounds.csv": "e4ecdaa04cd06bacf79271ee57cb5bf904c974536acc4ca38d389bd67ad8c531",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_2000.json": "d2d8c02d44e6928bba0dca5e1e94b796cfd97b7b4eea1184f3936b50fc0bd93e",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_2000_rounds.csv": "85e40b529acbcdc18a04d27edbfe1e92168da2649ea3719f57f24eae2b40922d",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_250.json": "e19831bd0e2897af37b767d02ffdb3dfe0022807905cc8750cb432577367373b",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_250_rounds.csv": "391c7bf1d589756a8a59ac0c58bb5968a4de2834efd9feb5195820c3db99b1e8",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_500.json": "7e1ad158e0430a8e1c5683ceefe7bbdd2d2d8c24e66f11f55bef84ecdd231282",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_500_rounds.csv": "164d1e1ffd6d077f4bb99e17f59c6db03dd4f783d7c8b1ca7bbcffbce2d5d543",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_comparison.csv": "36990e737bb9137986aaf97346e801581ac0d9ba98d86e83c1907ac937a64b83",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_summary.json": "671a8861d5d205aa4873b9d63f857f9115d1fd603242d030074ab111b1b3348c",
+    "docs/results/v4_staged_beta_cadence_seed42/stage2_A_paused.json": "9ab69d2ea66be6e15c2da834374f0e73f67714bbd7e6b6f393cdb05e876055ee",
+    "docs/results/v4_staged_beta_cadence_seed42/stage2_A_rounds.csv": "04fe7b3fcfd98f11be6c26a33ddcb04618a196f0fe5eb036ae63d6e35827e787",
+    "docs/results/v4_staged_beta_cadence_seed42/stage2_B_paused.json": "8aee9b08f8d41e8c18e1cccd815589293e0d71a2358a4b4733edfc6bc1f242a4",
+    "docs/results/v4_staged_beta_cadence_seed42/stage2_B_rounds.csv": "66d43d5ead7a7ac5a7f09cd23125ea7d2145a5f90f50ded0c2e455ed9c1f34db",
+    "docs/results/v4_staged_beta_cadence_seed42/study_summary.json": "6632827b79a61d9d5101f83e27aab81640c8e7580cd6a54d31f1772c1d3573d6",
+    "src/dqn/__init__.py": "9ef07285353137977a2a6c8a1fdbc5e62a765e5978a560cf4fc89f94be00f027",
+    "src/dqn/agents/dqn_agent.py": "13a6af0c353c02fde800992b880008e3ebbfea8d59cf833cbbc7adb2aa2a9e05",
+    "src/dqn/memory/replay_buffer.py": "429fd3a0718fbe07511faf09c1a7389ad36220ab233d0712c5cee57352733d05",
+    "src/dqn/networks/__init__.py": "d253237b86e899f8921f967340aa1a86b657de5b9c20057ca767808833860b75",
+    "src/dqn/networks/factory.py": "d0ce1e5b9c26e575070bff1c4bf16be8a387462099b24a4c45d6e581746bc9f8",
+    "src/dqn/networks/kan_qnet.py": "c663c44664e7922b52ee0981c59ba5c7b61a5c8bab2d24277d7355db1175e258",
+    "src/dqn/networks/mlp_qnet.py": "29e8e76b5bdad64e95b7c8a82429b8bf137432d692ec49b8fa5213557736fc9a",
+    "src/dqn/policies/epsilon_greedy.py": "e414e1e373e67432ae5ce47c880a6ccc8a2a4ed32f4e0a4d4329ed3b7d8e54c8",
+    "src/dqn/utils/action_mapper.py": "76fd712109526d34fafbd5c518a8538461c8e7d89d98e0235b9b6d7ead7404fa",
+    "src/dqn/utils/legacy_reward.py": "098a312e36f88e74e3710f3c369ed1b90c106313da071d6dfc59924fa088bb0d",
+    "src/dqn/utils/reward.py": "89e5df3d7c54e13a9141be96406760adc6cec049107d23f7d4c3f13a4e8a7780",
+    "src/dqn/utils/state_builder.py": "4d7b4128226752b92b26a9e2d3830daa18ab0391cfd1d3533b5fcb8d04eac74b",
+    "src/dqn/utils/training_metrics.py": "acf8872c515ad6a8f4c899b14ed377e9bf39dd07761a42838a29304b73c8191e",
+    "src/envs/__init__.py": "2f4425ec06ebd7e46596885745970f63fd06e9ccf53206f29d1963122c80e596",
+    "src/envs/dqn_mpc_weight_env.py": "a0680dc3c6d0548404e0fdbb27b4a99bac150f5b2f67c1dbb9059751ab075129",
+    "src/main/audit_fixed_physical_l2_84_train.py": "942f3af25e99f5d2ad9f72ed2cbb53da4adb879000123cdd4248b063c44d2665",
+    "src/main/audit_ideal_reference_84_train.py": "fd39ab642c4dd5e9ec7ecba4f4bb723dfaa4d0f179eb3045f91bee2c0ba9b026",
+    "src/main/audit_rms_l2_84_train.py": "8b352cbb0c9dabe97a0e99626f716cf5131c7c6f80e7fdee6175a9c5504dc9f1",
+    "src/main/audit_rms_marginals_84_train.py": "b5ec73e73446d2c1aaf35c2c4679b62d8c0289fc29bd15497e35550129fdbc68",
+    "src/main/build_final_operating_dataset.py": "84d03e2778f5d2eab6ee4e97b03a7d8b490adbc30eeee74aa8f8419e771a4f6c",
+    "src/main/build_operating_segment_dataset.py": "dad78939158052b14295c716f7d3592a81bf5e49798145b4be28d8702143e5d3",
+    "src/main/build_rebuilt_operating_segment_dataset.py": "1803bea6f0a8d0dd026eb4e783e7160a1ec5a1d7a4af87f4b2e3dd49c2c1ddd4",
+    "src/main/build_spline_1s_diagnostics.py": "8bbea79114a60cbb6ac400aec7cb13f1e46477e59b45c53e7463d99096ae5f81",
+    "src/main/build_total_load_dataset_721.py": "4d926332c2dac379637e2fd7cdd07b38cfcf726da0a77a14d7650e70898914ae",
+    "src/main/build_zero_boundary_operating_dataset.py": "8e82a06fe73d5a5620e9c68818a5359bbc0efef06db1f93c071b45c14c85ca5c",
+    "src/main/build_zero_boundary_power_review.py": "9a84dcb0e4a636f50596ae25a708916d9d35964f512b1e775206dc8dbbea52a7",
+    "src/main/calibrate_unified_mpc_actions_train.py": "b47a0218b448089f1032c3e2bc830d84ebd115ad54a9e3ccbb114e1a218ee5ea",
+    "src/main/compare_mpc_vs_dqn.py": "a195a95f0cb317424d9d3c898e34df54528286e02c30596db8db2f76de98741b",
+    "src/main/formal_paths.py": "e3f7902cba9974df6d8f4f73d3f931830d1621f3abab8cbfe128194824a544fd",
+    "src/main/mpc_solvers/__init__.py": "24ce9dae1a5d6537aba85cb9ee4dd6a8a150e75e748d3236ca003a2c972e90bc",
+    "src/main/mpc_solvers/dqn_mpc_solver_bank.py": "402d07f3a9eb9c0f257c2350cbe28add72da0ebd2aa2b2abe64c2ccc9d322c43",
+    "src/main/mpc_solvers/formal_config.py": "04c7d1489aa1d59aeca077f3d407fa454a5eebbb57245a2d2471628483774778",
+    "src/main/mpc_solvers/mpc_qp_formulation.py": "2e5b98734a926a2e5941bd5d40034aba7a3c9b3417ea35d94cd609ae29e1ce3c",
+    "src/main/mpc_solvers/n6_qp_scaling.py": "ecd5a4d323c36c1a58d4a10a0abf4f87543e1b62dc98dcc993fb87b9a06b775f",
+    "src/main/mpc_solvers/osqp_runtime.py": "52ba22f1311d1286133577b33464614e4def7b2f3cdbb52a9106d225dd673c24",
+    "src/main/refine_operating_segment_split.py": "be10c96ea91b222581b2fc3394e217432b09248cde80843947244b5e1d91e40c",
+    "src/main/run_dqn_mpc_causal_training.py": "aa70d6ac91a5ae717834e7dd0aa7f426617106e53726d4d7266aff0ff6d24460",
+    "src/main/run_v2_objective_scale_audit.py": "743303212ffacca29c807a5ca36cecfe692d310c064a481acb953abfbc71db23",
+    "src/main/test_dqn_mpc_causal.py": "3cc33d2fb0801284f48b89a59f8e2fe4dea2459d2ec3fd6707896961e6b81df6",
+    "src/main/test_mpc_nominal_causal.py": "2d78046f748494d8921e40ef8d2c49e43d98a0e532247574465efe4310b1491a",
+    "src/main/train_dqn_mpc_mlp.py": "f936bb3467429621a09177cd132d0de15b0ae87e18d91386746f4144a6d06e66",
+    "src/main/zero_residual_numerical_negative_loads.py": "0b98157e2d2e6a007ed0d5012d3cbdf94ac483484fca798f408b316f1eb50a57",
+    "src/mpc/__init__.py": "fc4a928c83328f9ebb453420a4127c61e752331d920783c7c957a63dea98c57d",
+    "src/mpc/solvers/fc_dp0_curve.py": "26f216bce9ba9042fd5bfc2078777cf27120a8252c55a169c06f1c9f5e882255",
+    "src/utils/common_types.py": "a71cb5c041857e517245bf62680d1168b45dda19016d11633cb0db6f2f3ba5b9",
+    "src/utils/data_aligner.py": "26e078a052a1b8bd6403fd8006dfa0e6aaa4865eecd4f1102d05ec9c2c9ec0b2",
+    "src/utils/data_loader.py": "f11a04b60eaa01381c435e092ca007d53e779912d56086076a12aad2659094da",
+    "src/utils/final_dataset_feasibility.py": "c2b68036c4c09c8843c4918e7b65eabc891defbeec088b8257a50770e7eef429",
+    "src/utils/final_dataset_semantics.py": "c097473581389b8bd4eadedb856bdef5fb088eb69bc304c907263272ef183042",
+    "src/utils/final_dataset_source.py": "1736696f3df40ba65bd68de657993286afdeed88d2bc6b333bb074cd59297724",
+    "src/utils/final_dataset_split.py": "e63c1716b917067def9bc329a6d50ba00eba1807c8fa787346679557dcd9c78e",
+    "src/utils/final_dataset_verification.py": "f84ab9bbf6d63f300ef5774d663a902079cddcbc5dde650a37bbddc83714e36d",
+    "src/utils/formal_operating_dataset.py": "fcc66b91e6130483c61121833d62d8553b0f7e0020007062f0717cbdf9de108d",
+    "src/utils/operating_segment_dataset.py": "41fc7d5393e0c2ff3be3a104c2e80d59c55af22f2df24dacc812ebe017fd1602",
+    "src/utils/physical_config.py": "2a7bf292cb1a5b4607a49a849773987c0090262a7d9180da61450780a275ac77",
+    "src/utils/rebuilt_operating_dataset.py": "c6117dae57bb34b3d9e253923749cd4e94741ec5e007268d182eb887a3dbbf24",
+    "src/v2/__init__.py": "7bfe25029e1367dae4ce94c3f0ac9c1828cb83ac8bac07709c765bf436727305",
+    "src/v2/analysis/__init__.py": "f0aac8c99a9cd0e8abd691876233f3e2715a7012c551abb2b79b329f7b66fa81",
+    "src/v2/analysis/action_screening.py": "434ea85adfd6f295be2734d47ad8b08d04b6b0ed079af905acd4df31024ea728",
+    "src/v2/analysis/objective_scale_audit.py": "dcca1c1d374d3ef4e6bedeb573801a0788f3c25bb6e55ebba2c5a33bb1e64d34",
+    "src/v2/analysis/solver_audit.py": "d769e9020006dc6cdc7de01d96a8cbc5e1203f98a1d02091176e26e68049e285",
+    "src/v2/analysis/timescale_audit.py": "ec5e4dcb8e0cf359effe62d256b4eb2ec77f12338aa943e3e77c4559a04dc56b",
+    "src/v2/analysis/train_objective_scale_runner.py": "2338385fcd545212882be3af2deccddaa96f0eb34454793896618bdb34a3d856",
+    "src/v2/analysis/train_state_audit.py": "24a5011635211c5a0b1d37b99db1014cd4a692a10bf77ee0b8b289d345456777",
+    "src/v2/config.py": "b76213f78ae939fb53d02d262f7aa9da2a88db850cc39ad5e1de44e0d63d2c6b",
+    "src/v2/contracts.py": "60f803b461a1a8116df0e7c8b0f863ca41f851aaae08e62f7bb024770361a433",
+    "src/v2/control/__init__.py": "a0c8ecb0fac30b461d6b459c339f17a602d8797469476140cc7c781ed40caad6",
+    "src/v2/control/causal_base_load.py": "5e538c93daec68b2217e8b524c44b8b34d3791421408636873b1dc329075a340",
+    "src/v2/control/nonlinear_mpc.py": "e12553efd695c2b2b7a640cb336d02580e594d3037ea2001742843ced8ab044f",
+    "src/v2/data/__init__.py": "6b8a407bf82ca9cb1535165eb475013dc7450f9ee404df8051cc406d726167b9",
+    "src/v2/data/ais_speed_sidecar.py": "39d853bd24be6612aafa5bdfb7b0a2647525470ac95d510bb2b348437684d1be",
+    "src/v2/data/formal_training_dataset.py": "316a6b84b6ff2ad25a1e7462f334af957bebe2e467f1c493453b2fc5567dfce6",
+    "src/v2/data/power_gap_interpolation.py": "8612a82bb83cbcad90bbf292a3987d6b470a8698afd5d977caed4c767a0b6186",
+    "src/v2/data/raw_inventory.py": "dd519ca69b4ae477012d33d2e816b38184200bc733194fed0c0a914637eef877",
+    "src/v2/data/segment_power_source.py": "2a2c47e0a31dbc7ab3fd982f8d69e1a041ca57b8e2d56e359450655506896712",
+    "src/v2/data/shore_mode_sidecar.py": "d74317d95de897cc2b0bd02ec18360af867da98a2c4822a31e041b673dd1a6b8",
+    "src/v2/data/supervisory_aggregation.py": "4fe5432f1591ebefdd0a8cd496b2e01d24e00d703634a501f852bff1bc220146",
+    "src/v2/data/supervisory_rules.py": "69295780a4dba8014ea2c9d658c9cde7ae1ee38fe3fad410882a1abcbfdce04c",
+    "src/v2/data/train_supervisory_audit.py": "5f7f18266442c03524435d1f0971d91cd940bc74d8af0628c778a35271b77418",
+    "src/v2/data/zero_boundary_dataset.py": "a9a98d92325c91ec866826adbce586e6230f8503de0cf0559c527d62f722d2b4",
+    "src/v2/data/zero_boundary_power_review.py": "33e8e505f6f70ee52ca1f62fe8b77d55fc0dc6e4c8a713f64455180cc8f3e103",
+    "src/v2/dqn/__init__.py": "a3c0a186f514f8d2be70fff300e5fdb33353d04decd0756d6bec694919eaab0d",
+    "src/v2/dqn/action_space.py": "2636bfe6b87d9629fc5dfb76b4f99d5ca95bd9f48e26c4393d5b6e7af005d2b2",
+    "src/v2/dqn/history.py": "08703c4d8b779ee53491cb2cb35bb890d858c18500486b3f53f6cea83f8b8841",
+    "src/v2/dqn/state.py": "d5c21f05754e030bf627efcedfe79694bdb4cb394dc2a24cb81d2fbfac0de622",
+    "src/v2/economics.py": "eff406c68214f492cbed6057003579fa3d889e161f1c94d7ec0b7d03a59f1363",
+    "src/v2/envs/__init__.py": "0005dbccedcc5c2b6a2e3de1a1603810203732c867581934b75dd19a9d03e99e",
+    "src/v2/envs/formal_episode.py": "36c2ba324437767e31074e81dd3065ee9e1f4dc9693bfb4e8efe21e8c1cac9ac",
+    "src/v2/envs/multirate_weight_env.py": "9f496f219d75856f1b9a0ebe4160fbc03102b21bbf661cd7be1d2c6d11d39e43",
+    "src/v2/evaluation/__init__.py": "85c8dd976d29199764bbcd9c1a4bfcda8dab8070822ab63a67583414e1f1655e",
+    "src/v2/evaluation/checkpoint_selection.py": "720b6961c1ef8ee87e2b94b8f27e50cd4315aaf1e5e805089e1ddcd0dbceb1d5",
+    "src/v2/evaluation/final_test.py": "298c274146178bc3da1daec87428951e7df6f7464beccd02e3f0f00e034bd61f",
+    "src/v2/evaluation/formal_policy.py": "dc491d4312210c30eb0ea9b8973ca3f0175075055624c8a4380c3cf4c23e4464",
+    "src/v2/evaluation/power_trace_plots.py": "3c8907e6e8763e462d7941f202a23ff26f3f0986fc04444d6bf7b48ad4845bb0",
+    "src/v2/evaluation/study_selection.py": "3fac6d2312bb96f8db152e78bce078f89fe8dca992250fd1fdef4e04526f41d2",
+    "src/v2/evaluation/tau_lpf_screen.py": "7f5f828f2a110fafb2c3d63296bc9df00823bf2b5a2ee3ba537b5a53609364df",
+    "src/v2/failure_policy.py": "cf3230f1a26f2f91dd3bb8c0e815160cc7deea4865fc6ae554dc095b79c18346",
+    "src/v2/main/__init__.py": "b50f87608ddfca46be83b874aa1dd45657a29360888aa044a937c87ecb4befeb",
+    "src/v2/main/build_ais_speed_sidecar.py": "f6b95e0fe72023850a05a31d5403b47f1e291e41aefdb945e1e9c97e60127f0b",
+    "src/v2/main/build_shore_mode_sidecar.py": "a2793743a46ab5ceaf52e6d9cd5d7e484e1e06ba5c56b420c46cc92f615b08b1",
+    "src/v2/main/compare_m5_m10_validation.py": "74be44b1fc9c2a36395e29b85e51975f81efeace717e128791b23b4940396cf9",
+    "src/v2/main/evaluate_formal_dqn_test.py": "fce790b5db4deec3f37bb5ba2079cda51dcd294467cd46506cb43a3ed15bbd1c",
+    "src/v2/main/history_dqn_evaluation.py": "cd998fce08f0162f29d93d35e36018f86183e19eaf1771d850ca0b63152f222d",
+    "src/v2/main/run_failure_penalty_audit.py": "5bd9c413674baee1d6374b8a1e80b9e91adb945754c704158f2ecf965d772d50",
+    "src/v2/main/run_m10_reward_scale_calibration.py": "bf7771bfa6e0fec30b6b531bf1dcf2060cf9f68a8a01214498f0d18b5ecf438e",
+    "src/v2/main/run_preflight.py": "d99a6dc68789568363c1cb1379bc1fcfbc191ca81e67d6056450297312159c77",
+    "src/v2/main/run_reward_scale_calibration.py": "28b012e4f644889c59669cb6f6591152ed05a0692f3daedc4a86f21afa89ee75",
+    "src/v2/main/run_tau_lpf_validation_screen.py": "1e2079077be2e1205ae64ae892ba341ad782a6e1afe8c14ac72fb6b10bc86df6",
+    "src/v2/main/run_train_only_timescale_audit.py": "4e0dbcb0f2c405a39338bc4f7909639cf6998d0dc15177f4dcbf1d9a37e68a76",
+    "src/v2/main/run_train_state_audit.py": "0def23001825089c0079c174d09533207ab4ebde69b01d948cafa50f446b8cae",
+    "src/v2/main/select_formal_dqn_checkpoint.py": "198e17552743960eb52a9639e6fe8c7e1a20f2c29716940e85540e94097278a9",
+    "src/v2/main/select_history_dqn_study.py": "7a13f7cb1f92ce21a183637ffe5d45a71e5ceb35c9d29a73be4c66dd805cf5b8",
+    "src/v2/main/train_formal_dqn.py": "6148d1cfe81e99afb85cad4a35cbaf806cca5cb714d2d2f928f8d92b90619d7c",
+    "src/v2/main/train_history_dqn_study.py": "241d7b450b8599763e789837377ce77d170abec2fd2ee546e15872ff00be727c",
+    "src/v2/main/train_m10_dqn_study.py": "c4eb119093723a7166950c958bb910b84602bf9cade4b6aa1d62166776f1e86b",
+    "src/v2/models/__init__.py": "bc6d1f92d7ddda13d3a6449e96c57cf66a2350e1b69e6f71d2c6bd6261a11b74",
+    "src/v2/models/battery_degradation.py": "f26f6bbb3416095484bf496e7488c50dd70e1a656b894e71be1334b8e7040e8b",
+    "src/v2/models/battery_energy.py": "34d6a0a65e17ee24b9bb4c052ff572269516f6f8628213f2efadab1bef72aecb",
+    "src/v2/models/fuel_cell_degradation.py": "056adfab3a3a9d69b6e30ca42e931ffbf0a7889085a2161edfbb9c404b067dc4",
+    "src/v2/models/fuel_cell_efficiency.py": "0b0b668bb21a69eaddc24a5103ece22132b4f06c4528524f98ebd4e7b081f6f5",
+    "src/v2/preflight.py": "0a444e003f780ffad7a00cc00f935708c3bcb7ac878bf7d12eda8f61cd90a970",
+    "src/v2/training/__init__.py": "d4634fa70065ee1d23eb2b6fad80ccf82cf76815d4baba9fe7198ae8e49b2c69",
+    "src/v2/training/artifacts.py": "3f87f7e0a10b3377e26a3215a21f037914778f02558053501a33666c834ae204",
+    "src/v2/training/checkpoint.py": "36c75e232d5f2661ffbd2b62de29dba55188c8777caffee32fa1833fb2d1a487",
+    "src/v2/training/diagnostics.py": "be33b6d2e2f855fb721ec8604f272d03d294c0f6fee853e81575f64a24c96529",
+    "src/v2/training/dqn.py": "4dbc4ba22d5237f7b040a0013cc018531eb5735164063760c9024f5c4b6df76e",
+    "src/v2/training/experiments.py": "01508f6d75cfe353e50a5519b8e39d9110e79805d71a0c2a0e5d82c4dba4022d",
+    "src/v2/training/reward_scaling.py": "d4d839c3453f58d177b4fa99412c816385bec283d683dbd9f903e4183f969aa1",
+    "src/v2/training/schedule.py": "ae212f9930e0cbe98c17b381572f41b36c02f7ca81351742f1bd657575187121",
+    "src/v3/__init__.py": "09ebd675e615cabc94ac84e83493fd5f12599a699ba50bc4a9b23ca670834f4d",
+    "src/v3/action_calibration.py": "7659a76a6fc093ccf0e8e571f9989035da20dd0a3118af087b2ed0c95e5bc7bd",
+    "src/v3/closed_loop_screen.py": "92af81925c1c29062b56d8b591f38527cb718321ac7a3d1662b3e251ebc57658",
+    "src/v3/control.py": "98ccac8a8603549c21872a573978d6cc900a311b56199c3cacc8271ba96fed7a",
+    "src/v3/dqn.py": "f7c633448a68b54acbfd0738524537056f096c53a07e70030f95c9ccfbcc6cad",
+    "src/v3/episode_replay.py": "687ace1fcf102bd49b0ce608e4c35af1df101903e06c88a10bcbea24c574a2ab",
+    "src/v3/forecasting.py": "713094386645038d42b91e13ad5f1c8dbdc2d3603e09547f65ff4567f496d737",
+    "src/v3/metrics.py": "d93bb63ad2496eea28eceefd9c6143e843e3c9572190faa4f4cf824dbebe6268",
+    "src/v3/shore.py": "61ce5f4f545beea35ab4f01996b9da43eed7360a3244b3f81ab567cf0df7c02a",
+    "src/v3/test_diagnostic.py": "6f00df9dee4975f40ce701effc17a6918e931a2a1df9acd56438ac771c0d2871",
+    "src/v3/training.py": "85e23c043446ce62b6477373b5b66333c10f88c8ad555bcf7bdf15ef4d0e2074",
+    "src/v4/__init__.py": "0fac1b89827fea7291c71568e801d198ea4f5d82fb109c2bb261431134ee3e1c",
+    "src/v4/control.py": "64acf721ebe3e646279f1036786049d6b3c405194143abb4d2eff463d1d1a24f",
+    "src/v4/diagnostics.py": "89c148ae42e74f153ae20e1f4a723f76db91aad5fae2a25e43b80b0289f1bf8d",
+    "src/v4/dqn.py": "f07f1a7820c0ad4d9cae4f6b99e6c484143cec8d2bf5d74b113d12bad64fab6f",
+    "src/v4/experiment_paths.py": "b627aae39a9f8f36bc5abcea628388cff3adb26b0b577f7195d273c3610efd54",
+    "src/v4/experiment_schedule.py": "053aabe857082c64a0d30a82890f9f1505c085fd8df651003bd32dad65c5d68a",
+    "src/v4/failure_penalty_reference.json": "28957a8d39657a0f2e4884c5585f31a0f2d6a896173abb5d29f85ab0bbf0f91e",
+    "src/v4/failure_replay.py": "0db71906dbcb0f84f31c19b742652e50883f2f819fe8078117047671d724f4dd",
+    "src/v4/feedback_study.py": "9a08a1a57916004c35e798857cf944d4280f68fadac773f94be8e675d422eb86",
+    "src/v4/monitored_training.py": "4e44f94882d4c94f04f7260bd9c54592210dd48fad0a4360c6045f9669ef180b",
+    "src/v4/review.py": "df0f5b6865b73b121ece05bba68efd432f2a0751ea3472ee827bfd9a3657670a",
+    "src/v4/reward_feedback.py": "150972a80740fb33d430aa1420f7fc7d40ae3ee4c86af30101090b6ef2c79872",
+    "src/v4/soc_beta_study.py": "1b33258f4073d5780eb2a6c5fa73e14a6ef69d98072f7c08bc3ae6409b517792",
+    "src/v4/staged_study.py": "21ef859bd093c5f57d47ddb3ae33be9f2960c48b16fe22135e7ddff902ab5523",
+    "src/v4/telemetry.py": "c5c0ee6d3ddf5a70e3ab0b0e99f1828cb60f2eee5bc13a9eab36c18d9d7dd4c7",
+    "src/v4/train.py": "66cd0b4edd4a90b969cd77234dc42afb3ce0319d27b93f0962a0ff90a9bb1266",
+    "tests/test_dqn_mpc_mlp_smoke.py": "5acb5d1bfd7c359419be3fb0eaab4f8a37c7d60932997dce2ad16a68665c0f09",
+    "tests/test_dqn_mpc_mlp_training.py": "f3b02248c3d19af1b10ca00c1b00670c7f821759eb4d4cdbda102739eb457058",
+    "tests/test_dqn_mpc_reward.py": "8a78eb7545178465d045567481ecd565ba1334e198989563e4a3e6864cb34254",
+    "tests/test_dqn_mpc_solver_bank.py": "09b3dd7eb7f676a081f1915ea921a12f7db5f1e00ab2e983571c3f86e11eafc1",
+    "tests/test_dqn_mpc_weight_env.py": "3a1cba48fad6f5681b9537b1e994de0c4897d03c27b138ed63e07c45c91db8a2",
+    "tests/test_dqn_network_backends.py": "22739d3c130bfe09da3cc10f7875b5eff4477544d437efca656c746e6603b776",
+    "tests/test_dqn_round_boundary_training.py": "6d60be3447b2798179efeddc288bc73fa8dd972aa6ae2652efbd45f71e10b0d4",
+    "tests/test_dqn_runtime_robustness.py": "b9bd8439fead681a2483c465bfd8b48ad67ca5d0139247a16cac559378e3c843",
+    "tests/test_dqn_state_builder.py": "dd65cd28fcf3ad149947c7a9f67a569e020f80a0320bb9de739e6a038a377e14",
+    "tests/test_dqn_training_state_resume.py": "77fa5ac1578494001eab61bdcb7cbdd60b6862e48d9738944667c918f4383fd3",
+    "tests/test_dqn_weight_action_table.py": "61336fa7218aa8ddba7616410d7a0853f09bd12267ee9a0d1d68e388835f1a3f",
+    "tests/test_executed_reward_contract.py": "e3a2409b84c3fd438893ce83a81d867122f5eac396f7e734ba7b5fe7bedb9c0a",
+    "tests/test_fc_dp0_curve.py": "e931afad155d801a2803ddbe3142ed9a2428bf5bfa46548e7c1d496e21a8f37b",
+    "tests/test_final_dataset_builder.py": "04165f2968940c90a753dee610e9d0bc3e09d025a609da165d8c927d62d719fc",
+    "tests/test_final_dataset_feasibility.py": "278241e950d01799112372fc152d42af2fe3be51e853870d10d5cf37bea22b08",
+    "tests/test_final_dataset_semantics.py": "d77e0bf34a37703dc9440b3b683c36a0f26ce4a796a5522477312cfa04b9c51a",
+    "tests/test_final_dataset_source.py": "ac0300d02001ba1f0b4f718e13a5879ad71b4f1265443b014f78bb220eb846e3",
+    "tests/test_formal_checkpoint_paths.py": "3524f2e99c64820e68c09f338448d5acdcff564753a8a6ecaf1c32b1a47e9ac0",
+    "tests/test_formal_operating_dataset.py": "eefa294e518b8707b48f96a877bc9259d49ae352e4553a638fa0c7c34b7f2bdc",
+    "tests/test_ideal_reference_84_audit.py": "cafeed8a78584a3afe160c4799079142df63b64bfdeffdfbfdb1ab4b2d8164bb",
+    "tests/test_mpc_soc_reference.py": "89eecaa9351d9c6d7f430892469534f9f9177f732444fe491f2965cef948c88e",
+    "tests/test_operating_segment_dataset.py": "1da5ccd8e9a414308d946003e5487a0bd9c3155085e4b67bc5cbe12158ab3c4f",
+    "tests/test_operating_segment_repartition.py": "19740451278166b898ae31501c75becf0c9831a684d8374312eea597c41d4a7f",
+    "tests/test_rebuilt_operating_dataset.py": "6590a1a325ae8e1302a8f6a43a276703124b63435f725a90f6a3f9cbdb3211f8",
+    "tests/test_spline_1s_diagnostics.py": "11293f1968573c9282cdbc744b39a6d9c83c01c7e0325bec7d1acf6a915c9dfe",
+    "tests/test_total_load_dataset_721.py": "6b46c346d4464c4967f571bdb4f3411a45892d6105a7464350e896a576b32322",
+    "tests/test_unified_objective_calibration.py": "08388494d3ab3dafff9a789170936940404132b5c13251ad59dbdac08ee3d1a0",
+    "tests/test_v2_action_space.py": "311ef91606471baa3ce113af60504c33a561c9c1fcc9896e22d119658c935ef0",
+    "tests/test_v2_ais_speed_sidecar.py": "854e6db6e0aaa4be6b73a0b644c4d39f8093c758927d6849588202f68599b757",
+    "tests/test_v2_artifacts.py": "eee3873c8fa6dfbc774b856132d21c0bf7ed21d3bc162636352cab2b162b31b9",
+    "tests/test_v2_checkpoint_resume.py": "f95c0a9940a253595556d7f88b6df88336e3c7fe8e9249e412f4a8e3e6a26db8",
+    "tests/test_v2_checkpoint_selection.py": "ace50bb3b8669b6af7cb2882a436c7b6dddafe6a5e44b7bb4e03652b7663a132",
+    "tests/test_v2_contracts.py": "f21be771ad4ae2cc110c8bd262a2b0aaa3a6592fff4c3170acbbd93c6546d91c",
+    "tests/test_v2_data_guards.py": "d899ac80e288aef9c5295aeb9c3c66417cf88fe98105de59baf3a5dddcf61db4",
+    "tests/test_v2_degradation_models.py": "aafe5487187c0edcca9b58b8428339564225bdd099c1fcdd2730055e5fbbd9b3",
+    "tests/test_v2_dqn_diagnostics.py": "d07f676bb016d72897400df405b4c8d58865f6c400aa2b8e8dd535d6d308c760",
+    "tests/test_v2_dqn_experiments.py": "fd00e991ff9975dd2254170dd4bd3883f2e2d334f2597a09d986bde8908aaed8",
+    "tests/test_v2_dqn_training.py": "8574a37d96b6f697cf1de589a221fd97e464709c7a537e12c3bd0eba50a989e8",
+    "tests/test_v2_economic_interval_semantics.py": "d5e4d4471b8162a810612c67c4e78f9b1630b8e6b35857869ad78088e400ca28",
+    "tests/test_v2_energy_models.py": "cb02e1415f222d75042729fdf27c526fa6d2b64623ba4b2e43a761ac3da6ef46",
+    "tests/test_v2_failure_policy.py": "7a3a85677d32beb30185ff823f22b721029f35e8f020110707e8f79b548a3c94",
+    "tests/test_v2_final_test_evaluation.py": "dd83577be6fe13aa906f30b24bbf99cf3fd91ad588f11d2cbadf51ee6e2bb79f",
+    "tests/test_v2_formal_episode.py": "c215669093651f4670fa1ebb1f912ea19b217769699f116c4ff63e8030f41630",
+    "tests/test_v2_formal_policy_evaluation.py": "ec9db015e6ae45955fcae0176eabab81dc654a578177197aaedb036f53fc0ceb",
+    "tests/test_v2_formal_preflight.py": "c466d65cfc756dd8ed0b71a3fe0f717a9f197b7439bfec8502587896adc5b77d",
+    "tests/test_v2_formal_state.py": "8237c97a85ed76491dbcbed29869b0b8ef09788dc06a10d4bceff7cfa0e57bd8",
+    "tests/test_v2_formal_training_cli.py": "36c2e98a33764f49b34ee5cecfdd820b39bf883bb7938d833ffd251cbda33dd4",
+    "tests/test_v2_formal_training_dataset.py": "90f21809a12a59db5e0d475cad3a474703daa0267ee344d296c2fdb04eac73eb",
+    "tests/test_v2_history_evaluation_profile.py": "78e6d14998887d4b5ac1687569088403edbb00182d1b9b8b4ed82502dd4e4997",
+    "tests/test_v2_history_state.py": "d28770043890edf08ea22e253385d4dc9263300292e87afd3a6d2d27f6e3ef42",
+    "tests/test_v2_history_study_cli.py": "22fa394309fd537b2d04fd67770f633e6beffc9ce25a6cd16ad0aaf350dbd2b6",
+    "tests/test_v2_history_study_selection.py": "ac4a752288f7f54ab6ace3e607a12df067c0067f4210bca147c307fc6f2fb7cd",
+    "tests/test_v2_m10_ablation.py": "33ca3db053de657600e1dc576bfa07525742ca951b86119b6a3c00d7bd01960f",
+    "tests/test_v2_multirate_env.py": "00043c21f0c6d1e8fac98ce766f9e046a64eb0c02e69d3c490d1983187b541c6",
+    "tests/test_v2_nonlinear_mpc.py": "8a5cf7e7904121ba8e36645dc4b471a988aa05f50036bb8af787bb385b31c47e",
+    "tests/test_v2_objective_scale_audit.py": "97e4ef71dbb1f39057a8c3f789fcdc0e0111a9f6881e4b1a83b111e7e3a86d1c",
+    "tests/test_v2_parameter_freeze.py": "547a1ccf4bfeb6d4dca609611f2fb547e595e912f3e46f4466c661621844ae94",
+    "tests/test_v2_power_gap_interpolation.py": "9c00dd0ecf7c89e7b70700fe8614a8605c16ca36a06bc68a16c399fd3ffc15df",
+    "tests/test_v2_power_trace_plots.py": "fe092d625156d87f5dd3a55140a61088f9bbe905b770e7801def01866ff1b5e1",
+    "tests/test_v2_reward_scale_calibration.py": "2a45af0d25f6fab2f73988b68304c13cbc5d4c0a83fced4d587af213b41e8640",
+    "tests/test_v2_segment_power_source.py": "d95e6a5f331754aa4ca6f82b3d1225e4959389f37cef2beb7a44269d1b8d463c",
+    "tests/test_v2_shore_mode_sidecar.py": "6e4d5e6e5be3151e362da2685d9384a5923efa16115d79d9d9c690a5163771d9",
+    "tests/test_v2_state_and_economics.py": "7d61508fbcc4037f57281485caf7228340f0d3b448f3efceb1fa29398f8e01b4",
+    "tests/test_v2_supervisory_aggregation.py": "976d1e4dc413142adc360c2e2db725af4ec5e1d2673dede81be3df346e5fd90d",
+    "tests/test_v2_supervisory_rules.py": "bfca1967dde6eb036a986516951c28b152c9f795a438ac08595dfe3e4d93aaf0",
+    "tests/test_v2_tau_lpf_validation_screen.py": "31295867b4dd4f9cb2fcae3993608e3f05d0953898ea4d7885181f7af8349368",
+    "tests/test_v2_train_objective_scale_runner.py": "962ac450660e0b4abd9f25d23db8faeaa78085c84d32aec104513ac480715d39",
+    "tests/test_v2_train_only_audits.py": "ad2268662b92ea78f622b26d20fc961f71a42f2503f50bc0b5cf7e5957f2e02a",
+    "tests/test_v2_train_state_audit.py": "0bdaf96de7adcb214664c8c319aacbe35aaa0886567d1e503ff20024cf24cc4f",
+    "tests/test_v2_train_supervisory_audit.py": "a158968b2c6a0483683a3730f1b49024a672113852a16c11ce419520c572cdf9",
+    "tests/test_v2_validation_selection_cli.py": "a5156b9d0cdd0b3113301a3da184de67e84cc244744451fa435cd18322a55ce0",
+    "tests/test_v2_zero_boundary_dataset.py": "097c6fb5e41c24dba431a640ff3fec48eb2fd164bcd187a539b544138e449e32",
+    "tests/test_v2_zero_boundary_power_review.py": "3c72603a6f39ab1fde924c668c09a7c1c5debf26866800dc30df030acb13c218",
+    "tests/test_v3_action_calibration.py": "6cc2872fb9088d3824d54999ad33d47a5ec09f26384150a1c399bb9d56d17de4",
+    "tests/test_v3_closed_loop_screen.py": "3e1d117b259ccebdb30486085166d59a696e932501cff8ebe11d8e87051e9d71",
+    "tests/test_v3_double_dqn.py": "9ae097c03992b7e1bfc465b852bab167bbf1dcb0fcad0345cf511e2f09949f57",
+    "tests/test_v3_episode_replay.py": "f4eeab9eb73efe3b70c4b1ce738fffd284df2ca9d0e4044483c979e669152ed6",
+    "tests/test_v3_persistence_control.py": "cdda6a8e70e6df4e6be7ef70d885286984f061528796a27c2a2938a50f561ba0",
+    "tests/test_v3_shore_settlement.py": "89d596e3a0da5ea5c1f50a87c98c65ad710eb9ce6ec9893878bc20b5b140d026",
+    "tests/test_v4_control.py": "623375b84fd12a5b58b56c3b9026f3882b8ad274a4fb38a7739e130beba158b4",
+    "tests/test_v4_dqn.py": "acd7ff6554312fc63d362ec24e3207d1cef84a40acce13393fbf1f377087fa2d",
+    "tests/test_v4_experiment_schedule.py": "2e5209d7011c2cfd4693b69045af5e470d1143048cbc54992ed13361c02f0f19",
+    "tests/test_v4_failure_td.py": "7ae6955d0542510a1bd5f3e390db7c28bf8eb4cb8220bde6c2330f145ae5136d",
+    "tests/test_v4_feedback_monitoring.py": "eb32a5b8e1c0e91ee323623fdbf4175fcf16f98f1da462650b94c62579cbfcf7",
+    "tests/test_v4_monitored_training.py": "f4bac738d1627e36252f73759678cf580f8f738588135aaafcbb98221f71e9a0",
+    "tests/test_v4_n_step.py": "4a5805a9678575a7fdd3a80ad0a5d7fe022d207ca6f467e67440e1870d146871",
+    "tests/test_v4_review_metrics.py": "8f305d6845e17812152a9dd097bb2e603b76dc4aa3c1e1371300695810ad9c60",
+    "tests/test_v4_reward_feedback.py": "4796f5e3392ca6fe2c51fbb95d61abd084008e98ff7fa6d9ad40b3ddc772c319",
+    "tests/test_v4_training.py": "6e84d56f84d1cd4f6b8f3d58c67aaf86c3271d4b4066af5d8c00964d2f48ff16",
+    "tests/test_validation_q_diagnostics.py": "b2258a45b3cd950751c137b597b29d13817de1acc511f43b3dfdc5d78768753a",
+    "tests/test_zero_residual_numerical_negative_loads.py": "476687509c62f71bf41d00f521b63a129503fc4a86c321c826b029e510385369"
+  },
+  "manifest_sha256": {
+    "data/processed/operating_dataset_zero_boundary_v2/metadata/excluded_parent_manifest.csv": "d3319adbbe79d3cca742906039982f14b9054a2f06465e1bedef93732c7bafdc",
+    "data/processed/operating_dataset_zero_boundary_v2/metadata/parent_split_manifest.csv": "36d44abab31a36c1bd6ab62c14a5a7cee2869cbfab451518c8ea921a53bb9623",
+    "data/processed/operating_dataset_zero_boundary_v2/metadata/sample_manifest.csv": "413f2c8e60487ab43f5d24d179d0cbe20697eb1204ab6521151044a03dddf029",
+    "data/processed/operating_dataset_zero_boundary_v2_ais/metadata/sample_manifest.csv": "e7853ea68f3bad5c302c36e92522b01a83b736c8b48f2d54541ffd35f0d2829d",
+    "data/processed/operating_dataset_zero_boundary_v2_modes/metadata/sample_manifest.csv": "2a44ade715a3094f883867b70e99acfbe5b0cd4a64de2a9c5631a379e0191f8f"
+  }
+}

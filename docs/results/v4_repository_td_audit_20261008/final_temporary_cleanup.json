@@ -1,0 +1,1463 @@
+{
+  "schema": 1,
+  "root": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp",
+  "validation": "only ignored/untracked .pyc/.pyo, known pytest cache, and current synthetic regression basetemp; NUL-delimited git ignore matching",
+  "targets": [
+    {
+      "path": "src/dqn/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/dqn/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 252
+        }
+      ]
+    },
+    {
+      "path": "src/dqn/agents/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/dqn/agents/__pycache__/dqn_agent.cpython-311.pyc",
+          "bytes": 26230
+        }
+      ]
+    },
+    {
+      "path": "src/dqn/memory/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/dqn/memory/__pycache__/replay_buffer.cpython-311.pyc",
+          "bytes": 12163
+        }
+      ]
+    },
+    {
+      "path": "src/dqn/networks/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/dqn/networks/__pycache__/factory.cpython-311.pyc",
+          "bytes": 2436
+        },
+        {
+          "path": "src/dqn/networks/__pycache__/kan_qnet.cpython-311.pyc",
+          "bytes": 13906
+        },
+        {
+          "path": "src/dqn/networks/__pycache__/mlp_qnet.cpython-311.pyc",
+          "bytes": 4947
+        },
+        {
+          "path": "src/dqn/networks/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 577
+        }
+      ]
+    },
+    {
+      "path": "src/dqn/policies/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/dqn/policies/__pycache__/epsilon_greedy.cpython-311.pyc",
+          "bytes": 2123
+        }
+      ]
+    },
+    {
+      "path": "src/dqn/utils/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/dqn/utils/__pycache__/action_mapper.cpython-311.pyc",
+          "bytes": 5421
+        },
+        {
+          "path": "src/dqn/utils/__pycache__/legacy_reward.cpython-311.pyc",
+          "bytes": 4349
+        },
+        {
+          "path": "src/dqn/utils/__pycache__/reward.cpython-311.pyc",
+          "bytes": 2632
+        },
+        {
+          "path": "src/dqn/utils/__pycache__/state_builder.cpython-311.pyc",
+          "bytes": 3639
+        },
+        {
+          "path": "src/dqn/utils/__pycache__/training_metrics.cpython-311.pyc",
+          "bytes": 4742
+        }
+      ]
+    },
+    {
+      "path": "src/envs/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/envs/__pycache__/dqn_mpc_weight_env.cpython-311.pyc",
+          "bytes": 19643
+        },
+        {
+          "path": "src/envs/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 290
+        }
+      ]
+    },
+    {
+      "path": "src/main/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/main/__pycache__/audit_ideal_reference_84_train.cpython-311.pyc",
+          "bytes": 74766
+        },
+        {
+          "path": "src/main/__pycache__/build_final_operating_dataset.cpython-311.pyc",
+          "bytes": 71581
+        },
+        {
+          "path": "src/main/__pycache__/build_rebuilt_operating_segment_dataset.cpython-311.pyc",
+          "bytes": 89160
+        },
+        {
+          "path": "src/main/__pycache__/build_spline_1s_diagnostics.cpython-311.pyc",
+          "bytes": 33572
+        },
+        {
+          "path": "src/main/__pycache__/build_zero_boundary_operating_dataset.cpython-311.pyc",
+          "bytes": 29843
+        },
+        {
+          "path": "src/main/__pycache__/build_zero_boundary_power_review.cpython-311.pyc",
+          "bytes": 3540
+        },
+        {
+          "path": "src/main/__pycache__/calibrate_unified_mpc_actions_train.cpython-311.pyc",
+          "bytes": 45204
+        },
+        {
+          "path": "src/main/__pycache__/compare_mpc_vs_dqn.cpython-311.pyc",
+          "bytes": 16778
+        },
+        {
+          "path": "src/main/__pycache__/formal_paths.cpython-311.pyc",
+          "bytes": 3364
+        },
+        {
+          "path": "src/main/__pycache__/refine_operating_segment_split.cpython-311.pyc",
+          "bytes": 2204
+        },
+        {
+          "path": "src/main/__pycache__/run_dqn_mpc_causal_training.cpython-311.pyc",
+          "bytes": 17339
+        },
+        {
+          "path": "src/main/__pycache__/run_v2_objective_scale_audit.cpython-311.pyc",
+          "bytes": 21420
+        },
+        {
+          "path": "src/main/__pycache__/test_dqn_mpc_causal.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 14894
+        },
+        {
+          "path": "src/main/__pycache__/test_mpc_nominal_causal.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 13573
+        },
+        {
+          "path": "src/main/__pycache__/train_dqn_mpc_mlp.cpython-311.pyc",
+          "bytes": 72958
+        },
+        {
+          "path": "src/main/__pycache__/zero_residual_numerical_negative_loads.cpython-311.pyc",
+          "bytes": 6977
+        }
+      ]
+    },
+    {
+      "path": "src/main/mpc_solvers/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/main/mpc_solvers/__pycache__/dqn_mpc_solver_bank.cpython-311.pyc",
+          "bytes": 9667
+        },
+        {
+          "path": "src/main/mpc_solvers/__pycache__/formal_config.cpython-311.pyc",
+          "bytes": 2688
+        },
+        {
+          "path": "src/main/mpc_solvers/__pycache__/mpc_qp_formulation.cpython-311.pyc",
+          "bytes": 28793
+        },
+        {
+          "path": "src/main/mpc_solvers/__pycache__/n6_qp_scaling.cpython-311.pyc",
+          "bytes": 9035
+        },
+        {
+          "path": "src/main/mpc_solvers/__pycache__/osqp_runtime.cpython-311.pyc",
+          "bytes": 5099
+        },
+        {
+          "path": "src/main/mpc_solvers/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 281
+        }
+      ]
+    },
+    {
+      "path": "src/mpc/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/mpc/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 252
+        }
+      ]
+    },
+    {
+      "path": "src/mpc/solvers/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/mpc/solvers/__pycache__/fc_dp0_curve.cpython-311.pyc",
+          "bytes": 8745
+        }
+      ]
+    },
+    {
+      "path": "src/utils/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/utils/__pycache__/common_types.cpython-311.pyc",
+          "bytes": 2287
+        },
+        {
+          "path": "src/utils/__pycache__/data_aligner.cpython-311.pyc",
+          "bytes": 35083
+        },
+        {
+          "path": "src/utils/__pycache__/data_loader.cpython-311.pyc",
+          "bytes": 2504
+        },
+        {
+          "path": "src/utils/__pycache__/final_dataset_feasibility.cpython-311.pyc",
+          "bytes": 14838
+        },
+        {
+          "path": "src/utils/__pycache__/final_dataset_semantics.cpython-311.pyc",
+          "bytes": 24809
+        },
+        {
+          "path": "src/utils/__pycache__/final_dataset_source.cpython-311.pyc",
+          "bytes": 27718
+        },
+        {
+          "path": "src/utils/__pycache__/final_dataset_split.cpython-311.pyc",
+          "bytes": 16142
+        },
+        {
+          "path": "src/utils/__pycache__/final_dataset_verification.cpython-311.pyc",
+          "bytes": 21710
+        },
+        {
+          "path": "src/utils/__pycache__/formal_operating_dataset.cpython-311.pyc",
+          "bytes": 22257
+        },
+        {
+          "path": "src/utils/__pycache__/operating_segment_dataset.cpython-311.pyc",
+          "bytes": 946
+        },
+        {
+          "path": "src/utils/__pycache__/physical_config.cpython-311.pyc",
+          "bytes": 902
+        },
+        {
+          "path": "src/utils/__pycache__/rebuilt_operating_dataset.cpython-311.pyc",
+          "bytes": 25193
+        }
+      ]
+    },
+    {
+      "path": "src/v2/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v2/__pycache__/config.cpython-311.pyc",
+          "bytes": 6666
+        },
+        {
+          "path": "src/v2/__pycache__/contracts.cpython-311.pyc",
+          "bytes": 3618
+        },
+        {
+          "path": "src/v2/__pycache__/economics.cpython-311.pyc",
+          "bytes": 32618
+        },
+        {
+          "path": "src/v2/__pycache__/failure_policy.cpython-311.pyc",
+          "bytes": 3270
+        },
+        {
+          "path": "src/v2/__pycache__/preflight.cpython-311.pyc",
+          "bytes": 42755
+        },
+        {
+          "path": "src/v2/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 367
+        }
+      ]
+    },
+    {
+      "path": "src/v2/analysis/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v2/analysis/__pycache__/action_screening.cpython-311.pyc",
+          "bytes": 84134
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/objective_scale_audit.cpython-311.pyc",
+          "bytes": 47278
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/solver_audit.cpython-311.pyc",
+          "bytes": 27900
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/timescale_audit.cpython-311.pyc",
+          "bytes": 42153
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/train_objective_scale_runner.cpython-311.pyc",
+          "bytes": 26403
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/train_state_audit.cpython-311.pyc",
+          "bytes": 85043
+        },
+        {
+          "path": "src/v2/analysis/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 2330
+        }
+      ]
+    },
+    {
+      "path": "src/v2/control/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v2/control/__pycache__/causal_base_load.cpython-311.pyc",
+          "bytes": 7485
+        },
+        {
+          "path": "src/v2/control/__pycache__/nonlinear_mpc.cpython-311.pyc",
+          "bytes": 38784
+        },
+        {
+          "path": "src/v2/control/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 1462
+        }
+      ]
+    },
+    {
+      "path": "src/v2/data/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v2/data/__pycache__/ais_speed_sidecar.cpython-311.pyc",
+          "bytes": 23965
+        },
+        {
+          "path": "src/v2/data/__pycache__/formal_training_dataset.cpython-311.pyc",
+          "bytes": 31306
+        },
+        {
+          "path": "src/v2/data/__pycache__/power_gap_interpolation.cpython-311.pyc",
+          "bytes": 10304
+        },
+        {
+          "path": "src/v2/data/__pycache__/raw_inventory.cpython-311.pyc",
+          "bytes": 13495
+        },
+        {
+          "path": "src/v2/data/__pycache__/segment_power_source.cpython-311.pyc",
+          "bytes": 22924
+        },
+        {
+          "path": "src/v2/data/__pycache__/shore_mode_sidecar.cpython-311.pyc",
+          "bytes": 21720
+        },
+        {
+          "path": "src/v2/data/__pycache__/supervisory_aggregation.cpython-311.pyc",
+          "bytes": 9503
+        },
+        {
+          "path": "src/v2/data/__pycache__/supervisory_rules.cpython-311.pyc",
+          "bytes": 9786
+        },
+        {
+          "path": "src/v2/data/__pycache__/train_supervisory_audit.cpython-311.pyc",
+          "bytes": 22938
+        },
+        {
+          "path": "src/v2/data/__pycache__/zero_boundary_dataset.cpython-311.pyc",
+          "bytes": 32431
+        },
+        {
+          "path": "src/v2/data/__pycache__/zero_boundary_power_review.cpython-311.pyc",
+          "bytes": 15770
+        },
+        {
+          "path": "src/v2/data/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 286
+        }
+      ]
+    },
+    {
+      "path": "src/v2/dqn/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v2/dqn/__pycache__/action_space.cpython-311.pyc",
+          "bytes": 6100
+        },
+        {
+          "path": "src/v2/dqn/__pycache__/history.cpython-311.pyc",
+          "bytes": 4104
+        },
+        {
+          "path": "src/v2/dqn/__pycache__/state.cpython-311.pyc",
+          "bytes": 25201
+        },
+        {
+          "path": "src/v2/dqn/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 1863
+        }
+      ]
+    },
+    {
+      "path": "src/v2/envs/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v2/envs/__pycache__/formal_episode.cpython-311.pyc",
+          "bytes": 21615
+        },
+        {
+          "path": "src/v2/envs/__pycache__/multirate_weight_env.cpython-311.pyc",
+          "bytes": 28880
+        },
+        {
+          "path": "src/v2/envs/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 639
+        }
+      ]
+    },
+    {
+      "path": "src/v2/evaluation/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v2/evaluation/__pycache__/checkpoint_selection.cpython-311.pyc",
+          "bytes": 37768
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/final_test.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 22565
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/formal_policy.cpython-311.pyc",
+          "bytes": 40942
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/power_trace_plots.cpython-311.pyc",
+          "bytes": 12974
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/study_selection.cpython-311.pyc",
+          "bytes": 17303
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/tau_lpf_screen.cpython-311.pyc",
+          "bytes": 9778
+        },
+        {
+          "path": "src/v2/evaluation/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 701
+        }
+      ]
+    },
+    {
+      "path": "src/v2/main/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v2/main/__pycache__/compare_m5_m10_validation.cpython-311.pyc",
+          "bytes": 16432
+        },
+        {
+          "path": "src/v2/main/__pycache__/evaluate_formal_dqn_test.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 7788
+        },
+        {
+          "path": "src/v2/main/__pycache__/history_dqn_evaluation.cpython-311.pyc",
+          "bytes": 2390
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_m10_reward_scale_calibration.cpython-311.pyc",
+          "bytes": 3051
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_preflight.cpython-311.pyc",
+          "bytes": 1291
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_reward_scale_calibration.cpython-311.pyc",
+          "bytes": 9323
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_tau_lpf_validation_screen.cpython-311.pyc",
+          "bytes": 14106
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_train_only_timescale_audit.cpython-311.pyc",
+          "bytes": 5977
+        },
+        {
+          "path": "src/v2/main/__pycache__/run_train_state_audit.cpython-311.pyc",
+          "bytes": 11099
+        },
+        {
+          "path": "src/v2/main/__pycache__/select_formal_dqn_checkpoint.cpython-311.pyc",
+          "bytes": 11544
+        },
+        {
+          "path": "src/v2/main/__pycache__/select_history_dqn_study.cpython-311.pyc",
+          "bytes": 10824
+        },
+        {
+          "path": "src/v2/main/__pycache__/train_formal_dqn.cpython-311.pyc",
+          "bytes": 35903
+        },
+        {
+          "path": "src/v2/main/__pycache__/train_history_dqn_study.cpython-311.pyc",
+          "bytes": 8293
+        },
+        {
+          "path": "src/v2/main/__pycache__/train_m10_dqn_study.cpython-311.pyc",
+          "bytes": 6925
+        },
+        {
+          "path": "src/v2/main/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 266
+        }
+      ]
+    },
+    {
+      "path": "src/v2/models/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v2/models/__pycache__/battery_degradation.cpython-311.pyc",
+          "bytes": 17949
+        },
+        {
+          "path": "src/v2/models/__pycache__/battery_energy.cpython-311.pyc",
+          "bytes": 6367
+        },
+        {
+          "path": "src/v2/models/__pycache__/fuel_cell_degradation.cpython-311.pyc",
+          "bytes": 27278
+        },
+        {
+          "path": "src/v2/models/__pycache__/fuel_cell_efficiency.cpython-311.pyc",
+          "bytes": 20545
+        },
+        {
+          "path": "src/v2/models/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 900
+        }
+      ]
+    },
+    {
+      "path": "src/v2/training/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v2/training/__pycache__/artifacts.cpython-311.pyc",
+          "bytes": 35800
+        },
+        {
+          "path": "src/v2/training/__pycache__/checkpoint.cpython-311.pyc",
+          "bytes": 11391
+        },
+        {
+          "path": "src/v2/training/__pycache__/diagnostics.cpython-311.pyc",
+          "bytes": 11732
+        },
+        {
+          "path": "src/v2/training/__pycache__/dqn.cpython-311.pyc",
+          "bytes": 27255
+        },
+        {
+          "path": "src/v2/training/__pycache__/experiments.cpython-311.pyc",
+          "bytes": 8247
+        },
+        {
+          "path": "src/v2/training/__pycache__/reward_scaling.cpython-311.pyc",
+          "bytes": 9362
+        },
+        {
+          "path": "src/v2/training/__pycache__/schedule.cpython-311.pyc",
+          "bytes": 4007
+        },
+        {
+          "path": "src/v2/training/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 746
+        }
+      ]
+    },
+    {
+      "path": "src/v3/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v3/__pycache__/action_calibration.cpython-311.pyc",
+          "bytes": 28237
+        },
+        {
+          "path": "src/v3/__pycache__/closed_loop_screen.cpython-311.pyc",
+          "bytes": 22863
+        },
+        {
+          "path": "src/v3/__pycache__/control.cpython-311.pyc",
+          "bytes": 32800
+        },
+        {
+          "path": "src/v3/__pycache__/dqn.cpython-311.pyc",
+          "bytes": 13762
+        },
+        {
+          "path": "src/v3/__pycache__/episode_replay.cpython-311.pyc",
+          "bytes": 15412
+        },
+        {
+          "path": "src/v3/__pycache__/shore.cpython-311.pyc",
+          "bytes": 3099
+        },
+        {
+          "path": "src/v3/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 298
+        }
+      ]
+    },
+    {
+      "path": "src/v4/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "src/v4/__pycache__/control.cpython-311.pyc",
+          "bytes": 23091
+        },
+        {
+          "path": "src/v4/__pycache__/diagnostics.cpython-311.pyc",
+          "bytes": 7265
+        },
+        {
+          "path": "src/v4/__pycache__/dqn.cpython-311.pyc",
+          "bytes": 32812
+        },
+        {
+          "path": "src/v4/__pycache__/experiment_paths.cpython-311.pyc",
+          "bytes": 2094
+        },
+        {
+          "path": "src/v4/__pycache__/experiment_schedule.cpython-311.pyc",
+          "bytes": 5439
+        },
+        {
+          "path": "src/v4/__pycache__/failure_replay.cpython-311.pyc",
+          "bytes": 8516
+        },
+        {
+          "path": "src/v4/__pycache__/feedback_study.cpython-311.pyc",
+          "bytes": 5483
+        },
+        {
+          "path": "src/v4/__pycache__/monitored_training.cpython-311.pyc",
+          "bytes": 31919
+        },
+        {
+          "path": "src/v4/__pycache__/outcome_diagnostic.cpython-311.pyc",
+          "bytes": 18616
+        },
+        {
+          "path": "src/v4/__pycache__/review.cpython-311.pyc",
+          "bytes": 18691
+        },
+        {
+          "path": "src/v4/__pycache__/reward_feedback.cpython-311.pyc",
+          "bytes": 2324
+        },
+        {
+          "path": "src/v4/__pycache__/soc_beta_study.cpython-311.pyc",
+          "bytes": 19631
+        },
+        {
+          "path": "src/v4/__pycache__/staged_study.cpython-311.pyc",
+          "bytes": 28703
+        },
+        {
+          "path": "src/v4/__pycache__/telemetry.cpython-311.pyc",
+          "bytes": 1988
+        },
+        {
+          "path": "src/v4/__pycache__/train.cpython-311.pyc",
+          "bytes": 37063
+        },
+        {
+          "path": "src/v4/__pycache__/__init__.cpython-311.pyc",
+          "bytes": 277
+        }
+      ]
+    },
+    {
+      "path": "tests/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "tests/__pycache__/test_dqn_mpc_mlp_smoke.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 17466
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_mpc_mlp_training.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 31902
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_mpc_reward.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 8588
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_mpc_solver_bank.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 24714
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_mpc_weight_env.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 17358
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_network_backends.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 5404
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_round_boundary_training.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 14588
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_runtime_robustness.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 46678
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_state_builder.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6834
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_training_state_resume.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 13344
+        },
+        {
+          "path": "tests/__pycache__/test_dqn_weight_action_table.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 5251
+        },
+        {
+          "path": "tests/__pycache__/test_executed_reward_contract.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 18797
+        },
+        {
+          "path": "tests/__pycache__/test_fc_dp0_curve.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6414
+        },
+        {
+          "path": "tests/__pycache__/test_final_dataset_builder.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 9224
+        },
+        {
+          "path": "tests/__pycache__/test_final_dataset_feasibility.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 14256
+        },
+        {
+          "path": "tests/__pycache__/test_final_dataset_semantics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 12089
+        },
+        {
+          "path": "tests/__pycache__/test_final_dataset_source.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 5923
+        },
+        {
+          "path": "tests/__pycache__/test_formal_checkpoint_paths.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 7818
+        },
+        {
+          "path": "tests/__pycache__/test_formal_operating_dataset.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 12131
+        },
+        {
+          "path": "tests/__pycache__/test_ideal_reference_84_audit.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 7460
+        },
+        {
+          "path": "tests/__pycache__/test_mpc_soc_reference.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 9697
+        },
+        {
+          "path": "tests/__pycache__/test_operating_segment_dataset.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 2245
+        },
+        {
+          "path": "tests/__pycache__/test_operating_segment_repartition.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 2577
+        },
+        {
+          "path": "tests/__pycache__/test_rebuilt_operating_dataset.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 32651
+        },
+        {
+          "path": "tests/__pycache__/test_spline_1s_diagnostics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11648
+        },
+        {
+          "path": "tests/__pycache__/test_total_load_dataset_721.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6100
+        },
+        {
+          "path": "tests/__pycache__/test_unified_objective_calibration.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 4152
+        },
+        {
+          "path": "tests/__pycache__/test_v2_action_space.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 55331
+        },
+        {
+          "path": "tests/__pycache__/test_v2_ais_speed_sidecar.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11903
+        },
+        {
+          "path": "tests/__pycache__/test_v2_artifacts.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 30403
+        },
+        {
+          "path": "tests/__pycache__/test_v2_checkpoint_resume.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 18105
+        },
+        {
+          "path": "tests/__pycache__/test_v2_checkpoint_selection.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 34191
+        },
+        {
+          "path": "tests/__pycache__/test_v2_contracts.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 12383
+        },
+        {
+          "path": "tests/__pycache__/test_v2_data_guards.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 29606
+        },
+        {
+          "path": "tests/__pycache__/test_v2_degradation_models.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 49094
+        },
+        {
+          "path": "tests/__pycache__/test_v2_dqn_diagnostics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 7255
+        },
+        {
+          "path": "tests/__pycache__/test_v2_dqn_experiments.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 10823
+        },
+        {
+          "path": "tests/__pycache__/test_v2_dqn_training.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11694
+        },
+        {
+          "path": "tests/__pycache__/test_v2_economic_interval_semantics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 22691
+        },
+        {
+          "path": "tests/__pycache__/test_v2_energy_models.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 30200
+        },
+        {
+          "path": "tests/__pycache__/test_v2_failure_policy.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 4227
+        },
+        {
+          "path": "tests/__pycache__/test_v2_final_test_evaluation.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 35906
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_episode.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 27417
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_policy_evaluation.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 33710
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_preflight.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 14179
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_state.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6528
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_training_cli.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 21835
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_training_dataset.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 15989
+        },
+        {
+          "path": "tests/__pycache__/test_v2_formal_training_dataset.cpython-311.pyc",
+          "bytes": 15853
+        },
+        {
+          "path": "tests/__pycache__/test_v2_history_evaluation_profile.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6600
+        },
+        {
+          "path": "tests/__pycache__/test_v2_history_state.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 9022
+        },
+        {
+          "path": "tests/__pycache__/test_v2_history_study_cli.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 16466
+        },
+        {
+          "path": "tests/__pycache__/test_v2_history_study_selection.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 15024
+        },
+        {
+          "path": "tests/__pycache__/test_v2_m10_ablation.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 13081
+        },
+        {
+          "path": "tests/__pycache__/test_v2_multirate_env.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 40677
+        },
+        {
+          "path": "tests/__pycache__/test_v2_nonlinear_mpc.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 49118
+        },
+        {
+          "path": "tests/__pycache__/test_v2_objective_scale_audit.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 20326
+        },
+        {
+          "path": "tests/__pycache__/test_v2_parameter_freeze.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 9431
+        },
+        {
+          "path": "tests/__pycache__/test_v2_power_gap_interpolation.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 8337
+        },
+        {
+          "path": "tests/__pycache__/test_v2_power_trace_plots.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 10362
+        },
+        {
+          "path": "tests/__pycache__/test_v2_reward_scale_calibration.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 17175
+        },
+        {
+          "path": "tests/__pycache__/test_v2_segment_power_source.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 8375
+        },
+        {
+          "path": "tests/__pycache__/test_v2_shore_mode_sidecar.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 12092
+        },
+        {
+          "path": "tests/__pycache__/test_v2_state_and_economics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 38002
+        },
+        {
+          "path": "tests/__pycache__/test_v2_supervisory_aggregation.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 7069
+        },
+        {
+          "path": "tests/__pycache__/test_v2_supervisory_rules.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11294
+        },
+        {
+          "path": "tests/__pycache__/test_v2_tau_lpf_validation_screen.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 12016
+        },
+        {
+          "path": "tests/__pycache__/test_v2_train_objective_scale_runner.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11114
+        },
+        {
+          "path": "tests/__pycache__/test_v2_train_only_audits.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 32975
+        },
+        {
+          "path": "tests/__pycache__/test_v2_train_state_audit.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 53480
+        },
+        {
+          "path": "tests/__pycache__/test_v2_train_supervisory_audit.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 9740
+        },
+        {
+          "path": "tests/__pycache__/test_v2_validation_selection_cli.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 13795
+        },
+        {
+          "path": "tests/__pycache__/test_v2_zero_boundary_dataset.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 27804
+        },
+        {
+          "path": "tests/__pycache__/test_v2_zero_boundary_power_review.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11628
+        },
+        {
+          "path": "tests/__pycache__/test_v3_action_calibration.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 18058
+        },
+        {
+          "path": "tests/__pycache__/test_v3_closed_loop_screen.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 11016
+        },
+        {
+          "path": "tests/__pycache__/test_v3_double_dqn.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 3245
+        },
+        {
+          "path": "tests/__pycache__/test_v3_episode_replay.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 27140
+        },
+        {
+          "path": "tests/__pycache__/test_v3_persistence_control.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 13177
+        },
+        {
+          "path": "tests/__pycache__/test_v3_shore_settlement.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 4782
+        },
+        {
+          "path": "tests/__pycache__/test_v4_control.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 75470
+        },
+        {
+          "path": "tests/__pycache__/test_v4_control.cpython-311.pyc",
+          "bytes": 18877
+        },
+        {
+          "path": "tests/__pycache__/test_v4_dqn.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 18389
+        },
+        {
+          "path": "tests/__pycache__/test_v4_experiment_schedule.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 23937
+        },
+        {
+          "path": "tests/__pycache__/test_v4_experiment_schedule.cpython-311.pyc",
+          "bytes": 5578
+        },
+        {
+          "path": "tests/__pycache__/test_v4_failure_td.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 114366
+        },
+        {
+          "path": "tests/__pycache__/test_v4_failure_td.cpython-311.pyc",
+          "bytes": 39789
+        },
+        {
+          "path": "tests/__pycache__/test_v4_feedback_monitoring.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 66244
+        },
+        {
+          "path": "tests/__pycache__/test_v4_monitored_training.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 36531
+        },
+        {
+          "path": "tests/__pycache__/test_v4_monitored_training.cpython-311.pyc",
+          "bytes": 13857
+        },
+        {
+          "path": "tests/__pycache__/test_v4_n_step.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 33641
+        },
+        {
+          "path": "tests/__pycache__/test_v4_outcome_diagnostic.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6214
+        },
+        {
+          "path": "tests/__pycache__/test_v4_review_metrics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 25143
+        },
+        {
+          "path": "tests/__pycache__/test_v4_reward_feedback.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 67838
+        },
+        {
+          "path": "tests/__pycache__/test_v4_reward_feedback.cpython-311.pyc",
+          "bytes": 14253
+        },
+        {
+          "path": "tests/__pycache__/test_v4_td_scale_diagnostic.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 72136
+        },
+        {
+          "path": "tests/__pycache__/test_v4_training.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 33538
+        },
+        {
+          "path": "tests/__pycache__/test_v4_training.cpython-311.pyc",
+          "bytes": 14326
+        },
+        {
+          "path": "tests/__pycache__/test_validation_q_diagnostics.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6144
+        },
+        {
+          "path": "tests/__pycache__/test_zero_residual_numerical_negative_loads.cpython-311-pytest-9.1.1.pyc",
+          "bytes": 6203
+        }
+      ]
+    },
+    {
+      "path": "scripts/__pycache__",
+      "category": "python_cache",
+      "files": [
+        {
+          "path": "scripts/__pycache__/v4_td_scale_diagnostic.cpython-311.pyc",
+          "bytes": 53980
+        }
+      ]
+    },
+    {
+      "path": ".pytest_cache",
+      "category": "pytest_cache",
+      "files": [
+        {
+          "path": ".pytest_cache/.gitignore",
+          "bytes": 37
+        },
+        {
+          "path": ".pytest_cache/CACHEDIR.TAG",
+          "bytes": 191
+        },
+        {
+          "path": ".pytest_cache/README.md",
+          "bytes": 302
+        },
+        {
+          "path": ".pytest_cache/v/cache/lastfailed",
+          "bytes": 2
+        },
+        {
+          "path": ".pytest_cache/v/cache/nodeids",
+          "bytes": 23215
+        }
+      ]
+    },
+    {
+      "path": "outputs/v4_repository_td_audit_20261008/regression",
+      "category": "new_synthetic_regression_basetemp",
+      "files": [
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_cli_rejects_nonempty_outp0/original.txt",
+          "bytes": 8
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_controlled_repeated_failu0/learning_order_evidence.json",
+          "bytes": 4884
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_failed_greedy_train_skips0/report.json",
+          "bytes": 76228
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_failed_greedy_train_skips0/round_history.json",
+          "bytes": 76229
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_failed_greedy_trajectory_0/failed.json",
+          "bytes": 70222
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_failure_insertion_drives_0/report.json",
+          "bytes": 50635
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_failure_insertion_drives_0/round_001_exploratory_trajectories.json",
+          "bytes": 101445
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_failure_insertion_drives_0/round_001_train_trajectories.json",
+          "bytes": 88878
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_failure_insertion_drives_0/round_history.json",
+          "bytes": 50636
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_feedback_greedy_preserves0/greedy.json",
+          "bytes": 279963
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_first_step_infeasible_aft0/report.json",
+          "bytes": 50055
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_first_step_infeasible_aft0/round_history.json",
+          "bytes": 50056
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_fixed_review_keeps_diagno0/output/diagnostic_final_agent.pt",
+          "bytes": 58207
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_fixed_review_keeps_diagno0/output/episode_metrics.csv",
+          "bytes": 302
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_fixed_review_keeps_diagno0/output/profiles.json",
+          "bytes": 2375
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_fixed_review_keeps_diagno0/output/report.json",
+          "bytes": 16087
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_greedy_failure_preview_is0/readonly.json",
+          "bytes": 70292
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_historical_resume_cannot_0/v4_staged_beta_cadence_seed42/stage1_summary.json",
+          "bytes": 17
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_new_episode_credit_counts0/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_new_episode_credit_counts0/report.json",
+          "bytes": 61555
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_new_episode_credit_counts0/round_history.json",
+          "bytes": 61542
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_optimizer_target_mode_has0/replay16/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_optimizer_target_mode_has0/replay16/report.json",
+          "bytes": 61435
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_optimizer_target_mode_has0/replay16/round_history.json",
+          "bytes": 61436
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_optimizer_target_mode_has0/replay8/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_optimizer_target_mode_has0/replay8/report.json",
+          "bytes": 61447
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_optimizer_target_mode_has0/replay8/round_history.json",
+          "bytes": 61448
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_round_monitoring_does_not0/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_round_monitoring_does_not0/report.json",
+          "bytes": 124290
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_round_monitoring_does_not0/round_history.json",
+          "bytes": 124291
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_single_run_cli_end_to_end0/new_run/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_single_run_cli_end_to_end0/new_run/report.json",
+          "bytes": 62241
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_single_run_cli_end_to_end0/new_run/round_001_exploratory_trajectories.json",
+          "bytes": 279677
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_single_run_cli_end_to_end0/new_run/round_001_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_single_run_cli_end_to_end0/new_run/round_001_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_single_run_cli_end_to_end0/new_run/round_history.json",
+          "bytes": 62176
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_single_run_cli_end_to_end0/new_run/round_metrics.csv",
+          "bytes": 845
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_stage1_gate_selects_lowes0/worker/best_agent.pt",
+          "bytes": 61857
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_stage1_gate_selects_lowes0/worker/best_profiles.json",
+          "bytes": 45320
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_stage1_gate_selects_lowes0/worker/report.json",
+          "bytes": 61471
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_stage1_gate_selects_lowes0/worker/round_history.json",
+          "bytes": 61306
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_stage1_gate_selects_lowes0/worker/round_metrics.csv",
+          "bytes": 843
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb0/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb0/report.json",
+          "bytes": 61967
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb0/round_001_exploratory_trajectories.json",
+          "bytes": 279582
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb0/round_001_train_trajectories.json",
+          "bytes": 279453
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb0/round_001_validation_trajectories.json",
+          "bytes": 54603
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb0/round_history.json",
+          "bytes": 61968
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb1/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb1/report.json",
+          "bytes": 93957
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb1/round_001_exploratory_trajectories.json",
+          "bytes": 279677
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb1/round_001_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb1/round_001_validation_trajectories.json",
+          "bytes": 54635
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb1/round_002_exploratory_trajectories.json",
+          "bytes": 279931
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb1/round_002_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb1/round_002_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb1/round_history.json",
+          "bytes": 93958
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb2/best_agent.pt",
+          "bytes": 61985
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb2/report.json",
+          "bytes": 93938
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb2/round_001_exploratory_trajectories.json",
+          "bytes": 279601
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb2/round_001_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb2/round_001_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb2/round_002_exploratory_trajectories.json",
+          "bytes": 279921
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb2/round_002_train_trajectories.json",
+          "bytes": 279933
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb2/round_002_validation_trajectories.json",
+          "bytes": 54651
+        },
+        {
+          "path": "outputs/v4_repository_td_audit_20261008/regression/test_synthetic_schedules_feedb2/round_history.json",
+          "bytes": 93939
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "new_synthetic_regression_basetemp": {
+      "files": 66,
+      "bytes": 6700466
+    },
+    "pytest_cache": {
+      "files": 5,
+      "bytes": 23747
+    },
+    "python_cache": {
+      "files": 245,
+      "bytes": 4607280
+    },
+    "all": {
+      "files": 316,
+      "bytes": 11331493
+    }
+  },
+  "execution": {
+    "performed": false,
+    "reason": "automatic approval rejected both recursive and regular-file scoped deletion with blocked by policy; no more deletion attempted",
+    "rejected_attempts": 3,
+    "all_planned_files_still_present": true
+  }
+}

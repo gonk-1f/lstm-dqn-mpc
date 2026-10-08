@@ -1,0 +1,4152 @@
+{
+  "scope": "Synthetic fixed three-row branches; no Train/Validation/Test trajectories or payloads.",
+  "initial_soc": 0.2135,
+  "loads_kw": [
+    600.0,
+    1000.0,
+    0.0
+  ],
+  "prescribed_powers_after_first": [
+    600,
+    0
+  ],
+  "beta_soc": 500.0,
+  "first_actions_kw": [
+    0,
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100,
+    110,
+    120,
+    130,
+    140,
+    150,
+    160,
+    170,
+    180,
+    190,
+    200,
+    210,
+    220,
+    230,
+    240,
+    250,
+    260,
+    270,
+    280,
+    290,
+    300,
+    310,
+    320,
+    330,
+    340,
+    350,
+    360,
+    370,
+    380,
+    390,
+    400,
+    410,
+    420,
+    430,
+    440,
+    450,
+    460,
+    470,
+    480,
+    490,
+    500,
+    510,
+    520,
+    530,
+    540,
+    550,
+    560,
+    570,
+    580,
+    590,
+    600
+  ],
+  "safe_first_actions_kw": [
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100,
+    110,
+    120,
+    130,
+    140,
+    150,
+    160,
+    170,
+    180,
+    190,
+    200,
+    210,
+    220,
+    230,
+    240,
+    250,
+    260,
+    270,
+    280,
+    290,
+    300,
+    310,
+    320,
+    330,
+    340,
+    350,
+    360,
+    370,
+    380,
+    390,
+    400,
+    410,
+    420,
+    430,
+    440,
+    450,
+    460,
+    470,
+    480,
+    490,
+    500,
+    510,
+    520,
+    530,
+    540,
+    550,
+    560,
+    570,
+    580,
+    590,
+    600
+  ],
+  "failed_first_actions_kw": [
+    0,
+    10,
+    20,
+    30
+  ],
+  "unique_branch_count": 61,
+  "failure_branch_multiplicity": 16,
+  "corpus_trajectory_count": 121,
+  "economic_transitions_per_cycle": 235,
+  "successful_transitions_per_cycle": 171,
+  "failed_terminal_transitions_per_cycle": 64,
+  "corpus_cycles": 82,
+  "ledger_sha256": "bba44a175db6d72e6892ef41e246e67aa3f5987a63af8801c89e306072ddfba6",
+  "failure_reference": {
+    "reference_amount": 10132.660087898294,
+    "scale": 1.0,
+    "reference_split": "train",
+    "reference_count": 30,
+    "reference_statistic": "nearest_rank_p95_comparable_economic_cost",
+    "unit": "CNY-equivalent reward units; not actual expenditure",
+    "source_file": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_profiles.json",
+    "source_sha256": "3e1fae46266d99629116b52156840541a33136be92f9f4e68e1e8b03256a0642"
+  },
+  "cf_original_units": 10132.660087898294,
+  "allowed_frozen_cost_json": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\src\\v4\\failure_penalty_reference.json",
+  "allowed_frozen_cost_json_sha256": "28957a8d39657a0f2e4884c5585f31a0f2d6a896173abb5d29f85ab0bbf0f91e",
+  "frozen_train_completed_economic_cost_distribution": {
+    "count": 30,
+    "mean": 5187.168628097371,
+    "std": 2665.0855609894625,
+    "min": 1343.1574656058567,
+    "p05": 2102.893912553635,
+    "p50": 5180.8277490898445,
+    "p95": 10075.707898307133,
+    "max": 10468.9426056963
+  },
+  "cf_over_frozen_train_median_episode_cost": 1.9557994549574391,
+  "frozen_cost_scope": "comparable economic ledger of completed Train samples; excludes SOC shaping",
+  "raw_versus_redistributed_identity": [
+    {
+      "first_power_kw": 0,
+      "failed": true,
+      "raw_return": -10154.535137488558,
+      "redistributed_return": -10154.535137488558,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -2.875310606169872,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.999738984093426,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -10132.660087898294
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -2.875310606169872,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.999738984093426,
+          "immediate_battery_energy_adjustment": -6.094182825484836,
+          "terminal_correction": 6.094182825484836,
+          "failure_penalty_reward": -10132.660087898294
+        }
+      ]
+    },
+    {
+      "first_power_kw": 10,
+      "failed": true,
+      "raw_return": -10515.858840038529,
+      "redistributed_return": -10515.858840038529,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -364.2264063550868,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.97234578514929,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -10132.660087898294
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -364.2264063550868,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.97234578514929,
+          "immediate_battery_energy_adjustment": -5.992613111726712,
+          "terminal_correction": 5.992613111726712,
+          "failure_penalty_reward": -10132.660087898294
+        }
+      ]
+    },
+    {
+      "first_power_kw": 20,
+      "failed": true,
+      "raw_return": -10516.882106430143,
+      "redistributed_return": -10516.882106430143,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -365.2770461840888,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.944972347760274,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -10132.660087898294
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -365.2770461840888,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.944972347760274,
+          "immediate_battery_energy_adjustment": -5.8910433979686445,
+          "terminal_correction": 5.8910433979686445,
+          "failure_penalty_reward": -10132.660087898294
+        }
+      ]
+    },
+    {
+      "first_power_kw": 30,
+      "failed": true,
+      "raw_return": -10517.912330884901,
+      "redistributed_return": -10517.912330884901,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -366.33462431468115,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.91761867192637,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -10132.660087898294
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -366.33462431468115,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.91761867192637,
+          "immediate_battery_energy_adjustment": -5.789473684210577,
+          "terminal_correction": 5.789473684210577,
+          "failure_penalty_reward": -10132.660087898294
+        }
+      ]
+    },
+    {
+      "first_power_kw": 40,
+      "failed": false,
+      "raw_return": -967.4098526899471,
+      "redistributed_return": -967.4098526899471,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -367.40072604915247,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.89028475764758,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -70.95307968351334,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.999055341789283,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -404.01765151605525,
+          "soc_shaping_reward": -19.999055341789283,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -367.40072604915247,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.89028475764758,
+          "immediate_battery_energy_adjustment": -5.68790397045251,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -70.95307968351334,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.999055341789283,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -404.01765151605525,
+          "soc_shaping_reward": -19.999055341789283,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 9.750692520775658,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 50,
+      "failed": false,
+      "raw_return": -967.1330469782757,
+      "redistributed_return": -967.1330469782757,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -368.4780853609187,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.862970604923913,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -69.85016406155052,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.970950726860988,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.8499254971606,
+          "soc_shaping_reward": -19.970950726860988,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -368.4780853609187,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.862970604923913,
+          "immediate_battery_energy_adjustment": -5.5863342566944425,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -69.85016406155052,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.970950726860988,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.8499254971606,
+          "soc_shaping_reward": -19.970950726860988,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 9.64912280701759,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 60,
+      "failed": false,
+      "raw_return": -966.8727037587067,
+      "redistributed_return": -966.8727037587067,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -369.5714884772518,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.835676213755352,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -68.74724851314458,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.942865873487808,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.6825588075794,
+          "soc_shaping_reward": -19.942865873487808,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -369.5714884772518,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.835676213755352,
+          "immediate_battery_energy_adjustment": -5.484764542936318,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -68.74724851314458,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.942865873487808,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.6825588075794,
+          "soc_shaping_reward": -19.942865873487808,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 9.547553093259467,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 70,
+      "failed": false,
+      "raw_return": -966.6372039099604,
+      "redistributed_return": -966.6372039099604,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -370.6893165290086,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.80840158414191,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -67.64433303829549,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.91480078166974,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.5155511951749,
+          "soc_shaping_reward": -19.91480078166974,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -370.6893165290086,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.80840158414191,
+          "immediate_battery_energy_adjustment": -5.383194829178251,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -67.64433303829549,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.91480078166974,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.5155511951749,
+          "soc_shaping_reward": -19.91480078166974,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 9.445983379501456,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 80,
+      "failed": false,
+      "raw_return": -966.4146126814055,
+      "redistributed_return": -966.4146126814055,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -371.8196350175272,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.78114671608359,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.5414176370034,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.886755451406792,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.34890240797773,
+          "soc_shaping_reward": -19.886755451406792,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -371.8196350175272,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.78114671608359,
+          "immediate_battery_energy_adjustment": -5.281625115420184,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.5414176370034,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.886755451406792,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.34890240797773,
+          "soc_shaping_reward": -19.886755451406792,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 9.344413665743332,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 90,
+      "failed": false,
+      "raw_return": -966.1943155638087,
+      "redistributed_return": -966.1943155638087,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -372.9518296853764,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.753911609580378,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -65.43850230926817,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.858729882698956,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.1826121941858,
+          "soc_shaping_reward": -19.858729882698956,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -372.9518296853764,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.753911609580378,
+          "immediate_battery_energy_adjustment": -5.180055401662116,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -65.43850230926817,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.858729882698956,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.1826121941858,
+          "soc_shaping_reward": -19.858729882698956,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 9.242843951985265,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 100,
+      "failed": false,
+      "raw_return": -965.9763283990624,
+      "redistributed_return": -965.9763283990624,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -374.0859166260839,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.72669626463228,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -64.33558705508985,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.830724075546232,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.01668030216393,
+          "soc_shaping_reward": -19.830724075546232,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -374.0859166260839,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.72669626463228,
+          "immediate_battery_energy_adjustment": -5.078485687903992,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -64.33558705508985,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.830724075546232,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -403.01668030216393,
+          "soc_shaping_reward": -19.830724075546232,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 9.141274238227197,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 110,
+      "failed": false,
+      "raw_return": -965.7605117026114,
+      "redistributed_return": -965.7605117026114,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -375.2217566065616,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.699500681239304,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -63.23267187446841,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.80273802994863,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.85110648044486,
+          "soc_shaping_reward": -19.80273802994863,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -375.2217566065616,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.699500681239304,
+          "immediate_battery_energy_adjustment": -4.976915974145925,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -63.23267187446841,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.80273802994863,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.85110648044486,
+          "soc_shaping_reward": -19.80273802994863,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 9.03970452446913,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 120,
+      "failed": false,
+      "raw_return": -965.5465605891584,
+      "redistributed_return": -965.5465605891584,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -376.35904499281287,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.672324859401442,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -62.12975676740382,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.774771745906147,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.685890477728,
+          "soc_shaping_reward": -19.774771745906147,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -376.35904499281287,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.672324859401442,
+          "immediate_battery_energy_adjustment": -4.8753462603878575,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -62.12975676740382,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.774771745906147,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.685890477728,
+          "soc_shaping_reward": -19.774771745906147,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 8.938134810711063,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 130,
+      "failed": false,
+      "raw_return": -965.3339950377459,
+      "redistributed_return": -965.3339950377459,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -377.497302015013,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.645168799118697,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -61.026841733896234,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.74682522341877,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.52103204288045,
+          "soc_shaping_reward": -19.74682522341877,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -377.497302015013,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.645168799118697,
+          "immediate_battery_energy_adjustment": -4.773776546629733,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -61.026841733896234,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.74682522341877,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.52103204288045,
+          "soc_shaping_reward": -19.74682522341877,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 8.836565096952938,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 140,
+      "failed": false,
+      "raw_return": -965.1224013959538,
+      "redistributed_return": -965.1224013959538,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -378.6361142717082,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.618032500391063,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -59.92392677394551,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.718898462486514,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.35653092493607,
+          "soc_shaping_reward": -19.718898462486514,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -378.6361142717082,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.618032500391063,
+          "immediate_battery_energy_adjustment": -4.672206832871723,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -59.92392677394551,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.718898462486514,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.35653092493607,
+          "soc_shaping_reward": -19.718898462486514,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 8.734995383194871,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 150,
+      "failed": false,
+      "raw_return": -964.9124198319212,
+      "redistributed_return": -964.9124198319212,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -379.77612218183543,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.59091596321855,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -58.82101188755167,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.690991463109377,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.1923868730968,
+          "soc_shaping_reward": -19.690991463109377,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -379.77612218183543,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.59091596321855,
+          "immediate_battery_energy_adjustment": -4.570637119113599,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -58.82101188755167,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.690991463109377,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.1923868730968,
+          "soc_shaping_reward": -19.690991463109377,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 8.633425669436804,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 160,
+      "failed": false,
+      "raw_return": -964.7041488353948,
+      "redistributed_return": -964.7041488353948,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -380.9174244857733,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.563819187601148,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -57.718097074714734,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.66310422528735,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.02859963673086,
+          "soc_shaping_reward": -19.66310422528735,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -380.9174244857733,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.563819187601148,
+          "immediate_battery_energy_adjustment": -4.469067405355531,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -57.718097074714734,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.66310422528735,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -402.02859963673086,
+          "soc_shaping_reward": -19.66310422528735,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 8.531855955678736,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 170,
+      "failed": false,
+      "raw_return": -964.4975689820963,
+      "redistributed_return": -964.4975689820963,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -382.06000200970755,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.536742173538862,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -56.61518233543464,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.635236749020436,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.86516896537444,
+          "soc_shaping_reward": -19.635236749020436,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -382.06000200970755,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.536742173538862,
+          "immediate_battery_energy_adjustment": -4.367497691597464,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -56.61518233543464,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.635236749020436,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.86516896537444,
+          "soc_shaping_reward": -19.635236749020436,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 8.430286241920612,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 180,
+      "failed": false,
+      "raw_return": -964.292648322079,
+      "redistributed_return": -964.292648322079,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -383.20382305398766,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.509684921031692,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -55.512267669711555,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.607389034308643,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.7020946087308,
+          "soc_shaping_reward": -19.607389034308643,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -383.20382305398766,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.509684921031692,
+          "immediate_battery_energy_adjustment": -4.265927977839397,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -55.512267669711555,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.607389034308643,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.7020946087308,
+          "soc_shaping_reward": -19.607389034308643,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 8.328716528162545,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 190,
+      "failed": false,
+      "raw_return": -964.0893418678997,
+      "redistributed_return": -964.0893418678997,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -384.3488428813007,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.48264743007964,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -54.40935307754532,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.579561081151965,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.5393763166702,
+          "soc_shaping_reward": -19.579561081151965,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -384.3488428813007,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.48264743007964,
+          "immediate_battery_energy_adjustment": -4.164358264081329,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -54.40935307754532,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.579561081151965,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.5393763166702,
+          "soc_shaping_reward": -19.579561081151965,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 8.227146814404477,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 200,
+      "failed": false,
+      "raw_return": -963.8875910943142,
+      "redistributed_return": -963.8875910943142,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -385.495003216364,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.4556297006827,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -53.30643855893598,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.551752889550404,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.3770138392307,
+          "soc_shaping_reward": -19.551752889550404,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -385.495003216364,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.4556297006827,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -53.30643855893598,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.551752889550404,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.3770138392307,
+          "soc_shaping_reward": -19.551752889550404,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 8.125577100646353,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 210,
+      "failed": false,
+      "raw_return": -963.6873234654161,
+      "redistributed_return": -963.6873234654161,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -386.64223177306667,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.428631732840877,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -52.20352411388349,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.523964459503954,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.2150069266172,
+          "soc_shaping_reward": -19.523964459503954,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -386.64223177306667,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.428631732840877,
+          "immediate_battery_energy_adjustment": -3.9612188365651377,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -52.20352411388349,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.523964459503954,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.2150069266172,
+          "soc_shaping_reward": -19.523964459503954,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 8.024007386888343,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 220,
+      "failed": false,
+      "raw_return": -963.4885308627538,
+      "redistributed_return": -963.4885308627538,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -387.79052068258454,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.401653526554174,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -51.100609742387945,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.496195791012624,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.05335532920196,
+          "soc_shaping_reward": -19.496195791012624,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -387.79052068258454,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.401653526554174,
+          "immediate_battery_energy_adjustment": -3.8596491228070704,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -51.100609742387945,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.496195791012624,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -401.05335532920196,
+          "soc_shaping_reward": -19.496195791012624,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 7.922437673130219,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 230,
+      "failed": false,
+      "raw_return": -963.2916717975384,
+      "redistributed_return": -963.2916717975384,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -388.94032870558897,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.374695081822583,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -49.99769544444931,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.46844688407641,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.8920587975247,
+          "soc_shaping_reward": -19.46844688407641,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -388.94032870558897,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.374695081822583,
+          "immediate_battery_energy_adjustment": -3.758079409049003,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -49.99769544444931,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.46844688407641,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.8920587975247,
+          "soc_shaping_reward": -19.46844688407641,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 7.820867959372151,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 240,
+      "failed": false,
+      "raw_return": -963.0966836970285,
+      "redistributed_return": -963.0966836970285,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -390.0915935186323,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.347756398646105,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -48.89478122006763,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.440717738695305,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.731117082292,
+          "soc_shaping_reward": -19.440717738695305,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -390.0915935186323,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.347756398646105,
+          "immediate_battery_energy_adjustment": -3.656509695290879,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -48.89478122006763,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.440717738695305,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.731117082292,
+          "soc_shaping_reward": -19.440717738695305,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 7.719298245614084,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 250,
+      "failed": false,
+      "raw_return": -962.9033378863659,
+      "redistributed_return": -962.9033378863659,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -391.2440866959818,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.32083747702475,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -47.791867069242734,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.413008354869323,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.570529934378,
+          "soc_shaping_reward": -19.413008354869323,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -391.2440866959818,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.32083747702475,
+          "immediate_battery_energy_adjustment": -3.5549399815328115,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -47.791867069242734,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.413008354869323,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.570529934378,
+          "soc_shaping_reward": -19.413008354869323,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 7.61772853185596,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 260,
+      "failed": false,
+      "raw_return": -962.7113550753926,
+      "redistributed_return": -962.7113550753926,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -392.3975291964383,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.293938316958503,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -46.688952991974794,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.385318732598453,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.41029710482417,
+          "soc_shaping_reward": -19.385318732598453,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -392.3975291964383,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.293938316958503,
+          "immediate_battery_energy_adjustment": -3.453370267774744,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -46.688952991974794,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.385318732598453,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.41029710482417,
+          "soc_shaping_reward": -19.385318732598453,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 7.516158818097949,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 270,
+      "failed": false,
+      "raw_return": -962.5204038914312,
+      "redistributed_return": -962.5204038914312,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -393.5515898961156,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.267058918447372,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -45.58603898826375,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.3576488718827,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.2504183448391,
+          "soc_shaping_reward": -19.3576488718827,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -393.5515898961156,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.267058918447372,
+          "immediate_battery_energy_adjustment": -3.35180055401662,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -45.58603898826375,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.3576488718827,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.2504183448391,
+          "soc_shaping_reward": -19.3576488718827,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 7.414589104339825,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 280,
+      "failed": false,
+      "raw_return": -962.3301002094893,
+      "redistributed_return": -962.3301002094893,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -394.7058849186455,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.240199281491364,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -44.48312505810961,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.329998772722064,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.0908934057987,
+          "soc_shaping_reward": -19.329998772722064,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -394.7058849186455,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.240199281491364,
+          "immediate_battery_energy_adjustment": -3.2502308402586095,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -44.48312505810961,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.329998772722064,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -400.0908934057987,
+          "soc_shaping_reward": -19.329998772722064,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 7.313019390581758,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 290,
+      "failed": false,
+      "raw_return": -962.1400075199169,
+      "redistributed_return": -962.1400075199169,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -395.8599780028352,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.213359406090465,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -43.380211201512424,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.30236843511654,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.9317220392458,
+          "soc_shaping_reward": -19.30236843511654,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -395.8599780028352,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.213359406090465,
+          "immediate_battery_energy_adjustment": -3.1486611265004854,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -43.380211201512424,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.30236843511654,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.9317220392458,
+          "soc_shaping_reward": -19.30236843511654,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 7.21144967682369,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 300,
+      "failed": false,
+      "raw_return": -961.9497525468221,
+      "redistributed_return": -961.9497525468221,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -397.01349612108186,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.18653929224468,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -42.277297418472024,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.274757859066135,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.7729039968913,
+          "soc_shaping_reward": -19.274757859066135,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -397.01349612108186,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.18653929224468,
+          "immediate_battery_energy_adjustment": -3.047091412742418,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -42.277297418472024,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.274757859066135,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.7729039968913,
+          "soc_shaping_reward": -19.274757859066135,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 7.109879963065623,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 310,
+      "failed": false,
+      "raw_return": -961.7596910599232,
+      "redistributed_return": -961.7596910599232,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -398.16679529122644,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.159738939954014,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -41.174383708988586,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.24716704457084,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.61443903061246,
+          "soc_shaping_reward": -19.24716704457084,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -398.16679529122644,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.159738939954014,
+          "immediate_battery_energy_adjustment": -2.9455216989843507,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -41.174383708988586,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.24716704457084,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.61443903061246,
+          "soc_shaping_reward": -19.24716704457084,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 7.008310249307499,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 320,
+      "failed": false,
+      "raw_return": -961.5700791424425,
+      "redistributed_return": -961.5700791424425,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -399.3201318444462,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.132958349218466,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -40.071470073062045,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.21959599163067,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.4563268924545,
+          "soc_shaping_reward": -19.21959599163067,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -399.3201318444462,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.132958349218466,
+          "immediate_battery_energy_adjustment": -2.8439519852262265,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -40.071470073062045,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.21959599163067,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.4563268924545,
+          "soc_shaping_reward": -19.21959599163067,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 6.906740535549432,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 330,
+      "failed": false,
+      "raw_return": -961.3811508070334,
+      "redistributed_return": -961.3811508070334,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -400.47374004118234,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.10619752003803,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -38.968556510692395,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.192044700245606,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.29856733462935,
+          "soc_shaping_reward": -19.192044700245606,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -400.47374004118234,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.10619752003803,
+          "immediate_battery_energy_adjustment": -2.742382271468216,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -38.968556510692395,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.192044700245606,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.29856733462935,
+          "soc_shaping_reward": -19.192044700245606,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 6.805170821791364,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 340,
+      "failed": false,
+      "raw_return": -961.1931817357139,
+      "redistributed_return": -961.1931817357139,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -401.6278958110735,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.079456452412714,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -37.865643021879656,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.164513170415663,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.14116010951676,
+          "soc_shaping_reward": -19.164513170415663,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -401.6278958110735,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.079456452412714,
+          "immediate_battery_energy_adjustment": -2.640812557710092,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -37.865643021879656,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.164513170415663,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -399.14116010951676,
+          "soc_shaping_reward": -19.164513170415663,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 6.70360110803324,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 350,
+      "failed": false,
+      "raw_return": -961.0064891963073,
+      "redistributed_return": -961.0064891963073,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -402.782916669396,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.05273514634251,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -36.762729606623815,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.137001402140836,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.98410496966335,
+          "soc_shaping_reward": -19.137001402140836,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -402.782916669396,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.05273514634251,
+          "immediate_battery_energy_adjustment": -2.5392428439520245,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -36.762729606623815,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.137001402140836,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.98410496966335,
+          "soc_shaping_reward": -19.137001402140836,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 6.60203139427523,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 360,
+      "failed": false,
+      "raw_return": -960.821432525711,
+      "redistributed_return": -960.821432525711,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -403.93916220033356,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.02603360182742,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -35.659816264924864,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.109509395421124,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.82740166778296,
+          "soc_shaping_reward": -19.109509395421124,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -403.93916220033356,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.02603360182742,
+          "immediate_battery_energy_adjustment": -2.437673130193957,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -35.659816264924864,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.109509395421124,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.82740166778296,
+          "soc_shaping_reward": -19.109509395421124,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 6.500461680517105,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 370,
+      "failed": false,
+      "raw_return": -960.6384143362466,
+      "redistributed_return": -960.6384143362466,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -405.0970352633261,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.99935181886745,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -34.556902996782824,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.08203715025652,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.6710499567572,
+          "soc_shaping_reward": -19.08203715025652,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -405.0970352633261,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.99935181886745,
+          "immediate_battery_energy_adjustment": -2.33610341643589,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -34.556902996782824,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.08203715025652,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.6710499567572,
+          "soc_shaping_reward": -19.08203715025652,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 6.398891966759038,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 380,
+      "failed": false,
+      "raw_return": -960.4579847261758,
+      "redistributed_return": -960.4579847261758,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -406.25708620358733,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.972689797462593,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -33.45398980219768,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.054584666647038,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.51504958963415,
+          "soc_shaping_reward": -19.054584666647038,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -406.25708620358733,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.972689797462593,
+          "immediate_battery_energy_adjustment": -2.2345337026777656,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -33.45398980219768,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.054584666647038,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.51504958963415,
+          "soc_shaping_reward": -19.054584666647038,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 6.297322253000971,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 390,
+      "failed": false,
+      "raw_return": -960.280500970052,
+      "redistributed_return": -960.280500970052,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -407.4196725424544,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.946047537612852,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -32.351076681169374,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.027151944592678,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.35940031962997,
+          "soc_shaping_reward": -19.027151944592678,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -407.4196725424544,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.946047537612852,
+          "immediate_battery_energy_adjustment": -2.1329639889196983,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -32.351076681169374,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -19.027151944592678,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.35940031962997,
+          "soc_shaping_reward": -19.027151944592678,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 6.1957525392428465,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 400,
+      "failed": false,
+      "raw_return": -960.1056071253272,
+      "redistributed_return": -960.1056071253272,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -408.5844385839965,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.919425039318227,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -31.248163633698084,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.999738984093426,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.2041019001275,
+          "soc_shaping_reward": -18.999738984093426,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -408.5844385839965,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.919425039318227,
+          "immediate_battery_energy_adjustment": -2.031394275161631,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -31.248163633698084,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.999738984093426,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.2041019001275,
+          "soc_shaping_reward": -18.999738984093426,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 6.094182825484836,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 410,
+      "failed": false,
+      "raw_return": -959.9328587590132,
+      "redistributed_return": -959.9328587590132,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -409.750940141675,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.892822302578715,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -30.14525065978364,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.97234578514929,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.04915408467724,
+          "soc_shaping_reward": -18.97234578514929,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -409.750940141675,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.892822302578715,
+          "immediate_battery_energy_adjustment": -1.9298245614035068,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -30.14525065978364,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.97234578514929,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -398.04915408467724,
+          "soc_shaping_reward": -18.97234578514929,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 5.992613111726712,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 420,
+      "failed": false,
+      "raw_return": -959.7617467961186,
+      "redistributed_return": -959.7617467961186,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -410.91866838678095,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.866239327394325,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -29.042337759426097,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.944972347760274,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.8945566269967,
+          "soc_shaping_reward": -18.944972347760274,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -410.91866838678095,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.866239327394325,
+          "immediate_battery_energy_adjustment": -1.8282548476454963,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -29.042337759426097,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.944972347760274,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.8945566269967,
+          "soc_shaping_reward": -18.944972347760274,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 5.8910433979686445,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 430,
+      "failed": false,
+      "raw_return": -959.5916946632564,
+      "redistributed_return": -959.5916946632564,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -412.0870469920426,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.839676113765044,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -27.939424932625446,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.91761867192637,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.74030928097056,
+          "soc_shaping_reward": -18.91761867192637,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -412.0870469920426,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.839676113765044,
+          "immediate_battery_energy_adjustment": -1.726685133887372,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -27.939424932625446,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.91761867192637,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.74030928097056,
+          "soc_shaping_reward": -18.91761867192637,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 5.789473684210577,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 440,
+      "failed": false,
+      "raw_return": -959.4220569190376,
+      "redistributed_return": -959.4220569190376,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -413.25543076201876,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.813132661690883,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -26.836512179381643,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.89028475764758,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.58641180065115,
+          "soc_shaping_reward": -18.89028475764758,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -413.25543076201876,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.813132661690883,
+          "immediate_battery_energy_adjustment": -1.6251154201293048,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -26.836512179381643,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.89028475764758,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.58641180065115,
+          "soc_shaping_reward": -18.89028475764758,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 5.68790397045251,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 450,
+      "failed": false,
+      "raw_return": -959.2521238535724,
+      "redistributed_return": -959.2521238535724,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -414.4231102326002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.78660897117184,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -25.73359949969485,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.862970604923913,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.4328639402577,
+          "soc_shaping_reward": -18.862970604923913,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -414.4231102326002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.78660897117184,
+          "immediate_battery_energy_adjustment": -1.5235457063712374,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -25.73359949969485,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.862970604923913,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.4328639402577,
+          "soc_shaping_reward": -18.862970604923913,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 5.5863342566944425,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 460,
+      "failed": false,
+      "raw_return": -959.0818302634693,
+      "redistributed_return": -959.0818302634693,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -415.59002044600885,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.760105042207904,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -24.6306868935649,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.835676213755352,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.27966545417706,
+          "soc_shaping_reward": -18.835676213755352,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -415.59002044600885,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.760105042207904,
+          "immediate_battery_energy_adjustment": -1.4219759926131132,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -24.6306868935649,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.835676213755352,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.27966545417706,
+          "soc_shaping_reward": -18.835676213755352,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 5.484764542936318,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 470,
+      "failed": false,
+      "raw_return": -958.9117028745065,
+      "redistributed_return": -958.9117028745065,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -416.75668837346893,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.73362087479909,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -23.527774360991852,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.80840158414191,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.1268160969629,
+          "soc_shaping_reward": -18.80840158414191,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -416.75668837346893,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.73362087479909,
+          "immediate_battery_energy_adjustment": -1.3204062788551028,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -23.527774360991852,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.80840158414191,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.14999999999996,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -397.1268160969629,
+          "soc_shaping_reward": -18.80840158414191,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 5.383194829178251,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 480,
+      "failed": false,
+      "raw_return": -958.9383830763936,
+      "redistributed_return": -958.9383830763936,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -418.1197556499689,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.70715646894539,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -22.42486190197565,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.781146716083583,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.97431562333645,
+          "soc_shaping_reward": -18.781146716083583,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -418.1197556499689,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.70715646894539,
+          "immediate_battery_energy_adjustment": -1.2188365650969786,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -22.42486190197565,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.781146716083583,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.97431562333645,
+          "soc_shaping_reward": -18.781146716083583,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 5.281625115420127,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 490,
+      "failed": false,
+      "raw_return": -958.7698075855457,
+      "redistributed_return": -958.7698075855457,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -419.2871592370353,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.680711824646803,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -21.321949516516398,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.753911609580378,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.82216378818634,
+          "soc_shaping_reward": -18.753911609580378,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -419.2871592370353,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.680711824646803,
+          "immediate_battery_energy_adjustment": -1.1172668513389112,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -21.321949516516398,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.753911609580378,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.82216378818634,
+          "soc_shaping_reward": -18.753911609580378,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 5.180055401662116,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 500,
+      "failed": false,
+      "raw_return": -958.6027082788019,
+      "redistributed_return": -958.6027082788019,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -420.45563125645185,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.654286941903333,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -20.219037204614107,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.72669626463228,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.670360346568,
+          "soc_shaping_reward": -18.72669626463228,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -420.45563125645185,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.654286941903333,
+          "immediate_battery_energy_adjustment": -1.015697137580844,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -20.219037204614107,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.72669626463228,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.670360346568,
+          "soc_shaping_reward": -18.72669626463228,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 5.078485687903992,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 510,
+      "failed": false,
+      "raw_return": -958.4376129350462,
+      "redistributed_return": -958.4376129350462,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -421.6256997318793,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.62788182071498,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -19.116124966268654,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.699500681239304,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.5189050537046,
+          "soc_shaping_reward": -18.699500681239304,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -421.6256997318793,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.62788182071498,
+          "immediate_battery_energy_adjustment": -0.9141274238227766,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -19.116124966268654,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.699500681239304,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.5189050537046,
+          "soc_shaping_reward": -18.699500681239304,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 4.976915974145925,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 520,
+      "failed": false,
+      "raw_return": -958.275097059094,
+      "redistributed_return": -958.275097059094,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -422.797940412743,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.601496461081748,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -18.013212801480105,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.672324859401442,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.3677976649862,
+          "soc_shaping_reward": -18.672324859401442,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -422.797940412743,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.601496461081748,
+          "immediate_battery_energy_adjustment": -0.8125577100647092,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -18.013212801480105,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.672324859401442,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.3677976649862,
+          "soc_shaping_reward": -18.672324859401442,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 4.8753462603878575,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 530,
+      "failed": false,
+      "raw_return": -958.1159496325694,
+      "redistributed_return": -958.1159496325694,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -423.97314252510955,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.575130863003622,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -16.910300710248396,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.645168799118697,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.2170379359704,
+          "soc_shaping_reward": -18.645168799118697,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -423.97314252510955,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.575130863003622,
+          "immediate_battery_energy_adjustment": -0.710987996306585,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -16.910300710248396,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.645168799118697,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.2170379359704,
+          "soc_shaping_reward": -18.645168799118697,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 4.773776546629733,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 540,
+      "failed": false,
+      "raw_return": -957.9607555378221,
+      "redistributed_return": -957.9607555378221,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -425.15189119560387,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.548785026480612,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -15.807388692573644,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.618032500391063,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.0666256223819,
+          "soc_shaping_reward": -18.618032500391063,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -425.15189119560387,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.548785026480612,
+          "immediate_battery_energy_adjustment": -0.6094182825485177,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -15.807388692573644,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.618032500391063,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -396.0666256223819,
+          "soc_shaping_reward": -18.618032500391063,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 4.672206832871723,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 550,
+      "failed": false,
+      "raw_return": -957.8090263444207,
+      "redistributed_return": -957.8090263444207,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -426.33369823790224,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.52245895151273,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -14.704476748455793,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.59091596321855,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.91656048011276,
+          "soc_shaping_reward": -18.59091596321855,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -426.33369823790224,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.52245895151273,
+          "immediate_battery_energy_adjustment": -0.5078485687904504,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -14.704476748455793,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.59091596321855,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.91656048011276,
+          "soc_shaping_reward": -18.59091596321855,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 4.570637119113599,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 560,
+      "failed": false,
+      "raw_return": -957.660161164155,
+      "redistributed_return": -957.660161164155,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -427.51796300773543,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.49615263809995,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -13.601564877894898,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.563819187601148,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.7668422652224,
+          "soc_shaping_reward": -18.563819187601148,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -427.51796300773543,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.49615263809995,
+          "immediate_battery_energy_adjustment": -0.40627885503238303,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -13.601564877894898,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.563819187601148,
+          "immediate_battery_energy_adjustment": -4.062788550323148,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.7668422652224,
+          "soc_shaping_reward": -18.563819187601148,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 4.469067405355531,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 570,
+      "failed": false,
+      "raw_return": -957.5134903999507,
+      "redistributed_return": -957.5134903999507,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -428.70401615180265,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.469866086242288,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -12.498653080890845,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.536742173538862,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.6174707339371,
+          "soc_shaping_reward": -18.536742173538862,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -428.70401615180265,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.469866086242288,
+          "immediate_battery_energy_adjustment": -0.30470914127425885,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -12.498653080890845,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.536742173538862,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.6174707339371,
+          "soc_shaping_reward": -18.536742173538862,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 4.367497691597464,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 580,
+      "failed": false,
+      "raw_return": -957.3682713107755,
+      "redistributed_return": -957.3682713107755,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -429.8911151726778,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.443599295939745,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -11.395741357443635,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.509684921031692,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.4684456426509,
+          "soc_shaping_reward": -18.509684921031692,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -429.8911151726778,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.443599295939745,
+          "immediate_battery_energy_adjustment": -0.20313942751619152,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -11.395741357443635,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.509684921031692,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.4684456426509,
+          "soc_shaping_reward": -18.509684921031692,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 4.265927977839397,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 590,
+      "failed": false,
+      "raw_return": -957.2236853586744,
+      "redistributed_return": -957.2236853586744,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -431.0784417758447,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.41735226719232,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -10.292829707553382,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.48264743007964,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.31976674792475,
+          "soc_shaping_reward": -18.48264743007964,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -431.0784417758447,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.41735226719232,
+          "immediate_battery_energy_adjustment": -0.10156971375812418,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -10.292829707553382,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.48264743007964,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000002,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.31976674792475,
+          "soc_shaping_reward": -18.48264743007964,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 4.164358264081329,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    },
+    {
+      "first_power_kw": 600,
+      "failed": false,
+      "raw_return": -957.0797545990321,
+      "redistributed_return": -957.0797545990321,
+      "return_difference": 0.0,
+      "raw_reward_components": [
+        {
+          "executed_economic_reward": -432.2660182599594,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.391125000000002,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -9.189918131220027,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.4556297006827,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.17143380648713,
+          "soc_shaping_reward": -18.4556297006827,
+          "immediate_battery_energy_adjustment": 0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        }
+      ],
+      "redistributed_reward_components": [
+        {
+          "executed_economic_reward": -432.2660182599594,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -17.391125000000002,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -9.189918131220027,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -0.0,
+          "soc_shaping_reward": -18.4556297006827,
+          "immediate_battery_energy_adjustment": -4.062788550323205,
+          "terminal_correction": 0.0,
+          "failure_penalty_reward": -0.0
+        },
+        {
+          "executed_economic_reward": -66.15000000000008,
+          "observed_shore_reward": -0.0,
+          "modeled_terminal_settlement_reward": -395.17143380648713,
+          "soc_shaping_reward": -18.4556297006827,
+          "immediate_battery_energy_adjustment": -0.0,
+          "terminal_correction": 4.062788550323205,
+          "failure_penalty_reward": -0.0
+        }
+      ]
+    }
+  ],
+  "reward_scale_profiles": {
+    "raw": {
+      "ordinary_nonterminal_abs_reward": {
+        "count": 114,
+        "mean": 238.45506811977955,
+        "std": 180.12618026286188,
+        "min": 27.645547831902725,
+        "p05": 34.02991122451308,
+        "p50": 238.62157291605132,
+        "p95": 443.1050945606502,
+        "max": 449.6571432599594
+      },
+      "successful_terminal_abs_reward": {
+        "count": 57,
+        "mean": 484.87631406971605,
+        "std": 3.052450308854049,
+        "min": 479.77706350716994,
+        "p05": 480.2689964387174,
+        "p50": 484.8259228840851,
+        "p95": 489.6193665176891,
+        "max": 490.1667068578445
+      },
+      "failed_terminal_abs_reward": {
+        "count": 4,
+        "mean": 10426.297103710533,
+        "std": 156.90352407358662,
+        "min": 10154.535137488558,
+        "p05": 10208.733692871054,
+        "p50": 10516.370473234336,
+        "p95": 10517.757797216687,
+        "max": 10517.912330884901
+      },
+      "completed_segment_abs_return": {
+        "count": 57,
+        "mean": 961.7864503092752,
+        "std": 3.0195110086637102,
+        "min": 957.0797545990321,
+        "p05": 957.4844465821157,
+        "p50": 961.5700791424425,
+        "p95": 966.6843038797097,
+        "max": 967.4098526899471
+      },
+      "cf_over_median_ordinary_step": 42.463302726878894,
+      "cf_over_median_complete_segment_return": 10.537619990146645
+    },
+    "redistributed": {
+      "ordinary_nonterminal_abs_reward": {
+        "count": 114,
+        "mean": 241.90843838755427,
+        "std": 179.43716077137157,
+        "min": 31.70833638222593,
+        "p05": 38.09269977483626,
+        "p50": 243.49691917643918,
+        "p95": 443.67896344338334,
+        "max": 449.6571432599594
+      },
+      "successful_terminal_abs_reward": {
+        "count": 57,
+        "mean": 477.9695735341666,
+        "std": 1.3818325410343284,
+        "min": 475.71427495684674,
+        "p05": 475.92181268987156,
+        "p50": 477.9191823485357,
+        "p95": 480.15306919543605,
+        "max": 480.4160143370688
+      },
+      "failed_terminal_abs_reward": {
+        "count": 4,
+        "mean": 10426.297103710533,
+        "std": 156.90352407358662,
+        "min": 10154.535137488558,
+        "p05": 10208.733692871054,
+        "p50": 10516.370473234336,
+        "p95": 10517.757797216687,
+        "max": 10517.912330884901
+      },
+      "completed_segment_abs_return": {
+        "count": 57,
+        "mean": 961.7864503092752,
+        "std": 3.0195110086637102,
+        "min": 957.0797545990321,
+        "p05": 957.4844465821157,
+        "p50": 961.5700791424425,
+        "p95": 966.6843038797097,
+        "max": 967.4098526899471
+      },
+      "cf_over_median_ordinary_step": 41.6130935954722,
+      "cf_over_median_complete_segment_return": 10.537619990146645
+    }
+  },
+  "scaling_identity_checks": [
+    {
+      "alpha": 1.0,
+      "cf_scaled": 10132.660087898294,
+      "mode": "raw",
+      "max_component_sum_identity_error": 5.684341886080802e-14,
+      "completed_return_range_scaled": [
+        957.0797545990321,
+        967.4098526899471
+      ]
+    },
+    {
+      "alpha": 1.0,
+      "cf_scaled": 10132.660087898294,
+      "mode": "redistributed",
+      "max_component_sum_identity_error": 5.684341886080802e-14,
+      "completed_return_range_scaled": [
+        957.0797545990321,
+        967.4098526899471
+      ]
+    },
+    {
+      "alpha": 0.01,
+      "cf_scaled": 101.32660087898294,
+      "mode": "raw",
+      "max_component_sum_identity_error": 1.4210854715202004e-14,
+      "completed_return_range_scaled": [
+        9.57079754599032,
+        9.67409852689947
+      ]
+    },
+    {
+      "alpha": 0.01,
+      "cf_scaled": 101.32660087898294,
+      "mode": "redistributed",
+      "max_component_sum_identity_error": 1.4210854715202004e-14,
+      "completed_return_range_scaled": [
+        9.57079754599032,
+        9.67409852689947
+      ]
+    },
+    {
+      "alpha": 0.001,
+      "cf_scaled": 10.132660087898294,
+      "mode": "raw",
+      "max_component_sum_identity_error": 1.7763568394002505e-15,
+      "completed_return_range_scaled": [
+        0.957079754599032,
+        0.9674098526899472
+      ]
+    },
+    {
+      "alpha": 0.001,
+      "cf_scaled": 10.132660087898294,
+      "mode": "redistributed",
+      "max_component_sum_identity_error": 1.7763568394002505e-15,
+      "completed_return_range_scaled": [
+        0.957079754599032,
+        0.9674098526899472
+      ]
+    }
+  ],
+  "ledger_units": "Original actual/modelled accounting CNY; no scaled ledger copies.",
+  "scaled_reward_units": "alpha times original CNY-equivalent reward, including SOC shaping and CF."
+}

@@ -1,0 +1,1049 @@
+{
+  "moves": [
+    {
+      "old_path": "docs/method_v2_multiscale_dqn_wmpc.md",
+      "new_path": "docs/history/v2/method_v2_multiscale_dqn_wmpc.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "95c514db2aae874079cf26ee0d56330a06feb636a60c7125a45211f259f69bf0",
+      "original_bytes": 9273,
+      "after_link_remap_sha256": "95c514db2aae874079cf26ee0d56330a06feb636a60c7125a45211f259f69bf0",
+      "after_bytes": 9273,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-14-multiscale-dqn-wmpc-v2.md",
+      "new_path": "docs/history/v2/plans/2026-09-14-multiscale-dqn-wmpc-v2.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "6fba5b208cc57a5c13a4c9b27335a5994058a77ddada4bcb1dcf34316425a3fc",
+      "original_bytes": 11156,
+      "after_link_remap_sha256": "6fba5b208cc57a5c13a4c9b27335a5994058a77ddada4bcb1dcf34316425a3fc",
+      "after_bytes": 11156,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-21-objective-scale-audit.md",
+      "new_path": "docs/history/v2/plans/2026-09-21-objective-scale-audit.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "e60dc350e20c79635e91afd830919bfcf291bc23ec2abc95ea2f429a08c33830",
+      "original_bytes": 3239,
+      "after_link_remap_sha256": "e60dc350e20c79635e91afd830919bfcf291bc23ec2abc95ea2f429a08c33830",
+      "after_bytes": 3239,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-22-economic-model-closure.md",
+      "new_path": "docs/history/v2/plans/2026-09-22-economic-model-closure.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "48c5aa6c15137b5a0bc5fd7690aa2543180b256f08eebce7edb088cabaf11dc2",
+      "original_bytes": 18680,
+      "after_link_remap_sha256": "48c5aa6c15137b5a0bc5fd7690aa2543180b256f08eebce7edb088cabaf11dc2",
+      "after_bytes": 18680,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-22-objective-audit-data-rules.md",
+      "new_path": "docs/history/v2/plans/2026-09-22-objective-audit-data-rules.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "a6dd143499832096ce236ca9ab6f8b20c148daa341bd761723b5e2a8866bc4fa",
+      "original_bytes": 3653,
+      "after_link_remap_sha256": "a6dd143499832096ce236ca9ab6f8b20c148daa341bd761723b5e2a8866bc4fa",
+      "after_bytes": 3653,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-22-v2-parameter-freeze.md",
+      "new_path": "docs/history/v2/plans/2026-09-22-v2-parameter-freeze.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "a696132e50312b73e7b8409b5df67f8abd562f2f72e4f660d10596d58e7304d5",
+      "original_bytes": 2418,
+      "after_link_remap_sha256": "a696132e50312b73e7b8409b5df67f8abd562f2f72e4f660d10596d58e7304d5",
+      "after_bytes": 2418,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-23-segment-power-cubic-spline.md",
+      "new_path": "docs/history/v2/plans/2026-09-23-segment-power-cubic-spline.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "dcce5becddd5f57ad8c25feaab25843a544579d0add706dc0fc30a24a741f290",
+      "original_bytes": 18112,
+      "after_link_remap_sha256": "dcce5becddd5f57ad8c25feaab25843a544579d0add706dc0fc30a24a741f290",
+      "after_bytes": 18112,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-23-zero-boundary-dataset.md",
+      "new_path": "docs/history/v2/plans/2026-09-23-zero-boundary-dataset.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "84f3cf345aa5c87916c7c6874624406c14d39b98ec59e6a33706e7430cd0e3eb",
+      "original_bytes": 32515,
+      "after_link_remap_sha256": "84f3cf345aa5c87916c7c6874624406c14d39b98ec59e6a33706e7430cd0e3eb",
+      "after_bytes": 32515,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-24-v2-dqn-state-audit.md",
+      "new_path": "docs/history/v2/plans/2026-09-24-v2-dqn-state-audit.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "50cb55e6c8510d61b0a02c2d3d2f0f7f18dfeff143961cdd85bf1470c6963dae",
+      "original_bytes": 11796,
+      "after_link_remap_sha256": "50cb55e6c8510d61b0a02c2d3d2f0f7f18dfeff143961cdd85bf1470c6963dae",
+      "after_bytes": 11796,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-24-v2-formal-training-readiness.md",
+      "new_path": "docs/history/v2/plans/2026-09-24-v2-formal-training-readiness.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "2905b47842dc41407aaf6b0ea96c5210dd24b8ba1a4be935fd510fc737358cfd",
+      "original_bytes": 7254,
+      "after_link_remap_sha256": "2905b47842dc41407aaf6b0ea96c5210dd24b8ba1a4be935fd510fc737358cfd",
+      "after_bytes": 7254,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-24-zero-boundary-power-review.md",
+      "new_path": "docs/history/v2/plans/2026-09-24-zero-boundary-power-review.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "241c1d3143b5fe7ae84ee0630f7988d283a5c3014fa0988b4d6f8ed59b8f7d6c",
+      "original_bytes": 25513,
+      "after_link_remap_sha256": "241c1d3143b5fe7ae84ee0630f7988d283a5c3014fa0988b4d6f8ed59b8f7d6c",
+      "after_bytes": 25513,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-25-fc-independent-shore-classification.md",
+      "new_path": "docs/history/v2/plans/2026-09-25-fc-independent-shore-classification.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "7b3b6e4f9c73a9ff35d4d5b8ce335a912551437f899971d830116c0c379611c5",
+      "original_bytes": 6404,
+      "after_link_remap_sha256": "7b3b6e4f9c73a9ff35d4d5b8ce335a912551437f899971d830116c0c379611c5",
+      "after_bytes": 6404,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-25-final-s8-state-audit.md",
+      "new_path": "docs/history/v2/plans/2026-09-25-final-s8-state-audit.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "523a33babecb4c7bc40cf56aa4c04c9f517bc095656322f948931858ff7c1f13",
+      "original_bytes": 4926,
+      "after_link_remap_sha256": "523a33babecb4c7bc40cf56aa4c04c9f517bc095656322f948931858ff7c1f13",
+      "after_bytes": 4926,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-25-v2-shore-event-s8.md",
+      "new_path": "docs/history/v2/plans/2026-09-25-v2-shore-event-s8.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "7ca91f238ad7e02f2bfe2a9efdc568c5164580084f51f61afbf2c51cc218f499",
+      "original_bytes": 13698,
+      "after_link_remap_sha256": "7ca91f238ad7e02f2bfe2a9efdc568c5164580084f51f61afbf2c51cc218f499",
+      "after_bytes": 13698,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-26-v2-terminal-failure-learning.md",
+      "new_path": "docs/history/v2/plans/2026-09-26-v2-terminal-failure-learning.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "2bcbc1184006be7ea6df94a07366ff32214448d3f1eaf29eb83f7bc4a61306f3",
+      "original_bytes": 14057,
+      "after_link_remap_sha256": "2bcbc1184006be7ea6df94a07366ff32214448d3f1eaf29eb83f7bc4a61306f3",
+      "after_bytes": 14057,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-26-v2-validation-selection-final-test.md",
+      "new_path": "docs/history/v2/plans/2026-09-26-v2-validation-selection-final-test.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "22751f5c808fd7a1b244771b2be005adcc56d7dba89aa72a0b671736356909f6",
+      "original_bytes": 18658,
+      "after_link_remap_sha256": "22751f5c808fd7a1b244771b2be005adcc56d7dba89aa72a0b671736356909f6",
+      "after_bytes": 18658,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-27-v2-dqn-history-action-hyperparameter-study.md",
+      "new_path": "docs/history/v2/plans/2026-09-27-v2-dqn-history-action-hyperparameter-study.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "b828b7e4030efe3c9760b41b0d3a44f35bfd9770ccbe079b8dc91caf55499d31",
+      "original_bytes": 44124,
+      "after_link_remap_sha256": "b828b7e4030efe3c9760b41b0d3a44f35bfd9770ccbe079b8dc91caf55499d31",
+      "after_bytes": 44124,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-29-h4-final-evaluation.md",
+      "new_path": "docs/history/v2/plans/2026-09-29-h4-final-evaluation.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "1fcf438587590a99c2642b2692734a51fb1354912b46d0a9510b3163044fbf8b",
+      "original_bytes": 4113,
+      "after_link_remap_sha256": "1fcf438587590a99c2642b2692734a51fb1354912b46d0a9510b3163044fbf8b",
+      "after_bytes": 4113,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-29-tau-lpf-validation-screen.md",
+      "new_path": "docs/history/v2/plans/2026-09-29-tau-lpf-validation-screen.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "972caa0b3c820ec8b6c1b32a0a85a8abfb1b78ba33fe686af5c5d94b3c59c038",
+      "original_bytes": 1157,
+      "after_link_remap_sha256": "972caa0b3c820ec8b6c1b32a0a85a8abfb1b78ba33fe686af5c5d94b3c59c038",
+      "after_bytes": 1157,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-30-v2-lpf-single-commit.md",
+      "new_path": "docs/history/v2/plans/2026-09-30-v2-lpf-single-commit.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "d0a2b412df5a0af174b029e45e79a6193511402f4dcf46b54e9f062ecfc79a20",
+      "original_bytes": 15254,
+      "after_link_remap_sha256": "d0a2b412df5a0af174b029e45e79a6193511402f4dcf46b54e9f062ecfc79a20",
+      "after_bytes": 15254,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-02-v2-economic-cycle-correction.md",
+      "new_path": "docs/history/v2/plans/2026-10-02-v2-economic-cycle-correction.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "42bb79908edc0d2dad27dcb4b48795a8b476bbe13077be46f21084a8041f96a3",
+      "original_bytes": 3744,
+      "after_link_remap_sha256": "42bb79908edc0d2dad27dcb4b48795a8b476bbe13077be46f21084a8041f96a3",
+      "after_bytes": 3744,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-03-v2-m10-action-hold-ablation.md",
+      "new_path": "docs/history/v2/plans/2026-10-03-v2-m10-action-hold-ablation.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "eca533e382bacde20482416c7a5a9a4a868ff30a4d68059cd7a8ffd837a042e4",
+      "original_bytes": 981,
+      "after_link_remap_sha256": "eca533e382bacde20482416c7a5a9a4a868ff30a4d68059cd7a8ffd837a042e4",
+      "after_bytes": 981,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-06-direct-power-mlp.md",
+      "new_path": "docs/history/v4/plans/2026-10-06-direct-power-mlp.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "fb0f9aca4f3c651986090fab4b27d0c3e77a1547c23d0260f60045ee38035734",
+      "original_bytes": 3514,
+      "after_link_remap_sha256": "fb0f9aca4f3c651986090fab4b27d0c3e77a1547c23d0260f60045ee38035734",
+      "after_bytes": 3514,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-06-v3-economic-action-calibration.md",
+      "new_path": "docs/history/v3/plans/2026-10-06-v3-economic-action-calibration.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "68efb2218cacd5d30fc76a6cc1d1188bc0edd0e09dc6850c36df8e5f56e14216",
+      "original_bytes": 2484,
+      "after_link_remap_sha256": "68efb2218cacd5d30fc76a6cc1d1188bc0edd0e09dc6850c36df8e5f56e14216",
+      "after_bytes": 2484,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-06-v3-mode-gated-episode-replay.md",
+      "new_path": "docs/history/v3/plans/2026-10-06-v3-mode-gated-episode-replay.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "88dba39f55a830846f6c28538c307b77ad8975e9d0d0b4f26c292c89346f24b7",
+      "original_bytes": 2114,
+      "after_link_remap_sha256": "88dba39f55a830846f6c28538c307b77ad8975e9d0d0b4f26c292c89346f24b7",
+      "after_bytes": 2114,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-07-v4-beta250-review.md",
+      "new_path": "docs/history/v4/plans/2026-10-07-v4-beta250-review.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "690ecf5a95177cbed7c44d35a0c92b05d3fc82e0389d398ee7650b4cad4bcd30",
+      "original_bytes": 1800,
+      "after_link_remap_sha256": "690ecf5a95177cbed7c44d35a0c92b05d3fc82e0389d398ee7650b4cad4bcd30",
+      "after_bytes": 1800,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-07-v4-failure-terminal-settlement.md",
+      "new_path": "docs/history/v4/plans/2026-10-07-v4-failure-terminal-settlement.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "c15d0dd810857892fca8206f6585337d08991631cd1c93397cfc6765fe7854b4",
+      "original_bytes": 4024,
+      "after_link_remap_sha256": "c15d0dd810857892fca8206f6585337d08991631cd1c93397cfc6765fe7854b4",
+      "after_bytes": 4024,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-07-v4-staged-beta-cadence-study.md",
+      "new_path": "docs/history/v4/plans/2026-10-07-v4-staged-beta-cadence-study.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "b67d1d2d4407c9fb60dbf91851aa5a676627d1dd314fae710451f584eef69dee",
+      "original_bytes": 2987,
+      "after_link_remap_sha256": "b67d1d2d4407c9fb60dbf91851aa5a676627d1dd314fae710451f584eef69dee",
+      "after_bytes": 2987,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-08-v4-failure-economic-td.md",
+      "new_path": "docs/history/v4/plans/2026-10-08-v4-failure-economic-td.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "3b3ca43e8b10e73c41bc37511ebab297f4a451bdc2468385daa8b4f1dd3aeb5b",
+      "original_bytes": 4008,
+      "after_link_remap_sha256": "3b3ca43e8b10e73c41bc37511ebab297f4a451bdc2468385daa8b4f1dd3aeb5b",
+      "after_bytes": 4008,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-08-v4-reward-feedback.md",
+      "new_path": "docs/history/v4/plans/2026-10-08-v4-reward-feedback.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "fc672c0468b318428c610ae1e377e6910bcbba3c6a12ea379787114856c2c3cd",
+      "original_bytes": 4660,
+      "after_link_remap_sha256": "fc672c0468b318428c610ae1e377e6910bcbba3c6a12ea379787114856c2c3cd",
+      "after_bytes": 4660,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-21-objective-scale-audit-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-21-objective-scale-audit-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "237f50a64015bf1d39e2d177dfcd6b6b35a87a983fc3d44a4f3e5232e2579813",
+      "original_bytes": 2922,
+      "after_link_remap_sha256": "237f50a64015bf1d39e2d177dfcd6b6b35a87a983fc3d44a4f3e5232e2579813",
+      "after_bytes": 2922,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-22-economic-model-closure-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-22-economic-model-closure-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "e94df64710163109c0501add93b268e177bc1dd6458f9e3b9629403be96ef6a1",
+      "original_bytes": 11298,
+      "after_link_remap_sha256": "e94df64710163109c0501add93b268e177bc1dd6458f9e3b9629403be96ef6a1",
+      "after_bytes": 11298,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-22-objective-audit-data-rules-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-22-objective-audit-data-rules-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "c34b7134f45cfaad5fe3d4bd9c6bf8fa643335fee61d21757a96cbb8b1f6322b",
+      "original_bytes": 2562,
+      "after_link_remap_sha256": "c34b7134f45cfaad5fe3d4bd9c6bf8fa643335fee61d21757a96cbb8b1f6322b",
+      "after_bytes": 2562,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-23-segment-power-cubic-spline-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-23-segment-power-cubic-spline-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "065aafb96da473eef4e9634fd5f0af1ddb97aea522b766efc8a663a630c914b5",
+      "original_bytes": 4839,
+      "after_link_remap_sha256": "065aafb96da473eef4e9634fd5f0af1ddb97aea522b766efc8a663a630c914b5",
+      "after_bytes": 4839,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-23-zero-boundary-dataset-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-23-zero-boundary-dataset-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "2cf06a9ec8cf95dc0d07ebb8babfe889adae6a57e73e51d2a4c0a88a64dc3e22",
+      "original_bytes": 10583,
+      "after_link_remap_sha256": "2cf06a9ec8cf95dc0d07ebb8babfe889adae6a57e73e51d2a4c0a88a64dc3e22",
+      "after_bytes": 10583,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-24-v2-dqn-state-audit-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-24-v2-dqn-state-audit-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "5c06bc9796a93efc62ab59c5098ed6695767711534775537ab9adea0a6a1b8b9",
+      "original_bytes": 10112,
+      "after_link_remap_sha256": "5c06bc9796a93efc62ab59c5098ed6695767711534775537ab9adea0a6a1b8b9",
+      "after_bytes": 10112,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-24-v2-formal-training-readiness-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-24-v2-formal-training-readiness-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "330c4a0865d6b61367ca76174b3509619b3debc6718b2d7660a83fcf48d2028d",
+      "original_bytes": 15107,
+      "after_link_remap_sha256": "330c4a0865d6b61367ca76174b3509619b3debc6718b2d7660a83fcf48d2028d",
+      "after_bytes": 15107,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-24-zero-boundary-power-review-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-24-zero-boundary-power-review-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "42a573e043d20d4448ceec61f33b1362e393f5d73851ee0c25a51372dc816d40",
+      "original_bytes": 3439,
+      "after_link_remap_sha256": "42a573e043d20d4448ceec61f33b1362e393f5d73851ee0c25a51372dc816d40",
+      "after_bytes": 3439,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-25-shore-classification-without-fc-gate-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-25-shore-classification-without-fc-gate-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "a902ebd2940e48935e634ae5c46d6f3477fb846e0129b55244e024cb0601b64d",
+      "original_bytes": 3385,
+      "after_link_remap_sha256": "a902ebd2940e48935e634ae5c46d6f3477fb846e0129b55244e024cb0601b64d",
+      "after_bytes": 3385,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-25-v2-shore-event-s8-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-25-v2-shore-event-s8-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "88f2158d339f54a794beb36486eb745e929e079f4448c39b2e0c25d1fd290de4",
+      "original_bytes": 6560,
+      "after_link_remap_sha256": "88f2158d339f54a794beb36486eb745e929e079f4448c39b2e0c25d1fd290de4",
+      "after_bytes": 6560,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-26-v2-terminal-failure-learning-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-26-v2-terminal-failure-learning-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "6384396c110598650ae0fa7dc42e7dfd576e35e3681a5e607188bc7f69e838a1",
+      "original_bytes": 7514,
+      "after_link_remap_sha256": "6384396c110598650ae0fa7dc42e7dfd576e35e3681a5e607188bc7f69e838a1",
+      "after_bytes": 7514,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-26-v2-validation-selection-final-test-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-26-v2-validation-selection-final-test-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "8b0d15c3b2ebcc35dd162b29ff7bc4dfa456d46353bad32f0a83f44fc76ad9a1",
+      "original_bytes": 6896,
+      "after_link_remap_sha256": "8b0d15c3b2ebcc35dd162b29ff7bc4dfa456d46353bad32f0a83f44fc76ad9a1",
+      "after_bytes": 6896,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-27-v2-dqn-history-action-hyperparameter-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-27-v2-dqn-history-action-hyperparameter-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "5e99ed0e26d2954f55d1f15da34d344ef537ea42e145df941f83cf77d1b4260c",
+      "original_bytes": 17936,
+      "after_link_remap_sha256": "5e99ed0e26d2954f55d1f15da34d344ef537ea42e145df941f83cf77d1b4260c",
+      "after_bytes": 17936,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "be6ef2180ea1758c8dc1df60e43bf516746e49d435ccc98c22536c642465e8b7",
+      "original_bytes": 6004,
+      "after_link_remap_sha256": "be6ef2180ea1758c8dc1df60e43bf516746e49d435ccc98c22536c642465e8b7",
+      "after_bytes": 6004,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-10-02-v2-economic-cycle-correction-design.md",
+      "new_path": "docs/history/v2/specs/2026-10-02-v2-economic-cycle-correction-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "9fde00a8feb754790864da155e6e8a66324df202252db74dab8bf4521ca4f3d4",
+      "original_bytes": 1370,
+      "after_link_remap_sha256": "9fde00a8feb754790864da155e6e8a66324df202252db74dab8bf4521ca4f3d4",
+      "after_bytes": 1370,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-10-03-v2-m10-action-hold-ablation-design.md",
+      "new_path": "docs/history/v2/specs/2026-10-03-v2-m10-action-hold-ablation-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report",
+      "original_sha256": "70ac6a27eecb394ec08ac4ef2900e2946177a8ed191013debececfc307487a17",
+      "original_bytes": 2287,
+      "after_link_remap_sha256": "70ac6a27eecb394ec08ac4ef2900e2946177a8ed191013debececfc307487a17",
+      "after_bytes": 2287,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_action_space_design.md",
+      "new_path": "docs/history/v2/v2_action_space_design.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "22fe39d273220a269a11232368f38d760b083ca6f63a9abc1aaba692e30d8947",
+      "original_bytes": 8717,
+      "after_link_remap_sha256": "22fe39d273220a269a11232368f38d760b083ca6f63a9abc1aaba692e30d8947",
+      "after_bytes": 8717,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_battery_degradation_model.md",
+      "new_path": "docs/reference/models/v2_battery_degradation_model.md",
+      "classification": "physical_economic_model_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "45bceae2c017aeec4e82257aab41ba307ecdf0b20b8b2d95eeba19d9adf65a55",
+      "original_bytes": 3454,
+      "after_link_remap_sha256": "45bceae2c017aeec4e82257aab41ba307ecdf0b20b8b2d95eeba19d9adf65a55",
+      "after_bytes": 3454,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_data_provenance.md",
+      "new_path": "docs/reference/data/v2_data_provenance.md",
+      "classification": "data_provenance_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "5e9172c4cfab84b4d8f508f4944d7aea085992f060b194be6251438cf837f3af",
+      "original_bytes": 3080,
+      "after_link_remap_sha256": "5e9172c4cfab84b4d8f508f4944d7aea085992f060b194be6251438cf837f3af",
+      "after_bytes": 3080,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_economic_parameters.md",
+      "new_path": "docs/reference/models/v2_economic_parameters.md",
+      "classification": "physical_economic_model_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "1bd5746b4f9430abae41f54af458adbd3df5a971ccffb1edb6c7291c82fc3063",
+      "original_bytes": 7384,
+      "after_link_remap_sha256": "1bd5746b4f9430abae41f54af458adbd3df5a971ccffb1edb6c7291c82fc3063",
+      "after_bytes": 7384,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_failure_penalty_calibration.md",
+      "new_path": "docs/history/v2/v2_failure_penalty_calibration.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "e6e53fc487c112a94d2fd0774053c25ae766e68c83c28fbe86c8fbe4c9f16c44",
+      "original_bytes": 1704,
+      "after_link_remap_sha256": "e6e53fc487c112a94d2fd0774053c25ae766e68c83c28fbe86c8fbe4c9f16c44",
+      "after_bytes": 1704,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_fc_degradation_model.md",
+      "new_path": "docs/reference/models/v2_fc_degradation_model.md",
+      "classification": "physical_economic_model_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "fc5862c91d814f5cecdcf1ddb2a898219ca40cf9831f80e0b6da441d87dc2188",
+      "original_bytes": 6540,
+      "after_link_remap_sha256": "fc5862c91d814f5cecdcf1ddb2a898219ca40cf9831f80e0b6da441d87dc2188",
+      "after_bytes": 6540,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_formal_training_runbook.md",
+      "new_path": "docs/history/v2/v2_formal_training_runbook.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "140aca65bb91b0afe21cc23d1bbde1efb057aae8d4e75d5f41bf59ab9e102531",
+      "original_bytes": 10940,
+      "after_link_remap_sha256": "140aca65bb91b0afe21cc23d1bbde1efb057aae8d4e75d5f41bf59ab9e102531",
+      "after_bytes": 10940,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_objective_scale_audit.md",
+      "new_path": "docs/history/v2/v2_objective_scale_audit.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "f2a7ac9a183dedeac17ab873e0cdbfaff80e8809f2eac4e72e1831853df2abd5",
+      "original_bytes": 3602,
+      "after_link_remap_sha256": "f2a7ac9a183dedeac17ab873e0cdbfaff80e8809f2eac4e72e1831853df2abd5",
+      "after_bytes": 3602,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_plant_configuration.md",
+      "new_path": "docs/reference/models/v2_plant_configuration.md",
+      "classification": "physical_economic_model_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "1063aef33802ad8205842771fe9ad287aa82e2944e65929cc6c20ca75505518e",
+      "original_bytes": 2327,
+      "after_link_remap_sha256": "1063aef33802ad8205842771fe9ad287aa82e2944e65929cc6c20ca75505518e",
+      "after_bytes": 2327,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_raw_excel_inventory.md",
+      "new_path": "docs/reference/data/v2_raw_excel_inventory.md",
+      "classification": "data_provenance_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "2759db50b703cdc5ce873b8ad29fa6b1d38b47421e65fd27bd4a9eec6a915abc",
+      "original_bytes": 4250,
+      "after_link_remap_sha256": "2759db50b703cdc5ce873b8ad29fa6b1d38b47421e65fd27bd4a9eec6a915abc",
+      "after_bytes": 4250,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_remaining_training_work.md",
+      "new_path": "docs/history/v2/v2_remaining_training_work.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "532779b5cee5d4f84961cd3139b30d2e05b17876d7e19115f210cc3bfd028f1e",
+      "original_bytes": 1630,
+      "after_link_remap_sha256": "532779b5cee5d4f84961cd3139b30d2e05b17876d7e19115f210cc3bfd028f1e",
+      "after_bytes": 1630,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_rl_mpc_literature_and_train_ablation_2026-10-05.md",
+      "new_path": "docs/history/v2/v2_rl_mpc_literature_and_train_ablation_2026-10-05.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "d53f98ba3e316942a091bab394de05e8237bd6aa1fbc8af0404b61ae796a84ad",
+      "original_bytes": 8827,
+      "after_link_remap_sha256": "d53f98ba3e316942a091bab394de05e8237bd6aa1fbc8af0404b61ae796a84ad",
+      "after_bytes": 8827,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v2_timescale_selection.md",
+      "new_path": "docs/history/v2/v2_timescale_selection.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "5da99d1c40c8a4c7b41304e356bf86c81d7ead08ba6c3b0eeec2a8c506dd0312",
+      "original_bytes": 6044,
+      "after_link_remap_sha256": "5da99d1c40c8a4c7b41304e356bf86c81d7ead08ba6c3b0eeec2a8c506dd0312",
+      "after_bytes": 6044,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v3_persistence_dqn_mpc.md",
+      "new_path": "docs/history/v3/v3_persistence_dqn_mpc.md",
+      "classification": "historical_v3_method_diagnostics",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "b5af0872259ed3d2cfd5d5c5c5d14d19c56d42ed3fd9acbafed75b330de40545",
+      "original_bytes": 12321,
+      "after_link_remap_sha256": "b5af0872259ed3d2cfd5d5c5c5d14d19c56d42ed3fd9acbafed75b330de40545",
+      "after_bytes": 12321,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v3_predictive_control.md",
+      "new_path": "docs/history/v3/v3_predictive_control.md",
+      "classification": "historical_v3_method_diagnostics",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "efe2382aefefa264444ba43e01d0d2e07eb19d69c9f30a003477c433e85c5882",
+      "original_bytes": 7777,
+      "after_link_remap_sha256": "efe2382aefefa264444ba43e01d0d2e07eb19d69c9f30a003477c433e85c5882",
+      "after_bytes": 7777,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "new_path": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "d5b3f5adbbd17a86beb31d796175ddcfb7928076cfa199432437c4d3085de8dd",
+      "original_bytes": 10261,
+      "after_link_remap_sha256": "49b10b76ec8efe6ec83385961b47ca2d219698b93a4791e9bedc6dda1b7c33be",
+      "after_bytes": 10291,
+      "link_only_changed": true
+    },
+    {
+      "old_path": "docs/v4_cleanup_2026-10-07.md",
+      "new_path": "docs/history/v4/v4_cleanup_2026-10-07.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "669b6df17cb92396b67b19504886f50af98a0cd54439e598293d26c9f38fa8fb",
+      "original_bytes": 3470,
+      "after_link_remap_sha256": "669b6df17cb92396b67b19504886f50af98a0cd54439e598293d26c9f38fa8fb",
+      "after_bytes": 3470,
+      "link_only_changed": false
+    },
+    {
+      "old_path": "docs/v4_reward_feedback_implementation_2026-10-08.md",
+      "new_path": "docs/history/v4/v4_reward_feedback_implementation_2026-10-08.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "b5b12d98d13cd92ea528deea46dc9d32f6eab09430fb10a60a75258e59d3300b",
+      "original_bytes": 9524,
+      "after_link_remap_sha256": "4462e7aa80732e77276eb910a151090fb65acd9ac9b6e464be5fcf0e3dfc8500",
+      "after_bytes": 9536,
+      "link_only_changed": true
+    },
+    {
+      "old_path": "docs/v4_staged_beta_cadence_2026-10-08.md",
+      "new_path": "docs/history/v4/v4_staged_beta_cadence_2026-10-08.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "6bd61e10466e478688515fa804eba42b89a3aad09c1e3e5e222c8c4b80933aad",
+      "original_bytes": 10078,
+      "after_link_remap_sha256": "e911cfff902a73c2323bc0fca3270c216d7f344d81d9dd96617aff8db200c4ea",
+      "after_bytes": 10118,
+      "link_only_changed": true
+    },
+    {
+      "old_path": "docs/v4_status_2026-10-07.md",
+      "new_path": "docs/history/v4/v4_status_2026-10-07.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "3854cf1fdb0768ab44df10ba94cb6827ea334e8d1707b33e5424e1e19b1dcb51",
+      "original_bytes": 17302,
+      "after_link_remap_sha256": "e2f80ad9c2193087273990860a462b370f529af54466aceedbf39ab2e9f7f608",
+      "after_bytes": 17331,
+      "link_only_changed": true
+    },
+    {
+      "old_path": "docs/v4_training_failure_audit_2026-10-06.md",
+      "new_path": "docs/history/v4/v4_training_failure_audit_2026-10-06.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit",
+      "original_sha256": "3fa853d25550c03df883dd85b03b0eb71993d93123ae75271007ee0e48b18dcd",
+      "original_bytes": 7360,
+      "after_link_remap_sha256": "3fa853d25550c03df883dd85b03b0eb71993d93123ae75271007ee0e48b18dcd",
+      "after_bytes": 7360,
+      "link_only_changed": false
+    }
+  ],
+  "link_only_rewrites": [
+    {
+      "path": "docs/history/v4/README_legacy_pre_d111c99.md",
+      "original_location": "README.md",
+      "before_sha256": "e3c0b175848eccdc3fcc043997f7d29337580ce09d88d66ee66b574d210973e9",
+      "after_sha256": "8297881e12a4a4b13c1f118b6bf52bda75d402842020aaad70d150ee314f3d2d",
+      "link_updates": [
+        {
+          "line": 5,
+          "old_destination": "docs/v4_status_2026-10-07.md",
+          "new_destination": "v4_status_2026-10-07.md",
+          "resolved_target": "docs/history/v4/v4_status_2026-10-07.md"
+        },
+        {
+          "line": 6,
+          "old_destination": "docs/v4_beta250_40r_review_2026-10-07.md",
+          "new_destination": "v4_beta250_40r_review_2026-10-07.md",
+          "resolved_target": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md"
+        },
+        {
+          "line": 9,
+          "old_destination": "docs/v4_cleanup_2026-10-07.md",
+          "new_destination": "v4_cleanup_2026-10-07.md",
+          "resolved_target": "docs/history/v4/v4_cleanup_2026-10-07.md"
+        },
+        {
+          "line": 14,
+          "old_destination": "docs/v3_persistence_dqn_mpc.md",
+          "new_destination": "../v3/v3_persistence_dqn_mpc.md",
+          "resolved_target": "docs/history/v3/v3_persistence_dqn_mpc.md"
+        },
+        {
+          "line": 16,
+          "old_destination": "docs/v3_predictive_control.md",
+          "new_destination": "../v3/v3_predictive_control.md",
+          "resolved_target": "docs/history/v3/v3_predictive_control.md"
+        },
+        {
+          "line": 61,
+          "old_destination": "docs/v2_formal_training_runbook.md",
+          "new_destination": "../v2/v2_formal_training_runbook.md",
+          "resolved_target": "docs/history/v2/v2_formal_training_runbook.md"
+        },
+        {
+          "line": 65,
+          "old_destination": "docs/method_v2_multiscale_dqn_wmpc.md",
+          "new_destination": "../v2/method_v2_multiscale_dqn_wmpc.md",
+          "resolved_target": "docs/history/v2/method_v2_multiscale_dqn_wmpc.md"
+        },
+        {
+          "line": 66,
+          "old_destination": "docs/superpowers/specs/2026-09-24-v2-formal-training-readiness-design.md",
+          "new_destination": "../v2/specs/2026-09-24-v2-formal-training-readiness-design.md",
+          "resolved_target": "docs/history/v2/specs/2026-09-24-v2-formal-training-readiness-design.md"
+        },
+        {
+          "line": 67,
+          "old_destination": "docs/v2_data_provenance.md",
+          "new_destination": "../../reference/data/v2_data_provenance.md",
+          "resolved_target": "docs/reference/data/v2_data_provenance.md"
+        },
+        {
+          "line": 67,
+          "old_destination": "docs/v2_plant_configuration.md",
+          "new_destination": "../../reference/models/v2_plant_configuration.md",
+          "resolved_target": "docs/reference/models/v2_plant_configuration.md"
+        },
+        {
+          "line": 68,
+          "old_destination": "docs/v2_fc_efficiency_model.md",
+          "new_destination": "../../v2_fc_efficiency_model.md",
+          "resolved_target": "docs/v2_fc_efficiency_model.md"
+        },
+        {
+          "line": 68,
+          "old_destination": "docs/v2_economic_parameters.md",
+          "new_destination": "../../reference/models/v2_economic_parameters.md",
+          "resolved_target": "docs/reference/models/v2_economic_parameters.md"
+        },
+        {
+          "line": 69,
+          "old_destination": "docs/v2_fc_degradation_model.md",
+          "new_destination": "../../reference/models/v2_fc_degradation_model.md",
+          "resolved_target": "docs/reference/models/v2_fc_degradation_model.md"
+        },
+        {
+          "line": 69,
+          "old_destination": "docs/v2_battery_degradation_model.md",
+          "new_destination": "../../reference/models/v2_battery_degradation_model.md",
+          "resolved_target": "docs/reference/models/v2_battery_degradation_model.md"
+        },
+        {
+          "line": 70,
+          "old_destination": "docs/v2_action_space_design.md",
+          "new_destination": "../v2/v2_action_space_design.md",
+          "resolved_target": "docs/history/v2/v2_action_space_design.md"
+        },
+        {
+          "line": 70,
+          "old_destination": "docs/v2_dqn_state_audit.md",
+          "new_destination": "../../v2_dqn_state_audit.md",
+          "resolved_target": "docs/v2_dqn_state_audit.md"
+        },
+        {
+          "line": 79,
+          "old_destination": "docs/archive_v1/",
+          "new_destination": "../../archive_v1",
+          "resolved_target": "docs/archive_v1"
+        }
+      ]
+    },
+    {
+      "path": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "original_location": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "before_sha256": "d5b3f5adbbd17a86beb31d796175ddcfb7928076cfa199432437c4d3085de8dd",
+      "after_sha256": "49b10b76ec8efe6ec83385961b47ca2d219698b93a4791e9bedc6dda1b7c33be",
+      "link_updates": [
+        {
+          "line": 5,
+          "old_destination": "results/v4_beta250_40r_seed42.json",
+          "new_destination": "../../results/v4_beta250_40r_seed42.json",
+          "resolved_target": "docs/results/v4_beta250_40r_seed42.json"
+        },
+        {
+          "line": 5,
+          "old_destination": "results/v4_beta250_40r_seed42_rounds.csv",
+          "new_destination": "../../results/v4_beta250_40r_seed42_rounds.csv",
+          "resolved_target": "docs/results/v4_beta250_40r_seed42_rounds.csv"
+        },
+        {
+          "line": 124,
+          "old_destination": "figures/v4_beta250_40r_seed42/training_curves.png",
+          "new_destination": "../../figures/v4_beta250_40r_seed42/training_curves.png",
+          "resolved_target": "docs/figures/v4_beta250_40r_seed42/training_curves.png"
+        },
+        {
+          "line": 130,
+          "old_destination": "figures/v4_beta250_40r_seed42/zero_boundary_036_power_soc.png",
+          "new_destination": "../../figures/v4_beta250_40r_seed42/zero_boundary_036_power_soc.png",
+          "resolved_target": "docs/figures/v4_beta250_40r_seed42/zero_boundary_036_power_soc.png"
+        },
+        {
+          "line": 134,
+          "old_destination": "figures/v4_beta250_40r_seed42/zero_boundary_004_power_soc.png",
+          "new_destination": "../../figures/v4_beta250_40r_seed42/zero_boundary_004_power_soc.png",
+          "resolved_target": "docs/figures/v4_beta250_40r_seed42/zero_boundary_004_power_soc.png"
+        }
+      ]
+    },
+    {
+      "path": "docs/history/v4/v4_reward_feedback_implementation_2026-10-08.md",
+      "original_location": "docs/v4_reward_feedback_implementation_2026-10-08.md",
+      "before_sha256": "b5b12d98d13cd92ea528deea46dc9d32f6eab09430fb10a60a75258e59d3300b",
+      "after_sha256": "4462e7aa80732e77276eb910a151090fb65acd9ac9b6e464be5fcf0e3dfc8500",
+      "link_updates": [
+        {
+          "line": 91,
+          "old_destination": "results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json",
+          "new_destination": "../../results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json",
+          "resolved_target": "docs/results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json"
+        },
+        {
+          "line": 91,
+          "old_destination": "results/v4_reward_feedback_implementation_20261008/verification.json",
+          "new_destination": "../../results/v4_reward_feedback_implementation_20261008/verification.json",
+          "resolved_target": "docs/results/v4_reward_feedback_implementation_20261008/verification.json"
+        }
+      ]
+    },
+    {
+      "path": "docs/history/v4/v4_staged_beta_cadence_2026-10-08.md",
+      "original_location": "docs/v4_staged_beta_cadence_2026-10-08.md",
+      "before_sha256": "6bd61e10466e478688515fa804eba42b89a3aad09c1e3e5e222c8c4b80933aad",
+      "after_sha256": "e911cfff902a73c2323bc0fca3270c216d7f344d81d9dd96617aff8db200c4ea",
+      "link_updates": [
+        {
+          "line": 64,
+          "old_destination": "results/v4_staged_beta_cadence_seed42/",
+          "new_destination": "../../results/v4_staged_beta_cadence_seed42",
+          "resolved_target": "docs/results/v4_staged_beta_cadence_seed42"
+        },
+        {
+          "line": 66,
+          "old_destination": "figures/v4_staged_beta_cadence_seed42/stage1_completion.png",
+          "new_destination": "../../figures/v4_staged_beta_cadence_seed42/stage1_completion.png",
+          "resolved_target": "docs/figures/v4_staged_beta_cadence_seed42/stage1_completion.png"
+        },
+        {
+          "line": 70,
+          "old_destination": "results/v4_staged_beta_cadence_seed42/reconstruction_audit.json",
+          "new_destination": "../../results/v4_staged_beta_cadence_seed42/reconstruction_audit.json",
+          "resolved_target": "docs/results/v4_staged_beta_cadence_seed42/reconstruction_audit.json"
+        },
+        {
+          "line": 84,
+          "old_destination": "figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png",
+          "new_destination": "../../figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png",
+          "resolved_target": "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png"
+        },
+        {
+          "line": 105,
+          "old_destination": "results/v4_staged_beta_cadence_seed42/raw/",
+          "new_destination": "../../results/v4_staged_beta_cadence_seed42/raw",
+          "resolved_target": "docs/results/v4_staged_beta_cadence_seed42/raw"
+        },
+        {
+          "line": 105,
+          "old_destination": "results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json",
+          "new_destination": "../../results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json",
+          "resolved_target": "docs/results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json"
+        },
+        {
+          "line": 105,
+          "old_destination": "results/v4_staged_beta_cadence_seed42/study_summary.json",
+          "new_destination": "../../results/v4_staged_beta_cadence_seed42/study_summary.json",
+          "resolved_target": "docs/results/v4_staged_beta_cadence_seed42/study_summary.json"
+        }
+      ]
+    },
+    {
+      "path": "docs/history/v4/v4_status_2026-10-07.md",
+      "original_location": "docs/v4_status_2026-10-07.md",
+      "before_sha256": "3854cf1fdb0768ab44df10ba94cb6827ea334e8d1707b33e5424e1e19b1dcb51",
+      "after_sha256": "e2f80ad9c2193087273990860a462b370f529af54466aceedbf39ab2e9f7f608",
+      "link_updates": [
+        {
+          "line": 3,
+          "old_destination": "v4_direct_power.md",
+          "new_destination": "../../v4_direct_power.md",
+          "resolved_target": "docs/v4_direct_power.md"
+        },
+        {
+          "line": 60,
+          "old_destination": "v2_economic_parameters.md",
+          "new_destination": "../../reference/models/v2_economic_parameters.md",
+          "resolved_target": "docs/reference/models/v2_economic_parameters.md"
+        }
+      ]
+    }
+  ],
+  "relative_destinations_rewritten": 33
+}

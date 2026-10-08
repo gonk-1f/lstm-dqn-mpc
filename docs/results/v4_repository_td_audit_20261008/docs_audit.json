@@ -1,0 +1,2630 @@
+{
+  "base_commit": "d111c99c142c47b643c7d7eb31338aa321b14fef",
+  "scope": "README.md and every tracked Markdown under docs at base commit; docs/results/figures and all old manifests remain fixed; dataset payloads were not read",
+  "summary": {
+    "markdown_files": 85,
+    "recommended_moves": 67,
+    "local_markdown_links": 39,
+    "external_markdown_links_not_network_checked": 23,
+    "baseline_broken_local_links": 0,
+    "link_destinations_requiring_remap": 31,
+    "undefined_explicit_reference_links": 0,
+    "reference_definitions": 0,
+    "plain_missing_historical_output_references": 103,
+    "non_markdown_doc_reference_lines": 6,
+    "protected_paths": 140,
+    "plain_historical_output_categories": {
+      "available_or_unverifiable": 35,
+      "historical_missing_or_not_generated_here": 43,
+      "documented_deleted_output": 54,
+      "archived_in_other_branch_2e70008": 6
+    }
+  },
+  "relocation_recommendations": [
+    {
+      "old_path": "README.md",
+      "new_path": "README.md",
+      "classification": "current_navigation",
+      "action": "rewrite",
+      "reason": "lead with current v4 failure TD, schedules and no-new-formal-run boundary"
+    },
+    {
+      "old_path": "docs/archive_v1/CLUSTER_BASED_TOTAL_LOAD_REBUILD.md",
+      "new_path": "docs/archive_v1/CLUSTER_BASED_TOTAL_LOAD_REBUILD.md",
+      "classification": "immutable_historical_archive",
+      "action": "keep",
+      "reason": "archive bytes and paths are protected"
+    },
+    {
+      "old_path": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "new_path": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "classification": "immutable_historical_archive",
+      "action": "keep",
+      "reason": "archive bytes and paths are protected"
+    },
+    {
+      "old_path": "docs/archive_v1/dqn_runtime_robustness.md",
+      "new_path": "docs/archive_v1/dqn_runtime_robustness.md",
+      "classification": "immutable_historical_archive",
+      "action": "keep",
+      "reason": "archive bytes and paths are protected"
+    },
+    {
+      "old_path": "docs/archive_v1/executed_reward_references_20260913.md",
+      "new_path": "docs/archive_v1/executed_reward_references_20260913.md",
+      "classification": "immutable_historical_archive",
+      "action": "keep",
+      "reason": "archive bytes and paths are protected"
+    },
+    {
+      "old_path": "docs/archive_v1/executed_reward_verification_20260913.md",
+      "new_path": "docs/archive_v1/executed_reward_verification_20260913.md",
+      "classification": "immutable_historical_archive",
+      "action": "keep",
+      "reason": "archive bytes and paths are protected"
+    },
+    {
+      "old_path": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "new_path": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "classification": "immutable_historical_archive",
+      "action": "keep",
+      "reason": "archive bytes and paths are protected"
+    },
+    {
+      "old_path": "docs/archive_v1/superpowers/plans/2026-09-08-final-dataset.md",
+      "new_path": "docs/archive_v1/superpowers/plans/2026-09-08-final-dataset.md",
+      "classification": "immutable_historical_archive",
+      "action": "keep",
+      "reason": "archive bytes and paths are protected"
+    },
+    {
+      "old_path": "docs/archive_v1/superpowers/plans/2026-09-11-dqn-mpc-unified-objective.md",
+      "new_path": "docs/archive_v1/superpowers/plans/2026-09-11-dqn-mpc-unified-objective.md",
+      "classification": "immutable_historical_archive",
+      "action": "keep",
+      "reason": "archive bytes and paths are protected"
+    },
+    {
+      "old_path": "docs/archive_v1/superpowers/plans/2026-09-13-executed-reward.md",
+      "new_path": "docs/archive_v1/superpowers/plans/2026-09-13-executed-reward.md",
+      "classification": "immutable_historical_archive",
+      "action": "keep",
+      "reason": "archive bytes and paths are protected"
+    },
+    {
+      "old_path": "docs/archive_v1/superpowers/specs/2026-09-11-dqn-mpc-unified-objective-design.md",
+      "new_path": "docs/archive_v1/superpowers/specs/2026-09-11-dqn-mpc-unified-objective-design.md",
+      "classification": "immutable_historical_archive",
+      "action": "keep",
+      "reason": "archive bytes and paths are protected"
+    },
+    {
+      "old_path": "docs/method_v2_multiscale_dqn_wmpc.md",
+      "new_path": "docs/history/v2/method_v2_multiscale_dqn_wmpc.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/results/v4_staged_beta_cadence_seed42/README.md",
+      "new_path": "docs/results/v4_staged_beta_cadence_seed42/README.md",
+      "classification": "immutable_historical_archive",
+      "action": "keep",
+      "reason": "archive bytes and paths are protected"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-14-multiscale-dqn-wmpc-v2.md",
+      "new_path": "docs/history/v2/plans/2026-09-14-multiscale-dqn-wmpc-v2.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-21-objective-scale-audit.md",
+      "new_path": "docs/history/v2/plans/2026-09-21-objective-scale-audit.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-22-economic-model-closure.md",
+      "new_path": "docs/history/v2/plans/2026-09-22-economic-model-closure.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-22-objective-audit-data-rules.md",
+      "new_path": "docs/history/v2/plans/2026-09-22-objective-audit-data-rules.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-22-v2-parameter-freeze.md",
+      "new_path": "docs/history/v2/plans/2026-09-22-v2-parameter-freeze.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-23-segment-power-cubic-spline.md",
+      "new_path": "docs/history/v2/plans/2026-09-23-segment-power-cubic-spline.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-23-zero-boundary-dataset.md",
+      "new_path": "docs/history/v2/plans/2026-09-23-zero-boundary-dataset.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-24-v2-dqn-state-audit.md",
+      "new_path": "docs/history/v2/plans/2026-09-24-v2-dqn-state-audit.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-24-v2-formal-training-readiness.md",
+      "new_path": "docs/history/v2/plans/2026-09-24-v2-formal-training-readiness.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-24-zero-boundary-power-review.md",
+      "new_path": "docs/history/v2/plans/2026-09-24-zero-boundary-power-review.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-25-fc-independent-shore-classification.md",
+      "new_path": "docs/history/v2/plans/2026-09-25-fc-independent-shore-classification.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-25-final-s8-state-audit.md",
+      "new_path": "docs/history/v2/plans/2026-09-25-final-s8-state-audit.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-25-v2-shore-event-s8.md",
+      "new_path": "docs/history/v2/plans/2026-09-25-v2-shore-event-s8.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-26-v2-terminal-failure-learning.md",
+      "new_path": "docs/history/v2/plans/2026-09-26-v2-terminal-failure-learning.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-26-v2-validation-selection-final-test.md",
+      "new_path": "docs/history/v2/plans/2026-09-26-v2-validation-selection-final-test.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-27-v2-dqn-history-action-hyperparameter-study.md",
+      "new_path": "docs/history/v2/plans/2026-09-27-v2-dqn-history-action-hyperparameter-study.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-29-h4-final-evaluation.md",
+      "new_path": "docs/history/v2/plans/2026-09-29-h4-final-evaluation.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-29-tau-lpf-validation-screen.md",
+      "new_path": "docs/history/v2/plans/2026-09-29-tau-lpf-validation-screen.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-09-30-v2-lpf-single-commit.md",
+      "new_path": "docs/history/v2/plans/2026-09-30-v2-lpf-single-commit.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-02-v2-economic-cycle-correction.md",
+      "new_path": "docs/history/v2/plans/2026-10-02-v2-economic-cycle-correction.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-03-v2-m10-action-hold-ablation.md",
+      "new_path": "docs/history/v2/plans/2026-10-03-v2-m10-action-hold-ablation.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-06-direct-power-mlp.md",
+      "new_path": "docs/history/v4/plans/2026-10-06-direct-power-mlp.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-06-v3-economic-action-calibration.md",
+      "new_path": "docs/history/v3/plans/2026-10-06-v3-economic-action-calibration.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-06-v3-mode-gated-episode-replay.md",
+      "new_path": "docs/history/v3/plans/2026-10-06-v3-mode-gated-episode-replay.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-07-v4-beta250-review.md",
+      "new_path": "docs/history/v4/plans/2026-10-07-v4-beta250-review.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-07-v4-failure-terminal-settlement.md",
+      "new_path": "docs/history/v4/plans/2026-10-07-v4-failure-terminal-settlement.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-07-v4-staged-beta-cadence-study.md",
+      "new_path": "docs/history/v4/plans/2026-10-07-v4-staged-beta-cadence-study.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-08-v4-failure-economic-td.md",
+      "new_path": "docs/history/v4/plans/2026-10-08-v4-failure-economic-td.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/plans/2026-10-08-v4-reward-feedback.md",
+      "new_path": "docs/history/v4/plans/2026-10-08-v4-reward-feedback.md",
+      "classification": "historical_implementation_plans",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-21-objective-scale-audit-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-21-objective-scale-audit-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-22-economic-model-closure-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-22-economic-model-closure-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-22-objective-audit-data-rules-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-22-objective-audit-data-rules-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-23-segment-power-cubic-spline-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-23-segment-power-cubic-spline-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-23-zero-boundary-dataset-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-23-zero-boundary-dataset-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-24-v2-dqn-state-audit-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-24-v2-dqn-state-audit-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-24-v2-formal-training-readiness-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-24-v2-formal-training-readiness-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-24-zero-boundary-power-review-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-24-zero-boundary-power-review-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-25-shore-classification-without-fc-gate-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-25-shore-classification-without-fc-gate-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-25-v2-shore-event-s8-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-25-v2-shore-event-s8-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-26-v2-terminal-failure-learning-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-26-v2-terminal-failure-learning-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-26-v2-validation-selection-final-test-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-26-v2-validation-selection-final-test-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-27-v2-dqn-history-action-hyperparameter-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-27-v2-dqn-history-action-hyperparameter-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "new_path": "docs/history/v2/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-10-02-v2-economic-cycle-correction-design.md",
+      "new_path": "docs/history/v2/specs/2026-10-02-v2-economic-cycle-correction-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/superpowers/specs/2026-10-03-v2-m10-action-hold-ablation-design.md",
+      "new_path": "docs/history/v2/specs/2026-10-03-v2-m10-action-hold-ablation-design.md",
+      "classification": "historical_implementation_specs",
+      "action": "move",
+      "reason": "completed historical plan/spec; current contract comes from root v4 method and latest implementation report"
+    },
+    {
+      "old_path": "docs/v2_action_space_design.md",
+      "new_path": "docs/history/v2/v2_action_space_design.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_battery_degradation_model.md",
+      "new_path": "docs/reference/models/v2_battery_degradation_model.md",
+      "classification": "physical_economic_model_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_cleanup_manifest.md",
+      "new_path": "docs/v2_cleanup_manifest.md",
+      "classification": "retained_legacy_contract",
+      "action": "keep",
+      "reason": "old cleanup manifest, preserve path and bytes"
+    },
+    {
+      "old_path": "docs/v2_data_provenance.md",
+      "new_path": "docs/reference/data/v2_data_provenance.md",
+      "classification": "data_provenance_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_dqn_state_audit.md",
+      "new_path": "docs/v2_dqn_state_audit.md",
+      "classification": "retained_legacy_contract",
+      "action": "keep",
+      "reason": "src/v2/main/run_train_state_audit.py:36 output default; sources/tests protected"
+    },
+    {
+      "old_path": "docs/v2_economic_parameters.md",
+      "new_path": "docs/reference/models/v2_economic_parameters.md",
+      "classification": "physical_economic_model_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_failure_penalty_calibration.md",
+      "new_path": "docs/history/v2/v2_failure_penalty_calibration.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_fc_degradation_model.md",
+      "new_path": "docs/reference/models/v2_fc_degradation_model.md",
+      "classification": "physical_economic_model_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_fc_efficiency_model.md",
+      "new_path": "docs/v2_fc_efficiency_model.md",
+      "classification": "retained_legacy_contract",
+      "action": "keep",
+      "reason": "src/v2/preflight.py:490 provenance path; sources/tests protected"
+    },
+    {
+      "old_path": "docs/v2_formal_training_runbook.md",
+      "new_path": "docs/history/v2/v2_formal_training_runbook.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_objective_scale_audit.md",
+      "new_path": "docs/history/v2/v2_objective_scale_audit.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_plant_configuration.md",
+      "new_path": "docs/reference/models/v2_plant_configuration.md",
+      "classification": "physical_economic_model_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_preflight_report.md",
+      "new_path": "docs/v2_preflight_report.md",
+      "classification": "retained_legacy_contract",
+      "action": "keep",
+      "reason": "tests/test_v2_formal_preflight.py:183 hard-read; sources/tests protected"
+    },
+    {
+      "old_path": "docs/v2_raw_excel_inventory.md",
+      "new_path": "docs/reference/data/v2_raw_excel_inventory.md",
+      "classification": "data_provenance_foundation",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_remaining_training_work.md",
+      "new_path": "docs/history/v2/v2_remaining_training_work.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_rl_mpc_literature_and_train_ablation_2026-10-05.md",
+      "new_path": "docs/history/v2/v2_rl_mpc_literature_and_train_ablation_2026-10-05.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v2_timescale_selection.md",
+      "new_path": "docs/history/v2/v2_timescale_selection.md",
+      "classification": "historical_v2_method_report_research",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v3_persistence_dqn_mpc.md",
+      "new_path": "docs/history/v3/v3_persistence_dqn_mpc.md",
+      "classification": "historical_v3_method_diagnostics",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v3_predictive_control.md",
+      "new_path": "docs/history/v3/v3_predictive_control.md",
+      "classification": "historical_v3_method_diagnostics",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "new_path": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v4_cleanup_2026-10-07.md",
+      "new_path": "docs/history/v4/v4_cleanup_2026-10-07.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v4_direct_power.md",
+      "new_path": "docs/v4_direct_power.md",
+      "classification": "current_v4",
+      "action": "keep",
+      "reason": "retain current method path; preserve old bytes in history snapshot before rewriting",
+      "snapshot_path": "docs/history/v4/v4_direct_power_pre_d111c99.md"
+    },
+    {
+      "old_path": "docs/v4_failure_economic_td_2026-10-08.md",
+      "new_path": "docs/v4_failure_economic_td_2026-10-08.md",
+      "classification": "current_v4",
+      "action": "keep",
+      "reason": "latest implementation report retained as current entry"
+    },
+    {
+      "old_path": "docs/v4_reward_feedback_implementation_2026-10-08.md",
+      "new_path": "docs/history/v4/v4_reward_feedback_implementation_2026-10-08.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v4_staged_beta_cadence_2026-10-08.md",
+      "new_path": "docs/history/v4/v4_staged_beta_cadence_2026-10-08.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v4_status_2026-10-07.md",
+      "new_path": "docs/history/v4/v4_status_2026-10-07.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    },
+    {
+      "old_path": "docs/v4_training_failure_audit_2026-10-06.md",
+      "new_path": "docs/history/v4/v4_training_failure_audit_2026-10-06.md",
+      "classification": "historical_v4_report",
+      "action": "move",
+      "reason": "make generation and historical scope explicit"
+    }
+  ],
+  "local_markdown_links": [
+    {
+      "source": "README.md",
+      "line": 5,
+      "kind": "inline",
+      "destination": "docs/v4_status_2026-10-07.md",
+      "target": "docs/v4_status_2026-10-07.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/history/v4/v4_status_2026-10-07.md",
+      "recommended_destination": "docs/history/v4/v4_status_2026-10-07.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 6,
+      "kind": "inline",
+      "destination": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "target": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "recommended_destination": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 9,
+      "kind": "inline",
+      "destination": "docs/v4_cleanup_2026-10-07.md",
+      "target": "docs/v4_cleanup_2026-10-07.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/history/v4/v4_cleanup_2026-10-07.md",
+      "recommended_destination": "docs/history/v4/v4_cleanup_2026-10-07.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 14,
+      "kind": "inline",
+      "destination": "docs/v3_persistence_dqn_mpc.md",
+      "target": "docs/v3_persistence_dqn_mpc.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/history/v3/v3_persistence_dqn_mpc.md",
+      "recommended_destination": "docs/history/v3/v3_persistence_dqn_mpc.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 16,
+      "kind": "inline",
+      "destination": "docs/v3_predictive_control.md",
+      "target": "docs/v3_predictive_control.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/history/v3/v3_predictive_control.md",
+      "recommended_destination": "docs/history/v3/v3_predictive_control.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 61,
+      "kind": "inline",
+      "destination": "docs/v2_formal_training_runbook.md",
+      "target": "docs/v2_formal_training_runbook.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/history/v2/v2_formal_training_runbook.md",
+      "recommended_destination": "docs/history/v2/v2_formal_training_runbook.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 65,
+      "kind": "inline",
+      "destination": "docs/method_v2_multiscale_dqn_wmpc.md",
+      "target": "docs/method_v2_multiscale_dqn_wmpc.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/history/v2/method_v2_multiscale_dqn_wmpc.md",
+      "recommended_destination": "docs/history/v2/method_v2_multiscale_dqn_wmpc.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 66,
+      "kind": "inline",
+      "destination": "docs/superpowers/specs/2026-09-24-v2-formal-training-readiness-design.md",
+      "target": "docs/superpowers/specs/2026-09-24-v2-formal-training-readiness-design.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/history/v2/specs/2026-09-24-v2-formal-training-readiness-design.md",
+      "recommended_destination": "docs/history/v2/specs/2026-09-24-v2-formal-training-readiness-design.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 67,
+      "kind": "inline",
+      "destination": "docs/v2_data_provenance.md",
+      "target": "docs/v2_data_provenance.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/reference/data/v2_data_provenance.md",
+      "recommended_destination": "docs/reference/data/v2_data_provenance.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 67,
+      "kind": "inline",
+      "destination": "docs/v2_plant_configuration.md",
+      "target": "docs/v2_plant_configuration.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/reference/models/v2_plant_configuration.md",
+      "recommended_destination": "docs/reference/models/v2_plant_configuration.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 68,
+      "kind": "inline",
+      "destination": "docs/v2_fc_efficiency_model.md",
+      "target": "docs/v2_fc_efficiency_model.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/v2_fc_efficiency_model.md",
+      "recommended_destination": "docs/v2_fc_efficiency_model.md",
+      "requires_remap": false,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 68,
+      "kind": "inline",
+      "destination": "docs/v2_economic_parameters.md",
+      "target": "docs/v2_economic_parameters.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/reference/models/v2_economic_parameters.md",
+      "recommended_destination": "docs/reference/models/v2_economic_parameters.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 69,
+      "kind": "inline",
+      "destination": "docs/v2_fc_degradation_model.md",
+      "target": "docs/v2_fc_degradation_model.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/reference/models/v2_fc_degradation_model.md",
+      "recommended_destination": "docs/reference/models/v2_fc_degradation_model.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 69,
+      "kind": "inline",
+      "destination": "docs/v2_battery_degradation_model.md",
+      "target": "docs/v2_battery_degradation_model.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/reference/models/v2_battery_degradation_model.md",
+      "recommended_destination": "docs/reference/models/v2_battery_degradation_model.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 70,
+      "kind": "inline",
+      "destination": "docs/v2_action_space_design.md",
+      "target": "docs/v2_action_space_design.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/history/v2/v2_action_space_design.md",
+      "recommended_destination": "docs/history/v2/v2_action_space_design.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 70,
+      "kind": "inline",
+      "destination": "docs/v2_dqn_state_audit.md",
+      "target": "docs/v2_dqn_state_audit.md",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/v2_dqn_state_audit.md",
+      "recommended_destination": "docs/v2_dqn_state_audit.md",
+      "requires_remap": false,
+      "classification": "valid"
+    },
+    {
+      "source": "README.md",
+      "line": 79,
+      "kind": "inline",
+      "destination": "docs/archive_v1/",
+      "target": "docs/archive_v1",
+      "exists_at_baseline": true,
+      "new_source": "README.md",
+      "new_target": "docs/archive_v1",
+      "recommended_destination": "docs/archive_v1",
+      "requires_remap": false,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "line": 5,
+      "kind": "inline",
+      "destination": "results/v4_beta250_40r_seed42.json",
+      "target": "docs/results/v4_beta250_40r_seed42.json",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "new_target": "docs/results/v4_beta250_40r_seed42.json",
+      "recommended_destination": "../../results/v4_beta250_40r_seed42.json",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "line": 5,
+      "kind": "inline",
+      "destination": "results/v4_beta250_40r_seed42_rounds.csv",
+      "target": "docs/results/v4_beta250_40r_seed42_rounds.csv",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "new_target": "docs/results/v4_beta250_40r_seed42_rounds.csv",
+      "recommended_destination": "../../results/v4_beta250_40r_seed42_rounds.csv",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "line": 124,
+      "kind": "image",
+      "destination": "figures/v4_beta250_40r_seed42/training_curves.png",
+      "target": "docs/figures/v4_beta250_40r_seed42/training_curves.png",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "new_target": "docs/figures/v4_beta250_40r_seed42/training_curves.png",
+      "recommended_destination": "../../figures/v4_beta250_40r_seed42/training_curves.png",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "line": 130,
+      "kind": "image",
+      "destination": "figures/v4_beta250_40r_seed42/zero_boundary_036_power_soc.png",
+      "target": "docs/figures/v4_beta250_40r_seed42/zero_boundary_036_power_soc.png",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "new_target": "docs/figures/v4_beta250_40r_seed42/zero_boundary_036_power_soc.png",
+      "recommended_destination": "../../figures/v4_beta250_40r_seed42/zero_boundary_036_power_soc.png",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "line": 134,
+      "kind": "image",
+      "destination": "figures/v4_beta250_40r_seed42/zero_boundary_004_power_soc.png",
+      "target": "docs/figures/v4_beta250_40r_seed42/zero_boundary_004_power_soc.png",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "new_target": "docs/figures/v4_beta250_40r_seed42/zero_boundary_004_power_soc.png",
+      "recommended_destination": "../../figures/v4_beta250_40r_seed42/zero_boundary_004_power_soc.png",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_direct_power.md",
+      "line": 57,
+      "kind": "inline",
+      "destination": "v4_beta250_40r_review_2026-10-07.md",
+      "target": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "exists_at_baseline": true,
+      "new_source": "docs/v4_direct_power.md",
+      "new_target": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "recommended_destination": "history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_failure_economic_td_2026-10-08.md",
+      "line": 15,
+      "kind": "inline",
+      "destination": "results/v4_failure_economic_td_20261008/verification.json",
+      "target": "docs/results/v4_failure_economic_td_20261008/verification.json",
+      "exists_at_baseline": true,
+      "new_source": "docs/v4_failure_economic_td_2026-10-08.md",
+      "new_target": "docs/results/v4_failure_economic_td_20261008/verification.json",
+      "recommended_destination": "results/v4_failure_economic_td_20261008/verification.json",
+      "requires_remap": false,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_failure_economic_td_2026-10-08.md",
+      "line": 16,
+      "kind": "inline",
+      "destination": "results/v4_failure_economic_td_20261008/learning_order_evidence.json",
+      "target": "docs/results/v4_failure_economic_td_20261008/learning_order_evidence.json",
+      "exists_at_baseline": true,
+      "new_source": "docs/v4_failure_economic_td_2026-10-08.md",
+      "new_target": "docs/results/v4_failure_economic_td_20261008/learning_order_evidence.json",
+      "recommended_destination": "results/v4_failure_economic_td_20261008/learning_order_evidence.json",
+      "requires_remap": false,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_reward_feedback_implementation_2026-10-08.md",
+      "line": 91,
+      "kind": "inline",
+      "destination": "results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json",
+      "target": "docs/results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_reward_feedback_implementation_2026-10-08.md",
+      "new_target": "docs/results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json",
+      "recommended_destination": "../../results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_reward_feedback_implementation_2026-10-08.md",
+      "line": 91,
+      "kind": "inline",
+      "destination": "results/v4_reward_feedback_implementation_20261008/verification.json",
+      "target": "docs/results/v4_reward_feedback_implementation_20261008/verification.json",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_reward_feedback_implementation_2026-10-08.md",
+      "new_target": "docs/results/v4_reward_feedback_implementation_20261008/verification.json",
+      "recommended_destination": "../../results/v4_reward_feedback_implementation_20261008/verification.json",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_staged_beta_cadence_2026-10-08.md",
+      "line": 64,
+      "kind": "inline",
+      "destination": "results/v4_staged_beta_cadence_seed42/",
+      "target": "docs/results/v4_staged_beta_cadence_seed42",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_staged_beta_cadence_2026-10-08.md",
+      "new_target": "docs/results/v4_staged_beta_cadence_seed42",
+      "recommended_destination": "../../results/v4_staged_beta_cadence_seed42",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_staged_beta_cadence_2026-10-08.md",
+      "line": 66,
+      "kind": "image",
+      "destination": "figures/v4_staged_beta_cadence_seed42/stage1_completion.png",
+      "target": "docs/figures/v4_staged_beta_cadence_seed42/stage1_completion.png",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_staged_beta_cadence_2026-10-08.md",
+      "new_target": "docs/figures/v4_staged_beta_cadence_seed42/stage1_completion.png",
+      "recommended_destination": "../../figures/v4_staged_beta_cadence_seed42/stage1_completion.png",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_staged_beta_cadence_2026-10-08.md",
+      "line": 70,
+      "kind": "inline",
+      "destination": "results/v4_staged_beta_cadence_seed42/reconstruction_audit.json",
+      "target": "docs/results/v4_staged_beta_cadence_seed42/reconstruction_audit.json",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_staged_beta_cadence_2026-10-08.md",
+      "new_target": "docs/results/v4_staged_beta_cadence_seed42/reconstruction_audit.json",
+      "recommended_destination": "../../results/v4_staged_beta_cadence_seed42/reconstruction_audit.json",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_staged_beta_cadence_2026-10-08.md",
+      "line": 84,
+      "kind": "image",
+      "destination": "figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png",
+      "target": "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_staged_beta_cadence_2026-10-08.md",
+      "new_target": "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png",
+      "recommended_destination": "../../figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_staged_beta_cadence_2026-10-08.md",
+      "line": 105,
+      "kind": "inline",
+      "destination": "results/v4_staged_beta_cadence_seed42/raw/",
+      "target": "docs/results/v4_staged_beta_cadence_seed42/raw",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_staged_beta_cadence_2026-10-08.md",
+      "new_target": "docs/results/v4_staged_beta_cadence_seed42/raw",
+      "recommended_destination": "../../results/v4_staged_beta_cadence_seed42/raw",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_staged_beta_cadence_2026-10-08.md",
+      "line": 105,
+      "kind": "inline",
+      "destination": "results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json",
+      "target": "docs/results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_staged_beta_cadence_2026-10-08.md",
+      "new_target": "docs/results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json",
+      "recommended_destination": "../../results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_staged_beta_cadence_2026-10-08.md",
+      "line": 105,
+      "kind": "inline",
+      "destination": "results/v4_staged_beta_cadence_seed42/study_summary.json",
+      "target": "docs/results/v4_staged_beta_cadence_seed42/study_summary.json",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_staged_beta_cadence_2026-10-08.md",
+      "new_target": "docs/results/v4_staged_beta_cadence_seed42/study_summary.json",
+      "recommended_destination": "../../results/v4_staged_beta_cadence_seed42/study_summary.json",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_status_2026-10-07.md",
+      "line": 3,
+      "kind": "inline",
+      "destination": "v4_beta250_40r_review_2026-10-07.md",
+      "target": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_status_2026-10-07.md",
+      "new_target": "docs/history/v4/v4_beta250_40r_review_2026-10-07.md",
+      "recommended_destination": "v4_beta250_40r_review_2026-10-07.md",
+      "requires_remap": false,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_status_2026-10-07.md",
+      "line": 3,
+      "kind": "inline",
+      "destination": "v4_direct_power.md",
+      "target": "docs/v4_direct_power.md",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_status_2026-10-07.md",
+      "new_target": "docs/v4_direct_power.md",
+      "recommended_destination": "../../v4_direct_power.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_status_2026-10-07.md",
+      "line": 3,
+      "kind": "inline",
+      "destination": "v4_training_failure_audit_2026-10-06.md",
+      "target": "docs/v4_training_failure_audit_2026-10-06.md",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_status_2026-10-07.md",
+      "new_target": "docs/history/v4/v4_training_failure_audit_2026-10-06.md",
+      "recommended_destination": "v4_training_failure_audit_2026-10-06.md",
+      "requires_remap": false,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_status_2026-10-07.md",
+      "line": 60,
+      "kind": "inline",
+      "destination": "v2_economic_parameters.md",
+      "target": "docs/v2_economic_parameters.md",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_status_2026-10-07.md",
+      "new_target": "docs/reference/models/v2_economic_parameters.md",
+      "recommended_destination": "../../reference/models/v2_economic_parameters.md",
+      "requires_remap": true,
+      "classification": "valid"
+    },
+    {
+      "source": "docs/v4_training_failure_audit_2026-10-06.md",
+      "line": 5,
+      "kind": "inline",
+      "destination": "v4_status_2026-10-07.md",
+      "target": "docs/v4_status_2026-10-07.md",
+      "exists_at_baseline": true,
+      "new_source": "docs/history/v4/v4_training_failure_audit_2026-10-06.md",
+      "new_target": "docs/history/v4/v4_status_2026-10-07.md",
+      "recommended_destination": "v4_status_2026-10-07.md",
+      "requires_remap": false,
+      "classification": "valid"
+    }
+  ],
+  "external_markdown_links": [
+    {
+      "source": "docs/archive_v1/executed_reward_references_20260913.md",
+      "line": 7,
+      "kind": "inline",
+      "destination": "https://arxiv.org/html/2402.02624v1"
+    },
+    {
+      "source": "docs/archive_v1/executed_reward_references_20260913.md",
+      "line": 8,
+      "kind": "inline",
+      "destination": "https://www.researchgate.net/publication/357540616_Weights-varying_MPC_for_Autonomous_Vehicle_Guidance_a_Deep_Reinforcement_Learning_Approach"
+    },
+    {
+      "source": "docs/archive_v1/executed_reward_references_20260913.md",
+      "line": 9,
+      "kind": "inline",
+      "destination": "https://www.researchgate.net/publication/371098049_Energy_Management_of_P2_Hybrid_Electric_Vehicle_Based_on_Event-Triggered_Nonlinear_Model_Predictive_Control_and_Deep_Q_Network/fulltext/647221e1a25e543829d0b80a/Energy-Management-of-P2-Hybrid-Electric-Vehicle-Based-on-Event-Triggered-Nonlinear-Model-Predictive-Control-and-Deep-Q-Network.pdf"
+    },
+    {
+      "source": "docs/archive_v1/executed_reward_references_20260913.md",
+      "line": 10,
+      "kind": "inline",
+      "destination": "https://www.researchgate.net/publication/330591563_Automated_Tuning_of_Nonlinear_Model_Predictive_Controller_by_Reinforcement_Learning"
+    },
+    {
+      "source": "docs/archive_v1/executed_reward_references_20260913.md",
+      "line": 11,
+      "kind": "inline",
+      "destination": "https://repository.tudelft.nl/file/File_5f230ded-4f1a-456f-b3e4-4337cd8f90ec"
+    },
+    {
+      "source": "docs/archive_v1/executed_reward_references_20260913.md",
+      "line": 12,
+      "kind": "inline",
+      "destination": "https://journals.sagepub.com/doi/10.1177/16878132261426615"
+    },
+    {
+      "source": "docs/archive_v1/executed_reward_references_20260913.md",
+      "line": 13,
+      "kind": "inline",
+      "destination": "https://doi.org/10.1016/j.ijhydene.2025.151770"
+    },
+    {
+      "source": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "line": 335,
+      "kind": "inline",
+      "destination": "https://doi.org/10.1016/j.engappai.2024.109009"
+    },
+    {
+      "source": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "line": 417,
+      "kind": "inline",
+      "destination": "https://repository.tudelft.nl/file/File_5f230ded-4f1a-456f-b3e4-4337cd8f90ec"
+    },
+    {
+      "source": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "line": 418,
+      "kind": "inline",
+      "destination": "https://journals.sagepub.com/doi/10.1177/16878132261426615"
+    },
+    {
+      "source": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "line": 419,
+      "kind": "inline",
+      "destination": "https://ieeexplore.ieee.org/document/9655042"
+    },
+    {
+      "source": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "line": 419,
+      "kind": "inline",
+      "destination": "https://www.researchgate.net/publication/357540616_Weights-varying_MPC_for_Autonomous_Vehicle_Guidance_a_Deep_Reinforcement_Learning_Approach"
+    },
+    {
+      "source": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "line": 420,
+      "kind": "inline",
+      "destination": "https://arxiv.org/html/2402.02624v1"
+    },
+    {
+      "source": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "line": 421,
+      "kind": "inline",
+      "destination": "https://doi.org/10.1016/j.ijhydene.2025.151770"
+    },
+    {
+      "source": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "line": 422,
+      "kind": "inline",
+      "destination": "https://ieeexplore.ieee.org/document/8594350"
+    },
+    {
+      "source": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "line": 422,
+      "kind": "inline",
+      "destination": "https://www.researchgate.net/publication/330591563_Automated_Tuning_of_Nonlinear_Model_Predictive_Controller_by_Reinforcement_Learning"
+    },
+    {
+      "source": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "line": 423,
+      "kind": "inline",
+      "destination": "https://doi.org/10.3390/wevj14060135"
+    },
+    {
+      "source": "docs/archive_v1/rl_mpc_seven_papers_review_20260914.md",
+      "line": 423,
+      "kind": "inline",
+      "destination": "https://mdpi-res.com/d_attachment/wevj/wevj-14-00135/article_deploy/wevj-14-00135.pdf"
+    },
+    {
+      "source": "docs/v2_rl_mpc_literature_and_train_ablation_2026-10-05.md",
+      "line": 29,
+      "kind": "inline",
+      "destination": "https://github.com/gonk-1f/lstm-dqn-mpc/blob/ab817598cd0977c817f173aca0679362bb54ced8/outputs/v2_literature_train_ablation/train_pilot_3_episodes.json"
+    },
+    {
+      "source": "docs/v2_rl_mpc_literature_and_train_ablation_2026-10-05.md",
+      "line": 29,
+      "kind": "inline",
+      "destination": "https://github.com/gonk-1f/lstm-dqn-mpc/blob/ab817598cd0977c817f173aca0679362bb54ced8/outputs/v2_literature_train_ablation/train_full_30_episodes.json"
+    },
+    {
+      "source": "docs/v3_predictive_control.md",
+      "line": 48,
+      "kind": "inline",
+      "destination": "https://doi.org/10.1162/neco.1997.9.8.1735"
+    },
+    {
+      "source": "docs/v3_predictive_control.md",
+      "line": 48,
+      "kind": "inline",
+      "destination": "https://doi.org/10.1016/j.neucom.2009.11.030"
+    },
+    {
+      "source": "docs/v3_predictive_control.md",
+      "line": 48,
+      "kind": "inline",
+      "destination": "https://link.springer.com/article/10.1007/s44196-022-00128-y"
+    }
+  ],
+  "reference_definitions": [],
+  "undefined_reference_links": [],
+  "plain_historical_output_references": [
+    {
+      "source": "README.md",
+      "line": 10,
+      "destination": "outputs/",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/archive_v1/CLUSTER_BASED_TOTAL_LOAD_REBUILD.md",
+      "line": 107,
+      "destination": "outputs/spline_1s_diagnostics/data/natural_clipped_by_voyage",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/archive_v1/CLUSTER_BASED_TOTAL_LOAD_REBUILD.md",
+      "line": 108,
+      "destination": "outputs/total_load_dataset_build/total_load_66_segments.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 9,
+      "destination": "outputs/action_space/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 10,
+      "destination": "outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 11,
+      "destination": "outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds_20260907_092051/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds_20260907_092051/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 12,
+      "destination": "outputs/dqn_mpc_mlp_causal_soc_reference_v2_formal_rounds/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 13,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_huber_round1/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_huber_round1/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 14,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_loss_ablation_comparison/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_loss_ablation_comparison/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 15,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_gamma0999_round1/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_gamma0999_round1/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 16,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_gamma099_round1/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_gamma099_round1/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 17,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_round1/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_round1/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 18,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_mse_round1/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_mse_round1/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 19,
+      "destination": "outputs/fixed_action_validation_016_053_qsoc80/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/fixed_action_validation_016_053_qsoc80/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 20,
+      "destination": "outputs/fixed_physical_l2_84_train_20260912/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/fixed_physical_l2_84_train_20260912/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 21,
+      "destination": "outputs/ideal_reference_84_train_20260912/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/ideal_reference_84_train_20260912/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 22,
+      "destination": "outputs/mpc_action_redesign_20260911/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/mpc_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 23,
+      "destination": "outputs/rms_l2_84_train_20260912/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/rms_l2_84_train_20260912/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 24,
+      "destination": "outputs/rms_marginals_84_train_20260912/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/rms_marginals_84_train_20260912/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 25,
+      "destination": "outputs/unified_objective_action_redesign_20260911/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/unified_objective_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 26,
+      "destination": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/action_distribution.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/mpc_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 27,
+      "destination": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/per_state_action.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/mpc_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 28,
+      "destination": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/state_winners_and_reward_gap.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/mpc_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 29,
+      "destination": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/winner_by_fc_power.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/mpc_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 30,
+      "destination": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/winner_by_load.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/mpc_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 31,
+      "destination": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/winner_by_load_transition.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/mpc_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 32,
+      "destination": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/winner_by_soc.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/mpc_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.md",
+      "line": 33,
+      "destination": "outputs/mpc_action_redesign_20260911/normalized_objective_reward_audit/winner_by_soc_regime.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/mpc_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-23-segment-power-cubic-spline.md",
+      "line": 19,
+      "destination": "outputs/v2_segment_power_review/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-23-segment-power-cubic-spline.md",
+      "line": 20,
+      "destination": "outputs/v2_segment_power_review/gap_diagnostics.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-23-segment-power-cubic-spline.md",
+      "line": 369,
+      "destination": "outputs/v2_segment_power_review/2024-*/**.png",
+      "status": "pattern_or_command",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-23-segment-power-cubic-spline.md",
+      "line": 370,
+      "destination": "outputs/v2_segment_power_review/segment_power_index.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-23-segment-power-cubic-spline.md",
+      "line": 371,
+      "destination": "outputs/v2_segment_power_review/index.html",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-23-segment-power-cubic-spline.md",
+      "line": 372,
+      "destination": "outputs/v2_segment_power_review/gap_diagnostics.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-23-zero-boundary-dataset.md",
+      "line": 23,
+      "destination": "outputs/v2_segment_power_review/gap_diagnostics.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-23-zero-boundary-dataset.md",
+      "line": 449,
+      "destination": "outputs/v2_segment_power_review/gap_diagnostics.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-24-v2-dqn-state-audit.md",
+      "line": 201,
+      "destination": "outputs/v2_dqn_state_audit",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-24-v2-dqn-state-audit.md",
+      "line": 225,
+      "destination": "outputs/v2_dqn_state_audit/",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-24-zero-boundary-power-review.md",
+      "line": 18,
+      "destination": "outputs/v2_zero_boundary_power_review/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/v2_zero_boundary_power_review/"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-24-zero-boundary-power-review.md",
+      "line": 19,
+      "destination": "outputs/v2_segment_power_review/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-24-zero-boundary-power-review.md",
+      "line": 507,
+      "destination": "outputs/v2_zero_boundary_power_review/index.html",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/v2_zero_boundary_power_review/"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-24-zero-boundary-power-review.md",
+      "line": 508,
+      "destination": "outputs/v2_zero_boundary_power_review/review_manifest.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/v2_zero_boundary_power_review/"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-24-zero-boundary-power-review.md",
+      "line": 509,
+      "destination": "outputs/v2_zero_boundary_power_review/train/*.png",
+      "status": "pattern_or_command",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-24-zero-boundary-power-review.md",
+      "line": 510,
+      "destination": "outputs/v2_zero_boundary_power_review/validation/*.png",
+      "status": "pattern_or_command",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-24-zero-boundary-power-review.md",
+      "line": 511,
+      "destination": "outputs/v2_zero_boundary_power_review/test/*.png",
+      "status": "pattern_or_command",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-25-final-s8-state-audit.md",
+      "line": 44,
+      "destination": "outputs/v2_dqn_state_audit/**",
+      "status": "pattern_or_command",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-26-v2-terminal-failure-learning.md",
+      "line": 23,
+      "destination": "outputs/v2_failure_penalty_audit/audit_summary.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-26-v2-terminal-failure-learning.md",
+      "line": 272,
+      "destination": "outputs/v2_failure_penalty_audit/audit_summary.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-26-v2-validation-selection-final-test.md",
+      "line": 426,
+      "destination": "outputs/v2_formal_dqn_selection/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-26-v2-validation-selection-final-test.md",
+      "line": 474,
+      "destination": "outputs/dqn_mpc_literature_executed_reward_84_v1_review_20260914/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_literature_executed_reward_84_v1_review_20260914/"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-26-v2-validation-selection-final-test.md",
+      "line": 475,
+      "destination": "outputs/v2_formal_dqn/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-26-v2-validation-selection-final-test.md",
+      "line": 476,
+      "destination": "outputs/v2_segment_power_review/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-27-v2-dqn-history-action-hyperparameter-study.md",
+      "line": 845,
+      "destination": "outputs/v2_history_dqn_study/<experiment>",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-27-v2-dqn-history-action-hyperparameter-study.md",
+      "line": 861,
+      "destination": "outputs/v2_history_dqn_study/reward_scale_calibration.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-29-h4-final-evaluation.md",
+      "line": 56,
+      "destination": "outputs/v2_history_dqn_study/H4_formal_selection_40/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-29-h4-final-evaluation.md",
+      "line": 57,
+      "destination": "outputs/v2_history_dqn_study/H4_round20_test/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-29-h4-final-evaluation.md",
+      "line": 58,
+      "destination": "outputs/v2_history_dqn_study/H4_round20_test_power_plots/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-30-v2-lpf-single-commit.md",
+      "line": 25,
+      "destination": "outputs/v2_dqn_state_audit/*",
+      "status": "pattern_or_command",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-30-v2-lpf-single-commit.md",
+      "line": 26,
+      "destination": "outputs/v2_objective_scale_audit/audit_summary.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-30-v2-lpf-single-commit.md",
+      "line": 27,
+      "destination": "outputs/v2_failure_penalty_audit/audit_summary.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-30-v2-lpf-single-commit.md",
+      "line": 28,
+      "destination": "outputs/v2_history_dqn_study/reward_scale_calibration.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-30-v2-lpf-single-commit.md",
+      "line": 303,
+      "destination": "outputs/v2_dqn_state_audit/*",
+      "status": "pattern_or_command",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-30-v2-lpf-single-commit.md",
+      "line": 304,
+      "destination": "outputs/v2_objective_scale_audit/audit_summary.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-30-v2-lpf-single-commit.md",
+      "line": 305,
+      "destination": "outputs/v2_failure_penalty_audit/audit_summary.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-09-30-v2-lpf-single-commit.md",
+      "line": 306,
+      "destination": "outputs/v2_history_dqn_study/reward_scale_calibration.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-10-02-v2-economic-cycle-correction.md",
+      "line": 52,
+      "destination": "outputs/v2_p1_pilot/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-10-02-v2-economic-cycle-correction.md",
+      "line": 53,
+      "destination": "outputs/v2_p2_pilot/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-10-02-v2-economic-cycle-correction.md",
+      "line": 64,
+      "destination": "outputs/v2_history_dqn_study/reward_scale_calibration.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-10-06-direct-power-mlp.md",
+      "line": 42,
+      "destination": "outputs/",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-10-06-v3-economic-action-calibration.md",
+      "line": 21,
+      "destination": "outputs/v3_persistence_calibration/action_calibration.json",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/plans/2026-10-07-v4-beta250-review.md",
+      "line": 14,
+      "destination": "outputs/v4_beta250_40r_seed42",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-23-segment-power-cubic-spline-design.md",
+      "line": 5,
+      "destination": "outputs/v2_segment_power_review",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-23-zero-boundary-dataset-design.md",
+      "line": 160,
+      "destination": "outputs/v2_segment_power_review/gap_diagnostics.csv",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-24-v2-dqn-state-audit-design.md",
+      "line": 189,
+      "destination": "outputs/v2_dqn_state_audit/",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-24-zero-boundary-power-review-design.md",
+      "line": 25,
+      "destination": "outputs/v2_zero_boundary_power_review/{train,validation,test}/",
+      "status": "pattern_or_command",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-24-zero-boundary-power-review-design.md",
+      "line": 44,
+      "destination": "outputs/v2_zero_boundary_power_review/index.html",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/v2_zero_boundary_power_review/"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-24-zero-boundary-power-review-design.md",
+      "line": 60,
+      "destination": "outputs/",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-24-zero-boundary-power-review-design.md",
+      "line": 61,
+      "destination": "outputs/v2_segment_power_review",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-26-v2-terminal-failure-learning-design.md",
+      "line": 140,
+      "destination": "outputs/v2_formal_dqn/latest.pt",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-26-v2-validation-selection-final-test-design.md",
+      "line": 145,
+      "destination": "outputs/dqn_mpc_literature_executed_reward_84_v1_review_20260914/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_literature_executed_reward_84_v1_review_20260914/"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-26-v2-validation-selection-final-test-design.md",
+      "line": 146,
+      "destination": "outputs/v2_formal_dqn/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-26-v2-validation-selection-final-test-design.md",
+      "line": 147,
+      "destination": "outputs/v2_segment_power_review/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-26-v2-validation-selection-final-test-design.md",
+      "line": 150,
+      "destination": "outputs/v2_formal_dqn_v3/round_001.pt",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "line": 76,
+      "destination": "outputs/v2_history_dqn_study/H4_tau180/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "line": 77,
+      "destination": "outputs/v2_history_dqn_study/H4_tau180_selection_40/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "line": 78,
+      "destination": "outputs/v2_history_dqn_study/H4_tau180_test/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "line": 79,
+      "destination": "outputs/v2_history_dqn_study/H4_tau180_test_power_plots/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "line": 80,
+      "destination": "outputs/v2_history_dqn_study/tau_lpf_validation_screen/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "line": 86,
+      "destination": "outputs/v2_history_dqn_study/H4_round20_test/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "line": 87,
+      "destination": "outputs/v2_history_dqn_study/H4_round20_test_power_plots/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/superpowers/specs/2026-09-30-v2-lpf-single-commit-design.md",
+      "line": 88,
+      "destination": "outputs/v2_history_dqn_study/reward_scale_calibration_tau90_backup.json",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 15,
+      "destination": "outputs/",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 21,
+      "destination": "outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 22,
+      "destination": "outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds_20260907_092051/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_causal_soc_deadband_formal_rounds_20260907_092051/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 23,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_huber_round1/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_huber_round1/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 24,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_loss_ablation_comparison/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_loss_ablation_comparison/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 25,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_gamma099_round1/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_gamma099_round1/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 26,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_gamma0999_round1/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_gamma0999_round1/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 27,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_round1/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_mse_buffer300k_round1/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 28,
+      "destination": "outputs/dqn_mpc_mlp_qsoc80_mse_round1/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_mlp_qsoc80_mse_round1/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 29,
+      "destination": "outputs/fixed_action_validation_016_053_qsoc80/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/fixed_action_validation_016_053_qsoc80/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 30,
+      "destination": "outputs/fixed_physical_l2_84_train_20260912/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/fixed_physical_l2_84_train_20260912/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 31,
+      "destination": "outputs/ideal_reference_84_train_20260912/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/ideal_reference_84_train_20260912/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 32,
+      "destination": "outputs/mpc_action_redesign_20260911/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/mpc_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 33,
+      "destination": "outputs/rms_l2_84_train_20260912/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/rms_l2_84_train_20260912/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 34,
+      "destination": "outputs/rms_marginals_84_train_20260912/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/rms_marginals_84_train_20260912/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 35,
+      "destination": "outputs/unified_objective_action_redesign_20260911/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/unified_objective_action_redesign_20260911/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 36,
+      "destination": "outputs/dqn_mpc_train_executed_reward_84_v1_gate_20260913/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_train_executed_reward_84_v1_gate_20260913/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 37,
+      "destination": "outputs/dqn_mpc_progress_executed_reward_84_v1_handoff_20260914/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_progress_executed_reward_84_v1_handoff_20260914/"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 38,
+      "destination": "outputs/action_space/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 38,
+      "destination": "outputs/dqn_mpc_mlp_causal_soc_reference_v2_formal_rounds/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/v2_cleanup_manifest.md",
+      "line": 61,
+      "destination": "outputs/dqn_mpc_literature_executed_reward_84_v1_review_20260914/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/dqn_mpc_literature_executed_reward_84_v1_review_20260914/"
+    },
+    {
+      "source": "docs/v2_failure_penalty_calibration.md",
+      "line": 9,
+      "destination": "outputs/v2_failure_penalty_audit/audit_summary.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/v2_formal_training_runbook.md",
+      "line": 44,
+      "destination": "outputs/v2_history_dqn_study/reward_scale_calibration.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/v2_formal_training_runbook.md",
+      "line": 125,
+      "destination": "outputs/v2_formal_dqn_v3",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/v2_formal_training_runbook.md",
+      "line": 150,
+      "destination": "outputs/v2_formal_dqn/latest.pt",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/v2_formal_training_runbook.md",
+      "line": 151,
+      "destination": "outputs/v2_formal_dqn_v3/latest.pt",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/v2_formal_training_runbook.md",
+      "line": 199,
+      "destination": "outputs/v2_formal_dqn_test",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "historical_missing_or_not_generated_here"
+    },
+    {
+      "source": "docs/v2_objective_scale_audit.md",
+      "line": 7,
+      "destination": "outputs/v2_objective_scale_audit/audit_summary.json",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/v2_objective_scale_audit.md",
+      "line": 10,
+      "destination": "outputs/v2_action_behavior_audit/audit_summary.json",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/v2_action_behavior_audit/"
+    },
+    {
+      "source": "docs/v2_rl_mpc_literature_and_train_ablation_2026-10-05.md",
+      "line": 29,
+      "destination": "outputs/v2_literature_train_ablation/train_pilot_3_episodes.json) 和 [",
+      "status": "pattern_or_command",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/v3_persistence_dqn_mpc.md",
+      "line": 3,
+      "destination": "outputs/v3_persistence_calibration",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "archived_in_other_branch_2e70008"
+    },
+    {
+      "source": "docs/v3_persistence_dqn_mpc.md",
+      "line": 40,
+      "destination": "outputs/v3_persistence_calibration/closed_loop_train_pilot.json",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "archived_in_other_branch_2e70008"
+    },
+    {
+      "source": "docs/v3_persistence_dqn_mpc.md",
+      "line": 71,
+      "destination": "outputs/v3_persistence_calibration/action_calibration.json",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "archived_in_other_branch_2e70008"
+    },
+    {
+      "source": "docs/v3_persistence_dqn_mpc.md",
+      "line": 71,
+      "destination": "outputs/v3_persistence_calibration/action_calibration_response16.json",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "archived_in_other_branch_2e70008"
+    },
+    {
+      "source": "docs/v3_predictive_control.md",
+      "line": 3,
+      "destination": "outputs/v3_lstm*",
+      "status": "pattern_or_command",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/v3_predictive_control.md",
+      "line": 42,
+      "destination": "outputs/v3_lstm/selection.json",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "archived_in_other_branch_2e70008"
+    },
+    {
+      "source": "docs/v3_predictive_control.md",
+      "line": 46,
+      "destination": "outputs/v3_lstm_test_diagnostic/diagnostic.json",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "archived_in_other_branch_2e70008"
+    },
+    {
+      "source": "docs/v4_beta250_40r_review_2026-10-07.md",
+      "line": 5,
+      "destination": "outputs/v4_beta250_40r_seed42/",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/v4_cleanup_2026-10-07.md",
+      "line": 23,
+      "destination": "outputs/",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/v4_cleanup_2026-10-07.md",
+      "line": 29,
+      "destination": "outputs/v4_beta250_40r_seed42/",
+      "status": "exists",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/v4_status_2026-10-07.md",
+      "line": 29,
+      "destination": "outputs/v4_direct_power*/",
+      "status": "pattern_or_command",
+      "syntax": "code_span_not_markdown_link"
+    },
+    {
+      "source": "docs/v4_status_2026-10-07.md",
+      "line": 86,
+      "destination": "outputs/v4_direct_power_40r_u16_eps1_to_005_terminal_v1_seed42/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/v4_direct_power_40r_u16_eps1_to_005_terminal_v1_seed42/"
+    },
+    {
+      "source": "docs/v4_status_2026-10-07.md",
+      "line": 110,
+      "destination": "outputs/v4_soc_beta_study_5r_seed42/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/v4_soc_beta_study_5r_seed42/"
+    },
+    {
+      "source": "docs/v4_training_failure_audit_2026-10-06.md",
+      "line": 37,
+      "destination": "outputs/v4_direct_power_40r_u1_seed42/report.json",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/v4_direct_power_40r_u1_seed42/"
+    },
+    {
+      "source": "docs/v4_training_failure_audit_2026-10-06.md",
+      "line": 38,
+      "destination": "outputs/v4_direct_power_40r_u1_seed42_greedy/report.json",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/v4_direct_power_40r_u1_seed42_greedy/"
+    },
+    {
+      "source": "docs/v4_training_failure_audit_2026-10-06.md",
+      "line": 45,
+      "destination": "outputs/v4_direct_power_40r_u16_seed42/",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/v4_direct_power_40r_u16_seed42/"
+    },
+    {
+      "source": "docs/v4_training_failure_audit_2026-10-06.md",
+      "line": 63,
+      "destination": "outputs/v4_direct_power_40r_u16_eps1_to_005_seed42/report.json",
+      "status": "missing_historical_output_reference",
+      "syntax": "code_span_not_markdown_link",
+      "historical_classification": "documented_deleted_output",
+      "cleanup_manifest_prefix": "outputs/v4_direct_power_40r_u16_eps1_to_005_seed42/"
+    }
+  ],
+  "code_json_doc_references": [
+    {
+      "source": "src/main/audit_ideal_reference_84_train.py",
+      "line": 173,
+      "referenced_docs": [
+        "README.md"
+      ],
+      "text": "paths = list((ROOT/'src').rglob('*.py')) + [ROOT/'README.md']",
+      "immutable_source": false
+    },
+    {
+      "source": "src/main/build_total_load_dataset_721.py",
+      "line": 42,
+      "referenced_docs": [
+        "docs/CLUSTER_BASED_TOTAL_LOAD_REBUILD.md"
+      ],
+      "text": "DEFAULT_REPORT = PROJ / \"docs\" / \"CLUSTER_BASED_TOTAL_LOAD_REBUILD.md\"",
+      "immutable_source": false,
+      "actual_archived_document": "docs/archive_v1/CLUSTER_BASED_TOTAL_LOAD_REBUILD.md"
+    },
+    {
+      "source": "src/v2/main/run_train_state_audit.py",
+      "line": 36,
+      "referenced_docs": [
+        "docs/v2_dqn_state_audit.md"
+      ],
+      "text": "DEFAULT_REPORT_PATH = PROJECT_ROOT / \"docs\" / \"v2_dqn_state_audit.md\"",
+      "immutable_source": false
+    },
+    {
+      "source": "src/v2/preflight.py",
+      "line": 490,
+      "referenced_docs": [
+        "docs/v2_fc_efficiency_model.md"
+      ],
+      "text": "\"docs/v2_fc_efficiency_model.md; FC_Data.xlsx SHA-256 and A2:B12 are frozen\",",
+      "immutable_source": false
+    },
+    {
+      "source": "tests/test_v2_formal_preflight.py",
+      "line": 183,
+      "referenced_docs": [
+        "docs/v2_preflight_report.md"
+      ],
+      "text": "report = (ROOT / \"docs\" / \"v2_preflight_report.md\").read_text(encoding=\"utf-8\")",
+      "immutable_source": false
+    },
+    {
+      "source": "docs/archive_v1/diagnostic_cleanup_20260913.json",
+      "line": 31,
+      "referenced_docs": [
+        "README.md"
+      ],
+      "text": "\"README.md\"",
+      "immutable_source": true,
+      "reference_scope": "historical root README provenance; preserve manifest bytes"
+    }
+  ],
+  "protected_paths": [
+    "docs/figures/v4_beta250_40r_seed42/train_zero_boundary_008_power_soc.png",
+    "docs/figures/v4_beta250_40r_seed42/train_zero_boundary_015_power_soc.png",
+    "docs/figures/v4_beta250_40r_seed42/training_curves.png",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_004_power_soc.png",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_009_power_soc.png",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_010_power_soc.png",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_019_power_soc.png",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_032_power_soc.png",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_036_power_soc.png",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_043_power_soc.png",
+    "docs/figures/v4_beta250_40r_seed42/zero_boundary_047_power_soc.png",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage1_completion.png",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage1_optimizer_axis.png",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage1_soc_fc_cost.png",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_optimizer_axis.png",
+    "docs/figures/v4_staged_beta_cadence_seed42/stage2_partial_soc_fc_cost.png",
+    "docs/results/v4_beta250_40r_seed42.json",
+    "docs/results/v4_beta250_40r_seed42_rounds.csv",
+    "docs/results/v4_failure_economic_td_20261008/learning_order_evidence.json",
+    "docs/results/v4_failure_economic_td_20261008/verification.json",
+    "docs/results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json",
+    "docs/results/v4_reward_feedback_implementation_20261008/verification.json",
+    "docs/results/v4_staged_beta_cadence_seed42/.gitattributes",
+    "docs/results/v4_staged_beta_cadence_seed42/README.md",
+    "docs/results/v4_staged_beta_cadence_seed42/baseline_40r_consistency.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/archive_paused.py",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/baseline_40r_consistency.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interim_stage1.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_1000/best_agent.pt",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_1000/round_history.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_1000/train.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_250/best_agent.pt",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_250/round_history.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/interruptions/stage1_beta_250/train.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/monitor.py",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/reconstruction_audit.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/recovery_launch.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/resource_failure_beta1000.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/resource_failure_beta250.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_agent.pt",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_profiles.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_004_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_009_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_010_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_019_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_032_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_036_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_043_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/best_zero_boundary_047_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/report.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/round_history.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/round_metrics.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/train.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_1000/train.stderr.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_agent.pt",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_profiles.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_004_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_009_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_010_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_019_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_032_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_036_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_043_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/best_zero_boundary_047_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/report.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/round_history.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/round_metrics.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_2000/train.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_agent.pt",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_profiles.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_004_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_009_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_010_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_019_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_032_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_036_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_043_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/best_zero_boundary_047_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/report.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/round_history.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/round_metrics.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/train.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_250/train.stderr.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_agent.pt",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_profiles.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_004_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_009_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_010_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_019_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_032_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_036_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_043_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_zero_boundary_047_power_soc.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/report.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/round_history.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/round_metrics.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/train.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_comparison.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_completion.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_optimizer_axis.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_soc_fc_cost.png",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage1_summary.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/best_agent.pt",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/paused_report.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/round_history.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/round_metrics.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/train.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/A_episode16/train.stderr.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/best_agent.pt",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/paused_report.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/round_history.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/round_metrics.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/train.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2/B_replay16/train.stderr.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/stage2_launch.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/study.log",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/study_summary.json",
+    "docs/results/v4_staged_beta_cadence_seed42/raw/summarize_stage1.py",
+    "docs/results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json",
+    "docs/results/v4_staged_beta_cadence_seed42/reconstruction_audit.json",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_1000.json",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_1000_rounds.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_2000.json",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_2000_rounds.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_250.json",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_250_rounds.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_500.json",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_beta_500_rounds.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_comparison.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/stage1_summary.json",
+    "docs/results/v4_staged_beta_cadence_seed42/stage2_A_paused.json",
+    "docs/results/v4_staged_beta_cadence_seed42/stage2_A_rounds.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/stage2_B_paused.json",
+    "docs/results/v4_staged_beta_cadence_seed42/stage2_B_rounds.csv",
+    "docs/results/v4_staged_beta_cadence_seed42/study_summary.json",
+    "docs/v2_cleanup_manifest.md",
+    "docs/v4_cleanup_inventory_2026-10-07.json",
+    "outputs/v2_dqn_state_audit/audit_manifest.json",
+    "src/v4/failure_penalty_reference.json"
+  ],
+  "parser_limits": [
+    "External URLs were catalogued but not fetched.",
+    "Fenced and inline code do not count as Markdown links; output code spans are separately classified.",
+    "Inline destination scanner supports common quoted-title/angle syntax; no nested-parenthesis local destinations were found.",
+    "No local anchor-fragment links were found at baseline.",
+    "Plain missing output references do not count as broken Markdown links; only cleanup manifests establish documented deletion."
+  ],
+  "manual_findings": [
+    {
+      "source": "src/main/build_total_load_dataset_721.py",
+      "line": 42,
+      "finding": "Historical builder output default points to absent root docs/CLUSTER_BASED_TOTAL_LOAD_REBUILD.md; archived document exists under docs/archive_v1. Keep sources unchanged and describe the stale output default as historical."
+    },
+    {
+      "source": "README.md",
+      "line": 5,
+      "finding": "Leading current-status link targets a 2026-10-07 snapshot; body presents stale v2 NO-GO even though retained v2 runbook/economic docs record later GO. New README should distinguish current v4 implementation from historical empirical results."
+    }
+  ],
+  "preserved_fixed_path_references": [
+    {
+      "source": "src/v4/failure_penalty_reference.json",
+      "field": "source_file",
+      "target": "docs/results/v4_staged_beta_cadence_seed42/raw/stage1/beta_500/best_profiles.json",
+      "rule": "keep both JSON bytes and referenced archive path unchanged"
+    },
+    {
+      "source": "tests/test_v4_failure_td.py",
+      "line": 180,
+      "target": "docs/results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json",
+      "rule": "source/test hash and archive path remain unchanged"
+    }
+  ]
+}

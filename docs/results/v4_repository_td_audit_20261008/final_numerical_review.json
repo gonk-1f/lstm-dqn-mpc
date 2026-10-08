@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "review_mode": "stdlib only; AST/text/JSON/CSV/hash review; no torch or pytest import; no optimizer calls; no official payload reads",
+  "findings": [],
+  "blocking_findings": 0,
+  "unresolved_missing_fields": 0,
+  "source_sha256": "1f2e33d30463d0572cf39ebf569312bd504dfeceb95b61c9a17fa50760ae9c76",
+  "test_sha256": "4aa15fd7423f45e0e4657640ff77623313c32aec17e09eee7824d894422e8dff",
+  "summary_sha256": "2463497313545737401a8954c4ff374cf59d0c0cba56a66682a4c9a057402d30",
+  "corpus_metadata_sha256": "4ad58975b2d69fca6a69250df626704130767a30e9088aa352e1efcbc0b5d346",
+  "guard": {
+    "require_empty": true,
+    "precedes_corpus_build": true,
+    "source_line": 452,
+    "shared_guard_blocks_docs_results_figures_and_staged_archive": true
+  },
+  "production_diff_empty": true,
+  "production_learn_huber_adam_clip_unchanged": true,
+  "reward_scaling_review": "Original trajectory reward enters replay, then replay reward and CF metadata each multiply alpha exactly once; ledger objects are never scaled/replaced. Uniform scaling commutes with summed components.",
+  "randomness_review": "Same corpus object and identical native initialized online/target Q across all alpha; seeded Random.sample delegates once; all602 per-batch CSV SHA hashes are identical across alpha; final sampling SHA matches.",
+  "accounting_review": {
+    "gamma": 1.0,
+    "n_step": 1,
+    "raw_redistributed_branch_returns_closed": 61,
+    "scaled_component_identity_checks": 6,
+    "ledger_sha256": "bba44a175db6d72e6892ef41e246e67aa3f5987a63af8801c89e306072ddfba6",
+    "sampling_sha256": "3e1e138773b5f700794912856a0b481940f5efbd30893c82966a93b949abc5a8",
+    "gradient_norm": "Original clip_grad_norm_ returns total gradient norm before its clipping; wrapper delegates once and returns that result.",
+    "td_normalization": "TD/alpha restores original reward units; TD/(alpha*CF) is dimensionless against the same frozen reference. smooth_l1_original_units_beta1 is a recomputed common-unit diagnostic, not the trained native loss rescaled."
+  },
+  "runs": [
+    {
+      "alpha": 1.0,
+      "csv_rows": 602,
+      "csv_sha256": "b6aa360d1cbaca0c21135f3c3acd4fd5f135e8249a9f5ac209b4af4553e40739",
+      "optimizer_updates": 602,
+      "replay_insertions": 19270,
+      "clipping_count": 50,
+      "clipping_fraction": 0.08305647840531562,
+      "all_td_normalization_identities_valid": true,
+      "sample_counts_and_fractions_valid": true,
+      "all_numeric_csv_fields_finite": true,
+      "summary_mean_std_quantiles_match_csv": true,
+      "max_summary_distribution_abs_error": 2.2737367544323206e-13,
+      "initial_online_and_target_q_identical": true,
+      "actual_greedy": {
+        "completed": true,
+        "failure_cause": null,
+        "powers_kw": [
+          330,
+          330,
+          330
+        ],
+        "soc": [
+          0.2135,
+          0.20970445344129554,
+          0.20028587494376968,
+          0.2044725736617184
+        ],
+        "reward_sum_original_units": -870.0267796427092,
+        "actual_ledger_cost_cny": 414.0007743158201,
+        "modeled_terminal_cost_cny": 398.8614547081272
+      },
+      "td_mae_original_units_mean": 3067.578525277071,
+      "huber_linear_fraction_mean": 1.0,
+      "last50_td_mae_original_units_mean": 3085.8705786132814
+    },
+    {
+      "alpha": 0.01,
+      "csv_rows": 602,
+      "csv_sha256": "609cf4a4549d3b3737f7e4e20bff790f12595561f0d615c708a035026d8a6959",
+      "optimizer_updates": 602,
+      "replay_insertions": 19270,
+      "clipping_count": 0,
+      "clipping_fraction": 0.0,
+      "all_td_normalization_identities_valid": true,
+      "sample_counts_and_fractions_valid": true,
+      "all_numeric_csv_fields_finite": true,
+      "summary_mean_std_quantiles_match_csv": true,
+      "max_summary_distribution_abs_error": 3.410605131648481e-13,
+      "initial_online_and_target_q_identical": true,
+      "actual_greedy": {
+        "completed": true,
+        "failure_cause": null,
+        "powers_kw": [
+          330,
+          600,
+          600
+        ],
+        "soc": [
+          0.2135,
+          0.20970445344129554,
+          0.20408142150247413,
+          0.21169360098965362
+        ],
+        "reward_sum_original_units": -895.853185718927,
+        "actual_ledger_cost_cny": 450.0259692267316,
+        "modeled_terminal_cost_cny": 390.7993243177898
+      },
+      "td_mae_original_units_mean": 2893.613813565023,
+      "huber_linear_fraction_mean": 0.628296303986711,
+      "last50_td_mae_original_units_mean": 2652.6474590301514
+    },
+    {
+      "alpha": 0.001,
+      "csv_rows": 602,
+      "csv_sha256": "a99d695f1df9f898ab06a78077f7b9f44d6d313b62748fc419bcf4f166b3702a",
+      "optimizer_updates": 602,
+      "replay_insertions": 19270,
+      "clipping_count": 0,
+      "clipping_fraction": 0.0,
+      "all_td_normalization_identities_valid": true,
+      "sample_counts_and_fractions_valid": true,
+      "all_numeric_csv_fields_finite": true,
+      "summary_mean_std_quantiles_match_csv": true,
+      "max_summary_distribution_abs_error": 1.1368683772161603e-13,
+      "initial_online_and_target_q_identical": true,
+      "actual_greedy": {
+        "completed": true,
+        "failure_cause": null,
+        "powers_kw": [
+          600,
+          600,
+          360
+        ],
+        "soc": [
+          0.2135,
+          0.2135,
+          0.20787696806117859,
+          0.2124442757534863
+        ],
+        "reward_sum_original_units": -917.567532764995,
+        "actual_ledger_cost_cny": 474.174832563808,
+        "modeled_terminal_cost_cny": 389.9573706516871
+      },
+      "td_mae_original_units_mean": 2306.720378514738,
+      "huber_linear_fraction_mean": 0.29222902823920266,
+      "last50_td_mae_original_units_mean": 591.6669312119484
+    }
+  ],
+  "interpretation_limits": [
+    "Huge SmoothL1 residuals alone do not demonstrate gradient explosion or numerical divergence because residual derivative saturates.",
+    "Fixed beta1, Adam epsilon, clip10 and unscaled fixture-only FC0 +1 initial bias change the optimization regime across alpha.",
+    "One synthetic route, one seed and602 updates cannot support convergence, formal-route completion improvement or economic cost superiority.",
+    "Uniform alpha0.001 can be favored for observed reward/TD magnitude and clipping behavior only; production alpha remains1.",
+    "Measured fixed corpus is onboard-only with zero observed-shore reward; new parameterized test code separately covers nonzero actual-shore reward under both timing modes. Root owns execution of those tests."
+  ],
+  "recommendation_scope": "Numerical scaling/conditioning proposal only; no cost-superiority claim; no production defaults edited.",
+  "prior_numerical_review_source_snapshot": {
+    "source_sha256": "c3946cfa03675a9ffae53b2e07eb638c028009e00e4646acc75f36470fced040",
+    "test_sha256": "7db14f146163c55615e445e34d25aff51a00602975ed12e4755f802caa2c8131"
+  },
+  "source_change_review": "Final source adds an explicit raw/redistributed diagnostic CLI choice and tests add nonzero actual-shore scaling coverage. Production source and existing tests remain unchanged. Default diagnostic timing remains raw; internal final-reward scaling, sampling, Huber/gradient instrumentation and update protocol remain the reviewed implementation.",
+  "final_repository_gate": {
+    "base_commit": "d111c99c142c47b643c7d7eb31338aa321b14fef",
+    "production_source_files_checked": 156,
+    "existing_test_files_checked": 91,
+    "baseline_files_total": 247,
+    "existing_changed_paths": [],
+    "missing_baseline_paths": [],
+    "all_existing_src_and_tests_unchanged": true,
+    "source_and_test_hashes_refreshed": true,
+    "official_loader_symbols_or_calls_in_new_script": [],
+    "uniform_final_reward_scale_and_cf_metadata_scale_once": true,
+    "ledger_scale_assignments": [],
+    "synthetic_fc0_bias_only_in_new_diagnostic_instance": true,
+    "production_default_changes": false,
+    "guard_precedes_corpus_build": true,
+    "guard_requires_empty_output": true,
+    "new_reward_mode_cli_raw_default": true,
+    "nonzero_actual_shore_test_code_present": true,
+    "stdlib_readonly_gate_no_torch_pytest_optimizer": true
+  }
+}

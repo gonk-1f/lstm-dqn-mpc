@@ -88,7 +88,7 @@ m = min(n, 当前完整ONBOARD段剩余步数)
 
 最终相关测试为 **153 passed，330 subtests passed**。10条固定轨迹的累计奖励最大绝对误差为 **1.1368683772161603e-13**；各四项实际账本与MODELED账本严格相等。
 
-结果清单见 [契约记录](results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json)及[测试与计数核验](results/v4_reward_feedback_implementation_20261008/verification.json)。上一阶段93个原始归档文件SHA256及5个数据manifest哈希再次核验，不覆盖旧报告、图、日志或best权重。报告中的`formal_training_optimizer_updates`仅沿用“bootstrap之后训练阶段”的字段命名，本次对应的验证运行全部为合成数据。
+结果清单见 [契约记录](../../results/v4_reward_feedback_implementation_20261008/reward_contract_verification.json)及[测试与计数核验](../../results/v4_reward_feedback_implementation_20261008/verification.json)。上一阶段93个原始归档文件SHA256及5个数据manifest哈希再次核验，不覆盖旧报告、图、日志或best权重。报告中的`formal_training_optimizer_updates`仅沿用“bootstrap之后训练阶段”的字段命名，本次对应的验证运行全部为合成数据。
 
 ## 5. 失败轨迹仍未解决的学习问题
 

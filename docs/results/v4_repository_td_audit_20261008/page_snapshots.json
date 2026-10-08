@@ -1,0 +1,22 @@
+{
+  "content_origins": {
+    "docs/history/v4/README_legacy_pre_d111c99.md": "README.md",
+    "docs/history/v4/v4_direct_power_pre_d111c99.md": "docs/v4_direct_power.md"
+  },
+  "records": [
+    {
+      "from": "README.md",
+      "to": "docs/history/v4/README_legacy_pre_d111c99.md",
+      "bytes": 4383,
+      "original_sha256": "e3c0b175848eccdc3fcc043997f7d29337580ce09d88d66ee66b574d210973e9",
+      "action": "retain prior current page before updating entry documentation; relative link-only remap follows"
+    },
+    {
+      "from": "docs/v4_direct_power.md",
+      "to": "docs/history/v4/v4_direct_power_pre_d111c99.md",
+      "bytes": 11041,
+      "original_sha256": "d89bb13bfa9c624003b27031dde9b779365879995792312c245e82667a5dabea",
+      "action": "retain prior current page before updating entry documentation; relative link-only remap follows"
+    }
+  ]
+}

@@ -61,13 +61,13 @@ SOC 四档、平均/最低 SOC、FC=0 比例均按实际执行的 30 s ONBOARD �
 | 1000 | 4,5,6 | 6 | 30/30, 8/8 | 43,364.64 | 45.75 | 43,410.39 | 18/30 |
 | 2000 | 4,5,6 | 6 | 30/30, 8/8 | 40,606.16 | 44.20 | 40,650.36 | 15/30 |
 
-第40轮四组均不满足 Train 门槛，Validation 全部跳过。表内 Validation 费用来自各自最佳合格轮次。每轮完整值见 [结果目录](results/v4_staged_beta_cadence_seed42/)，下图空白表示跳过评估。
+第40轮四组均不满足 Train 门槛，Validation 全部跳过。表内 Validation 费用来自各自最佳合格轮次。每轮完整值见 [结果目录](../../results/v4_staged_beta_cadence_seed42)，下图空白表示跳过评估。
 
-![阶段1完成率](figures/v4_staged_beta_cadence_seed42/stage1_completion.png)
+![阶段1完成率](../../figures/v4_staged_beta_cadence_seed42/stage1_completion.png)
 
 按指定规则固定 beta=500 进入阶段2。该组第7轮最佳模型的 Train/Validation SOC>=0.79 占比分别为 84.39%/73.26%，平均动作后 SOC 为 0.7818/0.7623；完成资格已达到，高 SOC 贴边仍明显。
 
-全部四组都出现早期合格、后期退化。beta=250 的全部40轮探索完成数、实际执行步骤、实际费用、modeled费用、软惩罚和SOC分布与上一轮固定配置复核逐项一致。中断恢复的14/11轮记录和两份最佳 checkpoint 文件均完全一致，见 [恢复审计](results/v4_staged_beta_cadence_seed42/reconstruction_audit.json)。
+全部四组都出现早期合格、后期退化。beta=250 的全部40轮探索完成数、实际执行步骤、实际费用、modeled费用、软惩罚和SOC分布与上一轮固定配置复核逐项一致。中断恢复的14/11轮记录和两份最佳 checkpoint 文件均完全一致，见 [恢复审计](../../results/v4_staged_beta_cadence_seed42/reconstruction_audit.json)。
 
 ## 阶段 2 结果
 
@@ -81,7 +81,7 @@ SOC 四档、平均/最低 SOC、FC=0 比例均按实际执行的 30 s ONBOARD �
 
 A最后完整轮次的探索完成数为20/30，B为16/30；两组该轮Validation均按资格规则跳过。A在第19轮暂停，日志最后记录 `progress step=238650`；B在第20轮暂停，最后记录 `progress step=245400`。这些日志值不是中断轮次的精确执行/更新总数。
 
-![阶段2部分完成率](figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png)
+![阶段2部分完成率](../../figures/v4_staged_beta_cadence_seed42/stage2_partial_completion.png)
 
 暂停前完整轮次均已出现早期可行、后期完成率下降。A第18轮greedy Train中，SOC>=0.79占56.35%、SOC<0.4占5.22%、FC=0占37.86%；B第19轮SOC<0.4占63.94%、FC=0占75.74%。A/B最佳模型的Validation中SOC>=0.79仍分别占73.35%/72.62%。这些现象不能证明某种调度解决了训练稳定性问题。
 
@@ -102,6 +102,6 @@ A最后完整轮次的探索完成数为20/30，B为16/30；两组该轮Validati
 
 各阶段1最佳模型独立轨迹复核另执行21,709步/组，未计入训练量。阶段2保存的是第7轮合格online模型权重；中断后未新增独立轨迹复核，也没有保存optimizer/replay/RNG恢复状态。不能把这些权重当成原运行的可恢复训练快照。
 
-全部现存实验文件（包括中断尝试、资源错误日志、逐轮JSON/CSV、六份合格权重及已有FC/Battery/SOC轨迹）保存在[完整原始归档](results/v4_staged_beta_cadence_seed42/raw/)，逐文件SHA256见[归档清单](results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json)。[暂停汇总](results/v4_staged_beta_cadence_seed42/study_summary.json)明确区分完整、部分完成及未运行状态。归档时再次核验数据manifest哈希与四组完整实验一致；报告记录Test打开数均为0。
+全部现存实验文件（包括中断尝试、资源错误日志、逐轮JSON/CSV、六份合格权重及已有FC/Battery/SOC轨迹）保存在[完整原始归档](../../results/v4_staged_beta_cadence_seed42/raw)，逐文件SHA256见[归档清单](../../results/v4_staged_beta_cadence_seed42/raw_archive_inventory.json)。[暂停汇总](../../results/v4_staged_beta_cadence_seed42/study_summary.json)明确区分完整、部分完成及未运行状态。归档时再次核验数据manifest哈希与四组完整实验一致；报告记录Test打开数均为0。
 
 提交前相关定向测试：117 passed、330 subtests passed；本次没有修改网络、reward、超参数或数据划分。
