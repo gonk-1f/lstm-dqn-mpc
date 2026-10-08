@@ -1,0 +1,194 @@
+{
+  "base_commit": "4a425b4",
+  "scope": "unit, contract and synthetic smoke only",
+  "official_train_validation_payloads_loaded": false,
+  "test_payloads_opened": 0,
+  "formal_training_started": false,
+  "targeted_tests": {
+    "passed": 153,
+    "subtests_passed": 330,
+    "seconds": 90.86
+  },
+  "old_raw_archive_files_sha256_verified": 93,
+  "dataset_manifest_sha256_verified": {
+    "operating_dataset_zero_boundary_v2/excluded_parent_manifest.csv": "d3319adbbe79d3cca742906039982f14b9054a2f06465e1bedef93732c7bafdc",
+    "operating_dataset_zero_boundary_v2/parent_split_manifest.csv": "36d44abab31a36c1bd6ab62c14a5a7cee2869cbfab451518c8ea921a53bb9623",
+    "operating_dataset_zero_boundary_v2/sample_manifest.csv": "413f2c8e60487ab43f5d24d179d0cbe20697eb1204ab6521151044a03dddf029",
+    "operating_dataset_zero_boundary_v2_ais/sample_manifest.csv": "e7853ea68f3bad5c302c36e92522b01a83b736c8b48f2d54541ffd35f0d2829d",
+    "operating_dataset_zero_boundary_v2_modes/sample_manifest.csv": "2a44ade715a3094f883867b70e99acfbe5b0cd4a64de2a9c5631a379e0191f8f"
+  },
+  "source_file_sha256": {
+    "src/v4/control.py": "b9553619d2e87baa16a6a993c2aa14360b28baa63828450e84b594db03cfa7e5",
+    "src/v4/diagnostics.py": "9fbe17bc471d40ff9f17f7120904ad358e1ff101f46637995cfd0168f0825220",
+    "src/v4/dqn.py": "367dc60317aff3a9402a7d14bb31a2a7df5fcc5ddd8756612a45f69c9e14f097",
+    "src/v4/experiment_paths.py": "b627aae39a9f8f36bc5abcea628388cff3adb26b0b577f7195d273c3610efd54",
+    "src/v4/experiment_schedule.py": "053aabe857082c64a0d30a82890f9f1505c085fd8df651003bd32dad65c5d68a",
+    "src/v4/feedback_study.py": "1e9f3280d85fa5c977eff140f5b1dd3739741fdb65a17511ed76e3326b1f96ed",
+    "src/v4/monitored_training.py": "89dc191b734ea1389db099f25d1678f5abdfa7faf1c3275e97f87724c2d0973d",
+    "src/v4/review.py": "df0f5b6865b73b121ece05bba68efd432f2a0751ea3472ee827bfd9a3657670a",
+    "src/v4/reward_feedback.py": "fb48abeac0d19ec78362129ffab02e776ad9b393b8625ea64ae764e998cfbe95",
+    "src/v4/soc_beta_study.py": "1b33258f4073d5780eb2a6c5fa73e14a6ef69d98072f7c08bc3ae6409b517792",
+    "src/v4/staged_study.py": "56e19dcd528d3603f470a2ce7be6e4c5fa6dd95fb2fc7ffe6d84611c3f7ec8c0",
+    "src/v4/telemetry.py": "c5c0ee6d3ddf5a70e3ab0b0e99f1828cb60f2eee5bc13a9eab36c18d9d7dd4c7",
+    "src/v4/train.py": "c9fe09e333f44ca7ddf545be75f9236d01f03964d73e5c7228337d7bd0e93bb0",
+    "src/v4/__init__.py": "0fac1b89827fea7291c71568e801d198ea4f5d82fb109c2bb261431134ee3e1c"
+  },
+  "synthetic_counter_runs": [
+    {
+      "purpose": "synthetic counter verification only, not formal model evaluation",
+      "cadence": "episode16",
+      "rounds": 1,
+      "bootstrap_updates": 480,
+      "post_bootstrap_updates": 480,
+      "counts": {
+        "training_environment_transitions": 120,
+        "training_policy_calls": 120,
+        "bootstrap_environment_transitions": 120,
+        "greedy_evaluation_environment_transitions": 144,
+        "economic_replay_insertions": 240,
+        "economic_optimizer_updates": 960,
+        "outcome_optimizer_updates": 960,
+        "target_sync_calls_including_initial_copy": 4,
+        "remaining_transition_credit": 0,
+        "bootstrap_economic_optimizer_updates": 480,
+        "formal_training_economic_optimizer_updates": 480,
+        "failed_suffix_transitions_excluded_from_economic_replay": 0,
+        "no_feasible_action_events_without_executed_suffix": 0
+      },
+      "bootstrap_td_statistics": {
+        "optimizer_updates": 480,
+        "sample_count": 30720,
+        "mean_smooth_l1_loss": 95.191011540095,
+        "mean_td_error": -95.24438698291779,
+        "mean_absolute_td_error": 95.6415284951528,
+        "root_mean_square_td_error": 185.3667958922754,
+        "max_absolute_td_error": 371.5261535644531
+      },
+      "per_round_td_statistics": [
+        {
+          "optimizer_updates": 480,
+          "sample_count": 30720,
+          "mean_smooth_l1_loss": 103.28143876393636,
+          "mean_td_error": -102.82770273685455,
+          "mean_absolute_td_error": 103.76927826404571,
+          "root_mean_square_td_error": 189.8025127430805,
+          "max_absolute_td_error": 427.5231018066406
+        }
+      ],
+      "test_payloads_opened": 0
+    },
+    {
+      "purpose": "synthetic counter verification only, not formal model evaluation",
+      "cadence": "replay32",
+      "rounds": 2,
+      "bootstrap_updates": 3,
+      "post_bootstrap_updates": 8,
+      "counts": {
+        "training_environment_transitions": 240,
+        "training_policy_calls": 240,
+        "bootstrap_environment_transitions": 120,
+        "greedy_evaluation_environment_transitions": 288,
+        "economic_replay_insertions": 360,
+        "economic_optimizer_updates": 11,
+        "outcome_optimizer_updates": 1440,
+        "target_sync_calls_including_initial_copy": 1,
+        "remaining_transition_credit": 8,
+        "bootstrap_economic_optimizer_updates": 3,
+        "formal_training_economic_optimizer_updates": 8,
+        "failed_suffix_transitions_excluded_from_economic_replay": 0,
+        "no_feasible_action_events_without_executed_suffix": 0
+      },
+      "bootstrap_td_statistics": {
+        "optimizer_updates": 3,
+        "sample_count": 192,
+        "mean_smooth_l1_loss": 103.27128601074219,
+        "mean_td_error": -103.54581705729167,
+        "mean_absolute_td_error": 103.71734364827473,
+        "root_mean_square_td_error": 193.42143175050862,
+        "max_absolute_td_error": 371.5261535644531
+      },
+      "per_round_td_statistics": [
+        {
+          "optimizer_updates": 4,
+          "sample_count": 256,
+          "mean_smooth_l1_loss": 103.42053604125977,
+          "mean_td_error": -103.75845718383789,
+          "mean_absolute_td_error": 103.88177680969238,
+          "root_mean_square_td_error": 191.15258829458404,
+          "max_absolute_td_error": 424.6197204589844
+        },
+        {
+          "optimizer_updates": 4,
+          "sample_count": 256,
+          "mean_smooth_l1_loss": 125.15107536315918,
+          "mean_td_error": -125.57343482971191,
+          "mean_absolute_td_error": 125.63259887695312,
+          "root_mean_square_td_error": 212.16958687274197,
+          "max_absolute_td_error": 424.6178894042969
+        }
+      ],
+      "test_payloads_opened": 0
+    },
+    {
+      "purpose": "synthetic counter verification only, not formal model evaluation",
+      "cadence": "replay16",
+      "rounds": 2,
+      "bootstrap_updates": 7,
+      "post_bootstrap_updates": 15,
+      "counts": {
+        "training_environment_transitions": 240,
+        "training_policy_calls": 240,
+        "bootstrap_environment_transitions": 120,
+        "greedy_evaluation_environment_transitions": 288,
+        "economic_replay_insertions": 360,
+        "economic_optimizer_updates": 22,
+        "outcome_optimizer_updates": 1440,
+        "target_sync_calls_including_initial_copy": 1,
+        "remaining_transition_credit": 8,
+        "bootstrap_economic_optimizer_updates": 7,
+        "formal_training_economic_optimizer_updates": 15,
+        "failed_suffix_transitions_excluded_from_economic_replay": 0,
+        "no_feasible_action_events_without_executed_suffix": 0
+      },
+      "bootstrap_td_statistics": {
+        "optimizer_updates": 7,
+        "sample_count": 448,
+        "mean_smooth_l1_loss": 96.51034654889789,
+        "mean_td_error": -96.79692949567523,
+        "mean_absolute_td_error": 96.9593026297433,
+        "root_mean_square_td_error": 186.66772576894485,
+        "max_absolute_td_error": 371.5261535644531
+      },
+      "per_round_td_statistics": [
+        {
+          "optimizer_updates": 8,
+          "sample_count": 512,
+          "mean_smooth_l1_loss": 103.80628681182861,
+          "mean_td_error": -104.14393424987793,
+          "mean_absolute_td_error": 104.267653465271,
+          "root_mean_square_td_error": 191.9938003810686,
+          "max_absolute_td_error": 427.1150207519531
+        },
+        {
+          "optimizer_updates": 7,
+          "sample_count": 448,
+          "mean_smooth_l1_loss": 104.49152156284877,
+          "mean_td_error": -104.90252685546875,
+          "mean_absolute_td_error": 104.9705320085798,
+          "root_mean_square_td_error": 192.71051510991447,
+          "max_absolute_td_error": 427.1153564453125
+        }
+      ],
+      "test_payloads_opened": 0
+    }
+  ],
+  "review_fixes": [
+    "first-step infeasible after SHORE preserves successful prefix outcome",
+    "shared guards reject archived output paths including historical resume"
+  ],
+  "limitations": [
+    "failed unfinished suffix remains outside economic Q",
+    "no formal economic or completion-rate improvement established"
+  ],
+  "source_hash_normalization": "CRLF normalized to LF; matches Git text blobs across checkouts"
+}

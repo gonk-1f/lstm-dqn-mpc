@@ -6,9 +6,10 @@ import math
 
 class EconomicUpdateSchedule:
     def __init__(self, cadence: str, *, target_mode: str, target_interval: int = 1000):
-        if cadence not in {"episode16", "replay16", "replay8"}:
+        if cadence not in {"episode16", "replay32", "replay16", "replay8"}:
             raise ValueError("unknown economic update cadence")
-        if target_mode not in {"round", "optimizer"} or target_interval < 1:
+        if (target_mode not in {"round", "optimizer"}
+                or type(target_interval) is not int or target_interval < 1):
             raise ValueError("invalid target schedule")
         self.cadence = cadence
         self.target_mode = target_mode
@@ -25,7 +26,7 @@ class EconomicUpdateSchedule:
             self.remaining_transition_credit += insertions
 
     def consume(self, agent, *, batch_size: int) -> list[float]:
-        stride = 16 if self.cadence == "replay16" else 8
+        stride = int(self.cadence.removeprefix('replay')) if self.cadence != 'episode16' else 0
         losses = []
         while (
             self.pending_episode_updates > 0 if self.cadence == "episode16"

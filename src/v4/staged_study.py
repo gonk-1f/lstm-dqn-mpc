@@ -1,4 +1,8 @@
-"""Two-stage beta and replay-cadence study with per-round greedy selection."""
+"""Historical two-stage study with original reward and legacy episode credit.
+
+New reward-feedback configurations use the explicit single-run feedback_study
+entry. This runner retains its archived experiment protocol for reproduction.
+"""
 
 from __future__ import annotations
 
@@ -26,6 +30,7 @@ from .monitored_training import _write_json, run_monitored_training
 from .review import _manifest_hashes, _trajectory_plot
 from .soc_beta_study import _profile
 from .train import _default_data_root
+from .experiment_paths import unarchived_output_path
 
 
 BETAS = (250.0, 500.0, 1000.0, 2000.0)
@@ -234,7 +239,7 @@ def main(argv:Sequence[str]|None=None)->int:
     parser.add_argument("--workers",type=int,default=4)
     parser.add_argument("--resume",action="store_true")
     args=parser.parse_args(argv)
-    args.output_dir=args.output_dir.resolve()
+    args.output_dir=unarchived_output_path(args.output_dir)
     if args.worker:
         if args.beta is None:
             parser.error("worker needs --beta")

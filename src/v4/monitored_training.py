@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 import subprocess
 import time
@@ -15,21 +16,38 @@ from .control import ACTION_KW, ReplayExecutionError, replay_episode
 from .dqn import DirectPowerDDQN
 from .experiment_schedule import BestCheckpoint, EconomicUpdateSchedule, fully_completed
 from .train import _run_episodes, _summarize
+from .diagnostics import fixed_q_diagnostics, trajectory_record
+from .reward_feedback import BatteryEnergyValue
+from .experiment_paths import unarchived_output_path
 
 
-def greedy_evaluate(episodes, agent, accountant, beta_soc: float) -> dict:
+def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
+                    redistribute_battery_energy: bool = False, trajectory_path: Path | None = None) -> dict:
     """Preserve all training RNG streams; never add replay or run optimizers."""
     random_state = agent.random.getstate()
     outcome_random_state = agent.outcome_random.getstate()
     torch_state = torch.random.get_rng_state()
     failed_transitions = []
+    failure_profiles = []
+    def on_failure(exc):
+        failed_transitions.extend(exc.executed_transitions)
+        failure_profiles.append(trajectory_record(
+            exc.sample_id,
+            exc.executed_transitions, completed=False, failure=str(exc)))
     try:
         results, failures = _run_episodes(
             episodes, lambda state, feasible: agent.select_power(state, feasible, epsilon=0.0),
             accountant, beta_soc=beta_soc,
-            on_failure=lambda exc: failed_transitions.extend(exc.executed_transitions),
+            on_failure=on_failure, redistribute_battery_energy=redistribute_battery_energy,
         )
-        return _summarize(results, len(episodes), failures, failed_transitions)
+        summary = _summarize(results, len(episodes), failures, failed_transitions)
+        if trajectory_path is not None:
+            _write_json(trajectory_path, {
+                'completed': [trajectory_record(r.sample_id,r.transitions,completed=True) for r in results],
+                'failed': failure_profiles,
+            })
+            summary['trajectory_file'] = trajectory_path.name
+        return summary
     finally:
         agent.random.setstate(random_state)
         agent.outcome_random.setstate(outcome_random_state)
@@ -47,14 +65,18 @@ def run_monitored_training(
     cadence: str = "episode16", target_mode: str = "round", target_interval: int = 1000,
     seed: int = 42, batch_size: int = 64, updates_per_episode: int = 16,
     epsilon_start: float = 1.0, epsilon_end: float = 0.05, progress_every_steps: int = 0,
+    redistribute_battery_energy: bool = False, n_step: int = 1,
+    episode_credit_scope: str = 'sample', required_split_sizes: tuple[int,int] | None = None,
+    capture_trajectories: bool = False,
 ):
     if not 1 <= rounds <= 40 or updates_per_episode != 16 or batch_size < 1:
         raise ValueError("study permits at most 40 rounds and fixes episode cadence at 16")
-    if not 0 <= epsilon_end <= epsilon_start <= 1 or beta_soc < 0:
+    if (not 0 <= epsilon_end <= epsilon_start <= 1 or not math.isfinite(beta_soc) or beta_soc < 0
+            or episode_credit_scope not in ('sample','voyage')):
         raise ValueError("invalid beta or epsilon schedule")
     if dataset.opened_test_payloads != 0:
         raise RuntimeError("Test must be closed before the study")
-    output_dir = Path(output_dir)
+    output_dir = unarchived_output_path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     if any((output_dir / name).exists() for name in ("report.json", "round_history.json", "best_agent.pt")):
         raise FileExistsError("training requires a fresh result directory")
@@ -65,32 +87,48 @@ def run_monitored_training(
         raise ValueError("Train and Validation must be nonempty")
     if any(item.split != "train" for item in train) or any(item.split != "validation" for item in validation):
         raise ValueError("dataset split identity differs")
-    agent = DirectPowerDDQN(seed=seed)
+    if required_split_sizes is not None and (len(train),len(validation)) != required_split_sizes:
+        raise ValueError('dataset sizes differ from the required checkpoint qualification set')
+    agent = DirectPowerDDQN(seed=seed,n_step=n_step)
     accountant = EconomicMPC(nominal_cost_cny=1.0)
     schedule = EconomicUpdateSchedule(cadence, target_mode=target_mode, target_interval=target_interval)
     selector = BestCheckpoint()
     bootstrap_failed = []
     bootstrap_prefix = 0
+    bootstrap_completed_voyages = 0
+    failure_suffix_count = 0
+    no_suffix_failure_events = 0
+    initial_q_diagnostics = fixed_q_diagnostics(agent,accountant)
 
     def bootstrap_failure(exc):
-        nonlocal bootstrap_prefix
+        nonlocal bootstrap_prefix, bootstrap_completed_voyages, failure_suffix_count, no_suffix_failure_events
         bootstrap_failed.extend(exc.executed_transitions)
+        if exc.failure_kind == 'no_feasible_action' and (
+                not exc.executed_transitions or exc.executed_transitions[-1].done):
+            no_suffix_failure_events += 1
         if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
-            bootstrap_prefix += agent.remember_completed_prefix(exc.executed_transitions)
-            agent.remember_outcome_trajectory(exc.executed_transitions, failed=True)
+            retained = agent.remember_completed_prefix(exc.executed_transitions)
+            bootstrap_prefix += retained
+            bootstrap_completed_voyages += sum(t.done for t in exc.executed_transitions[:retained])
+            failure_suffix_count += len(exc.executed_transitions)-retained
+            agent.remember_outcome_trajectory(exc.executed_transitions,
+                                              failed=not exc.executed_transitions[-1].done)
 
     print(f"bootstrap beta={beta_soc:g} cadence={cadence} target={target_mode} start", flush=True)
     bootstrap, bootstrap_errors = _run_episodes(
         train, lambda state, feasible: min(feasible, key=lambda power: abs(power-state[1]*600)),
         accountant, beta_soc=beta_soc, on_failure=bootstrap_failure,
+        redistribute_battery_energy=redistribute_battery_energy,
     )
     for result in bootstrap:
-        for transition in result.transitions:
-            agent.remember_transition(transition)
+        agent.remember_trajectory(result.transitions)
+        bootstrap_completed_voyages += sum(t.done for t in result.transitions)
         if result.transitions:
             agent.remember_outcome_trajectory(result.transitions, failed=False)
-    schedule.grant(insertions=agent.economic_replay_insertions, completed_episodes=len(bootstrap))
+    schedule.grant(insertions=agent.economic_replay_insertions,
+                   completed_episodes=(len(bootstrap) if episode_credit_scope == 'sample' else bootstrap_completed_voyages))
     bootstrap_losses = schedule.consume(agent, batch_size=batch_size)
+    bootstrap_td_statistics = agent.td_statistics()
     for _ in range(16 * (len(bootstrap) + len(bootstrap_errors))):
         agent.learn_outcome(batch_size=batch_size)
     if target_mode == "round":
@@ -99,6 +137,7 @@ def run_monitored_training(
     print(f"bootstrap completed={len(bootstrap)}/{len(train)} economic_updates={agent.economic_optimizer_updates}", flush=True)
     history = []
     selected_steps = 0
+    executed_training_steps = 0
     evaluation_steps = 0
     best_record = None
     first_qualification = None
@@ -110,20 +149,33 @@ def run_monitored_training(
         "cadence": cadence, "updates_per_completed_episode": 16,
         "target_mode": target_mode, "target_interval_optimizer_updates": target_interval if target_mode == "optimizer" else None,
         "bootstrap_uses_same_cadence": True, "torch_threads": torch.get_num_threads(),
+        'redistribute_battery_energy': redistribute_battery_energy, 'n_step': n_step,
+        'episode_credit_scope': episode_credit_scope,
+        'required_split_sizes': list(required_split_sizes) if required_split_sizes is not None else None,
+        'battery_energy_value': {
+            'coefficient_cny': BatteryEnergyValue.from_accountant(accountant).coefficient_cny,
+            'reference_soc': BatteryEnergyValue.from_accountant(accountant).reference_soc,
+        },
     }
     source_commit = subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip()
+    source_worktree_dirty = bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
 
     def snapshot_report(completed_training=False):
         return {
             "completed_training": completed_training, "source_commit": source_commit,
+            'source_worktree_dirty': source_worktree_dirty,
             "hyperparameters": hyperparameters, "bootstrap": bootstrap_summary,
             "bootstrap_optimizer_updates": len(bootstrap_losses),
+            'formal_training_optimizer_updates': agent.economic_optimizer_updates-len(bootstrap_losses),
+            'bootstrap_td_statistics': bootstrap_td_statistics,
+            'initial_fixed_state_q_diagnostics': initial_q_diagnostics,
             "bootstrap_economic_replay_insertions": sum(len(x.transitions) for x in bootstrap)+bootstrap_prefix,
             "rounds": history, "best_checkpoint": best_record,
             "first_qualification": first_qualification, "eligible_rounds": selector.eligible_rounds,
             "test_payloads_opened": dataset.opened_test_payloads,
             "execution_counts": {
-                "training_environment_transitions": selected_steps,
+                "training_environment_transitions": executed_training_steps,
+                'training_policy_calls': selected_steps,
                 "bootstrap_environment_transitions": bootstrap_summary["executed_onboard_transitions"],
                 "greedy_evaluation_environment_transitions": evaluation_steps,
                 "economic_replay_insertions": agent.economic_replay_insertions,
@@ -131,10 +183,16 @@ def run_monitored_training(
                 "outcome_optimizer_updates": agent.outcome_optimizer_updates,
                 "target_sync_calls_including_initial_copy": agent.target_sync_calls,
                 "remaining_transition_credit": schedule.remaining_transition_credit,
+                'bootstrap_economic_optimizer_updates': len(bootstrap_losses),
+                'formal_training_economic_optimizer_updates': agent.economic_optimizer_updates-len(bootstrap_losses),
+                'failed_suffix_transitions_excluded_from_economic_replay': failure_suffix_count,
+                'no_feasible_action_events_without_executed_suffix': no_suffix_failure_events,
             },
             "elapsed_seconds": time.monotonic()-started,
             "cost_rule": "Actual plus modeled terminal settlement; SOC shaping excluded; incomplete split cost is null",
             "monitoring_rng_isolation": True,
+            'failure_training_semantics': 'Completed voyage prefixes enter economic Q; unfinished failure suffixes are outcome-only, without economic terminal or correction',
+            'dataset_class': type(dataset).__name__,
         }
 
     for round_index in range(1, rounds+1):
@@ -143,6 +201,9 @@ def run_monitored_training(
         )
         print(f"round {round_index}/{rounds} start epsilon={epsilon:.4f}",flush=True)
         results, failures, failed_transitions, losses = [], [], [], []
+        failure_profiles = []
+        completed_voyages = 0
+        agent.reset_td_statistics()
         before_insertions = agent.economic_replay_insertions
         before_updates = agent.economic_optimizer_updates
         for episode_index, episode in enumerate(train, start=1):
@@ -156,38 +217,62 @@ def run_monitored_training(
 
             before_episode_insertions = agent.economic_replay_insertions
             try:
-                result = replay_episode(episode,training_policy,accountant=accountant,beta_soc=beta_soc)
+                result = replay_episode(episode,training_policy,accountant=accountant,beta_soc=beta_soc,
+                                         redistribute_battery_energy=redistribute_battery_energy)
             except ReplayExecutionError as exc:
                 failures.append(f"{episode.sample_id}: {exc}")
                 failed_transitions.extend(exc.executed_transitions)
+                failure_profiles.append(trajectory_record(episode.sample_id,exc.executed_transitions,
+                                                          completed=False,failure=str(exc)))
+                prefix_voyages = 0
+                if exc.failure_kind == 'no_feasible_action' and (
+                        not exc.executed_transitions or exc.executed_transitions[-1].done):
+                    no_suffix_failure_events += 1
                 if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
-                    agent.remember_completed_prefix(exc.executed_transitions)
-                    agent.remember_outcome_trajectory(exc.executed_transitions,failed=True)
-                schedule.grant(insertions=agent.economic_replay_insertions-before_episode_insertions,completed_episodes=0)
+                    retained = agent.remember_completed_prefix(exc.executed_transitions)
+                    prefix_voyages = sum(t.done for t in exc.executed_transitions[:retained])
+                    completed_voyages += prefix_voyages
+                    failure_suffix_count += len(exc.executed_transitions)-retained
+                    agent.remember_outcome_trajectory(exc.executed_transitions,
+                                                      failed=not exc.executed_transitions[-1].done)
+                schedule.grant(insertions=agent.economic_replay_insertions-before_episode_insertions,
+                               completed_episodes=(prefix_voyages if episode_credit_scope == 'voyage' else 0))
                 losses.extend(schedule.consume(agent,batch_size=batch_size))
                 if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
                     for _ in range(16):
                         agent.learn_outcome(batch_size=batch_size)
                 continue
             results.append(result)
-            for transition in result.transitions:
-                agent.remember_transition(transition)
+            agent.remember_trajectory(result.transitions)
+            voyages = sum(t.done for t in result.transitions)
+            completed_voyages += voyages
             if result.transitions:
                 agent.remember_outcome_trajectory(result.transitions,failed=False)
-            schedule.grant(insertions=agent.economic_replay_insertions-before_episode_insertions,completed_episodes=1)
+            schedule.grant(insertions=agent.economic_replay_insertions-before_episode_insertions,
+                           completed_episodes=(voyages if episode_credit_scope == 'voyage' else 1))
             losses.extend(schedule.consume(agent,batch_size=batch_size))
             for _ in range(16):
                 agent.learn_outcome(batch_size=batch_size)
         if target_mode == "round":
             agent.sync_target()
         explore = _summarize(results,len(train),failures,failed_transitions)
+        executed_training_steps += explore['executed_onboard_transitions']
+        if capture_trajectories:
+            path = output_dir/f'round_{round_index:03d}_exploratory_trajectories.json'
+            _write_json(path,{'completed':[trajectory_record(r.sample_id,r.transitions,completed=True) for r in results],
+                              'failed':failure_profiles})
+            explore['trajectory_file'] = path.name
         print(f"round {round_index}/{rounds} exploratory={len(results)}/{len(train)} greedy_train start",flush=True)
-        greedy_train = greedy_evaluate(train,agent,accountant,beta_soc)
+        greedy_train = greedy_evaluate(train,agent,accountant,beta_soc,
+            redistribute_battery_energy=redistribute_battery_energy,
+            trajectory_path=output_dir/f'round_{round_index:03d}_train_trajectories.json' if capture_trajectories else None)
         evaluation_steps += greedy_train["executed_onboard_transitions"]
         greedy_validation = None
         if fully_completed(greedy_train):
             print(f"round {round_index}/{rounds} greedy_train={len(train)}/{len(train)} validation start",flush=True)
-            greedy_validation = greedy_evaluate(validation,agent,accountant,beta_soc)
+            greedy_validation = greedy_evaluate(validation,agent,accountant,beta_soc,
+                redistribute_battery_energy=redistribute_battery_energy,
+                trajectory_path=output_dir/f'round_{round_index:03d}_validation_trajectories.json' if capture_trajectories else None)
             evaluation_steps += greedy_validation["executed_onboard_transitions"]
         row = {
             "round":round_index,"epsilon":epsilon,"exploratory_train":explore,
@@ -198,9 +283,13 @@ def run_monitored_training(
             "economic_optimizer_updates_cumulative":agent.economic_optimizer_updates,
             "economic_replay_insertions":agent.economic_replay_insertions-before_insertions,
             "economic_replay_insertions_cumulative":agent.economic_replay_insertions,
-            "training_environment_transitions_cumulative":selected_steps,
+            "training_environment_transitions_cumulative":executed_training_steps,
+            'training_policy_calls_cumulative': selected_steps,
             "target_sync_calls_cumulative":agent.target_sync_calls,
             "remaining_transition_credit":schedule.remaining_transition_credit,
+            'td_statistics': agent.td_statistics(),
+            'fixed_state_q_diagnostics': fixed_q_diagnostics(agent,accountant),
+            'completed_voyages_entering_economic_replay': completed_voyages,
         }
         improved = selector.consider(round_index,greedy_train,greedy_validation)
         row["qualified_checkpoint"] = fully_completed(greedy_train) and fully_completed(greedy_validation)
@@ -208,7 +297,7 @@ def run_monitored_training(
         if row["qualified_checkpoint"] and first_qualification is None:
             first_qualification = {
                 "round":round_index,"economic_optimizer_updates":agent.economic_optimizer_updates,
-                "environment_transitions_including_bootstrap":selected_steps+bootstrap_summary["executed_onboard_transitions"],
+                "environment_transitions_including_bootstrap":executed_training_steps+bootstrap_summary["executed_onboard_transitions"],
                 "economic_replay_insertions":agent.economic_replay_insertions,
             }
         if improved:

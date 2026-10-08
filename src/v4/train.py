@@ -16,6 +16,7 @@ from v3.control import EconomicMPC
 from .control import ACTION_KW, DirectReplay, DirectTransition, ReplayExecutionError, replay_episode
 from .dqn import DirectPowerDDQN
 from .telemetry import soc_time_occupancy
+from .diagnostics import COMPONENT_NAMES, reward_totals
 
 
 def _summarize(
@@ -39,6 +40,14 @@ def _summarize(
         for item in results
     )
     comparable_cost = observed_cost + modeled_cost
+    completed_transitions = [t for item in results for t in item.transitions]
+    executed_transitions = [*completed_transitions, *failed_transitions]
+    voyage_terminal_soc = [t.actual_soc for t in executed_transitions if t.done]
+    executed_components = {
+        name: math.fsum(getattr(item.total_ledger,name) for item in results)
+              + math.fsum(getattr(t.original_economic_ledger,name) for t in failed_transitions)
+        for name in COMPONENT_NAMES
+    }
     return {
         "episodes": requested,
         "completed": len(results),
@@ -46,6 +55,19 @@ def _summarize(
         "cost_cny": comparable_cost if not failures else None,
         "completed_cost_cny": comparable_cost,
         "completed_observed_cost_cny": observed_cost,
+        'executed_observed_components_cny': executed_components,
+        'executed_observed_cost_cny': math.fsum(executed_components.values()),
+        'executed_cost_scope': 'Completed sample full ledgers plus retained failed transition ledgers; unattached leading SHORE of failed samples is not available here',
+        "completed_observed_components_cny": {
+            name: math.fsum(getattr(item.total_ledger, name) for item in results) for name in COMPONENT_NAMES
+        },
+        "completed_modeled_components_cny": {
+            name: math.fsum(getattr(item.modeled_terminal_settlement.ledger, name)
+                           for item in results if item.modeled_terminal_settlement is not None)
+            for name in COMPONENT_NAMES
+        },
+        "completed_reward_feedback": reward_totals(completed_transitions),
+        "executed_reward_feedback_including_failed_prefix": reward_totals(executed_transitions),
         "completed_modeled_terminal_cost_cny": modeled_cost,
         "completed_soc_soft_penalty_cny": sum(item.soc_soft_penalty_cny for item in results),
         "transitions": sum(len(item.transitions) for item in results),
@@ -58,6 +80,12 @@ def _summarize(
         "onboard_soc_mean": math.fsum(all_onboard_soc) / len(all_onboard_soc) if all_onboard_soc else None,
         "fc_zero_fraction": sum(value == 0 for value in all_fc) / len(all_fc) if all_fc else None,
         "fc_starts": starts,
+        "executed_fc_starts_including_failed_prefix": sum(
+            t.state[4] == 0 and t.action_kw > 0 for t in executed_transitions),
+        "completed_voyages": sum(t.done for t in completed_transitions),
+        'voyage_terminal_soc_mean': math.fsum(voyage_terminal_soc)/len(voyage_terminal_soc) if voyage_terminal_soc else None,
+        'voyage_terminal_soc_min': min(voyage_terminal_soc) if voyage_terminal_soc else None,
+        'voyage_terminal_soc_max': max(voyage_terminal_soc) if voyage_terminal_soc else None,
         "soc_min": min(soc) if soc else None,
         "soc_max": max(soc) if soc else None,
         "onboard_soc_min": min(onboard_soc) if onboard_soc else None,
@@ -71,13 +99,16 @@ def _summarize(
     }
 
 
-def _run_episodes(episodes, policy, accountant, *, on_failure=None, beta_soc: float = 0.0):
+def _run_episodes(episodes, policy, accountant, *, on_failure=None, beta_soc: float = 0.0,
+                  redistribute_battery_energy: bool = False):
     results: list[DirectReplay] = []
     failures: list[str] = []
     for episode in episodes:
         try:
-            results.append(replay_episode(episode, policy, accountant=accountant, beta_soc=beta_soc))
+            results.append(replay_episode(episode, policy, accountant=accountant, beta_soc=beta_soc,
+                                          redistribute_battery_energy=redistribute_battery_energy))
         except ReplayExecutionError as exc:
+            exc.sample_id = str(episode.sample_id)
             failures.append(f"{episode.sample_id}: {exc}")
             if on_failure is not None:
                 on_failure(exc)
@@ -133,7 +164,8 @@ def run_train_validation(
         bootstrap_failed_transitions.extend(exc.executed_transitions)
         if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
             bootstrap_completed_prefixes += agent.remember_completed_prefix(exc.executed_transitions)
-            agent.remember_outcome_trajectory(exc.executed_transitions, failed=True)
+            agent.remember_outcome_trajectory(exc.executed_transitions,
+                                              failed=not exc.executed_transitions[-1].done)
             bootstrap_failed_prefixes += len(exc.executed_transitions)
 
     if progress_every_steps:
@@ -210,7 +242,8 @@ def run_train_validation(
                 round_failed_transitions.extend(exc.executed_transitions)
                 if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
                     completed_prefix_transitions += agent.remember_completed_prefix(exc.executed_transitions)
-                    agent.remember_outcome_trajectory(exc.executed_transitions, failed=True)
+                    agent.remember_outcome_trajectory(exc.executed_transitions,
+                                                      failed=not exc.executed_transitions[-1].done)
                     failed_prefix_transitions += len(exc.executed_transitions)
                     for _ in range(updates_per_episode):
                         loss = agent.learn_outcome(batch_size=batch_size)

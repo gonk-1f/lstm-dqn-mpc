@@ -1,0 +1,295 @@
+{
+  "purpose": "fixed synthetic physical trajectories; no learned policy or optimizer updates",
+  "base_commit": "4a425b4",
+  "test_payloads_opened": 0,
+  "beta_soc": 500,
+  "battery_value_coefficient_cny": 722.5263157894739,
+  "float_tolerance": {
+    "relative": 1e-12,
+    "absolute": 1e-08
+  },
+  "cases": [
+    {
+      "case": "A_modeled",
+      "initial_soc": 0.55,
+      "onboard_decisions": 4,
+      "completed_voyages": 1,
+      "original_economic_ledger": {
+        "h2_cost_cny": 1.72836624128373,
+        "fuel_cell_degradation_cost_cny": 383.24249999999995,
+        "battery_degradation_cost_cny": 0.7294374746348582,
+        "shore_cost_cny": 0.0
+      },
+      "modeled_terminal_ledger": {
+        "h2_cost_cny": 0.0,
+        "fuel_cell_degradation_cost_cny": 0.0,
+        "battery_degradation_cost_cny": 11.232268607445377,
+        "shore_cost_cny": 39.68125577100656
+      },
+      "ledger_strictly_equal": true,
+      "old_reward_sum": -436.6138280943705,
+      "new_reward_sum": -436.6138280943705,
+      "reward_sum_difference": 0.0,
+      "per_voyage_reward_sum_differences": [
+        0.0
+      ],
+      "soft_penalty": 0.0,
+      "immediate_adjustment_sum": -3.5549399815327902,
+      "terminal_correction_sum": 3.5549399815327902
+    },
+    {
+      "case": "B_high_terminal",
+      "initial_soc": 0.7,
+      "onboard_decisions": 3,
+      "completed_voyages": 1,
+      "original_economic_ledger": {
+        "h2_cost_cny": 0.0,
+        "fuel_cell_degradation_cost_cny": 0.0,
+        "battery_degradation_cost_cny": 0.15396768162393165,
+        "shore_cost_cny": 0.0
+      },
+      "modeled_terminal_ledger": {
+        "h2_cost_cny": 0.0,
+        "fuel_cell_degradation_cost_cny": 0.0,
+        "battery_degradation_cost_cny": 0.0,
+        "shore_cost_cny": 0.0
+      },
+      "ledger_strictly_equal": true,
+      "old_reward_sum": -14.874792240194422,
+      "new_reward_sum": -14.874792240194422,
+      "reward_sum_difference": 0.0,
+      "per_voyage_reward_sum_differences": [
+        0.0
+      ],
+      "soft_penalty": 14.720824558570492,
+      "immediate_adjustment_sum": -1.0156971375807728,
+      "terminal_correction_sum": 1.0156971375807728
+    },
+    {
+      "case": "C_actual_shore",
+      "initial_soc": 0.52,
+      "onboard_decisions": 3,
+      "completed_voyages": 1,
+      "original_economic_ledger": {
+        "h2_cost_cny": 0.864183120641865,
+        "fuel_cell_degradation_cost_cny": 381.97124999999994,
+        "battery_degradation_cost_cny": 4.194474206690774,
+        "shore_cost_cny": 12.042105263157897
+      },
+      "modeled_terminal_ledger": {
+        "h2_cost_cny": 0.0,
+        "fuel_cell_degradation_cost_cny": 0.0,
+        "battery_degradation_cost_cny": 0.0,
+        "shore_cost_cny": 0.0
+      },
+      "ledger_strictly_equal": true,
+      "old_reward_sum": -399.0720125904905,
+      "new_reward_sum": -399.0720125904905,
+      "reward_sum_difference": 0.0,
+      "per_voyage_reward_sum_differences": [
+        0.0
+      ],
+      "soft_penalty": 0.0,
+      "immediate_adjustment_sum": -2.031394275161624,
+      "terminal_correction_sum": 2.031394275161624
+    },
+    {
+      "case": "D_two_voyages",
+      "initial_soc": 0.52,
+      "onboard_decisions": 5,
+      "completed_voyages": 2,
+      "original_economic_ledger": {
+        "h2_cost_cny": 2.664036465745202,
+        "fuel_cell_degradation_cost_cny": 785.9925,
+        "battery_degradation_cost_cny": 4.626189365869788,
+        "shore_cost_cny": 12.042105263157897
+      },
+      "modeled_terminal_ledger": {
+        "h2_cost_cny": 0.0,
+        "fuel_cell_degradation_cost_cny": 0.0,
+        "battery_degradation_cost_cny": 13.843931634354796,
+        "shore_cost_cny": 47.89042474607593
+      },
+      "ledger_strictly_equal": true,
+      "old_reward_sum": -867.0591874752035,
+      "new_reward_sum": -867.0591874752035,
+      "reward_sum_difference": 0.0,
+      "per_voyage_reward_sum_differences": [
+        0.0,
+        -5.684341886080802e-14
+      ],
+      "soft_penalty": 0.0,
+      "immediate_adjustment_sum": -2.130424746075761,
+      "terminal_correction_sum": 2.130424746075761
+    },
+    {
+      "case": "E_fc_charging",
+      "initial_soc": 0.5,
+      "onboard_decisions": 4,
+      "completed_voyages": 1,
+      "original_economic_ledger": {
+        "h2_cost_cny": 11.997036519918716,
+        "fuel_cell_degradation_cost_cny": 493.8850000000001,
+        "battery_degradation_cost_cny": 2.88502359275566,
+        "shore_cost_cny": 0.0
+      },
+      "modeled_terminal_ledger": {
+        "h2_cost_cny": 0.0,
+        "fuel_cell_degradation_cost_cny": 0.0,
+        "battery_degradation_cost_cny": 18.473281246647666,
+        "shore_cost_cny": 63.085964912280986
+      },
+      "ledger_strictly_equal": true,
+      "old_reward_sum": -590.3263062716031,
+      "new_reward_sum": -590.3263062716031,
+      "reward_sum_difference": 0.0,
+      "per_voyage_reward_sum_differences": [
+        0.0
+      ],
+      "soft_penalty": 0.0,
+      "immediate_adjustment_sum": 9.1666666666666,
+      "terminal_correction_sum": -9.1666666666666
+    },
+    {
+      "case": "F_cross_working_band",
+      "initial_soc": 0.4014,
+      "onboard_decisions": 33,
+      "completed_voyages": 1,
+      "original_economic_ledger": {
+        "h2_cost_cny": 179.95554779878074,
+        "fuel_cell_degradation_cost_cny": 534.9750000000004,
+        "battery_degradation_cost_cny": 60.21871943596629,
+        "shore_cost_cny": 0.0
+      },
+      "modeled_terminal_ledger": {
+        "h2_cost_cny": 0.0,
+        "fuel_cell_degradation_cost_cny": 0.0,
+        "battery_degradation_cost_cny": 0.0,
+        "shore_cost_cny": 0.0
+      },
+      "ledger_strictly_equal": true,
+      "old_reward_sum": -775.5217239958397,
+      "new_reward_sum": -775.5217239958396,
+      "reward_sum_difference": 1.1368683772161603e-13,
+      "per_voyage_reward_sum_differences": [
+        1.1368683772161603e-13
+      ],
+      "soft_penalty": 0.3724567610922479,
+      "immediate_adjustment_sum": 154.8430286241921,
+      "terminal_correction_sum": -154.8430286241921
+    },
+    {
+      "case": "G_unchanged",
+      "initial_soc": 0.55,
+      "onboard_decisions": 3,
+      "completed_voyages": 1,
+      "original_economic_ledger": {
+        "h2_cost_cny": 1.7998533451033367,
+        "fuel_cell_degradation_cost_cny": 404.02124999999995,
+        "battery_degradation_cost_cny": 0.0,
+        "shore_cost_cny": 0.0
+      },
+      "modeled_terminal_ledger": {
+        "h2_cost_cny": 0.0,
+        "fuel_cell_degradation_cost_cny": 0.0,
+        "battery_degradation_cost_cny": 10.3120050462963,
+        "shore_cost_cny": 36.12631578947369
+      },
+      "ledger_strictly_equal": true,
+      "old_reward_sum": -452.2594241808733,
+      "new_reward_sum": -452.2594241808733,
+      "reward_sum_difference": 0.0,
+      "per_voyage_reward_sum_differences": [
+        0.0
+      ],
+      "soft_penalty": 0.0,
+      "immediate_adjustment_sum": 0.0,
+      "terminal_correction_sum": 0.0
+    },
+    {
+      "case": "H_length1_soc0.3",
+      "initial_soc": 0.3,
+      "onboard_decisions": 1,
+      "completed_voyages": 1,
+      "original_economic_ledger": {
+        "h2_cost_cny": 0.864183120641865,
+        "fuel_cell_degradation_cost_cny": 370.94624999999996,
+        "battery_degradation_cost_cny": 0.0,
+        "shore_cost_cny": 0.0
+      },
+      "modeled_terminal_ledger": {
+        "h2_cost_cny": 0.0,
+        "fuel_cell_degradation_cost_cny": 0.0,
+        "battery_degradation_cost_cny": 78.24390527777769,
+        "shore_cost_cny": 216.75789473684196
+      },
+      "ledger_strictly_equal": true,
+      "old_reward_sum": -671.8122331352615,
+      "new_reward_sum": -671.8122331352615,
+      "reward_sum_difference": 0.0,
+      "per_voyage_reward_sum_differences": [
+        0.0
+      ],
+      "soft_penalty": 5.0000000000000036,
+      "immediate_adjustment_sum": 0.0,
+      "terminal_correction_sum": 0.0
+    },
+    {
+      "case": "H_length9_soc0.5",
+      "initial_soc": 0.5,
+      "onboard_decisions": 9,
+      "completed_voyages": 1,
+      "original_economic_ledger": {
+        "h2_cost_cny": 7.777648085776785,
+        "fuel_cell_degradation_cost_cny": 381.1162499999999,
+        "battery_degradation_cost_cny": 0.0,
+        "shore_cost_cny": 0.0
+      },
+      "modeled_terminal_ledger": {
+        "h2_cost_cny": 0.0,
+        "fuel_cell_degradation_cost_cny": 0.0,
+        "battery_degradation_cost_cny": 21.57576175925927,
+        "shore_cost_cny": 72.25263157894739
+      },
+      "ledger_strictly_equal": true,
+      "old_reward_sum": -482.72229142398334,
+      "new_reward_sum": -482.72229142398334,
+      "reward_sum_difference": 0.0,
+      "per_voyage_reward_sum_differences": [
+        0.0
+      ],
+      "soft_penalty": 0.0,
+      "immediate_adjustment_sum": 0.0,
+      "terminal_correction_sum": 0.0
+    },
+    {
+      "case": "H_length37_soc0.7",
+      "initial_soc": 0.7,
+      "onboard_decisions": 37,
+      "completed_voyages": 1,
+      "original_economic_ledger": {
+        "h2_cost_cny": 31.974775463749005,
+        "fuel_cell_degradation_cost_cny": 416.71124999999984,
+        "battery_degradation_cost_cny": 0.0,
+        "shore_cost_cny": 0.0
+      },
+      "modeled_terminal_ledger": {
+        "h2_cost_cny": 0.0,
+        "fuel_cell_degradation_cost_cny": 0.0,
+        "battery_degradation_cost_cny": 0.0,
+        "shore_cost_cny": 0.0
+      },
+      "ledger_strictly_equal": true,
+      "old_reward_sum": -633.6860254637487,
+      "new_reward_sum": -633.6860254637487,
+      "reward_sum_difference": 0.0,
+      "per_voyage_reward_sum_differences": [
+        0.0
+      ],
+      "soft_penalty": 184.99999999999991,
+      "immediate_adjustment_sum": 0.0,
+      "terminal_correction_sum": 0.0
+    }
+  ],
+  "maximum_absolute_cumulative_reward_difference": 1.1368683772161603e-13
+}

@@ -11,9 +11,11 @@ from v2.economics import RawCnyIntervalLedger, ShoreEnergyClassification
 from v2.models.battery_energy import next_soc
 from v2.models.battery_degradation import battery_life_state
 from v2.models.fuel_cell_degradation import fuel_cell_life_state
-from v3.control import AccountState, EconomicMPC, SOC_MAX, SOC_MIN
+from v3.control import AccountState, EconomicMPC, SOC_MAX, SOC_MIN, SHORE_TARGET_SOC
 from v3.episode_replay import SHORE_MODES, ShoreBlock, _ledger_total, _validated_rows
 from v3.shore import settle_shore_segment
+
+from .reward_feedback import BatteryEnergyValue
 
 
 ACTION_KW = tuple(range(0, 601, 10))
@@ -62,6 +64,20 @@ class DirectTransition:
     shore_ledger: RawCnyIntervalLedger | None = None
     modeled_terminal_ledger: RawCnyIntervalLedger | None = None
     soc_soft_penalty_cny: float = 0.0
+    original_reward: float | None = None
+    immediate_battery_energy_adjustment: float = 0.0
+    terminal_correction: float = 0.0
+
+    @property
+    def new_reward(self) -> float:
+        return self.reward_cny
+
+    @property
+    def original_economic_ledger(self) -> RawCnyIntervalLedger:
+        """Observed four-component ledger; modeled settlement is separate."""
+        if self.shore_ledger is None:
+            return self.executed_ledger
+        return _ledger_total((self.executed_ledger, self.shore_ledger))
 
 
 @dataclass(frozen=True)
@@ -106,7 +122,7 @@ def modeled_terminal_settlement(
     physical: AccountState, accountant: EconomicMPC,
 ) -> ModeledTerminalSettlement | None:
     """Value missing recharge to SOC 0.6 at the bounded 624 kW charge rate."""
-    reference_soc = 0.6
+    reference_soc = SHORE_TARGET_SOC
     if physical.soc >= reference_soc:
         return None
     charge_kw = -accountant.plant.battery_charge_min_kw
@@ -181,12 +197,14 @@ def replay_episode(
     episode: object, policy: Callable[[tuple[float, ...], tuple[int, ...]], int], *,
     accountant: EconomicMPC, initial_state: AccountState | None = None,
     beta_soc: float = 0.0,
+    redistribute_battery_energy: bool = False,
 ) -> DirectReplay:
     """Execute ONBOARD FC actions; route shore rows outside the DQN policy.
 
     The current exogenous load is observed before the FC decision. Physical
     feasibility is screened from that measurement; an invalid command fails
-    closed without power clipping or a synthetic cost.
+    closed without power clipping or a synthetic cost. Reward redistribution
+    is opt-in so historical callers keep their original reward timing.
     """
     modes, loads, requests = _validated_rows(episode)
     if not callable(policy):
@@ -197,6 +215,9 @@ def replay_episode(
         raise TypeError("initial_state must be an AccountState")
     if not isfinite(beta_soc) or beta_soc < 0.0:
         raise ValueError("beta_soc must be finite and nonnegative")
+    if type(redistribute_battery_energy) is not bool:
+        raise ValueError('redistribute_battery_energy must be bool')
+    energy_value = BatteryEnergyValue.from_accountant(accountant)
     physical = initial_state or AccountState()
     transitions: list[DirectTransition] = []
     shore_blocks: list[ShoreBlock] = []
@@ -233,6 +254,7 @@ def replay_episode(
             continue
 
         history = (0.0,)  # virtual departure boundary, never a physical row
+        voyage_initial_soc = physical.soc
         while index < len(modes) and modes[index] is OperatingMode.ONBOARD:
             try:
                 actual_load = normalize_onboard_load_kw(loads[index])
@@ -298,6 +320,15 @@ def replay_episode(
                 if terminal_settlement is not None:
                     modeled_ledger = terminal_settlement.ledger
                     reward += modeled_ledger.reward_cny
+            original_reward = reward
+            # Actual onboard SOC comes from next_physical, before any shore
+            # settlement changes physical. No extra efficiency is applied.
+            adjustment = correction = 0.0
+            if redistribute_battery_energy:
+                adjustment = -(energy_value(next_physical.soc) - energy_value(decision_state[0]))
+                if last_onboard:
+                    correction = energy_value(next_physical.soc) - energy_value(voyage_initial_soc)
+                reward = original_reward + adjustment + correction
             if shore_ledger is not None:
                 successor_history = (0.0, normalize_onboard_load_kw(loads[shore_end])) if shore_end < len(modes) else (0.0,)
             elif index + 1 < len(modes) and modes[index + 1] is OperatingMode.ONBOARD:
@@ -313,6 +344,7 @@ def replay_episode(
                 decision_state, fc_kw, reward, next_state, ledger,
                 battery_kw, next_physical.soc, last_onboard, next_feasible,
                 shore_ledger, modeled_ledger, soc_penalty,
+                original_reward, adjustment, correction,
             ))
             if last_onboard and shore_ledger is not None:
                 index = shore_end
