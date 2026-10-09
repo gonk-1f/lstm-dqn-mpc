@@ -1,5 +1,6 @@
 from dataclasses import replace
 from math import fsum
+from unittest.mock import patch
 
 import pytest
 import torch
@@ -17,9 +18,13 @@ def branch(first_power=0, *, feedback=False, modes=None, loads=None, initial_soc
     data = episode(modes or ('onboard',)*3, loads or (600,1000,0), (0,)*len(modes or ('onboard',)*3))
     powers = iter((first_power,600,0))
     try:
-        result = replay_episode(data,lambda _s,_a:next(powers),accountant=accountant,
-            initial_state=AccountState(soc=initial_soc),beta_soc=500,
-            redistribute_battery_energy=feedback)
+        # Preserve this historical economic-TD corpus independently of the
+        # newer strategy gate; all fixed actions remain physically feasible.
+        with patch('v4.control.policy_candidate_fc_actions',
+                   side_effect=lambda physical, _previous: physical):
+            result = replay_episode(data,lambda _s,_a:next(powers),accountant=accountant,
+                initial_state=AccountState(soc=initial_soc),beta_soc=500,
+                redistribute_battery_energy=feedback)
         return result, accountant
     except ReplayExecutionError as error:
         return error, accountant

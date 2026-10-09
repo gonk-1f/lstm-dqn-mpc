@@ -2,6 +2,7 @@
 from dataclasses import replace
 from math import fsum
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 
@@ -36,9 +37,14 @@ def fixed_replay(case, *, feedback):
         power = next(powers)
         assert power in feasible
         return power
-    result = replay_episode(episode(modes, loads, requests), policy,
-                            accountant=accountant, initial_state=AccountState(soc=soc),
-                            beta_soc=500, redistribute_battery_energy=feedback)
+    # Historical reward contracts include physically legal FC shutdown actions
+    # that Scheme A now excludes from policy selection. Bypass only the strategy
+    # gate in this isolated ledger regression; the real plant remains unchanged.
+    with patch('v4.control.policy_candidate_fc_actions',
+               side_effect=lambda physical, _previous: physical):
+        result = replay_episode(episode(modes, loads, requests), policy,
+                                accountant=accountant, initial_state=AccountState(soc=soc),
+                                beta_soc=500, redistribute_battery_energy=feedback)
     return result, accountant
 
 

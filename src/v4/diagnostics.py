@@ -39,6 +39,8 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None, reward
     transitions = tuple(transitions)
     rows, voyage = [], 0
     for item in transitions:
+        physical_actions = getattr(item, 'physical_feasible_actions', ())
+        candidate_actions = getattr(item, 'policy_candidate_actions', ())
         rows.append({
             'voyage_index': voyage, 'soc_before': item.state[0], 'soc_after': item.actual_soc,
             'fc_kw': item.action_kw, 'battery_bus_kw': item.actual_battery_kw,
@@ -52,6 +54,13 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None, reward
             'actual_shore_ledger': ledger_components(item.shore_ledger),
             'modeled_terminal_settlement': ledger_components(item.modeled_terminal_ledger),
             'done': item.done, 'next_feasible_actions_kw': list(item.next_feasible_actions),
+            'physical_feasible_actions_kw': list(physical_actions),
+            'policy_candidate_actions_kw': list(candidate_actions),
+            'fc_stop_reason': (
+                'forced_no_positive_action' if item.action_kw == 0 and item.state[4] > 0
+                and physical_actions == (0,) else
+                'delayed_or_continued_off' if item.action_kw == 0 else None
+            ),
             'terminal_reason':item.terminal_reason or ('completed' if item.done else None),
             'successful_terminal':item.is_successful_terminal,
             'failure_penalty_equivalent_cny':item.failure_penalty_equivalent_cny,

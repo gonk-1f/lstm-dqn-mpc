@@ -72,6 +72,8 @@ class DirectTransition:
     terminal_correction: float = 0.0
     terminal_reason: str | None = None
     failure_penalty_equivalent_cny: float = 0.0
+    physical_feasible_actions: tuple[int, ...] = ()
+    policy_candidate_actions: tuple[int, ...] = ()
 
     @property
     def is_successful_terminal(self) -> bool:
@@ -178,7 +180,7 @@ def _checked_action(value: object, feasible_actions: tuple[int, ...]) -> int:
     if type(value) is not int or value not in ACTION_KW:
         raise ValueError("FC action must be an exact 10 kW-grid integer in [0, 600]")
     if value not in feasible_actions:
-        raise ValueError("FC action violates actual battery power or SOC bounds")
+        raise ValueError("FC action violates the current strategy candidate mask")
     return value
 
 
@@ -200,6 +202,21 @@ def feasible_fc_actions(
         if SOC_MIN - 1e-9 <= soc <= SOC_MAX + 1e-9:
             feasible.append(fc_kw)
     return tuple(feasible)
+
+
+def policy_candidate_fc_actions(
+    physical_actions: tuple[int, ...], previous_fc_kw: float,
+) -> tuple[int, ...]:
+    """Retain FC output when possible without changing physical feasibility.
+
+    A previously running FC may stop only when the physical mask has no
+    positive action. An OFF FC can remain OFF or start as before.
+    """
+    if previous_fc_kw > 0.0:
+        positive = tuple(action for action in physical_actions if action > 0)
+        if positive:
+            return positive
+    return physical_actions
 
 
 def infeasibility_cause(measured_load_kw: float, accountant: EconomicMPC) -> str:
@@ -279,13 +296,16 @@ def replay_episode(
                 actual_load = normalize_onboard_load_kw(loads[index])
                 current_history = (*history[-2:], actual_load)
                 decision_state = build_state(physical, current_history, accountant, departure=len(history) == 1)
-                feasible_actions = feasible_fc_actions(physical, actual_load, accountant)
-                if not feasible_actions:
+                physical_actions = feasible_fc_actions(physical, actual_load, accountant)
+                if not physical_actions:
                     empty_physical_mask=True
                     raise NoFeasibleFCActionError(
                         "no feasible FC action for actual battery power and SOC bounds"
                     )
-                fc_kw = _checked_action(policy(decision_state, feasible_actions), feasible_actions)
+                candidate_actions = policy_candidate_fc_actions(
+                    physical_actions, physical.previous_fc_kw,
+                )
+                fc_kw = _checked_action(policy(decision_state, candidate_actions), candidate_actions)
                 next_physical, ledger, battery_kw = accountant.interval(physical, fc_kw, actual_load)
                 if not accountant.plant.battery_charge_min_kw <= battery_kw <= accountant.plant.battery_discharge_max_kw:
                     raise RuntimeError("actual battery power exceeded physical bounds")
@@ -359,9 +379,12 @@ def replay_episode(
             else:
                 successor_history = history
             next_state = build_state(physical, successor_history, accountant, departure=shore_ledger is not None)
-            next_feasible = (
+            next_physical_actions = (
                 feasible_fc_actions(physical, loads[index + 1], accountant)
                 if not last_onboard else ()
+            )
+            next_feasible = policy_candidate_fc_actions(
+                next_physical_actions, physical.previous_fc_kw,
             )
             transitions.append(DirectTransition(
                 decision_state, fc_kw, reward, next_state, ledger,
@@ -369,6 +392,8 @@ def replay_episode(
                 shore_ledger, modeled_ledger, soc_penalty,
                 original_reward, adjustment, correction,
                 'completed' if last_onboard else None,
+                physical_feasible_actions=physical_actions,
+                policy_candidate_actions=candidate_actions,
             ))
             if last_onboard and shore_ledger is not None:
                 index = shore_end
