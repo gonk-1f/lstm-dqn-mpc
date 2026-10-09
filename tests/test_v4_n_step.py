@@ -5,8 +5,11 @@ import pytest
 import torch
 
 from test_v4_control import NoSolveAccountant, episode
-from v4.control import replay_episode
+from v3.control import AccountState
+from v4.control import ReplayExecutionError, replay_episode
 from v4.dqn import DirectPowerDDQN, masked_double_dqn_targets
+from v4.failure_replay import FailurePenalty, prepare_failure_replay
+from v4.reward_feedback import BatteryEnergyValue
 
 
 @pytest.mark.parametrize('n', (1,8))
@@ -65,6 +68,135 @@ def test_n_step_refuses_spliced_noncontiguous_voyages_without_boundary():
     with pytest.raises(ValueError,match='contiguous'):
         agent.remember_trajectory(mixed)
     assert not agent.replay and agent.economic_replay_insertions == 0
+
+
+def _soc_limited_failure(executed_steps, *, previous_voyage=False):
+    """Only the next, unexecuted 1000 kW row is infeasible after 600 kW discharge."""
+    accountant = NoSolveAccountant()
+    loads = (0.,) * (executed_steps - 1) + (600., 1000.)
+    modes = ('onboard',) * (executed_steps + 1)
+    shore = (0.,) * len(modes)
+    initial_soc = .2135
+    if previous_voyage:
+        modes = ('onboard',) * 3 + ('shore_charging',) + modes
+        loads = (0.,) * 4 + loads
+        shore = (0., 0., 0., -100.) + shore
+        initial_soc = .212
+    with pytest.raises(ReplayExecutionError) as caught:
+        replay_episode(episode(modes, loads, shore), lambda _s, _mask: 0,
+                       accountant=accountant, initial_state=AccountState(soc=initial_soc),
+                       beta_soc=500, redistribute_battery_energy=True)
+    error = caught.value
+    assert error.failure_kind == 'no_feasible_action'
+    assert error.failure_cause == 'soc_limited'
+    penalty = FailurePenalty.from_reference()
+    view = prepare_failure_replay(
+        error, penalty=penalty, energy_value=BatteryEnergyValue.from_accountant(accountant),
+        redistribute_battery_energy=True,
+    )
+    return error, view, penalty
+
+
+@pytest.mark.parametrize('executed_steps', (2, 7, 8, 9, 12))
+def test_n_step_eight_soc_failure_windows_stop_at_real_terminal(executed_steps):
+    error, view, penalty = _soc_limited_failure(executed_steps)
+    assert len(error.executed_transitions) == executed_steps
+    assert len(view.transitions) == executed_steps
+    assert view.failed_suffix_transitions == executed_steps
+    assert sum(t.terminal_reason == 'failure_soc_limited' for t in view.transitions) == 1
+    assert sum(t.failure_penalty_equivalent_cny for t in view.transitions) == pytest.approx(penalty.amount)
+    assert fsum(t.reward_cny for t in view.transitions) == pytest.approx(
+        fsum(t.original_reward for t in error.executed_transitions) - penalty.amount)
+    assert all(left.executed_ledger == right.executed_ledger
+               for left, right in zip(error.executed_transitions, view.transitions))
+    assert all(t.shore_ledger is None and t.modeled_terminal_ledger is None
+               for t in view.transitions)
+
+    agent = DirectPowerDDQN(seed=42, n_step=8, reward_scale=.001,
+                            failure_terminal_quota=2)
+    assert agent.remember_trajectory(view.transitions) == executed_steps
+    terminal_entries = min(8, executed_steps)
+    assert len(agent.replay) == agent.economic_failure_replay_insertions == executed_steps
+    assert agent.failure_terminal_replay_count == terminal_entries
+    assert agent.economic_failure_terminal_insertions == terminal_entries
+    for index, item in enumerate(agent.replay):
+        end = min(index + 8, executed_steps)
+        tail = view.transitions[end - 1]
+        assert item.reward_cny == pytest.approx(.001 * fsum(
+            t.reward_cny for t in view.transitions[index:end]))
+        unpenalized = fsum(
+            t.original_reward + t.immediate_battery_energy_adjustment + t.terminal_correction
+            for t in view.transitions[index:end])
+        assert item.reward_cny == pytest.approx(
+            .001 * (unpenalized - (penalty.amount if end == executed_steps else 0.)))
+        assert item.bootstrap_steps == end - index
+        assert item.next_state == tail.next_state
+        assert tuple(action * 10 for action in item.next_feasible_indices) == tail.next_feasible_actions
+        assert item.experience_outcome == 'failure'
+        assert item.done == (end == executed_steps)
+        assert item.terminal_reason == ('failure_soc_limited' if item.done else None)
+        assert item.failure_penalty_equivalent_cny == (penalty.amount if item.done else 0.)
+        if item.done:
+            assert not item.next_feasible_indices
+            target = masked_double_dqn_targets(
+                torch.tensor([[item.reward_cny]]), torch.zeros((1, 61)),
+                torch.full((1, 61), 999.), torch.ones((1, 1)),
+                next_action_masks=torch.zeros((1, 61), dtype=torch.bool), gamma=1.,
+                bootstrap_steps=torch.tensor([[item.bootstrap_steps]]))
+            assert target.item() == pytest.approx(item.reward_cny, abs=1e-6)
+
+
+def test_n_step_eight_failure_after_shore_does_not_join_previous_voyage():
+    error, view, penalty = _soc_limited_failure(9, previous_voyage=True)
+    assert len(error.executed_transitions) == len(view.transitions) == 12
+    assert view.successful_prefix_transitions == 3
+    assert view.failed_suffix_transitions == 9
+    assert view.transitions[2].is_successful_terminal
+    assert view.transitions[2].shore_ledger is not None
+    assert all(t.shore_ledger is None and t.modeled_terminal_ledger is None
+               for t in view.transitions[3:])
+    assert all(t.failure_penalty_equivalent_cny == 0 for t in view.transitions[:3])
+    assert view.transitions[3].state[0] != pytest.approx(.6)
+
+    agent = DirectPowerDDQN(seed=42, n_step=8, failure_terminal_quota=2)
+    agent.remember_trajectory(view.transitions)
+    assert [item.experience_outcome for item in list(agent.replay)[:3]] == ['success'] * 3
+    assert all(item.done and item.terminal_reason == 'completed'
+               for item in list(agent.replay)[:3])
+    assert agent.replay[0].reward_cny == pytest.approx(fsum(
+        t.reward_cny for t in view.transitions[:3]))
+    assert agent.replay[3].bootstrap_steps == 8 and not agent.replay[3].done
+    assert agent.replay[3].failure_penalty_equivalent_cny == 0.
+    assert agent.failure_terminal_replay_count == 8
+    assert sum(item.failure_penalty_equivalent_cny for item in agent.replay) == pytest.approx(
+        8 * penalty.amount)  # Replay metadata, not eight physical penalties.
+    assert sum(t.failure_penalty_equivalent_cny for t in view.transitions) == pytest.approx(
+        penalty.amount)
+
+
+def test_n_step_eight_quota_samples_windows_not_independent_failure_events():
+    _error, view, penalty = _soc_limited_failure(9)
+    agent = DirectPowerDDQN(seed=17, n_step=8, reward_scale=.001,
+                            failure_terminal_quota=2, replay_capacity=80)
+    agent.remember_trajectory(view.transitions)
+    for index in range(62):
+        state = (.4, index / 100., 0., 0., 0., 0., 0., 0.)
+        agent.remember(state, 0, 0., state, done=True, next_feasible_actions=())
+    assert agent.economic_failure_terminal_insertions == 8
+    assert agent.failure_terminal_replay_count == 8
+    assert len(agent.replay) == 71
+    batch = agent._sample_replay_batch(64)
+    terminal = [item for item in batch if item.terminal_reason == 'failure_soc_limited']
+    assert len(batch) == len({id(item) for item in batch}) == 64
+    assert len(terminal) == 2
+    assert all(item.failure_penalty_equivalent_cny == penalty.amount for item in terminal)
+    assert agent.learn(batch_size=64) is not None
+    assert agent.td_statistics()['sample_outcomes']['failure_terminal'] == 2
+    for index in range(80):
+        state = (.5, index / 100., 0., 0., 0., 0., 0., 0.)
+        agent.remember(state, 0, 0., state, done=True, next_feasible_actions=())
+    assert agent.failure_terminal_replay_count == 0
+    assert not any(item.terminal_reason == 'failure_soc_limited' for item in agent.replay)
 
 
 @pytest.mark.parametrize('interval', (250,500,1000))
