@@ -26,12 +26,17 @@ from .learning_curves import write_learning_curves
 from .reward_feedback import BatteryEnergyValue
 from .experiment_paths import unarchived_output_path
 from .failure_replay import FailurePenalty, prepare_failure_replay
+from .decision_diagnostics import (
+    DIAGNOSTIC_SAMPLE_IDS, MAX_DECISIONS_PER_SAMPLE,
+    actual_greedy_q_records, save_diagnostic_snapshot,
+)
 
 
 def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
                     redistribute_battery_energy: bool = False, trajectory_path: Path | None = None,
                     learn_no_feasible_failures: bool = False, failure_penalty: FailurePenalty | None = None,
-                    abort_on_execution_error: bool = False) -> dict:
+                    abort_on_execution_error: bool = False,
+                    decision_diagnostic_sink=None) -> dict:
     """Preserve all training RNG streams; never add replay or run optimizers."""
     random_state = agent.random.getstate()
     outcome_random_state = agent.outcome_random.getstate()
@@ -54,6 +59,8 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             transitions=preview.transitions
             event_only_count+=int(preview.event_only)
         failed_transitions.extend(transitions)
+        if decision_diagnostic_sink is not None and exc.sample_id in DIAGNOSTIC_SAMPLE_IDS:
+            decision_diagnostic_sink(exc.sample_id, transitions, failed=True)
         profile=trajectory_record(
             exc.sample_id,
             transitions, completed=False, failure=str(exc), reward_scale=agent.reward_scale)
@@ -66,6 +73,10 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             accountant, beta_soc=beta_soc,
             on_failure=on_failure, redistribute_battery_energy=redistribute_battery_energy,
         )
+        if decision_diagnostic_sink is not None:
+            for result in results:
+                if result.sample_id in DIAGNOSTIC_SAMPLE_IDS:
+                    decision_diagnostic_sink(result.sample_id, result.transitions, failed=False)
         summary = _summarize(results, len(episodes), failures, failed_transitions)
         summary.update(executed_transition_statistics(
             (*[t for result in results for t in result.transitions], *failed_transitions)))
@@ -185,16 +196,21 @@ def run_monitored_training(
     manifest_sha256: dict[str,str] | None = None,
     dataset_roots: tuple[str,...] | None = None,
     abort_on_execution_error: bool = False, capture_log: bool = False,
+    diagnostic_rounds: tuple[int, ...] = (),
 ):
     """Start fresh; persist provenance and complete rounds before any exception."""
     if not math.isfinite(reward_scale) or reward_scale <= 0:
         raise ValueError('reward_scale must be finite and positive')
     if type(failure_terminal_quota) is not int or failure_terminal_quota < 0:
         raise ValueError('failure_terminal_quota must be a nonnegative integer')
+    if (type(diagnostic_rounds) is not tuple or
+            any(type(value) is not int or not 1 <= value <= rounds for value in diagnostic_rounds) or
+            len(set(diagnostic_rounds)) != len(diagnostic_rounds)):
+        raise ValueError('diagnostic rounds must be distinct integers within the training budget')
     output_dir = unarchived_output_path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     if any((output_dir/name).exists() for name in
-           ('report.json','round_history.json','best_agent.pt','run_metadata.json')):
+           ('report.json','round_history.json','best_agent.pt','run_metadata.json','diagnostic_checkpoints')):
         raise FileExistsError('training requires a fresh result directory')
     source_root = Path(__file__).resolve().parents[2]
     source_commit = subprocess.check_output(['git','rev-parse','HEAD'],cwd=source_root,text=True).strip()
@@ -230,6 +246,12 @@ def run_monitored_training(
             'td_original_unit_conversion':'native_td_error / reward_scale'},
         'initialization':'new seeded weights; empty replay; new optimizer; no checkpoint loaded',
         'dataset_class':type(dataset).__name__,
+        'diagnostic_configuration':{
+            'rounds':list(diagnostic_rounds),
+            'train_sample_ids':sorted(DIAGNOSTIC_SAMPLE_IDS),
+            'max_decisions_per_sample':MAX_DECISIONS_PER_SAMPLE,
+            'checkpoint_purpose':'diagnostic_only',
+        },
     }
     _write_json(output_dir/'run_metadata.json',metadata)
     initial = metadata | {'completed_training':False,'run_status':'starting','rounds':[],
@@ -251,7 +273,8 @@ def run_monitored_training(
                 capture_trajectories=capture_trajectories,learn_no_feasible_failures=learn_no_feasible_failures,
                 failure_penalty_scale=failure_penalty_scale,reward_scale=reward_scale,
                 failure_terminal_quota=failure_terminal_quota,
-                run_metadata=metadata,runtime=runtime,abort_on_execution_error=abort_on_execution_error)
+                run_metadata=metadata,runtime=runtime,abort_on_execution_error=abort_on_execution_error,
+                diagnostic_rounds=diagnostic_rounds)
             report['learning_curve_artifacts'] = write_learning_curves(report,output_dir)
             _persist_report(report,output_dir)
             return agent, report
@@ -291,6 +314,7 @@ def _run_monitored_training(
     learn_no_feasible_failures: bool, failure_penalty_scale: float,
     reward_scale: float, failure_terminal_quota: int,
     run_metadata: dict, runtime: dict, abort_on_execution_error: bool,
+    diagnostic_rounds: tuple[int, ...],
 ):
     if not 1 <= rounds <= 40 or updates_per_episode != 16 or batch_size < 1:
         raise ValueError("study permits at most 40 rounds and fixes episode cadence at 16")
@@ -402,6 +426,7 @@ def _run_monitored_training(
     executed_training_steps = 0
     evaluation_steps = 0
     best_record = None
+    diagnostic_artifacts: list[dict] = []
     first_qualification = None
     hyperparameters = run_metadata['hyperparameters']
     source_commit = run_metadata['source_commit']
@@ -420,6 +445,7 @@ def _run_monitored_training(
             'economic_replay_outcome_counts':replay_counts(),
             "bootstrap_economic_replay_insertions": sum(len(x.transitions) for x in bootstrap)+bootstrap_prefix,
             "rounds": history, "best_checkpoint": best_record,
+            "diagnostic_artifacts": diagnostic_artifacts,
             "first_qualification": first_qualification, "eligible_rounds": selector.eligible_rounds,
             "test_payloads_opened": dataset.opened_test_payloads,
             "execution_counts": {
@@ -543,11 +569,17 @@ def _run_monitored_training(
             explore['trajectory_file'] = path.name
         print(f"round {round_index}/{rounds} exploratory={len(results)}/{len(train)} greedy_train start",flush=True)
         runtime['phase']='greedy_train'
+        decision_rows = [] if round_index in diagnostic_rounds else None
+        def diagnostic_sink(sample_id, transitions, *, failed):
+            if decision_rows is not None:
+                decision_rows.extend(actual_greedy_q_records(
+                    sample_id, transitions, agent, failed=failed))
         greedy_train = greedy_evaluate(train,agent,accountant,beta_soc,
             redistribute_battery_energy=redistribute_battery_energy,
             trajectory_path=output_dir/f'round_{round_index:03d}_train_trajectories.json' if capture_trajectories else None,
             learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty,
-            abort_on_execution_error=abort_on_execution_error)
+            abort_on_execution_error=abort_on_execution_error,
+            decision_diagnostic_sink=diagnostic_sink if decision_rows is not None else None)
         evaluation_steps += greedy_train["executed_onboard_transitions"]
         greedy_validation = None
         if fully_completed(greedy_train):
@@ -611,6 +643,16 @@ def _run_monitored_training(
                 'dataset_roots':run_metadata['dataset_roots'],
             },temporary)
             temporary.replace(output_dir/"best_agent.pt")
+        if decision_rows is not None:
+            artifact = save_diagnostic_snapshot(
+                output_dir, round_index=round_index, agent=agent, decisions=decision_rows,
+                run_metadata=run_metadata,
+                training_environment_transitions=(
+                    executed_training_steps + bootstrap_summary["executed_onboard_transitions"]),
+                test_payloads_opened=dataset.opened_test_payloads,
+            )
+            row["diagnostic_artifacts"] = artifact
+            diagnostic_artifacts.append({"round": round_index, **artifact})
         history.append(row)
         if dataset.opened_test_payloads != 0:
             raise RuntimeError("Test opened during monitored training")

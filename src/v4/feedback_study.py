@@ -40,6 +40,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                         help='multiplier of frozen Train-only P95 economic cost, in reward-equivalent CNY')
     parser.add_argument('--episode-credit-scope',choices=('sample','voyage'),default='voyage',
                         help='voyage counts completed ONBOARD segments; sample reproduces legacy credit')
+    parser.add_argument('--diagnostic-rounds',default='',
+                        help='comma-separated read-only network/actual-Train-Q snapshots, e.g. 1,10,20,30,40')
     args = parser.parse_args(argv)
     if not 1 <= args.rounds <= 40:
         parser.error('rounds must be explicitly chosen in [1,40]')
@@ -47,6 +49,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error('reward-scale must be finite and positive')
     if args.failure_terminal_quota < 0:
         parser.error('failure-terminal-quota must be nonnegative')
+    try:
+        diagnostic_rounds = tuple(int(value.strip()) for value in args.diagnostic_rounds.split(',')
+                                  if value.strip())
+    except ValueError:
+        parser.error('diagnostic-rounds must contain comma-separated integers')
+    if (len(set(diagnostic_rounds)) != len(diagnostic_rounds)
+            or any(not 1 <= value <= args.rounds for value in diagnostic_rounds)):
+        parser.error('diagnostic-rounds must be distinct and within the requested rounds')
     output = fresh_output_path(args.output_dir)
     roots = tuple(_default_data_root(name) for name in (
         'operating_dataset_zero_boundary_v2','operating_dataset_zero_boundary_v2_ais',
@@ -63,7 +73,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         reward_scale=args.reward_scale,failure_terminal_quota=args.failure_terminal_quota,
         manifest_sha256=before,
         dataset_roots=tuple(str(root.resolve()) for root in roots),
-        abort_on_execution_error=True,capture_log=True)
+        abort_on_execution_error=True,capture_log=True,
+        diagnostic_rounds=diagnostic_rounds)
     try:
         after = _manifest_hashes(roots)
         if dataset.opened_test_payloads != 0 or after != before:
