@@ -9,6 +9,7 @@
 5. [统一奖励缩放接入与正式训练命令](v4_reward_scale_training_2026-10-08.md)：默认仍为1，记录0.001单组40轮的实现验证和运行命令；已完成结果见下一项。
 6. [已完成的0.001正式40轮结果](v4_scaled_reward_40r_2026-10-08.md)：最高greedy Train22/30、末轮12/30；Validation全部按门槛跳过，无合格checkpoint；全量输出无损归档。
 7. [失败终止配额2的40轮对照](v4_failure_terminal_quota2_40r_2026-10-09.md)：最高greedy Train27/30、末轮25/30；Validation仍未触发；全量轨迹无损归档。
+8. [FC运行状态、启停与失败航段可行性审计](v4_fc_runtime_feasibility_audit_2026-10-09.md)：只读P0审计与方案A设计建议；未实施、未训练、未读取Test。
 
 当前 `v4.feedback_study` 默认 beta500、redistributed、replay32、target500、batch64、γ1、n1、epsilon1→0.05、失败惩罚倍率1、奖励缩放1。
 只读查看 [入口代码](../src/v4/feedback_study.py) 或运行 `--help`。正式训练需要显式轮数和新目录；已完成的实验见上述结果报告。
