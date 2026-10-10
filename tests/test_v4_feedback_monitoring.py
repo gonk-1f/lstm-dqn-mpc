@@ -87,7 +87,8 @@ def test_new_episode_credit_counts_completed_voyages_not_sample_containers(tmp_p
                 operating_mode=('onboard','shore_charging','onboard'),
                 load_kw=(0.,0.,0.),battery_bus_kw=(0.,-10.,0.)),)
     agent, report = run_monitored_training(TwoVoyages(),output_dir=tmp_path,rounds=1,beta_soc=500,
-        batch_size=1,target_mode='optimizer',redistribute_battery_energy=True,episode_credit_scope='voyage',n_step=8)
+        batch_size=1,cadence='episode16',target_mode='optimizer',
+        redistribute_battery_energy=True,episode_credit_scope='voyage',n_step=8)
     assert report['bootstrap_optimizer_updates'] == 32
     assert agent.economic_optimizer_updates == 64
     assert report['rounds'][0]['completed_voyages_entering_economic_replay'] == 2

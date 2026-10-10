@@ -72,7 +72,7 @@ def prepare_failure_replay(error: ReplayExecutionError, *, penalty: FailurePenal
         return FailureReplay(values,start,0,error.failure_cause,True,
                              False if error.failure_cause=='structural_power' else None)
     last=suffix[-1]
-    if last.done or last.next_feasible_actions or last.shore_ledger is not None or last.modeled_terminal_ledger is not None:
+    if last.done or last.next_feasible_actions or last.modeled_terminal_ledger is not None:
         raise ValueError('failure suffix must end at an executed nonterminal infeasible-next-state transition')
     if last.terminal_correction or last.failure_penalty_equivalent_cny:
         raise ValueError('failure suffix is already corrected or penalized')

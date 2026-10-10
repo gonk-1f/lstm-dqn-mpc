@@ -82,7 +82,7 @@ def test_fixed_trajectories_preserve_ledger_and_each_voyage_reward_sum(case):
             assert after.immediate_battery_energy_adjustment == 0
         originals.append(after.original_reward)
         adjusted.append(after.new_reward)
-        if after.done:
+        if after.done or after.shore_ledger is not None:
             assert after.terminal_correction == pytest.approx(
                 coefficient*(segment_start-after.actual_soc), abs=1e-10)
             assert fsum(originals) == pytest.approx(fsum(adjusted), rel=1e-12, abs=1e-8)
@@ -150,16 +150,17 @@ def test_failed_unfinished_suffix_has_no_correction_and_no_economic_terminal():
 
 def test_completed_segment_before_failed_suffix_is_corrected_separately():
     data = episode(('onboard','shore_charging','onboard','onboard'),
-                   (100,0,1000,1800), (0,0,0,0))
-    powers = iter((100,0))
+                   (100,0,1000,2000), (0,0,0,0))
+    powers = iter((100,600))
     with pytest.raises(ReplayExecutionError) as caught:
         replay_episode(data, lambda _s,_a:next(powers), accountant=NoSolveAccountant(),
                        initial_state=AccountState(soc=.215), beta_soc=500,
                        redistribute_battery_energy=True)
     completed, failed = caught.value.executed_transitions
-    assert completed.done and not failed.done
+    assert not completed.done and not failed.done
+    assert completed.shore_ledger is not None
     assert completed.original_reward == pytest.approx(completed.new_reward)
     assert failed.terminal_correction == 0
     agent = DirectPowerDDQN(seed=42)
-    assert agent.remember_completed_prefix((completed,failed)) == 1
-    assert len(agent.replay) == 1 and agent.replay[0].done
+    assert agent.remember_completed_prefix((completed,failed)) == 0
+    assert len(agent.replay) == 0

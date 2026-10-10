@@ -1,12 +1,7 @@
-"""Explicit, single-configuration v4 reward-feedback verification/training entry.
-
-No parallel jobs or implicit 40-round budget. Formal experiments require an
-explicit command and user authorization; this change was verified synthetically.
-"""
+"""Frozen 100-round, pure-economic direct-power Double DQN training entry."""
 from __future__ import annotations
 
 import argparse
-import math
 from pathlib import Path
 import sys
 import traceback
@@ -26,16 +21,16 @@ def fresh_output_path(path: Path) -> Path:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir',type=Path,required=True)
-    parser.add_argument('--rounds',type=int,required=True)
-    parser.add_argument('--beta-soc',type=float,default=500.)
-    parser.add_argument('--reward-feedback',choices=('original','redistributed'),default='redistributed')
-    parser.add_argument('--reward-scale',type=float,default=1.,
+    parser.add_argument('--resume-from',type=Path,default=None)
+    parser.add_argument('--rounds',type=int,default=100)
+    parser.add_argument('--beta-soc',type=float,default=0.)
+    parser.add_argument('--reward-feedback',choices=('original','redistributed'),default='original')
+    parser.add_argument('--reward-scale',type=float,default=.001,
                         help='uniform multiplier applied once to final economic-Q replay rewards; ledgers remain CNY')
-    parser.add_argument('--failure-terminal-quota',type=int,default=0,
+    parser.add_argument('--failure-terminal-quota',type=int,default=2,
                         help='failure terminal samples per economic Q batch; 0 preserves uniform replay')
     parser.add_argument('--cadence',choices=('episode16','replay32','replay16'),default='replay32')
-    parser.add_argument('--target-interval',type=int,choices=(250,500,1000),default=500)
-    parser.add_argument('--n-step',type=int,choices=(1,8),default=1)
+    parser.add_argument('--n-step',type=int,choices=(1,8),default=8)
     parser.add_argument('--failure-penalty-scale',type=float,default=1.,
                         help='multiplier of frozen Train-only P95 economic cost, in reward-equivalent CNY')
     parser.add_argument('--episode-credit-scope',choices=('sample','voyage'),default='voyage',
@@ -43,12 +38,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument('--diagnostic-rounds',default='',
                         help='comma-separated read-only network/actual-Train-Q snapshots, e.g. 1,10,20,30,40')
     args = parser.parse_args(argv)
-    if not 1 <= args.rounds <= 40:
-        parser.error('rounds must be explicitly chosen in [1,40]')
-    if not math.isfinite(args.reward_scale) or args.reward_scale <= 0:
-        parser.error('reward-scale must be finite and positive')
-    if args.failure_terminal_quota < 0:
-        parser.error('failure-terminal-quota must be nonnegative')
+    if (args.rounds != 100 or args.beta_soc != 0 or args.reward_feedback != 'original'
+            or args.reward_scale != .001 or args.failure_terminal_quota != 2
+            or args.cadence != 'replay32' or args.n_step != 8
+            or args.failure_penalty_scale != 1 or args.episode_credit_scope != 'voyage'):
+        parser.error('formal 100-round run uses the frozen DDQN configuration')
     try:
         diagnostic_rounds = tuple(int(value.strip()) for value in args.diagnostic_rounds.split(',')
                                   if value.strip())
@@ -57,16 +51,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     if (len(set(diagnostic_rounds)) != len(diagnostic_rounds)
             or any(not 1 <= value <= args.rounds for value in diagnostic_rounds)):
         parser.error('diagnostic-rounds must be distinct and within the requested rounds')
-    output = fresh_output_path(args.output_dir)
+    output = (fresh_output_path(args.output_dir) if args.resume_from is None
+              else unarchived_output_path(args.output_dir))
     roots = tuple(_default_data_root(name) for name in (
         'operating_dataset_zero_boundary_v2','operating_dataset_zero_boundary_v2_ais',
         'operating_dataset_zero_boundary_v2_modes'))
     before = _manifest_hashes(roots)
     dataset = FormalTrainingDataset.open(*roots)
     _, report = run_monitored_training(dataset,output_dir=output,rounds=args.rounds,
-        beta_soc=args.beta_soc,cadence=args.cadence,target_mode='optimizer',
-        target_interval=args.target_interval,seed=42,batch_size=64,epsilon_start=1.,epsilon_end=.05,
-        redistribute_battery_energy=args.reward_feedback == 'redistributed',
+        beta_soc=args.beta_soc,cadence=args.cadence,target_mode='soft',
+        target_interval=500,seed=42,batch_size=64,epsilon_start=1.,epsilon_end=.05,
+        redistribute_battery_energy=False,
         episode_credit_scope=args.episode_credit_scope,n_step=args.n_step,
         required_split_sizes=(30,8),capture_trajectories=True,progress_every_steps=50,
         learn_no_feasible_failures=True,failure_penalty_scale=args.failure_penalty_scale,
@@ -74,7 +69,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         manifest_sha256=before,
         dataset_roots=tuple(str(root.resolve()) for root in roots),
         abort_on_execution_error=True,capture_log=True,
-        diagnostic_rounds=diagnostic_rounds)
+        diagnostic_rounds=diagnostic_rounds,resume_from=args.resume_from)
     try:
         after = _manifest_hashes(roots)
         if dataset.opened_test_payloads != 0 or after != before:

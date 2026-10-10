@@ -51,7 +51,9 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None, reward
             'scaled_training_reward': item.reward_cny * scale,
             'soc_soft_penalty': item.soc_soft_penalty_cny,
             'original_economic_ledger': ledger_components(item.original_economic_ledger),
-            'actual_shore_ledger': ledger_components(item.shore_ledger),
+            'modeled_fixed_target_shore_ledger': ledger_components(item.shore_ledger),
+            'shore_settlement_basis': (
+                'modeled_fixed_target_soc_0.6' if item.shore_ledger is not None else None),
             'modeled_terminal_settlement': ledger_components(item.modeled_terminal_ledger),
             'done': item.done, 'next_feasible_actions_kw': list(item.next_feasible_actions),
             'physical_feasible_actions_kw': list(physical_actions),

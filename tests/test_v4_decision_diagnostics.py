@@ -92,7 +92,7 @@ def test_diagnostics_do_not_change_actions_updates_networks_or_selection(tmp_pat
     assert records["round"] == 1 and len(records["decisions"]) <= 48
     assert {row["sample_id"] for row in records["decisions"]} == {
         "zero_boundary_015", "zero_boundary_017", "zero_boundary_044"}
-    restored = MLPQNetwork(8, 61, (128, 64))
+    restored = MLPQNetwork(8, 61, (128, 128))
     restored.load_state_dict(checkpoint["online_state"])
     with torch.inference_mode():
         for row in records["decisions"]:
@@ -160,9 +160,9 @@ def test_formal_entry_passes_explicit_diagnostic_rounds_without_running_training
 
     monkeypatch.setattr(feedback_study, "run_monitored_training", fake_run)
     assert feedback_study.main(["--output-dir", str(tmp_path / "diagnostic_cli"),
-        "--rounds", "40", "--diagnostic-rounds", "1,10,20,30,40",
+        "--rounds", "100", "--diagnostic-rounds", "1,10,20,30,40",
         "--reward-scale", "0.001", "--failure-terminal-quota", "2",
-        "--n-step", "1", "--cadence", "replay32", "--target-interval", "500"]) == 0
+        "--n-step", "8", "--cadence", "replay32"]) == 0
     assert captured["diagnostic_rounds"] == (1, 10, 20, 30, 40)
     assert captured["failure_terminal_quota"] == 2
     assert captured["reward_scale"] == .001

@@ -33,7 +33,7 @@ def test_n_step_preserves_terminal_settlement_correction_and_endpoint_mask(n):
     assert agent.td_statistics()['sample_count'] == 4
 
 
-def test_n_step_does_not_cross_shore_or_voyage_boundary():
+def test_n_step_crosses_shore_within_sample_but_not_sample_terminal():
     result = replay_episode(episode(('onboard',)*3+('shore_charging',)+('onboard',)*9,
                                     (100,)*3+(0,)+(200,)*9, (0,)*3+(-624,)+(0,)*9),
                             lambda _s,_a:100, accountant=NoSolveAccountant(), beta_soc=500,
@@ -43,8 +43,10 @@ def test_n_step_does_not_cross_shore_or_voyage_boundary():
     assert agent.economic_replay_insertions == 12 and len(agent.replay) == 4
     full = DirectPowerDDQN(seed=42, n_step=8)
     full.remember_trajectory(result.transitions)
-    assert full.replay[0].bootstrap_steps == 3 and full.replay[0].done
-    assert full.replay[0].reward_cny == pytest.approx(fsum(t.reward_cny for t in result.transitions[:3]))
+    assert full.replay[0].bootstrap_steps == 8 and not full.replay[0].done
+    assert full.replay[0].reward_cny == pytest.approx(fsum(t.reward_cny for t in result.transitions[:8]))
+    assert result.transitions[2].shore_ledger is not None and not result.transitions[2].done
+    assert result.transitions[2].next_state == result.transitions[3].state
     assert full.replay[3].bootstrap_steps == 8 and not full.replay[3].done
     assert full.replay[3].reward_cny == pytest.approx(fsum(t.reward_cny for t in result.transitions[3:11]))
     with pytest.raises(ValueError, match='completed'):
@@ -146,30 +148,32 @@ def test_n_step_eight_soc_failure_windows_stop_at_real_terminal(executed_steps):
             assert target.item() == pytest.approx(item.reward_cny, abs=1e-6)
 
 
-def test_n_step_eight_failure_after_shore_does_not_join_previous_voyage():
-    error, view, penalty = _soc_limited_failure(9, previous_voyage=True)
-    assert len(error.executed_transitions) == len(view.transitions) == 12
-    assert view.successful_prefix_transitions == 3
-    assert view.failed_suffix_transitions == 9
-    assert view.transitions[2].is_successful_terminal
+def test_n_step_eight_failure_after_shore_propagates_across_same_sample():
+    accountant = NoSolveAccountant()
+    with pytest.raises(ReplayExecutionError) as caught:
+        replay_episode(episode(('onboard',)*3 + ('shore_charging','onboard'),
+                               (0.,0.,0.,0.,2000.), (0.,)*5),
+                       lambda _s,_mask:0, accountant=accountant)
+    error = caught.value
+    penalty = FailurePenalty.from_reference()
+    view = prepare_failure_replay(error, penalty=penalty,
+        energy_value=BatteryEnergyValue.from_accountant(accountant),
+        redistribute_battery_energy=False)
+    assert len(error.executed_transitions) == len(view.transitions) == 3
+    assert view.successful_prefix_transitions == 0
+    assert view.failed_suffix_transitions == 3
+    assert not view.transitions[2].is_successful_terminal
     assert view.transitions[2].shore_ledger is not None
-    assert all(t.shore_ledger is None and t.modeled_terminal_ledger is None
-               for t in view.transitions[3:])
-    assert all(t.failure_penalty_equivalent_cny == 0 for t in view.transitions[:3])
-    assert view.transitions[3].state[0] != pytest.approx(.6)
+    assert all(t.failure_penalty_equivalent_cny == 0 for t in view.transitions[:2])
 
     agent = DirectPowerDDQN(seed=42, n_step=8, failure_terminal_quota=2)
     agent.remember_trajectory(view.transitions)
-    assert [item.experience_outcome for item in list(agent.replay)[:3]] == ['success'] * 3
-    assert all(item.done and item.terminal_reason == 'completed'
-               for item in list(agent.replay)[:3])
-    assert agent.replay[0].reward_cny == pytest.approx(fsum(
-        t.reward_cny for t in view.transitions[:3]))
-    assert agent.replay[3].bootstrap_steps == 8 and not agent.replay[3].done
-    assert agent.replay[3].failure_penalty_equivalent_cny == 0.
-    assert agent.failure_terminal_replay_count == 8
+    assert all(item.done and item.terminal_reason == 'failure_structural_power'
+               for item in agent.replay)
+    assert agent.replay[0].reward_cny == pytest.approx(fsum(t.reward_cny for t in view.transitions))
+    assert agent.failure_terminal_replay_count == 3
     assert sum(item.failure_penalty_equivalent_cny for item in agent.replay) == pytest.approx(
-        8 * penalty.amount)  # Replay metadata, not eight physical penalties.
+        3 * penalty.amount)  # Overlapping returns, one physical penalty.
     assert sum(t.failure_penalty_equivalent_cny for t in view.transitions) == pytest.approx(
         penalty.amount)
 

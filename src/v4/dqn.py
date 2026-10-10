@@ -18,6 +18,10 @@ from .failure_replay import FAILURE_TERMINALS
 
 
 STATE_DIM = 8
+ECONOMIC_LEARNING_RATE = 1e-4
+ECONOMIC_HIDDEN_DIMS = (128, 128)
+OUTCOME_LEARNING_RATE = 1e-4
+OUTCOME_HIDDEN_DIMS = (128, 64)
 
 
 def masked_double_dqn_targets(
@@ -70,11 +74,12 @@ class OutcomeItem:
 class DirectPowerDDQN:
     def __init__(
         self, *, seed: int = 42, gamma: float = 1.0,
-        learning_rate: float = 1e-4, replay_capacity: int = 100_000,
-        hidden_dims: tuple[int, ...] = (128, 64),
+        learning_rate: float = ECONOMIC_LEARNING_RATE, replay_capacity: int = 100_000,
+        hidden_dims: tuple[int, ...] = ECONOMIC_HIDDEN_DIMS,
         n_step: int = 1,
         reward_scale: float = 1.0,
         failure_terminal_quota: int = 0,
+        target_tau: float = 0.001,
     ) -> None:
         if not 0 <= gamma <= 1 or learning_rate <= 0 or replay_capacity < 1:
             raise ValueError("invalid Double-DQN hyperparameters")
@@ -84,7 +89,10 @@ class DirectPowerDDQN:
             raise ValueError('reward_scale must be finite and positive')
         if type(failure_terminal_quota) is not int or failure_terminal_quota < 0:
             raise ValueError('failure_terminal_quota must be a nonnegative integer')
+        if not math.isfinite(target_tau) or not 0 < target_tau <= 1:
+            raise ValueError('target_tau must be in (0, 1]')
         self.reward_scale = float(reward_scale)
+        self.target_tau = float(target_tau)
         self.failure_terminal_quota = failure_terminal_quota
         self.n_step = n_step
         self.gamma = float(gamma)
@@ -93,6 +101,7 @@ class DirectPowerDDQN:
         self.online = MLPQNetwork(STATE_DIM, len(ACTION_KW), hidden_dims)
         self.target = MLPQNetwork(STATE_DIM, len(ACTION_KW), hidden_dims)
         self.target_sync_calls = 0
+        self.target_soft_update_calls = 0
         self.economic_optimizer_updates = 0
         self.economic_replay_insertions = 0
         self.economic_success_replay_insertions = 0
@@ -110,8 +119,8 @@ class DirectPowerDDQN:
         self._ordinary_pool: list[tuple[int, ReplayItem]] = []
         self._failure_terminal_positions: dict[int, int] = {}
         self._ordinary_positions: dict[int, int] = {}
-        self.outcome_model = MLPQNetwork(STATE_DIM, len(ACTION_KW), hidden_dims)
-        self.outcome_optimizer = torch.optim.Adam(self.outcome_model.parameters(), lr=learning_rate)
+        self.outcome_model = MLPQNetwork(STATE_DIM, len(ACTION_KW), OUTCOME_HIDDEN_DIMS)
+        self.outcome_optimizer = torch.optim.Adam(self.outcome_model.parameters(), lr=OUTCOME_LEARNING_RATE)
         self.outcome_random = random.Random(seed + 1)
         self.outcome_replay: deque[OutcomeItem] = deque(maxlen=replay_capacity)
         self._td_updates = self._td_samples = 0
@@ -235,7 +244,7 @@ class DirectPowerDDQN:
         )
 
     def remember_trajectory(self, transitions: Sequence[DirectTransition]) -> int:
-        """One replay entry per executed decision, with no cross-voyage return."""
+        """One entry per real decision; windows may cross shore within a sample."""
         values = tuple(transitions)
         if not values:
             return 0
@@ -361,6 +370,7 @@ class DirectPowerDDQN:
         preclip_norm = nn.utils.clip_grad_norm_(self.online.parameters(), 10.0)
         self.optimizer.step()
         self.economic_optimizer_updates += 1
+        self.soft_update_target()
         with torch.no_grad():
             error = target - q
             self._td_updates += 1
@@ -489,3 +499,59 @@ class DirectPowerDDQN:
     def sync_target(self) -> None:
         self.target.load_state_dict(self.online.state_dict())
         self.target_sync_calls += 1
+
+    def soft_update_target(self) -> None:
+        with torch.no_grad():
+            for target, online in zip(self.target.parameters(), self.online.parameters()):
+                target.lerp_(online, self.target_tau)
+        self.target_soft_update_calls += 1
+
+    def training_state(self) -> dict:
+        """All optimizer, replay, network and RNG state needed at a round boundary."""
+        return {
+            'online': self.online.state_dict(), 'target': self.target.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+            'outcome_model': self.outcome_model.state_dict(),
+            'outcome_optimizer': self.outcome_optimizer.state_dict(),
+            'replay': tuple(self.replay), 'replay_ids': tuple(self._replay_ids),
+            'next_replay_id': self._next_replay_id,
+            'failure_pool_ids': tuple(key for key, _ in self._failure_terminal_pool),
+            'ordinary_pool_ids': tuple(key for key, _ in self._ordinary_pool),
+            'outcome_replay': tuple(self.outcome_replay),
+            'random_state': self.random.getstate(),
+            'outcome_random_state': self.outcome_random.getstate(),
+            'torch_rng_state': torch.random.get_rng_state(),
+            'counts': {name: getattr(self, name) for name in (
+                'target_sync_calls', 'target_soft_update_calls',
+                'economic_optimizer_updates', 'economic_replay_insertions',
+                'economic_success_replay_insertions', 'economic_failure_replay_insertions',
+                'economic_failure_terminal_insertions', 'outcome_optimizer_updates')},
+        }
+
+    def load_training_state(self, state: dict) -> None:
+        if len(state['replay']) > self.replay.maxlen or len(state['outcome_replay']) > self.outcome_replay.maxlen:
+            raise ValueError('checkpoint replay exceeds configured capacity')
+        self.online.load_state_dict(state['online'], strict=True)
+        self.target.load_state_dict(state['target'], strict=True)
+        self.optimizer.load_state_dict(state['optimizer'])
+        self.outcome_model.load_state_dict(state['outcome_model'], strict=True)
+        self.outcome_optimizer.load_state_dict(state['outcome_optimizer'])
+        self.replay = deque(state['replay'], maxlen=self.replay.maxlen)
+        self._replay_ids = deque(state['replay_ids'])
+        if len(self.replay) != len(self._replay_ids):
+            raise ValueError('checkpoint replay IDs do not match replay items')
+        self._next_replay_id = state['next_replay_id']
+        by_id = dict(zip(self._replay_ids, self.replay))
+        self._failure_terminal_pool = [(key, by_id[key]) for key in state['failure_pool_ids']]
+        self._ordinary_pool = [(key, by_id[key]) for key in state['ordinary_pool_ids']]
+        if (len(self._failure_terminal_pool) + len(self._ordinary_pool) != len(self.replay)
+                or set(state['failure_pool_ids']).intersection(state['ordinary_pool_ids'])):
+            raise ValueError('checkpoint sampling pools do not partition the replay')
+        self._failure_terminal_positions = {key: index for index, (key, _) in enumerate(self._failure_terminal_pool)}
+        self._ordinary_positions = {key: index for index, (key, _) in enumerate(self._ordinary_pool)}
+        self.outcome_replay = deque(state['outcome_replay'], maxlen=self.outcome_replay.maxlen)
+        for name, value in state['counts'].items():
+            setattr(self, name, value)
+        self.random.setstate(state['random_state'])
+        self.outcome_random.setstate(state['outcome_random_state'])
+        torch.random.set_rng_state(state['torch_rng_state'])

@@ -15,9 +15,9 @@ def test_invalid_reward_scale_is_rejected_before_dataset_open(tmp_path, monkeypa
     monkeypatch.setattr(feedback_study.FormalTrainingDataset, 'open',
         lambda *args: pytest.fail('invalid scale must precede dataset opening'))
     with pytest.raises(SystemExit):
-        feedback_study.main(['--output-dir', str(tmp_path/'invalid'), '--rounds', '1',
+        feedback_study.main(['--output-dir', str(tmp_path/'invalid'),
                              '--reward-scale', scale])
-    assert 'reward-scale must be finite and positive' in capsys.readouterr().err
+    assert 'frozen DDQN configuration' in capsys.readouterr().err
     assert not (tmp_path/'invalid').exists()
 
 
@@ -26,9 +26,9 @@ def test_negative_failure_terminal_quota_is_rejected_before_dataset_open(tmp_pat
     monkeypatch.setattr(feedback_study.FormalTrainingDataset, 'open',
                         lambda *args: pytest.fail('invalid quota must precede dataset opening'))
     with pytest.raises(SystemExit):
-        feedback_study.main(['--output-dir', str(tmp_path/'invalid'), '--rounds', '1',
+        feedback_study.main(['--output-dir', str(tmp_path/'invalid'),
                              '--failure-terminal-quota', '-1'])
-    assert 'failure-terminal-quota must be nonnegative' in capsys.readouterr().err
+    assert 'frozen DDQN configuration' in capsys.readouterr().err
     assert not (tmp_path/'invalid').exists()
 
 
@@ -101,43 +101,27 @@ def test_aborted_training_preserves_completed_round_without_resuming(tmp_path, m
             rounds=1, beta_soc=500, reward_scale=.001)
 
 
-def test_formal_cli_scale_metadata_logging_and_fixed_configuration_with_synthetic_rows(tmp_path, monkeypatch):
+def test_formal_cli_passes_only_frozen_configuration_without_training(tmp_path, monkeypatch):
     from v4 import feedback_study
-    class FixedSynthetic(FakeDataset):
-        def load_train(self):
-            return tuple(SimpleNamespace(sample_id=f't_{i}', split='train',
-                operating_mode=('onboard',)*4, load_kw=(0., 100., 100., 0.),
-                battery_bus_kw=(0.,)*4) for i in range(30))
-        def load_validation(self):
-            return tuple(SimpleNamespace(sample_id=f'v_{i}', split='validation',
-                operating_mode=('onboard',)*3, load_kw=(0., 80., 0.),
-                battery_bus_kw=(0.,)*3) for i in range(8))
-    output = tmp_path/'scaled_single_run'
-    monkeypatch.setattr(feedback_study.FormalTrainingDataset, 'open', lambda *args: FixedSynthetic())
+    dataset = FakeDataset()
+    captured = {}
+    monkeypatch.setattr(feedback_study.FormalTrainingDataset, 'open', lambda *args: dataset)
     monkeypatch.setattr(feedback_study, '_default_data_root', lambda name: tmp_path/name)
-    assert feedback_study.main(['--output-dir', str(output), '--rounds', '1',
-        '--reward-scale', '0.001', '--reward-feedback', 'redistributed', '--beta-soc', '500',
-        '--failure-penalty-scale', '1', '--cadence', 'replay32', '--target-interval', '500',
-        '--n-step', '1', '--failure-terminal-quota', '2']) == 0
-    report = json.loads((output/'report.json').read_text(encoding='utf-8'))
-    hp = report['hyperparameters']
-    assert (hp['reward_scale'], hp['learning_rate'], hp['gamma'], hp['batch_size']) == (.001, .0001, 1., 64)
-    assert hp['hidden_dims'] == [128, 64] and hp['replay_capacity'] == 100000
-    assert hp['failure_terminal_quota'] == 2
-    assert report['rounds'][0]['economic_failure_terminal_replay_size'] == 0
-    assert hp['epsilon_start'] == 1 and hp['epsilon_end'] == .05
-    assert report['execution_counts']['economic_optimizer_updates'] == 7
-    assert report['test_payloads_opened'] == 0 and report['dataset_manifests_unchanged']
-    assert report['manifest_sha256'] == {}
-    assert 'MONITOR round=1' in (output/'train.log').read_text(encoding='utf-8')
-    assert 'progress step=50' in (output/'train.log').read_text(encoding='utf-8')
-    checkpoint = torch.load(output/'best_agent.pt', weights_only=True)
-    assert checkpoint['reward_scale'] == .001 and checkpoint['manifest_sha256'] == {}
-    row = next(csv.DictReader((output/'round_metrics.csv').open(encoding='utf-8')))
-    assert row['reward_scale'] == '0.001'
-    assert float(row['economic_optimizer_updates']) == 7
-    assert 'td_error_mae_original_reward_units' in row
-    assert row['economic_failure_terminal_replay_size'] == '0'
+    monkeypatch.setattr(feedback_study, '_manifest_hashes', lambda roots: {})
+    def fake_run(_dataset, **kwargs):
+        captured.update(kwargs)
+        kwargs['output_dir'].mkdir(parents=True)
+        return None, {'rounds': [], 'best_checkpoint': None}
+    monkeypatch.setattr(feedback_study, 'run_monitored_training', fake_run)
+    output = tmp_path/'frozen_entry'
+    assert feedback_study.main(['--output-dir', str(output)]) == 0
+    assert captured['rounds'] == 100 and captured['seed'] == 42
+    assert captured['n_step'] == 8 and captured['batch_size'] == 64
+    assert captured['cadence'] == 'replay32' and captured['target_mode'] == 'soft'
+    assert captured['reward_scale'] == .001 and captured['failure_terminal_quota'] == 2
+    assert captured['beta_soc'] == 0 and not captured['redistribute_battery_energy']
+    assert captured['required_split_sizes'] == (30,8)
+    assert dataset.opened_test_payloads == 0
 
 
 def test_strict_entry_aborts_model_error_instead_of_creating_physical_failure(tmp_path, monkeypatch):
@@ -178,22 +162,20 @@ def test_bootstrap_exception_keeps_initial_provenance_and_log(tmp_path, monkeypa
 
 def test_post_training_manifest_guard_marks_report_aborted_and_preserves_evidence(tmp_path, monkeypatch):
     from v4 import feedback_study
-    class OneStepFormalFake(FakeDataset):
-        def load_train(self):
-            return tuple(SimpleNamespace(sample_id=f't_{i}', split='train',
-                operating_mode=('onboard',), load_kw=(100.,), battery_bus_kw=(0.,))
-                for i in range(30))
-        def load_validation(self):
-            return tuple(SimpleNamespace(sample_id=f'v_{i}', split='validation',
-                operating_mode=('onboard',), load_kw=(80.,), battery_bus_kw=(0.,))
-                for i in range(8))
     hashes = iter(({'fake_manifest':'before'}, {'fake_manifest':'after'}))
     output = tmp_path/'guarded'
     monkeypatch.setattr(feedback_study, '_manifest_hashes', lambda roots: next(hashes))
-    monkeypatch.setattr(feedback_study.FormalTrainingDataset, 'open', lambda *args: OneStepFormalFake())
+    monkeypatch.setattr(feedback_study.FormalTrainingDataset, 'open', lambda *args: FakeDataset())
     monkeypatch.setattr(feedback_study, '_default_data_root', lambda name: tmp_path/name)
+    def fake_run(_dataset, **kwargs):
+        output.mkdir()
+        (output/'best_agent.pt').write_bytes(b'synthetic checkpoint')
+        (output/'train.log').write_text('synthetic run\n',encoding='utf-8')
+        return None, {'rounds':[{'round':1}], 'best_checkpoint':{'round':1},
+                      'manifest_sha256':kwargs['manifest_sha256']}
+    monkeypatch.setattr(feedback_study, 'run_monitored_training', fake_run)
     with pytest.raises(RuntimeError, match='dataset manifests changed'):
-        feedback_study.main(['--output-dir', str(output), '--rounds', '1', '--reward-scale', '.001'])
+        feedback_study.main(['--output-dir', str(output)])
     report = json.loads((output/'report.json').read_text(encoding='utf-8'))
     history = json.loads((output/'round_history.json').read_text(encoding='utf-8'))
     assert report['run_status'] == history['run_status'] == 'aborted'

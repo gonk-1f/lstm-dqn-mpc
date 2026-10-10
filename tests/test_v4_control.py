@@ -49,7 +49,7 @@ def test_mode_gate_shore_settlement_and_next_voyage_soc_carry():
 
     result = replay_episode(data, policy, accountant=NoSolveAccountant())
     assert len(seen) == len(result.transitions) == 3
-    assert [item.done for item in result.transitions] == [False, True, True]
+    assert [item.done for item in result.transitions] == [False, False, True]
     assert result.fc_power_kw_by_row == (100.0, 100.0, 0.0, 0.0, 100.0)
     assert result.transitions[0].actual_battery_kw == 0.0
     assert result.transitions[1].actual_battery_kw == 20.0
@@ -64,6 +64,9 @@ def test_mode_gate_shore_settlement_and_next_voyage_soc_carry():
     assert result.shore_blocks[0].end_soc == 0.6
     assert result.transitions[0].next_state == result.transitions[1].state
     assert result.transitions[1].next_state == result.transitions[2].state
+    assert result.transitions[1].next_feasible_actions == result.transitions[2].policy_candidate_actions
+    assert result.shore_blocks[0].settlement_basis == 'modeled_fixed_target_soc_0.6'
+    assert result.shore_blocks[0].accepted_battery_bus_kw == ()
     assert result.total_cost_cny == pytest.approx(-sum(item.reward_cny for item in result.transitions))
 
 
@@ -101,15 +104,35 @@ def test_first_decision_sees_current_measured_load_and_feasible_grid():
     assert 0 in feasible
 
 
-def test_partial_shore_charge_carries_actual_soc_without_forcing_target():
+def test_modeled_shore_reaches_target_independent_of_recorded_request():
     data = episode(("shore_charging", "onboard"), (0.0, 80.0), (-10.0, 0.0))
     result = replay_episode(
         data, lambda _state, feasible: min(feasible, key=lambda value: abs(value - 80)),
         accountant=NoSolveAccountant(), initial_state=AccountState(soc=0.5),
     )
-    assert 0.5 < result.shore_blocks[0].end_soc < 0.6
+    assert result.shore_blocks[0].end_soc == pytest.approx(0.6)
     assert result.transitions[0].state[0] == pytest.approx(result.shore_blocks[0].end_soc)
     assert result.fc_power_kw_by_row[0] == 0.0
+    assert result.shore_blocks[0].ledger.shore_cost_cny > 0
+    assert result.shore_blocks[0].ledger.battery_degradation_cost_cny > 0
+    other = replay_episode(
+        episode(('shore_charging','onboard'), (0.,80.), (-500.,0.)),
+        lambda _state, feasible: min(feasible, key=lambda value: abs(value-80)),
+        accountant=NoSolveAccountant(), initial_state=AccountState(soc=.5),
+    )
+    assert other.shore_blocks[0].ledger == result.shore_blocks[0].ledger
+    assert other.transitions[0].state == result.transitions[0].state
+
+
+def test_modeled_shore_keeps_soc_above_target_without_grid_purchase():
+    result = replay_episode(
+        episode(('shore_charging','onboard'), (0.,0.), (-624.,0.)),
+        lambda _state, feasible: 0, accountant=NoSolveAccountant(),
+        initial_state=AccountState(soc=.7),
+    )
+    assert result.shore_blocks[0].end_soc == pytest.approx(.7)
+    assert result.shore_blocks[0].ledger.shore_cost_cny == 0
+    assert result.shore_blocks[0].ledger.battery_degradation_cost_cny == 0
 
 
 def test_terminal_deficit_has_separate_modeled_grid_and_battery_degradation():
@@ -133,12 +156,12 @@ def test_terminal_deficit_has_separate_modeled_grid_and_battery_degradation():
     assert result.transitions[-1].reward_cny == pytest.approx(-result.comparable_cost_cny)
 
 
-def test_actual_shore_and_terminal_surplus_never_get_modeled_recharge():
+def test_modeled_shore_and_terminal_surplus_never_get_duplicate_recharge():
     actual = episode(("onboard", "shore_charging"), (100.0, 0.0), (0.0, -100.0))
     actual_result = replay_episode(actual, lambda _state, _actions: 0, accountant=NoSolveAccountant())
     assert actual_result.shore_blocks
     assert actual_result.modeled_terminal_settlement is None
-    assert actual_result.final_state.soc < 0.6
+    assert actual_result.final_state.soc == pytest.approx(0.6)
     assert actual_result.total_ledger.shore_cost_cny > 0
     assert actual_result.comparable_cost_cny == pytest.approx(actual_result.total_cost_cny)
 

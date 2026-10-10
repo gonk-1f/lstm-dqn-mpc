@@ -61,6 +61,7 @@ def _learning_series(report, scale):
         'greedy_validation_completed': summary_values('greedy_validation','completed'),
         'validation_comparable_cost_cny': [_complete_cost(row.get('greedy_validation'),'cost_cny') for row in rows],
         'validation_observed_cost_cny': [_complete_cost(row.get('greedy_validation'),'completed_observed_cost_cny') for row in rows],
+        'validation_modeled_shore_cost_cny': [_complete_cost(row.get('greedy_validation'),'completed_modeled_fixed_target_shore_cost_cny') for row in rows],
         'validation_modeled_cost_cny': [_complete_cost(row.get('greedy_validation'),'completed_modeled_terminal_cost_cny') for row in rows],
         'td_mae_scaled_reward_units': td,
         'td_mae_original_reward_units': [original_error(row.get('td_statistics',{})) for row in rows],
@@ -175,8 +176,9 @@ def write_learning_curves(report: dict, output_dir: Path) -> dict:
     save(fig,FIGURES[0])
 
     fig,ax=plt.subplots(figsize=(9,4))
-    for key,label in (('validation_comparable_cost_cny','Comparable: observed + modeled'),
-                      ('validation_observed_cost_cny','Observed economic ledger'),
+    for key,label in (('validation_comparable_cost_cny','Comparable total'),
+                      ('validation_observed_cost_cny','Observed ONBOARD ledger'),
+                      ('validation_modeled_shore_cost_cny','MODELED fixed-target SHORE'),
                       ('validation_modeled_cost_cny','MODELED terminal settlement')):
         plot(ax,key,label)
     ax.set(ylabel='CNY',title='Validation costs only for completely finished splits')

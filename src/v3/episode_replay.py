@@ -34,6 +34,7 @@ class ShoreBlock:
     requested_battery_bus_kw: tuple[float, ...]
     accepted_battery_bus_kw: tuple[float, ...]
     soc_path: tuple[float, ...]
+    settlement_basis: str = 'logged_charge_request'
 
 
 @dataclass(frozen=True)

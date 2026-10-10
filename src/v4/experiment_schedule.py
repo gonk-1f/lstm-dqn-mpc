@@ -8,7 +8,7 @@ class EconomicUpdateSchedule:
     def __init__(self, cadence: str, *, target_mode: str, target_interval: int = 1000):
         if cadence not in {"episode16", "replay32", "replay16", "replay8"}:
             raise ValueError("unknown economic update cadence")
-        if (target_mode not in {"round", "optimizer"}
+        if (target_mode not in {"round", "optimizer", "soft"}
                 or type(target_interval) is not int or target_interval < 1):
             raise ValueError("invalid target schedule")
         self.cadence = cadence

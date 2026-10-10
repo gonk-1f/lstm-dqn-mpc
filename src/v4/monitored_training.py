@@ -8,6 +8,7 @@ import csv
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from dataclasses import asdict
 from pathlib import Path
+import random
 import subprocess
 import sys
 import time
@@ -18,11 +19,14 @@ import torch
 from v3.control import EconomicMPC
 
 from .control import ACTION_KW, ReplayExecutionError, replay_episode
-from .dqn import DirectPowerDDQN
+from .dqn import (
+    DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE,
+    OUTCOME_HIDDEN_DIMS, OUTCOME_LEARNING_RATE,
+)
 from .experiment_schedule import BestCheckpoint, EconomicUpdateSchedule, fully_completed
 from .train import _run_episodes, _summarize
 from .diagnostics import fixed_q_diagnostics, trajectory_record, executed_transition_statistics
-from .learning_curves import write_learning_curves
+from .learning_curves import FIGURES, write_learning_curves
 from .reward_feedback import BatteryEnergyValue
 from .experiment_paths import unarchived_output_path
 from .failure_replay import FailurePenalty, prepare_failure_replay
@@ -184,21 +188,22 @@ class _ConsoleLog:
 
 
 def run_monitored_training(
-    dataset, *, output_dir: Path, rounds: int = 40, beta_soc: float,
-    cadence: str = "episode16", target_mode: str = "round", target_interval: int = 1000,
+    dataset, *, output_dir: Path, rounds: int = 100, beta_soc: float = 0.0,
+    cadence: str = "replay32", target_mode: str = "soft", target_interval: int = 500,
     seed: int = 42, batch_size: int = 64, updates_per_episode: int = 16,
     epsilon_start: float = 1.0, epsilon_end: float = 0.05, progress_every_steps: int = 0,
-    redistribute_battery_energy: bool = False, n_step: int = 1,
+    redistribute_battery_energy: bool = False, n_step: int = 8,
     episode_credit_scope: str = 'sample', required_split_sizes: tuple[int,int] | None = None,
     capture_trajectories: bool = False,
     learn_no_feasible_failures: bool = True, failure_penalty_scale: float = 1.0,
-    reward_scale: float = 1.0, failure_terminal_quota: int = 0,
+    reward_scale: float = 0.001, failure_terminal_quota: int = 2,
     manifest_sha256: dict[str,str] | None = None,
     dataset_roots: tuple[str,...] | None = None,
     abort_on_execution_error: bool = False, capture_log: bool = False,
     diagnostic_rounds: tuple[int, ...] = (),
+    resume_from: Path | None = None,
 ):
-    """Start fresh; persist provenance and complete rounds before any exception."""
+    """Run or resume only at an atomically saved, complete round boundary."""
     if not math.isfinite(reward_scale) or reward_scale <= 0:
         raise ValueError('reward_scale must be finite and positive')
     if type(failure_terminal_quota) is not int or failure_terminal_quota < 0:
@@ -209,9 +214,19 @@ def run_monitored_training(
         raise ValueError('diagnostic rounds must be distinct integers within the training budget')
     output_dir = unarchived_output_path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    if any((output_dir/name).exists() for name in
-           ('report.json','round_history.json','best_agent.pt','run_metadata.json','diagnostic_checkpoints')):
-        raise FileExistsError('training requires a fresh result directory')
+    if resume_from is None:
+        if any((output_dir/name).exists() for name in
+               ('report.json','round_history.json','best_agent.pt','run_metadata.json',
+                'diagnostic_checkpoints','training_state_latest.pt')):
+            raise FileExistsError('training requires a fresh result directory')
+        resume_state = None
+    else:
+        checkpoint_path = Path(resume_from).resolve()
+        if checkpoint_path != (output_dir/'training_state_latest.pt').resolve():
+            raise ValueError('resume checkpoint must be training_state_latest.pt in the output directory')
+        resume_state = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
+        if resume_state.get('format_version') != 1:
+            raise ValueError('unsupported complete-round checkpoint format')
     source_root = Path(__file__).resolve().parents[2]
     source_commit = subprocess.check_output(['git','rev-parse','HEAD'],cwd=source_root,text=True).strip()
     dirty = bool(subprocess.check_output(['git','status','--porcelain'],cwd=source_root,text=True).strip())
@@ -219,11 +234,15 @@ def run_monitored_training(
     energy_value = BatteryEnergyValue.from_accountant(EconomicMPC(nominal_cost_cny=1.0))
     parameters = {
         'beta_soc':beta_soc,'rounds':rounds,'seed':seed,'batch_size':batch_size,
-        'gamma':1.0,'learning_rate':1e-4,'hidden_dims':[128,64],
-        'state_dim':8,'action_kw':list(ACTION_KW),'replay_capacity':100000,
+        'gamma':1.0,'learning_rate':ECONOMIC_LEARNING_RATE,'hidden_dims':list(ECONOMIC_HIDDEN_DIMS),
+        'outcome_learning_rate':OUTCOME_LEARNING_RATE,'outcome_hidden_dims':list(OUTCOME_HIDDEN_DIMS),
+        'state_dim':8,'action_kw':list(ACTION_KW),'replay_capacity':300000,
         'epsilon_start':epsilon_start,'epsilon_end':epsilon_end,
+        'epsilon_linear_end_round':70,'epsilon_hold_from_round':71,
         'cadence':cadence,'updates_per_completed_episode':16,'target_mode':target_mode,
         'target_interval_optimizer_updates':target_interval if target_mode=='optimizer' else None,
+        'target_tau':0.001 if target_mode=='soft' else None,
+        'loss':'smooth_l1','huber_delta':1.0,'gradient_max_norm':10.0,
         'bootstrap_uses_same_cadence':True,'torch_threads':torch.get_num_threads(),
         'redistribute_battery_energy':redistribute_battery_energy,'n_step':n_step,
         'episode_credit_scope':episode_credit_scope,
@@ -235,6 +254,7 @@ def run_monitored_training(
         'battery_energy_value':{'coefficient_cny':energy_value.coefficient_cny,
                                 'reference_soc':energy_value.reference_soc},
         'reward_scale':float(reward_scale),'failure_terminal_quota':failure_terminal_quota,
+        'shore_settlement':'modeled_fixed_target_soc_0.6',
     }
     metadata = {
         'source_commit':source_commit,'source_worktree_dirty':dirty,
@@ -242,7 +262,8 @@ def run_monitored_training(
         'dataset_roots':list(dataset_roots or ()),
         'reward_units':{'economic_q':'scaled_reward_equivalent_cny',
             'stored_reward':'reward_scale * final_unscaled_reward',
-            'original_rewards':'reward_equivalent_cny','economic_ledger':'actual_cny',
+            'original_rewards':'reward_equivalent_cny',
+            'economic_ledger':'CNY; modeled fixed-target SHORE and terminal settlement separately tagged',
             'td_original_unit_conversion':'native_td_error / reward_scale'},
         'initialization':'new seeded weights; empty replay; new optimizer; no checkpoint loaded',
         'dataset_class':type(dataset).__name__,
@@ -253,14 +274,48 @@ def run_monitored_training(
             'checkpoint_purpose':'diagnostic_only',
         },
     }
-    _write_json(output_dir/'run_metadata.json',metadata)
-    initial = metadata | {'completed_training':False,'run_status':'starting','rounds':[],
-                          'best_checkpoint':None,'test_payloads_opened':dataset.opened_test_payloads}
-    _persist_report(initial,output_dir)
+    if resume_state is None:
+        _write_json(output_dir/'run_metadata.json',metadata)
+        initial = metadata | {'completed_training':False,'run_status':'starting','rounds':[],
+                              'best_checkpoint':None,'test_payloads_opened':dataset.opened_test_payloads}
+        _persist_report(initial,output_dir)
+    else:
+        saved = resume_state['metadata']
+        if (saved['source_commit'] != source_commit or saved['hyperparameters'] != parameters
+                or saved['manifest_sha256'] != metadata['manifest_sha256']
+                or saved['dataset_roots'] != metadata['dataset_roots']
+                or saved['dataset_class'] != metadata['dataset_class']
+                or saved['diagnostic_configuration'] != metadata['diagnostic_configuration']
+                or json.loads((output_dir/'run_metadata.json').read_text(encoding='utf-8')) != saved):
+            raise ValueError('resume source, architecture, hyperparameters or data manifest mismatch')
+        metadata = saved
+        best_path = output_dir/'best_agent.pt'
+        committed_best = resume_state.get('best_checkpoint_bytes')
+        if committed_best is not None and (not best_path.exists() or best_path.read_bytes() != committed_best):
+            temporary = output_dir/'best_agent.pt.tmp'
+            temporary.write_bytes(committed_best)
+            temporary.replace(best_path)
+        elif committed_best is None and best_path.exists():
+            best_path.replace(output_dir/'best_agent_uncommitted.pt')
+        existing = [output_dir/name for name in (*FIGURES, 'learning_curves_metadata.json')]
+        existing.extend(output_dir/name for name in
+                        json.loads((output_dir/'report.json').read_text(encoding='utf-8'))
+                        .get('learning_curve_artifacts', {}).get('figures', ())
+                        if Path(name).name == name)
+        existing = list(dict.fromkeys(path for path in existing if path.exists()))
+        if existing:
+            archive = output_dir/f'resume_prior_curves_after_round_{resume_state["completed_round"]:03d}'
+            suffix = 1
+            while archive.exists():
+                archive = output_dir/f'resume_prior_curves_after_round_{resume_state["completed_round"]:03d}_{suffix}'
+                suffix += 1
+            archive.mkdir()
+            for path in existing:
+                path.replace(archive/path.name)
     runtime = {'phase':'initialization','round':None,'episode':None}
     with ExitStack() as stack:
         if capture_log:
-            log = stack.enter_context((output_dir/'train.log').open('x',encoding='utf-8'))
+            log = stack.enter_context((output_dir/'train.log').open('a' if resume_state else 'x',encoding='utf-8'))
             stack.enter_context(redirect_stdout(_ConsoleLog(sys.stdout,log)))
             stack.enter_context(redirect_stderr(_ConsoleLog(sys.stderr,log)))
         try:
@@ -274,7 +329,7 @@ def run_monitored_training(
                 failure_penalty_scale=failure_penalty_scale,reward_scale=reward_scale,
                 failure_terminal_quota=failure_terminal_quota,
                 run_metadata=metadata,runtime=runtime,abort_on_execution_error=abort_on_execution_error,
-                diagnostic_rounds=diagnostic_rounds)
+                diagnostic_rounds=diagnostic_rounds,resume_state=resume_state)
             report['learning_curve_artifacts'] = write_learning_curves(report,output_dir)
             _persist_report(report,output_dir)
             return agent, report
@@ -315,9 +370,10 @@ def _run_monitored_training(
     reward_scale: float, failure_terminal_quota: int,
     run_metadata: dict, runtime: dict, abort_on_execution_error: bool,
     diagnostic_rounds: tuple[int, ...],
+    resume_state: dict | None,
 ):
-    if not 1 <= rounds <= 40 or updates_per_episode != 16 or batch_size < 1:
-        raise ValueError("study permits at most 40 rounds and fixes episode cadence at 16")
+    if not 1 <= rounds <= 100 or updates_per_episode != 16 or batch_size < 1:
+        raise ValueError("study permits at most 100 rounds and fixes legacy episode credit at 16")
     if (not 0 <= epsilon_end <= epsilon_start <= 1 or not math.isfinite(beta_soc) or beta_soc < 0
             or episode_credit_scope not in ('sample','voyage')):
         raise ValueError("invalid beta or epsilon schedule")
@@ -334,7 +390,9 @@ def _run_monitored_training(
     if required_split_sizes is not None and (len(train),len(validation)) != required_split_sizes:
         raise ValueError('dataset sizes differ from the required checkpoint qualification set')
     agent = DirectPowerDDQN(seed=seed,n_step=n_step,reward_scale=reward_scale,
-                            failure_terminal_quota=failure_terminal_quota)
+                            learning_rate=ECONOMIC_LEARNING_RATE, hidden_dims=ECONOMIC_HIDDEN_DIMS,
+                            replay_capacity=300_000, failure_terminal_quota=failure_terminal_quota,
+                            target_tau=0.001)
     runtime.update(agent=agent,phase='bootstrap')
     accountant = EconomicMPC(nominal_cost_cny=1.0)
     schedule = EconomicUpdateSchedule(cadence, target_mode=target_mode, target_interval=target_interval)
@@ -384,50 +442,81 @@ def _run_monitored_training(
                 retained=agent.remember_completed_prefix(exc.executed_transitions)
                 prefix=exc.executed_transitions[:retained]
             bootstrap_prefix += retained
-            bootstrap_completed_voyages += sum(t.is_successful_terminal for t in prefix)
+            bootstrap_completed_voyages += sum(t.shore_ledger is not None or t.is_successful_terminal
+                                               for t in prefix)
             failure_suffix_count += len(exc.executed_transitions)-retained
             agent.remember_outcome_trajectory(exc.executed_transitions,
                                               failed=not exc.executed_transitions[-1].done)
 
-    print(f"bootstrap beta={beta_soc:g} cadence={cadence} target={target_mode} start", flush=True)
-    bootstrap_policy_calls = 0
-    def bootstrap_policy(state, feasible):
-        nonlocal bootstrap_policy_calls
-        power = min(feasible, key=lambda value: abs(value-state[1]*600))
-        bootstrap_policy_calls += 1
-        if progress_every_steps and bootstrap_policy_calls % progress_every_steps == 0:
-            print(f'bootstrap progress step={bootstrap_policy_calls} soc={state[0]:.4f} fc={power}',flush=True)
-        return power
-    bootstrap, bootstrap_errors = _run_episodes(
-        train, bootstrap_policy,
-        accountant, beta_soc=beta_soc, on_failure=bootstrap_failure,
-        redistribute_battery_energy=redistribute_battery_energy,
-    )
-    for result in bootstrap:
-        agent.remember_trajectory(result.transitions)
-        bootstrap_completed_voyages += sum(t.done for t in result.transitions)
-        if result.transitions:
-            agent.remember_outcome_trajectory(result.transitions, failed=False)
-    schedule.grant(insertions=agent.economic_replay_insertions,
-                   completed_episodes=(len(bootstrap) if episode_credit_scope == 'sample' else bootstrap_completed_voyages))
-    bootstrap_losses = schedule.consume(agent, batch_size=batch_size)
-    bootstrap_td_statistics = agent.td_statistics()
-    for _ in range(16 * (len(bootstrap) + len(bootstrap_errors))):
-        agent.learn_outcome(batch_size=batch_size)
-    if target_mode == "round":
-        agent.sync_target()
-    bootstrap_summary = _summarize(bootstrap, len(train), bootstrap_errors, bootstrap_failed)
-    bootstrap_summary.update(executed_transition_statistics(
-        (*[t for result in bootstrap for t in result.transitions], *bootstrap_failed)))
-    bootstrap_summary['failure_reason_counts']=bootstrap_reason_counts
-    print(f"bootstrap completed={len(bootstrap)}/{len(train)} economic_updates={agent.economic_optimizer_updates}", flush=True)
-    history = []
-    selected_steps = 0
-    executed_training_steps = 0
-    evaluation_steps = 0
-    best_record = None
-    diagnostic_artifacts: list[dict] = []
-    first_qualification = None
+    if resume_state is None:
+        print(f"bootstrap beta={beta_soc:g} cadence={cadence} target={target_mode} start", flush=True)
+        bootstrap_policy_calls = 0
+        def bootstrap_policy(state, feasible):
+            nonlocal bootstrap_policy_calls
+            power = min(feasible, key=lambda value: abs(value-state[1]*600))
+            bootstrap_policy_calls += 1
+            if progress_every_steps and bootstrap_policy_calls % progress_every_steps == 0:
+                print(f'bootstrap progress step={bootstrap_policy_calls} soc={state[0]:.4f} fc={power}',flush=True)
+            return power
+        bootstrap, bootstrap_errors = _run_episodes(
+            train, bootstrap_policy, accountant, beta_soc=beta_soc,
+            on_failure=bootstrap_failure,
+            redistribute_battery_energy=redistribute_battery_energy,
+        )
+        for result in bootstrap:
+            agent.remember_trajectory(result.transitions)
+            bootstrap_completed_voyages += sum(t.shore_ledger is not None or t.is_successful_terminal
+                                               for t in result.transitions)
+            if result.transitions:
+                agent.remember_outcome_trajectory(result.transitions, failed=False)
+        schedule.grant(insertions=agent.economic_replay_insertions,
+                       completed_episodes=(len(bootstrap) if episode_credit_scope == 'sample' else bootstrap_completed_voyages))
+        bootstrap_losses = schedule.consume(agent, batch_size=batch_size)
+        bootstrap_td_statistics = agent.td_statistics()
+        for _ in range(16 * (len(bootstrap) + len(bootstrap_errors))):
+            agent.learn_outcome(batch_size=batch_size)
+        if target_mode == "round":
+            agent.sync_target()
+        bootstrap_summary = _summarize(bootstrap, len(train), bootstrap_errors, bootstrap_failed)
+        bootstrap_summary.update(executed_transition_statistics(
+            (*[t for result in bootstrap for t in result.transitions], *bootstrap_failed)))
+        bootstrap_summary['failure_reason_counts']=bootstrap_reason_counts
+        bootstrap_insertions = agent.economic_replay_insertions
+        print(f"bootstrap completed={len(bootstrap)}/{len(train)} economic_updates={agent.economic_optimizer_updates}", flush=True)
+        history = []
+        selected_steps = executed_training_steps = evaluation_steps = 0
+        best_record = None
+        diagnostic_artifacts: list[dict] = []
+        first_qualification = None
+        elapsed_before_resume = 0.0
+    else:
+        agent.load_training_state(resume_state['agent'])
+        schedule.remaining_transition_credit = resume_state['schedule']['remaining_transition_credit']
+        schedule.pending_episode_updates = resume_state['schedule']['pending_episode_updates']
+        report = resume_state['report']
+        history = report['rounds']
+        if len(history) != resume_state['completed_round'] or len(history) >= rounds:
+            raise ValueError('resume requires an incomplete run at a complete round boundary')
+        bootstrap_summary = report['bootstrap']
+        bootstrap_insertions = report['bootstrap_economic_replay_insertions']
+        bootstrap_losses = [None] * report['bootstrap_optimizer_updates']
+        bootstrap_td_statistics = report['bootstrap_td_statistics']
+        initial_q_diagnostics = report['initial_fixed_state_q_diagnostics']
+        counts = report['execution_counts']
+        selected_steps = counts['training_policy_calls']
+        executed_training_steps = counts['training_environment_transitions']
+        evaluation_steps = counts['greedy_evaluation_environment_transitions']
+        failure_suffix_count = counts['failed_suffix_transitions_excluded_from_economic_replay']
+        no_suffix_failure_events = counts['no_feasible_action_events_without_executed_suffix']
+        best_record = report['best_checkpoint']
+        diagnostic_artifacts = report['diagnostic_artifacts']
+        first_qualification = report['first_qualification']
+        selector.round = best_record['round'] if best_record else None
+        selector.cost_cny = best_record['validation_comparable_cost_cny'] if best_record else None
+        selector.first_eligible_round = report['first_qualification']['round'] if first_qualification else None
+        selector.eligible_rounds = list(report['eligible_rounds'])
+        elapsed_before_resume = report['elapsed_seconds']
+        print(f"resume after round {len(history)}/{rounds}", flush=True)
     hyperparameters = run_metadata['hyperparameters']
     source_commit = run_metadata['source_commit']
     source_worktree_dirty = run_metadata['source_worktree_dirty']
@@ -443,7 +532,7 @@ def _run_monitored_training(
             'bootstrap_td_statistics': bootstrap_td_statistics,
             'initial_fixed_state_q_diagnostics': initial_q_diagnostics,
             'economic_replay_outcome_counts':replay_counts(),
-            "bootstrap_economic_replay_insertions": sum(len(x.transitions) for x in bootstrap)+bootstrap_prefix,
+            "bootstrap_economic_replay_insertions": bootstrap_insertions,
             "rounds": history, "best_checkpoint": best_record,
             "diagnostic_artifacts": diagnostic_artifacts,
             "first_qualification": first_qualification, "eligible_rounds": selector.eligible_rounds,
@@ -457,6 +546,7 @@ def _run_monitored_training(
                 "economic_optimizer_updates": agent.economic_optimizer_updates,
                 "outcome_optimizer_updates": agent.outcome_optimizer_updates,
                 "target_sync_calls_including_initial_copy": agent.target_sync_calls,
+                "target_soft_update_calls": agent.target_soft_update_calls,
                 "remaining_transition_credit": schedule.remaining_transition_credit,
                 'bootstrap_economic_optimizer_updates': len(bootstrap_losses),
                 'formal_training_economic_optimizer_updates': agent.economic_optimizer_updates-len(bootstrap_losses),
@@ -467,8 +557,8 @@ def _run_monitored_training(
                 'economic_failure_terminal_insertions':agent.economic_failure_terminal_insertions,
                 'economic_failure_terminal_replay_size':agent.failure_terminal_replay_count,
             },
-            "elapsed_seconds": time.monotonic()-started,
-            "cost_rule": "Actual plus modeled terminal settlement; SOC shaping excluded; incomplete split cost is null",
+            "elapsed_seconds": elapsed_before_resume + time.monotonic()-started,
+            "cost_rule": "ONBOARD actual plus modeled fixed-target SHORE plus modeled terminal if no final SHORE; incomplete split cost is null",
             "monitoring_rng_isolation": True,
             'failure_training_semantics': ('Genuine no-feasible-action suffixes enter economic Q with a tagged terminal, once-only training penalty and potential correction; ledgers unchanged'
                 if learn_no_feasible_failures else 'Historical outcome-only unfinished suffix protocol'),
@@ -476,11 +566,9 @@ def _run_monitored_training(
         }
 
     _persist_report(snapshot_report(),output_dir)
-    for round_index in range(1, rounds+1):
+    for round_index in range(len(history)+1, rounds+1):
         runtime.update(phase='exploratory_training',round=round_index,episode=None)
-        epsilon = epsilon_start if rounds == 1 else epsilon_end if round_index == rounds else (
-            epsilon_start+(epsilon_end-epsilon_start)*(round_index-1)/(rounds-1)
-        )
+        epsilon = epsilon_start + (epsilon_end-epsilon_start)*min(round_index-1, 69)/69
         print(f"round {round_index}/{rounds} start epsilon={epsilon:.4f}",flush=True)
         results, failures, failed_transitions, losses = [], [], [], []
         failure_profiles = []
@@ -492,7 +580,9 @@ def _run_monitored_training(
         before_success=agent.economic_success_replay_insertions
         before_failure=agent.economic_failure_replay_insertions
         before_failure_terminals=agent.economic_failure_terminal_insertions
-        for episode_index, episode in enumerate(train, start=1):
+        round_train = list(train)
+        random.Random(seed + round_index).shuffle(round_train)
+        for episode_index, episode in enumerate(round_train, start=1):
             runtime['episode']=episode_index
             def training_policy(state, feasible):
                 nonlocal selected_steps
@@ -531,7 +621,8 @@ def _run_monitored_training(
                     else:
                         retained=agent.remember_completed_prefix(exc.executed_transitions)
                         prefix=exc.executed_transitions[:retained]
-                    prefix_voyages = sum(t.is_successful_terminal for t in prefix)
+                    prefix_voyages = sum(t.shore_ledger is not None or t.is_successful_terminal
+                                         for t in prefix)
                     completed_voyages += prefix_voyages
                     failure_suffix_count += len(exc.executed_transitions)-retained
                     agent.remember_outcome_trajectory(exc.executed_transitions,
@@ -545,7 +636,8 @@ def _run_monitored_training(
                 continue
             results.append(result)
             agent.remember_trajectory(result.transitions)
-            voyages = sum(t.done for t in result.transitions)
+            voyages = sum(t.shore_ledger is not None or t.is_successful_terminal
+                          for t in result.transitions)
             completed_voyages += voyages
             if result.transitions:
                 agent.remember_outcome_trajectory(result.transitions,failed=False)
@@ -603,6 +695,7 @@ def _run_monitored_training(
             "training_environment_transitions_cumulative":executed_training_steps,
             'training_policy_calls_cumulative': selected_steps,
             "target_sync_calls_cumulative":agent.target_sync_calls,
+            "target_soft_update_calls_cumulative":agent.target_soft_update_calls,
             'reward_scale':reward_scale,
             "remaining_transition_credit":schedule.remaining_transition_credit,
             'td_statistics': agent.td_statistics(),
@@ -657,7 +750,20 @@ def _run_monitored_training(
         if dataset.opened_test_payloads != 0:
             raise RuntimeError("Test opened during monitored training")
         runtime['phase']='persisting_completed_round'
-        _persist_report(snapshot_report(),output_dir)
+        complete_round_report = snapshot_report()
+        _persist_report(complete_round_report,output_dir)
+        checkpoint = {
+            'format_version':1,'completed_round':round_index,
+            'metadata':run_metadata,'report':complete_round_report,
+            'agent':agent.training_state(),
+            'best_checkpoint_bytes':((output_dir/'best_agent.pt').read_bytes()
+                                     if (output_dir/'best_agent.pt').exists() else None),
+            'schedule':{'remaining_transition_credit':schedule.remaining_transition_credit,
+                        'pending_episode_updates':schedule.pending_episode_updates},
+        }
+        temporary = output_dir/'training_state_latest.pt.tmp'
+        torch.save(checkpoint, temporary)
+        temporary.replace(output_dir/'training_state_latest.pt')
         val = "SKIPPED" if greedy_validation is None else f"{greedy_validation['completed']}/{len(validation)}"
         cost = None if greedy_validation is None else greedy_validation["cost_cny"]
         print(f"MONITOR round={round_index} exploratory={len(results)}/{len(train)} greedy_train={greedy_train['completed']}/{len(train)} validation={val} cost={cost} updates={agent.economic_optimizer_updates} best_round={selector.round}",flush=True)

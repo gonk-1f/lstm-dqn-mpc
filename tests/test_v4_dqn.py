@@ -1,6 +1,7 @@
 import pytest
 import torch
 
+from dqn.networks.mlp_qnet import MLPQNetwork
 from v2.economics import RawCnyIntervalLedger
 from v4.control import ACTION_KW, DirectTransition
 from v4.dqn import DirectPowerDDQN, masked_double_dqn_targets
@@ -14,6 +15,33 @@ def test_mlp_dimensions_and_feasible_epsilon_selection():
         assert agent.select_power(state, (100, 110), epsilon=1.0) in (100, 110)
     with pytest.raises(ValueError, match="feasible"):
         agent.select_power(state, (), epsilon=0.0)
+
+
+def test_default_economic_network_and_optimizer_change_without_changing_outcome():
+    agent = DirectPowerDDQN(seed=7)
+    def layer_sizes(network):
+        return [network.layers[0].in_features, *(layer.out_features for layer in network.layers)]
+    assert layer_sizes(agent.online) == [8, 128, 128, 61]
+    assert layer_sizes(agent.target) == [8, 128, 128, 61]
+    assert all(torch.equal(value, agent.target.state_dict()[key])
+               for key, value in agent.online.state_dict().items())
+    assert agent.optimizer.param_groups[0]['lr'] == pytest.approx(.0001)
+    assert layer_sizes(agent.outcome_model) == [8, 128, 64, 61]
+    assert agent.outcome_optimizer.param_groups[0]['lr'] == pytest.approx(.0001)
+    assert agent.online(torch.zeros(2, 8)).shape == (2, 61)
+    before = {key: value.clone() for key, value in agent.online.state_dict().items()}
+    state = (0.6,) + (0.0,) * 7
+    agent.remember(state, 100, -2., state, done=False, next_feasible_actions=(100, 200))
+    assert agent.learn(batch_size=1) is not None
+    assert any(not torch.equal(value, agent.online.state_dict()[key])
+               for key, value in before.items())
+
+
+def test_legacy_128_64_checkpoint_cannot_silently_load_into_new_v4_q_network():
+    legacy = MLPQNetwork(8, 61, (128, 64))
+    current = DirectPowerDDQN(seed=7)
+    with pytest.raises(RuntimeError, match='size mismatch'):
+        current.online.load_state_dict(legacy.state_dict())
 
 
 def test_masked_double_dqn_target_uses_online_choice_target_value_and_terminal():

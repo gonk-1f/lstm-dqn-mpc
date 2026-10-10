@@ -14,7 +14,10 @@ from v2.data.formal_training_dataset import FormalTrainingDataset
 from v3.control import EconomicMPC
 
 from .control import ACTION_KW, DirectReplay, DirectTransition, ReplayExecutionError, replay_episode
-from .dqn import DirectPowerDDQN
+from .dqn import (
+    DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE,
+    OUTCOME_HIDDEN_DIMS, OUTCOME_LEARNING_RATE,
+)
 from .telemetry import soc_time_occupancy
 from .diagnostics import COMPONENT_NAMES, reward_totals
 
@@ -34,6 +37,9 @@ def _summarize(
     all_fc.extend(transition.action_kw for transition in failed_transitions)
     terminal_onboard_soc = [item.transitions[-1].actual_soc for item in results if item.transitions]
     observed_cost = sum(item.total_cost_cny for item in results)
+    modeled_shore_ledgers = [block.ledger for result in results for block in result.shore_blocks
+                             if block.settlement_basis == 'modeled_fixed_target_soc_0.6']
+    modeled_shore_cost = math.fsum(ledger.total_cost_cny for ledger in modeled_shore_ledgers)
     modeled_cost = sum(
         0.0 if item.modeled_terminal_settlement is None
         else item.modeled_terminal_settlement.ledger.total_cost_cny
@@ -42,11 +48,22 @@ def _summarize(
     comparable_cost = observed_cost + modeled_cost
     completed_transitions = [t for item in results for t in item.transitions]
     executed_transitions = [*completed_transitions, *failed_transitions]
-    voyage_terminal_soc = [t.actual_soc for t in executed_transitions if t.is_successful_terminal]
+    voyage_terminal_soc = [t.actual_soc for t in executed_transitions
+                           if t.shore_ledger is not None or t.is_successful_terminal]
+    completed_onboard_segments = (sum(t.shore_ledger is not None for t in executed_transitions)
+                                  + sum(t.is_successful_terminal and t.shore_ledger is None
+                                        for t in executed_transitions))
     executed_components = {
         name: math.fsum(getattr(item.total_ledger,name) for item in results)
               + math.fsum(getattr(t.original_economic_ledger,name) for t in failed_transitions)
         for name in COMPONENT_NAMES
+    }
+    executed_modeled_shore_ledgers = [*modeled_shore_ledgers,
+                                     *(t.shore_ledger for t in failed_transitions
+                                       if t.shore_ledger is not None)]
+    executed_observed_components = {
+        name: value - math.fsum(getattr(ledger, name) for ledger in executed_modeled_shore_ledgers)
+        for name, value in executed_components.items()
     }
     return {
         "episodes": requested,
@@ -54,12 +71,24 @@ def _summarize(
         "failed": failures,
         "cost_cny": comparable_cost if not failures else None,
         "completed_cost_cny": comparable_cost,
-        "completed_observed_cost_cny": observed_cost,
-        'executed_observed_components_cny': executed_components,
-        'executed_observed_cost_cny': math.fsum(executed_components.values()),
-        'executed_cost_scope': 'Completed sample full ledgers plus retained failed transition ledgers; unattached leading SHORE of failed samples is not available here',
+        "completed_observed_cost_cny": observed_cost - modeled_shore_cost,
+        "completed_accounted_cost_including_modeled_shore_cny": observed_cost,
+        "completed_modeled_fixed_target_shore_cost_cny": modeled_shore_cost,
+        "completed_modeled_fixed_target_shore_components_cny": {
+            name: math.fsum(getattr(ledger, name) for ledger in modeled_shore_ledgers)
+            for name in COMPONENT_NAMES
+        },
+        'executed_observed_components_cny': executed_observed_components,
+        'executed_observed_cost_cny': math.fsum(executed_observed_components.values()),
+        'executed_accounted_components_cny': executed_components,
+        'executed_accounted_cost_cny': math.fsum(executed_components.values()),
+        'executed_modeled_fixed_target_shore_cost_cny': math.fsum(
+            ledger.total_cost_cny for ledger in executed_modeled_shore_ledgers),
+        'executed_cost_scope': 'Completed sample ledgers plus failed executed transitions; modeled fixed-target SHORE shown separately; unattached leading SHORE in failed samples is unavailable',
         "completed_observed_components_cny": {
-            name: math.fsum(getattr(item.total_ledger, name) for item in results) for name in COMPONENT_NAMES
+            name: math.fsum(getattr(item.total_ledger, name) for item in results)
+                  - math.fsum(getattr(ledger, name) for ledger in modeled_shore_ledgers)
+            for name in COMPONENT_NAMES
         },
         "completed_modeled_components_cny": {
             name: math.fsum(getattr(item.modeled_terminal_settlement.ledger, name)
@@ -82,7 +111,8 @@ def _summarize(
         "fc_starts": starts,
         "executed_fc_starts_including_failed_prefix": sum(
             t.state[4] == 0 and t.action_kw > 0 for t in executed_transitions),
-        "completed_voyages": sum(t.is_successful_terminal for t in executed_transitions),
+        "completed_voyages": completed_onboard_segments,
+        "completed_onboard_segments": completed_onboard_segments,
         'failed_samples':len(failures),
         'failure_terminal_count':sum(t.done and not t.is_successful_terminal for t in failed_transitions),
         'voyage_terminal_soc_mean': math.fsum(voyage_terminal_soc)/len(voyage_terminal_soc) if voyage_terminal_soc else None,
@@ -375,8 +405,11 @@ def run_train_validation(
         "hyperparameters": {
             "seed": seed, "rounds": rounds, "batch_size": batch_size,
             "updates_per_episode": updates_per_episode, "gamma": agent.gamma,
-            "learning_rate": 1e-4, "replay_capacity": 100_000,
-            "hidden_dims": [128, 64], "epsilon_start": epsilon_start, "epsilon_end": epsilon_end,
+            "learning_rate": ECONOMIC_LEARNING_RATE, "replay_capacity": 100_000,
+            "hidden_dims": list(ECONOMIC_HIDDEN_DIMS),
+            "outcome_learning_rate": OUTCOME_LEARNING_RATE,
+            "outcome_hidden_dims": list(OUTCOME_HIDDEN_DIMS),
+            "epsilon_start": epsilon_start, "epsilon_end": epsilon_end,
             "beta_soc": beta_soc,
             "target_sync_schedule": "initial hard copy; once after bootstrap; once after each round",
             "economic_update_schedule": "16 by default per completed sample, unchanged",

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from math import ceil, fsum, isfinite
 from typing import Callable
 
@@ -12,7 +12,7 @@ from v2.models.battery_energy import next_soc
 from v2.models.battery_degradation import battery_life_state
 from v2.models.fuel_cell_degradation import fuel_cell_life_state
 from v3.control import AccountState, EconomicMPC, SOC_MAX, SOC_MIN, SHORE_TARGET_SOC
-from v3.episode_replay import SHORE_MODES, ShoreBlock, _ledger_total, _validated_rows
+from v3.episode_replay import SHORE_MODES, ShoreBlock, _ledger_total
 from v3.shore import settle_shore_segment
 
 from .reward_feedback import BatteryEnergyValue
@@ -85,7 +85,7 @@ class DirectTransition:
 
     @property
     def original_economic_ledger(self) -> RawCnyIntervalLedger:
-        """Observed four-component ledger; modeled settlement is separate."""
+        """Executed four-component ledger, including any modeled port charge."""
         if self.shore_ledger is None:
             return self.executed_ledger
         return _ledger_total((self.executed_ledger, self.shore_ledger))
@@ -151,6 +151,43 @@ def modeled_terminal_settlement(
     return ModeledTerminalSettlement(
         physical.soc, reference_soc, grid_kwh, settlement.ledger,
     )
+
+
+def _modeled_fixed_target_shore(physical: AccountState, accountant: EconomicMPC,
+                                recorded_requests: tuple[float, ...]):
+    """Settle a port call to SOC 0.6; logged powers do not limit this model.
+
+    The existing formal shore interval supplies the FC shutdown, charging
+    efficiency, battery ageing and tariff. Synthetic charge intervals exist
+    only inside this accounting calculation, not as measured 30 s trace rows.
+    """
+    charge_kw = -accountant.plant.battery_charge_min_kw
+    deficit_kwh = max(0.0, SHORE_TARGET_SOC - physical.soc) * accountant.plant.battery_nominal_energy_kwh
+    steps = max(1, ceil(deficit_kwh * 3600.0 / (charge_kw * 30.0)))
+    settlement = settle_shore_segment(accountant, physical, (-charge_kw,) * steps)
+    if deficit_kwh > 0 and abs(settlement.end_state.soc - SHORE_TARGET_SOC) > 1e-9:
+        raise RuntimeError('modeled fixed-target SHORE failed to reach SOC 0.6')
+    if deficit_kwh > 0:
+        settlement = replace(settlement, end_state=replace(settlement.end_state, soc=SHORE_TARGET_SOC))
+    block_data = (recorded_requests, (), (), 'modeled_fixed_target_soc_0.6')
+    return settlement, block_data
+
+
+def _validated_rows_v4(episode: object):
+    """Keep raw shore power only for provenance; it is not a charge request."""
+    try:
+        modes = tuple(OperatingMode(value) for value in episode.operating_mode)
+        loads = tuple(float(value) for value in episode.load_kw)
+        recorded_battery = tuple(float(value) for value in episode.battery_bus_kw)
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise ValueError('episode lacks valid operating modes and power rows') from exc
+    if not modes or len(modes) != len(loads) or len(modes) != len(recorded_battery):
+        raise ValueError('episode mode and power rows must have the same positive length')
+    if OperatingMode.UNRESOLVED in modes:
+        raise ValueError('unresolved operating mode blocks v4 replay')
+    if any(not isfinite(value) for value in (*loads, *recorded_battery)):
+        raise ValueError('episode power rows must be finite')
+    return modes, loads, recorded_battery
 
 
 def build_state(
@@ -241,7 +278,7 @@ def replay_episode(
     closed without power clipping or a synthetic cost. Reward redistribution
     is opt-in so historical callers keep their original reward timing.
     """
-    modes, loads, requests = _validated_rows(episode)
+    modes, loads, requests = _validated_rows_v4(episode)
     if not callable(policy):
         raise TypeError("policy must be callable")
     if not isinstance(accountant, EconomicMPC):
@@ -269,7 +306,7 @@ def replay_episode(
                 end += 1
             start_soc = physical.soc
             try:
-                shore = settle_shore_segment(accountant, physical, requests[index:end])
+                shore, block_data = _modeled_fixed_target_shore(physical, accountant, requests[index:end])
             except (RuntimeError, ValueError) as exc:
                 raise ReplayExecutionError(
                     index, modes[index], exc, executed_transitions=tuple(transitions),
@@ -277,14 +314,12 @@ def replay_episode(
             physical = shore.end_state
             block = ShoreBlock(
                 index, end, start_soc, physical.soc, shore.ledger,
-                shore.requested_battery_bus_kw, shore.accepted_battery_bus_kw,
-                shore.soc_path,
+                *block_data,
             )
             shore_blocks.append(block)
             ledgers.append(shore.ledger)
-            for offset, (power, soc) in enumerate(zip(block.accepted_battery_bus_kw, block.soc_path)):
-                battery_trace[index + offset] = power
-                soc_trace[index + offset] = soc
+            for row in range(index, end):
+                soc_trace[row] = physical.soc
             index = end
             continue
 
@@ -339,7 +374,8 @@ def replay_episode(
                 while shore_end < len(modes) and modes[shore_end] in SHORE_MODES:
                     shore_end += 1
                 try:
-                    shore = settle_shore_segment(accountant, physical, requests[shore_start:shore_end])
+                    shore, block_data = _modeled_fixed_target_shore(
+                        physical, accountant, requests[shore_start:shore_end])
                 except (RuntimeError, ValueError) as exc:
                     raise ReplayExecutionError(
                         shore_start, modes[shore_start], exc,
@@ -347,14 +383,12 @@ def replay_episode(
                     ) from exc
                 block = ShoreBlock(
                     shore_start, shore_end, physical.soc, shore.end_state.soc,
-                    shore.ledger, shore.requested_battery_bus_kw,
-                    shore.accepted_battery_bus_kw, shore.soc_path,
+                    shore.ledger, *block_data,
                 )
                 shore_blocks.append(block)
                 ledgers.append(shore.ledger)
-                for offset, (power, soc) in enumerate(zip(block.accepted_battery_bus_kw, block.soc_path)):
-                    battery_trace[shore_start + offset] = power
-                    soc_trace[shore_start + offset] = soc
+                for row in range(shore_start, shore_end):
+                    soc_trace[row] = shore.end_state.soc
                 physical = shore.end_state
                 shore_ledger = shore.ledger
                 reward += shore_ledger.reward_cny
@@ -379,19 +413,22 @@ def replay_episode(
             else:
                 successor_history = history
             next_state = build_state(physical, successor_history, accountant, departure=shore_ledger is not None)
+            has_next_onboard = shore_ledger is not None and shore_end < len(modes)
+            done = last_onboard and not has_next_onboard
+            next_load = loads[shore_end] if has_next_onboard else loads[index + 1] if not last_onboard else None
             next_physical_actions = (
-                feasible_fc_actions(physical, loads[index + 1], accountant)
-                if not last_onboard else ()
+                feasible_fc_actions(physical, next_load, accountant)
+                if next_load is not None else ()
             )
             next_feasible = policy_candidate_fc_actions(
                 next_physical_actions, physical.previous_fc_kw,
             )
             transitions.append(DirectTransition(
                 decision_state, fc_kw, reward, next_state, ledger,
-                battery_kw, next_physical.soc, last_onboard, next_feasible,
+                battery_kw, next_physical.soc, done, next_feasible,
                 shore_ledger, modeled_ledger, soc_penalty,
                 original_reward, adjustment, correction,
-                'completed' if last_onboard else None,
+                'completed' if done else None,
                 physical_feasible_actions=physical_actions,
                 policy_candidate_actions=candidate_actions,
             ))
