@@ -237,21 +237,6 @@ def feasible_fc_actions(
     return tuple(feasible)
 
 
-def policy_candidate_fc_actions(
-    physical_actions: tuple[int, ...], previous_fc_kw: float,
-) -> tuple[int, ...]:
-    """Retain FC output when possible without changing physical feasibility.
-
-    A previously running FC may stop only when the physical mask has no
-    positive action. An OFF FC can remain OFF or start as before.
-    """
-    if previous_fc_kw > 0.0:
-        positive = tuple(action for action in physical_actions if action > 0)
-        if positive:
-            return positive
-    return physical_actions
-
-
 def infeasibility_cause(measured_load_kw: float, accountant: EconomicMPC) -> str:
     """Diagnose an empty physical mask without changing its definition."""
     load = normalize_onboard_load_kw(measured_load_kw)
@@ -342,9 +327,7 @@ def replay_episode(
                     raise NoFeasibleFCActionError(
                         "no feasible FC action for actual battery power and SOC bounds"
                     )
-                candidate_actions = policy_candidate_fc_actions(
-                    physical_actions, physical.previous_fc_kw,
-                )
+                candidate_actions = physical_actions
                 fc_kw = _checked_action(policy(decision_state, candidate_actions), candidate_actions)
                 next_physical, ledger, battery_kw = accountant.interval(physical, fc_kw, actual_load)
                 if not accountant.plant.battery_charge_min_kw <= battery_kw <= accountant.plant.battery_discharge_max_kw:
@@ -444,9 +427,7 @@ def replay_episode(
                 feasible_fc_actions(physical, next_load, accountant)
                 if next_load is not None else ()
             )
-            next_feasible = policy_candidate_fc_actions(
-                next_physical_actions, physical.previous_fc_kw,
-            )
+            next_feasible = next_physical_actions
             transitions.append(DirectTransition(
                 decision_state, fc_kw, reward, next_state, ledger,
                 battery_kw, next_physical.soc, done, next_feasible,
