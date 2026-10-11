@@ -23,7 +23,9 @@ from .dqn import (
     DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE,
     OUTCOME_HIDDEN_DIMS, OUTCOME_LEARNING_RATE,
 )
-from .experiment_schedule import BestCheckpoint, EconomicUpdateSchedule, fully_completed
+from .experiment_schedule import (
+    BestCheckpoint, EconomicUpdateSchedule, annotate_evaluation, fully_completed,
+)
 from .train import _run_episodes, _summarize
 from .diagnostics import fixed_q_diagnostics, trajectory_record, executed_transition_statistics
 from .learning_curves import FIGURES, write_learning_curves
@@ -47,10 +49,12 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
     torch_state = torch.random.get_rng_state()
     failed_transitions = []
     failure_profiles = []
+    failure_events = []
     reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
     event_only_count=0
     def on_failure(exc):
         nonlocal event_only_count
+        failure_events.append(exc)
         if abort_on_execution_error and exc.failure_kind not in ('no_feasible_action','data_truncation'):
             raise exc
         cause=(exc.failure_cause if exc.failure_kind=='no_feasible_action' else
@@ -82,7 +86,9 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             for result in results:
                 if result.sample_id in DIAGNOSTIC_SAMPLE_IDS:
                     decision_diagnostic_sink(result.sample_id, result.transitions, failed=False)
-        summary = _summarize(results, len(episodes), failures, failed_transitions)
+        summary = annotate_evaluation(
+            _summarize(results, len(episodes), failures, failed_transitions),
+            episodes, results, failure_events)
         summary.update(executed_transition_statistics(
             (*[t for result in results for t in result.transitions], *failed_transitions)))
         summary.update(failure_reason_counts=reason_counts,event_only_failures=event_only_count)
@@ -131,6 +137,9 @@ def _write_round_metrics(report: dict, path: Path) -> None:
             'exploratory_completed': row['exploratory_train']['completed'],
             'greedy_train_completed': row['greedy_train']['completed'],
             'greedy_validation_completed': None if validation is None else validation['completed'],
+            'greedy_train_evaluable_episodes': row['greedy_train'].get('evaluable_episodes'),
+            'greedy_validation_evaluable_episodes': (
+                None if validation is None else validation.get('evaluable_episodes')),
             'validation_cost_cny': None if validation is None else validation['cost_cny'],
             'qualified': row['qualified_checkpoint'],
             'economic_optimizer_updates': row['economic_optimizer_updates_cumulative'],
@@ -402,6 +411,8 @@ def _run_monitored_training(
     bootstrap_failed = []
     bootstrap_prefix = 0
     bootstrap_completed_voyages = 0
+    bootstrap_unknown_discarded = 0
+    bootstrap_events = []
     failure_suffix_count = 0
     no_suffix_failure_events = 0
     initial_q_diagnostics = fixed_q_diagnostics(agent,accountant)
@@ -425,7 +436,9 @@ def _run_monitored_training(
         return None
 
     def bootstrap_failure(exc):
-        nonlocal bootstrap_prefix, bootstrap_completed_voyages, failure_suffix_count, no_suffix_failure_events
+        nonlocal bootstrap_prefix, bootstrap_completed_voyages, bootstrap_unknown_discarded
+        nonlocal failure_suffix_count, no_suffix_failure_events
+        bootstrap_events.append(exc)
         if abort_on_execution_error and exc.failure_kind not in ('no_feasible_action','data_truncation'):
             raise exc
         cause=(exc.failure_cause if exc.failure_kind=='no_feasible_action' else
@@ -437,10 +450,12 @@ def _run_monitored_training(
                 not exc.executed_transitions or exc.executed_transitions[-1].done):
             no_suffix_failure_events += 1
         if exc.failure_kind == 'data_truncation' and exc.executed_transitions:
-            retained=agent.remember_trajectory(exc.executed_transitions)
+            retained=agent.remember_completed_prefix(exc.executed_transitions)
             bootstrap_prefix += retained
+            bootstrap_unknown_discarded += len(exc.executed_transitions) - retained
             bootstrap_completed_voyages += sum(
-                t.shore_ledger is not None for t in exc.executed_transitions)
+                t.shore_ledger is not None or t.is_successful_terminal
+                for t in exc.executed_transitions[:retained])
         elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
             if view is not None:
                 retained=agent.remember_trajectory(view.transitions)
@@ -484,14 +499,18 @@ def _run_monitored_training(
             agent.learn_outcome(batch_size=batch_size)
         if target_mode == "round":
             agent.sync_target()
-        bootstrap_summary = _summarize(bootstrap, len(train), bootstrap_errors, bootstrap_failed)
+        bootstrap_summary = annotate_evaluation(
+            _summarize(bootstrap, len(train), bootstrap_errors, bootstrap_failed),
+            train, bootstrap, bootstrap_events)
         bootstrap_summary.update(executed_transition_statistics(
             (*[t for result in bootstrap for t in result.transitions], *bootstrap_failed)))
         bootstrap_summary['failure_reason_counts']=bootstrap_reason_counts
+        bootstrap_summary['unknown_discarded_economic_q_transitions'] = bootstrap_unknown_discarded
         bootstrap_insertions = agent.economic_replay_insertions
         print(f"bootstrap completed={len(bootstrap)}/{len(train)} economic_updates={agent.economic_optimizer_updates}", flush=True)
         history = []
         selected_steps = executed_training_steps = evaluation_steps = 0
+        unknown_discarded_total = 0
         best_record = None
         diagnostic_artifacts: list[dict] = []
         first_qualification = None
@@ -513,6 +532,7 @@ def _run_monitored_training(
         selected_steps = counts['training_policy_calls']
         executed_training_steps = counts['training_environment_transitions']
         evaluation_steps = counts['greedy_evaluation_environment_transitions']
+        unknown_discarded_total = counts.get('unknown_discarded_economic_q_transitions', 0)
         failure_suffix_count = counts['failed_suffix_transitions_excluded_from_economic_replay']
         no_suffix_failure_events = counts['no_feasible_action_events_without_executed_suffix']
         best_record = report['best_checkpoint']
@@ -558,6 +578,7 @@ def _run_monitored_training(
                 'bootstrap_economic_optimizer_updates': len(bootstrap_losses),
                 'formal_training_economic_optimizer_updates': agent.economic_optimizer_updates-len(bootstrap_losses),
                 'failed_suffix_transitions_excluded_from_economic_replay': failure_suffix_count,
+                'unknown_discarded_economic_q_transitions': unknown_discarded_total,
                 'no_feasible_action_events_without_executed_suffix': no_suffix_failure_events,
                 'economic_success_replay_insertions':agent.economic_success_replay_insertions,
                 'economic_failure_replay_insertions':agent.economic_failure_replay_insertions,
@@ -579,8 +600,10 @@ def _run_monitored_training(
         print(f"round {round_index}/{rounds} start epsilon={epsilon:.4f}",flush=True)
         results, failures, failed_transitions, losses = [], [], [], []
         failure_profiles = []
+        training_events = []
         reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
         completed_voyages = 0
+        unknown_discarded_round = 0
         agent.reset_td_statistics()
         before_insertions = agent.economic_replay_insertions
         before_updates = agent.economic_optimizer_updates
@@ -604,6 +627,8 @@ def _run_monitored_training(
                 result = replay_episode(episode,training_policy,accountant=accountant,beta_soc=beta_soc,
                                          redistribute_battery_energy=redistribute_battery_energy)
             except ReplayExecutionError as exc:
+                exc.sample_id = str(episode.sample_id)
+                training_events.append(exc)
                 if abort_on_execution_error and exc.failure_kind not in ('no_feasible_action','data_truncation'):
                     raise
                 failures.append(f"{episode.sample_id}: {exc}")
@@ -623,9 +648,11 @@ def _run_monitored_training(
                         not exc.executed_transitions or exc.executed_transitions[-1].done):
                     no_suffix_failure_events += 1
                 if exc.failure_kind == 'data_truncation' and exc.executed_transitions:
-                    retained=agent.remember_trajectory(exc.executed_transitions)
+                    retained=agent.remember_completed_prefix(exc.executed_transitions)
+                    unknown_discarded_round += len(exc.executed_transitions) - retained
                     prefix_voyages = sum(
-                        t.shore_ledger is not None for t in exc.executed_transitions)
+                        t.shore_ledger is not None or t.is_successful_terminal
+                        for t in exc.executed_transitions[:retained])
                     completed_voyages += prefix_voyages
                 elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
                     if view is not None:
@@ -661,10 +688,14 @@ def _run_monitored_training(
                 agent.learn_outcome(batch_size=batch_size)
         if target_mode == "round":
             agent.sync_target()
-        explore = _summarize(results,len(train),failures,failed_transitions)
+        explore = annotate_evaluation(
+            _summarize(results,len(train),failures,failed_transitions),
+            train, results, training_events)
         explore.update(executed_transition_statistics(
             (*[t for result in results for t in result.transitions], *failed_transitions)))
         explore['failure_reason_counts']=reason_counts
+        explore['unknown_discarded_economic_q_transitions'] = unknown_discarded_round
+        unknown_discarded_total += unknown_discarded_round
         executed_training_steps += explore['executed_onboard_transitions']
         if capture_trajectories:
             path = output_dir/f'round_{round_index:03d}_exploratory_trajectories.json'
@@ -686,20 +717,18 @@ def _run_monitored_training(
             abort_on_execution_error=abort_on_execution_error,
             decision_diagnostic_sink=diagnostic_sink if decision_rows is not None else None)
         evaluation_steps += greedy_train["executed_onboard_transitions"]
-        greedy_validation = None
-        if fully_completed(greedy_train):
-            runtime['phase']='greedy_validation'
-            print(f"round {round_index}/{rounds} greedy_train={len(train)}/{len(train)} validation start",flush=True)
-            greedy_validation = greedy_evaluate(validation,agent,accountant,beta_soc,
-                redistribute_battery_energy=redistribute_battery_energy,
-                trajectory_path=output_dir/f'round_{round_index:03d}_validation_trajectories.json' if capture_trajectories else None,
-                learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty,
-                abort_on_execution_error=abort_on_execution_error)
-            evaluation_steps += greedy_validation["executed_onboard_transitions"]
+        runtime['phase']='greedy_validation'
+        print(f"round {round_index}/{rounds} greedy_train={greedy_train['evaluable_completed']}/{greedy_train['evaluable_episodes']} validation start",flush=True)
+        greedy_validation = greedy_evaluate(validation,agent,accountant,beta_soc,
+            redistribute_battery_energy=redistribute_battery_energy,
+            trajectory_path=output_dir/f'round_{round_index:03d}_validation_trajectories.json' if capture_trajectories else None,
+            learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty,
+            abort_on_execution_error=abort_on_execution_error)
+        evaluation_steps += greedy_validation["executed_onboard_transitions"]
         row = {
             "round":round_index,"epsilon":epsilon,"exploratory_train":explore,
             "greedy_train":greedy_train,"greedy_validation":greedy_validation,
-            "validation_skip_reason":None if greedy_validation is not None else "greedy_train_incomplete",
+            "validation_skip_reason":None,
             "mean_loss":sum(losses)/len(losses) if losses else None,
             "economic_optimizer_updates":agent.economic_optimizer_updates-before_updates,
             "economic_optimizer_updates_cumulative":agent.economic_optimizer_updates,
@@ -714,7 +743,12 @@ def _run_monitored_training(
             'td_statistics': agent.td_statistics(),
             'fixed_state_q_diagnostics': fixed_q_diagnostics(agent,accountant),
             'completed_voyages_entering_economic_replay': completed_voyages,
-            'failed_sample_count':len(failures),'failure_reason_counts':reason_counts,
+            'unknown_discarded_economic_q_transitions': unknown_discarded_round,
+            'unknown_discarded_economic_q_transitions_cumulative': unknown_discarded_total,
+            'failed_sample_count':explore['physical_failures'],
+            'data_truncated_sample_count':explore['data_truncated_episodes'],
+            'noncompleted_sample_count':explore['noncompleted_samples'],
+            'failure_reason_counts':reason_counts,
             'economic_success_replay_insertions':agent.economic_success_replay_insertions-before_success,
             'economic_failure_replay_insertions':agent.economic_failure_replay_insertions-before_failure,
             'economic_failure_terminal_insertions':agent.economic_failure_terminal_insertions-before_failure_terminals,
@@ -777,9 +811,9 @@ def _run_monitored_training(
         temporary = output_dir/'training_state_latest.pt.tmp'
         torch.save(checkpoint, temporary)
         temporary.replace(output_dir/'training_state_latest.pt')
-        val = "SKIPPED" if greedy_validation is None else f"{greedy_validation['completed']}/{len(validation)}"
-        cost = None if greedy_validation is None else greedy_validation["cost_cny"]
-        print(f"MONITOR round={round_index} exploratory={len(results)}/{len(train)} greedy_train={greedy_train['completed']}/{len(train)} validation={val} cost={cost} updates={agent.economic_optimizer_updates} best_round={selector.round}",flush=True)
+        val = f"{greedy_validation['evaluable_completed']}/{greedy_validation['evaluable_episodes']}"
+        cost = greedy_validation["cost_cny"]
+        print(f"MONITOR round={round_index} exploratory={explore['evaluable_completed']}/{explore['evaluable_episodes']} greedy_train={greedy_train['evaluable_completed']}/{greedy_train['evaluable_episodes']} validation={val} cost={cost} updates={agent.economic_optimizer_updates} best_round={selector.round}",flush=True)
     report = snapshot_report(completed_training=True)
     _persist_report(report,output_dir)
     runtime['phase']='completed'

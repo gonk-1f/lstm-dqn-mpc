@@ -27,7 +27,7 @@ def test_greedy_evaluation_restores_training_random_stream_and_never_learns():
     assert "fc_zero_fraction" in summary and "onboard_soc_mean" in summary
 
 
-def test_failed_greedy_train_skips_validation_and_cannot_save_checkpoint(tmp_path):
+def test_failed_greedy_train_still_runs_validation_and_cannot_save_checkpoint(tmp_path):
     from v4.monitored_training import run_monitored_training
 
     class ImpossibleDataset(FakeDataset):
@@ -35,10 +35,52 @@ def test_failed_greedy_train_skips_validation_and_cannot_save_checkpoint(tmp_pat
             return (SimpleNamespace(sample_id="bad", split="train", operating_mode=("onboard",), load_kw=(2000.0,), battery_bus_kw=(0.0,)),)
 
     _, report = run_monitored_training(ImpossibleDataset(), output_dir=tmp_path, rounds=2, beta_soc=250, seed=1, batch_size=1)
-    assert all(row["greedy_validation"] is None for row in report["rounds"])
+    assert all(row["greedy_validation"]["evaluable_completed"] == 1
+               and row["validation_skip_reason"] is None for row in report["rounds"])
     assert report["best_checkpoint"] is None
     assert not (tmp_path / "best_agent.pt").exists()
     assert report["test_payloads_opened"] == 0
+
+
+def test_unknown_prefix_is_observed_but_never_used_as_a_terminal_q_target():
+    from v3.control import EconomicMPC
+    from v4.control import ReplayExecutionError, replay_episode
+    from v4.experiment_schedule import fully_completed
+    from v4.monitored_training import greedy_evaluate
+
+    accountant = EconomicMPC(nominal_cost_cny=1.0)
+    complete = SimpleNamespace(sample_id="complete", split="train",
+        operating_mode=("onboard",), load_kw=(100.0,), battery_bus_kw=(0.0,))
+    truncated = SimpleNamespace(sample_id="truncated", split="train",
+        operating_mode=("onboard", "unknown"), load_kw=(100.0, 0.0),
+        battery_bus_kw=(0.0, 0.0))
+    agent = DirectPowerDDQN(seed=42, n_step=8)
+    summary = greedy_evaluate((complete, truncated), agent, accountant, 0.0)
+    assert summary["evaluable_completed"] == summary["evaluable_episodes"] == 1
+    assert summary["data_truncated_episodes"] == summary["unknown_episodes"] == 1
+    assert summary["unknown_prefix_executed_onboard_transitions"] == 1
+    assert summary["cost_cny"] == summary["completed_cost_cny"]
+    assert fully_completed(summary)
+    assert not agent.replay
+    failed_before_unknown = SimpleNamespace(sample_id="failed_prefix", split="train",
+        operating_mode=("onboard", "unknown"), load_kw=(3000.0, 0.0),
+        battery_bus_kw=(0.0, 0.0))
+    failed_summary = greedy_evaluate((complete, failed_before_unknown), agent, accountant, 0.0)
+    assert failed_summary["unknown_prefix_physical_failures"] == 1
+    assert failed_summary["data_truncated_episodes"] == 0
+    assert not fully_completed(failed_summary)
+    try:
+        replay_episode(truncated, lambda _state, feasible: min(feasible), accountant=accountant)
+    except ReplayExecutionError as error:
+        assert error.failure_kind == "data_truncation"
+        assert error.executed_transitions[-1].terminal_reason == "data_truncation"
+        assert not error.executed_transitions[-1].done
+        assert error.executed_transitions[-1].modeled_terminal_ledger is None
+        assert error.executed_transitions[-1].failure_penalty_equivalent_cny == 0
+        assert agent.remember_completed_prefix(error.executed_transitions) == 0
+        assert not agent.replay
+    else:
+        raise AssertionError("UNKNOWN must truncate the observed trajectory")
 
 
 def test_round_monitoring_does_not_change_legacy_training_trajectory(tmp_path, monkeypatch):
@@ -55,8 +97,8 @@ def test_round_monitoring_does_not_change_legacy_training_trajectory(tmp_path, m
             return original_select(self, state, feasible, epsilon=epsilon)
         finally:
             self.random.setstate(saved)
-    # The old runner consumes RNG in its final-only evaluation too; isolate
-    # that diagnostic to compare the actual training stream, not its footer.
+    # Keep the legacy runner's greedy decisions isolated while comparing the
+    # actual training streams; both runners now evaluate after every round.
     with monkeypatch.context() as patch:
         patch.setattr(DirectPowerDDQN, "select_power", isolate_reference_final_evaluation)
         old, _ = run_train_validation(FakeDataset(), **kwargs)

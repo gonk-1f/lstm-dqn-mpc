@@ -46,8 +46,56 @@ class EconomicUpdateSchedule:
 
 
 def fully_completed(summary: dict | None) -> bool:
+    if summary is not None and 'evaluable_episodes' in summary:
+        return bool(summary['evaluable_episodes'] > 0
+                    and summary['evaluable_completed'] == summary['evaluable_episodes']
+                    and summary['physical_failures'] == 0
+                    and summary['execution_errors'] == 0
+                    and summary['data_truncated_episodes'] == summary['unknown_episodes'])
     return bool(summary and summary["episodes"] > 0 and not summary["failed"]
                 and summary["completed"] == summary["episodes"])
+
+
+def annotate_evaluation(summary: dict, episodes, results, errors) -> dict:
+    """Keep fixed complete-sample costs separate from UNKNOWN prefix diagnostics."""
+    episodes, results, errors = tuple(episodes), tuple(results), tuple(errors)
+    complete_ids = {str(item.sample_id) for item in episodes
+                    if 'unknown' not in item.operating_mode}
+    unknown_ids = {str(item.sample_id) for item in episodes
+                   if 'unknown' in item.operating_mode}
+    result_ids = {str(item.sample_id) for item in results}
+    error_ids = {str(item.sample_id) for item in errors}
+    if (len(complete_ids) + len(unknown_ids) != len(episodes)
+            or len(result_ids) != len(results) or len(error_ids) != len(errors)
+            or result_ids & error_ids or result_ids | error_ids != complete_ids | unknown_ids
+            or result_ids & unknown_ids):
+        raise ValueError('evaluation sample outcomes do not match the fixed split')
+    physical = tuple(error for error in errors if error.failure_kind == 'no_feasible_action')
+    truncations = tuple(error for error in errors if error.failure_kind == 'data_truncation')
+    execution = tuple(error for error in errors
+                      if error.failure_kind not in ('no_feasible_action', 'data_truncation'))
+    complete_cost = (summary['completed_cost_cny']
+                     if complete_ids and complete_ids <= result_ids and not execution else None)
+    summary.update(
+        evaluable_episodes=len(complete_ids),
+        evaluable_sample_ids=sorted(complete_ids),
+        evaluable_completed=len(result_ids & complete_ids),
+        unknown_episodes=len(unknown_ids),
+        unknown_sample_ids=sorted(unknown_ids),
+        data_truncated_episodes=len(truncations),
+        physical_failures=len(physical),
+        failed_samples=len(physical),
+        noncompleted_samples=len(errors),
+        evaluable_physical_failures=sum(error.sample_id in complete_ids for error in physical),
+        unknown_prefix_physical_failures=sum(error.sample_id in unknown_ids for error in physical),
+        execution_errors=len(execution),
+        unknown_prefix_executed_onboard_transitions=sum(
+            len(error.executed_transitions) for error in errors if error.sample_id in unknown_ids),
+        cost_cny=complete_cost,
+        comparable_evaluable_cost_cny=complete_cost,
+        cost_comparison_scope='fixed complete samples only; UNKNOWN prefixes excluded',
+    )
+    return summary
 
 
 @dataclass

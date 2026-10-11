@@ -28,7 +28,12 @@ def _fraction(summary, key):
 
 
 def _complete_cost(summary, key):
-    if summary is None or summary.get('completed') != summary.get('episodes'):
+    if summary is None:
+        return None
+    if 'evaluable_episodes' in summary:
+        if summary.get('cost_cny') is None:
+            return None
+    elif summary.get('completed') != summary.get('episodes'):
         return None
     return summary.get(key)
 
@@ -87,8 +92,11 @@ def _learning_series(report, scale):
         series[f'{split}_fc_change_mean_absolute_kw'] = [None if row.get(split) is None else
             row[split].get('fc_change_statistics_kw',{}).get('mean_absolute') for row in rows]
     for split in ('exploratory_train','greedy_train','greedy_validation'):
-        series[f'{split}_completion_fraction'] = [None if row.get(split) is None or not row[split].get('episodes') else
-            row[split]['completed']/row[split]['episodes'] for row in rows]
+        series[f'{split}_completion_fraction'] = [
+            None if row.get(split) is None or not row[split].get(
+                'evaluable_episodes', row[split].get('episodes')) else
+            row[split].get('evaluable_completed', row[split]['completed']) /
+            row[split].get('evaluable_episodes', row[split]['episodes']) for row in rows]
     return series
 
 
@@ -171,8 +179,8 @@ def write_learning_curves(report: dict, output_dir: Path) -> dict:
     for split,label in (('exploratory_train','Exploratory Train'),('greedy_train','Greedy Train'),
                         ('greedy_validation','Greedy Validation')):
         plot(ax,f'{split}_completion_fraction',label)
-    ax.set(ylabel='Completed / requested samples',ylim=(-.03,1.03),
-           title='Completion history; skipped Validation remains missing')
+    ax.set(ylabel='Completed / fully evaluable samples',ylim=(-.03,1.03),
+           title='Completion history; UNKNOWN samples reported separately')
     save(fig,FIGURES[0])
 
     fig,ax=plt.subplots(figsize=(9,4))
@@ -181,7 +189,7 @@ def write_learning_curves(report: dict, output_dir: Path) -> dict:
                       ('validation_modeled_shore_cost_cny','MODELED fixed-target SHORE'),
                       ('validation_modeled_cost_cny','MODELED terminal settlement')):
         plot(ax,key,label)
-    ax.set(ylabel='CNY',title='Validation costs only for completely finished splits')
+    ax.set(ylabel='CNY',title='Validation costs for the fixed complete-sample set')
     save(fig,FIGURES[1])
 
     fig,axes=plt.subplots(2,2,figsize=(11,7))

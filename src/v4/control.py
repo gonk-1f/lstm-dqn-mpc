@@ -431,7 +431,11 @@ def replay_episode(
             next_state = build_state(physical, successor_history, accountant, departure=shore_ledger is not None)
             has_next_onboard = (shore_ledger is not None and shore_end < len(modes)
                                 and modes[shore_end] is OperatingMode.ONBOARD)
-            done = last_onboard and not has_next_onboard
+            data_truncation = ((shore_ledger is not None and shore_end < len(modes)
+                                and modes[shore_end] is OperatingMode.UNKNOWN)
+                               or (shore_ledger is None and index + 1 < len(modes)
+                                   and modes[index + 1] is OperatingMode.UNKNOWN))
+            done = last_onboard and not has_next_onboard and not data_truncation
             next_load = loads[shore_end] if has_next_onboard else loads[index + 1] if not last_onboard else None
             next_physical_actions = (
                 feasible_fc_actions(physical, next_load, accountant)
@@ -445,12 +449,7 @@ def replay_episode(
                 battery_kw, next_physical.soc, done, next_feasible,
                 shore_ledger, modeled_ledger, soc_penalty,
                 original_reward, adjustment, correction,
-                ('data_truncation' if done and (
-                    (shore_ledger is not None and shore_end < len(modes)
-                     and modes[shore_end] is OperatingMode.UNKNOWN)
-                    or (shore_ledger is None and index + 1 < len(modes)
-                        and modes[index + 1] is OperatingMode.UNKNOWN))
-                 else 'completed' if done else None),
+                'data_truncation' if data_truncation else 'completed' if done else None,
                 physical_feasible_actions=physical_actions,
                 policy_candidate_actions=candidate_actions,
             ))

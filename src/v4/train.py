@@ -20,6 +20,7 @@ from .dqn import (
 )
 from .telemetry import soc_time_occupancy
 from .diagnostics import COMPONENT_NAMES, reward_totals
+from .experiment_schedule import annotate_evaluation, fully_completed
 
 
 def _summarize(
@@ -185,18 +186,22 @@ def run_train_validation(
         raise ValueError("Validation loader returned a non-Validation episode")
     train = train[:max_train_episodes]
     validation = validation[:max_validation_episodes]
+    from .monitored_training import greedy_evaluate
     accountant = EconomicMPC(nominal_cost_cny=1.0)  # only interval accounting; MPC solve is never called
     agent = DirectPowerDDQN(seed=seed)
     bootstrap_failed_prefixes = 0
     bootstrap_completed_prefixes = 0
     bootstrap_failed_transitions: list[DirectTransition] = []
+    bootstrap_events: list[ReplayExecutionError] = []
+    bootstrap_unknown_discarded = 0
 
     def remember_bootstrap_failure(exc: ReplayExecutionError) -> None:
-        nonlocal bootstrap_failed_prefixes, bootstrap_completed_prefixes
+        nonlocal bootstrap_failed_prefixes, bootstrap_completed_prefixes, bootstrap_unknown_discarded
+        bootstrap_events.append(exc)
         bootstrap_failed_transitions.extend(exc.executed_transitions)
         if exc.failure_kind == "data_truncation":
-            for transition in exc.executed_transitions:
-                agent.remember_transition(transition)
+            retained = agent.remember_completed_prefix(exc.executed_transitions)
+            bootstrap_unknown_discarded += len(exc.executed_transitions) - retained
         elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
             bootstrap_completed_prefixes += agent.remember_completed_prefix(exc.executed_transitions)
             agent.remember_outcome_trajectory(exc.executed_transitions,
@@ -245,6 +250,8 @@ def run_train_validation(
         failed_prefix_transitions = 0
         completed_prefix_transitions = 0
         round_failed_transitions: list[DirectTransition] = []
+        round_events: list[ReplayExecutionError] = []
+        round_unknown_discarded = 0
         for episode_index, episode in enumerate(train, start=1):
             episode_steps = 0
 
@@ -273,11 +280,13 @@ def run_train_validation(
                     beta_soc=beta_soc,
                 )
             except ReplayExecutionError as exc:
+                exc.sample_id = str(episode.sample_id)
+                round_events.append(exc)
                 failures.append(f"{episode.sample_id}: {exc}")
                 round_failed_transitions.extend(exc.executed_transitions)
                 if exc.failure_kind == "data_truncation":
-                    for transition in exc.executed_transitions:
-                        agent.remember_transition(transition)
+                    retained = agent.remember_completed_prefix(exc.executed_transitions)
+                    round_unknown_discarded += len(exc.executed_transitions) - retained
                 elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
                     completed_prefix_transitions += agent.remember_completed_prefix(exc.executed_transitions)
                     agent.remember_outcome_trajectory(exc.executed_transitions,
@@ -303,7 +312,9 @@ def run_train_validation(
                 if outcome_loss is not None:
                     outcome_losses.append(outcome_loss)
         agent.sync_target()
-        summary = _summarize(completed, len(train), failures, round_failed_transitions)
+        summary = annotate_evaluation(
+            _summarize(completed, len(train), failures, round_failed_transitions),
+            train, completed, round_events)
         summary.update({
             "round": round_index + 1, "epsilon": epsilon,
             "mean_loss": sum(losses) / len(losses) if losses else None,
@@ -317,7 +328,10 @@ def run_train_validation(
             "outcome_replay_size": len(agent.outcome_replay),
             "outcome_training_updates": len(outcome_losses),
             "outcome_mean_loss": sum(outcome_losses) / len(outcome_losses) if outcome_losses else None,
+            "unknown_discarded_economic_q_transitions": round_unknown_discarded,
         })
+        summary["greedy_train"] = greedy_evaluate(train, agent, accountant, beta_soc)
+        summary["greedy_validation"] = greedy_evaluate(validation, agent, accountant, beta_soc)
         training_rounds.append(summary)
         if progress_every_steps:
             print(
@@ -326,42 +340,18 @@ def run_train_validation(
                 f"mean_loss={summary['mean_loss']}",
                 flush=True,
             )
-    if progress_every_steps:
-        print(f"train greedy evaluation start episodes={len(train)} epsilon=0", flush=True)
-    train_greedy_failed_transitions: list[DirectTransition] = []
-    train_greedy_results, train_greedy_failures = _run_episodes(
-        train,
-        lambda state, feasible: agent.select_power(state, feasible),
-        accountant,
-        beta_soc=beta_soc,
-        on_failure=lambda exc: train_greedy_failed_transitions.extend(exc.executed_transitions),
-    )
-    if progress_every_steps:
-        print(
-            f"train greedy evaluation completed={len(train_greedy_results)}/{len(train)} "
-            f"failed={len(train_greedy_failures)}", flush=True,
-        )
-        print(f"validation start episodes={len(validation)} epsilon=0", flush=True)
-    validation_failed_transitions: list[DirectTransition] = []
-    validation_results, validation_failures = _run_episodes(
-        validation,
-        lambda state, feasible: agent.select_power(state, feasible),
-        accountant,
-        beta_soc=beta_soc,
-        on_failure=lambda exc: validation_failed_transitions.extend(exc.executed_transitions),
-    )
-    if progress_every_steps:
-        print(f"validation completed={len(validation_results)}/{len(validation)} failed={len(validation_failures)}", flush=True)
     if dataset.opened_test_payloads != before_test or before_test != 0:
         raise RuntimeError("Test payload was opened during Train/Validation selection")
     last_executed_onboard_train = sum(item.operating_mode[-1] == "onboard" for item in train)
     last_executed_onboard_validation = sum(item.operating_mode[-1] == "onboard" for item in validation)
+    train_greedy_summary = training_rounds[-1]["greedy_train"]
+    validation_summary = training_rounds[-1]["greedy_validation"]
     ineligibility_reasons: list[str] = []
     if not agent.replay:
         ineligibility_reasons.append("no_training_experience")
-    if train_greedy_failures or len(train_greedy_results) != len(train):
+    if not fully_completed(train_greedy_summary):
         ineligibility_reasons.append("train_greedy_incomplete")
-    if validation_failures or not validation_results:
+    if not fully_completed(validation_summary):
         ineligibility_reasons.append("validation_incomplete")
     report: dict[str, object] = {
         "controller": "MLP_Double_DQN_direct_FC_power",
@@ -369,19 +359,18 @@ def run_train_validation(
         "action_kw": list(ACTION_KW),
         "state_dim": 8,
         "reward_definition": "negative_observed_plus_modeled_terminal_four_component_CNY_minus_beta_soc_phi",
-        "bootstrap": _summarize(bootstrap, len(train), bootstrap_failures, bootstrap_failed_transitions),
+        "bootstrap": annotate_evaluation(
+            _summarize(bootstrap, len(train), bootstrap_failures, bootstrap_failed_transitions),
+            train, bootstrap, bootstrap_events),
+        "bootstrap_unknown_discarded_economic_q_transitions": bootstrap_unknown_discarded,
         "bootstrap_economic_q_optimizer_updates": len(bootstrap_losses),
         "bootstrap_mean_loss": sum(bootstrap_losses) / len(bootstrap_losses) if bootstrap_losses else None,
         "bootstrap_failed_prefix_transitions": bootstrap_failed_prefixes,
         "bootstrap_completed_prefix_transitions": bootstrap_completed_prefixes,
         "bootstrap_outcome_training_updates": len(bootstrap_outcome_losses),
         "training_rounds": training_rounds,
-        "train_greedy_evaluation": _summarize(
-            train_greedy_results, len(train), train_greedy_failures, train_greedy_failed_transitions,
-        ),
-        "validation": _summarize(
-            validation_results, len(validation), validation_failures, validation_failed_transitions,
-        ),
+        "train_greedy_evaluation": train_greedy_summary,
+        "validation": validation_summary,
         "execution_counts": {
             "training_onboard_selected_actions": selected_steps,
             "training_onboard_executed_transitions": sum(
@@ -391,8 +380,8 @@ def run_train_validation(
                 sum(len(item.transitions) for item in bootstrap) + len(bootstrap_failed_transitions)
             ),
             "greedy_evaluation_onboard_executed_transitions": (
-                sum(len(item.transitions) for item in (*train_greedy_results, *validation_results))
-                + len(train_greedy_failed_transitions) + len(validation_failed_transitions)
+                train_greedy_summary["executed_onboard_transitions"]
+                + validation_summary["executed_onboard_transitions"]
             ),
             "economic_q_optimizer_updates": agent.economic_optimizer_updates,
             "training_economic_q_optimizer_updates": agent.economic_optimizer_updates - len(bootstrap_losses),
