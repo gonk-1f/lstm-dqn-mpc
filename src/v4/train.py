@@ -13,7 +13,7 @@ import torch
 from v2.data.formal_training_dataset import FormalTrainingDataset
 from v3.control import EconomicMPC
 
-from .control import ACTION_KW, DirectReplay, DirectTransition, ReplayExecutionError, replay_episode
+from .control import ACTION_KW, SOC_REF, DirectReplay, DirectTransition, ReplayExecutionError, replay_episode
 from .dqn import (
     DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, STATE_DIM, STATE_FEATURES,
 )
@@ -335,7 +335,8 @@ def run_train_validation(
         "action_kw": list(ACTION_KW),
         "state_dim": STATE_DIM,
         "state_features": list(STATE_FEATURES),
-        "reward_definition": "negative_observed_plus_modeled_terminal_four_component_CNY_minus_beta_soc_phi",
+        "reward_definition": "negative_four_component_cost_with_existing_settlement_minus_beta_soc_times_post_action_soc_reference_deviation_squared",
+        "soc_penalty_units": "auxiliary reward-equivalent units; not actual CNY expenditure",
         "bootstrap": annotate_evaluation(
             _summarize(bootstrap, len(train), bootstrap_failures, bootstrap_failed_transitions),
             train, bootstrap, bootstrap_events),
@@ -378,6 +379,7 @@ def run_train_validation(
             "hidden_dims": list(ECONOMIC_HIDDEN_DIMS),
             "epsilon_start": epsilon_start, "epsilon_end": epsilon_end,
             "beta_soc": beta_soc,
+            "soc_ref": SOC_REF,
             "target_sync_schedule": "initial hard copy; once after bootstrap; once after each round",
             "economic_update_schedule": "16 by default per completed sample, unchanged",
         },

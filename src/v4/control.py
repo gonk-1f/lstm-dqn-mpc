@@ -17,17 +17,15 @@ from .reward_feedback import BatteryEnergyValue
 
 
 ACTION_KW = tuple(range(0, 601, 10))
+SOC_REF = 0.60
+DEFAULT_BETA_SOC = 200.0
 
 
 def soc_deviation_squared(soc: float) -> float:
-    """Squared distance from the onboard SOC working interval [0.4, 0.6]."""
+    """Auxiliary control objective; not an actual economic ledger expense."""
     if not isfinite(soc):
         raise ValueError("SOC must be finite")
-    if soc < 0.4:
-        return (0.4 - soc) ** 2
-    if soc > 0.6:
-        return (soc - 0.6) ** 2
-    return 0.0
+    return (soc - SOC_REF) ** 2
 
 
 class ReplayExecutionError(RuntimeError):
@@ -355,6 +353,7 @@ def replay_episode(
             last_onboard = index + 1 == len(modes) or modes[index + 1] is not OperatingMode.ONBOARD
             shore_ledger = None
             modeled_ledger = None
+            # Once per executed ONBOARD action, before any SHORE/terminal charge.
             soc_penalty = beta_soc * soc_deviation_squared(next_physical.soc)
             reward = ledger.reward_cny - soc_penalty
             if last_onboard and index + 1 < len(modes) and modes[index + 1] in SHORE_MODES:

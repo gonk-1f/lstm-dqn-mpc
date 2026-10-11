@@ -18,7 +18,7 @@ import torch
 
 from v3.control import EconomicMPC
 
-from .control import ACTION_KW, ReplayExecutionError, replay_episode
+from .control import ACTION_KW, DEFAULT_BETA_SOC, SOC_REF, ReplayExecutionError, replay_episode
 from .dqn import (
     DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, STATE_DIM, STATE_FEATURES,
 )
@@ -195,7 +195,7 @@ class _ConsoleLog:
 
 
 def run_monitored_training(
-    dataset, *, output_dir: Path, rounds: int = 100, beta_soc: float = 0.0,
+    dataset, *, output_dir: Path, rounds: int = 100, beta_soc: float = DEFAULT_BETA_SOC,
     cadence: str = "replay32", target_mode: str = "soft", target_interval: int = 500,
     seed: int = 42, batch_size: int = 64, updates_per_episode: int = 16,
     epsilon_start: float = 1.0, epsilon_end: float = 0.05, progress_every_steps: int = 0,
@@ -241,6 +241,8 @@ def run_monitored_training(
     energy_value = BatteryEnergyValue.from_accountant(EconomicMPC(nominal_cost_cny=1.0))
     parameters = {
         'beta_soc':beta_soc,'rounds':rounds,'seed':seed,'batch_size':batch_size,
+        'soc_ref':SOC_REF,
+        'soc_reward_formula':'-beta_soc * (actual_post_action_onboard_soc - soc_ref)**2',
         'gamma':1.0,'learning_rate':ECONOMIC_LEARNING_RATE,'hidden_dims':list(ECONOMIC_HIDDEN_DIMS),
         'state_dim':STATE_DIM,'state_features':list(STATE_FEATURES),
         'action_kw':list(ACTION_KW),'replay_capacity':300000,
@@ -270,6 +272,7 @@ def run_monitored_training(
         'reward_units':{'economic_q':'scaled_reward_equivalent_cny',
             'stored_reward':'reward_scale * final_unscaled_reward',
             'original_rewards':'reward_equivalent_cny',
+            'soc_soft_penalty':'auxiliary reward-equivalent units; not actual CNY expenditure',
             'economic_ledger':'CNY; modeled fixed-target SHORE and terminal settlement separately tagged',
             'td_original_unit_conversion':'native_td_error / reward_scale'},
         'initialization':'new seeded weights; empty replay; new optimizer; no checkpoint loaded',

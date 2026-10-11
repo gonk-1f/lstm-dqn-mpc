@@ -23,6 +23,7 @@ def reward_totals(transitions) -> dict:
         'immediate_battery_energy_adjustment': fsum(t.immediate_battery_energy_adjustment for t in values),
         'terminal_correction': fsum(t.terminal_correction for t in values),
         'new_reward': fsum(t.reward_cny for t in values),
+        'soc_auxiliary_penalty': fsum(t.soc_soft_penalty_cny for t in values),
         'failure_penalty_equivalent_cny':fsum(t.failure_penalty_equivalent_cny for t in values),
     }
 

@@ -1,4 +1,4 @@
-"""Frozen 100-round, pure-economic direct-power Double DQN training entry."""
+"""Frozen 100-round direct-power DDQN with a quadratic SOC reference reward."""
 from __future__ import annotations
 
 import argparse
@@ -8,6 +8,7 @@ import traceback
 from typing import Sequence
 
 from v2.data.formal_training_dataset import FormalTrainingDataset
+from .control import DEFAULT_BETA_SOC
 from .monitored_training import _write_json, run_monitored_training
 from .review import _manifest_hashes
 from .train import _default_data_root
@@ -23,7 +24,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument('--output-dir',type=Path,required=True)
     parser.add_argument('--resume-from',type=Path,default=None)
     parser.add_argument('--rounds',type=int,default=100)
-    parser.add_argument('--beta-soc',type=float,default=0.)
+    parser.add_argument('--beta-soc',type=float,default=DEFAULT_BETA_SOC,
+                        help='fixed-reference SOC auxiliary reward coefficient; not an economic expense')
     parser.add_argument('--reward-feedback',choices=('original','redistributed'),default='original')
     parser.add_argument('--reward-scale',type=float,default=.001,
                         help='uniform multiplier applied once to final economic-Q replay rewards; ledgers remain CNY')
@@ -38,7 +40,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument('--diagnostic-rounds',default='',
                         help='comma-separated read-only network/actual-Train-Q snapshots, e.g. 1,10,20,30,40')
     args = parser.parse_args(argv)
-    if (args.rounds != 100 or args.beta_soc != 0 or args.reward_feedback != 'original'
+    if (args.rounds != 100 or args.beta_soc != DEFAULT_BETA_SOC or args.reward_feedback != 'original'
             or args.reward_scale != .001 or args.failure_terminal_quota != 2
             or args.cadence != 'replay32' or args.n_step != 8
             or args.failure_penalty_scale != 1 or args.episode_credit_scope != 'voyage'):
