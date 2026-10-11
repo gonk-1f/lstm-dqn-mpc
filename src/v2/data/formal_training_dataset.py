@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
+import json
 import math
 from pathlib import Path
 
@@ -123,6 +124,8 @@ class FormalTrainingDataset:
         power: pd.DataFrame,
         ais: pd.DataFrame,
         modes: pd.DataFrame,
+        source_mode_root: Path | None = None,
+        source_modes: pd.DataFrame | None = None,
     ) -> None:
         self._power_root = power_root
         self._ais_root = ais_root
@@ -130,6 +133,8 @@ class FormalTrainingDataset:
         self._power = power
         self._ais = ais
         self._modes = modes
+        self._source_mode_root = source_mode_root
+        self._source_modes = source_modes
         self._cache: dict[str, tuple[FormalEpisode, ...]] = {}
         self._opened_test_payloads = 0
         self._final_test_access_started = False
@@ -183,13 +188,29 @@ class FormalTrainingDataset:
         mode_identities = m[["parent", "sample_id", "split"]].sort_values("sample_id").reset_index(drop=True)
         if not identities.equals(ais_identities) or not identities.equals(mode_identities):
             raise ValueError("power, AIS, and mode identities/splits differ")
+        source_mode_root = None
+        source_modes = None
+        policy_path = modes / "metadata" / "policy.json"
+        if policy_path.is_file():
+            policy = json.loads(policy_path.read_text(encoding="utf-8"))
+            if policy.get("schema_version") == "v4_mode_labels_30s_v3":
+                source_mode_root = (modes / str(policy["source_mode_root"])).resolve()
+                if source_mode_root != (modes.parent / "operating_dataset_zero_boundary_v2_modes").resolve():
+                    raise ValueError("v4 labels require the frozen source mode root")
+                source_manifest = source_mode_root / "metadata" / "sample_manifest.csv"
+                if _sha256(source_manifest) != policy["source_mode_manifest_sha256"]:
+                    raise ValueError("v4 label source mode manifest SHA-256 mismatch")
+                source_modes = pd.read_csv(source_manifest, encoding="utf-8-sig")
+                source_identities = source_modes[["parent", "sample_id", "split"]].sort_values("sample_id").reset_index(drop=True)
+                if not identities.equals(source_identities):
+                    raise ValueError("v4 labels and source mode identities/splits differ")
         for row in p[p["split"].eq("test")].itertuples(index=False):
             _contained(power, str(row.relative_path))
         for row in a[a["split"].eq("test")].itertuples(index=False):
             _contained(ais, str(row.relative_path))
         for row in m[m["split"].eq("test")].itertuples(index=False):
             _contained(modes, str(row.relative_path))
-        result = cls(power, ais, modes, p, a, m)
+        result = cls(power, ais, modes, p, a, m, source_mode_root, source_modes)
         if result.train_supervisory_steps != EXPECTED_TRAIN_STEPS:
             raise ValueError("formal Train supervisory-step count differs")
         if not 0 < result.train_macro_transitions <= math.ceil(EXPECTED_TRAIN_STEPS / 5):
@@ -271,12 +292,25 @@ class FormalTrainingDataset:
         power = pd.read_csv(power_path, encoding="utf-8-sig")
         speed = pd.read_csv(ais_path, encoding="utf-8-sig")
         modes = pd.read_csv(mode_path, encoding="utf-8-sig")
+        if self._source_mode_root is not None:
+            source_row = self._source_modes.set_index("sample_id").loc[str(power_row.sample_id)]
+            source_path = _contained(self._source_mode_root, str(source_row.relative_path))
+            if _sha256(source_path) != str(source_row.sha256):
+                raise ValueError(f"{power_row.sample_id}: source mode SHA-256 mismatch")
+            source = pd.read_csv(source_path, encoding="utf-8-sig")
+            if len(source) != len(modes) or not np.array_equal(
+                source[["timestamp", "time_s"]].astype(str).to_numpy(),
+                modes[["timestamp", "time_s"]].astype(str).to_numpy(),
+            ):
+                raise ValueError(f"{power_row.sample_id}: v4 labels and source axes differ")
+            for column in ("p_fc_total_kw", "p_batt_bus_kw"):
+                modes[column] = source[column].to_numpy()
         if not {"timestamp", "time_s", "load_total_kw"}.issubset(power.columns):
             raise ValueError("power payload schema mismatch")
         if not {"timestamp", "time_s", "speed_kn", "speed_provenance"}.issubset(speed.columns):
             raise ValueError("AIS payload schema mismatch")
         required_mode_columns = {
-            "timestamp", "time_s", "load_total_kw", "p_fc_total_kw",
+            "timestamp", "time_s", "p_fc_total_kw",
             "p_batt_bus_kw", "mode", "mode_reason",
         }
         if required_mode_columns.difference(modes.columns):
@@ -336,6 +370,9 @@ class FormalTrainingDataset:
         ):
             raise ValueError("power/AIS/mode timestamps differ")
         load = pd.to_numeric(selected["load_total_kw"], errors="coerce").to_numpy(dtype=float)
+        if "load_override_kw" in modes:
+            overrides = pd.to_numeric(modes["load_override_kw"], errors="coerce").to_numpy(dtype=float)
+            load = np.where(np.isfinite(overrides), overrides, load)
         velocity = pd.to_numeric(speed["speed_kn"], errors="coerce").to_numpy(dtype=float)
         provenance = tuple(str(value) for value in speed["speed_provenance"])
         fc = pd.to_numeric(modes["p_fc_total_kw"], errors="coerce").to_numpy(dtype=float)

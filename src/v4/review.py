@@ -91,7 +91,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     roots = tuple(_default_data_root(name) for name in (
         "operating_dataset_zero_boundary_v2",
         "operating_dataset_zero_boundary_v2_ais",
-        "operating_dataset_zero_boundary_v2_modes",
+        "operating_dataset_zero_boundary_v2_modes_v3",
     ))
     before_hashes = _manifest_hashes(roots)
     dataset = FormalTrainingDataset.open(*roots)

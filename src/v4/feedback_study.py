@@ -55,7 +55,7 @@ def main(argv: Sequence[str] | None = None) -> int:
               else unarchived_output_path(args.output_dir))
     roots = tuple(_default_data_root(name) for name in (
         'operating_dataset_zero_boundary_v2','operating_dataset_zero_boundary_v2_ais',
-        'operating_dataset_zero_boundary_v2_modes'))
+        'operating_dataset_zero_boundary_v2_modes_v3'))
     before = _manifest_hashes(roots)
     dataset = FormalTrainingDataset.open(*roots)
     _, report = run_monitored_training(dataset,output_dir=output,rounds=args.rounds,

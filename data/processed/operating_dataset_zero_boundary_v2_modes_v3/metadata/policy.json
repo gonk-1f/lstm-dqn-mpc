@@ -1,0 +1,77 @@
+{
+  "schema_version": "v4_mode_labels_30s_v3",
+  "source_mode_root": "../operating_dataset_zero_boundary_v2_modes",
+  "source_mode_manifest_sha256": "2a44ade715a3094f883867b70e99acfbe5b0cd4a64de2a9c5631a379e0191f8f",
+  "rule": {
+    "fc_zero_kw": 1.0,
+    "battery_charge_below_kw": -1.0,
+    "speed_at_most_kn": 0.1,
+    "sample_seconds": 30.0,
+    "minimum_confirmed_samples": 3,
+    "balance_deadband_kw": 1.0,
+    "pending_behavior": "no DQN action or SOC recharge before third sample",
+    "shore_meaning": "modeled charging opportunity, not measured grid connection",
+    "unknown_behavior": "truncate sample without charging or supply-failure penalty"
+  },
+  "raw_fc_unverified_train_intervals": {
+    "zero_boundary_007": [
+      [
+        5,
+        10
+      ]
+    ],
+    "zero_boundary_017": [
+      [
+        2,
+        15
+      ]
+    ],
+    "zero_boundary_037": [
+      [
+        3812,
+        3828
+      ]
+    ],
+    "zero_boundary_041": [
+      [
+        1,
+        13
+      ]
+    ],
+    "zero_boundary_042": [
+      [
+        5,
+        10
+      ]
+    ],
+    "zero_boundary_046": [
+      [
+        2,
+        14
+      ]
+    ]
+  },
+  "mode_counts": {
+    "onboard": 27716,
+    "unknown": 212,
+    "shore_pending": 20,
+    "shore_charging": 3030
+  },
+  "split_mode_counts": {
+    "train": {
+      "onboard": 21427,
+      "unknown": 204,
+      "shore_pending": 10,
+      "shore_charging": 1949
+    },
+    "validation": {
+      "onboard": 3524,
+      "shore_pending": 10,
+      "shore_charging": 1081,
+      "unknown": 8
+    },
+    "test": {
+      "onboard": 2765
+    }
+  }
+}

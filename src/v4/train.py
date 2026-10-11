@@ -194,7 +194,10 @@ def run_train_validation(
     def remember_bootstrap_failure(exc: ReplayExecutionError) -> None:
         nonlocal bootstrap_failed_prefixes, bootstrap_completed_prefixes
         bootstrap_failed_transitions.extend(exc.executed_transitions)
-        if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
+        if exc.failure_kind == "data_truncation":
+            for transition in exc.executed_transitions:
+                agent.remember_transition(transition)
+        elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
             bootstrap_completed_prefixes += agent.remember_completed_prefix(exc.executed_transitions)
             agent.remember_outcome_trajectory(exc.executed_transitions,
                                               failed=not exc.executed_transitions[-1].done)
@@ -272,7 +275,10 @@ def run_train_validation(
             except ReplayExecutionError as exc:
                 failures.append(f"{episode.sample_id}: {exc}")
                 round_failed_transitions.extend(exc.executed_transitions)
-                if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
+                if exc.failure_kind == "data_truncation":
+                    for transition in exc.executed_transitions:
+                        agent.remember_transition(transition)
+                elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
                     completed_prefix_transitions += agent.remember_completed_prefix(exc.executed_transitions)
                     agent.remember_outcome_trajectory(exc.executed_transitions,
                                                       failed=not exc.executed_transitions[-1].done)
@@ -445,7 +451,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     power = args.power_root or _default_data_root("operating_dataset_zero_boundary_v2")
     ais = args.ais_root or _default_data_root("operating_dataset_zero_boundary_v2_ais")
-    mode = args.mode_root or _default_data_root("operating_dataset_zero_boundary_v2_modes")
+    mode = args.mode_root or _default_data_root("operating_dataset_zero_boundary_v2_modes_v3")
     dataset = FormalTrainingDataset.open(power, ais, mode)
     agent, report = run_train_validation(
         dataset, rounds=args.rounds, batch_size=args.batch_size,

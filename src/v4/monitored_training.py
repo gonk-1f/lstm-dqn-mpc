@@ -47,13 +47,14 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
     torch_state = torch.random.get_rng_state()
     failed_transitions = []
     failure_profiles = []
-    reason_counts={'soc_limited':0,'structural_power':0,'execution_error':0}
+    reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
     event_only_count=0
     def on_failure(exc):
         nonlocal event_only_count
-        if abort_on_execution_error and exc.failure_kind != 'no_feasible_action':
+        if abort_on_execution_error and exc.failure_kind not in ('no_feasible_action','data_truncation'):
             raise exc
-        cause=exc.failure_cause if exc.failure_kind=='no_feasible_action' else 'execution_error'
+        cause=(exc.failure_cause if exc.failure_kind=='no_feasible_action' else
+               'data_truncation' if exc.failure_kind=='data_truncation' else 'execution_error')
         reason_counts[cause]+=1
         transitions=exc.executed_transitions
         if learn_no_feasible_failures and exc.failure_kind=='no_feasible_action':
@@ -404,7 +405,7 @@ def _run_monitored_training(
     failure_suffix_count = 0
     no_suffix_failure_events = 0
     initial_q_diagnostics = fixed_q_diagnostics(agent,accountant)
-    bootstrap_reason_counts={'soc_limited':0,'structural_power':0,'execution_error':0}
+    bootstrap_reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
 
     def replay_counts():
         n=agent.economic_replay_insertions
@@ -425,16 +426,22 @@ def _run_monitored_training(
 
     def bootstrap_failure(exc):
         nonlocal bootstrap_prefix, bootstrap_completed_voyages, failure_suffix_count, no_suffix_failure_events
-        if abort_on_execution_error and exc.failure_kind != 'no_feasible_action':
+        if abort_on_execution_error and exc.failure_kind not in ('no_feasible_action','data_truncation'):
             raise exc
-        cause=exc.failure_cause if exc.failure_kind=='no_feasible_action' else 'execution_error'
+        cause=(exc.failure_cause if exc.failure_kind=='no_feasible_action' else
+               'data_truncation' if exc.failure_kind=='data_truncation' else 'execution_error')
         bootstrap_reason_counts[cause]+=1
         view=failure_view(exc)
         bootstrap_failed.extend(view.transitions if view else exc.executed_transitions)
         if exc.failure_kind == 'no_feasible_action' and (
                 not exc.executed_transitions or exc.executed_transitions[-1].done):
             no_suffix_failure_events += 1
-        if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
+        if exc.failure_kind == 'data_truncation' and exc.executed_transitions:
+            retained=agent.remember_trajectory(exc.executed_transitions)
+            bootstrap_prefix += retained
+            bootstrap_completed_voyages += sum(
+                t.shore_ledger is not None for t in exc.executed_transitions)
+        elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
             if view is not None:
                 retained=agent.remember_trajectory(view.transitions)
                 prefix=exc.executed_transitions[:view.successful_prefix_transitions]
@@ -572,7 +579,7 @@ def _run_monitored_training(
         print(f"round {round_index}/{rounds} start epsilon={epsilon:.4f}",flush=True)
         results, failures, failed_transitions, losses = [], [], [], []
         failure_profiles = []
-        reason_counts={'soc_limited':0,'structural_power':0,'execution_error':0}
+        reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
         completed_voyages = 0
         agent.reset_td_statistics()
         before_insertions = agent.economic_replay_insertions
@@ -597,10 +604,11 @@ def _run_monitored_training(
                 result = replay_episode(episode,training_policy,accountant=accountant,beta_soc=beta_soc,
                                          redistribute_battery_energy=redistribute_battery_energy)
             except ReplayExecutionError as exc:
-                if abort_on_execution_error and exc.failure_kind != 'no_feasible_action':
+                if abort_on_execution_error and exc.failure_kind not in ('no_feasible_action','data_truncation'):
                     raise
                 failures.append(f"{episode.sample_id}: {exc}")
-                cause=exc.failure_cause if exc.failure_kind=='no_feasible_action' else 'execution_error'
+                cause=(exc.failure_cause if exc.failure_kind=='no_feasible_action' else
+                       'data_truncation' if exc.failure_kind=='data_truncation' else 'execution_error')
                 reason_counts[cause]+=1
                 view=failure_view(exc)
                 transitions=view.transitions if view else exc.executed_transitions
@@ -614,7 +622,12 @@ def _run_monitored_training(
                 if exc.failure_kind == 'no_feasible_action' and (
                         not exc.executed_transitions or exc.executed_transitions[-1].done):
                     no_suffix_failure_events += 1
-                if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
+                if exc.failure_kind == 'data_truncation' and exc.executed_transitions:
+                    retained=agent.remember_trajectory(exc.executed_transitions)
+                    prefix_voyages = sum(
+                        t.shore_ledger is not None for t in exc.executed_transitions)
+                    completed_voyages += prefix_voyages
+                elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
                     if view is not None:
                         retained=agent.remember_trajectory(view.transitions)
                         prefix=exc.executed_transitions[:view.successful_prefix_transitions]

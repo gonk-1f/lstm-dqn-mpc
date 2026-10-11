@@ -192,9 +192,9 @@ class DirectPowerDDQN:
             raise ValueError("next feasible actions do not match terminal flag")
         reason=('completed' if done else None) if terminal_reason is None else terminal_reason
         if (experience_outcome not in ('success','failure') or
-                (reason not in (None,'completed') and reason not in FAILURE_TERMINALS) or
+                (reason not in (None,'completed','data_truncation') and reason not in FAILURE_TERMINALS) or
                 bool(reason) != done or (reason in FAILURE_TERMINALS and experience_outcome!='failure') or
-                (reason=='completed' and experience_outcome!='success') or
+                (reason in ('completed','data_truncation') and experience_outcome!='success') or
                 not math.isfinite(failure_penalty_equivalent_cny) or failure_penalty_equivalent_cny<0 or
                 (failure_penalty_equivalent_cny and reason not in FAILURE_TERMINALS)):
             raise ValueError('invalid economic experience outcome or terminal reason')

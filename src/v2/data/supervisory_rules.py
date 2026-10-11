@@ -45,6 +45,7 @@ class OperatingMode(Enum):
     ONBOARD = "onboard"
     SHORE_PENDING = "shore_pending"
     SHORE_CHARGING = "shore_charging"
+    UNKNOWN = "unknown"
     UNRESOLVED = "unresolved"
 
 

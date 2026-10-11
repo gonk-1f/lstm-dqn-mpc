@@ -300,10 +300,17 @@ def replay_episode(
     terminal_settlement: ModeledTerminalSettlement | None = None
     index = 0
     while index < len(modes):
+        if modes[index] is OperatingMode.UNKNOWN:
+            raise ReplayExecutionError(
+                index, modes[index], ValueError('unverified data boundary truncates this sample'),
+                executed_transitions=tuple(transitions), failure_kind='data_truncation',
+            )
         if modes[index] in SHORE_MODES:
             end = index
             while end < len(modes) and modes[end] in SHORE_MODES:
                 end += 1
+            if OperatingMode.SHORE_CHARGING not in modes[index:end]:
+                raise ReplayExecutionError(index, modes[index], ValueError('unconfirmed SHORE block'))
             start_soc = physical.soc
             try:
                 shore, block_data = _modeled_fixed_target_shore(physical, accountant, requests[index:end])
@@ -319,7 +326,7 @@ def replay_episode(
             shore_blocks.append(block)
             ledgers.append(shore.ledger)
             for row in range(index, end):
-                soc_trace[row] = physical.soc
+                soc_trace[row] = start_soc if modes[row] is OperatingMode.SHORE_PENDING else physical.soc
             index = end
             continue
 
@@ -368,11 +375,16 @@ def replay_episode(
             modeled_ledger = None
             soc_penalty = beta_soc * soc_deviation_squared(next_physical.soc)
             reward = ledger.reward_cny - soc_penalty
-            if last_onboard and index + 1 < len(modes):
+            if last_onboard and index + 1 < len(modes) and modes[index + 1] in SHORE_MODES:
                 shore_start = index + 1
                 shore_end = shore_start
                 while shore_end < len(modes) and modes[shore_end] in SHORE_MODES:
                     shore_end += 1
+                if OperatingMode.SHORE_CHARGING not in modes[shore_start:shore_end]:
+                    raise ReplayExecutionError(
+                        shore_start, modes[shore_start], ValueError('unconfirmed SHORE block'),
+                        executed_transitions=tuple(transitions), failure_kind='data_truncation',
+                    )
                 try:
                     shore, block_data = _modeled_fixed_target_shore(
                         physical, accountant, requests[shore_start:shore_end])
@@ -388,7 +400,9 @@ def replay_episode(
                 shore_blocks.append(block)
                 ledgers.append(shore.ledger)
                 for row in range(shore_start, shore_end):
-                    soc_trace[row] = shore.end_state.soc
+                    soc_trace[row] = (
+                        block.start_soc if modes[row] is OperatingMode.SHORE_PENDING
+                        else shore.end_state.soc)
                 physical = shore.end_state
                 shore_ledger = shore.ledger
                 reward += shore_ledger.reward_cny
@@ -407,13 +421,16 @@ def replay_episode(
                     correction = energy_value.terminal_correction(voyage_initial_soc,next_physical.soc)
                 reward = original_reward + adjustment + correction
             if shore_ledger is not None:
-                successor_history = (0.0, normalize_onboard_load_kw(loads[shore_end])) if shore_end < len(modes) else (0.0,)
+                successor_history = ((0.0, normalize_onboard_load_kw(loads[shore_end]))
+                                     if shore_end < len(modes) and modes[shore_end] is OperatingMode.ONBOARD
+                                     else (0.0,))
             elif index + 1 < len(modes) and modes[index + 1] is OperatingMode.ONBOARD:
                 successor_history = (*history[-2:], normalize_onboard_load_kw(loads[index + 1]))
             else:
                 successor_history = history
             next_state = build_state(physical, successor_history, accountant, departure=shore_ledger is not None)
-            has_next_onboard = shore_ledger is not None and shore_end < len(modes)
+            has_next_onboard = (shore_ledger is not None and shore_end < len(modes)
+                                and modes[shore_end] is OperatingMode.ONBOARD)
             done = last_onboard and not has_next_onboard
             next_load = loads[shore_end] if has_next_onboard else loads[index + 1] if not last_onboard else None
             next_physical_actions = (
@@ -428,7 +445,12 @@ def replay_episode(
                 battery_kw, next_physical.soc, done, next_feasible,
                 shore_ledger, modeled_ledger, soc_penalty,
                 original_reward, adjustment, correction,
-                'completed' if done else None,
+                ('data_truncation' if done and (
+                    (shore_ledger is not None and shore_end < len(modes)
+                     and modes[shore_end] is OperatingMode.UNKNOWN)
+                    or (shore_ledger is None and index + 1 < len(modes)
+                        and modes[index + 1] is OperatingMode.UNKNOWN))
+                 else 'completed' if done else None),
                 physical_feasible_actions=physical_actions,
                 policy_candidate_actions=candidate_actions,
             ))
