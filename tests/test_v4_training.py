@@ -38,7 +38,7 @@ def test_training_uses_only_train_validation_and_separates_observed_costs():
     assert report["validation"]["episodes"] == 1
     assert report["validation"]["cost_cny"] > 0
     assert report["train_greedy_evaluation"]["completed"] == 1
-    assert report["reward_definition"] == "negative_observed_plus_modeled_terminal_four_component_CNY_minus_beta_soc_phi"
+    assert report["reward_definition"] == "negative_four_component_cost_with_existing_settlement_minus_beta_soc_times_post_action_soc_reference_deviation_squared"
     assert report["last_executed_onboard_episodes"] == {"train": 0, "validation": 1}
     assert report["selection_eligible"] is True
     assert report["selection_ineligibility_reasons"] == []
@@ -119,7 +119,7 @@ def test_epsilon_schedule_can_be_compared_without_changing_reward():
     assert [item["epsilon"] for item in report["training_rounds"]] == [1.0, 0.05]
     assert report["hyperparameters"]["epsilon_start"] == 1.0
     assert report["hyperparameters"]["epsilon_end"] == 0.05
-    assert report["reward_definition"] == "negative_observed_plus_modeled_terminal_four_component_CNY_minus_beta_soc_phi"
+    assert report["reward_definition"] == "negative_four_component_cost_with_existing_settlement_minus_beta_soc_times_post_action_soc_reference_deviation_squared"
 
 
 def test_beta_soc_is_configurable_and_reported_separately_from_economic_cost():
@@ -135,7 +135,7 @@ def test_beta_soc_is_configurable_and_reported_separately_from_economic_cost():
     )
 
 
-def test_training_retains_failed_prefix_for_outcome_and_separates_modeled_cost():
+def test_legacy_runner_excludes_unclosed_failure_prefix_and_separates_modeled_cost():
     class MixedDataset(FakeDataset):
         def load_train(self):
             good = super().load_train()[0]
@@ -156,11 +156,23 @@ def test_training_retains_failed_prefix_for_outcome_and_separates_modeled_cost()
     )
     round_one = report["training_rounds"][0]
     assert round_one["failed_prefix_transitions"] == 1
-    assert any(item.failed and item.state[1] == 230.0 / 600.0 for item in agent.outcome_replay)
-    assert all(item.state[1] != 230.0 / 600.0 for item in agent.replay)
+    assert all(item.state[4] != 230.0 / 600.0 for item in agent.replay)
     assert report["validation"]["completed_modeled_terminal_cost_cny"] > 0
     assert report["validation"]["completed_cost_cny"] == (
         report["validation"]["completed_observed_cost_cny"]
         + report["validation"]["completed_modeled_terminal_cost_cny"]
     )
     assert report["test_payloads_opened"] == 0
+
+
+def test_legacy_cli_help_marks_formal_entry_and_keeps_shared_helpers(capsys):
+    import pytest
+    from v4 import train
+    with pytest.raises(SystemExit) as caught:
+        train.main(['--help'])
+    assert caught.value.code == 0
+    help_text = capsys.readouterr().out
+    assert 'NOT the current formal 100-round' in ' '.join(help_text.split())
+    assert 'v4.feedback_study' in help_text
+    assert all(callable(getattr(train, name)) for name in
+               ('_default_data_root', '_run_episodes', '_summarize'))

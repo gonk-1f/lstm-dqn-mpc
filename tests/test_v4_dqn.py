@@ -9,36 +9,38 @@ from v4.dqn import DirectPowerDDQN, masked_double_dqn_targets
 
 def test_mlp_dimensions_and_feasible_epsilon_selection():
     agent = DirectPowerDDQN(seed=7)
-    assert agent.online(torch.zeros(2, 8)).shape == (2, 61)
-    state = (0.6,) + (0.0,) * 7
+    assert agent.online(torch.zeros(2, 7)).shape == (2, 61)
+    state = (0.6,) + (0.0,) * 6
     for _ in range(20):
         assert agent.select_power(state, (100, 110), epsilon=1.0) in (100, 110)
     with pytest.raises(ValueError, match="feasible"):
         agent.select_power(state, (), epsilon=0.0)
 
 
-def test_default_economic_network_and_optimizer_change_without_changing_outcome():
+def test_current_economic_network_optimizer_and_initial_target_copy():
     agent = DirectPowerDDQN(seed=7)
     def layer_sizes(network):
         return [network.layers[0].in_features, *(layer.out_features for layer in network.layers)]
-    assert layer_sizes(agent.online) == [8, 128, 128, 61]
-    assert layer_sizes(agent.target) == [8, 128, 128, 61]
+    assert layer_sizes(agent.online) == [7, 128, 128, 61]
+    assert layer_sizes(agent.target) == [7, 128, 128, 61]
     assert all(torch.equal(value, agent.target.state_dict()[key])
                for key, value in agent.online.state_dict().items())
-    assert agent.optimizer.param_groups[0]['lr'] == pytest.approx(.0001)
-    assert layer_sizes(agent.outcome_model) == [8, 128, 64, 61]
-    assert agent.outcome_optimizer.param_groups[0]['lr'] == pytest.approx(.0001)
-    assert agent.online(torch.zeros(2, 8)).shape == (2, 61)
+    assert agent.optimizer.param_groups[0]['lr'] == pytest.approx(.001)
+    for name in ('outcome_model', 'outcome_optimizer', 'outcome_replay',
+                 'remember_outcome_trajectory', 'learn_outcome'):
+        assert not hasattr(agent, name)
+    assert agent.online(torch.zeros(2, 7)).shape == (2, 61)
     before = {key: value.clone() for key, value in agent.online.state_dict().items()}
-    state = (0.6,) + (0.0,) * 7
+    state = (0.6,) + (0.0,) * 6
     agent.remember(state, 100, -2., state, done=False, next_feasible_actions=(100, 200))
     assert agent.learn(batch_size=1) is not None
     assert any(not torch.equal(value, agent.online.state_dict()[key])
                for key, value in before.items())
 
 
-def test_legacy_128_64_checkpoint_cannot_silently_load_into_new_v4_q_network():
-    legacy = MLPQNetwork(8, 61, (128, 64))
+@pytest.mark.parametrize('legacy_hidden', [(128, 64), (128, 128)])
+def test_legacy_eight_dimensional_checkpoint_cannot_silently_load(legacy_hidden):
+    legacy = MLPQNetwork(8, 61, legacy_hidden)
     current = DirectPowerDDQN(seed=7)
     with pytest.raises(RuntimeError, match='size mismatch'):
         current.online.load_state_dict(legacy.state_dict())
@@ -59,7 +61,7 @@ def test_masked_double_dqn_target_uses_online_choice_target_value_and_terminal()
 
 def test_replay_stores_raw_cny_reward_and_learns_without_cost_scale():
     agent = DirectPowerDDQN(seed=1)
-    state = (0.6,) + (0.0,) * 7
+    state = (0.6,) + (0.0,) * 6
     agent.remember(state, 100, -123.45, state, done=True, next_feasible_actions=())
     item = agent.replay[-1]
     assert item.reward_cny == -123.45
@@ -67,36 +69,29 @@ def test_replay_stores_raw_cny_reward_and_learns_without_cost_scale():
     assert agent.learn(batch_size=1) is not None
 
 
-def test_failure_outcome_learns_executed_prefix_without_creating_economic_terminal():
+def test_unterminated_failure_requires_explicit_failure_conversion():
     agent = DirectPowerDDQN(seed=1)
-    state = (0.215,) + (0.0,) * 7
+    state = (0.215,) + (0.0,) * 6
     ledger = RawCnyIntervalLedger(1.0, 2.0, 3.0, 0.0)
-    failed = DirectTransition(
-        state, 0, -6.0, state, ledger, 1000.0, 0.201,
-        False, (),
-    )
-    agent.remember_outcome_trajectory((failed,), failed=True)
-    assert len(agent.outcome_replay) == 1
-    assert agent.outcome_replay[-1].failed is True
-    assert agent.outcome_replay[-1].actual_reward_cny == -6.0
+    failed = DirectTransition(state, 0, -6.0, state, ledger, 1000.0, 0.201, False, ())
+    with pytest.raises(ValueError, match="explicitly failure-terminated"):
+        agent.remember_trajectory((failed,))
     assert not agent.replay
-    assert agent.learn_outcome(batch_size=1) is not None
 
 
-def test_failure_label_applies_only_to_unfinished_voyage_after_shore():
+def test_only_independently_completed_prefix_can_be_retained():
     agent = DirectPowerDDQN(seed=1)
-    state = (0.5,) + (0.0,) * 7
+    state = (0.5,) + (0.0,) * 6
     ledger = RawCnyIntervalLedger(1.0, 0.0, 0.0, 0.0)
-    finished = DirectTransition(state, 100, -1.0, state, ledger, 0.0, 0.5, True, ())
+    finished = DirectTransition(state, 100, -1.0, state, ledger, 0.0, 0.5, True, (),
+                                terminal_reason='completed')
     failed_later = DirectTransition(state, 0, -1.0, state, ledger, 1000.0, 0.201, False, ())
-    agent.remember_outcome_trajectory((finished, failed_later), failed=True)
-    assert [item.failed for item in agent.outcome_replay] == [False, True]
     assert agent.remember_completed_prefix((finished, failed_later)) == 1
     assert [item.action_index for item in agent.replay] == [ACTION_KW.index(100)]
 
 
 def _insert_sampling_example(agent, index, kind):
-    state = (0.6, index / 1000.0) + (0.0,) * 6
+    state = (0.6, index / 1000.0) + (0.0,) * 5
     if kind == 'terminal':
         agent.remember(state, 0, -10132.66, state, done=True,
                        next_feasible_actions=(), experience_outcome='failure',

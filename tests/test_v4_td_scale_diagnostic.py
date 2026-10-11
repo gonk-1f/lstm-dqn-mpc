@@ -84,8 +84,6 @@ def test_shared_sampling_602_updates_target500_and_threads_restore():
         assert run['counts']['scheduled_target_copies'] == 1
         assert run['counts']['target_sync_calls_total'] == 3
         assert run['counts']['scheduled_target_sync_at_updates'] == [500]
-        assert run['counts']['outcome_optimizer_updates'] == 0
-        assert run['outcome_weights_unchanged'] is True
         assert run['probe_before']['greedy_power_kw'] == 0
         assert len(run['probe_after']['q_values']) == 61
         assert sorted(run['probe_after']['order_kw_descending']) == list(range(0, 601, 10))
@@ -122,7 +120,7 @@ def test_nonzero_actual_shore_reward_scales_without_duplicate_settlement(alpha, 
         assert actual.modeled_terminal_ledger is None
     assert diagnostic.reward_components(result.transitions[-1])['observed_shore_reward'] < 0
     assert asdict(result.total_ledger) == ledgers_before
-    assert agent.economic_optimizer_updates == agent.outcome_optimizer_updates == 0
+    assert agent.economic_optimizer_updates == 0
 
 
 def test_records_huber_regime_and_bootstrap_target_q_before_updates():

@@ -66,7 +66,7 @@ def test_n_step_refuses_spliced_noncontiguous_voyages_without_boundary():
     result = replay_episode(episode(('onboard',)*3,(100,200,0),(0,)*3),
                             lambda _s,_a:100,accountant=NoSolveAccountant())
     agent = DirectPowerDDQN(seed=42,n_step=8)
-    mixed = (result.transitions[0],replace(result.transitions[-1],state=(.3,)*8))
+    mixed = (result.transitions[0],replace(result.transitions[-1],state=(.3,)*7))
     with pytest.raises(ValueError,match='contiguous'):
         agent.remember_trajectory(mixed)
     assert not agent.replay and agent.economic_replay_insertions == 0
@@ -184,7 +184,7 @@ def test_n_step_eight_quota_samples_windows_not_independent_failure_events():
                             failure_terminal_quota=2, replay_capacity=80)
     agent.remember_trajectory(view.transitions)
     for index in range(62):
-        state = (.4, index / 100., 0., 0., 0., 0., 0., 0.)
+        state = (.4, index / 100., 0., 0., 0., 0., 0.)
         agent.remember(state, 0, 0., state, done=True, next_feasible_actions=())
     assert agent.economic_failure_terminal_insertions == 8
     assert agent.failure_terminal_replay_count == 8
@@ -197,7 +197,7 @@ def test_n_step_eight_quota_samples_windows_not_independent_failure_events():
     assert agent.learn(batch_size=64) is not None
     assert agent.td_statistics()['sample_outcomes']['failure_terminal'] == 2
     for index in range(80):
-        state = (.5, index / 100., 0., 0., 0., 0., 0., 0.)
+        state = (.5, index / 100., 0., 0., 0., 0., 0.)
         agent.remember(state, 0, 0., state, done=True, next_feasible_actions=())
     assert agent.failure_terminal_replay_count == 0
     assert not any(item.terminal_reason == 'failure_soc_limited' for item in agent.replay)

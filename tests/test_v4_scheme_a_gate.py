@@ -1,4 +1,4 @@
-"""Conservative FC continuation gate; physical mask and ledger stay unchanged."""
+"""Regression coverage for removal of the artificial FC continuation gate."""
 
 import pytest
 import torch
@@ -12,7 +12,7 @@ from v4.failure_replay import FailurePenalty, prepare_failure_replay
 from v4.reward_feedback import BatteryEnergyValue
 
 
-def test_active_fc_cannot_voluntarily_stop_and_next_td_mask_matches():
+def test_active_fc_can_voluntarily_stop_and_next_td_mask_matches():
     data = episode(("onboard", "onboard", "onboard"), (100., 100., 100.), (0.,) * 3)
     seen = []
 
@@ -23,7 +23,9 @@ def test_active_fc_cannot_voluntarily_stop_and_next_td_mask_matches():
     replay = replay_episode(data, policy, accountant=NoSolveAccountant())
     assert 0 in feasible_fc_actions(AccountState(soc=.6, previous_fc_kw=100.), 100., NoSolveAccountant())
     assert 0 in seen[0]
-    assert all(0 not in mask for mask in seen[1:])
+    assert all(0 in mask for mask in seen)
+    assert [t.action_kw for t in replay.transitions] == [100, 0, 0]
+    assert all(t.policy_candidate_actions == t.physical_feasible_actions for t in replay.transitions)
     assert replay.transitions[0].next_feasible_actions == seen[1]
     assert replay.transitions[1].next_feasible_actions == seen[2]
     assert replay.transitions[-1].next_feasible_actions == ()
@@ -39,7 +41,7 @@ def test_active_fc_cannot_voluntarily_stop_and_next_td_mask_matches():
     assert not multi.replay[0].done
     assert tuple(index * 10 for index in multi.replay[0].next_feasible_indices) == (
         long.transitions[7].next_feasible_actions)
-    assert 0 not in long.transitions[7].next_feasible_actions
+    assert 0 in long.transitions[7].next_feasible_actions
 
 
 def test_forced_stop_and_off_state_keep_zero_candidate():
@@ -77,10 +79,10 @@ def test_greedy_and_exploration_use_same_strategy_candidates(epsilon):
     replay_episode(episode(("onboard", "onboard"), (100., 100.), (0., 0.)),
                    policy, accountant=NoSolveAccountant(),
                    initial_state=AccountState(previous_fc_kw=100.))
-    assert all(0 not in mask for mask in actions)
+    assert all(0 in mask for mask in actions)
 
 
-def test_shore_resets_candidate_gate_and_leaves_old_fixed_ledger_unchanged():
+def test_shore_resets_fc_history_and_preserves_fixed_ledger():
     data = episode(("onboard", "onboard", "shore_charging", "onboard", "onboard"),
                    (100., 120., 0., 120., 140.), (0., 0., -100., 0., 0.))
     sequence = iter((100, 100, 120, 120))
@@ -94,19 +96,18 @@ def test_shore_resets_candidate_gate_and_leaves_old_fixed_ledger_unchanged():
 
     replay = replay_episode(data, policy, accountant=NoSolveAccountant(),
                             beta_soc=500., redistribute_battery_energy=True)
-    assert 0 in masks[0] and 0 not in masks[1]
-    assert 0 in masks[2] and 0 not in masks[3]
+    assert all(0 in mask for mask in masks)
     assert [item.actual_soc for item in replay.transitions] == pytest.approx(
         [.6, .5997188484030589, .6, .5997188484030589])
     ledger = replay.total_ledger
     assert (ledger.h2_cost_cny, ledger.fuel_cell_degradation_cost_cny,
             ledger.battery_degradation_cost_cny, ledger.shore_cost_cny) == pytest.approx(
         (3.821341624345254, 757.6649999999998, .10476266185987847, .20313942751617078))
-    assert replay.transitions[1].next_feasible_actions == ()
+    assert replay.transitions[1].next_feasible_actions == masks[2]
     assert replay.transitions[3].next_feasible_actions == ()
 
 
-def test_shore_pending_and_charging_do_not_call_policy_and_reset_departure():
+def test_shore_pending_and_charging_do_not_call_policy_and_reset_histories():
     data = episode(("onboard", "shore_pending", "shore_charging", "onboard"),
                    (100., 0., 0., 100.), (0., 0., -100., 0.))
     seen = []
@@ -118,11 +119,12 @@ def test_shore_pending_and_charging_do_not_call_policy_and_reset_departure():
     replay = replay_episode(data, policy, accountant=NoSolveAccountant())
     assert len(seen) == 2
     assert all(0 in actions for _state, actions in seen)
-    assert all(state[7] == 1. for state, _actions in seen)
+    assert all(state[1:4] == (0., 0., 0.) and state[5:] == (0., 0.) for state, _actions in seen)
     assert len(replay.shore_blocks) == 1
     assert (replay.shore_blocks[0].start_index,
             replay.shore_blocks[0].end_index_exclusive) == (1, 3)
-    assert replay.transitions[0].next_feasible_actions == ()
+    assert replay.transitions[0].next_feasible_actions == seen[1][1]
+    assert not replay.transitions[0].done
 
 
 def test_empty_physical_mask_remains_failure_terminal_without_bootstrap():

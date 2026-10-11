@@ -12,7 +12,7 @@ from v4.dqn import DirectPowerDDQN
 
 def test_economic_soft_target_updates_once_per_adam_step_only():
     agent = DirectPowerDDQN(seed=42, n_step=8, target_tau=.001)
-    state = (.6, .2, 0., 0., 0., 0., 0., 1.)
+    state = (.6, .2, 0., 0., .2, 0., 0.)
     agent.remember(state, 100, -5., state, done=True, next_feasible_actions=())
     old_target = {key: value.clone() for key, value in agent.target.state_dict().items()}
     assert agent.learn(batch_size=1) is not None
@@ -20,7 +20,6 @@ def test_economic_soft_target_updates_once_per_adam_step_only():
     assert agent.target_soft_update_calls == agent.economic_optimizer_updates == 1
     for key, value in agent.target.state_dict().items():
         assert torch.allclose(value, torch.lerp(old_target[key], agent.online.state_dict()[key], .001))
-    agent.learn_outcome(batch_size=1)
     assert agent.target_soft_update_calls == 1
 
 
@@ -28,7 +27,7 @@ def test_training_state_restores_live_fifo_quota_pools_and_rng():
     settings = dict(seed=7, n_step=8, replay_capacity=4, failure_terminal_quota=2)
     agent = DirectPowerDDQN(**settings)
     for index in range(6):
-        state = (.6, index/10., 0., 0., 0., 0., 0., 1.)
+        state = (.6, index/10., 0., 0., 0., 0., 0.)
         terminal = index in (1,4)
         agent.remember(state, 100, -float(index), state, done=True,
                        next_feasible_actions=(),

@@ -1,4 +1,10 @@
-"""Train and validate a direct-power MLP Double-DQN without opening Test."""
+"""Legacy experimental runner and shared v4 evaluation helpers.
+
+This CLI is NOT the current formal 100-round configuration. Use
+``python -m v4.feedback_study`` for formal runs. Historical defaults remain
+only for legacy callers; _default_data_root, _run_episodes and _summarize
+are also dependencies of the formal monitored training path.
+"""
 
 from __future__ import annotations
 

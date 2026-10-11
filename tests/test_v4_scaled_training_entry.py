@@ -66,7 +66,7 @@ def test_monitored_scale_only_changes_replay_rewards_and_metadata(tmp_path, n_st
     for left, right in zip(agents[0].replay, agents[1].replay):
         assert (left.state, left.next_state, left.done) == (right.state, right.next_state, right.done)
     assert reports[0]['rounds'][0]['greedy_train'] == reports[1]['rounds'][0]['greedy_train']
-    for name in ('online', 'target', 'outcome_model'):
+    for name in ('online', 'target'):
         assert all(torch.equal(value, getattr(agents[1], name).state_dict()[key])
             for key, value in getattr(agents[0], name).state_dict().items())
 
@@ -119,7 +119,7 @@ def test_formal_cli_passes_only_frozen_configuration_without_training(tmp_path, 
     assert captured['n_step'] == 8 and captured['batch_size'] == 64
     assert captured['cadence'] == 'replay32' and captured['target_mode'] == 'soft'
     assert captured['reward_scale'] == .001 and captured['failure_terminal_quota'] == 2
-    assert captured['beta_soc'] == 0 and not captured['redistribute_battery_energy']
+    assert captured['beta_soc'] == 200 and not captured['redistribute_battery_energy']
     assert captured['required_split_sizes'] == (30,8)
     assert dataset.opened_test_payloads == 0
 

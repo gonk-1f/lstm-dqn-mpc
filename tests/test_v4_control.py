@@ -23,15 +23,15 @@ class NoSolveAccountant(EconomicMPC):
         raise AssertionError("direct power control must not solve MPC")
 
 
-def test_action_grid_and_causal_eight_feature_state():
-    accountant = NoSolveAccountant()
+def test_action_grid_and_causal_seven_feature_state():
     assert ACTION_KW == tuple(range(0, 601, 10))
-    first = build_state(AccountState(soc=0.6), (120.0,), accountant, departure=True)
-    assert len(first) == 8
-    assert first == (0.6, 0.2, 0.2, 0.0, 0.0, 0.0, 0.0, 1.0)
-    later = build_state(AccountState(soc=0.5, previous_fc_kw=100.0), (0.0, 120.0), accountant, departure=False)
-    assert later[:5] == pytest.approx((0.5, 0.2, 0.2, 0.0, 1.0 / 6.0))
-    assert later[7] == 0.0
+    first = build_state(AccountState(soc=0.6), (0., 0., 0.), (120., 120., 120.))
+    assert first == (0.6, 0., 0., 0., 0.2, 0., 0.)
+    later = build_state(AccountState(soc=0.5, previous_fc_kw=100.),
+                        (40., 60., 100.), (80., 120., 180.))
+    assert later == pytest.approx((0.5, 100/600, 40/600, 20/600, 180/600, 60/600, 40/600))
+    with pytest.raises(ValueError, match='FC history'):
+        build_state(AccountState(previous_fc_kw=100.), (0., 0., 0.), (120.,)*3)
 
 
 def test_mode_gate_shore_settlement_and_next_voyage_soc_carry():
@@ -60,7 +60,8 @@ def test_mode_gate_shore_settlement_and_next_voyage_soc_carry():
         + result.transitions[1].shore_ledger.total_cost_cny
     ))
     assert result.transitions[2].state[0] == pytest.approx(result.shore_blocks[0].end_soc)
-    assert result.transitions[2].state[7] == 1.0
+    assert result.transitions[2].state[1:4] == (0., 0., 0.)
+    assert result.transitions[2].state[5:] == (0., 0.)
     assert result.shore_blocks[0].end_soc == 0.6
     assert result.transitions[0].next_state == result.transitions[1].state
     assert result.transitions[1].next_state == result.transitions[2].state
@@ -98,8 +99,9 @@ def test_first_decision_sees_current_measured_load_and_feasible_grid():
 
     replay_episode(data, policy, accountant=NoSolveAccountant())
     state, feasible = seen[0]
-    assert state[1] == pytest.approx(100.0 / 600.0)
-    assert state[7] == 1.0
+    assert state[4] == pytest.approx(100.0 / 600.0)
+    assert state[1:4] == (0., 0., 0.)
+    assert state[5:] == (0., 0.)
     assert 100 in feasible
     assert 0 in feasible
 
@@ -190,10 +192,10 @@ def test_supply_failure_exposes_only_executed_prefix_and_failure_outcome():
 
 
 @pytest.mark.parametrize(("soc", "expected"), (
-    (0.2, 0.04), (0.3, 0.01), (0.4, 0.0), (0.5, 0.0),
+    (0.2, 0.16), (0.3, 0.09), (0.4, 0.04), (0.5, 0.01),
     (0.6, 0.0), (0.7, 0.01), (0.8, 0.04),
 ))
-def test_soc_soft_penalty_has_exact_piecewise_boundaries(soc, expected):
+def test_soc_reference_quadratic_has_no_deadband(soc, expected):
     assert soc_deviation_squared(soc) == pytest.approx(expected)
 
 
@@ -201,9 +203,9 @@ def test_soc_soft_penalty_is_onboard_only_and_preserves_actual_shore_cost():
     data = episode(("onboard", "shore_charging"), (100.0, 0.0), (0.0, -100.0))
     kwargs = dict(accountant=NoSolveAccountant(), initial_state=AccountState(soc=0.35))
     baseline = replay_episode(data, lambda _state, _actions: 0, beta_soc=0.0, **kwargs)
-    shaped = replay_episode(data, lambda _state, _actions: 0, beta_soc=1000.0, **kwargs)
+    shaped = replay_episode(data, lambda _state, _actions: 0, beta_soc=200.0, **kwargs)
     onboard_soc = shaped.transitions[0].actual_soc
-    expected_penalty = 1000.0 * (0.4 - onboard_soc) ** 2
+    expected_penalty = 200.0 * (0.6 - onboard_soc) ** 2
     assert shaped.transitions[0].soc_soft_penalty_cny == pytest.approx(expected_penalty)
     assert shaped.transitions[0].reward_cny == pytest.approx(
         baseline.transitions[0].reward_cny - expected_penalty
@@ -223,3 +225,41 @@ def test_soc_soft_penalty_does_not_replace_modeled_terminal_settlement():
     assert result.transitions[-1].reward_cny == pytest.approx(
         -result.comparable_cost_cny - result.soc_soft_penalty_cny
     )
+
+
+def test_executed_fc_history_and_observed_load_differences_advance_together():
+    powers = iter((100, 200, 0, 300))
+    result = replay_episode(episode(('onboard',)*4, (120., 150., 80., 90.), (0.,)*4),
+        lambda _state, actions: next(powers), accountant=NoSolveAccountant(),
+        initial_state=AccountState(previous_fc_kw=50.))
+    expected = [
+        (50, 0, 0, 120, 0, 0),
+        (100, 50, 0, 150, 30, 0),
+        (200, 100, 50, 80, -70, 30),
+        (0, -200, 100, 90, 10, -70),
+    ]
+    for transition, features in zip(result.transitions, expected):
+        assert transition.state[1:] == pytest.approx(tuple(v/600 for v in features))
+    for current, following in zip(result.transitions, result.transitions[1:]):
+        assert current.next_state == following.state
+        assert following.state[1] == current.action_kw/600
+
+
+def test_quadratic_soc_reward_enters_eight_step_replay_once_with_scale():
+    from math import fsum
+    from v4.dqn import DirectPowerDDQN
+    data = episode(('onboard',)*9, (100.,)*9, (0.,)*9)
+    baseline = replay_episode(data, lambda _s, _a: 0, accountant=NoSolveAccountant(), beta_soc=0.)
+    shaped = replay_episode(data, lambda _s, _a: 0, accountant=NoSolveAccountant(), beta_soc=200.)
+    assert shaped.total_ledger == baseline.total_ledger
+    assert shaped.modeled_terminal_settlement == baseline.modeled_terminal_settlement
+    assert shaped.soc_by_row == baseline.soc_by_row
+    for left, right in zip(baseline.transitions, shaped.transitions):
+        penalty = 200*(.6-right.actual_soc)**2
+        assert right.reward_cny == pytest.approx(left.reward_cny-penalty)
+    agent = DirectPowerDDQN(n_step=8, reward_scale=.001)
+    agent.remember_trajectory(shaped.transitions)
+    for i, item in enumerate(agent.replay):
+        assert item.reward_cny == pytest.approx(.001*fsum(t.reward_cny for t in shaped.transitions[i:i+8]))
+    assert shaped.transitions[-1].reward_cny == pytest.approx(
+        baseline.transitions[-1].reward_cny-shaped.transitions[-1].soc_soft_penalty_cny)

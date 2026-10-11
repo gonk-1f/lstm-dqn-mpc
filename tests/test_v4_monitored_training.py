@@ -9,7 +9,7 @@ from v4.dqn import DirectPowerDDQN
 def test_economic_replay_insertions_count_new_entries_after_capacity_saturation():
     a = DirectPowerDDQN(seed=1, replay_capacity=2)
     for _ in range(5):
-        a.remember((0.6,)*8, 0, -1, (0.6,)*8, done=True, next_feasible_actions=())
+        a.remember((0.6,)*7, 0, -1, (0.6,)*7, done=True, next_feasible_actions=())
     assert len(a.replay) == 2
     assert a.economic_replay_insertions == 5
 
@@ -83,32 +83,17 @@ def test_unknown_prefix_is_observed_but_never_used_as_a_terminal_q_target():
         raise AssertionError("UNKNOWN must truncate the observed trajectory")
 
 
-def test_round_monitoring_does_not_change_legacy_training_trajectory(tmp_path, monkeypatch):
-    from v4.train import run_train_validation
+def test_monitored_runs_are_reproducible_without_legacy_runner_equivalence(tmp_path):
     from v4.monitored_training import run_monitored_training
-
-    kwargs = dict(rounds=3,seed=42,batch_size=1,updates_per_episode=16,beta_soc=250.0,epsilon_start=1.0,epsilon_end=.05)
-    original_select = DirectPowerDDQN.select_power
-    def isolate_reference_final_evaluation(self, state, feasible, *, epsilon=0.0):
-        if epsilon != 0.0:
-            return original_select(self, state, feasible, epsilon=epsilon)
-        saved = self.random.getstate()
-        try:
-            return original_select(self, state, feasible, epsilon=epsilon)
-        finally:
-            self.random.setstate(saved)
-    # Keep the legacy runner's greedy decisions isolated while comparing the
-    # actual training streams; both runners now evaluate after every round.
-    with monkeypatch.context() as patch:
-        patch.setattr(DirectPowerDDQN, "select_power", isolate_reference_final_evaluation)
-        old, _ = run_train_validation(FakeDataset(), **kwargs)
-    new, report = run_monitored_training(FakeDataset(), output_dir=tmp_path, **kwargs)
+    kwargs = dict(rounds=2, seed=42, batch_size=1, beta_soc=200.0)
+    old, reference = run_monitored_training(FakeDataset(), output_dir=tmp_path/'first', **kwargs)
+    new, report = run_monitored_training(FakeDataset(), output_dir=tmp_path/'second', **kwargs)
     assert old.random.getstate() == new.random.getstate()
-    assert old.outcome_random.getstate() == new.outcome_random.getstate()
     assert tuple(old.replay) == tuple(new.replay)
-    for name in ("online", "target", "outcome_model"):
-        assert all(torch.equal(value, getattr(new,name).state_dict()[key]) for key,value in getattr(old,name).state_dict().items())
-    assert len(report["rounds"]) == 3
+    for name in ('online', 'target'):
+        assert all(torch.equal(value, getattr(new,name).state_dict()[key])
+                   for key,value in getattr(old,name).state_dict().items())
+    assert reference['rounds'] == report['rounds']
 
 
 def test_optimizer_target_mode_has_no_bootstrap_or_round_extra_sync(tmp_path):

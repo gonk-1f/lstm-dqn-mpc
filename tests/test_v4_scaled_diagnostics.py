@@ -12,7 +12,7 @@ def transition(*, soc=.5, before=.55, fc=200, prior_fc=100, reward=-20,
                done=False, reason=None):
     ledger = SimpleNamespace(h2_cost_cny=10., fuel_cell_degradation_cost_cny=2.,
                              battery_degradation_cost_cny=3., shore_cost_cny=0.)
-    return SimpleNamespace(state=(before, .5, 0., 0., prior_fc/600, 0., 0., 0.),
+    return SimpleNamespace(state=(before, prior_fc/600, 0., 0., .5, 0., 0.),
         actual_soc=soc, action_kw=fc, actual_battery_kw=300-fc,
         reward_cny=float(reward), original_reward=float(reward)-1.,
         immediate_battery_energy_adjustment=-2., terminal_correction=3.,
@@ -87,7 +87,7 @@ def test_fixed_q_probe_converts_units_without_sampling_or_mutating_training_stat
     from v4.diagnostics import fixed_q_diagnostics
     agent = DirectPowerDDQN(seed=42,reward_scale=.001)
     weights = {name:value.clone() for name,value in agent.online.state_dict().items()}
-    rng = (agent.random.getstate(),agent.outcome_random.getstate(),torch.random.get_rng_state().clone())
+    rng = (agent.random.getstate(),torch.random.get_rng_state().clone())
     rows = fixed_q_diagnostics(agent,EconomicMPC(nominal_cost_cny=1.))
     assert len(rows) == 3
     for row in rows:
@@ -96,8 +96,8 @@ def test_fixed_q_probe_converts_units_without_sampling_or_mutating_training_stat
         assert len(row['q_values_original_reward_units']) == 61
         assert row['q_values_original_reward_units'] == pytest.approx([x/.001 for x in row['q_values']])
         assert row['fc_zero_q_original_reward_units'] == pytest.approx(row['fc_zero_q']/.001)
-    assert agent.random.getstate() == rng[0] and agent.outcome_random.getstate() == rng[1]
-    assert torch.equal(torch.random.get_rng_state(),rng[2])
+    assert agent.random.getstate() == rng[0]
+    assert torch.equal(torch.random.get_rng_state(),rng[1])
     assert all(torch.equal(value,weights[name]) for name,value in agent.online.state_dict().items())
     assert not agent.replay and not agent.economic_optimizer_updates
 

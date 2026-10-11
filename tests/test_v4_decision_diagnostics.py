@@ -58,12 +58,10 @@ def test_diagnostics_do_not_change_actions_updates_networks_or_selection(tmp_pat
     assert dataset.opened_test_payloads == 0
     assert tuple(plain.replay) == tuple(observed.replay)
     assert plain.random.getstate() == observed.random.getstate()
-    assert plain.outcome_random.getstate() == observed.outcome_random.getstate()
     assert torch.equal(plain_torch_rng, observed_torch_rng)
     assert plain.economic_optimizer_updates == observed.economic_optimizer_updates > 0
     assert plain.target_sync_calls == observed.target_sync_calls
-    assert plain.outcome_optimizer_updates == observed.outcome_optimizer_updates
-    for name in ("online", "target", "outcome_model"):
+    for name in ("online", "target"):
         assert all(torch.equal(value, getattr(observed, name).state_dict()[key])
                    for key, value in getattr(plain, name).state_dict().items())
     assert plain_report["rounds"][0]["greedy_train"] == report["rounds"][0]["greedy_train"]
@@ -92,7 +90,7 @@ def test_diagnostics_do_not_change_actions_updates_networks_or_selection(tmp_pat
     assert records["round"] == 1 and len(records["decisions"]) <= 48
     assert {row["sample_id"] for row in records["decisions"]} == {
         "zero_boundary_015", "zero_boundary_017", "zero_boundary_044"}
-    restored = MLPQNetwork(8, 61, (128, 128))
+    restored = MLPQNetwork(7, 61, (128, 128))
     restored.load_state_dict(checkpoint["online_state"])
     with torch.inference_mode():
         for row in records["decisions"]:
@@ -109,8 +107,7 @@ def test_diagnostics_do_not_change_actions_updates_networks_or_selection(tmp_pat
 def test_actual_state_probe_prioritizes_forced_stop_without_rng_or_replay():
     accountant = EconomicMPC(nominal_cost_cny=1.)
     agent = DirectPowerDDQN(seed=42)
-    rng = (agent.random.getstate(), agent.outcome_random.getstate(),
-           torch.random.get_rng_state().clone())
+    rng = (agent.random.getstate(), torch.random.get_rng_state().clone())
     data = SimpleNamespace(sample_id="zero_boundary_015", split="train",
         operating_mode=("onboard",), load_kw=(0.,), battery_bus_kw=(0.,))
     replay = replay_episode(data, lambda _state, mask: min(mask),
@@ -121,8 +118,7 @@ def test_actual_state_probe_prioritizes_forced_stop_without_rng_or_replay():
     assert rows[0]["physical_actions_kw"] == rows[0]["candidate_actions_kw"] == [0]
     assert rows[0]["selected_action_kw"] == 0
     assert agent.random.getstate() == rng[0]
-    assert agent.outcome_random.getstate() == rng[1]
-    assert torch.equal(torch.random.get_rng_state(), rng[2])
+    assert torch.equal(torch.random.get_rng_state(), rng[1])
     assert not agent.replay and agent.economic_optimizer_updates == 0
 
 
@@ -191,7 +187,8 @@ def test_diagnostic_snapshot_refuses_open_test_and_unqualified_round_stays_unsel
         rounds=1, beta_soc=500., batch_size=8, required_split_sizes=(1, 1),
         diagnostic_rounds=(1,))
     assert report["best_checkpoint"] is None
-    assert report["rounds"][0]["greedy_validation"] is None
+    assert report["rounds"][0]["greedy_validation"]["evaluable_completed"] == 1
+    assert report["rounds"][0]["validation_skip_reason"] is None
     assert not (tmp_path / "failed" / "best_agent.pt").exists()
     assert (tmp_path / "failed" / "diagnostic_checkpoints" / "round_001.pt").exists()
     decisions = json.loads((tmp_path / "failed" / "diagnostic_checkpoints" /

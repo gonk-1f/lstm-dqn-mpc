@@ -2,7 +2,7 @@
 
 Run from any directory: python scripts/v4_td_scale_diagnostic.py
 The default comparison uses raw rewards to reproduce the controlled failure-TD
-test. Use --reward-mode redistributed for the production feedback-study timing.
+test. --reward-mode redistributed is retained for historical comparisons only.
 Both reward timing modes use the same fixed corpus and penalty reference.
 Production learn(), physics, prices, and default algorithms are unchanged.
 """
@@ -92,13 +92,10 @@ def build_corpus():
         for feedback in (False, True):
             powers = iter((power, 600, 0))
             try:
-                # Retain the frozen pre-Scheme-A synthetic corpus: the final
-                # OFF command is physically legal but now strategy-gated.
-                with patch('v4.control.policy_candidate_fc_actions',
-                           side_effect=lambda physical, _previous: physical):
-                    result = replay_episode(synthetic_episode(), lambda _s, _m: next(powers),
-                        accountant=accountant, initial_state=AccountState(soc=INITIAL_SOC),
-                        beta_soc=BETA_SOC, redistribute_battery_energy=feedback)
+                # Fixed actions use the unmodified physical feasibility mask.
+                result = replay_episode(synthetic_episode(), lambda _s, _m: next(powers),
+                    accountant=accountant, initial_state=AccountState(soc=INITIAL_SOC),
+                    beta_soc=BETA_SOC, redistribute_battery_energy=feedback)
                 results.append(result.transitions)
                 outcomes.append(False)
             except ReplayExecutionError as error:

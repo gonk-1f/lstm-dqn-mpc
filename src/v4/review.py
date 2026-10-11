@@ -1,4 +1,4 @@
-"""Fixed beta=250, 40-round Train/Validation review; Test remains closed."""
+"""Legacy beta=250, 40-round review; not the formal feedback_study entry."""
 
 from __future__ import annotations
 
@@ -141,16 +141,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         occupancy = soc_time_occupancy(soc for row in rows for soc in row["soc_after"])
         if occupancy["counts"] != summary["soc_time_occupancy"]["counts"]:
             raise RuntimeError("profile SOC occupancy differs from final greedy evaluation")
-        summary["completed_observed_components_cny"] = {
-            component: sum(row["observed_components_cny"][component] for row in rows if row["completed"])
-            for component in (
-                "h2_cost_cny", "fuel_cell_degradation_cost_cny", "battery_degradation_cost_cny", "shore_cost_cny",
-            )
-        }
-        summary["completed_modeled_components_cny"] = {
-            component: sum(row["modeled_components_cny"][component] for row in rows if row["completed"])
-            for component in summary["completed_observed_components_cny"]
-        }
+        # Keep the shared evaluation summary's separation of observed costs,
+        # modeled fixed-target SHORE, and modeled terminal recharge. Historical
+        # profile "observed_components" includes SHORE and must not overwrite it.
     if dataset.opened_test_payloads != 0 or before_hashes != _manifest_hashes(roots):
         raise RuntimeError("Test opened or dataset manifests changed during review")
     report["test_payloads_opened"] = dataset.opened_test_payloads

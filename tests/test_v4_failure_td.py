@@ -1,6 +1,5 @@
 from dataclasses import replace
 from math import fsum
-from unittest.mock import patch
 
 import pytest
 import torch
@@ -19,13 +18,9 @@ def branch(first_power=0, *, feedback=False, modes=None, loads=None, initial_soc
     data = episode(modes or ('onboard',)*3, loads or (600,1000,0), (0,)*len(modes or ('onboard',)*3))
     powers = iter((first_power,600,0))
     try:
-        # Preserve this historical economic-TD corpus independently of the
-        # newer strategy gate; all fixed actions remain physically feasible.
-        with patch('v4.control.policy_candidate_fc_actions',
-                   side_effect=lambda physical, _previous: physical):
-            result = replay_episode(data,lambda _s,_a:next(powers),accountant=accountant,
-                initial_state=AccountState(soc=initial_soc),beta_soc=500,
-                redistribute_battery_energy=feedback)
+        result = replay_episode(data,lambda _s,_a:next(powers),accountant=accountant,
+            initial_state=AccountState(soc=initial_soc),beta_soc=500,
+            redistribute_battery_energy=feedback)
         return result, accountant
     except ReplayExecutionError as error:
         return error, accountant
@@ -178,7 +173,7 @@ def test_failure_reference_matches_immutable_train_archive():
     assert p.reference_amount==values[math.ceil(.95*len(values))-1]
 
 
-def test_pure_onboard_complete_contracts_match_previous_archive_exactly():
+def test_pure_onboard_economic_ledgers_match_archive_despite_new_soc_reward():
     import json
     from pathlib import Path
     from test_v4_reward_feedback import CASES,fixed_replay
@@ -193,7 +188,9 @@ def test_pure_onboard_complete_contracts_match_previous_archive_exactly():
             expected=previous[case[0]]
             assert ledger_components(current.total_ledger)==expected['original_economic_ledger']
             assert ledger_components(current.modeled_terminal_settlement.ledger if current.modeled_terminal_settlement else None)==expected['modeled_terminal_ledger']
-            assert fsum(t.reward_cny for t in current.transitions)==expected['new_reward_sum' if feedback else 'old_reward_sum']
+            assert fsum(t.reward_cny for t in current.transitions) == pytest.approx(
+                expected['new_reward_sum' if feedback else 'old_reward_sum']
+                + expected['soft_penalty'] - current.soc_soft_penalty_cny, abs=1e-8)
             assert all(t.failure_penalty_equivalent_cny==0 for t in current.transitions)
 
 
@@ -229,7 +226,7 @@ def test_greedy_failure_preview_is_readonly_and_not_successful_terminal(tmp_path
     data=SimpleNamespace(sample_id='readonly_failure',split='train',operating_mode=('onboard',)*50,
                          load_kw=(1000.,)*50,battery_bus_kw=(0.,)*50)
     agent=DirectPowerDDQN(seed=42)
-    saved=(agent.random.getstate(),agent.outcome_random.getstate(),torch.random.get_rng_state().clone())
+    saved=(agent.random.getstate(),torch.random.get_rng_state().clone())
     weights={key:t.clone() for key,t in agent.online.state_dict().items()}
     # Preserve select_power's RNG side effect while fixing only the test actor's power.
     original=agent.select_power
@@ -246,10 +243,10 @@ def test_greedy_failure_preview_is_readonly_and_not_successful_terminal(tmp_path
     assert summary['completed']==summary['completed_voyages']==0
     assert summary['failure_terminal_count']==1
     assert summary['failure_reason_counts']['soc_limited']==1
-    assert agent.random.getstate()==saved[0] and agent.outcome_random.getstate()==saved[1]
-    assert torch.equal(torch.random.get_rng_state(),saved[2])
+    assert agent.random.getstate()==saved[0]
+    assert torch.equal(torch.random.get_rng_state(),saved[1])
     assert all(torch.equal(t,agent.online.state_dict()[key]) for key,t in weights.items())
-    assert not agent.replay and not agent.outcome_replay
+    assert not agent.replay
     assert not agent.optimizer.state and agent.economic_optimizer_updates==0
 
 
@@ -278,7 +275,6 @@ def test_controlled_repeated_failure_td_changes_online_q_and_full_mask_greedy(tm
             final_linear.bias[0]+=1.  # intentional synthetic FC=0 starting preference, no architecture change
         agent.sync_target()
         initial_target_copies=agent.target_sync_calls
-        outcome={k:t.clone() for k,t in agent.outcome_model.state_dict().items()}
         before=agent.online(torch.tensor([state],dtype=torch.float32)).detach()[0]
         assert agent.select_power(state,mask)==0
         schedule=EconomicUpdateSchedule('replay32',target_mode='soft',target_interval=500)
@@ -299,8 +295,6 @@ def test_controlled_repeated_failure_td_changes_online_q_and_full_mask_greedy(tm
         assert agent.economic_optimizer_updates==agent.economic_replay_insertions//32
         assert agent.target_sync_calls==initial_target_copies
         assert agent.target_soft_update_calls==agent.economic_optimizer_updates
-        assert agent.outcome_optimizer_updates==0
-        assert all(torch.equal(value,agent.outcome_model.state_dict()[name]) for name,value in outcome.items())
         assert agent.td_statistics()['failure_terminal']['sample_count']>0
         (tmp_path/'learning_order_evidence.json').write_text(json.dumps({
             'scope':'synthetic repeated economic replay only; no formal dataset, outcome updates or evaluation',

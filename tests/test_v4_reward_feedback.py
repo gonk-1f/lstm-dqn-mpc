@@ -2,7 +2,6 @@
 from dataclasses import replace
 from math import fsum
 from types import SimpleNamespace
-from unittest.mock import patch
 
 import pytest
 
@@ -37,14 +36,9 @@ def fixed_replay(case, *, feedback):
         power = next(powers)
         assert power in feasible
         return power
-    # Historical reward contracts include physically legal FC shutdown actions
-    # that Scheme A now excludes from policy selection. Bypass only the strategy
-    # gate in this isolated ledger regression; the real plant remains unchanged.
-    with patch('v4.control.policy_candidate_fc_actions',
-               side_effect=lambda physical, _previous: physical):
-        result = replay_episode(episode(modes, loads, requests), policy,
-                                accountant=accountant, initial_state=AccountState(soc=soc),
-                                beta_soc=500, redistribute_battery_energy=feedback)
+    result = replay_episode(episode(modes, loads, requests), policy,
+                            accountant=accountant, initial_state=AccountState(soc=soc),
+                            beta_soc=500, redistribute_battery_energy=feedback)
     return result, accountant
 
 
@@ -144,8 +138,9 @@ def test_failed_unfinished_suffix_has_no_correction_and_no_economic_terminal():
     assert prefix[-1].new_reward != prefix[-1].original_reward
     agent = DirectPowerDDQN(seed=42)
     assert agent.remember_completed_prefix(prefix) == 0
-    agent.remember_outcome_trajectory(prefix, failed=True)
-    assert not agent.replay and agent.outcome_replay[-1].failed
+    with pytest.raises(ValueError, match='explicitly failure-terminated'):
+        agent.remember_trajectory(prefix)
+    assert not agent.replay
 
 
 def test_completed_segment_before_failed_suffix_is_corrected_separately():
@@ -164,3 +159,20 @@ def test_completed_segment_before_failed_suffix_is_corrected_separately():
     agent = DirectPowerDDQN(seed=42)
     assert agent.remember_completed_prefix((completed,failed)) == 0
     assert len(agent.replay) == 0
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError,
+    reason="Legacy redistribution conflicts with an immediate post-SHORE failure correction; formal mode disables redistribution")
+def test_legacy_redistribution_immediate_post_shore_failure_known_limitation():
+    from v4.failure_replay import FailurePenalty, prepare_failure_replay
+    from v4.reward_feedback import BatteryEnergyValue
+    accountant = NoSolveAccountant()
+    with pytest.raises(ReplayExecutionError) as caught:
+        replay_episode(episode(('onboard','shore_charging','onboard'),
+                               (100.,0.,2000.), (0.,0.,0.)),
+                       lambda _s, _a: 0, accountant=accountant,
+                       redistribute_battery_energy=True)
+    view = prepare_failure_replay(caught.value, penalty=FailurePenalty.from_reference(),
+        energy_value=BatteryEnergyValue.from_accountant(accountant),
+        redistribute_battery_energy=True)
+    assert view.transitions[-1].terminal_reason == 'failure_structural_power'

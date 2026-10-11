@@ -49,9 +49,6 @@ def test_complete_shore_settlement_feedback_and_n_step_scale_once(modes,loads,sh
             assert right.reward_cny==pytest.approx(.001*left.reward_cny)
             assert replace(right,reward_cny=left.reward_cny)==left
         # Outcomes continue to use the observed ledger, not the economic-Q scale.
-        normal.remember_outcome_trajectory(result.transitions,failed=False)
-        scaled.remember_outcome_trajectory(result.transitions,failed=False)
-        assert tuple(normal.outcome_replay)==tuple(scaled.outcome_replay)
         original.append(result)
     a,b=original
     assert a.total_ledger==b.total_ledger and a.modeled_terminal_settlement==b.modeled_terminal_settlement
@@ -108,7 +105,7 @@ def test_real_optimizer_statistics_units_sampling_and_clip_observation():
     with torch.no_grad():
         for p in a.online.parameters():p.zero_()
         for p in a.target.parameters():p.zero_()
-    state=(.6,)*8
+    state=(.6,)*7
     a.remember(state,0,-1000.,state,done=True,next_feasible_actions=())
     a.remember(state,10,-11000.,state,done=True,next_feasible_actions=(),
         experience_outcome='failure',terminal_reason='failure_soc_limited',
@@ -133,11 +130,11 @@ def test_real_optimizer_statistics_units_sampling_and_clip_observation():
 
 def test_default_one_is_exact_explicit_one_for_optimizer_and_rng():
     a,b=DirectPowerDDQN(seed=42),DirectPowerDDQN(seed=42,reward_scale=1)
-    state=(.6,)*8
+    state=(.6,)*7
     for agent in (a,b):
         for power in (0,600):agent.remember(state,power,-123.,state,done=True,next_feasible_actions=())
         agent.learn(batch_size=2)
     assert tuple(a.replay)==tuple(b.replay) and a.random.getstate()==b.random.getstate()
     assert a.td_statistics()==b.td_statistics()
-    for name in ('online','target','outcome_model'):
+    for name in ('online','target'):
         assert all(torch.equal(v,getattr(b,name).state_dict()[k]) for k,v in getattr(a,name).state_dict().items())

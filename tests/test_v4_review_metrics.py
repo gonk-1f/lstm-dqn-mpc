@@ -88,4 +88,5 @@ def test_fixed_review_keeps_diagnostic_checkpoint_and_cost_categories(tmp_path, 
     )
     assert train["completed_cost_cny"] == pytest.approx(
         train["completed_observed_cost_cny"] + train["completed_modeled_terminal_cost_cny"]
+        + train["completed_modeled_fixed_target_shore_cost_cny"]
     )
