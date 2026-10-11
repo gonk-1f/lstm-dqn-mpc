@@ -46,7 +46,7 @@ def actual_greedy_q_records(
             low_fc_run = 0
         if item.state[0] >= .79:
             tags.add("near_soc_ceiling")
-        if item.action_kw == 0 and item.state[4] > 0 and item.physical_feasible_actions == (0,):
+        if item.action_kw == 0 and item.state[1] > 0 and item.physical_feasible_actions == (0,):
             tags.add("forced_stop")
     if failed:
         for index in range(max(0, len(values) - 3), len(values)):
@@ -116,7 +116,6 @@ def save_diagnostic_snapshot(
         "economic_optimizer_updates": agent.economic_optimizer_updates,
         "target_sync_calls": agent.target_sync_calls,
         "economic_replay_insertions": agent.economic_replay_insertions,
-        "outcome_optimizer_updates": agent.outcome_optimizer_updates,
         "training_environment_transitions": training_environment_transitions,
         "test_payloads_opened": test_payloads_opened,
     }

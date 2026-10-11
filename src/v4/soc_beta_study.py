@@ -76,7 +76,7 @@ def _profile(
         ),
         "battery_peak_abs_kw": max((abs(value) for value in battery), default=None),
         "onboard_step": list(range(len(transitions))),
-        "load_kw": [item.state[1] * 600.0 for item in transitions],
+        "load_kw": [item.state[4] * 600.0 for item in transitions],
         "fc_kw": fc,
         "battery_bus_kw": battery,
         "soc_after": soc,

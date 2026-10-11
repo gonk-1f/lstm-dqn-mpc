@@ -20,8 +20,7 @@ from v3.control import EconomicMPC
 
 from .control import ACTION_KW, ReplayExecutionError, replay_episode
 from .dqn import (
-    DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE,
-    OUTCOME_HIDDEN_DIMS, OUTCOME_LEARNING_RATE,
+    DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, STATE_DIM, STATE_FEATURES,
 )
 from .experiment_schedule import (
     BestCheckpoint, EconomicUpdateSchedule, annotate_evaluation, fully_completed,
@@ -45,7 +44,6 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
                     decision_diagnostic_sink=None) -> dict:
     """Preserve all training RNG streams; never add replay or run optimizers."""
     random_state = agent.random.getstate()
-    outcome_random_state = agent.outcome_random.getstate()
     torch_state = torch.random.get_rng_state()
     failed_transitions = []
     failure_profiles = []
@@ -102,7 +100,6 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
         return summary
     finally:
         agent.random.setstate(random_state)
-        agent.outcome_random.setstate(outcome_random_state)
         torch.random.set_rng_state(torch_state)
 
 
@@ -245,8 +242,8 @@ def run_monitored_training(
     parameters = {
         'beta_soc':beta_soc,'rounds':rounds,'seed':seed,'batch_size':batch_size,
         'gamma':1.0,'learning_rate':ECONOMIC_LEARNING_RATE,'hidden_dims':list(ECONOMIC_HIDDEN_DIMS),
-        'outcome_learning_rate':OUTCOME_LEARNING_RATE,'outcome_hidden_dims':list(OUTCOME_HIDDEN_DIMS),
-        'state_dim':8,'action_kw':list(ACTION_KW),'replay_capacity':300000,
+        'state_dim':STATE_DIM,'state_features':list(STATE_FEATURES),
+        'action_kw':list(ACTION_KW),'replay_capacity':300000,
         'epsilon_start':epsilon_start,'epsilon_end':epsilon_end,
         'epsilon_linear_end_round':70,'epsilon_hold_from_round':71,
         'cadence':cadence,'updates_per_completed_episode':16,'target_mode':target_mode,
@@ -355,8 +352,7 @@ def run_monitored_training(
                 report['abort']['actual_partial_execution_counts'] = {
                     'economic_replay_insertions':agent.economic_replay_insertions,
                     'economic_optimizer_updates':agent.economic_optimizer_updates,
-                    'target_sync_calls_including_initial_copy':agent.target_sync_calls,
-                    'outcome_optimizer_updates':agent.outcome_optimizer_updates}
+                    'target_sync_calls_including_initial_copy':agent.target_sync_calls}
             _persist_report(report,output_dir)
             try:
                 report['learning_curve_artifacts'] = write_learning_curves(report,output_dir)
@@ -467,15 +463,13 @@ def _run_monitored_training(
             bootstrap_completed_voyages += sum(t.shore_ledger is not None or t.is_successful_terminal
                                                for t in prefix)
             failure_suffix_count += len(exc.executed_transitions)-retained
-            agent.remember_outcome_trajectory(exc.executed_transitions,
-                                              failed=not exc.executed_transitions[-1].done)
 
     if resume_state is None:
         print(f"bootstrap beta={beta_soc:g} cadence={cadence} target={target_mode} start", flush=True)
         bootstrap_policy_calls = 0
         def bootstrap_policy(state, feasible):
             nonlocal bootstrap_policy_calls
-            power = min(feasible, key=lambda value: abs(value-state[1]*600))
+            power = min(feasible, key=lambda value: abs(value-state[4]*600))
             bootstrap_policy_calls += 1
             if progress_every_steps and bootstrap_policy_calls % progress_every_steps == 0:
                 print(f'bootstrap progress step={bootstrap_policy_calls} soc={state[0]:.4f} fc={power}',flush=True)
@@ -489,14 +483,10 @@ def _run_monitored_training(
             agent.remember_trajectory(result.transitions)
             bootstrap_completed_voyages += sum(t.shore_ledger is not None or t.is_successful_terminal
                                                for t in result.transitions)
-            if result.transitions:
-                agent.remember_outcome_trajectory(result.transitions, failed=False)
         schedule.grant(insertions=agent.economic_replay_insertions,
                        completed_episodes=(len(bootstrap) if episode_credit_scope == 'sample' else bootstrap_completed_voyages))
         bootstrap_losses = schedule.consume(agent, batch_size=batch_size)
         bootstrap_td_statistics = agent.td_statistics()
-        for _ in range(16 * (len(bootstrap) + len(bootstrap_errors))):
-            agent.learn_outcome(batch_size=batch_size)
         if target_mode == "round":
             agent.sync_target()
         bootstrap_summary = annotate_evaluation(
@@ -571,7 +561,6 @@ def _run_monitored_training(
                 "greedy_evaluation_environment_transitions": evaluation_steps,
                 "economic_replay_insertions": agent.economic_replay_insertions,
                 "economic_optimizer_updates": agent.economic_optimizer_updates,
-                "outcome_optimizer_updates": agent.outcome_optimizer_updates,
                 "target_sync_calls_including_initial_copy": agent.target_sync_calls,
                 "target_soft_update_calls": agent.target_soft_update_calls,
                 "remaining_transition_credit": schedule.remaining_transition_credit,
@@ -589,7 +578,7 @@ def _run_monitored_training(
             "cost_rule": "ONBOARD actual plus modeled fixed-target SHORE plus modeled terminal if no final SHORE; incomplete split cost is null",
             "monitoring_rng_isolation": True,
             'failure_training_semantics': ('Genuine no-feasible-action suffixes enter economic Q with a tagged terminal, once-only training penalty and potential correction; ledgers unchanged'
-                if learn_no_feasible_failures else 'Historical outcome-only unfinished suffix protocol'),
+                if learn_no_feasible_failures else 'Unfinished suffixes excluded from economic replay'),
             'dataset_class': type(dataset).__name__,
         }
 
@@ -665,27 +654,18 @@ def _run_monitored_training(
                                          for t in prefix)
                     completed_voyages += prefix_voyages
                     failure_suffix_count += len(exc.executed_transitions)-retained
-                    agent.remember_outcome_trajectory(exc.executed_transitions,
-                                                      failed=not exc.executed_transitions[-1].done)
                 schedule.grant(insertions=agent.economic_replay_insertions-before_episode_insertions,
                                completed_episodes=(prefix_voyages if episode_credit_scope == 'voyage' else 0))
                 losses.extend(schedule.consume(agent,batch_size=batch_size))
-                if exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
-                    for _ in range(16):
-                        agent.learn_outcome(batch_size=batch_size)
                 continue
             results.append(result)
             agent.remember_trajectory(result.transitions)
             voyages = sum(t.shore_ledger is not None or t.is_successful_terminal
                           for t in result.transitions)
             completed_voyages += voyages
-            if result.transitions:
-                agent.remember_outcome_trajectory(result.transitions,failed=False)
             schedule.grant(insertions=agent.economic_replay_insertions-before_episode_insertions,
                            completed_episodes=(voyages if episode_credit_scope == 'voyage' else 1))
             losses.extend(schedule.consume(agent,batch_size=batch_size))
-            for _ in range(16):
-                agent.learn_outcome(batch_size=batch_size)
         if target_mode == "round":
             agent.sync_target()
         explore = annotate_evaluation(

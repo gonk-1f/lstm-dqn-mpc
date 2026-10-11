@@ -17,11 +17,14 @@ from .control import ACTION_KW, DirectTransition
 from .failure_replay import FAILURE_TERMINALS
 
 
-STATE_DIM = 8
-ECONOMIC_LEARNING_RATE = 1e-4
+STATE_DIM = 7
+STATE_FEATURES = (
+    'soc', 'previous_fc_kw_over_600', 'previous_fc_delta_kw_over_600',
+    'second_previous_fc_delta_kw_over_600', 'current_load_kw_over_600',
+    'current_load_delta_kw_over_600', 'previous_load_delta_kw_over_600',
+)
+ECONOMIC_LEARNING_RATE = 1e-3
 ECONOMIC_HIDDEN_DIMS = (128, 128)
-OUTCOME_LEARNING_RATE = 1e-4
-OUTCOME_HIDDEN_DIMS = (128, 64)
 
 
 def masked_double_dqn_targets(
@@ -61,16 +64,6 @@ class ReplayItem:
     failure_penalty_equivalent_cny: float = 0.0
 
 
-@dataclass(frozen=True)
-class OutcomeItem:
-    """Observed rollout result; the label is not an economic cost."""
-
-    state: tuple[float, ...]
-    action_index: int
-    actual_reward_cny: float
-    failed: bool
-
-
 class DirectPowerDDQN:
     def __init__(
         self, *, seed: int = 42, gamma: float = 1.0,
@@ -107,7 +100,6 @@ class DirectPowerDDQN:
         self.economic_success_replay_insertions = 0
         self.economic_failure_replay_insertions = 0
         self.economic_failure_terminal_insertions = 0
-        self.outcome_optimizer_updates = 0
         self.sync_target()
         self.target.eval()
         self.optimizer = torch.optim.Adam(self.online.parameters(), lr=learning_rate)
@@ -119,10 +111,6 @@ class DirectPowerDDQN:
         self._ordinary_pool: list[tuple[int, ReplayItem]] = []
         self._failure_terminal_positions: dict[int, int] = {}
         self._ordinary_positions: dict[int, int] = {}
-        self.outcome_model = MLPQNetwork(STATE_DIM, len(ACTION_KW), OUTCOME_HIDDEN_DIMS)
-        self.outcome_optimizer = torch.optim.Adam(self.outcome_model.parameters(), lr=OUTCOME_LEARNING_RATE)
-        self.outcome_random = random.Random(seed + 1)
-        self.outcome_replay: deque[OutcomeItem] = deque(maxlen=replay_capacity)
         self._td_updates = self._td_samples = 0
         self._td_loss_sum = self._td_sum = self._td_abs_sum = self._td_square_sum = self._td_abs_max = 0.0
         self._failure_td_samples = 0
@@ -133,7 +121,7 @@ class DirectPowerDDQN:
     def _state(value: Sequence[float]) -> tuple[float, ...]:
         state = tuple(float(item) for item in value)
         if len(state) != STATE_DIM or not all(math.isfinite(item) for item in state):
-            raise ValueError("state must have eight finite features")
+            raise ValueError("state must have seven finite features")
         return state
 
     @staticmethod
@@ -175,8 +163,8 @@ class DirectPowerDDQN:
         """Insert an original-unit, fully composed reward; scale exactly once.
 
         Callers assemble economic/shaping/redistribution/terminal/failure and
-        n-step components before this boundary. Penalty metadata and outcome
-        rewards remain original units, independently of this training scale.
+        n-step components before this boundary. Failure penalty metadata
+        remains in original units, independently of this training scale.
         """
         if type(action_kw) is not int or action_kw not in ACTION_KW:
             raise ValueError("action must use the FC grid")
@@ -292,53 +280,6 @@ class DirectPowerDDQN:
         )
         self.remember_trajectory(values[:last_completed_index + 1])
         return last_completed_index + 1
-
-    def remember_outcome_trajectory(
-        self, transitions: Sequence[DirectTransition], *, failed: bool,
-    ) -> None:
-        """Retain all executed actions with their eventual observed outcome.
-
-        A failed suffix is never converted to a zero-cost economic terminal.
-        Labels describe the sampled behavior trajectory, not causal blame for
-        every earlier action or a guaranteed future safety certificate.
-        """
-        values = tuple(transitions)
-        if not values or type(failed) is not bool:
-            raise ValueError("outcome trajectory needs executed transitions and a bool label")
-        if failed and (values[-1].done or values[-1].next_feasible_actions):
-            raise ValueError("failed outcome requires a nonterminal infeasible next state")
-        if not failed and not values[-1].is_successful_terminal:
-            raise ValueError("completed outcome must end at a completed transition")
-        last_completed_index = max(
-            (index for index, transition in enumerate(values) if transition.is_successful_terminal),
-            default=-1,
-        )
-        for index, transition in enumerate(values):
-            observed_cost = transition.executed_ledger.total_cost_cny
-            if transition.shore_ledger is not None:
-                observed_cost += transition.shore_ledger.total_cost_cny
-            self.outcome_replay.append(OutcomeItem(
-                self._state(transition.state), ACTION_KW.index(transition.action_kw),
-                -observed_cost, failed and index > last_completed_index,
-            ))
-
-    def learn_outcome(self, *, batch_size: int = 64) -> float | None:
-        if batch_size < 1:
-            raise ValueError("batch_size must be positive")
-        if len(self.outcome_replay) < batch_size:
-            return None
-        batch = self.outcome_random.sample(tuple(self.outcome_replay), batch_size)
-        states = torch.tensor([item.state for item in batch], dtype=torch.float32)
-        actions = torch.tensor([[item.action_index] for item in batch], dtype=torch.long)
-        failed = torch.tensor([[float(item.failed)] for item in batch], dtype=torch.float32)
-        logits = self.outcome_model(states).gather(1, actions)
-        loss = nn.functional.binary_cross_entropy_with_logits(logits, failed)
-        self.outcome_optimizer.zero_grad()
-        loss.backward()
-        nn.utils.clip_grad_norm_(self.outcome_model.parameters(), 10.0)
-        self.outcome_optimizer.step()
-        self.outcome_optimizer_updates += 1
-        return float(loss.item())
 
     def learn(self, *, batch_size: int = 64) -> float | None:
         if batch_size < 1:
@@ -511,31 +452,25 @@ class DirectPowerDDQN:
         return {
             'online': self.online.state_dict(), 'target': self.target.state_dict(),
             'optimizer': self.optimizer.state_dict(),
-            'outcome_model': self.outcome_model.state_dict(),
-            'outcome_optimizer': self.outcome_optimizer.state_dict(),
             'replay': tuple(self.replay), 'replay_ids': tuple(self._replay_ids),
             'next_replay_id': self._next_replay_id,
             'failure_pool_ids': tuple(key for key, _ in self._failure_terminal_pool),
             'ordinary_pool_ids': tuple(key for key, _ in self._ordinary_pool),
-            'outcome_replay': tuple(self.outcome_replay),
             'random_state': self.random.getstate(),
-            'outcome_random_state': self.outcome_random.getstate(),
             'torch_rng_state': torch.random.get_rng_state(),
             'counts': {name: getattr(self, name) for name in (
                 'target_sync_calls', 'target_soft_update_calls',
                 'economic_optimizer_updates', 'economic_replay_insertions',
                 'economic_success_replay_insertions', 'economic_failure_replay_insertions',
-                'economic_failure_terminal_insertions', 'outcome_optimizer_updates')},
+                'economic_failure_terminal_insertions')},
         }
 
     def load_training_state(self, state: dict) -> None:
-        if len(state['replay']) > self.replay.maxlen or len(state['outcome_replay']) > self.outcome_replay.maxlen:
+        if len(state['replay']) > self.replay.maxlen:
             raise ValueError('checkpoint replay exceeds configured capacity')
         self.online.load_state_dict(state['online'], strict=True)
         self.target.load_state_dict(state['target'], strict=True)
         self.optimizer.load_state_dict(state['optimizer'])
-        self.outcome_model.load_state_dict(state['outcome_model'], strict=True)
-        self.outcome_optimizer.load_state_dict(state['outcome_optimizer'])
         self.replay = deque(state['replay'], maxlen=self.replay.maxlen)
         self._replay_ids = deque(state['replay_ids'])
         if len(self.replay) != len(self._replay_ids):
@@ -549,9 +484,7 @@ class DirectPowerDDQN:
             raise ValueError('checkpoint sampling pools do not partition the replay')
         self._failure_terminal_positions = {key: index for index, (key, _) in enumerate(self._failure_terminal_pool)}
         self._ordinary_positions = {key: index for index, (key, _) in enumerate(self._ordinary_pool)}
-        self.outcome_replay = deque(state['outcome_replay'], maxlen=self.outcome_replay.maxlen)
         for name, value in state['counts'].items():
             setattr(self, name, value)
         self.random.setstate(state['random_state'])
-        self.outcome_random.setstate(state['outcome_random_state'])
         torch.random.set_rng_state(state['torch_rng_state'])

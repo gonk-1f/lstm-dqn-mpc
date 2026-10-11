@@ -257,7 +257,6 @@ def _run_scale(corpus, *, alpha, repeats, redistributed):
         agent.online.layers[-1].bias[0] += 1.  # Exact test-only initial preference.
     agent.sync_target()
     initial_copies = agent.target_sync_calls
-    outcome_before = model_fingerprint(agent.outcome_model)
     before = probe(agent, corpus)
     mask = feasible_fc_actions(AccountState(soc=INITIAL_SOC), LOADS_KW[0], SyntheticAccountant())
     # Match the existing controlled test's one initial select_power RNG draw.
@@ -347,14 +346,12 @@ def _run_scale(corpus, *, alpha, repeats, redistributed):
         'alpha': alpha, 'reward_mode': 'redistributed' if redistributed else 'raw',
         'sampling_sha256': agent.random.digest.hexdigest(),
         'ledger_sha256_before': ledger_before, 'ledger_sha256_after': ledger_fingerprint(corpus),
-        'outcome_weights_unchanged': outcome_before == model_fingerprint(agent.outcome_model),
         'counts': {
             'replay_insertions': agent.economic_replay_insertions,
             'success_insertions': agent.economic_success_replay_insertions,
             'failure_insertions': agent.economic_failure_replay_insertions,
             'failure_terminal_insertions': agent.economic_failure_terminal_insertions,
             'optimizer_updates': agent.economic_optimizer_updates,
-            'outcome_optimizer_updates': agent.outcome_optimizer_updates,
             'remaining_transition_credit': schedule.remaining_transition_credit,
             'initial_target_copies': initial_copies,
             'initial_copy_breakdown': {'constructor': 1, 'after_synthetic_fc0_bias': 1},

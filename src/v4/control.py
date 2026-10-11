@@ -9,8 +9,6 @@ from typing import Callable
 from v2.data.supervisory_rules import OperatingMode, normalize_onboard_load_kw
 from v2.economics import RawCnyIntervalLedger, ShoreEnergyClassification
 from v2.models.battery_energy import next_soc
-from v2.models.battery_degradation import battery_life_state
-from v2.models.fuel_cell_degradation import fuel_cell_life_state
 from v3.control import AccountState, EconomicMPC, SOC_MAX, SOC_MIN, SHORE_TARGET_SOC
 from v3.episode_replay import SHORE_MODES, ShoreBlock, _ledger_total
 from v3.shore import settle_shore_segment
@@ -191,25 +189,23 @@ def _validated_rows_v4(episode: object):
 
 
 def build_state(
-    physical: AccountState, observed_loads_kw: tuple[float, ...],
-    accountant: EconomicMPC, *, departure: bool,
+    physical: AccountState, fc_history_kw: tuple[float, float, float],
+    observed_loads_kw: tuple[float, float, float],
 ) -> tuple[float, ...]:
-    """Eight features measured before the commanded interval; no future load."""
-    if not observed_loads_kw or any(not isfinite(value) for value in observed_loads_kw):
-        raise ValueError("state needs finite observed loads")
-    current = observed_loads_kw[-1]
-    previous = observed_loads_kw[-2] if len(observed_loads_kw) >= 2 else 0.0
-    prior = observed_loads_kw[-3] if len(observed_loads_kw) >= 3 else 0.0
-    fc_life = fuel_cell_life_state(physical.fc_loss_uv)
-    battery_life = battery_life_state(
-        physical.battery_weighted_ah, normalization=accountant.battery_normalization,
-    )
-    rated = accountant.plant.fuel_cell_rated_total_kw
+    """Seven causal features; FC history contains executed commands only."""
+    if (len(fc_history_kw) != 3 or len(observed_loads_kw) != 3 or
+            any(not isfinite(value) for value in (*fc_history_kw, *observed_loads_kw))):
+        raise ValueError("state needs three finite FC and observed load samples")
+    if abs(fc_history_kw[-1] - physical.previous_fc_kw) > 1e-9:
+        raise ValueError("FC history must match the executed physical state")
+    fc_prior2, fc_prior1, fc_previous = fc_history_kw
+    load_prior2, load_prior1, current = observed_loads_kw
+    rated = float(ACTION_KW[-1])
     return (
-        float(physical.soc), current / rated, (current - previous) / rated,
-        (previous - prior) / rated, physical.previous_fc_kw / rated,
-        fc_life.economic_life_fraction, battery_life.economic_life_fraction,
-        float(departure),
+        float(physical.soc), fc_previous / rated,
+        (fc_previous - fc_prior1) / rated, (fc_prior1 - fc_prior2) / rated,
+        current / rated, (current - load_prior1) / rated,
+        (load_prior1 - load_prior2) / rated,
     )
 
 
@@ -330,14 +326,16 @@ def replay_episode(
             index = end
             continue
 
-        history = (0.0,)  # virtual departure boundary, never a physical row
+        history: tuple[float, float, float] | None = None
+        fc_history = (physical.previous_fc_kw,) * 3
         voyage_initial_soc = physical.soc
         while index < len(modes) and modes[index] is OperatingMode.ONBOARD:
             empty_physical_mask=False
             try:
                 actual_load = normalize_onboard_load_kw(loads[index])
-                current_history = (*history[-2:], actual_load)
-                decision_state = build_state(physical, current_history, accountant, departure=len(history) == 1)
+                current_history = ((actual_load,) * 3 if history is None
+                                   else (*history[-2:], actual_load))
+                decision_state = build_state(physical, fc_history, current_history)
                 physical_actions = feasible_fc_actions(physical, actual_load, accountant)
                 if not physical_actions:
                     empty_physical_mask=True
@@ -370,6 +368,7 @@ def replay_episode(
             battery_trace[index] = battery_kw
             soc_trace[index] = physical.soc
             history = current_history
+            fc_history = (*fc_history[-2:], float(fc_kw))
             last_onboard = index + 1 == len(modes) or modes[index + 1] is not OperatingMode.ONBOARD
             shore_ledger = None
             modeled_ledger = None
@@ -421,14 +420,18 @@ def replay_episode(
                     correction = energy_value.terminal_correction(voyage_initial_soc,next_physical.soc)
                 reward = original_reward + adjustment + correction
             if shore_ledger is not None:
-                successor_history = ((0.0, normalize_onboard_load_kw(loads[shore_end]))
-                                     if shore_end < len(modes) and modes[shore_end] is OperatingMode.ONBOARD
-                                     else (0.0,))
+                successor_load = (normalize_onboard_load_kw(loads[shore_end])
+                                  if shore_end < len(modes) and modes[shore_end] is OperatingMode.ONBOARD
+                                  else actual_load)
+                successor_history = (successor_load,) * 3
+                successor_fc_history = (physical.previous_fc_kw,) * 3
             elif index + 1 < len(modes) and modes[index + 1] is OperatingMode.ONBOARD:
                 successor_history = (*history[-2:], normalize_onboard_load_kw(loads[index + 1]))
+                successor_fc_history = fc_history
             else:
                 successor_history = history
-            next_state = build_state(physical, successor_history, accountant, departure=shore_ledger is not None)
+                successor_fc_history = fc_history
+            next_state = build_state(physical, successor_fc_history, successor_history)
             has_next_onboard = (shore_ledger is not None and shore_end < len(modes)
                                 and modes[shore_end] is OperatingMode.ONBOARD)
             data_truncation = ((shore_ledger is not None and shore_end < len(modes)

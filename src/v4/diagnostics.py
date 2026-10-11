@@ -59,7 +59,7 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None, reward
             'physical_feasible_actions_kw': list(physical_actions),
             'policy_candidate_actions_kw': list(candidate_actions),
             'fc_stop_reason': (
-                'forced_no_positive_action' if item.action_kw == 0 and item.state[4] > 0
+                'forced_no_positive_action' if item.action_kw == 0 and item.state[1] > 0
                 and physical_actions == (0,) else
                 'delayed_or_continued_off' if item.action_kw == 0 else None
             ),
@@ -84,7 +84,7 @@ def executed_transition_statistics(transitions) -> dict:
     """
     values = tuple(transitions)
     power = [item.action_kw for item in values]
-    raw_change = [item.action_kw-item.state[4]*ACTION_KW[-1] for item in values]
+    raw_change = [item.action_kw-item.state[1]*ACTION_KW[-1] for item in values]
     # Undo only machine roundoff from normalized FC state, in diagnostic kW.
     change = [0.0 if abs(value) <= 1e-9 else value for value in raw_change]
     n = len(values)
@@ -116,7 +116,7 @@ def fixed_q_diagnostics(agent, accountant) -> list[dict]:
                               ('working_soc_load600', .5, 600.),
                               ('high_soc_load100', .75, 100.)):
         physical = AccountState(soc=soc, previous_fc_kw=300.)
-        state = build_state(physical, (load, load, load), accountant, departure=False)
+        state = build_state(physical, (300., 300., 300.), (load, load, load))
         feasible = feasible_fc_actions(physical, load, accountant)
         with torch.no_grad():
             q = agent.online(torch.tensor([state], dtype=torch.float32))[0].tolist()

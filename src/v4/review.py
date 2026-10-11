@@ -114,7 +114,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     checkpoint = {
         "architecture": "v4_mlp_double_dqn_direct_power",
         "model_state": agent.online.state_dict(),
-        "state_dim": 8, "action_kw": report["action_kw"],
+        "state_dim": report["state_dim"], "action_kw": report["action_kw"],
         "hyperparameters": report["hyperparameters"],
         "selection_eligible": report["selection_eligible"],
         "purpose": "Train/Validation diagnostics; not authorization to open Test",

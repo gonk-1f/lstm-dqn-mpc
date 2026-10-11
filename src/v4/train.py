@@ -15,8 +15,7 @@ from v3.control import EconomicMPC
 
 from .control import ACTION_KW, DirectReplay, DirectTransition, ReplayExecutionError, replay_episode
 from .dqn import (
-    DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE,
-    OUTCOME_HIDDEN_DIMS, OUTCOME_LEARNING_RATE,
+    DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, STATE_DIM, STATE_FEATURES,
 )
 from .telemetry import soc_time_occupancy
 from .diagnostics import COMPONENT_NAMES, reward_totals
@@ -111,7 +110,7 @@ def _summarize(
         "fc_zero_fraction": sum(value == 0 for value in all_fc) / len(all_fc) if all_fc else None,
         "fc_starts": starts,
         "executed_fc_starts_including_failed_prefix": sum(
-            t.state[4] == 0 and t.action_kw > 0 for t in executed_transitions),
+            t.state[1] == 0 and t.action_kw > 0 for t in executed_transitions),
         "completed_voyages": completed_onboard_segments,
         "completed_onboard_segments": completed_onboard_segments,
         'failed_samples':len(failures),
@@ -204,15 +203,13 @@ def run_train_validation(
             bootstrap_unknown_discarded += len(exc.executed_transitions) - retained
         elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
             bootstrap_completed_prefixes += agent.remember_completed_prefix(exc.executed_transitions)
-            agent.remember_outcome_trajectory(exc.executed_transitions,
-                                              failed=not exc.executed_transitions[-1].done)
             bootstrap_failed_prefixes += len(exc.executed_transitions)
 
     if progress_every_steps:
         print(f"bootstrap start episodes={len(train)}", flush=True)
     bootstrap, bootstrap_failures = _run_episodes(
         train,
-        lambda state, feasible: min(feasible, key=lambda power: abs(power - state[1] * 600.0)),
+        lambda state, feasible: min(feasible, key=lambda power: abs(power - state[4] * 600.0)),
         accountant,
         on_failure=remember_bootstrap_failure,
         beta_soc=beta_soc,
@@ -222,15 +219,9 @@ def run_train_validation(
     for result in bootstrap:
         for transition in result.transitions:
             agent.remember_transition(transition)
-        if result.transitions:
-            agent.remember_outcome_trajectory(result.transitions, failed=False)
     bootstrap_losses = [
         loss for _ in range(updates_per_episode * len(bootstrap))
         if (loss := agent.learn(batch_size=batch_size)) is not None
-    ]
-    bootstrap_outcome_losses = [
-        loss for _ in range(updates_per_episode * (len(bootstrap) + len(bootstrap_failures)))
-        if (loss := agent.learn_outcome(batch_size=batch_size)) is not None
     ]
     agent.sync_target()
     training_rounds: list[dict[str, object]] = []
@@ -246,7 +237,6 @@ def run_train_validation(
         completed: list[DirectReplay] = []
         failures: list[str] = []
         losses: list[float] = []
-        outcome_losses: list[float] = []
         failed_prefix_transitions = 0
         completed_prefix_transitions = 0
         round_failed_transitions: list[DirectTransition] = []
@@ -262,7 +252,7 @@ def run_train_validation(
                 episode_steps += 1
                 if progress_every_steps:
                     if selected_steps % progress_every_steps == 0:
-                        load_kw = state[1] * accountant.plant.fuel_cell_rated_total_kw
+                        load_kw = state[4] * accountant.plant.fuel_cell_rated_total_kw
                         print(
                             f"progress step={selected_steps} phase=train round={round_index + 1}/{rounds} "
                             f"episode={episode_index}/{len(train)} sample={episode.sample_id} "
@@ -289,28 +279,17 @@ def run_train_validation(
                     round_unknown_discarded += len(exc.executed_transitions) - retained
                 elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
                     completed_prefix_transitions += agent.remember_completed_prefix(exc.executed_transitions)
-                    agent.remember_outcome_trajectory(exc.executed_transitions,
-                                                      failed=not exc.executed_transitions[-1].done)
                     failed_prefix_transitions += len(exc.executed_transitions)
-                    for _ in range(updates_per_episode):
-                        loss = agent.learn_outcome(batch_size=batch_size)
-                        if loss is not None:
-                            outcome_losses.append(loss)
                 if progress_every_steps:
                     print(f"failure phase=train round={round_index + 1}/{rounds} sample={episode.sample_id} {exc}", flush=True)
                 continue
             completed.append(result)
             for transition in result.transitions:
                 agent.remember_transition(transition)
-            if result.transitions:
-                agent.remember_outcome_trajectory(result.transitions, failed=False)
             for _ in range(updates_per_episode):
                 loss = agent.learn(batch_size=batch_size)
                 if loss is not None:
                     losses.append(loss)
-                outcome_loss = agent.learn_outcome(batch_size=batch_size)
-                if outcome_loss is not None:
-                    outcome_losses.append(outcome_loss)
         agent.sync_target()
         summary = annotate_evaluation(
             _summarize(completed, len(train), failures, round_failed_transitions),
@@ -325,9 +304,6 @@ def run_train_validation(
             "target_sync_calls_cumulative": agent.target_sync_calls,
             "failed_prefix_transitions": failed_prefix_transitions,
             "completed_prefix_transitions": completed_prefix_transitions,
-            "outcome_replay_size": len(agent.outcome_replay),
-            "outcome_training_updates": len(outcome_losses),
-            "outcome_mean_loss": sum(outcome_losses) / len(outcome_losses) if outcome_losses else None,
             "unknown_discarded_economic_q_transitions": round_unknown_discarded,
         })
         summary["greedy_train"] = greedy_evaluate(train, agent, accountant, beta_soc)
@@ -357,7 +333,8 @@ def run_train_validation(
         "controller": "MLP_Double_DQN_direct_FC_power",
         "sample_seconds": 30,
         "action_kw": list(ACTION_KW),
-        "state_dim": 8,
+        "state_dim": STATE_DIM,
+        "state_features": list(STATE_FEATURES),
         "reward_definition": "negative_observed_plus_modeled_terminal_four_component_CNY_minus_beta_soc_phi",
         "bootstrap": annotate_evaluation(
             _summarize(bootstrap, len(train), bootstrap_failures, bootstrap_failed_transitions),
@@ -367,7 +344,6 @@ def run_train_validation(
         "bootstrap_mean_loss": sum(bootstrap_losses) / len(bootstrap_losses) if bootstrap_losses else None,
         "bootstrap_failed_prefix_transitions": bootstrap_failed_prefixes,
         "bootstrap_completed_prefix_transitions": bootstrap_completed_prefixes,
-        "bootstrap_outcome_training_updates": len(bootstrap_outcome_losses),
         "training_rounds": training_rounds,
         "train_greedy_evaluation": train_greedy_summary,
         "validation": validation_summary,
@@ -385,7 +361,6 @@ def run_train_validation(
             ),
             "economic_q_optimizer_updates": agent.economic_optimizer_updates,
             "training_economic_q_optimizer_updates": agent.economic_optimizer_updates - len(bootstrap_losses),
-            "outcome_optimizer_updates": agent.outcome_optimizer_updates,
             "target_sync_calls_including_initial_copy": agent.target_sync_calls,
             "target_sync_calls_after_initialization": agent.target_sync_calls - 1,
             "scope": "ONBOARD decision transitions; excludes SHORE accounting and virtual modeled charging",
@@ -396,14 +371,11 @@ def run_train_validation(
         "selection_eligible": not ineligibility_reasons,
         "selection_ineligibility_reasons": ineligibility_reasons,
         "test_payloads_opened": dataset.opened_test_payloads,
-        "outcome_model_role": "diagnostic_observed_rollout_failure_only_no_action_filter",
         "hyperparameters": {
             "seed": seed, "rounds": rounds, "batch_size": batch_size,
             "updates_per_episode": updates_per_episode, "gamma": agent.gamma,
             "learning_rate": ECONOMIC_LEARNING_RATE, "replay_capacity": 100_000,
             "hidden_dims": list(ECONOMIC_HIDDEN_DIMS),
-            "outcome_learning_rate": OUTCOME_LEARNING_RATE,
-            "outcome_hidden_dims": list(OUTCOME_HIDDEN_DIMS),
             "epsilon_start": epsilon_start, "epsilon_end": epsilon_end,
             "beta_soc": beta_soc,
             "target_sync_schedule": "initial hard copy; once after bootstrap; once after each round",
@@ -457,7 +429,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         torch.save({
             "architecture": "v4_mlp_double_dqn_direct_power",
             "model_state": agent.online.state_dict(),
-            "state_dim": 8, "action_kw": ACTION_KW,
+            "state_dim": STATE_DIM, "action_kw": ACTION_KW,
             "hyperparameters": report["hyperparameters"],
         }, args.output_dir / "selected_agent.pt")
     else:
