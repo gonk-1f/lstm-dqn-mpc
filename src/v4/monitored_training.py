@@ -16,11 +16,13 @@ import traceback
 
 import torch
 
+from v2.data.supervisory_rules import OperatingMode
 from v3.control import EconomicMPC
 
 from .control import ACTION_KW, DEFAULT_BETA_SOC, SOC_REF, ReplayExecutionError, replay_episode
 from .dqn import (
-    DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, STATE_DIM, STATE_FEATURES,
+    DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, ECONOMIC_REPLAY_FORMAT_VERSION,
+    STATE_DIM, STATE_FEATURES,
 )
 from .experiment_schedule import (
     BestCheckpoint, EconomicUpdateSchedule, annotate_evaluation, fully_completed,
@@ -107,6 +109,20 @@ def _write_json(path: Path, payload: dict) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     temporary.replace(path)
+
+
+def _replay_source(episode, transitions, source_round: int) -> dict:
+    """Diagnostic origins use dataset rows, including gaps occupied by SHORE."""
+    rows = tuple(index for index, mode in enumerate(episode.operating_mode)
+                 if OperatingMode(mode) is OperatingMode.ONBOARD)
+    return {'source_sample_id':str(episode.sample_id), 'source_round':source_round,
+            'source_rows':rows[:len(transitions)]}
+
+
+def _completed_independent_prefix(transitions):
+    end = max((index + 1 for index, item in enumerate(transitions)
+               if item.is_successful_terminal), default=0)
+    return transitions[:end]
 
 
 def _flatten_metrics(values: dict, prefix: str = '') -> dict:
@@ -204,6 +220,7 @@ def run_monitored_training(
     capture_trajectories: bool = False,
     learn_no_feasible_failures: bool = True, failure_penalty_scale: float = 1.0,
     reward_scale: float = 0.001, failure_terminal_quota: int = 2,
+    unknown_replay_mode: str = 'observed_nstep',
     manifest_sha256: dict[str,str] | None = None,
     dataset_roots: tuple[str,...] | None = None,
     abort_on_execution_error: bool = False, capture_log: bool = False,
@@ -215,6 +232,8 @@ def run_monitored_training(
         raise ValueError('reward_scale must be finite and positive')
     if type(failure_terminal_quota) is not int or failure_terminal_quota < 0:
         raise ValueError('failure_terminal_quota must be a nonnegative integer')
+    if unknown_replay_mode not in ('discard', 'observed_nstep'):
+        raise ValueError('unknown_replay_mode must be discard or observed_nstep')
     if (type(diagnostic_rounds) is not tuple or
             any(type(value) is not int or not 1 <= value <= rounds for value in diagnostic_rounds) or
             len(set(diagnostic_rounds)) != len(diagnostic_rounds)):
@@ -263,6 +282,8 @@ def run_monitored_training(
         'battery_energy_value':{'coefficient_cny':energy_value.coefficient_cny,
                                 'reference_soc':energy_value.reference_soc},
         'reward_scale':float(reward_scale),'failure_terminal_quota':failure_terminal_quota,
+        'unknown_replay_mode':unknown_replay_mode,
+        'economic_replay_format_version':ECONOMIC_REPLAY_FORMAT_VERSION,
         'shore_settlement':'modeled_fixed_target_soc_0.6',
     }
     metadata = {
@@ -338,6 +359,7 @@ def run_monitored_training(
                 capture_trajectories=capture_trajectories,learn_no_feasible_failures=learn_no_feasible_failures,
                 failure_penalty_scale=failure_penalty_scale,reward_scale=reward_scale,
                 failure_terminal_quota=failure_terminal_quota,
+                unknown_replay_mode=unknown_replay_mode,
                 run_metadata=metadata,runtime=runtime,abort_on_execution_error=abort_on_execution_error,
                 diagnostic_rounds=diagnostic_rounds,resume_state=resume_state)
             report['learning_curve_artifacts'] = write_learning_curves(report,output_dir)
@@ -377,6 +399,7 @@ def _run_monitored_training(
     capture_trajectories: bool,
     learn_no_feasible_failures: bool, failure_penalty_scale: float,
     reward_scale: float, failure_terminal_quota: int,
+    unknown_replay_mode: str,
     run_metadata: dict, runtime: dict, abort_on_execution_error: bool,
     diagnostic_rounds: tuple[int, ...],
     resume_state: dict | None,
@@ -411,20 +434,25 @@ def _run_monitored_training(
     bootstrap_prefix = 0
     bootstrap_completed_voyages = 0
     bootstrap_unknown_discarded = 0
+    bootstrap_unknown_retained = 0
     bootstrap_events = []
     failure_suffix_count = 0
     no_suffix_failure_events = 0
     initial_q_diagnostics = fixed_q_diagnostics(agent,accountant)
     bootstrap_reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
+    train_by_id = {str(episode.sample_id):episode for episode in train}
 
     def replay_counts():
         n=agent.economic_replay_insertions
         return {
             'success':agent.economic_success_replay_insertions,'failure':agent.economic_failure_replay_insertions,
+            'unresolved':agent.economic_unresolved_replay_insertions,
             'failure_terminals':agent.economic_failure_terminal_insertions,
             'failure_terminals_in_pool':agent.failure_terminal_replay_count,
+            'normal_terminals_in_pool':agent.normal_terminal_replay_count,
             'success_fraction':agent.economic_success_replay_insertions/n if n else None,
             'failure_fraction':agent.economic_failure_replay_insertions/n if n else None,
+            'unresolved_fraction':agent.economic_unresolved_replay_insertions/n if n else None,
         }
 
     def failure_view(exc):
@@ -436,6 +464,7 @@ def _run_monitored_training(
 
     def bootstrap_failure(exc):
         nonlocal bootstrap_prefix, bootstrap_completed_voyages, bootstrap_unknown_discarded
+        nonlocal bootstrap_unknown_retained
         nonlocal failure_suffix_count, no_suffix_failure_events
         bootstrap_events.append(exc)
         if abort_on_execution_error and exc.failure_kind not in ('no_feasible_action','data_truncation'):
@@ -449,18 +478,24 @@ def _run_monitored_training(
                 not exc.executed_transitions or exc.executed_transitions[-1].done):
             no_suffix_failure_events += 1
         if exc.failure_kind == 'data_truncation' and exc.executed_transitions:
-            retained=agent.remember_completed_prefix(exc.executed_transitions)
+            remember = (agent.remember_observed_prefix if unknown_replay_mode == 'observed_nstep'
+                        else agent.remember_completed_prefix)
+            retained=remember(exc.executed_transitions,
+                **_replay_source(train_by_id[exc.sample_id], exc.executed_transitions, 0))
             bootstrap_prefix += retained
+            bootstrap_unknown_retained += retained
             bootstrap_unknown_discarded += len(exc.executed_transitions) - retained
             bootstrap_completed_voyages += sum(
                 t.shore_ledger is not None or t.is_successful_terminal
-                for t in exc.executed_transitions[:retained])
+                for t in _completed_independent_prefix(exc.executed_transitions))
         elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
             if view is not None:
-                retained=agent.remember_trajectory(view.transitions)
+                retained=agent.remember_trajectory(view.transitions,
+                    **_replay_source(train_by_id[exc.sample_id], view.transitions, 0))
                 prefix=exc.executed_transitions[:view.successful_prefix_transitions]
             else:
-                retained=agent.remember_completed_prefix(exc.executed_transitions)
+                retained=agent.remember_completed_prefix(exc.executed_transitions,
+                    **_replay_source(train_by_id[exc.sample_id], exc.executed_transitions, 0))
                 prefix=exc.executed_transitions[:retained]
             bootstrap_prefix += retained
             bootstrap_completed_voyages += sum(t.shore_ledger is not None or t.is_successful_terminal
@@ -483,7 +518,8 @@ def _run_monitored_training(
             redistribute_battery_energy=redistribute_battery_energy,
         )
         for result in bootstrap:
-            agent.remember_trajectory(result.transitions)
+            agent.remember_trajectory(result.transitions,
+                **_replay_source(train_by_id[result.sample_id], result.transitions, 0))
             bootstrap_completed_voyages += sum(t.shore_ledger is not None or t.is_successful_terminal
                                                for t in result.transitions)
         schedule.grant(insertions=agent.economic_replay_insertions,
@@ -499,11 +535,13 @@ def _run_monitored_training(
             (*[t for result in bootstrap for t in result.transitions], *bootstrap_failed)))
         bootstrap_summary['failure_reason_counts']=bootstrap_reason_counts
         bootstrap_summary['unknown_discarded_economic_q_transitions'] = bootstrap_unknown_discarded
+        bootstrap_summary['unknown_retained_economic_q_transitions'] = bootstrap_unknown_retained
         bootstrap_insertions = agent.economic_replay_insertions
         print(f"bootstrap completed={len(bootstrap)}/{len(train)} economic_updates={agent.economic_optimizer_updates}", flush=True)
         history = []
         selected_steps = executed_training_steps = evaluation_steps = 0
-        unknown_discarded_total = 0
+        unknown_discarded_total = bootstrap_unknown_discarded
+        unknown_retained_total = bootstrap_unknown_retained
         best_record = None
         diagnostic_artifacts: list[dict] = []
         first_qualification = None
@@ -526,6 +564,7 @@ def _run_monitored_training(
         executed_training_steps = counts['training_environment_transitions']
         evaluation_steps = counts['greedy_evaluation_environment_transitions']
         unknown_discarded_total = counts.get('unknown_discarded_economic_q_transitions', 0)
+        unknown_retained_total = counts.get('unknown_retained_economic_q_transitions', 0)
         failure_suffix_count = counts['failed_suffix_transitions_excluded_from_economic_replay']
         no_suffix_failure_events = counts['no_feasible_action_events_without_executed_suffix']
         best_record = report['best_checkpoint']
@@ -571,17 +610,24 @@ def _run_monitored_training(
                 'formal_training_economic_optimizer_updates': agent.economic_optimizer_updates-len(bootstrap_losses),
                 'failed_suffix_transitions_excluded_from_economic_replay': failure_suffix_count,
                 'unknown_discarded_economic_q_transitions': unknown_discarded_total,
+                'unknown_retained_economic_q_transitions': unknown_retained_total,
                 'no_feasible_action_events_without_executed_suffix': no_suffix_failure_events,
                 'economic_success_replay_insertions':agent.economic_success_replay_insertions,
                 'economic_failure_replay_insertions':agent.economic_failure_replay_insertions,
+                'economic_unresolved_replay_insertions':agent.economic_unresolved_replay_insertions,
                 'economic_failure_terminal_insertions':agent.economic_failure_terminal_insertions,
                 'economic_failure_terminal_replay_size':agent.failure_terminal_replay_count,
+                'economic_normal_terminal_replay_size':agent.normal_terminal_replay_count,
             },
             "elapsed_seconds": elapsed_before_resume + time.monotonic()-started,
             "cost_rule": "ONBOARD actual plus modeled fixed-target SHORE plus modeled terminal if no final SHORE; incomplete split cost is null",
             "monitoring_rng_isolation": True,
             'failure_training_semantics': ('Genuine no-feasible-action suffixes enter economic Q with a tagged terminal, once-only training penalty and potential correction; ledgers unchanged'
                 if learn_no_feasible_failures else 'Unfinished suffixes excluded from economic replay'),
+            'unknown_replay_semantics': (
+                'Retain complete n-step windows with a genuinely observed successor decision; unresolved outcome, no synthetic terminal or UNKNOWN successor'
+                if unknown_replay_mode == 'observed_nstep' else
+                'Discard unfinished UNKNOWN suffixes; retain only independently completed prefixes'),
             'dataset_class': type(dataset).__name__,
         }
 
@@ -596,11 +642,13 @@ def _run_monitored_training(
         reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
         completed_voyages = 0
         unknown_discarded_round = 0
+        unknown_retained_round = 0
         agent.reset_td_statistics()
         before_insertions = agent.economic_replay_insertions
         before_updates = agent.economic_optimizer_updates
         before_success=agent.economic_success_replay_insertions
         before_failure=agent.economic_failure_replay_insertions
+        before_unresolved=agent.economic_unresolved_replay_insertions
         before_failure_terminals=agent.economic_failure_terminal_insertions
         round_train = list(train)
         random.Random(seed + round_index).shuffle(round_train)
@@ -640,18 +688,24 @@ def _run_monitored_training(
                         not exc.executed_transitions or exc.executed_transitions[-1].done):
                     no_suffix_failure_events += 1
                 if exc.failure_kind == 'data_truncation' and exc.executed_transitions:
-                    retained=agent.remember_completed_prefix(exc.executed_transitions)
+                    remember = (agent.remember_observed_prefix if unknown_replay_mode == 'observed_nstep'
+                                else agent.remember_completed_prefix)
+                    retained=remember(exc.executed_transitions,
+                        **_replay_source(episode, exc.executed_transitions, round_index))
+                    unknown_retained_round += retained
                     unknown_discarded_round += len(exc.executed_transitions) - retained
                     prefix_voyages = sum(
                         t.shore_ledger is not None or t.is_successful_terminal
-                        for t in exc.executed_transitions[:retained])
+                        for t in _completed_independent_prefix(exc.executed_transitions))
                     completed_voyages += prefix_voyages
                 elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
                     if view is not None:
-                        retained=agent.remember_trajectory(view.transitions)
+                        retained=agent.remember_trajectory(view.transitions,
+                            **_replay_source(episode, view.transitions, round_index))
                         prefix=exc.executed_transitions[:view.successful_prefix_transitions]
                     else:
-                        retained=agent.remember_completed_prefix(exc.executed_transitions)
+                        retained=agent.remember_completed_prefix(exc.executed_transitions,
+                            **_replay_source(episode, exc.executed_transitions, round_index))
                         prefix=exc.executed_transitions[:retained]
                     prefix_voyages = sum(t.shore_ledger is not None or t.is_successful_terminal
                                          for t in prefix)
@@ -662,7 +716,8 @@ def _run_monitored_training(
                 losses.extend(schedule.consume(agent,batch_size=batch_size))
                 continue
             results.append(result)
-            agent.remember_trajectory(result.transitions)
+            agent.remember_trajectory(result.transitions,
+                **_replay_source(episode, result.transitions, round_index))
             voyages = sum(t.shore_ledger is not None or t.is_successful_terminal
                           for t in result.transitions)
             completed_voyages += voyages
@@ -678,7 +733,9 @@ def _run_monitored_training(
             (*[t for result in results for t in result.transitions], *failed_transitions)))
         explore['failure_reason_counts']=reason_counts
         explore['unknown_discarded_economic_q_transitions'] = unknown_discarded_round
+        explore['unknown_retained_economic_q_transitions'] = unknown_retained_round
         unknown_discarded_total += unknown_discarded_round
+        unknown_retained_total += unknown_retained_round
         executed_training_steps += explore['executed_onboard_transitions']
         if capture_trajectories:
             path = output_dir/f'round_{round_index:03d}_exploratory_trajectories.json'
@@ -728,14 +785,18 @@ def _run_monitored_training(
             'completed_voyages_entering_economic_replay': completed_voyages,
             'unknown_discarded_economic_q_transitions': unknown_discarded_round,
             'unknown_discarded_economic_q_transitions_cumulative': unknown_discarded_total,
+            'unknown_retained_economic_q_transitions': unknown_retained_round,
+            'unknown_retained_economic_q_transitions_cumulative': unknown_retained_total,
             'failed_sample_count':explore['physical_failures'],
             'data_truncated_sample_count':explore['data_truncated_episodes'],
             'noncompleted_sample_count':explore['noncompleted_samples'],
             'failure_reason_counts':reason_counts,
             'economic_success_replay_insertions':agent.economic_success_replay_insertions-before_success,
             'economic_failure_replay_insertions':agent.economic_failure_replay_insertions-before_failure,
+            'economic_unresolved_replay_insertions':agent.economic_unresolved_replay_insertions-before_unresolved,
             'economic_failure_terminal_insertions':agent.economic_failure_terminal_insertions-before_failure_terminals,
             'economic_failure_terminal_replay_size':agent.failure_terminal_replay_count,
+            'economic_normal_terminal_replay_size':agent.normal_terminal_replay_count,
             'economic_replay_outcome_counts_cumulative':replay_counts(),
         }
         improved = selector.consider(round_index,greedy_train,greedy_validation)

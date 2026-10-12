@@ -1,9 +1,132 @@
+import json
 from types import SimpleNamespace
 
+import pytest
 import torch
 
 from test_v4_training import FakeDataset
 from v4.dqn import DirectPowerDDQN
+
+
+class UnknownPrefixDataset(FakeDataset):
+    """A real observed prefix with SHORE rows and an unverified final boundary."""
+    def load_train(self):
+        from v2.data.supervisory_rules import OperatingMode
+        modes = ("shore_charging", OperatingMode.ONBOARD, "onboard", "shore_charging",
+                 *(("onboard",) * 50), "unknown")
+        return (SimpleNamespace(sample_id="unknown_prefix", split="train",
+            operating_mode=modes, load_kw=(0.,) * len(modes),
+            battery_bus_kw=(0.,) * len(modes)),)
+
+
+@pytest.mark.parametrize("mode,retained", [("observed_nstep", 44), ("discard", 0)])
+def test_unknown_replay_retains_observed_windows_with_sources_and_actual_credit(tmp_path, monkeypatch,
+                                                                            mode, retained):
+    from v4 import monitored_training
+    monkeypatch.setattr(monitored_training, "write_learning_curves", lambda *args: {})
+    agent, report = monitored_training.run_monitored_training(UnknownPrefixDataset(),
+        output_dir=tmp_path, rounds=1, seed=42, batch_size=1000, n_step=8,
+        unknown_replay_mode=mode, episode_credit_scope="voyage")
+    discarded = 52 - retained
+    assert report["bootstrap"]["unknown_retained_economic_q_transitions"] == retained
+    assert report["bootstrap"]["unknown_discarded_economic_q_transitions"] == discarded
+    row = report["rounds"][0]
+    assert row["unknown_retained_economic_q_transitions"] == retained
+    assert row["unknown_discarded_economic_q_transitions"] == discarded
+    assert row["unknown_retained_economic_q_transitions_cumulative"] == 2 * retained
+    assert row["unknown_discarded_economic_q_transitions_cumulative"] == 2 * discarded
+    assert report["execution_counts"]["unknown_retained_economic_q_transitions"] == 2 * retained
+    assert report["execution_counts"]["unknown_discarded_economic_q_transitions"] == 2 * discarded
+    assert row["completed_voyages_entering_economic_replay"] == 0
+    assert agent.economic_replay_insertions == 2 * retained
+    assert row["remaining_transition_credit"] == 2 * retained
+    assert agent.economic_success_replay_insertions == agent.economic_failure_replay_insertions == 0
+    assert agent.economic_unresolved_replay_insertions == 2 * retained
+    assert agent.normal_terminal_replay_count == agent.failure_terminal_replay_count == 0
+    assert report["economic_replay_outcome_counts"]["unresolved"] == 2 * retained
+    assert report["economic_replay_outcome_counts"]["normal_terminals_in_pool"] == 0
+    assert row["greedy_train"]["data_truncated_episodes"] == 1
+    assert row["greedy_train"]["physical_failures"] == 0
+    assert row["greedy_train"]["evaluable_completed"] == 0
+    assert row["greedy_validation"]["evaluable_completed"] == 1
+    assert row["validation_skip_reason"] is None and not row["qualified_checkpoint"]
+    assert report["best_checkpoint"] is None and report["test_payloads_opened"] == 0
+    expected_rows = (1, 2, *range(4, 54))[:retained]
+    for round_index in (0, 1):
+        items = [item for item in agent.replay if item.source_round == round_index]
+        assert tuple(item.source_row_index for item in items) == expected_rows
+        assert all(item.source_sample_id == "unknown_prefix" and not item.done
+                   and item.experience_outcome == "unresolved" and item.bootstrap_steps == 8
+                   for item in items)
+    assert report["hyperparameters"]["unknown_replay_mode"] == mode
+    assert report["hyperparameters"]["economic_replay_format_version"] == 2
+    checkpoint = torch.load(tmp_path / "training_state_latest.pt", weights_only=False)
+    assert checkpoint["agent"]["format_version"] == 2
+    assert len(checkpoint["agent"]["replay"]) == 2 * retained
+
+
+def test_monitored_unknown_replay_default_is_observed_nstep(tmp_path, monkeypatch):
+    from v4 import monitored_training
+    monkeypatch.setattr(monitored_training, "write_learning_curves", lambda *args: {})
+    agent, report = monitored_training.run_monitored_training(UnknownPrefixDataset(),
+        output_dir=tmp_path, rounds=1, batch_size=1000, n_step=8)
+    assert report["hyperparameters"]["unknown_replay_mode"] == "observed_nstep"
+    assert agent.economic_unresolved_replay_insertions == 88
+
+
+def test_monitored_success_and_failure_replay_have_actual_source_rows(tmp_path, monkeypatch):
+    from v4 import monitored_training
+    monkeypatch.setattr(monitored_training, "write_learning_curves", lambda *args: {})
+    class SourceDataset(FakeDataset):
+        def load_train(self):
+            complete = super().load_train()[0]
+            complete.operating_mode = ("shore_charging", "onboard", "shore_charging")
+            complete.load_kw = (0., 100., 0.)
+            complete.battery_bus_kw = (0., 0., 0.)
+            failed = SimpleNamespace(sample_id="failed_source", split="train",
+                operating_mode=("shore_charging", *(("onboard",) * 13)),
+                load_kw=(0., *((0.,) * 12), 3000.), battery_bus_kw=(0.,) * 14)
+            return complete, failed
+    agent, report = monitored_training.run_monitored_training(SourceDataset(), output_dir=tmp_path,
+        rounds=1, n_step=8, batch_size=1000)
+    for round_index in (0, 1):
+        successful = [t for t in agent.replay if t.source_round == round_index
+                      and t.source_sample_id == "train_1"]
+        failed = [t for t in agent.replay if t.source_round == round_index
+                  and t.source_sample_id == "failed_source"]
+        assert len(successful) == 1 and successful[0].source_row_index == 1
+        assert tuple(t.source_row_index for t in failed) == tuple(range(1, 13))
+        assert failed[-1].done and failed[-1].experience_outcome == "failure"
+    assert agent.economic_replay_insertions == 26
+    assert report["rounds"][0]["remaining_transition_credit"] == 26
+
+
+def test_invalid_unknown_replay_mode_is_rejected_before_dataset_loading(tmp_path):
+    from v4.monitored_training import run_monitored_training
+    class UnopenedDataset(FakeDataset):
+        def load_train(self):
+            pytest.fail("invalid replay semantics must be rejected before data loading")
+    with pytest.raises(ValueError, match="unknown_replay_mode"):
+        run_monitored_training(UnopenedDataset(), output_dir=tmp_path,
+                               unknown_replay_mode="invented_successor")
+
+
+def test_prior_replay_metadata_contract_cannot_resume_before_dataset_loading(tmp_path, monkeypatch):
+    from v4 import monitored_training
+    monkeypatch.setattr(monitored_training, "write_learning_curves", lambda *args: {})
+    monitored_training.run_monitored_training(FakeDataset(), output_dir=tmp_path, rounds=1)
+    path = tmp_path / "training_state_latest.pt"
+    checkpoint = torch.load(path, weights_only=False)
+    saved = checkpoint["metadata"]
+    saved["hyperparameters"].pop("economic_replay_format_version")
+    saved["hyperparameters"].pop("unknown_replay_mode")
+    torch.save(checkpoint, path)
+    (tmp_path / "run_metadata.json").write_text(json.dumps(saved), encoding="utf-8")
+    monkeypatch.setattr(FakeDataset, "load_train",
+                        lambda self: pytest.fail("old replay contract must fail before data loading"))
+    with pytest.raises(ValueError, match="resume source, architecture, hyperparameters or data manifest mismatch"):
+        monitored_training.run_monitored_training(FakeDataset(), output_dir=tmp_path,
+            rounds=1, resume_from=path)
 
 
 def test_economic_replay_insertions_count_new_entries_after_capacity_saturation():

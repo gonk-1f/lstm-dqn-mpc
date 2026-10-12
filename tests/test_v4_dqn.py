@@ -204,3 +204,125 @@ def test_failure_terminal_quota_reports_actual_td_draws_without_mutating_replay(
 def test_failure_terminal_quota_rejects_invalid_values(quota):
     with pytest.raises(ValueError, match='failure_terminal_quota'):
         DirectPowerDDQN(failure_terminal_quota=quota)
+
+
+def _unknown_prefix(length, *, shore=False):
+    from types import SimpleNamespace
+    from v3.control import EconomicMPC
+    from v4.control import ReplayExecutionError, replay_episode
+    modes = ['onboard'] * length
+    if shore:
+        modes[5:5] = ['shore_pending', 'shore_charging']
+    modes.append('unknown')
+    episode = SimpleNamespace(sample_id='prefix', split='train', operating_mode=tuple(modes),
+        load_kw=tuple(100. if mode == 'onboard' else 0. for mode in modes),
+        battery_bus_kw=(0.,) * len(modes))
+    with pytest.raises(ReplayExecutionError) as caught:
+        replay_episode(episode, lambda state, feasible: 100, accountant=EconomicMPC(nominal_cost_cny=1.))
+    assert caught.value.failure_kind == 'data_truncation'
+    return caught.value.executed_transitions
+
+
+@pytest.mark.parametrize('n,length,expected', [(8, 0, 0), (8, 8, 0), (8, 9, 1), (8, 20, 12), (1, 3, 2)])
+def test_observed_unknown_prefix_requires_real_successor_and_full_window(n, length, expected):
+    a = DirectPowerDDQN(seed=42, n_step=n, gamma=.9, reward_scale=.001)
+    values = _unknown_prefix(length)
+    assert a.remember_observed_prefix(values, source_sample_id='prefix', source_round=1,
+                                     source_rows=tuple(range(length))) == expected
+    assert a.economic_unresolved_replay_insertions == expected
+    assert a.economic_success_replay_insertions == a.economic_failure_replay_insertions == 0
+    for index, item in enumerate(a.replay):
+        assert not item.done and item.terminal_reason is None and item.next_feasible_indices
+        assert item.experience_outcome == 'unresolved' and item.bootstrap_steps == n
+        assert item.next_state == values[index+n].state
+        assert item.reward_cny == pytest.approx(.001 * sum(.9**j * values[index+j].reward_cny for j in range(n)))
+        assert item.failure_penalty_equivalent_cny == 0
+        assert item.source_sample_id == 'prefix' and item.source_round == 1 and item.source_row_index == index
+
+
+def test_observed_prefix_can_cross_confirmed_shore_but_never_unknown():
+    a = DirectPowerDDQN(n_step=8, reward_scale=.001)
+    values = _unknown_prefix(12, shore=True)
+    assert values[4].shore_ledger is not None and not values[4].done
+    assert a.remember_observed_prefix(values) == 4
+    assert a.replay[0].reward_cny == pytest.approx(.001 * sum(t.reward_cny for t in values[:8]))
+    assert a.replay[0].next_state == values[8].state
+    assert all(not item.done for item in a.replay)
+    # The unobserved final successor cannot be passed to the ordinary terminal API.
+    with pytest.raises(ValueError, match='completed or explicitly failure'):
+        a.remember_trajectory(values)
+
+
+def test_observed_prefix_keeps_independently_closed_segment_without_crossing_its_terminal():
+    from types import SimpleNamespace
+    from v3.control import EconomicMPC
+    from v4.control import replay_episode
+    complete = replay_episode(SimpleNamespace(sample_id='closed', split='train',
+        operating_mode=('onboard',)*3, load_kw=(100.,)*3, battery_bus_kw=(0.,)*3),
+        lambda state, feasible: 100, accountant=EconomicMPC(nominal_cost_cny=1.))
+    partial = _unknown_prefix(12)
+    a = DirectPowerDDQN(n_step=8, reward_scale=.001)
+    assert a.remember_observed_prefix((*complete.transitions, *partial)) == 7
+    assert a.economic_success_replay_insertions == 3
+    assert a.economic_unresolved_replay_insertions == 4
+    assert [t.bootstrap_steps for t in list(a.replay)[:3]] == [3, 2, 1]
+    assert all(t.done for t in list(a.replay)[:3])
+    assert all(not t.done and t.bootstrap_steps == 8 for t in list(a.replay)[3:])
+    assert a.replay[3].reward_cny == pytest.approx(.001*sum(t.reward_cny for t in partial[:8]))
+
+
+def test_observed_prefix_rejects_discontinuity_or_physical_failure_atomically():
+    from dataclasses import replace
+    a = DirectPowerDDQN(n_step=8)
+    values = list(_unknown_prefix(12))
+    values[5] = replace(values[5], state=(.7,) + values[5].state[1:])
+    with pytest.raises(ValueError, match='contiguous'):
+        a.remember_observed_prefix(values)
+    assert not a.replay
+    failed = replace(_unknown_prefix(12)[-1], done=True, terminal_reason='failure_soc_limited',
+                     next_feasible_actions=(), failure_penalty_equivalent_cny=100.)
+    with pytest.raises(ValueError, match='truncation'):
+        a.remember_observed_prefix((failed,))
+    with pytest.raises(ValueError, match='outcome'):
+        a.remember((.6,)*7, 100, -1., (.6,)*7, done=True, next_feasible_actions=(),
+                   experience_outcome='unresolved')
+    assert not a.replay
+
+
+def test_replay_diagnostics_record_actual_categories_without_changing_updates_or_rng():
+    from copy import deepcopy
+    agents = [DirectPowerDDQN(seed=42, reward_scale=.001, failure_terminal_quota=2,
+                             replay_diagnostics=enabled) for enabled in (True, False)]
+    for a in agents:
+        state = (.6,) + (0.,)*6
+        a.remember(state, 100, -1., state, done=True, next_feasible_actions=(),
+                   source_sample_id='zero_boundary_015', source_round=100, source_row_index=97)
+        a.remember(state, 100, -100., state, done=True, next_feasible_actions=(),
+                   experience_outcome='failure', terminal_reason='failure_soc_limited')
+        a.remember(state, 100, -1., state, done=False, next_feasible_actions=(100,),
+                   experience_outcome='unresolved')
+        a.learn(batch_size=3)
+    a, b = agents
+    assert a.random.getstate() == b.random.getstate()
+    assert all(torch.equal(v, b.online.state_dict()[k]) for k, v in a.online.state_dict().items())
+    assert all(torch.equal(v, b.target.state_dict()[k]) for k, v in a.target.state_dict().items())
+    before_rng = a.random.getstate(), torch.random.get_rng_state().clone()
+    before = deepcopy(a.online.state_dict())
+    stats = a.td_statistics()
+    assert stats['normal_terminal']['sample_count'] == 1
+    assert stats['failure_terminal']['sample_count'] == 1
+    assert stats['sample_outcomes']['unresolved'] == 1
+    assert stats['replay_coverage']['pool_categories']['normal_terminal'] == 1
+    probe = stats['watched_replay_targets'][0]
+    assert probe['source_row_index'] == 97 and probe['draw_count_cumulative'] == 1
+    assert probe['done'] and probe['target_scaled'] == pytest.approx(-.001)
+    assert stats['normal_terminal']['original_units']['mean_absolute_td_error'] == pytest.approx(
+        stats['normal_terminal']['mean_absolute_td_error']/.001)
+    assert a.random.getstate() == before_rng[0] and torch.equal(torch.random.get_rng_state(), before_rng[1])
+    assert all(torch.equal(v, a.online.state_dict()[k]) for k, v in before.items())
+    restored = DirectPowerDDQN(seed=999, reward_scale=.001, failure_terminal_quota=2)
+    restored.load_training_state(a.training_state())
+    assert restored.economic_unresolved_replay_insertions == 1
+    assert restored.td_statistics()['watched_replay_targets'] == stats['watched_replay_targets']
+    with pytest.raises(ValueError, match='format'):
+        restored.load_training_state({'format_version': 1})

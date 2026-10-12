@@ -101,7 +101,8 @@ def test_aborted_training_preserves_completed_round_without_resuming(tmp_path, m
             rounds=1, beta_soc=500, reward_scale=.001)
 
 
-def test_formal_cli_passes_only_frozen_configuration_without_training(tmp_path, monkeypatch):
+@pytest.mark.parametrize('unknown_mode', ['observed_nstep', 'discard'])
+def test_formal_cli_passes_only_frozen_configuration_without_training(tmp_path, monkeypatch, unknown_mode):
     from v4 import feedback_study
     dataset = FakeDataset()
     captured = {}
@@ -114,13 +115,17 @@ def test_formal_cli_passes_only_frozen_configuration_without_training(tmp_path, 
         return None, {'rounds': [], 'best_checkpoint': None}
     monkeypatch.setattr(feedback_study, 'run_monitored_training', fake_run)
     output = tmp_path/'frozen_entry'
-    assert feedback_study.main(['--output-dir', str(output)]) == 0
+    args = ['--output-dir', str(output)]
+    if unknown_mode == 'discard':
+        args.extend(['--unknown-replay-mode', 'discard'])
+    assert feedback_study.main(args) == 0
     assert captured['rounds'] == 100 and captured['seed'] == 42
     assert captured['n_step'] == 8 and captured['batch_size'] == 64
     assert captured['cadence'] == 'replay32' and captured['target_mode'] == 'soft'
     assert captured['reward_scale'] == .001 and captured['failure_terminal_quota'] == 2
     assert captured['beta_soc'] == 200 and not captured['redistribute_battery_energy']
     assert captured['required_split_sizes'] == (30,8)
+    assert captured['unknown_replay_mode'] == unknown_mode
     assert dataset.opened_test_payloads == 0
 
 

@@ -33,6 +33,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                         help='failure terminal samples per economic Q batch; 0 preserves uniform replay')
     parser.add_argument('--cadence',choices=('episode16','replay32','replay16'),default='replay32')
     parser.add_argument('--n-step',type=int,choices=(1,8),default=8)
+    parser.add_argument('--unknown-replay-mode',choices=('discard','observed_nstep'),
+                        default='observed_nstep',
+                        help='retain full observed n-step windows before UNKNOWN; discard reproduces prior replay semantics')
     parser.add_argument('--failure-penalty-scale',type=float,default=1.,
                         help='multiplier of frozen Train-only P95 economic cost, in reward-equivalent CNY')
     parser.add_argument('--episode-credit-scope',choices=('sample','voyage'),default='voyage',
@@ -68,6 +71,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         required_split_sizes=(30,8),capture_trajectories=True,progress_every_steps=50,
         learn_no_feasible_failures=True,failure_penalty_scale=args.failure_penalty_scale,
         reward_scale=args.reward_scale,failure_terminal_quota=args.failure_terminal_quota,
+        unknown_replay_mode=args.unknown_replay_mode,
         manifest_sha256=before,
         dataset_roots=tuple(str(root.resolve()) for root in roots),
         abort_on_execution_error=True,capture_log=True,
