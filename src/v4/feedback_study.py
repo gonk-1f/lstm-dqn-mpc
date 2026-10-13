@@ -9,7 +9,9 @@ from typing import Sequence
 
 from v2.data.formal_training_dataset import FormalTrainingDataset
 from .control import DEFAULT_BETA_SOC
-from .monitored_training import _write_json, run_monitored_training, validate_experiment_identity
+from .monitored_training import (
+    _write_json, run_monitored_training, validate_experiment_identity, validate_replay_configuration,
+)
 from .review import _manifest_hashes
 from .train import _default_data_root
 from .experiment_paths import unarchived_output_path
@@ -35,6 +37,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                         help='uniform multiplier applied once to final economic-Q replay rewards; ledgers remain CNY')
     parser.add_argument('--failure-terminal-quota',type=int,default=2,
                         help='failure terminal samples per economic Q batch; 0 preserves uniform replay')
+    parser.add_argument('--replay-sampling',choices=('uniform','prioritized'),default='uniform',
+                        help='economic replay sampling; prioritized replay is an explicit candidate option')
+    parser.add_argument('--per-alpha',type=float,default=.6,
+                        help='proportional replay priority exponent in [0,1]')
+    parser.add_argument('--per-beta',type=float,default=1.,
+                        help='importance-sampling correction exponent in [0,1]; 1 applies full correction')
+    parser.add_argument('--per-epsilon',type=float,default=1e-6,
+                        help='finite positive offset keeping proportional priorities nonzero')
     parser.add_argument('--cadence',choices=('episode16','replay32','replay16'),default='replay32')
     parser.add_argument('--n-step',type=int,choices=(1,8),default=8)
     parser.add_argument('--unknown-replay-mode',choices=('discard','observed_nstep'),
@@ -49,6 +59,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         validate_experiment_identity(args.seed, args.experiment_id)
+        validate_replay_configuration(args.replay_sampling, args.per_alpha, args.per_beta, args.per_epsilon)
     except ValueError as exc:
         parser.error(str(exc))
     if (args.rounds != 100 or args.beta_soc != DEFAULT_BETA_SOC or args.reward_feedback != 'original'
@@ -79,6 +90,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         required_split_sizes=(30,8),capture_trajectories=True,progress_every_steps=50,
         learn_no_feasible_failures=True,failure_penalty_scale=args.failure_penalty_scale,
         reward_scale=args.reward_scale,failure_terminal_quota=args.failure_terminal_quota,
+        replay_sampling=args.replay_sampling,per_alpha=args.per_alpha,
+        per_beta=args.per_beta,per_epsilon=args.per_epsilon,
         unknown_replay_mode=args.unknown_replay_mode,
         experiment_id=args.experiment_id,
         manifest_sha256=before,

@@ -1,0 +1,548 @@
+{
+  "seed": 42,
+  "updates_per_group": 300,
+  "batch": 64,
+  "network": "7-128-128-61",
+  "learning_rate": 0.001,
+  "alpha": 0.6,
+  "beta_is": 1.0,
+  "epsilon": 1e-06,
+  "failure_quota": 2,
+  "source_exports": [
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\docs\\results\\v4_replay_coverage_audit_20261012\\nearest_replay_examples.csv",
+      "sha256": "89d4a90b4f0653e32c40adf623bdd7906682a1e8ffff270798b13ea7e6291075"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\docs\\results\\v4_replay_coverage_audit_20261012\\normal_terminal_nearest_nonterminal.csv",
+      "sha256": "d54bf6fb89cc19028dbd8bd15f7250077eda939c9a0fb13fffd4320fe2d08dff"
+    }
+  ],
+  "total_records": 538,
+  "train_records": 432,
+  "heldout_records": 106,
+  "group_split": "(Train sample ID, source round), disjoint groups",
+  "training_scope": "fixed exported final-A targets; fresh identical network initialization; no bootstrap recomputation",
+  "target_updates": 0,
+  "environment_steps": 0,
+  "formal_replay_insertions": 0,
+  "limitations": "selected neighborhood exports, not full Replay; no original network checkpoint; all61 ranks are probe-only outputs, not historical decisions",
+  "results": {
+    "uniform": {
+      "curves": [
+        {
+          "step": 0,
+          "train_all_mae": 5.997288627075721,
+          "train_normal_terminal_mae": 0.0644440008699894,
+          "train_failure_prefix_mae": 9.004392009844883,
+          "train_ordinary_mae": 4.193944091448968,
+          "heldout_all_mae": 4.1320479181155845,
+          "heldout_normal_terminal_mae": 0.023232316332204,
+          "heldout_failure_prefix_mae": 7.851004850864411,
+          "heldout_ordinary_mae": 3.5546121023878268,
+          "risk": {
+            "516139": {
+              "abs_error": 11.467512130737305,
+              "q_selected": 0.09229528903961182,
+              "selected_action_rank_all61": 7,
+              "top_three_actions_all61": [
+                510,
+                560,
+                380
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 11.493327140808105,
+              "q_selected": 0.08996957540512085,
+              "selected_action_rank_all61": 7,
+              "top_three_actions_all61": [
+                510,
+                560,
+                380
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 50,
+          "train_all_mae": 2.6029792724336773,
+          "train_normal_terminal_mae": 0.33964599315077065,
+          "train_failure_prefix_mae": 4.5412446955125105,
+          "train_ordinary_mae": 1.2955975819043335,
+          "heldout_all_mae": 1.4105384732895303,
+          "heldout_normal_terminal_mae": 0.06608598679304123,
+          "heldout_failure_prefix_mae": 4.177458560466766,
+          "heldout_ordinary_mae": 0.8291810766051088,
+          "risk": {
+            "516139": {
+              "abs_error": 7.675641059875488,
+              "q_selected": -3.699575424194336,
+              "selected_action_rank_all61": 60,
+              "top_three_actions_all61": [
+                270,
+                540,
+                360
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 7.880767822265625,
+              "q_selected": -3.522589683532715,
+              "selected_action_rank_all61": 60,
+              "top_three_actions_all61": [
+                270,
+                540,
+                360
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 100,
+          "train_all_mae": 0.9675459127756767,
+          "train_normal_terminal_mae": 0.2307606840506196,
+          "train_failure_prefix_mae": 1.2155385669186818,
+          "train_ordinary_mae": 0.7464234772669911,
+          "heldout_all_mae": 1.2270609264279593,
+          "heldout_normal_terminal_mae": 0.0393715077745063,
+          "heldout_failure_prefix_mae": 3.8843146204948424,
+          "heldout_ordinary_mae": 0.659576775152472,
+          "risk": {
+            "516139": {
+              "abs_error": 8.567194938659668,
+              "q_selected": -2.808021306991577,
+              "selected_action_rank_all61": 57,
+              "top_three_actions_all61": [
+                270,
+                570,
+                360
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 8.734855651855469,
+              "q_selected": -2.668501615524292,
+              "selected_action_rank_all61": 57,
+              "top_three_actions_all61": [
+                270,
+                570,
+                360
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 150,
+          "train_all_mae": 0.846033792035154,
+          "train_normal_terminal_mae": 0.24124936204403638,
+          "train_failure_prefix_mae": 0.9945194017972877,
+          "train_ordinary_mae": 0.7120479181600743,
+          "heldout_all_mae": 1.163010919941062,
+          "heldout_normal_terminal_mae": 0.0171705817005464,
+          "heldout_failure_prefix_mae": 3.6298281073570253,
+          "heldout_ordinary_mae": 0.6400303961355475,
+          "risk": {
+            "516139": {
+              "abs_error": 8.362188339233398,
+              "q_selected": -3.0130279064178467,
+              "selected_action_rank_all61": 57,
+              "top_three_actions_all61": [
+                270,
+                570,
+                540
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 8.5600004196167,
+              "q_selected": -2.8433570861816406,
+              "selected_action_rank_all61": 57,
+              "top_three_actions_all61": [
+                270,
+                570,
+                540
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 200,
+          "train_all_mae": 0.8040969005302975,
+          "train_normal_terminal_mae": 0.24892857640981675,
+          "train_failure_prefix_mae": 0.988407032095271,
+          "train_ordinary_mae": 0.6377129784981068,
+          "heldout_all_mae": 1.11470895877354,
+          "heldout_normal_terminal_mae": 0.01859967809702669,
+          "heldout_failure_prefix_mae": 3.624772536754608,
+          "heldout_ordinary_mae": 0.5763734322559985,
+          "risk": {
+            "516139": {
+              "abs_error": 8.286897659301758,
+              "q_selected": -3.088318347930908,
+              "selected_action_rank_all61": 58,
+              "top_three_actions_all61": [
+                270,
+                570,
+                110
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 8.484777450561523,
+              "q_selected": -2.9185802936553955,
+              "selected_action_rank_all61": 58,
+              "top_three_actions_all61": [
+                270,
+                570,
+                110
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 250,
+          "train_all_mae": 0.7741134523163998,
+          "train_normal_terminal_mae": 0.24996654592454434,
+          "train_failure_prefix_mae": 0.9700321310715709,
+          "train_ordinary_mae": 0.5989357038628902,
+          "heldout_all_mae": 1.1039442497147423,
+          "heldout_normal_terminal_mae": 0.0203495342284441,
+          "heldout_failure_prefix_mae": 3.587096118927002,
+          "heldout_ordinary_mae": 0.5713129285015638,
+          "risk": {
+            "516139": {
+              "abs_error": 8.29731559753418,
+              "q_selected": -3.0779006481170654,
+              "selected_action_rank_all61": 58,
+              "top_three_actions_all61": [
+                270,
+                570,
+                110
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 8.476308822631836,
+              "q_selected": -2.927048444747925,
+              "selected_action_rank_all61": 58,
+              "top_three_actions_all61": [
+                270,
+                570,
+                110
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 300,
+          "train_all_mae": 0.7719335473741887,
+          "train_normal_terminal_mae": 0.26363979902118445,
+          "train_failure_prefix_mae": 0.969922957660483,
+          "train_ordinary_mae": 0.5971413011714625,
+          "heldout_all_mae": 1.090973252377842,
+          "heldout_normal_terminal_mae": 0.014807785994240217,
+          "heldout_failure_prefix_mae": 3.5011147618293763,
+          "heldout_ordinary_mae": 0.5761672786519497,
+          "risk": {
+            "516139": {
+              "abs_error": 8.137968063354492,
+              "q_selected": -3.237247943878174,
+              "selected_action_rank_all61": 58,
+              "top_three_actions_all61": [
+                270,
+                110,
+                570
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 8.315008163452148,
+              "q_selected": -3.088348865509033,
+              "selected_action_rank_all61": 58,
+              "top_three_actions_all61": [
+                270,
+                110,
+                570
+              ],
+              "split": "heldout"
+            }
+          }
+        }
+      ],
+      "risk_draws": {
+        "516139": 45,
+        "584126": 0
+      },
+      "sample_count": 19200,
+      "unique_samples": 432,
+      "normal_terminal_draws": 1173,
+      "failure_prefix_draws": 6402,
+      "failure_terminal_draws": 600
+    },
+    "prioritized": {
+      "curves": [
+        {
+          "step": 0,
+          "train_all_mae": 5.997288627075721,
+          "train_normal_terminal_mae": 0.0644440008699894,
+          "train_failure_prefix_mae": 9.004392009844883,
+          "train_ordinary_mae": 4.193944091448968,
+          "heldout_all_mae": 4.1320479181155845,
+          "heldout_normal_terminal_mae": 0.023232316332204,
+          "heldout_failure_prefix_mae": 7.851004850864411,
+          "heldout_ordinary_mae": 3.5546121023878268,
+          "risk": {
+            "516139": {
+              "abs_error": 11.467512130737305,
+              "q_selected": 0.09229528903961182,
+              "selected_action_rank_all61": 7,
+              "top_three_actions_all61": [
+                510,
+                560,
+                380
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 11.493327140808105,
+              "q_selected": 0.08996957540512085,
+              "selected_action_rank_all61": 7,
+              "top_three_actions_all61": [
+                510,
+                560,
+                380
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 50,
+          "train_all_mae": 4.9121708665560515,
+          "train_normal_terminal_mae": 0.13536954373121263,
+          "train_failure_prefix_mae": 7.902036051098391,
+          "train_ordinary_mae": 3.0113419386450313,
+          "heldout_all_mae": 3.1112240101650075,
+          "heldout_normal_terminal_mae": 0.01434063698564257,
+          "heldout_failure_prefix_mae": 6.729681259393692,
+          "heldout_ordinary_mae": 2.4695662712749047,
+          "risk": {
+            "516139": {
+              "abs_error": 10.377142906188965,
+              "q_selected": -0.9980735182762146,
+              "selected_action_rank_all61": 60,
+              "top_three_actions_all61": [
+                270,
+                560,
+                570
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 10.452073097229004,
+              "q_selected": -0.9512844085693359,
+              "selected_action_rank_all61": 60,
+              "top_three_actions_all61": [
+                270,
+                560,
+                570
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 100,
+          "train_all_mae": 1.0535014857262097,
+          "train_normal_terminal_mae": 0.4311112746596336,
+          "train_failure_prefix_mae": 1.1071867582609327,
+          "train_ordinary_mae": 0.9824010389557212,
+          "heldout_all_mae": 1.2990156518963147,
+          "heldout_normal_terminal_mae": 0.13371347529547556,
+          "heldout_failure_prefix_mae": 3.7376843214035036,
+          "heldout_ordinary_mae": 0.784885801846468,
+          "risk": {
+            "516139": {
+              "abs_error": 8.472639083862305,
+              "q_selected": -2.9025778770446777,
+              "selected_action_rank_all61": 57,
+              "top_three_actions_all61": [
+                270,
+                540,
+                410
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 8.662782669067383,
+              "q_selected": -2.7405753135681152,
+              "selected_action_rank_all61": 57,
+              "top_three_actions_all61": [
+                270,
+                540,
+                410
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 150,
+          "train_all_mae": 0.884017245596085,
+          "train_normal_terminal_mae": 0.2751641600206494,
+          "train_failure_prefix_mae": 1.0139087670140987,
+          "train_ordinary_mae": 0.7697842934612552,
+          "heldout_all_mae": 1.198617238797388,
+          "heldout_normal_terminal_mae": 0.029747261000531062,
+          "heldout_failure_prefix_mae": 3.625225472450256,
+          "heldout_ordinary_mae": 0.6878567979305605,
+          "risk": {
+            "516139": {
+              "abs_error": 8.359545707702637,
+              "q_selected": -3.0156710147857666,
+              "selected_action_rank_all61": 57,
+              "top_three_actions_all61": [
+                270,
+                540,
+                560
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 8.565104484558105,
+              "q_selected": -2.8382532596588135,
+              "selected_action_rank_all61": 57,
+              "top_three_actions_all61": [
+                270,
+                540,
+                560
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 200,
+          "train_all_mae": 0.8411024932909101,
+          "train_normal_terminal_mae": 0.26537821743637324,
+          "train_failure_prefix_mae": 1.027520423312839,
+          "train_ordinary_mae": 0.6739919640987216,
+          "heldout_all_mae": 1.1644375152218174,
+          "heldout_normal_terminal_mae": 0.06272732705942222,
+          "heldout_failure_prefix_mae": 3.7214285016059874,
+          "heldout_ordinary_mae": 0.6147179150883155,
+          "risk": {
+            "516139": {
+              "abs_error": 8.402070999145508,
+              "q_selected": -2.973145008087158,
+              "selected_action_rank_all61": 57,
+              "top_three_actions_all61": [
+                270,
+                540,
+                560
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 8.61241340637207,
+              "q_selected": -2.7909443378448486,
+              "selected_action_rank_all61": 57,
+              "top_three_actions_all61": [
+                270,
+                540,
+                560
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 250,
+          "train_all_mae": 0.8150441434764717,
+          "train_normal_terminal_mae": 0.25862457390874627,
+          "train_failure_prefix_mae": 0.9865252817277428,
+          "train_ordinary_mae": 0.6581324154726937,
+          "heldout_all_mae": 1.1384437450576785,
+          "heldout_normal_terminal_mae": 0.01849952047424657,
+          "heldout_failure_prefix_mae": 3.623617136478424,
+          "heldout_ordinary_mae": 0.6085214886484267,
+          "risk": {
+            "516139": {
+              "abs_error": 8.326852798461914,
+              "q_selected": -3.04836368560791,
+              "selected_action_rank_all61": 58,
+              "top_three_actions_all61": [
+                270,
+                540,
+                560
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 8.539641380310059,
+              "q_selected": -2.8637161254882812,
+              "selected_action_rank_all61": 58,
+              "top_three_actions_all61": [
+                270,
+                540,
+                560
+              ],
+              "split": "heldout"
+            }
+          }
+        },
+        {
+          "step": 300,
+          "train_all_mae": 0.8031126569020907,
+          "train_normal_terminal_mae": 0.28134456019848586,
+          "train_failure_prefix_mae": 0.9786705576258597,
+          "train_ordinary_mae": 0.6387589248976482,
+          "heldout_all_mae": 1.116324785499359,
+          "heldout_normal_terminal_mae": 0.08348125698310989,
+          "heldout_failure_prefix_mae": 3.5692203283309936,
+          "heldout_ordinary_mae": 0.5868563531320307,
+          "risk": {
+            "516139": {
+              "abs_error": 8.255962371826172,
+              "q_selected": -3.1192538738250732,
+              "selected_action_rank_all61": 58,
+              "top_three_actions_all61": [
+                270,
+                540,
+                560
+              ],
+              "split": "train"
+            },
+            "584126": {
+              "abs_error": 8.46713638305664,
+              "q_selected": -2.936221122741699,
+              "selected_action_rank_all61": 58,
+              "top_three_actions_all61": [
+                270,
+                540,
+                560
+              ],
+              "split": "heldout"
+            }
+          }
+        }
+      ],
+      "risk_draws": {
+        "516139": 186,
+        "584126": 0
+      },
+      "sample_count": 19200,
+      "unique_samples": 432,
+      "normal_terminal_draws": 275,
+      "failure_prefix_draws": 8232,
+      "failure_terminal_draws": 600
+    }
+  }
+}

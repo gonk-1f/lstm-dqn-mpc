@@ -224,6 +224,20 @@ def validate_experiment_identity(seed: int, experiment_id: str | None) -> None:
         raise ValueError('experiment-id must be a nonempty single line of at most 128 characters')
 
 
+def validate_replay_configuration(
+    replay_sampling: str, per_alpha: float, per_beta: float, per_epsilon: float,
+) -> None:
+    """Reject invalid candidate replay settings before resolving or loading data."""
+    if replay_sampling not in ('uniform', 'prioritized'):
+        raise ValueError('replay_sampling must be uniform or prioritized')
+    if not math.isfinite(per_alpha) or not 0 <= per_alpha <= 1:
+        raise ValueError('per_alpha must be finite and in [0, 1]')
+    if not math.isfinite(per_beta) or not 0 <= per_beta <= 1:
+        raise ValueError('per_beta must be finite and in [0, 1]')
+    if not math.isfinite(per_epsilon) or per_epsilon <= 0:
+        raise ValueError('per_epsilon must be finite and positive')
+
+
 def _source_tree_sha256(source_root: Path) -> str:
     """Catch uncommitted runtime-source changes; never hash dataset payloads."""
     digest = hashlib.sha256()
@@ -274,6 +288,8 @@ def run_monitored_training(
     capture_trajectories: bool = False,
     learn_no_feasible_failures: bool = True, failure_penalty_scale: float = 1.0,
     reward_scale: float = 0.001, failure_terminal_quota: int = 2,
+    replay_sampling: str = 'uniform', per_alpha: float = .6,
+    per_beta: float = 1.0, per_epsilon: float = 1e-6,
     unknown_replay_mode: str = 'observed_nstep',
     manifest_sha256: dict[str,str] | None = None,
     dataset_roots: tuple[str,...] | None = None,
@@ -284,6 +300,7 @@ def run_monitored_training(
 ):
     """Run or resume only at an atomically saved, complete round boundary."""
     validate_experiment_identity(seed, experiment_id)
+    validate_replay_configuration(replay_sampling, per_alpha, per_beta, per_epsilon)
     if not math.isfinite(reward_scale) or reward_scale <= 0:
         raise ValueError('reward_scale must be finite and positive')
     if type(failure_terminal_quota) is not int or failure_terminal_quota < 0:
@@ -338,6 +355,8 @@ def run_monitored_training(
         'battery_energy_value':{'coefficient_cny':energy_value.coefficient_cny,
                                 'reference_soc':energy_value.reference_soc},
         'reward_scale':float(reward_scale),'failure_terminal_quota':failure_terminal_quota,
+        'replay_sampling':replay_sampling,'per_alpha':float(per_alpha),
+        'per_beta':float(per_beta),'per_epsilon':float(per_epsilon),
         'unknown_replay_mode':unknown_replay_mode,
         'economic_replay_format_version':ECONOMIC_REPLAY_FORMAT_VERSION,
         'shore_settlement':'modeled_fixed_target_soc_0.6',
@@ -424,6 +443,8 @@ def run_monitored_training(
                 capture_trajectories=capture_trajectories,learn_no_feasible_failures=learn_no_feasible_failures,
                 failure_penalty_scale=failure_penalty_scale,reward_scale=reward_scale,
                 failure_terminal_quota=failure_terminal_quota,
+                replay_sampling=replay_sampling,per_alpha=per_alpha,
+                per_beta=per_beta,per_epsilon=per_epsilon,
                 unknown_replay_mode=unknown_replay_mode,
                 run_metadata=metadata,runtime=runtime,abort_on_execution_error=abort_on_execution_error,
                 diagnostic_rounds=diagnostic_rounds,resume_state=resume_state)
@@ -464,11 +485,13 @@ def _run_monitored_training(
     capture_trajectories: bool,
     learn_no_feasible_failures: bool, failure_penalty_scale: float,
     reward_scale: float, failure_terminal_quota: int,
+    replay_sampling: str, per_alpha: float, per_beta: float, per_epsilon: float,
     unknown_replay_mode: str,
     run_metadata: dict, runtime: dict, abort_on_execution_error: bool,
     diagnostic_rounds: tuple[int, ...],
     resume_state: dict | None,
 ):
+    validate_replay_configuration(replay_sampling, per_alpha, per_beta, per_epsilon)
     if not 1 <= rounds <= 100 or updates_per_episode != 16 or batch_size < 1:
         raise ValueError("study permits at most 100 rounds and fixes legacy episode credit at 16")
     if (not 0 <= epsilon_end <= epsilon_start <= 1 or not math.isfinite(beta_soc) or beta_soc < 0
@@ -489,6 +512,8 @@ def _run_monitored_training(
     agent = DirectPowerDDQN(seed=seed,n_step=n_step,reward_scale=reward_scale,
                             learning_rate=ECONOMIC_LEARNING_RATE, hidden_dims=ECONOMIC_HIDDEN_DIMS,
                             replay_capacity=300_000, failure_terminal_quota=failure_terminal_quota,
+                            replay_sampling=replay_sampling, per_alpha=per_alpha,
+                            per_beta=per_beta, per_epsilon=per_epsilon,
                             target_tau=0.001)
     runtime.update(agent=agent,phase='bootstrap')
     accountant = EconomicMPC(nominal_cost_cny=1.0)

@@ -15,6 +15,7 @@ from dqn.networks.mlp_qnet import MLPQNetwork
 
 from .control import ACTION_KW, DirectTransition
 from .failure_replay import FAILURE_TERMINALS
+from .prioritized_replay import PriorityIndex
 
 
 STATE_DIM = 7
@@ -26,6 +27,7 @@ STATE_FEATURES = (
 ECONOMIC_LEARNING_RATE = 1e-3
 ECONOMIC_HIDDEN_DIMS = (128, 128)
 ECONOMIC_REPLAY_FORMAT_VERSION = 2
+PRIORITIZED_REPLAY_FORMAT_VERSION = 3
 WATCHED_REPLAY_SOURCES = frozenset((('zero_boundary_015', 97),
                                   ('zero_boundary_005', 208), ('zero_boundary_006', 350)))
 
@@ -82,6 +84,10 @@ class DirectPowerDDQN:
         failure_terminal_quota: int = 0,
         target_tau: float = 0.001,
         replay_diagnostics: bool = True,
+        replay_sampling: str = 'uniform',
+        per_alpha: float = 0.6,
+        per_beta: float = 1.0,
+        per_epsilon: float = 1e-6,
     ) -> None:
         if not 0 <= gamma <= 1 or learning_rate <= 0 or replay_capacity < 1:
             raise ValueError("invalid Double-DQN hyperparameters")
@@ -93,6 +99,17 @@ class DirectPowerDDQN:
             raise ValueError('failure_terminal_quota must be a nonnegative integer')
         if not math.isfinite(target_tau) or not 0 < target_tau <= 1:
             raise ValueError('target_tau must be in (0, 1]')
+        if replay_sampling not in ('uniform', 'prioritized'):
+            raise ValueError('replay_sampling must be uniform or prioritized')
+        if (not math.isfinite(per_alpha) or not 0 <= per_alpha <= 1
+                or not math.isfinite(per_beta) or not 0 <= per_beta <= 1
+                or not math.isfinite(per_epsilon) or per_epsilon <= 0):
+            raise ValueError('invalid prioritized replay parameters')
+        self.replay_sampling = replay_sampling
+        self.per_alpha, self.per_beta, self.per_epsilon = float(per_alpha), float(per_beta), float(per_epsilon)
+        # With a quota, PER operates only on the ordinary pool. Quota=0 uses all live entries.
+        self._priority_index = (PriorityIndex(replay_capacity, alpha=self.per_alpha, epsilon=self.per_epsilon)
+                                if replay_sampling == 'prioritized' else None)
         self.reward_scale = float(reward_scale)
         self.target_tau = float(target_tau)
         self.failure_terminal_quota = failure_terminal_quota
@@ -216,6 +233,8 @@ class DirectPowerDDQN:
         )
         if len(self.replay) == self.replay.maxlen:
             expired_id = self._replay_ids.popleft()
+            if self._priority_index is not None:
+                self._priority_index.remove(expired_id)
             if expired_id in self._failure_terminal_positions:
                 pool, positions = self._failure_terminal_pool, self._failure_terminal_positions
             else:
@@ -240,6 +259,8 @@ class DirectPowerDDQN:
             pool, positions = self._ordinary_pool, self._ordinary_positions
         positions[entry_id] = len(pool)
         pool.append((entry_id, item))
+        if self._priority_index is not None and (self.failure_terminal_quota == 0 or reason not in FAILURE_TERMINALS):
+            self._priority_index.add(entry_id)
         self._record_pool_entry(item, 1)
         watch = (source_sample_id, source_row_index)
         if self.replay_diagnostics and watch in WATCHED_REPLAY_SOURCES:
@@ -386,7 +407,7 @@ class DirectPowerDDQN:
             raise ValueError("batch_size must be positive")
         if len(self.replay) < batch_size:
             return None
-        batch = self._sample_replay_batch(batch_size)
+        batch, weights, probabilities = self._sample_replay_batch_with_weights(batch_size)
         states = torch.tensor([item.state for item in batch], dtype=torch.float32)
         next_states = torch.tensor([item.next_state for item in batch], dtype=torch.float32)
         actions = torch.tensor([[item.action_index] for item in batch], dtype=torch.long)
@@ -403,7 +424,12 @@ class DirectPowerDDQN:
                 bootstrap_steps=(torch.tensor([[item.bootstrap_steps] for item in batch])
                                  if self.n_step != 1 else None),
             )
-        loss = nn.functional.smooth_l1_loss(q, target)
+        if self.replay_sampling == 'uniform':
+            loss = nn.functional.smooth_l1_loss(q, target)
+        else:
+            # Apply IS before reducing; weighting an already averaged Huber loss is wrong.
+            sample_loss = nn.functional.smooth_l1_loss(q, target, reduction='none')
+            loss = (sample_loss * torch.tensor(weights, dtype=q.dtype).reshape(-1, 1)).mean()
         if not torch.isfinite(loss):
             raise FloatingPointError('non-finite economic TD loss; optimizer was not updated')
         self.optimizer.zero_grad()
@@ -414,9 +440,23 @@ class DirectPowerDDQN:
         self.soft_update_target()
         with torch.no_grad():
             error = target - q
+            if self._priority_index is not None:
+                # Repeated PER draws are real entries; update each ID once with its unweighted TD.
+                priority_errors = {}
+                for item, absolute_error in zip(batch, error.abs().flatten().tolist()):
+                    if self._priority_index.contains(item.replay_id):
+                        priority_errors[item.replay_id] = max(priority_errors.get(item.replay_id, 0.), absolute_error)
+                for key, absolute_error in priority_errors.items():
+                    self._priority_index.update(key, absolute_error)
+            self._sampling_weight_sum += sum(weights)
+            self._sampling_weight_min = min(self._sampling_weight_min, min(weights))
+            self._sampling_weight_max = max(self._sampling_weight_max, max(weights))
+            self._sampling_repeated_draws += len(batch) - len({t.replay_id for t in batch})
             self._td_updates += 1
             self._td_samples += batch_size
             self._td_loss_sum += float(loss.item())
+            self._unweighted_loss_sum += (float(loss.item()) if self.replay_sampling == 'uniform'
+                                         else float(sample_loss.mean().item()))
             self._td_sum += float(error.sum().item())
             self._td_abs_sum += float(error.abs().sum().item())
             self._td_square_sum += float(error.square().sum().item())
@@ -548,6 +588,8 @@ class DirectPowerDDQN:
 
     def _sample_replay_batch(self, batch_size: int) -> list[ReplayItem]:
         """Draw a fixed terminal quota, falling back when either pool is short."""
+        if self.replay_sampling == 'prioritized':
+            return self._sample_replay_batch_with_weights(batch_size)[0]
         if self.failure_terminal_quota == 0:
             return self.random.sample(tuple(self.replay), batch_size)
         failure_count = min(self.failure_terminal_quota, len(self._failure_terminal_pool), batch_size)
@@ -558,6 +600,41 @@ class DirectPowerDDQN:
         self.random.shuffle(batch)
         return batch
 
+    def _item_for_replay_id(self, key: int) -> ReplayItem:
+        if key in self._ordinary_positions:
+            return self._ordinary_pool[self._ordinary_positions[key]][1]
+        return self._failure_terminal_pool[self._failure_terminal_positions[key]][1]
+
+    def _sample_replay_batch_with_weights(self, batch_size: int):
+        """PER/IS over the ordinary pool, retaining the original fixed failure quota.
+
+        Conditional IS restores the old quota objective, not uniform replay over
+        both classes. A SINGLE pool-level normalizer scales both classes equally.
+        Ordinary PER draws are with replacement; quota draws remain without it.
+        """
+        if self.replay_sampling == 'uniform':
+            batch = self._sample_replay_batch(batch_size)
+            return batch, [1.] * batch_size, [None] * batch_size
+        if batch_size < 1 or batch_size > len(self.replay):
+            raise ValueError('batch size must fit live replay')
+        if self.failure_terminal_quota == 0:
+            ids, probabilities = self._priority_index.sample(self.random, batch_size)
+            weights = self._priority_index.importance_weights(probabilities, self.per_beta)
+            return [self._item_for_replay_id(key) for key in ids], list(weights), list(probabilities)
+        failure_count = min(self.failure_terminal_quota, len(self._failure_terminal_pool), batch_size)
+        failure_count = max(failure_count, batch_size - len(self._ordinary_pool))
+        ordinary_count = batch_size - failure_count
+        normalizer = self._priority_index.importance_normalizer(self.per_beta) if ordinary_count else 1.
+        entries = [(item, 1. / normalizer, 1. / len(self._failure_terminal_pool))
+                   for _, item in self.random.sample(self._failure_terminal_pool, failure_count)]
+        if ordinary_count:
+            ids, probabilities = self._priority_index.sample(self.random, ordinary_count)
+            weights = self._priority_index.importance_weights(probabilities, self.per_beta)
+            entries.extend((self._item_for_replay_id(key), weight, probability)
+                           for key, weight, probability in zip(ids, weights, probabilities))
+        self.random.shuffle(entries)
+        return ([t for t, _, _ in entries], [w for _, w, _ in entries], [p for _, _, p in entries])
+
     def reset_td_statistics(self) -> None:
         """Reset diagnostic accumulators, without changing training state."""
         self._td_updates = self._td_samples = 0
@@ -567,6 +644,10 @@ class DirectPowerDDQN:
         self._reset_extended_statistics()
 
     def _reset_extended_statistics(self) -> None:
+        self._sampling_weight_sum = self._sampling_weight_max = 0.
+        self._unweighted_loss_sum = 0.
+        self._sampling_weight_min = math.inf
+        self._sampling_repeated_draws = 0
         self._gradient_norm_sum = self._gradient_norm_max = 0.0
         self._gradient_clipped_updates = 0
         self._sample_success = self._sample_failure = self._sample_unresolved = 0
@@ -618,9 +699,27 @@ class DirectPowerDDQN:
                        'root_mean_square_td_error', 'max_absolute_td_error')
         result.update({
             'reward_scale': self.reward_scale,
+            'replay_sampling': {
+                'mode': self.replay_sampling, 'alpha': self.per_alpha, 'beta': self.per_beta,
+                'epsilon': self.per_epsilon, 'draw_count': n,
+                'priority_pool_size': len(self._priority_index) if self._priority_index is not None else None,
+                'priority_pool': 'all replay' if self.failure_terminal_quota == 0 else 'non-failure-terminal replay',
+                'importance_reference': ('all-pool uniform objective' if self.failure_terminal_quota == 0
+                    else 'existing fixed failure-quota objective; not all-pool uniform'),
+                'mean_importance_weight': self._sampling_weight_sum / n if n else None,
+                'mean_unweighted_smooth_l1_loss': self._unweighted_loss_sum / self._td_updates
+                    if self._td_updates else None,
+                'min_importance_weight': self._sampling_weight_min if n else None,
+                'max_importance_weight': self._sampling_weight_max if n else None,
+                'within_batch_repeat_draws': self._sampling_repeated_draws,
+                'ordinary_with_replacement': self.replay_sampling == 'prioritized',
+                'td_error_statistics_are_unweighted': True,
+            },
             'reward_units': 'reward_scale * original CNY-equivalent training reward; not actual expenditure',
             'original_reward_units': 'original CNY-equivalent training reward; shaping/failure are not expenditure',
-            'loss_units': 'native Smooth L1 beta=1 in scaled training units; not an unscaled loss divided by alpha',
+            'loss_units': ('per-sample IS-weighted Smooth L1 beta=1 in scaled training units'
+                if self.replay_sampling == 'prioritized' else
+                'native Smooth L1 beta=1 in scaled training units; not an unscaled loss divided by alpha'),
             'original_units': self._original_units({key: result[key] for key in error_names}),
             'q_distribution': self._distribution_statistics('q'),
             'target_distribution': self._distribution_statistics('target'),
@@ -679,11 +778,15 @@ class DirectPowerDDQN:
     def training_state(self) -> dict:
         """All optimizer, replay, network and RNG state needed at a round boundary."""
         return {
-            'format_version': ECONOMIC_REPLAY_FORMAT_VERSION,
+            # Old loaders must reject a PER checkpoint instead of silently dropping priorities.
+            'format_version': (PRIORITIZED_REPLAY_FORMAT_VERSION if self.replay_sampling == 'prioritized'
+                               else ECONOMIC_REPLAY_FORMAT_VERSION),
             'online': self.online.state_dict(), 'target': self.target.state_dict(),
             'optimizer': self.optimizer.state_dict(),
             'replay': tuple(self.replay), 'replay_ids': tuple(self._replay_ids),
             'next_replay_id': self._next_replay_id,
+            'sampling_config': self._sampling_config(),
+            'priority_index': self._priority_index.state_dict() if self._priority_index is not None else None,
             'failure_pool_ids': tuple(key for key, _ in self._failure_terminal_pool),
             'ordinary_pool_ids': tuple(key for key, _ in self._ordinary_pool),
             'random_state': self.random.getstate(),
@@ -700,10 +803,27 @@ class DirectPowerDDQN:
         }
 
     def load_training_state(self, state: dict) -> None:
-        if state.get('format_version') != ECONOMIC_REPLAY_FORMAT_VERSION:
-            raise ValueError('economic replay checkpoint format is incompatible; start a new run')
+        expected_version = (PRIORITIZED_REPLAY_FORMAT_VERSION if self.replay_sampling == 'prioritized'
+                            else ECONOMIC_REPLAY_FORMAT_VERSION)
+        if state.get('format_version') != expected_version:
+            raise ValueError('economic replay checkpoint format/sampling is incompatible; start a new run')
         if len(state['replay']) > self.replay.maxlen:
             raise ValueError('checkpoint replay exceeds configured capacity')
+        # Fail before overwriting parameters if the sampler or priority state is incompatible.
+        saved_sampling = state.get('sampling_config', {
+            'mode': 'uniform', 'alpha': .6, 'beta': 1., 'epsilon': 1e-6,
+            'failure_terminal_quota': self.failure_terminal_quota})
+        if saved_sampling != self._sampling_config():
+            raise ValueError('checkpoint replay sampling configuration mismatch; start a new run')
+        if self._priority_index is not None:
+            if not isinstance(state.get('priority_index'), dict):
+                raise ValueError('checkpoint priority state is missing')
+            restored = PriorityIndex(self.replay.maxlen, alpha=self.per_alpha, epsilon=self.per_epsilon)
+            restored.load_state_dict(state['priority_index'])
+            eligible = state['replay_ids'] if self.failure_terminal_quota == 0 else state['ordinary_pool_ids']
+            if set(key for key, _ in restored.state_dict()['entries']) != set(eligible):
+                raise ValueError('checkpoint priority entries do not match live replay')
+            self._priority_index = restored
         self.online.load_state_dict(state['online'], strict=True)
         self.target.load_state_dict(state['target'], strict=True)
         self.optimizer.load_state_dict(state['optimizer'])
@@ -731,3 +851,7 @@ class DirectPowerDDQN:
             setattr(self, name, value)
         self.random.setstate(state['random_state'])
         torch.random.set_rng_state(state['torch_rng_state'])
+
+    def _sampling_config(self) -> dict:
+        return {'mode': self.replay_sampling, 'alpha': self.per_alpha, 'beta': self.per_beta,
+                'epsilon': self.per_epsilon, 'failure_terminal_quota': self.failure_terminal_quota}
