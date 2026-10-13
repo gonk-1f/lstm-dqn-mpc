@@ -230,7 +230,7 @@ def feasible_fc_actions(
             physical.soc, battery_kw, 30.0, plant.battery_nominal_energy_kwh,
             efficiency=accountant.efficiency,
         )
-        if SOC_MIN - 1e-9 <= soc <= SOC_MAX + 1e-9:
+        if SOC_MIN <= soc <= SOC_MAX:
             feasible.append(fc_kw)
     return tuple(feasible)
 

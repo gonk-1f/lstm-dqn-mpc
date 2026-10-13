@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import math
 import csv
+import hashlib
+import re
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from dataclasses import asdict
 from pathlib import Path
@@ -48,6 +50,7 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
     random_state = agent.random.getstate()
     torch_state = torch.random.get_rng_state()
     failed_transitions = []
+    failed_sample_lengths = []
     failure_profiles = []
     failure_events = []
     reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
@@ -68,6 +71,7 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             transitions=preview.transitions
             event_only_count+=int(preview.event_only)
         failed_transitions.extend(transitions)
+        failed_sample_lengths.append(len(transitions))
         if decision_diagnostic_sink is not None and exc.sample_id in DIAGNOSTIC_SAMPLE_IDS:
             decision_diagnostic_sink(exc.sample_id, transitions, failed=True)
         profile=trajectory_record(
@@ -90,7 +94,8 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             _summarize(results, len(episodes), failures, failed_transitions),
             episodes, results, failure_events)
         summary.update(executed_transition_statistics(
-            (*[t for result in results for t in result.transitions], *failed_transitions)))
+            (*[t for result in results for t in result.transitions], *failed_transitions),
+            sample_transition_counts=(*[len(result.transitions) for result in results], *failed_sample_lengths)))
         summary.update(failure_reason_counts=reason_counts,event_only_failures=event_only_count)
         if trajectory_path is not None:
             _write_json(trajectory_path, {
@@ -210,6 +215,55 @@ class _ConsoleLog:
         return getattr(self.stream, name)
 
 
+def validate_experiment_identity(seed: int, experiment_id: str | None) -> None:
+    if type(seed) is not int or not 0 <= seed < 2**32:
+        raise ValueError('seed must be an integer in [0, 2**32)')
+    if experiment_id is not None and (not isinstance(experiment_id, str)
+            or not experiment_id.strip() or len(experiment_id) > 128
+            or any(character in experiment_id for character in '\r\n')):
+        raise ValueError('experiment-id must be a nonempty single line of at most 128 characters')
+
+
+def _source_tree_sha256(source_root: Path) -> str:
+    """Catch uncommitted runtime-source changes; never hash dataset payloads."""
+    digest = hashlib.sha256()
+    for path in sorted((source_root/'src').rglob('*')):
+        if path.is_file() and path.suffix in ('.py', '.json'):
+            digest.update(path.relative_to(source_root).as_posix().encode('utf-8') + b'\0')
+            digest.update(path.read_bytes().replace(b'\r\n', b'\n') + b'\0')
+    return digest.hexdigest()
+
+
+def _preserve_uncommitted_diagnostics(output_dir: Path, completed_round: int) -> str | None:
+    """Keep orphan snapshots from an interrupted round without blocking replay."""
+    directory = output_dir/'diagnostic_checkpoints'
+    if not directory.exists():
+        return None
+    if not directory.is_dir() or directory.resolve().parent != output_dir.resolve():
+        raise ValueError('diagnostic directory resolves outside the run directory')
+    pending = []
+    for path in directory.iterdir():
+        match = re.fullmatch(r'round_(\d+)(?:\.pt|_decisions\.json)(?:\.tmp)?', path.name)
+        if match and int(match.group(1)) > completed_round and path.is_file():
+            if path.resolve().parent != directory.resolve():
+                raise ValueError('diagnostic artifact resolves outside the run directory')
+            pending.append(path)
+    if not pending:
+        return None
+    name = f'resume_uncommitted_diagnostics_after_round_{completed_round:03d}'
+    archive = output_dir/name
+    suffix = 1
+    while archive.exists():
+        archive = output_dir/f'{name}_{suffix}'
+        suffix += 1
+    if archive.resolve().parent != output_dir.resolve():
+        raise ValueError('diagnostic archive resolves outside the run directory')
+    archive.mkdir()
+    for path in pending:
+        path.replace(archive/path.name)
+    return archive.relative_to(output_dir).as_posix()
+
+
 def run_monitored_training(
     dataset, *, output_dir: Path, rounds: int = 100, beta_soc: float = DEFAULT_BETA_SOC,
     cadence: str = "replay32", target_mode: str = "soft", target_interval: int = 500,
@@ -226,8 +280,10 @@ def run_monitored_training(
     abort_on_execution_error: bool = False, capture_log: bool = False,
     diagnostic_rounds: tuple[int, ...] = (),
     resume_from: Path | None = None,
+    experiment_id: str | None = None,
 ):
     """Run or resume only at an atomically saved, complete round boundary."""
+    validate_experiment_identity(seed, experiment_id)
     if not math.isfinite(reward_scale) or reward_scale <= 0:
         raise ValueError('reward_scale must be finite and positive')
     if type(failure_terminal_quota) is not int or failure_terminal_quota < 0:
@@ -288,6 +344,7 @@ def run_monitored_training(
     }
     metadata = {
         'source_commit':source_commit,'source_worktree_dirty':dirty,
+        'source_tree_sha256':_source_tree_sha256(source_root), 'experiment_id':experiment_id,
         'hyperparameters':parameters,'manifest_sha256':dict(manifest_sha256 or {}),
         'dataset_roots':list(dataset_roots or ()),
         'reward_units':{'economic_q':'scaled_reward_equivalent_cny',
@@ -305,6 +362,7 @@ def run_monitored_training(
             'checkpoint_purpose':'diagnostic_only',
         },
     }
+    preserved_diagnostics = []
     if resume_state is None:
         _write_json(output_dir/'run_metadata.json',metadata)
         initial = metadata | {'completed_training':False,'run_status':'starting','rounds':[],
@@ -313,13 +371,19 @@ def run_monitored_training(
     else:
         saved = resume_state['metadata']
         if (saved['source_commit'] != source_commit or saved['hyperparameters'] != parameters
+                or saved.get('source_tree_sha256') != metadata['source_tree_sha256']
+                or saved.get('experiment_id') != experiment_id
                 or saved['manifest_sha256'] != metadata['manifest_sha256']
                 or saved['dataset_roots'] != metadata['dataset_roots']
                 or saved['dataset_class'] != metadata['dataset_class']
                 or saved['diagnostic_configuration'] != metadata['diagnostic_configuration']
                 or json.loads((output_dir/'run_metadata.json').read_text(encoding='utf-8')) != saved):
-            raise ValueError('resume source, architecture, hyperparameters or data manifest mismatch')
+            raise ValueError('resume source, architecture, hyperparameters, experiment identity or data manifest mismatch')
         metadata = saved
+        preserved_diagnostics = list(resume_state['report'].get('resume_preserved_uncommitted_diagnostics', ()))
+        archive = _preserve_uncommitted_diagnostics(output_dir, resume_state['completed_round'])
+        if archive is not None:
+            preserved_diagnostics.append(archive)
         best_path = output_dir/'best_agent.pt'
         committed_best = resume_state.get('best_checkpoint_bytes')
         if committed_best is not None and (not best_path.exists() or best_path.read_bytes() != committed_best):
@@ -343,7 +407,8 @@ def run_monitored_training(
             archive.mkdir()
             for path in existing:
                 path.replace(archive/path.name)
-    runtime = {'phase':'initialization','round':None,'episode':None}
+    runtime = {'phase':'initialization','round':None,'episode':None,
+               'resume_preserved_uncommitted_diagnostics':preserved_diagnostics}
     with ExitStack() as stack:
         if capture_log:
             log = stack.enter_context((output_dir/'train.log').open('a' if resume_state else 'x',encoding='utf-8'))
@@ -431,6 +496,7 @@ def _run_monitored_training(
     failure_penalty=FailurePenalty.from_reference(scale=failure_penalty_scale)
     selector = BestCheckpoint()
     bootstrap_failed = []
+    bootstrap_failed_sample_lengths = []
     bootstrap_prefix = 0
     bootstrap_completed_voyages = 0
     bootstrap_unknown_discarded = 0
@@ -474,6 +540,7 @@ def _run_monitored_training(
         bootstrap_reason_counts[cause]+=1
         view=failure_view(exc)
         bootstrap_failed.extend(view.transitions if view else exc.executed_transitions)
+        bootstrap_failed_sample_lengths.append(len(view.transitions if view else exc.executed_transitions))
         if exc.failure_kind == 'no_feasible_action' and (
                 not exc.executed_transitions or exc.executed_transitions[-1].done):
             no_suffix_failure_events += 1
@@ -532,7 +599,8 @@ def _run_monitored_training(
             _summarize(bootstrap, len(train), bootstrap_errors, bootstrap_failed),
             train, bootstrap, bootstrap_events)
         bootstrap_summary.update(executed_transition_statistics(
-            (*[t for result in bootstrap for t in result.transitions], *bootstrap_failed)))
+            (*[t for result in bootstrap for t in result.transitions], *bootstrap_failed),
+            sample_transition_counts=(*[len(result.transitions) for result in bootstrap], *bootstrap_failed_sample_lengths)))
         bootstrap_summary['failure_reason_counts']=bootstrap_reason_counts
         bootstrap_summary['unknown_discarded_economic_q_transitions'] = bootstrap_unknown_discarded
         bootstrap_summary['unknown_retained_economic_q_transitions'] = bootstrap_unknown_retained
@@ -583,6 +651,7 @@ def _run_monitored_training(
     def snapshot_report(completed_training=False):
         return run_metadata | {
             "completed_training": completed_training, "source_commit": source_commit,
+            'resume_preserved_uncommitted_diagnostics':runtime['resume_preserved_uncommitted_diagnostics'],
             'run_status':'completed' if completed_training else 'running',
             'source_worktree_dirty': source_worktree_dirty,
             "hyperparameters": hyperparameters, "bootstrap": bootstrap_summary,
@@ -637,6 +706,7 @@ def _run_monitored_training(
         epsilon = epsilon_start + (epsilon_end-epsilon_start)*min(round_index-1, 69)/69
         print(f"round {round_index}/{rounds} start epsilon={epsilon:.4f}",flush=True)
         results, failures, failed_transitions, losses = [], [], [], []
+        failed_sample_lengths = []
         failure_profiles = []
         training_events = []
         reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
@@ -678,6 +748,7 @@ def _run_monitored_training(
                 view=failure_view(exc)
                 transitions=view.transitions if view else exc.executed_transitions
                 failed_transitions.extend(transitions)
+                failed_sample_lengths.append(len(transitions))
                 profile=trajectory_record(episode.sample_id,transitions,completed=False,failure=str(exc),
                     reward_scale=reward_scale)
                 profile.update(failure_cause=cause,failed_observed_state=exc.failed_state,
@@ -730,7 +801,8 @@ def _run_monitored_training(
             _summarize(results,len(train),failures,failed_transitions),
             train, results, training_events)
         explore.update(executed_transition_statistics(
-            (*[t for result in results for t in result.transitions], *failed_transitions)))
+            (*[t for result in results for t in result.transitions], *failed_transitions),
+            sample_transition_counts=(*[len(result.transitions) for result in results], *failed_sample_lengths)))
         explore['failure_reason_counts']=reason_counts
         explore['unknown_discarded_economic_q_transitions'] = unknown_discarded_round
         explore['unknown_retained_economic_q_transitions'] = unknown_retained_round
@@ -821,6 +893,8 @@ def _run_monitored_training(
                 "model_state":{key:value.detach().cpu().clone() for key,value in agent.online.state_dict().items()},
                 "hyperparameters":hyperparameters,"selection":best_record,
                 "source_commit":source_commit,"test_payloads_opened":0,
+                'source_tree_sha256':run_metadata['source_tree_sha256'],
+                'experiment_id':run_metadata['experiment_id'],
                 'source_worktree_dirty':source_worktree_dirty,'reward_scale':reward_scale,
                 'reward_units':run_metadata['reward_units'],
                 'manifest_sha256':run_metadata['manifest_sha256'],

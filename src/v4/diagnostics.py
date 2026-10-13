@@ -76,19 +76,54 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None, reward
             'scaled_training_reward_total': fsum(item.reward_cny * scale for item in transitions)}
 
 
-def executed_transition_statistics(transitions) -> dict:
+def _fc_change_statistics(change) -> dict:
+    n = len(change)
+    absolute = tuple(abs(value) for value in change)
+    return {
+        'sample_count': n,
+        'mean_signed': fsum(change)/n if n else None,
+        'mean_absolute': fsum(absolute)/n if n else None,
+        'root_mean_square': sqrt(fsum(value*value for value in change)/n) if n else None,
+        'max_absolute': max(absolute, default=None),
+        'nonzero_fraction': sum(value != 0 for value in change)/n if n else None,
+        'strict_exceedance_counts': {
+            str(threshold): sum(value > threshold for value in absolute)
+            for threshold in (100, 200, 300)},
+    }
+
+
+def executed_transition_statistics(transitions, *, sample_transition_counts=None) -> dict:
     """Executed ONBOARD summaries, including failures, without crossing SHORE.
 
     Each FC change compares with that action's observed prior FC state. Reset
     states therefore count an actual departure transition from zero correctly.
     No automatic SHORE shutdown or modeled recharge control point is fabricated.
+    Explicit sample lengths are required for boundary groups; independent failed
+    prefixes may be nonterminal and cannot be distinguished by adjacency alone.
     """
     values = tuple(transitions)
     power = [item.action_kw for item in values]
     raw_change = [item.action_kw-item.state[1]*ACTION_KW[-1] for item in values]
-    # Undo only machine roundoff from normalized FC state, in diagnostic kW.
-    change = [0.0 if abs(value) <= 1e-9 else value for value in raw_change]
+    # Undo machine roundoff from normalized FC state before strict threshold
+    # comparisons, in diagnostic kW only; FC actions are on the 10 kW grid.
+    change = [0.0 if abs(value) <= 1e-9 else round(value, 9) for value in raw_change]
     n = len(values)
+    groups = None
+    if sample_transition_counts is not None:
+        counts = tuple(sample_transition_counts)
+        if any(type(count) is not int or count < 0 for count in counts) or sum(counts) != n:
+            raise ValueError('sample_transition_counts must be nonnegative integer lengths summing to executed steps')
+        grouped_change = {name: [] for name in ('sample_initial', 'shore_departure', 'continuous_onboard')}
+        offset = 0
+        for count in counts:
+            for index in range(offset, offset + count):
+                previous = values[index-1] if index > offset else None
+                group = ('sample_initial' if previous is None or previous.done else
+                         'shore_departure' if previous.shore_ledger is not None else
+                         'continuous_onboard')
+                grouped_change[group].append(change[index])
+            offset += count
+        groups = {name: _fc_change_statistics(changes) for name, changes in grouped_change.items()}
     return {
         'onboard_soc_max_including_failed_prefix': max((item.actual_soc for item in values),default=None),
         'fc_power_statistics_kw': {
@@ -99,11 +134,13 @@ def executed_transition_statistics(transitions) -> dict:
             'scope': 'All executed ONBOARD actions including failed prefixes; no SHORE steps',
         },
         'fc_change_statistics_kw': {
-            'mean_signed': fsum(change)/n if n else None,
-            'mean_absolute': fsum(abs(item) for item in change)/n if n else None,
-            'root_mean_square': sqrt(fsum(item*item for item in change)/n) if n else None,
-            'max_absolute': max((abs(item) for item in change),default=None),
-            'nonzero_fraction': sum(item!=0 for item in change)/n if n else None,
+            **_fc_change_statistics(change),
+            'boundary_groups': groups,
+            'boundary_grouping_scope': (
+                'Explicit independent sample lengths; SHORE departure follows attached shore_ledger; '
+                'sample_initial also includes a new independently closed segment after done'
+                if groups is not None else
+                'Unavailable without sample_transition_counts; independent sample boundaries are not guessed'),
             'scope': 'Commanded FC minus current observed previous FC; reset boundaries preserved',
         },
     }

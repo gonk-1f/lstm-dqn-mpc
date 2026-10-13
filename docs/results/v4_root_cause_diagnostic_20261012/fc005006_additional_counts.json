@@ -1,0 +1,24 @@
+{
+  "zero_boundary_005": {
+    "strict_internal_jump_counts": {
+      "abs_delta_gt100_kw": 41,
+      "abs_delta_gt200_kw": 40,
+      "abs_delta_gt300_kw": 40
+    },
+    "zero_is_worst_feasible_q_steps": 304,
+    "big_jump_load_change_abs_median_kw": 10.187591303703698,
+    "big_jump_load_change_abs_lt10_steps": 19,
+    "big_jump_best_second_gap_lt001": 4
+  },
+  "zero_boundary_006": {
+    "strict_internal_jump_counts": {
+      "abs_delta_gt100_kw": 12,
+      "abs_delta_gt200_kw": 0,
+      "abs_delta_gt300_kw": 0
+    },
+    "zero_is_worst_feasible_q_steps": 346,
+    "big_jump_load_change_abs_median_kw": null,
+    "big_jump_load_change_abs_lt10_steps": 0,
+    "big_jump_best_second_gap_lt001": 0
+  }
+}

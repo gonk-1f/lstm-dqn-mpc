@@ -1,0 +1,102 @@
+[
+  {
+    "sample_id": "zero_boundary_002",
+    "completed": true,
+    "failure": null,
+    "steps": 405,
+    "minutes": 202.5,
+    "soc_min": 0.3072359920527013,
+    "soc_max": 0.6291028238959312,
+    "soc_terminal": 0.580645458528361,
+    "high_soc_fraction": 0.0,
+    "fc_zero_fraction": 0.0,
+    "fc_mean": 285.95061728395063,
+    "mean_abs_fc_delta": 75.79207920792079,
+    "max_abs_fc_delta": 500,
+    "jumps_above_300": 52,
+    "economic_components": {
+      "h2_cost_cny": 1109.8186028761222,
+      "fuel_cell_degradation_cost_cny": 4287.105000000002,
+      "battery_degradation_cost_cny": 141.0171787814433,
+      "shore_cost_cny": 13.984165543297916
+    },
+    "economic_prefix_cost": 5551.924947200866,
+    "terminal_settlement_cost": 17.739825977434766,
+    "soc_penalty_equivalent": 1535.3777888298985
+  },
+  {
+    "sample_id": "zero_boundary_006",
+    "completed": true,
+    "failure": null,
+    "steps": 351,
+    "minutes": 175.5,
+    "soc_min": 0.6008880876068375,
+    "soc_max": 0.7999986502236773,
+    "soc_terminal": 0.7991717033800603,
+    "high_soc_fraction": 0.6638176638176638,
+    "fc_zero_fraction": 0.008547008547008548,
+    "fc_mean": 171.16809116809117,
+    "mean_abs_fc_delta": 21.62857142857143,
+    "max_abs_fc_delta": 320,
+    "jumps_above_300": 1,
+    "economic_components": {
+      "h2_cost_cny": 552.0671946311659,
+      "fuel_cell_degradation_cost_cny": 2002.0050000000035,
+      "battery_degradation_cost_cny": 34.43790466091822,
+      "shore_cost_cny": 0.0
+    },
+    "economic_prefix_cost": 2588.5100992920875,
+    "terminal_settlement_cost": 0.0,
+    "soc_penalty_equivalent": 2103.175553692212
+  },
+  {
+    "sample_id": "zero_boundary_015",
+    "completed": false,
+    "failure": "row 134 (onboard): no feasible FC action for actual battery power and SOC bounds",
+    "steps": 134,
+    "minutes": 67.0,
+    "soc_min": 0.20035976401579897,
+    "soc_max": 0.6372390108094825,
+    "soc_terminal": 0.20035976401579897,
+    "high_soc_fraction": 0.0,
+    "fc_zero_fraction": 0.0,
+    "fc_mean": 235.37313432835822,
+    "mean_abs_fc_delta": 44.58646616541353,
+    "max_abs_fc_delta": 450,
+    "jumps_above_300": 6,
+    "economic_components": {
+      "h2_cost_cny": 294.89674278407574,
+      "fuel_cell_degradation_cost_cny": 1192.263749999999,
+      "battery_degradation_cost_cny": 141.4791845691241,
+      "shore_cost_cny": 0.0
+    },
+    "economic_prefix_cost": 1628.6396773531987,
+    "terminal_settlement_cost": 0.0,
+    "soc_penalty_equivalent": 366.8561799490517
+  },
+  {
+    "sample_id": "zero_boundary_036",
+    "completed": false,
+    "failure": "row 85 (onboard): no feasible FC action for actual battery power and SOC bounds",
+    "steps": 85,
+    "minutes": 42.5,
+    "soc_min": 0.2025307360685836,
+    "soc_max": 0.6464899546297196,
+    "soc_terminal": 0.2025307360685836,
+    "high_soc_fraction": 0.0,
+    "fc_zero_fraction": 0.0,
+    "fc_mean": 174.94117647058823,
+    "mean_abs_fc_delta": 19.642857142857142,
+    "max_abs_fc_delta": 490,
+    "jumps_above_300": 2,
+    "economic_components": {
+      "h2_cost_cny": 136.91218092794637,
+      "fuel_cell_degradation_cost_cny": 657.5137499999997,
+      "battery_degradation_cost_cny": 125.255321986611,
+      "shore_cost_cny": 0.0
+    },
+    "economic_prefix_cost": 919.681252914557,
+    "terminal_settlement_cost": 0.0,
+    "soc_penalty_equivalent": 352.21153797858517
+  }
+]

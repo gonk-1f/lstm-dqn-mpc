@@ -9,7 +9,7 @@ from typing import Sequence
 
 from v2.data.formal_training_dataset import FormalTrainingDataset
 from .control import DEFAULT_BETA_SOC
-from .monitored_training import _write_json, run_monitored_training
+from .monitored_training import _write_json, run_monitored_training, validate_experiment_identity
 from .review import _manifest_hashes
 from .train import _default_data_root
 from .experiment_paths import unarchived_output_path
@@ -24,6 +24,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument('--output-dir',type=Path,required=True)
     parser.add_argument('--resume-from',type=Path,default=None)
     parser.add_argument('--rounds',type=int,default=100)
+    parser.add_argument('--seed',type=int,default=42,
+                        help='paired runs use the same seed; subsequent repeats may use43 and44')
+    parser.add_argument('--experiment-id',default=None,
+                        help='report/checkpoint identifier only; does not change learning')
     parser.add_argument('--beta-soc',type=float,default=DEFAULT_BETA_SOC,
                         help='fixed-reference SOC auxiliary reward coefficient; not an economic expense')
     parser.add_argument('--reward-feedback',choices=('original','redistributed'),default='original')
@@ -43,6 +47,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument('--diagnostic-rounds',default='',
                         help='comma-separated read-only network/actual-Train-Q snapshots, e.g. 1,10,20,30,40')
     args = parser.parse_args(argv)
+    try:
+        validate_experiment_identity(args.seed, args.experiment_id)
+    except ValueError as exc:
+        parser.error(str(exc))
     if (args.rounds != 100 or args.beta_soc != DEFAULT_BETA_SOC or args.reward_feedback != 'original'
             or args.reward_scale != .001 or args.failure_terminal_quota != 2
             or args.cadence != 'replay32' or args.n_step != 8
@@ -65,13 +73,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     dataset = FormalTrainingDataset.open(*roots)
     _, report = run_monitored_training(dataset,output_dir=output,rounds=args.rounds,
         beta_soc=args.beta_soc,cadence=args.cadence,target_mode='soft',
-        target_interval=500,seed=42,batch_size=64,epsilon_start=1.,epsilon_end=.05,
+        target_interval=500,seed=args.seed,batch_size=64,epsilon_start=1.,epsilon_end=.05,
         redistribute_battery_energy=False,
         episode_credit_scope=args.episode_credit_scope,n_step=args.n_step,
         required_split_sizes=(30,8),capture_trajectories=True,progress_every_steps=50,
         learn_no_feasible_failures=True,failure_penalty_scale=args.failure_penalty_scale,
         reward_scale=args.reward_scale,failure_terminal_quota=args.failure_terminal_quota,
         unknown_replay_mode=args.unknown_replay_mode,
+        experiment_id=args.experiment_id,
         manifest_sha256=before,
         dataset_roots=tuple(str(root.resolve()) for root in roots),
         abort_on_execution_error=True,capture_log=True,

@@ -4,7 +4,7 @@ import pytest
 
 from v2.economics import ShoreEnergyClassification
 from v3.control import AccountState, EconomicMPC
-from v4.control import ACTION_KW, ReplayExecutionError, build_state, replay_episode, soc_deviation_squared
+from v4.control import ACTION_KW, ReplayExecutionError, build_state, feasible_fc_actions, replay_episode, soc_deviation_squared
 
 
 def episode(modes, loads, shore):
@@ -21,6 +21,37 @@ class NoSolveAccountant(EconomicMPC):
 
     def solve(self, *args, **kwargs):
         raise AssertionError("direct power control must not solve MPC")
+
+
+@pytest.mark.parametrize('bound,load_kw,fc_kw,direction', (
+    (0.8, 90.0, 100, 1.0),
+    (0.2, 10.0, 0, -1.0),
+))
+def test_physical_mask_rejects_subnanoscopic_soc_bound_violation(bound, load_kw, fc_kw, direction):
+    accountant = NoSolveAccountant()
+    reference, _, _ = accountant.interval(AccountState(soc=0.5), fc_kw, load_kw)
+    initial = AccountState(soc=bound - (reference.soc - 0.5) + direction * 5e-10)
+    predicted, _, _ = accountant.interval(initial, fc_kw, load_kw)
+    assert 0.0 < direction * (predicted.soc - bound) < 1e-9
+    feasible = feasible_fc_actions(initial, load_kw, accountant)
+    assert fc_kw not in feasible
+    assert feasible
+    for action in feasible:
+        executed, _, _ = accountant.interval(initial, action, load_kw)
+        assert 0.2 <= executed.soc <= 0.8
+
+
+@pytest.mark.parametrize('bound,load_kw,fc_kw,direction', (
+    (0.8, 90.0, 100, 1.0),
+    (0.2, 10.0, 0, -1.0),
+))
+def test_physical_mask_preserves_actions_strictly_inside_soc_bounds(bound, load_kw, fc_kw, direction):
+    accountant = NoSolveAccountant()
+    reference, _, _ = accountant.interval(AccountState(soc=0.5), fc_kw, load_kw)
+    initial = AccountState(soc=bound - (reference.soc - 0.5) - direction * 5e-10)
+    predicted, _, _ = accountant.interval(initial, fc_kw, load_kw)
+    assert 0.2 <= predicted.soc <= 0.8
+    assert fc_kw in feasible_fc_actions(initial, load_kw, accountant)
 
 
 def test_action_grid_and_causal_seven_feature_state():

@@ -1,0 +1,27 @@
+{
+  "merge_tolerance_0_and_1e14_identical": true,
+  "direct_formula_vs_formal_next_soc_threshold_max_abs_diff": 2.220446049250313e-16,
+  "interval_union_max_components": 1,
+  "terminal_soc_set": [
+    0.2,
+    0.8
+  ],
+  "source_row19": {
+    "actual_soc": 0.6302017037405188,
+    "viable_soc_interval": [
+      0.6278531753435157,
+      0.8
+    ]
+  },
+  "source_row20": {
+    "actual_soc": 0.632395102258147,
+    "viable_soc_interval": [
+      0.6346138815534516,
+      0.8
+    ],
+    "shortfall_soc": 0.0022187792953045626
+  },
+  "policies_executed_total": 3,
+  "additional_environment_strategies": 0,
+  "test_payloads_opened": 0
+}

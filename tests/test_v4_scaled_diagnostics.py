@@ -80,6 +80,65 @@ def test_fc_change_statistics_do_not_count_state_normalization_roundoff_as_chang
     assert change['max_absolute']==0
 
 
+def test_fc_change_strict_threshold_counts_ignore_normalization_roundoff():
+    from v4.diagnostics import executed_transition_statistics
+    values = tuple(transition(fc=power, prior_fc=prior) for power, prior in (
+        (100, 0), (200, 0), (300, 0), (110, 0), (210, 0), (310, 0),
+        (320, 220), (420, 220), (520, 220)))
+    change = executed_transition_statistics(values)['fc_change_statistics_kw']
+    assert change['strict_exceedance_counts'] == {'100': 7, '200': 4, '300': 1}
+    assert change['sample_count'] == 9
+    assert change['mean_absolute'] == pytest.approx(1830 / 9)
+    assert change['max_absolute'] == 310
+    assert change['boundary_groups'] is None
+
+
+def test_fc_change_boundary_groups_use_sample_boundaries_and_attached_shore_ledger():
+    from v4.diagnostics import executed_transition_statistics
+    values = [transition(fc=600, prior_fc=0), transition(fc=500, prior_fc=600),
+              transition(fc=100, prior_fc=0),
+              transition(fc=300, prior_fc=100, done=True, reason='failure_soc_limited'),
+              transition(fc=100, prior_fc=80)]
+    values[1].shore_ledger = values[1].original_economic_ledger
+    before = deepcopy(values)
+    change = executed_transition_statistics(
+        iter(values), sample_transition_counts=(0, 4, 1, 0))['fc_change_statistics_kw']
+    assert change['sample_count'] == 5
+    assert change['mean_absolute'] == pytest.approx(1020 / 5)
+    groups = change['boundary_groups']
+    assert set(groups) == {'sample_initial', 'shore_departure', 'continuous_onboard'}
+    assert groups['sample_initial']['sample_count'] == 2
+    assert groups['sample_initial']['mean_absolute'] == 310
+    assert groups['sample_initial']['max_absolute'] == 600
+    assert groups['shore_departure']['sample_count'] == 1
+    assert groups['shore_departure']['mean_absolute'] == 100
+    continuous = groups['continuous_onboard']
+    assert continuous['sample_count'] == 2
+    assert continuous['mean_absolute'] == 150
+    assert continuous['strict_exceedance_counts'] == {'100': 1, '200': 0, '300': 0}
+    assert values == before
+
+
+def test_fc_change_does_not_join_independent_nonterminal_prefix_after_shore():
+    from v4.diagnostics import executed_transition_statistics
+    first = transition(fc=600, prior_fc=0)
+    first.shore_ledger = first.original_economic_ledger
+    second = transition(fc=100, prior_fc=0)
+    change = executed_transition_statistics(
+        (first, second), sample_transition_counts=(1, 1))['fc_change_statistics_kw']
+    assert change['mean_absolute'] == 350
+    assert change['boundary_groups']['sample_initial']['sample_count'] == 2
+    assert change['boundary_groups']['shore_departure']['sample_count'] == 0
+    assert change['boundary_groups']['continuous_onboard']['sample_count'] == 0
+
+
+@pytest.mark.parametrize('counts', [(1,), (3,), (2, -1), (True, 1), (1.0, 1)])
+def test_fc_change_boundary_groups_reject_invalid_sample_lengths(counts):
+    from v4.diagnostics import executed_transition_statistics
+    with pytest.raises(ValueError, match='sample_transition_counts'):
+        executed_transition_statistics((transition(), transition()), sample_transition_counts=counts)
+
+
 def test_fixed_q_probe_converts_units_without_sampling_or_mutating_training_state():
     import torch
     from v3.control import EconomicMPC

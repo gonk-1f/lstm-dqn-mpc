@@ -326,3 +326,59 @@ def test_replay_diagnostics_record_actual_categories_without_changing_updates_or
     assert restored.td_statistics()['watched_replay_targets'] == stats['watched_replay_targets']
     with pytest.raises(ValueError, match='format'):
         restored.load_training_state({'format_version': 1})
+
+
+@pytest.mark.parametrize('enabled', [True, False])
+def test_unique_replay_id_coverage_counts_optimizer_draws_and_evicted_available_ids(enabled):
+    agent = DirectPowerDDQN(seed=17, replay_capacity=3, replay_diagnostics=enabled)
+    state = (.6,) + (0.,) * 6
+    empty = agent.td_statistics()['replay_coverage']['unique_replay_ids_since_reset']
+    if enabled:
+        assert empty['sampled_count'] == empty['denominator'] == 0
+        assert empty['coverage_rate'] is None
+    else:
+        assert empty is None
+    for _ in range(3):
+        agent.remember(state, 100, -1., state, done=True, next_feasible_actions=())
+    agent.reset_td_statistics()
+    initial_rng = agent.random.getstate()
+    assert agent.learn(batch_size=4) is None
+    agent._sample_replay_batch(1)
+    agent.random.setstate(initial_rng)
+    if enabled:
+        assert agent.td_statistics()['replay_coverage']['unique_replay_ids_since_reset']['sampled_count'] == 0
+    assert agent.learn(batch_size=1) is not None
+    agent.random.setstate(initial_rng)
+    assert agent.learn(batch_size=1) is not None
+    coverage = agent.td_statistics()['replay_coverage']['unique_replay_ids_since_reset']
+    if enabled:
+        assert coverage['sampled_count'] == 1
+        assert coverage['initial_pool_size'] == coverage['denominator'] == 3
+        assert coverage['insertions_since_reset'] == 0
+        assert coverage['coverage_rate'] == pytest.approx(1 / 3)
+    else:
+        assert coverage is None
+    for _ in range(3):
+        agent.remember(state, 100, -1., state, done=True, next_feasible_actions=())
+    assert agent.learn(batch_size=3) is not None
+    stats = agent.td_statistics()
+    coverage = stats['replay_coverage']['unique_replay_ids_since_reset']
+    assert stats['sample_count'] == 5
+    if enabled:
+        assert coverage['sampled_count'] == 4
+        assert coverage['initial_pool_size'] == coverage['insertions_since_reset'] == 3
+        assert coverage['denominator'] == 6
+        assert coverage['coverage_rate'] == pytest.approx(4 / 6)
+        assert 'evicted' in coverage['denominator_definition']
+    else:
+        assert coverage is None
+    restored = DirectPowerDDQN(seed=999, replay_capacity=3)
+    restored.load_training_state(agent.training_state())
+    restored.reset_td_statistics()
+    restored_coverage = restored.td_statistics()['replay_coverage']['unique_replay_ids_since_reset']
+    if enabled:
+        assert restored_coverage['sampled_count'] == restored_coverage['insertions_since_reset'] == 0
+        assert restored_coverage['denominator'] == 3
+        assert restored_coverage['coverage_rate'] == 0
+    else:
+        assert restored_coverage is None

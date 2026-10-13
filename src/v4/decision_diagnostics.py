@@ -109,6 +109,8 @@ def save_diagnostic_snapshot(
         "target_state": {key: value.detach().cpu().clone()
                          for key, value in agent.target.state_dict().items()},
         "source_commit": run_metadata["source_commit"],
+        "source_tree_sha256": run_metadata.get("source_tree_sha256"),
+        "experiment_id": run_metadata.get("experiment_id"),
         "source_worktree_dirty": run_metadata["source_worktree_dirty"],
         "hyperparameters": run_metadata["hyperparameters"],
         "manifest_sha256": run_metadata["manifest_sha256"],
@@ -125,6 +127,8 @@ def save_diagnostic_snapshot(
     decision_payload = {
         "purpose": "diagnostic_only", "round": round_index,
         "source_commit": run_metadata["source_commit"],
+        "source_tree_sha256": run_metadata.get("source_tree_sha256"),
+        "experiment_id": run_metadata.get("experiment_id"),
         "checkpoint": checkpoint.relative_to(output_dir).as_posix(),
         "sample_ids": sorted(DIAGNOSTIC_SAMPLE_IDS),
         "max_decisions_per_sample": MAX_DECISIONS_PER_SAMPLE,

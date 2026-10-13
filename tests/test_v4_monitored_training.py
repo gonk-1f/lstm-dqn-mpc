@@ -124,7 +124,7 @@ def test_prior_replay_metadata_contract_cannot_resume_before_dataset_loading(tmp
     (tmp_path / "run_metadata.json").write_text(json.dumps(saved), encoding="utf-8")
     monkeypatch.setattr(FakeDataset, "load_train",
                         lambda self: pytest.fail("old replay contract must fail before data loading"))
-    with pytest.raises(ValueError, match="resume source, architecture, hyperparameters or data manifest mismatch"):
+    with pytest.raises(ValueError, match="resume source, architecture, hyperparameters, experiment identity or data manifest mismatch"):
         monitored_training.run_monitored_training(FakeDataset(), output_dir=tmp_path,
             rounds=1, resume_from=path)
 

@@ -52,7 +52,8 @@ def test_training_state_restores_live_fifo_quota_pools_and_rng():
 def test_complete_round_resume_restores_replay_rng_and_epsilon(tmp_path, monkeypatch):
     settings = dict(rounds=2, beta_soc=0., cadence='replay32', target_mode='soft',
                     n_step=8, reward_scale=.001, failure_terminal_quota=2,
-                    batch_size=1, capture_trajectories=False)
+                    batch_size=1, capture_trajectories=False,
+                    seed=43, experiment_id='synthetic-replay-ab-resume', diagnostic_rounds=(1,2))
     uninterrupted, reference = monitored_training.run_monitored_training(
         FakeDataset(), output_dir=tmp_path/'reference', **settings)
     original = monitored_training.replay_episode
@@ -70,10 +71,25 @@ def test_complete_round_resume_restores_replay_rng_and_epsilon(tmp_path, monkeyp
     checkpoint = output/'training_state_latest.pt'
     assert checkpoint.exists()
     assert len(json.loads((output/'report.json').read_text(encoding='utf-8'))['rounds']) == 1
+    committed_diagnostic = (output/'diagnostic_checkpoints/round_001.pt').read_bytes()
+    # Reproduce a crash after diagnostic files, before the round checkpoint.
+    (output/'diagnostic_checkpoints/round_002.pt').write_bytes(b'uncommitted diagnostic')
+    (output/'diagnostic_checkpoints/round_002_decisions.json').write_text('{}', encoding='utf-8')
     monkeypatch.setattr(monitored_training, 'replay_episode', original)
+    changed_identity = dict(settings, experiment_id='different-experiment')
+    with pytest.raises(ValueError, match='mismatch'):
+        monitored_training.run_monitored_training(FakeDataset(), output_dir=output,
+            resume_from=checkpoint, **changed_identity)
     resumed, report = monitored_training.run_monitored_training(
         FakeDataset(), output_dir=output, resume_from=checkpoint, **settings)
     assert report['rounds'] == reference['rounds']
+    assert report['experiment_id'] == settings['experiment_id']
+    assert report['hyperparameters']['seed'] == 43
+    assert report['source_tree_sha256'] == reference['source_tree_sha256']
+    assert (output/'diagnostic_checkpoints/round_001.pt').read_bytes() == committed_diagnostic
+    archive = output/report['resume_preserved_uncommitted_diagnostics'][0]
+    assert (archive/'round_002.pt').read_bytes() == b'uncommitted diagnostic'
+    assert (output/'diagnostic_checkpoints/round_002.pt').read_bytes() != b'uncommitted diagnostic'
     assert [row['epsilon'] for row in report['rounds']] == pytest.approx((1., 1.-.95/69))
     assert list(resumed.replay) == list(uninterrupted.replay)
     assert all(torch.equal(value, uninterrupted.online.state_dict()[key])

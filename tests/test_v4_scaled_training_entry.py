@@ -129,6 +129,42 @@ def test_formal_cli_passes_only_frozen_configuration_without_training(tmp_path, 
     assert dataset.opened_test_payloads == 0
 
 
+@pytest.mark.parametrize('mode', ['discard', 'observed_nstep'])
+def test_replay_ab_cli_routes_seed_experiment_id_and_resume_without_training(tmp_path, monkeypatch, mode):
+    from v4 import feedback_study
+    dataset = FakeDataset()
+    captured = {}
+    monkeypatch.setattr(feedback_study.FormalTrainingDataset, 'open', lambda *args: dataset)
+    monkeypatch.setattr(feedback_study, '_default_data_root', lambda name: tmp_path/name)
+    monkeypatch.setattr(feedback_study, '_manifest_hashes', lambda roots: {})
+    def fake_run(_dataset, **kwargs):
+        captured.update(kwargs)
+        kwargs['output_dir'].mkdir(exist_ok=True)
+        return None, {'rounds': [], 'best_checkpoint': None}
+    monkeypatch.setattr(feedback_study, 'run_monitored_training', fake_run)
+    output = tmp_path/'resumed_experiment'
+    checkpoint = output/'training_state_latest.pt'
+    assert feedback_study.main(['--output-dir', str(output), '--resume-from', str(checkpoint),
+        '--unknown-replay-mode', mode, '--seed', '43', '--experiment-id', 'V4-RPL-B-s43',
+        '--diagnostic-rounds', '1,10,20,30,40,50,60,70,80,90,100']) == 0
+    assert captured['seed'] == 43 and captured['experiment_id'] == 'V4-RPL-B-s43'
+    assert captured['unknown_replay_mode'] == mode and captured['resume_from'] == checkpoint
+    assert captured['diagnostic_rounds'] == (1,10,20,30,40,50,60,70,80,90,100)
+    assert captured['cadence'] == 'replay32' and captured['beta_soc'] == 200
+    assert captured['rounds'] == 100 and dataset.opened_test_payloads == 0
+
+
+@pytest.mark.parametrize('arguments', [('--seed','-1'), ('--seed',str(2**32)),
+                                      ('--experiment-id','  '), ('--experiment-id','bad\nidentifier')])
+def test_invalid_experiment_identity_is_rejected_before_output_or_data_open(tmp_path, monkeypatch, arguments):
+    from v4 import feedback_study
+    monkeypatch.setattr(feedback_study.FormalTrainingDataset, 'open',
+                        lambda *args: pytest.fail('invalid experiment must not open the dataset'))
+    with pytest.raises(SystemExit):
+        feedback_study.main(['--output-dir', str(tmp_path/'invalid'), *arguments])
+    assert not (tmp_path/'invalid').exists()
+
+
 def test_strict_entry_aborts_model_error_instead_of_creating_physical_failure(tmp_path, monkeypatch):
     from v4 import monitored_training
     from v4.control import ReplayExecutionError

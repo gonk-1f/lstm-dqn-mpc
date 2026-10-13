@@ -429,6 +429,7 @@ class DirectPowerDDQN:
             self._sample_failure += sum(item.experience_outcome == 'failure' for item in batch)
             self._sample_unresolved += sum(item.experience_outcome == 'unresolved' for item in batch)
             if self.replay_diagnostics:
+                self._sampled_replay_ids_since_reset.update(item.replay_id for item in batch)
                 for item, q_value, y_value, td_value in zip(batch, q.flatten().tolist(),
                                                          target.flatten().tolist(), error.flatten().tolist()):
                     category = self._category(item)
@@ -571,6 +572,9 @@ class DirectPowerDDQN:
         self._sample_success = self._sample_failure = self._sample_unresolved = 0
         self._category_td = {}
         self._draw_coverage = {}
+        self._sampled_replay_ids_since_reset = set()
+        self._coverage_initial_pool_size = len(self.replay)
+        self._coverage_insertions_at_reset = self.economic_replay_insertions
         self._distribution_sum = dict.fromkeys(('q', 'target'), 0.0)
         self._distribution_square_sum = dict.fromkeys(('q', 'target'), 0.0)
         self._distribution_min = dict.fromkeys(('q', 'target'), math.inf)
@@ -593,6 +597,8 @@ class DirectPowerDDQN:
 
     def td_statistics(self) -> dict:
         n = self._td_samples
+        coverage_insertions = self.economic_replay_insertions - self._coverage_insertions_at_reset
+        coverage_denominator = self._coverage_initial_pool_size + coverage_insertions
         result = {
             'optimizer_updates': self._td_updates, 'sample_count': n,
             'mean_smooth_l1_loss': self._td_loss_sum / self._td_updates if self._td_updates else None,
@@ -640,6 +646,18 @@ class DirectPowerDDQN:
             'replay_coverage': {'pool_categories': dict(self._pool_categories),
                 'pool': {key: dict(counts) for key, counts in self._pool_coverage.items()},
                 'actual_draws_since_reset': {key: dict(counts) for key, counts in self._draw_coverage.items()},
+                'unique_replay_ids_since_reset': {
+                    'sampled_count': len(self._sampled_replay_ids_since_reset),
+                    'initial_pool_size': self._coverage_initial_pool_size,
+                    'insertions_since_reset': coverage_insertions,
+                    'denominator': coverage_denominator,
+                    'coverage_rate': len(self._sampled_replay_ids_since_reset)/coverage_denominator
+                        if coverage_denominator else None,
+                    'denominator_definition': 'Pool size at reset plus all replay insertions since reset; '
+                        'includes entries evicted before being sampled',
+                    'scope': 'Unique replay IDs in actual successful optimizer batches since reset; '
+                        'repeated draws count once; bounded to this diagnostic round',
+                } if self.replay_diagnostics else None,
                 'diagnostics_enabled': self.replay_diagnostics,
                 'terminal_counts_are_n_step_windows_not_failure_or_completion_events': True},
             'watched_replay_targets': self._watched_target_statistics() if self.replay_diagnostics else [],
