@@ -1,6 +1,12 @@
 # 船舶燃料电池与锂电池能量管理
 
-当前分支 `feat/direct-power-mlp-ddqn` 使用 **30 s 直接功率 MLP Double-DQN**。
+最新项目状态见 [2026-10-14进度说明（可直接发给GPT）](docs/project_progress_for_gpt_2026-10-14.md)，涵盖目的、设备与仿真参数、LSTM/MPC/DDQN进程、最新100轮结果及问题诊断。
+
+本根工作树是 `refactor/multiscale-dqn-wmpc-v2`；更新的训练主线在 `feat/direct-power-mlp-ddqn`（`.worktrees/direct-power-mlp`）。两者代码和测试阶段不同。最新B组末轮Train17/21、Validation6/7，无合格最佳模型；当前主线是7维状态、SOC参考0.6/β200、8-step、已观测UNKNOWN窗口回放。
+
+下方入口说明保留早期阶段配置；最新配置、评价口径与跨分支证据以进度说明为准。
+
+v4 路线使用 **30 s 直接功率 MLP Double-DQN**。
 FC 动作为 0–600 kW、间隔 10 kW，电池承担剩余负载；单步物理 mask 保持功率与 SOC 硬边界。
 物理、退化和经济模型复用 v2/v3，当前控制器不调用 MPC 求解、不启用 KAN。
 

@@ -1,0 +1,147 @@
+{
+  "audit_date": "2026-10-14",
+  "timezone": "Asia/Shanghai",
+  "root_branch": "refactor/multiscale-dqn-wmpc-v2",
+  "root_source_commit_before_documentation": "f06cd38354bc0a9fcdd5754aea5d6a8ba3a46a37",
+  "training_branch": "feat/direct-power-mlp-ddqn",
+  "training_branch_commit": "9cd606357d8ebd2c81fd52fc3b38891c49c0183d",
+  "current_training_source": {
+    "state_dim": 7,
+    "state_features": [
+      "soc",
+      "previous_fc_kw_over_600",
+      "previous_fc_delta_kw_over_600",
+      "second_previous_fc_delta_kw_over_600",
+      "current_load_kw_over_600",
+      "current_load_delta_kw_over_600",
+      "previous_load_delta_kw_over_600"
+    ],
+    "linear_layers": [
+      [
+        7,
+        128
+      ],
+      [
+        128,
+        128
+      ],
+      [
+        128,
+        61
+      ]
+    ],
+    "learning_rate": 0.001,
+    "has_outcome_model": false,
+    "action_count": 61,
+    "action_min_kw": 0,
+    "action_max_kw": 600,
+    "soc_beta": 200.0,
+    "soc_reference": 0.6
+  },
+  "mode_sidecar_train_validation_counts": {
+    "train": {
+      "samples": 30,
+      "samples_with_unknown": 9,
+      "fully_evaluable_samples": 21
+    },
+    "validation": {
+      "samples": 8,
+      "samples_with_unknown": 1,
+      "fully_evaluable_samples": 7
+    }
+  },
+  "A_100r": {
+    "report_path": ".worktrees/direct-power-mlp/outputs/v4_socref060_beta200_100r_seed42/report.json",
+    "report_sha256": "476b143b35dd202141338a3c8a70147a6ced692fb8ed4dd9b1d3d16b5f6c2043",
+    "run_status": "completed",
+    "completed_training": true,
+    "completed_rounds": 100,
+    "best_checkpoint": null,
+    "test_payloads_opened": 0,
+    "last_train": {
+      "episodes": 30,
+      "completed": 13,
+      "evaluable_episodes": 21,
+      "evaluable_completed": 13,
+      "physical_failures": 8,
+      "unknown_episodes": 9,
+      "data_truncated_episodes": 9,
+      "execution_errors": 0
+    },
+    "last_validation": {
+      "episodes": 8,
+      "completed": 5,
+      "evaluable_episodes": 7,
+      "evaluable_completed": 5,
+      "physical_failures": 2,
+      "unknown_episodes": 1,
+      "data_truncated_episodes": 1,
+      "execution_errors": 0
+    },
+    "source_commit": "a3746c4278369669c58f59535bc8ac9860df0b22"
+  },
+  "B_100r": {
+    "report_path": ".worktrees/direct-power-mlp/outputs/v4_replay_ab_B_observed_seed42_100r_socmaskfix_resume30/report.json",
+    "report_sha256": "79b3e618d279b0c4b7f25a92a99333edfc100252ef344d9a09c2964cc327936e",
+    "run_status": "completed",
+    "completed_training": true,
+    "completed_rounds": 100,
+    "best_checkpoint": null,
+    "test_payloads_opened": 0,
+    "last_train": {
+      "episodes": 30,
+      "completed": 17,
+      "evaluable_episodes": 21,
+      "evaluable_completed": 17,
+      "physical_failures": 4,
+      "unknown_episodes": 9,
+      "data_truncated_episodes": 9,
+      "execution_errors": 0
+    },
+    "last_validation": {
+      "episodes": 8,
+      "completed": 6,
+      "evaluable_episodes": 7,
+      "evaluable_completed": 6,
+      "physical_failures": 1,
+      "unknown_episodes": 1,
+      "data_truncated_episodes": 1,
+      "execution_errors": 0
+    },
+    "source_commit": "a40afa2c8fd0a967d40d8aa30472b228232fbc0e"
+  },
+  "fresh_targeted_regressions": {
+    "test_files": [
+      "tests/test_v4_dqn.py",
+      "tests/test_v4_control.py",
+      "tests/test_v4_training.py",
+      "tests/test_v4_economic_100r.py",
+      "tests/test_v4_scheme_a_gate.py"
+    ],
+    "root_f06cd38": {
+      "passed": 33,
+      "failed": 21,
+      "duration_seconds": 42.98,
+      "exit_code": 1
+    },
+    "training_9cd6063": {
+      "passed": 73,
+      "failed": 0,
+      "duration_seconds": 49.84,
+      "exit_code": 0
+    },
+    "full_repository_suite_run": false
+  },
+  "fixed_training_commit_references": {
+    "docs/v4_socref200_100r_training_analysis.md": "3cb31d9a219e8a4efa46f297c5bd6bd6f9ec3e3cda2c6e62398ea46a1ad619e3",
+    "docs/v4_observed_prefix_replay_fix_2026-10-12.md": "c36ae05c4e18c92ef8905c991308e1c2e8e1768792cd811fd864dde1b21a06aa",
+    "docs/v4_B_observed_100r_result_analysis_2026-10-13.md": "c9e9c01a96d418b4e8c4f9fdde1ddcac23645702ae57dcb7c654f269fb4c6c93",
+    "docs/v4_ddqn_root_cause_diagnostic_2026-10-12.md": "b9b39cf9379a78a139049f04706bce435cf87e1c9ddf9c36016bb1f809d193ea",
+    "docs/v4_terminal_q_conflict_fc_jump_followup_2026-10-13.md": "e9e5abb8b8bc6e8a565bd83d5eefb95dc1295f667260e24085e7a587b7dc239e",
+    "docs/v4_per_jointfit_state_diagnostic_2026-10-13.md": "0e2fc00384e53cf0ec2ad3778f8604fc1d079445f0805e98186d0ad790427fc8"
+  },
+  "formal_training_started_during_this_audit": false,
+  "test_payloads_opened_during_this_audit": 0,
+  "ddpg_td3_status": "local untracked preparation; historical synthetic verification records only",
+  "git_scope": "progress documentation and navigation only; preserve untracked worktree drafts; outputs remain ignored"
+}
