@@ -25,6 +25,8 @@ def reward_totals(transitions) -> dict:
         'new_reward': fsum(t.reward_cny for t in values),
         'soc_auxiliary_penalty': fsum(t.soc_soft_penalty_cny for t in values),
         'failure_penalty_equivalent_cny':fsum(t.failure_penalty_equivalent_cny for t in values),
+        'excluded_degradation_cost_cny': fsum(
+            getattr(t, 'excluded_degradation_cost_cny', 0.0) for t in values),
     }
 
 
@@ -51,6 +53,7 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None, reward
             'terminal_correction': item.terminal_correction, 'new_reward': item.reward_cny,
             'scaled_training_reward': item.reward_cny * scale,
             'soc_soft_penalty': item.soc_soft_penalty_cny,
+            'excluded_degradation_cost_cny': getattr(item, 'excluded_degradation_cost_cny', 0.0),
             'original_economic_ledger': ledger_components(item.original_economic_ledger),
             'modeled_fixed_target_shore_ledger': ledger_components(item.shore_ledger),
             'shore_settlement_basis': (

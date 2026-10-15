@@ -138,13 +138,15 @@ def _summarize(
 
 
 def _run_episodes(episodes, policy, accountant, *, on_failure=None, beta_soc: float = 0.0,
-                  redistribute_battery_energy: bool = False):
+                  redistribute_battery_energy: bool = False,
+                  reward_cost_mode: str = 'full_economic'):
     results: list[DirectReplay] = []
     failures: list[str] = []
     for episode in episodes:
         try:
             results.append(replay_episode(episode, policy, accountant=accountant, beta_soc=beta_soc,
-                                          redistribute_battery_energy=redistribute_battery_energy))
+                                          redistribute_battery_energy=redistribute_battery_energy,
+                                          reward_cost_mode=reward_cost_mode))
         except ReplayExecutionError as exc:
             exc.sample_id = str(episode.sample_id)
             failures.append(f"{episode.sample_id}: {exc}")

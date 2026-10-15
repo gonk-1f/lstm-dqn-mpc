@@ -8,7 +8,7 @@ import traceback
 from typing import Sequence
 
 from v2.data.formal_training_dataset import FormalTrainingDataset
-from .control import DEFAULT_BETA_SOC
+from .control import DEFAULT_BETA_SOC, REWARD_COST_MODES
 from .monitored_training import (
     _write_json, run_monitored_training, validate_experiment_identity, validate_replay_configuration,
 )
@@ -33,6 +33,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument('--beta-soc',type=float,default=DEFAULT_BETA_SOC,
                         help='fixed-reference SOC auxiliary reward coefficient; not an economic expense')
     parser.add_argument('--reward-feedback',choices=('original','redistributed'),default='original')
+    parser.add_argument('--reward-cost-mode',choices=REWARD_COST_MODES,default='full_economic',
+                        help='energy_only trains on H2, shore electricity and SOC; full degradation ledgers remain for evaluation')
     parser.add_argument('--reward-scale',type=float,default=.001,
                         help='uniform multiplier applied once to final economic-Q replay rewards; ledgers remain CNY')
     parser.add_argument('--failure-terminal-quota',type=int,default=2,
@@ -84,6 +86,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     dataset = FormalTrainingDataset.open(*roots)
     _, report = run_monitored_training(dataset,output_dir=output,rounds=args.rounds,
         beta_soc=args.beta_soc,cadence=args.cadence,target_mode='soft',
+        reward_cost_mode=args.reward_cost_mode,
         target_interval=500,seed=args.seed,batch_size=64,epsilon_start=1.,epsilon_end=.05,
         redistribute_battery_energy=False,
         episode_credit_scope=args.episode_credit_scope,n_step=args.n_step,

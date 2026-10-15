@@ -19,6 +19,16 @@ from .reward_feedback import BatteryEnergyValue
 ACTION_KW = tuple(range(0, 601, 10))
 SOC_REF = 0.60
 DEFAULT_BETA_SOC = 200.0
+REWARD_COST_MODES = ('full_economic', 'energy_only')
+
+
+def ledger_training_reward(ledger: RawCnyIntervalLedger, reward_cost_mode: str) -> float:
+    """Select the training objective without altering the four-cost ledger."""
+    if reward_cost_mode not in REWARD_COST_MODES:
+        raise ValueError('reward_cost_mode must be full_economic or energy_only')
+    if reward_cost_mode == 'full_economic':
+        return ledger.reward_cny
+    return -fsum((ledger.h2_cost_cny, ledger.shore_cost_cny))
 
 
 def soc_deviation_squared(soc: float) -> float:
@@ -70,6 +80,7 @@ class DirectTransition:
     failure_penalty_equivalent_cny: float = 0.0
     physical_feasible_actions: tuple[int, ...] = ()
     policy_candidate_actions: tuple[int, ...] = ()
+    excluded_degradation_cost_cny: float = 0.0
 
     @property
     def is_successful_terminal(self) -> bool:
@@ -249,6 +260,7 @@ def replay_episode(
     accountant: EconomicMPC, initial_state: AccountState | None = None,
     beta_soc: float = 0.0,
     redistribute_battery_energy: bool = False,
+    reward_cost_mode: str = 'full_economic',
 ) -> DirectReplay:
     """Execute ONBOARD FC actions; route shore rows outside the DQN policy.
 
@@ -256,6 +268,8 @@ def replay_episode(
     feasibility is screened from that measurement; an invalid command fails
     closed without power clipping or a synthetic cost. Reward redistribution
     is opt-in so historical callers keep their original reward timing.
+    The energy-only candidate excludes degradation from reward only: all aging,
+    shore settlement and four-component physical ledgers remain unchanged.
     """
     modes, loads, requests = _validated_rows_v4(episode)
     if not callable(policy):
@@ -268,6 +282,8 @@ def replay_episode(
         raise ValueError("beta_soc must be finite and nonnegative")
     if type(redistribute_battery_energy) is not bool:
         raise ValueError('redistribute_battery_energy must be bool')
+    if reward_cost_mode not in REWARD_COST_MODES:
+        raise ValueError('reward_cost_mode must be full_economic or energy_only')
     energy_value = BatteryEnergyValue.from_accountant(accountant)
     physical = initial_state or AccountState()
     transitions: list[DirectTransition] = []
@@ -355,7 +371,7 @@ def replay_episode(
             modeled_ledger = None
             # Once per executed ONBOARD action, before any SHORE/terminal charge.
             soc_penalty = beta_soc * soc_deviation_squared(next_physical.soc)
-            reward = ledger.reward_cny - soc_penalty
+            reward = ledger_training_reward(ledger, reward_cost_mode) - soc_penalty
             if last_onboard and index + 1 < len(modes) and modes[index + 1] in SHORE_MODES:
                 shore_start = index + 1
                 shore_end = shore_start
@@ -386,12 +402,19 @@ def replay_episode(
                         else shore.end_state.soc)
                 physical = shore.end_state
                 shore_ledger = shore.ledger
-                reward += shore_ledger.reward_cny
+                reward += ledger_training_reward(shore_ledger, reward_cost_mode)
             elif last_onboard and index + 1 == len(modes):
                 terminal_settlement = modeled_terminal_settlement(physical, accountant)
                 if terminal_settlement is not None:
                     modeled_ledger = terminal_settlement.ledger
-                    reward += modeled_ledger.reward_cny
+                    reward += ledger_training_reward(modeled_ledger, reward_cost_mode)
+            excluded_degradation = (fsum(
+                cost
+                for attached_ledger in (ledger, shore_ledger, modeled_ledger)
+                if attached_ledger is not None
+                for cost in (attached_ledger.fuel_cell_degradation_cost_cny,
+                             attached_ledger.battery_degradation_cost_cny)
+            ) if reward_cost_mode == 'energy_only' else 0.0)
             original_reward = reward
             # Actual onboard SOC comes from next_physical, before any shore
             # settlement changes physical. No extra efficiency is applied.
@@ -435,6 +458,7 @@ def replay_episode(
                 'data_truncation' if data_truncation else 'completed' if done else None,
                 physical_feasible_actions=physical_actions,
                 policy_candidate_actions=candidate_actions,
+                excluded_degradation_cost_cny=excluded_degradation,
             ))
             if last_onboard and shore_ledger is not None:
                 index = shore_end
