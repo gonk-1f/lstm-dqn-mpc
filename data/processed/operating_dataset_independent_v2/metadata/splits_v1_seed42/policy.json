@@ -1,0 +1,58 @@
+{
+  "schema": "independent_v2_split_v1",
+  "dataset_version": "operating_dataset_independent_v2",
+  "split_version": "splits_v1_seed42",
+  "seed": 42,
+  "test_selected_by_user": [
+    "parent_001_seg01",
+    "parent_004_seg01",
+    "parent_013_seg01",
+    "parent_032_seg01"
+  ],
+  "validation_fraction_of_remaining_parent_groups": 0.2,
+  "validation_group_count": 8,
+  "remaining_parent_count": 39,
+  "group_key": "parent_sample_id",
+  "algorithm": "seeded month-stratified group sampling, one parent group per month then proportional largest remainders; stable sorted IDs; numpy.default_rng(42)",
+  "month_group_counts": {
+    "3": 2,
+    "4": 10,
+    "5": 7,
+    "6": 9,
+    "7": 11
+  },
+  "validation_month_quota": {
+    "3": 1,
+    "4": 2,
+    "5": 1,
+    "6": 2,
+    "7": 2
+  },
+  "test_not_used_to_design_validation": true,
+  "no_training_or_controller_metrics_used": true,
+  "split_counts": {
+    "train": 36,
+    "validation": 8,
+    "test": 4
+  },
+  "parent_split_counts": {
+    "train": 31,
+    "validation": 8,
+    "test": 4
+  },
+  "source_candidate_manifest_sha256": "ff7dd0763873f5092ef2d477ff70753288c14eba4170c6e2a585f807c7bd7fba",
+  "sample_manifest_sha256": "ff444eeb58e1b421940e8fbabb1da4d57ff4e94db3581dc83d8ce64a4c1d8e1e",
+  "payload_hash_manifest_sha256": "32378258965e2f572a945ea805062ea6265a10ed768d8bf08aee80a27e40832e",
+  "cross_parent_time_overlap_pairs": [],
+  "checked_payload_hashes": 96,
+  "payload_path_base": "dataset root, not split-manifest directory",
+  "numpy_version": "1.26.4",
+  "environment_integration_status": "PENDING_NO_FORMAL_ENTRY_CHANGED",
+  "economic_model_status": "PENDING_ZHOU_EQUIVALENT_HYDROGEN_NOT_IMPLEMENTED",
+  "historical_checkpoints_valid_for_new_task": false,
+  "limitations": [
+    "Fixed user-selected Test must not be used for hyperparameter selection.",
+    "Existing processed interpolation/deadband provenance is inherited unchanged.",
+    "Sub-kW signed values and final30s partial-tail handling remain explicit environment integration items."
+  ]
+}

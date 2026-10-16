@@ -23,7 +23,17 @@ from .reward_feedback import BatteryEnergyValue
 ACTION_KW = tuple(range(0, 601, 10))
 SOC_REF = 0.60
 DEFAULT_BETA_SOC = 200.0
-REWARD_COST_MODES = ('full_economic', 'energy_only', 'energy_with_fc_ramp')
+DEFAULT_STATE_MODE = 'history7'
+STATE_MODES = ('history7', 'minimal3')
+STATE_FEATURES_BY_MODE = {
+    'history7': (
+        'soc', 'previous_fc_kw_over_600', 'previous_fc_delta_kw_over_600',
+        'second_previous_fc_delta_kw_over_600', 'current_load_kw_over_600',
+        'current_load_delta_kw_over_600', 'previous_load_delta_kw_over_600',
+    ),
+    'minimal3': ('soc', 'current_load_kw_over_600', 'previous_fc_kw_over_600'),
+}
+REWARD_COST_MODES = ('full_economic', 'energy_only', 'energy_with_fc_ramp', 'control_only')
 # Fixed CNY/kW slope of formal aggregate FC transient degradation before EOL clipping.
 # This is a separate training term; the four-component ledger is not changed.
 FC_RAMP_REWARD_CNY_PER_KW = (
@@ -36,6 +46,8 @@ def ledger_training_reward(ledger: RawCnyIntervalLedger, reward_cost_mode: str) 
     """Select the training objective without altering the four-cost ledger."""
     if reward_cost_mode not in REWARD_COST_MODES:
         raise ValueError(f'reward_cost_mode must be one of {REWARD_COST_MODES}')
+    if reward_cost_mode == 'control_only':
+        return 0.0
     if reward_cost_mode == 'full_economic':
         return ledger.reward_cny
     return -fsum((ledger.h2_cost_cny, ledger.shore_cost_cny))
@@ -211,8 +223,11 @@ def _validated_rows_v4(episode: object):
 def build_state(
     physical: AccountState, fc_history_kw: tuple[float, float, float],
     observed_loads_kw: tuple[float, float, float],
+    *, state_mode: str = DEFAULT_STATE_MODE,
 ) -> tuple[float, ...]:
-    """Seven causal features; FC history contains executed commands only."""
+    """Select causal features; FC history contains executed commands only."""
+    if state_mode not in STATE_FEATURES_BY_MODE:
+        raise ValueError(f'state_mode must be one of {STATE_MODES}')
     if (len(fc_history_kw) != 3 or len(observed_loads_kw) != 3 or
             any(not isfinite(value) for value in (*fc_history_kw, *observed_loads_kw))):
         raise ValueError("state needs three finite FC and observed load samples")
@@ -221,6 +236,8 @@ def build_state(
     fc_prior2, fc_prior1, fc_previous = fc_history_kw
     load_prior2, load_prior1, current = observed_loads_kw
     rated = float(ACTION_KW[-1])
+    if state_mode == 'minimal3':
+        return float(physical.soc), current / rated, fc_previous / rated
     return (
         float(physical.soc), fc_previous / rated,
         (fc_previous - fc_prior1) / rated, (fc_prior1 - fc_prior2) / rated,
@@ -272,6 +289,7 @@ def replay_episode(
     beta_soc: float = 0.0,
     redistribute_battery_energy: bool = False,
     reward_cost_mode: str = 'full_economic',
+    state_mode: str = DEFAULT_STATE_MODE,
 ) -> DirectReplay:
     """Execute ONBOARD FC actions; route shore rows outside the DQN policy.
 
@@ -281,6 +299,8 @@ def replay_episode(
     is opt-in so historical callers keep their original reward timing.
     Energy-based candidates exclude degradation from reward only. The ramp
     candidate adds one ONBOARD training term; physical ledgers are unchanged.
+    Control-only uses just that ONBOARD ramp term and the SOC deviation;
+    all physical settlement ledgers still run without entering its reward.
     """
     modes, loads, requests = _validated_rows_v4(episode)
     if not callable(policy):
@@ -295,6 +315,10 @@ def replay_episode(
         raise ValueError('redistribute_battery_energy must be bool')
     if reward_cost_mode not in REWARD_COST_MODES:
         raise ValueError(f'reward_cost_mode must be one of {REWARD_COST_MODES}')
+    if state_mode not in STATE_FEATURES_BY_MODE:
+        raise ValueError(f'state_mode must be one of {STATE_MODES}')
+    if reward_cost_mode == 'control_only' and redistribute_battery_energy:
+        raise ValueError('control_only does not allow battery energy redistribution')
     energy_value = BatteryEnergyValue.from_accountant(accountant)
     physical = initial_state or AccountState()
     transitions: list[DirectTransition] = []
@@ -345,7 +369,7 @@ def replay_episode(
                 actual_load = normalize_onboard_load_kw(loads[index])
                 current_history = ((actual_load,) * 3 if history is None
                                    else (*history[-2:], actual_load))
-                decision_state = build_state(physical, fc_history, current_history)
+                decision_state = build_state(physical, fc_history, current_history, state_mode=state_mode)
                 physical_actions = feasible_fc_actions(physical, actual_load, accountant)
                 if not physical_actions:
                     empty_physical_mask=True
@@ -384,7 +408,7 @@ def replay_episode(
             # Once per executed ONBOARD action, before any SHORE/terminal charge.
             soc_penalty = beta_soc * soc_deviation_squared(next_physical.soc)
             fc_ramp_penalty = (FC_RAMP_REWARD_CNY_PER_KW * abs(fc_kw - previous_fc_kw)
-                               if reward_cost_mode == 'energy_with_fc_ramp' else 0.0)
+                               if reward_cost_mode in ('energy_with_fc_ramp', 'control_only') else 0.0)
             reward = ledger_training_reward(ledger, reward_cost_mode) - soc_penalty - fc_ramp_penalty
             if last_onboard and index + 1 < len(modes) and modes[index + 1] in SHORE_MODES:
                 shore_start = index + 1
@@ -450,7 +474,7 @@ def replay_episode(
             else:
                 successor_history = history
                 successor_fc_history = fc_history
-            next_state = build_state(physical, successor_fc_history, successor_history)
+            next_state = build_state(physical, successor_fc_history, successor_history, state_mode=state_mode)
             has_next_onboard = (shore_ledger is not None and shore_end < len(modes)
                                 and modes[shore_end] is OperatingMode.ONBOARD)
             data_truncation = ((shore_ledger is not None and shore_end < len(modes)

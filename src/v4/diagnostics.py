@@ -4,7 +4,7 @@ from math import fsum, isfinite, sqrt
 import torch
 
 from v3.control import AccountState
-from .control import ACTION_KW, build_state, feasible_fc_actions
+from .control import ACTION_KW, DEFAULT_STATE_MODE, build_state, feasible_fc_actions
 
 
 COMPONENT_NAMES = ('h2_cost_cny', 'fuel_cell_degradation_cost_cny',
@@ -65,7 +65,8 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None, reward
             'physical_feasible_actions_kw': list(physical_actions),
             'policy_candidate_actions_kw': list(candidate_actions),
             'fc_stop_reason': (
-                'forced_no_positive_action' if item.action_kw == 0 and item.state[1] > 0
+                'forced_no_positive_action' if item.action_kw == 0
+                and item.state[2 if len(item.state) == 3 else 1] > 0
                 and physical_actions == (0,) else
                 'delayed_or_continued_off' if item.action_kw == 0 else None
             ),
@@ -108,7 +109,8 @@ def executed_transition_statistics(transitions, *, sample_transition_counts=None
     """
     values = tuple(transitions)
     power = [item.action_kw for item in values]
-    raw_change = [item.action_kw-item.state[1]*ACTION_KW[-1] for item in values]
+    raw_change = [item.action_kw-item.state[2 if len(item.state) == 3 else 1]*ACTION_KW[-1]
+                  for item in values]
     # Undo machine roundoff from normalized FC state before strict threshold
     # comparisons, in diagnostic kW only; FC actions are on the 10 kW grid.
     change = [0.0 if abs(value) <= 1e-9 else round(value, 9) for value in raw_change]
@@ -159,7 +161,8 @@ def fixed_q_diagnostics(agent, accountant) -> list[dict]:
                               ('working_soc_load600', .5, 600.),
                               ('high_soc_load100', .75, 100.)):
         physical = AccountState(soc=soc, previous_fc_kw=300.)
-        state = build_state(physical, (300., 300., 300.), (load, load, load))
+        state = build_state(physical, (300., 300., 300.), (load, load, load),
+                            state_mode=getattr(agent, 'state_mode', DEFAULT_STATE_MODE))
         feasible = feasible_fc_actions(physical, load, accountant)
         with torch.no_grad():
             q = agent.online(torch.tensor([state], dtype=torch.float32))[0].tolist()

@@ -1,0 +1,5 @@
+﻿run,split,round,fixed_completed_count,comparable_evaluable_cost_cny,qualified_checkpoint,other_split_completed
+minimal3_control_only,greedy_train,31,21,67861.94192027369,False,6
+previous7D_energy_with_fc_ramp,greedy_train,10,21,138756.28107095428,False,6
+previous7D_energy_with_fc_ramp,greedy_train,35,21,101160.32048777946,False,6
+previous7D_energy_with_fc_ramp,greedy_train,50,21,132708.9312283893,False,6

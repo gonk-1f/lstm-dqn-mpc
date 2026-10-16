@@ -46,7 +46,8 @@ def actual_greedy_q_records(
             low_fc_run = 0
         if item.state[0] >= .79:
             tags.add("near_soc_ceiling")
-        if item.action_kw == 0 and item.state[1] > 0 and item.physical_feasible_actions == (0,):
+        if (item.action_kw == 0 and item.state[2 if len(item.state) == 3 else 1] > 0
+                and item.physical_feasible_actions == (0,)):
             tags.add("forced_stop")
     if failed:
         for index in range(max(0, len(values) - 3), len(values)):

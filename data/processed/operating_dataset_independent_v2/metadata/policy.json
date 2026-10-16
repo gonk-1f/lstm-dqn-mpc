@@ -1,0 +1,17 @@
+{
+  "source_head": "0e5ad4ce531ba7c1f64ed1e85048f1189ca3275d",
+  "source_power_root": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\data\\processed\\operating_dataset_zero_boundary_v2",
+  "source_mode_root": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\data\\processed\\operating_dataset_zero_boundary_v2_modes_v3",
+  "candidate_status": "REVIEW_ONLY_NO_FINAL_SPLIT",
+  "old_raw_rebuild_v1_not_used": true,
+  "source_parent_count": 43,
+  "candidate_count": 48,
+  "initial_soc_for_future_task": 0.6,
+  "no_shore_control_for_future_task": true,
+  "no_terminal_charge_for_future_task": true,
+  "equivalent_hydrogen_economic_model": "WAIT_USER_TEST_SELECTION_PHASE2_NOT_IMPLEMENTED",
+  "model_step_seconds": 30,
+  "canonical_curve_seconds": 1,
+  "preview_30s": "Existing30sdecision grid is preserved separately; full1stail remains in canonical curve. Finalmodel partial-tail convention awaits phase2.",
+  "values": "Canonical source load strings preserved verbatim and reread. Current1scurves and30spreview are cropped only; no new interpolation, clipping, zero forcing or raw data assembly"
+}

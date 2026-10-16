@@ -1,1 +1,3 @@
 data/processed/operating_dataset_final/** -text
+data/processed/operating_dataset_independent_v2/** -text
+docs/results/v4_minimal3_control_per_100r_analysis_20261016/** -text

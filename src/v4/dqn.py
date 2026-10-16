@@ -13,17 +13,14 @@ from torch import nn
 
 from dqn.networks.mlp_qnet import MLPQNetwork
 
-from .control import ACTION_KW, DirectTransition
+from .control import ACTION_KW, DEFAULT_STATE_MODE, STATE_FEATURES_BY_MODE, DirectTransition
 from .failure_replay import FAILURE_TERMINALS
 from .prioritized_replay import PriorityIndex
 
 
-STATE_DIM = 7
-STATE_FEATURES = (
-    'soc', 'previous_fc_kw_over_600', 'previous_fc_delta_kw_over_600',
-    'second_previous_fc_delta_kw_over_600', 'current_load_kw_over_600',
-    'current_load_delta_kw_over_600', 'previous_load_delta_kw_over_600',
-)
+# Preserve the public historical constants for seven-feature callers.
+STATE_FEATURES = STATE_FEATURES_BY_MODE[DEFAULT_STATE_MODE]
+STATE_DIM = len(STATE_FEATURES)
 ECONOMIC_LEARNING_RATE = 1e-3
 ECONOMIC_HIDDEN_DIMS = (128, 128)
 ECONOMIC_REPLAY_FORMAT_VERSION = 2
@@ -88,7 +85,13 @@ class DirectPowerDDQN:
         per_alpha: float = 0.6,
         per_beta: float = 1.0,
         per_epsilon: float = 1e-6,
+        state_mode: str = DEFAULT_STATE_MODE,
     ) -> None:
+        if state_mode not in STATE_FEATURES_BY_MODE:
+            raise ValueError(f'state_mode must be one of {tuple(STATE_FEATURES_BY_MODE)}')
+        self.state_mode = state_mode
+        self.state_features = STATE_FEATURES_BY_MODE[state_mode]
+        self.state_dim = len(self.state_features)
         if not 0 <= gamma <= 1 or learning_rate <= 0 or replay_capacity < 1:
             raise ValueError("invalid Double-DQN hyperparameters")
         if type(n_step) is not int or n_step not in (1, 8):
@@ -118,8 +121,8 @@ class DirectPowerDDQN:
         self.gamma = float(gamma)
         self.random = random.Random(seed)
         torch.manual_seed(seed)
-        self.online = MLPQNetwork(STATE_DIM, len(ACTION_KW), hidden_dims)
-        self.target = MLPQNetwork(STATE_DIM, len(ACTION_KW), hidden_dims)
+        self.online = MLPQNetwork(self.state_dim, len(ACTION_KW), hidden_dims)
+        self.target = MLPQNetwork(self.state_dim, len(ACTION_KW), hidden_dims)
         self.target_sync_calls = 0
         self.target_soft_update_calls = 0
         self.economic_optimizer_updates = 0
@@ -149,11 +152,10 @@ class DirectPowerDDQN:
         self._failure_td_sum = self._failure_td_abs_sum = self._failure_td_square_sum = self._failure_td_abs_max = 0.0
         self._reset_extended_statistics()
 
-    @staticmethod
-    def _state(value: Sequence[float]) -> tuple[float, ...]:
+    def _state(self, value: Sequence[float]) -> tuple[float, ...]:
         state = tuple(float(item) for item in value)
-        if len(state) != STATE_DIM or not all(math.isfinite(item) for item in state):
-            raise ValueError("state must have seven finite features")
+        if len(state) != self.state_dim or not all(math.isfinite(item) for item in state):
+            raise ValueError(f'state must have {self.state_dim} finite features ({self.state_mode})')
         return state
 
     @staticmethod
@@ -521,9 +523,9 @@ class DirectPowerDDQN:
             return 'unresolved_prefix'
         return 'ordinary_nonterminal'
 
-    @staticmethod
-    def _record_coverage(coverage, item, increment):
-        soc, load = item.state[0], item.state[4]*600.
+    def _record_coverage(self, coverage, item, increment):
+        soc = item.state[0]
+        load = item.state[self.state_features.index('current_load_kw_over_600')]*600.
         labels = {
             'soc': '<0.4' if soc < .4 else '0.4-0.6' if soc < .6 else '0.6-0.79' if soc < .79 else '>=0.79',
             'load_kw': '<200' if load < 200 else '200-600' if load < 600 else '>=600',
@@ -778,6 +780,8 @@ class DirectPowerDDQN:
     def training_state(self) -> dict:
         """All optimizer, replay, network and RNG state needed at a round boundary."""
         return {
+            'state_mode': self.state_mode, 'state_dim': self.state_dim,
+            'state_features': self.state_features,
             # Old loaders must reject a PER checkpoint instead of silently dropping priorities.
             'format_version': (PRIORITIZED_REPLAY_FORMAT_VERSION if self.replay_sampling == 'prioritized'
                                else ECONOMIC_REPLAY_FORMAT_VERSION),
@@ -803,12 +807,26 @@ class DirectPowerDDQN:
         }
 
     def load_training_state(self, state: dict) -> None:
+        # Pre-option checkpoints are unambiguously the historical seven-feature layout.
+        # Reject incompatible layouts before touching networks, optimizer, replay or RNG.
+        if (state.get('state_mode', DEFAULT_STATE_MODE) != self.state_mode
+                or state.get('state_dim', STATE_DIM) != self.state_dim
+                or tuple(state.get('state_features', STATE_FEATURES)) != self.state_features):
+            raise ValueError('checkpoint state mode/dimension is incompatible; start a new run')
+        for name, model in (('online', self.online), ('target', self.target)):
+            weights = state.get(name)
+            if weights is not None and (set(weights) != set(model.state_dict()) or any(
+                    weights[key].shape != value.shape for key, value in model.state_dict().items())):
+                raise ValueError('checkpoint network architecture is incompatible; start a new run')
         expected_version = (PRIORITIZED_REPLAY_FORMAT_VERSION if self.replay_sampling == 'prioritized'
                             else ECONOMIC_REPLAY_FORMAT_VERSION)
         if state.get('format_version') != expected_version:
             raise ValueError('economic replay checkpoint format/sampling is incompatible; start a new run')
         if len(state['replay']) > self.replay.maxlen:
             raise ValueError('checkpoint replay exceeds configured capacity')
+        if any(len(item.state) != self.state_dim or len(item.next_state) != self.state_dim
+               for item in state['replay']):
+            raise ValueError('checkpoint replay state dimension is incompatible')
         # Fail before overwriting parameters if the sampler or priority state is incompatible.
         saved_sampling = state.get('sampling_config', {
             'mode': 'uniform', 'alpha': .6, 'beta': 1., 'epsilon': 1e-6,

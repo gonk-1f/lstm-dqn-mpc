@@ -19,7 +19,10 @@ import torch
 from v2.data.formal_training_dataset import FormalTrainingDataset
 from v3.control import EconomicMPC
 
-from .control import ACTION_KW, SOC_REF, DirectReplay, DirectTransition, ReplayExecutionError, replay_episode
+from .control import (
+    ACTION_KW, DEFAULT_STATE_MODE, SOC_REF, DirectReplay, DirectTransition,
+    ReplayExecutionError, replay_episode,
+)
 from .dqn import (
     DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, STATE_DIM, STATE_FEATURES,
 )
@@ -116,7 +119,8 @@ def _summarize(
         "fc_zero_fraction": sum(value == 0 for value in all_fc) / len(all_fc) if all_fc else None,
         "fc_starts": starts,
         "executed_fc_starts_including_failed_prefix": sum(
-            t.state[1] == 0 and t.action_kw > 0 for t in executed_transitions),
+            t.state[2 if len(t.state) == 3 else 1] == 0 and t.action_kw > 0
+            for t in executed_transitions),
         "completed_voyages": completed_onboard_segments,
         "completed_onboard_segments": completed_onboard_segments,
         'failed_samples':len(failures),
@@ -139,14 +143,14 @@ def _summarize(
 
 def _run_episodes(episodes, policy, accountant, *, on_failure=None, beta_soc: float = 0.0,
                   redistribute_battery_energy: bool = False,
-                  reward_cost_mode: str = 'full_economic'):
+                  reward_cost_mode: str = 'full_economic', state_mode: str = DEFAULT_STATE_MODE):
     results: list[DirectReplay] = []
     failures: list[str] = []
     for episode in episodes:
         try:
             results.append(replay_episode(episode, policy, accountant=accountant, beta_soc=beta_soc,
                                           redistribute_battery_energy=redistribute_battery_energy,
-                                          reward_cost_mode=reward_cost_mode))
+                                          reward_cost_mode=reward_cost_mode, state_mode=state_mode))
         except ReplayExecutionError as exc:
             exc.sample_id = str(episode.sample_id)
             failures.append(f"{episode.sample_id}: {exc}")

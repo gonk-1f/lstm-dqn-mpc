@@ -1,0 +1,350 @@
+{
+  "status": "PASS",
+  "source_count": 43,
+  "candidate_count": 48,
+  "input_hashes_checked": 129,
+  "unknown_candidate_ids": [],
+  "no_load_value_changed": true,
+  "canonical_1s_load_text_preserved_and_reread": true,
+  "full_original_tail_preserved": true,
+  "no_raw_rebuild": true,
+  "no_new_split": true,
+  "checks": [
+    {
+      "candidate_id": "parent_001_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_002_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_003_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_004_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_005_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_006_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_007_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_008_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_009_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_009_seg02",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_010_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_010_seg02",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_011_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_012_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_013_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_015_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_016_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_017_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_018_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_019_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_019_seg02",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_020_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_021_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_022_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_029_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_029_seg02",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_032_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_033_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_034_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_035_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_036_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_037_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_038_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_040_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_041_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_042_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_043_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_044_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_045_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_046_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_046_seg02",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_047_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_048_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_049_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_050_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_051_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_052_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    },
+    {
+      "candidate_id": "parent_053_seg01",
+      "unchanged_load_values": true,
+      "strict_30s": true,
+      "unknown_points": 0,
+      "shore_points": 0
+    }
+  ]
+}

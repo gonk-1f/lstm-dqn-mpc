@@ -22,12 +22,13 @@ from v2.data.supervisory_rules import OperatingMode
 from v3.control import EconomicMPC
 
 from .control import (
-    ACTION_KW, DEFAULT_BETA_SOC, FC_RAMP_REWARD_CNY_PER_KW, REWARD_COST_MODES, SOC_REF,
+    ACTION_KW, DEFAULT_BETA_SOC, DEFAULT_STATE_MODE, FC_RAMP_REWARD_CNY_PER_KW,
+    REWARD_COST_MODES, SOC_REF, STATE_FEATURES_BY_MODE,
     ReplayExecutionError, replay_episode,
 )
 from .dqn import (
     DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, ECONOMIC_REPLAY_FORMAT_VERSION,
-    PRIORITIZED_REPLAY_FORMAT_VERSION, STATE_DIM, STATE_FEATURES,
+    PRIORITIZED_REPLAY_FORMAT_VERSION,
 )
 from .experiment_schedule import (
     BestCheckpoint, EconomicUpdateSchedule, annotate_evaluation, fully_completed,
@@ -47,6 +48,7 @@ from .decision_diagnostics import (
 def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
                     redistribute_battery_energy: bool = False, trajectory_path: Path | None = None,
                     reward_cost_mode: str = 'full_economic',
+                    state_mode: str = DEFAULT_STATE_MODE,
                     learn_no_feasible_failures: bool = False, failure_penalty: FailurePenalty | None = None,
                     abort_on_execution_error: bool = False,
                     decision_diagnostic_sink=None) -> dict:
@@ -91,7 +93,7 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             episodes, lambda state, feasible: agent.select_power(state, feasible, epsilon=0.0),
             accountant, beta_soc=beta_soc,
             on_failure=on_failure, redistribute_battery_energy=redistribute_battery_energy,
-            reward_cost_mode=reward_cost_mode,
+            reward_cost_mode=reward_cost_mode, state_mode=state_mode,
         )
         if decision_diagnostic_sink is not None:
             for result in results:
@@ -288,6 +290,7 @@ def _preserve_uncommitted_diagnostics(output_dir: Path, completed_round: int) ->
 def run_monitored_training(
     dataset, *, output_dir: Path, rounds: int = 100, beta_soc: float = DEFAULT_BETA_SOC,
     reward_cost_mode: str = 'full_economic',
+    state_mode: str = DEFAULT_STATE_MODE,
     cadence: str = "replay32", target_mode: str = "soft", target_interval: int = 500,
     seed: int = 42, batch_size: int = 64, updates_per_episode: int = 16,
     epsilon_start: float = 1.0, epsilon_end: float = 0.05, progress_every_steps: int = 0,
@@ -311,6 +314,12 @@ def run_monitored_training(
     validate_replay_configuration(replay_sampling, per_alpha, per_beta, per_epsilon)
     if reward_cost_mode not in REWARD_COST_MODES:
         raise ValueError(f'reward_cost_mode must be one of {REWARD_COST_MODES}')
+    if state_mode not in STATE_FEATURES_BY_MODE:
+        raise ValueError(f'state_mode must be one of {tuple(STATE_FEATURES_BY_MODE)}')
+    if reward_cost_mode == 'control_only' and redistribute_battery_energy:
+        raise ValueError('control_only does not allow battery energy reward redistribution')
+    state_features = STATE_FEATURES_BY_MODE[state_mode]
+    state_dim = len(state_features)
     if not math.isfinite(reward_scale) or reward_scale <= 0:
         raise ValueError('reward_scale must be finite and positive')
     if type(failure_terminal_quota) is not int or failure_terminal_quota < 0:
@@ -344,11 +353,18 @@ def run_monitored_training(
     parameters = {
         'beta_soc':beta_soc,'rounds':rounds,'seed':seed,'batch_size':batch_size,
         'reward_cost_mode':reward_cost_mode,
+        'reward_mode':reward_cost_mode,
+        'h2_reward_weight':0. if reward_cost_mode == 'control_only' else 1.,
+        'shore_purchase_reward_weight':0. if reward_cost_mode == 'control_only' else 1.,
         'fc_degradation_reward_weight':1. if reward_cost_mode == 'full_economic' else 0.,
         'battery_degradation_reward_weight':1. if reward_cost_mode == 'full_economic' else 0.,
         'fc_ramp_reward_coefficient_cny_per_kw': (
-            FC_RAMP_REWARD_CNY_PER_KW if reward_cost_mode == 'energy_with_fc_ramp' else 0.),
+            FC_RAMP_REWARD_CNY_PER_KW
+            if reward_cost_mode in ('energy_with_fc_ramp', 'control_only') else 0.),
         'reward_formula': (
+            '-(fc_ramp_reward_coefficient_cny_per_kw * abs(actual_fc_kw - previous_actual_fc_kw)'
+            ' + beta_soc * (SOC_next - soc_ref)**2)'
+            if reward_cost_mode == 'control_only' else
             '-(C_H2 + C_shore_purchase + beta_soc * (SOC_next - soc_ref)**2'
             ' + fc_ramp_reward_coefficient_cny_per_kw * abs(actual_fc_kw - previous_actual_fc_kw))'
             if reward_cost_mode == 'energy_with_fc_ramp' else
@@ -358,7 +374,8 @@ def run_monitored_training(
         'soc_ref':SOC_REF,
         'soc_reward_formula':'-beta_soc * (actual_post_action_onboard_soc - soc_ref)**2',
         'gamma':1.0,'learning_rate':ECONOMIC_LEARNING_RATE,'hidden_dims':list(ECONOMIC_HIDDEN_DIMS),
-        'state_dim':STATE_DIM,'state_features':list(STATE_FEATURES),
+        'state_mode':state_mode,'state_dim':state_dim,'state_features':list(state_features),
+        'network_dims':[state_dim,*ECONOMIC_HIDDEN_DIMS,len(ACTION_KW)],
         'action_kw':list(ACTION_KW),'replay_capacity':300000,
         'epsilon_start':epsilon_start,'epsilon_end':epsilon_end,
         'epsilon_linear_end_round':70,'epsilon_hold_from_round':71,
@@ -390,9 +407,11 @@ def run_monitored_training(
         'hyperparameters':parameters,'manifest_sha256':dict(manifest_sha256 or {}),
         'reward_definition':parameters['reward_formula'],
         'dataset_roots':list(dataset_roots or ()),
-        'reward_units':{'economic_q':'scaled_reward_equivalent_cny',
+        'reward_units':{'economic_q': ('scaled_control_reward_units'
+                           if reward_cost_mode == 'control_only' else 'scaled_reward_equivalent_cny'),
             'stored_reward':'reward_scale * final_unscaled_reward',
-            'original_rewards':'reward_equivalent_cny',
+            'original_rewards': ('control reward units; not actual CNY expenditure'
+                                if reward_cost_mode == 'control_only' else 'reward_equivalent_cny'),
             'soc_soft_penalty':'auxiliary reward-equivalent units; not actual CNY expenditure',
             'fc_ramp_penalty':'auxiliary reward-equivalent CNY on actual ONBOARD FC power changes; not additional economic ledger expenditure',
             'economic_ledger':'CNY; modeled fixed-target SHORE and terminal settlement separately tagged',
@@ -461,7 +480,7 @@ def run_monitored_training(
         try:
             agent, report = _run_monitored_training(dataset,output_dir=output_dir,rounds=rounds,
                 beta_soc=beta_soc,cadence=cadence,target_mode=target_mode,target_interval=target_interval,
-                reward_cost_mode=reward_cost_mode,
+                reward_cost_mode=reward_cost_mode, state_mode=state_mode,
                 seed=seed,batch_size=batch_size,updates_per_episode=updates_per_episode,
                 epsilon_start=epsilon_start,epsilon_end=epsilon_end,progress_every_steps=progress_every_steps,
                 redistribute_battery_energy=redistribute_battery_energy,n_step=n_step,
@@ -503,7 +522,7 @@ def run_monitored_training(
 
 def _run_monitored_training(
     dataset, *, output_dir: Path, rounds: int, beta_soc: float,
-    reward_cost_mode: str,
+    reward_cost_mode: str, state_mode: str,
     cadence: str, target_mode: str, target_interval: int,
     seed: int, batch_size: int, updates_per_episode: int,
     epsilon_start: float, epsilon_end: float, progress_every_steps: int,
@@ -537,6 +556,7 @@ def _run_monitored_training(
     if required_split_sizes is not None and (len(train),len(validation)) != required_split_sizes:
         raise ValueError('dataset sizes differ from the required checkpoint qualification set')
     agent = DirectPowerDDQN(seed=seed,n_step=n_step,reward_scale=reward_scale,
+                            state_mode=state_mode,
                             learning_rate=ECONOMIC_LEARNING_RATE, hidden_dims=ECONOMIC_HIDDEN_DIMS,
                             replay_capacity=300_000, failure_terminal_quota=failure_terminal_quota,
                             replay_sampling=replay_sampling, per_alpha=per_alpha,
@@ -626,14 +646,15 @@ def _run_monitored_training(
         bootstrap_policy_calls = 0
         def bootstrap_policy(state, feasible):
             nonlocal bootstrap_policy_calls
-            power = min(feasible, key=lambda value: abs(value-state[4]*600))
+            power = min(feasible, key=lambda value: abs(
+                value-state[1 if state_mode == 'minimal3' else 4]*600))
             bootstrap_policy_calls += 1
             if progress_every_steps and bootstrap_policy_calls % progress_every_steps == 0:
                 print(f'bootstrap progress step={bootstrap_policy_calls} soc={state[0]:.4f} fc={power}',flush=True)
             return power
         bootstrap, bootstrap_errors = _run_episodes(
             train, bootstrap_policy, accountant, beta_soc=beta_soc,
-            reward_cost_mode=reward_cost_mode,
+            reward_cost_mode=reward_cost_mode, state_mode=state_mode,
             on_failure=bootstrap_failure,
             redistribute_battery_energy=redistribute_battery_energy,
         )
@@ -788,7 +809,7 @@ def _run_monitored_training(
             before_episode_insertions = agent.economic_replay_insertions
             try:
                 result = replay_episode(episode,training_policy,accountant=accountant,beta_soc=beta_soc,
-                                         reward_cost_mode=reward_cost_mode,
+                                         reward_cost_mode=reward_cost_mode, state_mode=state_mode,
                                          redistribute_battery_energy=redistribute_battery_energy)
             except ReplayExecutionError as exc:
                 exc.sample_id = str(episode.sample_id)
@@ -877,7 +898,7 @@ def _run_monitored_training(
                 decision_rows.extend(actual_greedy_q_records(
                     sample_id, transitions, agent, failed=failed))
         greedy_train = greedy_evaluate(train,agent,accountant,beta_soc,
-            reward_cost_mode=reward_cost_mode,
+            reward_cost_mode=reward_cost_mode, state_mode=state_mode,
             redistribute_battery_energy=redistribute_battery_energy,
             trajectory_path=output_dir/f'round_{round_index:03d}_train_trajectories.json' if capture_trajectories else None,
             learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty,
@@ -887,7 +908,7 @@ def _run_monitored_training(
         runtime['phase']='greedy_validation'
         print(f"round {round_index}/{rounds} greedy_train={greedy_train['evaluable_completed']}/{greedy_train['evaluable_episodes']} validation start",flush=True)
         greedy_validation = greedy_evaluate(validation,agent,accountant,beta_soc,
-            reward_cost_mode=reward_cost_mode,
+            reward_cost_mode=reward_cost_mode, state_mode=state_mode,
             redistribute_battery_energy=redistribute_battery_energy,
             trajectory_path=output_dir/f'round_{round_index:03d}_validation_trajectories.json' if capture_trajectories else None,
             learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty,

@@ -1,0 +1,1522 @@
+{
+  "source_run": "outputs\\v4_minimal3_control_per_seed42_100r_20261016_141000_807",
+  "source_run_bytes": 11675475900,
+  "archived": [
+    {
+      "source": "report.json",
+      "archive": "raw/report.json.gz",
+      "source_bytes": 8620574,
+      "source_sha256": "ddcf6ebcbbb014546a6e97911de711ea933e51458d7029f133eb7a8145175165",
+      "archive_bytes": 1482031,
+      "archive_sha256": "db9193ffa0014a37c20e8effef0fb375720efddc2e344b2f708a9648e25d1027"
+    },
+    {
+      "source": "round_metrics.csv",
+      "archive": "raw/round_metrics.csv.gz",
+      "source_bytes": 2079223,
+      "source_sha256": "f833e8deb4989cca9536b3e5366e06b4bfe04e5c61f8f2f52d5e92be20ebaeec",
+      "archive_bytes": 416128,
+      "archive_sha256": "f7c52d7b6f4c0edd71068baa2ca436cba75a667ad6c7828223b5e708d5f6cf10"
+    },
+    {
+      "source": "train.log",
+      "archive": "raw/train.log.gz",
+      "source_bytes": 2245693,
+      "source_sha256": "f453b6d93631001560f961f261fb5952f57011eb75a9f55ac4cf68bb580ca337",
+      "archive_bytes": 202244,
+      "archive_sha256": "73a07f3358ad8218c0124cbd22cbb4894c09cd446e6fecfc535b1b3699a52031"
+    },
+    {
+      "source": "learning_curves_metadata.json",
+      "archive": "raw/learning_curves_metadata.json.gz",
+      "source_bytes": 139956,
+      "source_sha256": "e22724b124da732fe1eb2ba261b1bf4f8a644b53904232c7bbceedbfee1060b5",
+      "archive_bytes": 40755,
+      "archive_sha256": "1146066193e0ed0d9975cb957719d48ed78e45dfd2199b3c86d8ee2d4a6895fa"
+    },
+    {
+      "source": "round_031_train_trajectories.json",
+      "archive": "raw/round_031_train_trajectories.json.gz",
+      "source_bytes": 73847403,
+      "source_sha256": "3526be7d0bb5aceaa3a23499c88971e5863a86e23c627abb4bd4e984e7371209",
+      "archive_bytes": 1959626,
+      "archive_sha256": "73c3eb24889004b117a7ef7f387804ed748f0e05d74fd724992aa0e103994aac"
+    },
+    {
+      "source": "round_031_validation_trajectories.json",
+      "archive": "raw/round_031_validation_trajectories.json.gz",
+      "source_bytes": 14444567,
+      "source_sha256": "ecd5e6ee1f013d71884b559d5bad4f3f838d450b63da1da5f5e89f0846df8e6e",
+      "archive_bytes": 414020,
+      "archive_sha256": "6cd5fe007a12b409f6ce897703898b3b5302f890a603e6a721ad472c219418d8"
+    },
+    {
+      "source": "round_100_train_trajectories.json",
+      "archive": "raw/round_100_train_trajectories.json.gz",
+      "source_bytes": 55736757,
+      "source_sha256": "fcd16340664cb2678bf3a203bafaf8e62942cf881074ddfbe10ffad2c574194b",
+      "archive_bytes": 1645954,
+      "archive_sha256": "63acd5222d55b77f30c716773ee8ccdfca25a2b74324ee8471e1e20d1b395831"
+    },
+    {
+      "source": "round_100_validation_trajectories.json",
+      "archive": "raw/round_100_validation_trajectories.json.gz",
+      "source_bytes": 14167415,
+      "source_sha256": "03a17c22dc025d13f2c50659fe6dff1ca708a3f53c57c91452a8a2e06de5e042",
+      "archive_bytes": 415853,
+      "archive_sha256": "1806a8f4d37d25341e806a99ab901fef4dc42f7180211650c66d9987f4a2dd1a"
+    },
+    {
+      "source": "run_metadata.json",
+      "archive": "raw/run_metadata.json",
+      "source_bytes": 6282,
+      "source_sha256": "1a4a26c4a0c63f7ff85e52778b5d962acbaa103a449156de850f901644529db0",
+      "archive_bytes": 6282,
+      "archive_sha256": "1a4a26c4a0c63f7ff85e52778b5d962acbaa103a449156de850f901644529db0"
+    },
+    {
+      "source": "completion_rates.png",
+      "archive": "raw/completion_rates.png",
+      "source_bytes": 110793,
+      "source_sha256": "48d32977cade3ed1894520c297c3647e1641bb87aaba48a2ab8209cc21b86ec7",
+      "archive_bytes": 110793,
+      "archive_sha256": "48d32977cade3ed1894520c297c3647e1641bb87aaba48a2ab8209cc21b86ec7"
+    },
+    {
+      "source": "fc_and_update_counts.png",
+      "archive": "raw/fc_and_update_counts.png",
+      "source_bytes": 338222,
+      "source_sha256": "a43ce951f6eef0e93553fddaf7ff7a53c4baaf49d2ab37b7bcda2049d55b0981",
+      "archive_bytes": 338222,
+      "archive_sha256": "a43ce951f6eef0e93553fddaf7ff7a53c4baaf49d2ab37b7bcda2049d55b0981"
+    },
+    {
+      "source": "final_round_100_greedy_train_completed_trajectory.png",
+      "archive": "raw/final_round_100_greedy_train_completed_trajectory.png",
+      "source_bytes": 106180,
+      "source_sha256": "2e2ab689e5d89bd61de39016fe453bd678dd4c22856617fcd189d6ccd4e189d9",
+      "archive_bytes": 106180,
+      "archive_sha256": "2e2ab689e5d89bd61de39016fe453bd678dd4c22856617fcd189d6ccd4e189d9"
+    },
+    {
+      "source": "final_round_100_greedy_train_failed_trajectory.png",
+      "archive": "raw/final_round_100_greedy_train_failed_trajectory.png",
+      "source_bytes": 94393,
+      "source_sha256": "e404c0721a72ee38f96ca4726c82509c0327bbb1681a0efbf19dba4599e3b2fa",
+      "archive_bytes": 94393,
+      "archive_sha256": "e404c0721a72ee38f96ca4726c82509c0327bbb1681a0efbf19dba4599e3b2fa"
+    },
+    {
+      "source": "final_round_100_greedy_validation_completed_trajectory.png",
+      "archive": "raw/final_round_100_greedy_validation_completed_trajectory.png",
+      "source_bytes": 102610,
+      "source_sha256": "c756caf44c2f96bd2c9f4e29d2285322081a705585f2185eaaf052cc52358f49",
+      "archive_bytes": 102610,
+      "archive_sha256": "c756caf44c2f96bd2c9f4e29d2285322081a705585f2185eaaf052cc52358f49"
+    },
+    {
+      "source": "final_round_100_greedy_validation_failed_trajectory.png",
+      "archive": "raw/final_round_100_greedy_validation_failed_trajectory.png",
+      "source_bytes": 106933,
+      "source_sha256": "a812ff1effe553e15aace0da3f763464d845f2f616e2165c4ed27669c6b58d71",
+      "archive_bytes": 106933,
+      "archive_sha256": "a812ff1effe553e15aace0da3f763464d845f2f616e2165c4ed27669c6b58d71"
+    },
+    {
+      "source": "soc_and_epsilon.png",
+      "archive": "raw/soc_and_epsilon.png",
+      "source_bytes": 434364,
+      "source_sha256": "6746c80b82828ca942e88d3fd0b777f238f91591ae8742f020bc7b899e8dced0",
+      "archive_bytes": 434364,
+      "archive_sha256": "6746c80b82828ca942e88d3fd0b777f238f91591ae8742f020bc7b899e8dced0"
+    },
+    {
+      "source": "td_and_gradients.png",
+      "archive": "raw/td_and_gradients.png",
+      "source_bytes": 143275,
+      "source_sha256": "fe6e9d696500c474c158db43e0f0a0fb8380d5f90e8826ac3e2b193ef9e3411e",
+      "archive_bytes": 143275,
+      "archive_sha256": "fe6e9d696500c474c158db43e0f0a0fb8380d5f90e8826ac3e2b193ef9e3411e"
+    },
+    {
+      "source": "validation_economic_costs.png",
+      "archive": "raw/validation_economic_costs.png",
+      "source_bytes": 44696,
+      "source_sha256": "db80d0afad2d57ce06a3386ea60378a22ee04d7e593cf707882401a95a7c24ca",
+      "archive_bytes": 44696,
+      "archive_sha256": "db80d0afad2d57ce06a3386ea60378a22ee04d7e593cf707882401a95a7c24ca"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_001.pt",
+      "archive": "raw/diagnostic_checkpoints/round_001.pt",
+      "source_bytes": 209185,
+      "source_sha256": "a3ad345e86cd1f08b5f761f85b5827d9fe02650c029a8c341aae44674c172d62",
+      "archive_bytes": 209185,
+      "archive_sha256": "a3ad345e86cd1f08b5f761f85b5827d9fe02650c029a8c341aae44674c172d62"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_001_decisions.json",
+      "archive": "raw/diagnostic_checkpoints/round_001_decisions.json",
+      "source_bytes": 84997,
+      "source_sha256": "25a0502cc8f406b416101d26f58d91b965ffb42fc864315d8bb11e3bdd73ee26",
+      "archive_bytes": 84997,
+      "archive_sha256": "25a0502cc8f406b416101d26f58d91b965ffb42fc864315d8bb11e3bdd73ee26"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_010.pt",
+      "archive": "raw/diagnostic_checkpoints/round_010.pt",
+      "source_bytes": 209185,
+      "source_sha256": "c4839e615fe5a72bb1e401be9bffff5c708ef0c5c02d221f300f4a6a364b9015",
+      "archive_bytes": 209185,
+      "archive_sha256": "c4839e615fe5a72bb1e401be9bffff5c708ef0c5c02d221f300f4a6a364b9015"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_010_decisions.json",
+      "archive": "raw/diagnostic_checkpoints/round_010_decisions.json",
+      "source_bytes": 73058,
+      "source_sha256": "0667bf29f92088de74c902f65fc027536e961f626939c4e4cf118c42d662e1e2",
+      "archive_bytes": 73058,
+      "archive_sha256": "0667bf29f92088de74c902f65fc027536e961f626939c4e4cf118c42d662e1e2"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_020.pt",
+      "archive": "raw/diagnostic_checkpoints/round_020.pt",
+      "source_bytes": 209185,
+      "source_sha256": "7467d69caf37da03a1b0f476522e0d668cca6d67731b63219aef14b5d475d17e",
+      "archive_bytes": 209185,
+      "archive_sha256": "7467d69caf37da03a1b0f476522e0d668cca6d67731b63219aef14b5d475d17e"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_020_decisions.json",
+      "archive": "raw/diagnostic_checkpoints/round_020_decisions.json",
+      "source_bytes": 66671,
+      "source_sha256": "3ce5e8d6184ecea7fa2c9a4ad6725532d9fa13383d2ee8d5997997b603b69c8f",
+      "archive_bytes": 66671,
+      "archive_sha256": "3ce5e8d6184ecea7fa2c9a4ad6725532d9fa13383d2ee8d5997997b603b69c8f"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_030.pt",
+      "archive": "raw/diagnostic_checkpoints/round_030.pt",
+      "source_bytes": 209185,
+      "source_sha256": "630230f78d65431c8d679d5de56186b519c62d22e64b9fe88f8f28859b7e15e1",
+      "archive_bytes": 209185,
+      "archive_sha256": "630230f78d65431c8d679d5de56186b519c62d22e64b9fe88f8f28859b7e15e1"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_030_decisions.json",
+      "archive": "raw/diagnostic_checkpoints/round_030_decisions.json",
+      "source_bytes": 140623,
+      "source_sha256": "7d88d699879659f78dd86ebedd35ea0a787dd74a596db65b29e6ccc07efb59f0",
+      "archive_bytes": 140623,
+      "archive_sha256": "7d88d699879659f78dd86ebedd35ea0a787dd74a596db65b29e6ccc07efb59f0"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_040.pt",
+      "archive": "raw/diagnostic_checkpoints/round_040.pt",
+      "source_bytes": 209185,
+      "source_sha256": "6443f5ed1f342e5832a1868bf54344e89fa5c773209cbc0e5e9598fb7643610c",
+      "archive_bytes": 209185,
+      "archive_sha256": "6443f5ed1f342e5832a1868bf54344e89fa5c773209cbc0e5e9598fb7643610c"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_040_decisions.json",
+      "archive": "raw/diagnostic_checkpoints/round_040_decisions.json",
+      "source_bytes": 68422,
+      "source_sha256": "1552fe49ef1baaf6ba1c95921b32bf44a2eeb355f630f3052401f6b8b7fdc1ba",
+      "archive_bytes": 68422,
+      "archive_sha256": "1552fe49ef1baaf6ba1c95921b32bf44a2eeb355f630f3052401f6b8b7fdc1ba"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_050.pt",
+      "archive": "raw/diagnostic_checkpoints/round_050.pt",
+      "source_bytes": 209185,
+      "source_sha256": "3e47b40a1fdacff7820d896494a64044b78842cadf94b3396c03525add332acf",
+      "archive_bytes": 209185,
+      "archive_sha256": "3e47b40a1fdacff7820d896494a64044b78842cadf94b3396c03525add332acf"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_050_decisions.json",
+      "archive": "raw/diagnostic_checkpoints/round_050_decisions.json",
+      "source_bytes": 67554,
+      "source_sha256": "47c57b7901fce7783c1feee3694e388db8331fbbf17ef9faeea5296ba5a2bff8",
+      "archive_bytes": 67554,
+      "archive_sha256": "47c57b7901fce7783c1feee3694e388db8331fbbf17ef9faeea5296ba5a2bff8"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_060.pt",
+      "archive": "raw/diagnostic_checkpoints/round_060.pt",
+      "source_bytes": 209185,
+      "source_sha256": "f6a550c6df12706fc1dc344bb9d9cb177cf1e3ee06bbec94bb39112baf2905dc",
+      "archive_bytes": 209185,
+      "archive_sha256": "f6a550c6df12706fc1dc344bb9d9cb177cf1e3ee06bbec94bb39112baf2905dc"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_060_decisions.json",
+      "archive": "raw/diagnostic_checkpoints/round_060_decisions.json",
+      "source_bytes": 92014,
+      "source_sha256": "bcbd115c92246d2defe4d6d1bf2bc3ae243f57f72a2db681529f224036bf4710",
+      "archive_bytes": 92014,
+      "archive_sha256": "bcbd115c92246d2defe4d6d1bf2bc3ae243f57f72a2db681529f224036bf4710"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_070.pt",
+      "archive": "raw/diagnostic_checkpoints/round_070.pt",
+      "source_bytes": 209185,
+      "source_sha256": "9e7bd7e630d9456e2fd5d446a8591ad76b31031d8bf8baccee7d5f7a9d11915a",
+      "archive_bytes": 209185,
+      "archive_sha256": "9e7bd7e630d9456e2fd5d446a8591ad76b31031d8bf8baccee7d5f7a9d11915a"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_070_decisions.json",
+      "archive": "raw/diagnostic_checkpoints/round_070_decisions.json",
+      "source_bytes": 67248,
+      "source_sha256": "86648f5b5c433454a537938aacf46606f2602901f5785ecbe31c78e5ea01f5a2",
+      "archive_bytes": 67248,
+      "archive_sha256": "86648f5b5c433454a537938aacf46606f2602901f5785ecbe31c78e5ea01f5a2"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_080.pt",
+      "archive": "raw/diagnostic_checkpoints/round_080.pt",
+      "source_bytes": 209185,
+      "source_sha256": "70a6dc47e7a8a167154a6436c379ee76c427a447c711b56a7e3a319676c8764c",
+      "archive_bytes": 209185,
+      "archive_sha256": "70a6dc47e7a8a167154a6436c379ee76c427a447c711b56a7e3a319676c8764c"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_080_decisions.json",
+      "archive": "raw/diagnostic_checkpoints/round_080_decisions.json",
+      "source_bytes": 89399,
+      "source_sha256": "ed4133c3b544b69aa042aa178f4455a022be97203aceffd642ef852fff943820",
+      "archive_bytes": 89399,
+      "archive_sha256": "ed4133c3b544b69aa042aa178f4455a022be97203aceffd642ef852fff943820"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_090.pt",
+      "archive": "raw/diagnostic_checkpoints/round_090.pt",
+      "source_bytes": 209185,
+      "source_sha256": "e77fccb052282d8a9fdd8d52bd7897e75aaaf70006b9337e03c96e37533fbe8a",
+      "archive_bytes": 209185,
+      "archive_sha256": "e77fccb052282d8a9fdd8d52bd7897e75aaaf70006b9337e03c96e37533fbe8a"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_090_decisions.json",
+      "archive": "raw/diagnostic_checkpoints/round_090_decisions.json",
+      "source_bytes": 66221,
+      "source_sha256": "55359df82c0cdccf8d2c9001dab3aa8bc16cdbe814702f7e7e1c73c66f5988d8",
+      "archive_bytes": 66221,
+      "archive_sha256": "55359df82c0cdccf8d2c9001dab3aa8bc16cdbe814702f7e7e1c73c66f5988d8"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_100.pt",
+      "archive": "raw/diagnostic_checkpoints/round_100.pt",
+      "source_bytes": 209185,
+      "source_sha256": "671e8522c331a1220da37fad97f3cd82b2f8ca5803d38fab34e418dcd6ef23d8",
+      "archive_bytes": 209185,
+      "archive_sha256": "671e8522c331a1220da37fad97f3cd82b2f8ca5803d38fab34e418dcd6ef23d8"
+    },
+    {
+      "source": "diagnostic_checkpoints/round_100_decisions.json",
+      "archive": "raw/diagnostic_checkpoints/round_100_decisions.json",
+      "source_bytes": 65045,
+      "source_sha256": "71c1b464aa2493a590c1e2cd85deb00826e4878b5254d77445786cd88e12e1fa",
+      "archive_bytes": 65045,
+      "archive_sha256": "71c1b464aa2493a590c1e2cd85deb00826e4878b5254d77445786cd88e12e1fa"
+    }
+  ],
+  "omitted_local_only": [
+    {
+      "relative_path": "round_001_exploratory_trajectories.json",
+      "size_bytes": 44686308
+    },
+    {
+      "relative_path": "round_001_train_trajectories.json",
+      "size_bytes": 50176847
+    },
+    {
+      "relative_path": "round_001_validation_trajectories.json",
+      "size_bytes": 10983544
+    },
+    {
+      "relative_path": "round_002_exploratory_trajectories.json",
+      "size_bytes": 44663966
+    },
+    {
+      "relative_path": "round_002_train_trajectories.json",
+      "size_bytes": 62021507
+    },
+    {
+      "relative_path": "round_002_validation_trajectories.json",
+      "size_bytes": 14397395
+    },
+    {
+      "relative_path": "round_003_exploratory_trajectories.json",
+      "size_bytes": 43335405
+    },
+    {
+      "relative_path": "round_003_train_trajectories.json",
+      "size_bytes": 50539604
+    },
+    {
+      "relative_path": "round_003_validation_trajectories.json",
+      "size_bytes": 12774053
+    },
+    {
+      "relative_path": "round_004_exploratory_trajectories.json",
+      "size_bytes": 44531382
+    },
+    {
+      "relative_path": "round_004_train_trajectories.json",
+      "size_bytes": 65597131
+    },
+    {
+      "relative_path": "round_004_validation_trajectories.json",
+      "size_bytes": 14364790
+    },
+    {
+      "relative_path": "round_005_exploratory_trajectories.json",
+      "size_bytes": 44538296
+    },
+    {
+      "relative_path": "round_005_train_trajectories.json",
+      "size_bytes": 67106022
+    },
+    {
+      "relative_path": "round_005_validation_trajectories.json",
+      "size_bytes": 13424181
+    },
+    {
+      "relative_path": "round_006_exploratory_trajectories.json",
+      "size_bytes": 44717191
+    },
+    {
+      "relative_path": "round_006_train_trajectories.json",
+      "size_bytes": 65462445
+    },
+    {
+      "relative_path": "round_006_validation_trajectories.json",
+      "size_bytes": 14361970
+    },
+    {
+      "relative_path": "round_007_exploratory_trajectories.json",
+      "size_bytes": 44856910
+    },
+    {
+      "relative_path": "round_007_train_trajectories.json",
+      "size_bytes": 49688489
+    },
+    {
+      "relative_path": "round_007_validation_trajectories.json",
+      "size_bytes": 14378747
+    },
+    {
+      "relative_path": "round_008_exploratory_trajectories.json",
+      "size_bytes": 44552751
+    },
+    {
+      "relative_path": "round_008_train_trajectories.json",
+      "size_bytes": 60871934
+    },
+    {
+      "relative_path": "round_008_validation_trajectories.json",
+      "size_bytes": 14397977
+    },
+    {
+      "relative_path": "round_009_exploratory_trajectories.json",
+      "size_bytes": 44641509
+    },
+    {
+      "relative_path": "round_009_train_trajectories.json",
+      "size_bytes": 71429809
+    },
+    {
+      "relative_path": "round_009_validation_trajectories.json",
+      "size_bytes": 14494749
+    },
+    {
+      "relative_path": "round_010_exploratory_trajectories.json",
+      "size_bytes": 44689402
+    },
+    {
+      "relative_path": "round_010_train_trajectories.json",
+      "size_bytes": 66142877
+    },
+    {
+      "relative_path": "round_010_validation_trajectories.json",
+      "size_bytes": 14184505
+    },
+    {
+      "relative_path": "round_011_exploratory_trajectories.json",
+      "size_bytes": 44918519
+    },
+    {
+      "relative_path": "round_011_train_trajectories.json",
+      "size_bytes": 56418146
+    },
+    {
+      "relative_path": "round_011_validation_trajectories.json",
+      "size_bytes": 14437847
+    },
+    {
+      "relative_path": "round_012_exploratory_trajectories.json",
+      "size_bytes": 44671834
+    },
+    {
+      "relative_path": "round_012_train_trajectories.json",
+      "size_bytes": 55660903
+    },
+    {
+      "relative_path": "round_012_validation_trajectories.json",
+      "size_bytes": 13305930
+    },
+    {
+      "relative_path": "round_013_exploratory_trajectories.json",
+      "size_bytes": 45169175
+    },
+    {
+      "relative_path": "round_013_train_trajectories.json",
+      "size_bytes": 74710535
+    },
+    {
+      "relative_path": "round_013_validation_trajectories.json",
+      "size_bytes": 14496041
+    },
+    {
+      "relative_path": "round_014_exploratory_trajectories.json",
+      "size_bytes": 45608165
+    },
+    {
+      "relative_path": "round_014_train_trajectories.json",
+      "size_bytes": 71503487
+    },
+    {
+      "relative_path": "round_014_validation_trajectories.json",
+      "size_bytes": 14467507
+    },
+    {
+      "relative_path": "round_015_exploratory_trajectories.json",
+      "size_bytes": 43631644
+    },
+    {
+      "relative_path": "round_015_train_trajectories.json",
+      "size_bytes": 58589038
+    },
+    {
+      "relative_path": "round_015_validation_trajectories.json",
+      "size_bytes": 13913765
+    },
+    {
+      "relative_path": "round_016_exploratory_trajectories.json",
+      "size_bytes": 45055720
+    },
+    {
+      "relative_path": "round_016_train_trajectories.json",
+      "size_bytes": 71816898
+    },
+    {
+      "relative_path": "round_016_validation_trajectories.json",
+      "size_bytes": 14634485
+    },
+    {
+      "relative_path": "round_017_exploratory_trajectories.json",
+      "size_bytes": 44545220
+    },
+    {
+      "relative_path": "round_017_train_trajectories.json",
+      "size_bytes": 56771279
+    },
+    {
+      "relative_path": "round_017_validation_trajectories.json",
+      "size_bytes": 14030213
+    },
+    {
+      "relative_path": "round_018_exploratory_trajectories.json",
+      "size_bytes": 45015524
+    },
+    {
+      "relative_path": "round_018_train_trajectories.json",
+      "size_bytes": 71823462
+    },
+    {
+      "relative_path": "round_018_validation_trajectories.json",
+      "size_bytes": 14614948
+    },
+    {
+      "relative_path": "round_019_exploratory_trajectories.json",
+      "size_bytes": 46010502
+    },
+    {
+      "relative_path": "round_019_train_trajectories.json",
+      "size_bytes": 62944362
+    },
+    {
+      "relative_path": "round_019_validation_trajectories.json",
+      "size_bytes": 13436005
+    },
+    {
+      "relative_path": "round_020_exploratory_trajectories.json",
+      "size_bytes": 45684096
+    },
+    {
+      "relative_path": "round_020_train_trajectories.json",
+      "size_bytes": 68231396
+    },
+    {
+      "relative_path": "round_020_validation_trajectories.json",
+      "size_bytes": 14403572
+    },
+    {
+      "relative_path": "round_021_exploratory_trajectories.json",
+      "size_bytes": 45644825
+    },
+    {
+      "relative_path": "round_021_train_trajectories.json",
+      "size_bytes": 64597305
+    },
+    {
+      "relative_path": "round_021_validation_trajectories.json",
+      "size_bytes": 14501246
+    },
+    {
+      "relative_path": "round_022_exploratory_trajectories.json",
+      "size_bytes": 45588099
+    },
+    {
+      "relative_path": "round_022_train_trajectories.json",
+      "size_bytes": 64938252
+    },
+    {
+      "relative_path": "round_022_validation_trajectories.json",
+      "size_bytes": 13270596
+    },
+    {
+      "relative_path": "round_023_exploratory_trajectories.json",
+      "size_bytes": 45983301
+    },
+    {
+      "relative_path": "round_023_train_trajectories.json",
+      "size_bytes": 62140148
+    },
+    {
+      "relative_path": "round_023_validation_trajectories.json",
+      "size_bytes": 13468018
+    },
+    {
+      "relative_path": "round_024_exploratory_trajectories.json",
+      "size_bytes": 45590438
+    },
+    {
+      "relative_path": "round_024_train_trajectories.json",
+      "size_bytes": 44886853
+    },
+    {
+      "relative_path": "round_024_validation_trajectories.json",
+      "size_bytes": 13907449
+    },
+    {
+      "relative_path": "round_025_exploratory_trajectories.json",
+      "size_bytes": 47366449
+    },
+    {
+      "relative_path": "round_025_train_trajectories.json",
+      "size_bytes": 67920095
+    },
+    {
+      "relative_path": "round_025_validation_trajectories.json",
+      "size_bytes": 14070052
+    },
+    {
+      "relative_path": "round_026_exploratory_trajectories.json",
+      "size_bytes": 44996781
+    },
+    {
+      "relative_path": "round_026_train_trajectories.json",
+      "size_bytes": 71460168
+    },
+    {
+      "relative_path": "round_026_validation_trajectories.json",
+      "size_bytes": 14494496
+    },
+    {
+      "relative_path": "round_027_exploratory_trajectories.json",
+      "size_bytes": 46339662
+    },
+    {
+      "relative_path": "round_027_train_trajectories.json",
+      "size_bytes": 67924598
+    },
+    {
+      "relative_path": "round_027_validation_trajectories.json",
+      "size_bytes": 14443565
+    },
+    {
+      "relative_path": "round_028_exploratory_trajectories.json",
+      "size_bytes": 45402006
+    },
+    {
+      "relative_path": "round_028_train_trajectories.json",
+      "size_bytes": 59271659
+    },
+    {
+      "relative_path": "round_028_validation_trajectories.json",
+      "size_bytes": 13859655
+    },
+    {
+      "relative_path": "round_029_exploratory_trajectories.json",
+      "size_bytes": 44935550
+    },
+    {
+      "relative_path": "round_029_train_trajectories.json",
+      "size_bytes": 46386873
+    },
+    {
+      "relative_path": "round_029_validation_trajectories.json",
+      "size_bytes": 13734355
+    },
+    {
+      "relative_path": "round_030_exploratory_trajectories.json",
+      "size_bytes": 48924051
+    },
+    {
+      "relative_path": "round_030_train_trajectories.json",
+      "size_bytes": 60157914
+    },
+    {
+      "relative_path": "round_030_validation_trajectories.json",
+      "size_bytes": 13103197
+    },
+    {
+      "relative_path": "round_031_exploratory_trajectories.json",
+      "size_bytes": 44710483
+    },
+    {
+      "relative_path": "round_032_exploratory_trajectories.json",
+      "size_bytes": 43415028
+    },
+    {
+      "relative_path": "round_032_train_trajectories.json",
+      "size_bytes": 64474304
+    },
+    {
+      "relative_path": "round_032_validation_trajectories.json",
+      "size_bytes": 14404535
+    },
+    {
+      "relative_path": "round_033_exploratory_trajectories.json",
+      "size_bytes": 44486222
+    },
+    {
+      "relative_path": "round_033_train_trajectories.json",
+      "size_bytes": 50375378
+    },
+    {
+      "relative_path": "round_033_validation_trajectories.json",
+      "size_bytes": 12273893
+    },
+    {
+      "relative_path": "round_034_exploratory_trajectories.json",
+      "size_bytes": 45514880
+    },
+    {
+      "relative_path": "round_034_train_trajectories.json",
+      "size_bytes": 42424564
+    },
+    {
+      "relative_path": "round_034_validation_trajectories.json",
+      "size_bytes": 12679864
+    },
+    {
+      "relative_path": "round_035_exploratory_trajectories.json",
+      "size_bytes": 44869257
+    },
+    {
+      "relative_path": "round_035_train_trajectories.json",
+      "size_bytes": 66755938
+    },
+    {
+      "relative_path": "round_035_validation_trajectories.json",
+      "size_bytes": 14524424
+    },
+    {
+      "relative_path": "round_036_exploratory_trajectories.json",
+      "size_bytes": 49358284
+    },
+    {
+      "relative_path": "round_036_train_trajectories.json",
+      "size_bytes": 61906173
+    },
+    {
+      "relative_path": "round_036_validation_trajectories.json",
+      "size_bytes": 14215105
+    },
+    {
+      "relative_path": "round_037_exploratory_trajectories.json",
+      "size_bytes": 45277481
+    },
+    {
+      "relative_path": "round_037_train_trajectories.json",
+      "size_bytes": 45683756
+    },
+    {
+      "relative_path": "round_037_validation_trajectories.json",
+      "size_bytes": 11739768
+    },
+    {
+      "relative_path": "round_038_exploratory_trajectories.json",
+      "size_bytes": 48162277
+    },
+    {
+      "relative_path": "round_038_train_trajectories.json",
+      "size_bytes": 53705643
+    },
+    {
+      "relative_path": "round_038_validation_trajectories.json",
+      "size_bytes": 13857065
+    },
+    {
+      "relative_path": "round_039_exploratory_trajectories.json",
+      "size_bytes": 43874433
+    },
+    {
+      "relative_path": "round_039_train_trajectories.json",
+      "size_bytes": 51015902
+    },
+    {
+      "relative_path": "round_039_validation_trajectories.json",
+      "size_bytes": 13957073
+    },
+    {
+      "relative_path": "round_040_exploratory_trajectories.json",
+      "size_bytes": 51707188
+    },
+    {
+      "relative_path": "round_040_train_trajectories.json",
+      "size_bytes": 55519976
+    },
+    {
+      "relative_path": "round_040_validation_trajectories.json",
+      "size_bytes": 13624760
+    },
+    {
+      "relative_path": "round_041_exploratory_trajectories.json",
+      "size_bytes": 47919279
+    },
+    {
+      "relative_path": "round_041_train_trajectories.json",
+      "size_bytes": 45655344
+    },
+    {
+      "relative_path": "round_041_validation_trajectories.json",
+      "size_bytes": 13911109
+    },
+    {
+      "relative_path": "round_042_exploratory_trajectories.json",
+      "size_bytes": 44981934
+    },
+    {
+      "relative_path": "round_042_train_trajectories.json",
+      "size_bytes": 51170470
+    },
+    {
+      "relative_path": "round_042_validation_trajectories.json",
+      "size_bytes": 12310763
+    },
+    {
+      "relative_path": "round_043_exploratory_trajectories.json",
+      "size_bytes": 45009893
+    },
+    {
+      "relative_path": "round_043_train_trajectories.json",
+      "size_bytes": 45942954
+    },
+    {
+      "relative_path": "round_043_validation_trajectories.json",
+      "size_bytes": 13033431
+    },
+    {
+      "relative_path": "round_044_exploratory_trajectories.json",
+      "size_bytes": 45164591
+    },
+    {
+      "relative_path": "round_044_train_trajectories.json",
+      "size_bytes": 49342995
+    },
+    {
+      "relative_path": "round_044_validation_trajectories.json",
+      "size_bytes": 13844840
+    },
+    {
+      "relative_path": "round_045_exploratory_trajectories.json",
+      "size_bytes": 48245471
+    },
+    {
+      "relative_path": "round_045_train_trajectories.json",
+      "size_bytes": 51616862
+    },
+    {
+      "relative_path": "round_045_validation_trajectories.json",
+      "size_bytes": 11833715
+    },
+    {
+      "relative_path": "round_046_exploratory_trajectories.json",
+      "size_bytes": 46352822
+    },
+    {
+      "relative_path": "round_046_train_trajectories.json",
+      "size_bytes": 49218689
+    },
+    {
+      "relative_path": "round_046_validation_trajectories.json",
+      "size_bytes": 12844731
+    },
+    {
+      "relative_path": "round_047_exploratory_trajectories.json",
+      "size_bytes": 47172238
+    },
+    {
+      "relative_path": "round_047_train_trajectories.json",
+      "size_bytes": 51965519
+    },
+    {
+      "relative_path": "round_047_validation_trajectories.json",
+      "size_bytes": 13991749
+    },
+    {
+      "relative_path": "round_048_exploratory_trajectories.json",
+      "size_bytes": 44143397
+    },
+    {
+      "relative_path": "round_048_train_trajectories.json",
+      "size_bytes": 50179042
+    },
+    {
+      "relative_path": "round_048_validation_trajectories.json",
+      "size_bytes": 13436538
+    },
+    {
+      "relative_path": "round_049_exploratory_trajectories.json",
+      "size_bytes": 46175797
+    },
+    {
+      "relative_path": "round_049_train_trajectories.json",
+      "size_bytes": 57193911
+    },
+    {
+      "relative_path": "round_049_validation_trajectories.json",
+      "size_bytes": 14223110
+    },
+    {
+      "relative_path": "round_050_exploratory_trajectories.json",
+      "size_bytes": 47874770
+    },
+    {
+      "relative_path": "round_050_train_trajectories.json",
+      "size_bytes": 45953280
+    },
+    {
+      "relative_path": "round_050_validation_trajectories.json",
+      "size_bytes": 11863438
+    },
+    {
+      "relative_path": "round_051_exploratory_trajectories.json",
+      "size_bytes": 45426069
+    },
+    {
+      "relative_path": "round_051_train_trajectories.json",
+      "size_bytes": 47721006
+    },
+    {
+      "relative_path": "round_051_validation_trajectories.json",
+      "size_bytes": 12401461
+    },
+    {
+      "relative_path": "round_052_exploratory_trajectories.json",
+      "size_bytes": 48051069
+    },
+    {
+      "relative_path": "round_052_train_trajectories.json",
+      "size_bytes": 49494582
+    },
+    {
+      "relative_path": "round_052_validation_trajectories.json",
+      "size_bytes": 13379120
+    },
+    {
+      "relative_path": "round_053_exploratory_trajectories.json",
+      "size_bytes": 43635744
+    },
+    {
+      "relative_path": "round_053_train_trajectories.json",
+      "size_bytes": 53165130
+    },
+    {
+      "relative_path": "round_053_validation_trajectories.json",
+      "size_bytes": 11745126
+    },
+    {
+      "relative_path": "round_054_exploratory_trajectories.json",
+      "size_bytes": 43250337
+    },
+    {
+      "relative_path": "round_054_train_trajectories.json",
+      "size_bytes": 58171673
+    },
+    {
+      "relative_path": "round_054_validation_trajectories.json",
+      "size_bytes": 12753508
+    },
+    {
+      "relative_path": "round_055_exploratory_trajectories.json",
+      "size_bytes": 43670078
+    },
+    {
+      "relative_path": "round_055_train_trajectories.json",
+      "size_bytes": 57031584
+    },
+    {
+      "relative_path": "round_055_validation_trajectories.json",
+      "size_bytes": 13131243
+    },
+    {
+      "relative_path": "round_056_exploratory_trajectories.json",
+      "size_bytes": 49792139
+    },
+    {
+      "relative_path": "round_056_train_trajectories.json",
+      "size_bytes": 42463527
+    },
+    {
+      "relative_path": "round_056_validation_trajectories.json",
+      "size_bytes": 13226856
+    },
+    {
+      "relative_path": "round_057_exploratory_trajectories.json",
+      "size_bytes": 44252556
+    },
+    {
+      "relative_path": "round_057_train_trajectories.json",
+      "size_bytes": 44895816
+    },
+    {
+      "relative_path": "round_057_validation_trajectories.json",
+      "size_bytes": 13263268
+    },
+    {
+      "relative_path": "round_058_exploratory_trajectories.json",
+      "size_bytes": 44507526
+    },
+    {
+      "relative_path": "round_058_train_trajectories.json",
+      "size_bytes": 42147177
+    },
+    {
+      "relative_path": "round_058_validation_trajectories.json",
+      "size_bytes": 12094049
+    },
+    {
+      "relative_path": "round_059_exploratory_trajectories.json",
+      "size_bytes": 46374868
+    },
+    {
+      "relative_path": "round_059_train_trajectories.json",
+      "size_bytes": 41827396
+    },
+    {
+      "relative_path": "round_059_validation_trajectories.json",
+      "size_bytes": 12210346
+    },
+    {
+      "relative_path": "round_060_exploratory_trajectories.json",
+      "size_bytes": 45748038
+    },
+    {
+      "relative_path": "round_060_train_trajectories.json",
+      "size_bytes": 44969275
+    },
+    {
+      "relative_path": "round_060_validation_trajectories.json",
+      "size_bytes": 13966048
+    },
+    {
+      "relative_path": "round_061_exploratory_trajectories.json",
+      "size_bytes": 47747517
+    },
+    {
+      "relative_path": "round_061_train_trajectories.json",
+      "size_bytes": 42461604
+    },
+    {
+      "relative_path": "round_061_validation_trajectories.json",
+      "size_bytes": 12202431
+    },
+    {
+      "relative_path": "round_062_exploratory_trajectories.json",
+      "size_bytes": 47566967
+    },
+    {
+      "relative_path": "round_062_train_trajectories.json",
+      "size_bytes": 47709288
+    },
+    {
+      "relative_path": "round_062_validation_trajectories.json",
+      "size_bytes": 11110503
+    },
+    {
+      "relative_path": "round_063_exploratory_trajectories.json",
+      "size_bytes": 45838862
+    },
+    {
+      "relative_path": "round_063_train_trajectories.json",
+      "size_bytes": 55221976
+    },
+    {
+      "relative_path": "round_063_validation_trajectories.json",
+      "size_bytes": 13303339
+    },
+    {
+      "relative_path": "round_064_exploratory_trajectories.json",
+      "size_bytes": 46378521
+    },
+    {
+      "relative_path": "round_064_train_trajectories.json",
+      "size_bytes": 45978276
+    },
+    {
+      "relative_path": "round_064_validation_trajectories.json",
+      "size_bytes": 11563162
+    },
+    {
+      "relative_path": "round_065_exploratory_trajectories.json",
+      "size_bytes": 52348778
+    },
+    {
+      "relative_path": "round_065_train_trajectories.json",
+      "size_bytes": 50351568
+    },
+    {
+      "relative_path": "round_065_validation_trajectories.json",
+      "size_bytes": 13825767
+    },
+    {
+      "relative_path": "round_066_exploratory_trajectories.json",
+      "size_bytes": 45748100
+    },
+    {
+      "relative_path": "round_066_train_trajectories.json",
+      "size_bytes": 48242840
+    },
+    {
+      "relative_path": "round_066_validation_trajectories.json",
+      "size_bytes": 13213074
+    },
+    {
+      "relative_path": "round_067_exploratory_trajectories.json",
+      "size_bytes": 48246387
+    },
+    {
+      "relative_path": "round_067_train_trajectories.json",
+      "size_bytes": 49803250
+    },
+    {
+      "relative_path": "round_067_validation_trajectories.json",
+      "size_bytes": 14187290
+    },
+    {
+      "relative_path": "round_068_exploratory_trajectories.json",
+      "size_bytes": 48179989
+    },
+    {
+      "relative_path": "round_068_train_trajectories.json",
+      "size_bytes": 51918390
+    },
+    {
+      "relative_path": "round_068_validation_trajectories.json",
+      "size_bytes": 13143186
+    },
+    {
+      "relative_path": "round_069_exploratory_trajectories.json",
+      "size_bytes": 42964569
+    },
+    {
+      "relative_path": "round_069_train_trajectories.json",
+      "size_bytes": 49741659
+    },
+    {
+      "relative_path": "round_069_validation_trajectories.json",
+      "size_bytes": 13137115
+    },
+    {
+      "relative_path": "round_070_exploratory_trajectories.json",
+      "size_bytes": 49971845
+    },
+    {
+      "relative_path": "round_070_train_trajectories.json",
+      "size_bytes": 54888566
+    },
+    {
+      "relative_path": "round_070_validation_trajectories.json",
+      "size_bytes": 13377222
+    },
+    {
+      "relative_path": "round_071_exploratory_trajectories.json",
+      "size_bytes": 43057044
+    },
+    {
+      "relative_path": "round_071_train_trajectories.json",
+      "size_bytes": 49547585
+    },
+    {
+      "relative_path": "round_071_validation_trajectories.json",
+      "size_bytes": 14129201
+    },
+    {
+      "relative_path": "round_072_exploratory_trajectories.json",
+      "size_bytes": 53277582
+    },
+    {
+      "relative_path": "round_072_train_trajectories.json",
+      "size_bytes": 45273670
+    },
+    {
+      "relative_path": "round_072_validation_trajectories.json",
+      "size_bytes": 11539336
+    },
+    {
+      "relative_path": "round_073_exploratory_trajectories.json",
+      "size_bytes": 46070965
+    },
+    {
+      "relative_path": "round_073_train_trajectories.json",
+      "size_bytes": 48234342
+    },
+    {
+      "relative_path": "round_073_validation_trajectories.json",
+      "size_bytes": 14205444
+    },
+    {
+      "relative_path": "round_074_exploratory_trajectories.json",
+      "size_bytes": 45109411
+    },
+    {
+      "relative_path": "round_074_train_trajectories.json",
+      "size_bytes": 47947571
+    },
+    {
+      "relative_path": "round_074_validation_trajectories.json",
+      "size_bytes": 13661255
+    },
+    {
+      "relative_path": "round_075_exploratory_trajectories.json",
+      "size_bytes": 49598439
+    },
+    {
+      "relative_path": "round_075_train_trajectories.json",
+      "size_bytes": 43423142
+    },
+    {
+      "relative_path": "round_075_validation_trajectories.json",
+      "size_bytes": 13603218
+    },
+    {
+      "relative_path": "round_076_exploratory_trajectories.json",
+      "size_bytes": 49980637
+    },
+    {
+      "relative_path": "round_076_train_trajectories.json",
+      "size_bytes": 47400745
+    },
+    {
+      "relative_path": "round_076_validation_trajectories.json",
+      "size_bytes": 11235530
+    },
+    {
+      "relative_path": "round_077_exploratory_trajectories.json",
+      "size_bytes": 43526528
+    },
+    {
+      "relative_path": "round_077_train_trajectories.json",
+      "size_bytes": 58681312
+    },
+    {
+      "relative_path": "round_077_validation_trajectories.json",
+      "size_bytes": 14071840
+    },
+    {
+      "relative_path": "round_078_exploratory_trajectories.json",
+      "size_bytes": 47269112
+    },
+    {
+      "relative_path": "round_078_train_trajectories.json",
+      "size_bytes": 52156271
+    },
+    {
+      "relative_path": "round_078_validation_trajectories.json",
+      "size_bytes": 11910878
+    },
+    {
+      "relative_path": "round_079_exploratory_trajectories.json",
+      "size_bytes": 51713373
+    },
+    {
+      "relative_path": "round_079_train_trajectories.json",
+      "size_bytes": 46797419
+    },
+    {
+      "relative_path": "round_079_validation_trajectories.json",
+      "size_bytes": 11659658
+    },
+    {
+      "relative_path": "round_080_exploratory_trajectories.json",
+      "size_bytes": 53090208
+    },
+    {
+      "relative_path": "round_080_train_trajectories.json",
+      "size_bytes": 53449194
+    },
+    {
+      "relative_path": "round_080_validation_trajectories.json",
+      "size_bytes": 12593802
+    },
+    {
+      "relative_path": "round_081_exploratory_trajectories.json",
+      "size_bytes": 50784199
+    },
+    {
+      "relative_path": "round_081_train_trajectories.json",
+      "size_bytes": 60439662
+    },
+    {
+      "relative_path": "round_081_validation_trajectories.json",
+      "size_bytes": 14419373
+    },
+    {
+      "relative_path": "round_082_exploratory_trajectories.json",
+      "size_bytes": 50013513
+    },
+    {
+      "relative_path": "round_082_train_trajectories.json",
+      "size_bytes": 51902995
+    },
+    {
+      "relative_path": "round_082_validation_trajectories.json",
+      "size_bytes": 12198623
+    },
+    {
+      "relative_path": "round_083_exploratory_trajectories.json",
+      "size_bytes": 48133697
+    },
+    {
+      "relative_path": "round_083_train_trajectories.json",
+      "size_bytes": 50130878
+    },
+    {
+      "relative_path": "round_083_validation_trajectories.json",
+      "size_bytes": 14331924
+    },
+    {
+      "relative_path": "round_084_exploratory_trajectories.json",
+      "size_bytes": 53386266
+    },
+    {
+      "relative_path": "round_084_train_trajectories.json",
+      "size_bytes": 54417965
+    },
+    {
+      "relative_path": "round_084_validation_trajectories.json",
+      "size_bytes": 13331606
+    },
+    {
+      "relative_path": "round_085_exploratory_trajectories.json",
+      "size_bytes": 48879854
+    },
+    {
+      "relative_path": "round_085_train_trajectories.json",
+      "size_bytes": 55022846
+    },
+    {
+      "relative_path": "round_085_validation_trajectories.json",
+      "size_bytes": 12915812
+    },
+    {
+      "relative_path": "round_086_exploratory_trajectories.json",
+      "size_bytes": 51444344
+    },
+    {
+      "relative_path": "round_086_train_trajectories.json",
+      "size_bytes": 50511045
+    },
+    {
+      "relative_path": "round_086_validation_trajectories.json",
+      "size_bytes": 12788860
+    },
+    {
+      "relative_path": "round_087_exploratory_trajectories.json",
+      "size_bytes": 47331240
+    },
+    {
+      "relative_path": "round_087_train_trajectories.json",
+      "size_bytes": 53301811
+    },
+    {
+      "relative_path": "round_087_validation_trajectories.json",
+      "size_bytes": 13582630
+    },
+    {
+      "relative_path": "round_088_exploratory_trajectories.json",
+      "size_bytes": 48718006
+    },
+    {
+      "relative_path": "round_088_train_trajectories.json",
+      "size_bytes": 56135473
+    },
+    {
+      "relative_path": "round_088_validation_trajectories.json",
+      "size_bytes": 13085528
+    },
+    {
+      "relative_path": "round_089_exploratory_trajectories.json",
+      "size_bytes": 56442936
+    },
+    {
+      "relative_path": "round_089_train_trajectories.json",
+      "size_bytes": 44761883
+    },
+    {
+      "relative_path": "round_089_validation_trajectories.json",
+      "size_bytes": 13719530
+    },
+    {
+      "relative_path": "round_090_exploratory_trajectories.json",
+      "size_bytes": 54883264
+    },
+    {
+      "relative_path": "round_090_train_trajectories.json",
+      "size_bytes": 54518972
+    },
+    {
+      "relative_path": "round_090_validation_trajectories.json",
+      "size_bytes": 14288841
+    },
+    {
+      "relative_path": "round_091_exploratory_trajectories.json",
+      "size_bytes": 49844208
+    },
+    {
+      "relative_path": "round_091_train_trajectories.json",
+      "size_bytes": 56555031
+    },
+    {
+      "relative_path": "round_091_validation_trajectories.json",
+      "size_bytes": 13295901
+    },
+    {
+      "relative_path": "round_092_exploratory_trajectories.json",
+      "size_bytes": 54981211
+    },
+    {
+      "relative_path": "round_092_train_trajectories.json",
+      "size_bytes": 51403436
+    },
+    {
+      "relative_path": "round_092_validation_trajectories.json",
+      "size_bytes": 12729449
+    },
+    {
+      "relative_path": "round_093_exploratory_trajectories.json",
+      "size_bytes": 52131417
+    },
+    {
+      "relative_path": "round_093_train_trajectories.json",
+      "size_bytes": 60294897
+    },
+    {
+      "relative_path": "round_093_validation_trajectories.json",
+      "size_bytes": 13978408
+    },
+    {
+      "relative_path": "round_094_exploratory_trajectories.json",
+      "size_bytes": 53130187
+    },
+    {
+      "relative_path": "round_094_train_trajectories.json",
+      "size_bytes": 58273199
+    },
+    {
+      "relative_path": "round_094_validation_trajectories.json",
+      "size_bytes": 13438801
+    },
+    {
+      "relative_path": "round_095_exploratory_trajectories.json",
+      "size_bytes": 56164974
+    },
+    {
+      "relative_path": "round_095_train_trajectories.json",
+      "size_bytes": 52701990
+    },
+    {
+      "relative_path": "round_095_validation_trajectories.json",
+      "size_bytes": 13634792
+    },
+    {
+      "relative_path": "round_096_exploratory_trajectories.json",
+      "size_bytes": 46686302
+    },
+    {
+      "relative_path": "round_096_train_trajectories.json",
+      "size_bytes": 58164419
+    },
+    {
+      "relative_path": "round_096_validation_trajectories.json",
+      "size_bytes": 14173561
+    },
+    {
+      "relative_path": "round_097_exploratory_trajectories.json",
+      "size_bytes": 53643473
+    },
+    {
+      "relative_path": "round_097_train_trajectories.json",
+      "size_bytes": 54345753
+    },
+    {
+      "relative_path": "round_097_validation_trajectories.json",
+      "size_bytes": 11542526
+    },
+    {
+      "relative_path": "round_098_exploratory_trajectories.json",
+      "size_bytes": 50460919
+    },
+    {
+      "relative_path": "round_098_train_trajectories.json",
+      "size_bytes": 46319101
+    },
+    {
+      "relative_path": "round_098_validation_trajectories.json",
+      "size_bytes": 14248676
+    },
+    {
+      "relative_path": "round_099_exploratory_trajectories.json",
+      "size_bytes": 56573135
+    },
+    {
+      "relative_path": "round_099_train_trajectories.json",
+      "size_bytes": 52915388
+    },
+    {
+      "relative_path": "round_099_validation_trajectories.json",
+      "size_bytes": 13024286
+    },
+    {
+      "relative_path": "round_100_exploratory_trajectories.json",
+      "size_bytes": 55566546
+    },
+    {
+      "relative_path": "round_history.json",
+      "size_bytes": 8620574
+    },
+    {
+      "relative_path": "training_state_latest.pt",
+      "size_bytes": 96578867
+    }
+  ],
+  "round_history_identical_to_report": true,
+  "note": "Reviewed metrics/all100round report, figures, round31/100 greedy traces and small diagnostic weights archived. Remaining raw round traces and full resumable training_state_latest.pt remain local and are NOT backed up by this commit. No local files removed."
+}

@@ -299,3 +299,112 @@ def test_fc_ramp_failure_and_unknown_do_not_create_boundary_penalties(mode):
     unknown_agent = DirectPowerDDQN(n_step=8, reward_scale=.001, replay_sampling='prioritized')
     assert unknown_agent.remember_observed_prefix(prefix) == 2
     assert all(not t.done and t.experience_outcome == 'unresolved' for t in unknown_agent.replay)
+
+
+def test_minimal3_state_uses_only_current_soc_load_and_previous_executed_fc():
+    from v4.control import build_state
+
+    physical = AccountState(soc=.55, previous_fc_kw=100.)
+    actual = build_state(physical, (40., 60., 100.), (80., 120., 180.), state_mode='minimal3')
+    assert actual == pytest.approx((.55, 180. / 600., 100. / 600.))
+    # Changing already observed older history cannot add a hidden derivative feature.
+    assert build_state(physical, (0., 0., 100.), (20., 30., 180.), state_mode='minimal3') == actual
+    assert len(build_state(physical, (40., 60., 100.), (80., 120., 180.))) == 7
+    with pytest.raises(ValueError, match='state_mode'):
+        build_state(physical, (40., 60., 100.), (80., 120., 180.), state_mode='future')
+
+
+@pytest.mark.parametrize('modes,loads,actions', [
+    (('onboard',) * 3, (100., 300., 100.), (100, 200, 100)),
+    (('onboard', 'shore_charging'), (200., 0.), (100,)),
+    (('onboard', 'shore_charging', 'onboard', 'onboard'),
+     (200., 0., 200., 200.), (100, 200, 200)),
+])
+def test_control_only_minimal3_preserves_physics_ledger_and_boundary_semantics(modes, loads, actions):
+    results = []
+    for reward_mode, state_mode in (('energy_with_fc_ramp', 'history7'), ('control_only', 'minimal3')):
+        powers = iter(actions)
+        results.append(replay_episode(episode(modes, loads, (0.,) * len(modes)),
+            lambda _s, _a: next(powers), accountant=NoSolveAccountant(),
+            initial_state=AccountState(soc=.55, previous_fc_kw=40.), beta_soc=200.,
+            reward_cost_mode=reward_mode, state_mode=state_mode))
+    old, new = results
+    assert (new.final_state, new.total_ledger, new.shore_blocks, new.modeled_terminal_settlement) == (
+        old.final_state, old.total_ledger, old.shore_blocks, old.modeled_terminal_settlement)
+    assert (new.soc_by_row, new.fc_power_kw_by_row, new.battery_bus_kw_by_row) == (
+        old.soc_by_row, old.fc_power_kw_by_row, old.battery_bus_kw_by_row)
+    for before, after in zip(old.transitions, new.transitions):
+        assert after.state == (before.state[0], before.state[4], before.state[1])
+        assert after.next_state == (before.next_state[0], before.next_state[4], before.next_state[1])
+        assert (after.done, after.terminal_reason, after.next_feasible_actions) == (
+            before.done, before.terminal_reason, before.next_feasible_actions)
+        assert after.reward_cny == pytest.approx(-(
+            .11025 * abs(after.action_kw - after.state[2] * 600.)
+            + 200. * (after.actual_soc - .6) ** 2))
+        assert after.original_reward == after.reward_cny
+        assert after.immediate_battery_energy_adjustment == after.terminal_correction == 0.
+    # A real ledger charge is retained even though neither shore nor H2 is a training term.
+    assert new.total_ledger.total_cost_cny > 0.
+    if new.shore_blocks:
+        assert new.shore_blocks[0].ledger.shore_cost_cny > 0.
+        assert new.transitions[0].next_state[0] == .6
+        if len(new.transitions) > 1:
+            assert not new.transitions[0].done
+            assert new.transitions[0].next_state == new.transitions[1].state
+            assert new.transitions[1].state == (.6, loads[2] / 600., 0.)
+        else:
+            assert new.transitions[0].done
+            assert new.modeled_terminal_settlement is None
+    else:
+        assert new.modeled_terminal_settlement is not None
+        assert new.modeled_terminal_settlement.ledger.shore_cost_cny > 0.
+    agent = DirectPowerDDQN(state_mode='minimal3', n_step=8, reward_scale=.001,
+                            failure_terminal_quota=2, replay_sampling='prioritized')
+    assert agent.remember_trajectory(new.transitions) == len(new.transitions)
+    for i, item in enumerate(agent.replay):
+        assert item.reward_cny == pytest.approx(.001 * fsum(t.reward_cny for t in new.transitions[i:i+8]))
+        assert len(item.state) == len(item.next_state) == 3
+
+
+def test_control_only_minimal3_keeps_failure_once_and_unknown_nonterminal():
+    accountant = NoSolveAccountant()
+    with pytest.raises(ReplayExecutionError) as caught:
+        replay_episode(episode(('onboard',) * 2, (600., 1000.), (0.,) * 2),
+            lambda _s, _a: 0, accountant=accountant,
+            initial_state=AccountState(soc=.2135, previous_fc_kw=100.), beta_soc=200.,
+            reward_cost_mode='control_only', state_mode='minimal3')
+    error = caught.value
+    assert error.failure_kind == 'no_feasible_action' and error.failure_cause == 'soc_limited'
+    assert len(error.executed_transitions) == 1
+    executed = error.executed_transitions[0]
+    penalty = FailurePenalty.from_reference()
+    prepared = prepare_failure_replay(error, penalty=penalty,
+        energy_value=BatteryEnergyValue.from_accountant(accountant), redistribute_battery_energy=False)
+    terminal = prepared.transitions[-1]
+    assert terminal.reward_cny == pytest.approx(executed.reward_cny - penalty.amount)
+    assert terminal.done and terminal.terminal_reason == 'failure_soc_limited'
+    assert terminal.shore_ledger is terminal.modeled_terminal_ledger is None
+    assert terminal.terminal_correction == terminal.immediate_battery_energy_adjustment == 0.
+    assert sum(t.failure_penalty_equivalent_cny for t in prepared.transitions) == penalty.amount
+    agent = DirectPowerDDQN(state_mode='minimal3', n_step=8, reward_scale=.001,
+                            failure_terminal_quota=2, replay_sampling='prioritized')
+    agent.remember_trajectory(prepared.transitions)
+    assert agent.replay[0].reward_cny == pytest.approx(.001 * terminal.reward_cny)
+    assert agent.replay[0].done and not agent.replay[0].next_feasible_indices
+    with pytest.raises(ReplayExecutionError) as truncated:
+        replay_episode(episode(('onboard',) * 10 + ('unknown',), (200.,) * 10 + (0.,), (0.,) * 11),
+            lambda _s, _a: 100, accountant=NoSolveAccountant(), beta_soc=200.,
+            reward_cost_mode='control_only', state_mode='minimal3')
+    prefix = truncated.value.executed_transitions
+    assert truncated.value.failure_kind == 'data_truncation'
+    assert all(len(t.state) == 3 and not t.done and not t.failure_penalty_equivalent_cny for t in prefix)
+    assert all(t.shore_ledger is t.modeled_terminal_ledger is None for t in prefix)
+    unknown_agent = DirectPowerDDQN(state_mode='minimal3', n_step=8, reward_scale=.001)
+    assert unknown_agent.remember_observed_prefix(prefix) == 2
+    assert all(not item.done and item.experience_outcome == 'unresolved' for item in unknown_agent.replay)
+    calls = []
+    with pytest.raises(ValueError, match='redistribut'):
+        replay_episode(episode(('onboard',), (100.,), (0.,)),
+            lambda _s, _a: calls.append(1) or 100, accountant=NoSolveAccountant(),
+            reward_cost_mode='control_only', state_mode='minimal3', redistribute_battery_energy=True)
+    assert not calls

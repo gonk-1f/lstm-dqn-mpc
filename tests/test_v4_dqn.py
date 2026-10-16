@@ -38,6 +38,64 @@ def test_current_economic_network_optimizer_and_initial_target_copy():
                for key, value in before.items())
 
 
+@pytest.mark.parametrize('mode, state', [
+    ('history7', (.6, 0., 0., 0., .5, 0., 0.)),
+    ('minimal3', (.6, .5, 0.)),
+])
+def test_optional_state_layout_network_replay_and_checkpoint(mode, state):
+    import copy
+
+    agent = DirectPowerDDQN(state_mode=mode, n_step=8, reward_scale=.001,
+                            replay_sampling='prioritized', failure_terminal_quota=2)
+    assert agent.state_dim == len(state)
+    assert agent.online.layers[0].in_features == agent.target.layers[0].in_features == len(state)
+    assert agent.online(torch.tensor([state])).shape == (1, 61)
+    assert all(torch.equal(value, agent.target.state_dict()[key])
+               for key, value in agent.online.state_dict().items())
+    agent.remember(state, 100, -10., state, done=True, next_feasible_actions=())
+    assert agent._pool_coverage['load_kw'] == {'200-600': 1}
+    assert agent.replay[0].reward_cny == pytest.approx(-.01)
+    assert agent.learn(batch_size=1) is not None
+    assert agent.target_soft_update_calls == agent.economic_optimizer_updates == 1
+    saved = copy.deepcopy(agent.training_state())
+    assert saved['state_mode'] == mode and saved['state_dim'] == len(state)
+    restored = DirectPowerDDQN(state_mode=mode, n_step=8, reward_scale=.001,
+                               replay_sampling='prioritized', failure_terminal_quota=2)
+    restored.load_training_state(saved)
+    assert tuple(restored.replay) == tuple(agent.replay)
+    assert torch.equal(restored.online(torch.tensor([state])), agent.online(torch.tensor([state])))
+    if mode == 'history7':
+        for key in ('state_mode', 'state_dim', 'state_features'):
+            saved.pop(key, None)
+        restored.load_training_state(saved)  # Pre-option seven-feature checkpoint.
+    other = 'minimal3' if mode == 'history7' else 'history7'
+    incompatible = DirectPowerDDQN(state_mode=other, n_step=8, reward_scale=.001,
+                                   replay_sampling='prioritized', failure_terminal_quota=2)
+    before = {key: value.clone() for key, value in incompatible.online.state_dict().items()}
+    with pytest.raises(ValueError, match='state|architecture'):
+        incompatible.load_training_state(saved)
+    assert all(torch.equal(value, incompatible.online.state_dict()[key]) for key, value in before.items())
+    with pytest.raises(ValueError, match='features'):
+        agent.select_power((.6,) * (3 if mode == 'history7' else 7), (100,), epsilon=0.)
+
+
+def test_minimal3_diagnostics_use_actual_previous_fc_not_load():
+    from v3.control import EconomicMPC
+    from v4.diagnostics import executed_transition_statistics, fixed_q_diagnostics, trajectory_record
+    from v4.decision_diagnostics import actual_greedy_q_records
+
+    agent = DirectPowerDDQN(state_mode='minimal3', reward_scale=.001)
+    # Zero load, FC previously running: physical mask can force a stop at high SOC.
+    item = DirectTransition((.8, 0., .5), 0, -1., (.8, 0., 0.),
+        RawCnyIntervalLedger(0., 0., 0., 0.), 0., .8, True, (),
+        physical_feasible_actions=(0,), policy_candidate_actions=(0,))
+    assert trajectory_record('synthetic', (item,), completed=True)['transitions'][0][
+        'fc_stop_reason'] == 'forced_no_positive_action'
+    assert executed_transition_statistics((item,))['fc_change_statistics_kw']['max_absolute'] == 300.
+    assert 'forced_stop' in actual_greedy_q_records('synthetic', (item,), agent)[0]['priority_tags']
+    assert all(len(row['state']) == 3 for row in fixed_q_diagnostics(agent, EconomicMPC(nominal_cost_cny=1.)))
+
+
 @pytest.mark.parametrize('legacy_hidden', [(128, 64), (128, 128)])
 def test_legacy_eight_dimensional_checkpoint_cannot_silently_load(legacy_hidden):
     legacy = MLPQNetwork(8, 61, legacy_hidden)

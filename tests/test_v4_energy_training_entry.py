@@ -9,7 +9,7 @@ from test_v4_per_training_entry import (
 from test_v4_training import FakeDataset
 
 
-@pytest.mark.parametrize('mode', ['full_economic', 'energy_only', 'energy_with_fc_ramp'])
+@pytest.mark.parametrize('mode', ['full_economic', 'energy_only', 'energy_with_fc_ramp', 'control_only'])
 def test_cli_routes_reward_cost_mode_without_changing_frozen_configuration(tmp_path, monkeypatch, mode):
     captured = _capture_cli(tmp_path, monkeypatch, ['--reward-cost-mode', mode,
                                                   '--replay-sampling', 'prioritized'])
@@ -21,6 +21,64 @@ def test_cli_routes_reward_cost_mode_without_changing_frozen_configuration(tmp_p
     assert (captured['per_alpha'], captured['per_beta'], captured['per_epsilon']) == (.6, 1., 1e-6)
     assert captured['batch_size'] == 64 and captured['seed'] == 42
     assert captured['unknown_replay_mode'] == 'observed_nstep'
+    assert captured['state_mode'] == 'history7'
+
+
+def test_cli_routes_minimal3_control_only_with_unchanged_per_and_training_budget(tmp_path, monkeypatch):
+    captured = _capture_cli(tmp_path, monkeypatch, [
+        '--state-mode', 'minimal3', '--reward-cost-mode', 'control_only',
+        '--replay-sampling', 'prioritized'])
+    assert captured['state_mode'] == 'minimal3'
+    assert captured['reward_cost_mode'] == 'control_only'
+    assert captured['redistribute_battery_energy'] is False
+    assert (captured['rounds'], captured['n_step'], captured['batch_size']) == (100, 8, 64)
+    assert (captured['per_alpha'], captured['per_beta'], captured['per_epsilon']) == (.6, 1., 1e-6)
+
+
+def test_minimal3_control_only_metadata_reaches_agent_and_records_control_units(tmp_path, monkeypatch):
+    captured, metadata = _capture_agent_configuration(tmp_path, monkeypatch, {
+        'state_mode': 'minimal3', 'reward_cost_mode': 'control_only',
+        'replay_sampling': 'prioritized',
+    })
+    hp = metadata['hyperparameters']
+    assert captured['state_mode'] == hp['state_mode'] == 'minimal3'
+    assert hp['state_dim'] == 3 and hp['network_dims'] == [3, 128, 128, 61]
+    assert hp['reward_mode'] == hp['reward_cost_mode'] == 'control_only'
+    assert hp['h2_reward_weight'] == hp['shore_purchase_reward_weight'] == 0.
+    assert hp['fc_degradation_reward_weight'] == hp['battery_degradation_reward_weight'] == 0.
+    assert hp['fc_ramp_reward_coefficient_cny_per_kw'] == pytest.approx(.11025)
+    assert hp['reward_formula'] == (
+        '-(fc_ramp_reward_coefficient_cny_per_kw * abs(actual_fc_kw - previous_actual_fc_kw)'
+        ' + beta_soc * (SOC_next - soc_ref)**2)')
+    assert 'control' in metadata['reward_units']['economic_q']
+    assert 'not actual' in metadata['reward_units']['original_rewards']
+
+
+@pytest.mark.parametrize('configuration', [
+    {'state_mode': 'invalid'},
+    {'reward_cost_mode': 'control_only', 'redistribute_battery_energy': True},
+])
+def test_invalid_state_or_control_redistribution_rejected_before_output(tmp_path, configuration):
+    from v4.monitored_training import run_monitored_training
+    with pytest.raises(ValueError):
+        run_monitored_training(object(), output_dir=tmp_path/'invalid', **configuration)
+    assert not (tmp_path/'invalid').exists()
+
+
+def test_state_mode_mismatch_rejects_resume_before_loading_payloads(tmp_path, monkeypatch):
+    from v4 import monitored_training
+    _, saved = _capture_agent_configuration(tmp_path, monkeypatch, {
+        'state_mode': 'history7', 'reward_cost_mode': 'control_only',
+    })
+    monkeypatch.setattr(monitored_training.torch, 'load',
+                        lambda *args, **kwargs: {'format_version': 1, 'metadata': saved})
+    dataset = _MetadataOnlyDataset()
+    for method in ('load_train', 'load_validation'):
+        monkeypatch.setattr(dataset, method, lambda: pytest.fail('must reject before payload loading'))
+    with pytest.raises(ValueError, match='resume source, architecture, hyperparameters'):
+        monitored_training.run_monitored_training(
+            dataset, output_dir=tmp_path, resume_from=tmp_path/'training_state_latest.pt',
+            state_mode='minimal3', reward_cost_mode='control_only')
 
 
 @pytest.mark.parametrize('mode, expected_formula', [
@@ -67,32 +125,54 @@ def test_unknown_reward_cost_mode_is_rejected_before_data_or_output(tmp_path, mo
     assert not output.exists()
 
 
-def test_energy_only_reaches_bootstrap_exploration_and_both_greedy_paths(tmp_path, monkeypatch):
+@pytest.mark.parametrize('state_mode, reward_mode, dimension', [
+    ('history7', 'energy_only', 7), ('minimal3', 'control_only', 3),
+])
+def test_reward_modes_reach_bootstrap_exploration_and_both_greedy_paths(
+        tmp_path, monkeypatch, state_mode, reward_mode, dimension):
     from v4 import monitored_training, train
+    monkeypatch.setattr(monitored_training, 'write_learning_curves', lambda *args: {})
     original = train.replay_episode
     calls = []
 
     def capture(episode, policy, **kwargs):
-        assert kwargs['reward_cost_mode'] == 'energy_only'
+        assert kwargs['reward_cost_mode'] == reward_mode
+        assert kwargs['state_mode'] == state_mode
         calls.append(episode.split)
-        return original(episode, policy, **kwargs)
+        result = original(episode, policy, **kwargs)
+        assert all(len(t.state) == len(t.next_state) == dimension for t in result.transitions)
+        return result
 
     monkeypatch.setattr(train, 'replay_episode', capture)
     monkeypatch.setattr(monitored_training, 'replay_episode', capture)
     agent, report = monitored_training.run_monitored_training(
         FakeDataset(), output_dir=tmp_path, rounds=1, beta_soc=200,
-        reward_cost_mode='energy_only', replay_sampling='prioritized')
+        state_mode=state_mode, reward_cost_mode=reward_mode, replay_sampling='prioritized')
     assert calls == ['train', 'train', 'train', 'validation']
     assert report['test_payloads_opened'] == 0
     hp = report['hyperparameters']
-    assert hp['reward_cost_mode'] == 'energy_only'
+    assert hp['reward_cost_mode'] == reward_mode
+    assert hp['state_mode'] == agent.state_mode == state_mode
+    assert hp['state_dim'] == agent.state_dim == dimension
     assert hp['fc_degradation_reward_weight'] == hp['battery_degradation_reward_weight'] == 0.
     assert hp['economic_replay_format_version'] == agent.training_state()['format_version'] == 3
-    assert hp['reward_formula'] == '-(C_H2 + C_shore_purchase + beta_soc * (SOC_next - soc_ref)**2)'
+    if reward_mode == 'energy_only':
+        assert hp['reward_formula'] == '-(C_H2 + C_shore_purchase + beta_soc * (SOC_next - soc_ref)**2)'
     assert report['reward_definition'] == hp['reward_formula']
     assert report['best_checkpoint'] is not None
     assert report['best_checkpoint']['validation_comparable_cost_cny'] == pytest.approx(
         report['rounds'][0]['greedy_validation']['comparable_evaluable_cost_cny'])
+    import torch
+    from v4.dqn import DirectPowerDDQN
+
+    saved = torch.load(tmp_path/'training_state_latest.pt', map_location='cpu', weights_only=False)
+    clone = DirectPowerDDQN(state_mode=state_mode, n_step=8, reward_scale=.001,
+                            replay_capacity=300_000,
+                            replay_sampling='prioritized', failure_terminal_quota=2)
+    clone.load_training_state(saved['agent'])
+    assert clone.state_dim == dimension
+    assert all(torch.equal(left, right) for left, right in
+               zip(agent.online.parameters(), clone.online.parameters()))
 
 
 def test_reward_cost_mode_mismatch_cannot_resume_before_payload_loading(tmp_path, monkeypatch):
