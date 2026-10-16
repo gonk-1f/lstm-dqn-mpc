@@ -21,7 +21,10 @@ import torch
 from v2.data.supervisory_rules import OperatingMode
 from v3.control import EconomicMPC
 
-from .control import ACTION_KW, DEFAULT_BETA_SOC, REWARD_COST_MODES, SOC_REF, ReplayExecutionError, replay_episode
+from .control import (
+    ACTION_KW, DEFAULT_BETA_SOC, FC_RAMP_REWARD_CNY_PER_KW, REWARD_COST_MODES, SOC_REF,
+    ReplayExecutionError, replay_episode,
+)
 from .dqn import (
     DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, ECONOMIC_REPLAY_FORMAT_VERSION,
     PRIORITIZED_REPLAY_FORMAT_VERSION, STATE_DIM, STATE_FEATURES,
@@ -49,7 +52,7 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
                     decision_diagnostic_sink=None) -> dict:
     """Preserve all training RNG streams; never add replay or run optimizers."""
     if reward_cost_mode not in REWARD_COST_MODES:
-        raise ValueError('reward_cost_mode must be full_economic or energy_only')
+        raise ValueError(f'reward_cost_mode must be one of {REWARD_COST_MODES}')
     random_state = agent.random.getstate()
     torch_state = torch.random.get_rng_state()
     failed_transitions = []
@@ -307,7 +310,7 @@ def run_monitored_training(
     validate_experiment_identity(seed, experiment_id)
     validate_replay_configuration(replay_sampling, per_alpha, per_beta, per_epsilon)
     if reward_cost_mode not in REWARD_COST_MODES:
-        raise ValueError('reward_cost_mode must be full_economic or energy_only')
+        raise ValueError(f'reward_cost_mode must be one of {REWARD_COST_MODES}')
     if not math.isfinite(reward_scale) or reward_scale <= 0:
         raise ValueError('reward_scale must be finite and positive')
     if type(failure_terminal_quota) is not int or failure_terminal_quota < 0:
@@ -341,9 +344,15 @@ def run_monitored_training(
     parameters = {
         'beta_soc':beta_soc,'rounds':rounds,'seed':seed,'batch_size':batch_size,
         'reward_cost_mode':reward_cost_mode,
-        'fc_degradation_reward_weight':0. if reward_cost_mode == 'energy_only' else 1.,
-        'battery_degradation_reward_weight':0. if reward_cost_mode == 'energy_only' else 1.,
-        'reward_formula': ('-(C_H2 + C_shore_purchase + beta_soc * (SOC_next - soc_ref)**2)'
+        'fc_degradation_reward_weight':1. if reward_cost_mode == 'full_economic' else 0.,
+        'battery_degradation_reward_weight':1. if reward_cost_mode == 'full_economic' else 0.,
+        'fc_ramp_reward_coefficient_cny_per_kw': (
+            FC_RAMP_REWARD_CNY_PER_KW if reward_cost_mode == 'energy_with_fc_ramp' else 0.),
+        'reward_formula': (
+            '-(C_H2 + C_shore_purchase + beta_soc * (SOC_next - soc_ref)**2'
+            ' + fc_ramp_reward_coefficient_cny_per_kw * abs(actual_fc_kw - previous_actual_fc_kw))'
+            if reward_cost_mode == 'energy_with_fc_ramp' else
+            '-(C_H2 + C_shore_purchase + beta_soc * (SOC_next - soc_ref)**2)'
             if reward_cost_mode == 'energy_only' else
             '-(C_H2 + C_FC_deg + C_Bat_deg + C_shore_purchase + beta_soc * (SOC_next - soc_ref)**2)'),
         'soc_ref':SOC_REF,
@@ -385,6 +394,7 @@ def run_monitored_training(
             'stored_reward':'reward_scale * final_unscaled_reward',
             'original_rewards':'reward_equivalent_cny',
             'soc_soft_penalty':'auxiliary reward-equivalent units; not actual CNY expenditure',
+            'fc_ramp_penalty':'auxiliary reward-equivalent CNY on actual ONBOARD FC power changes; not additional economic ledger expenditure',
             'economic_ledger':'CNY; modeled fixed-target SHORE and terminal settlement separately tagged',
             'td_original_unit_conversion':'native_td_error / reward_scale'},
         'initialization':'new seeded weights; empty replay; new optimizer; no checkpoint loaded',

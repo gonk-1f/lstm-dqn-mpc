@@ -34,7 +34,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                         help='fixed-reference SOC auxiliary reward coefficient; not an economic expense')
     parser.add_argument('--reward-feedback',choices=('original','redistributed'),default='original')
     parser.add_argument('--reward-cost-mode',choices=REWARD_COST_MODES,default='full_economic',
-                        help='energy_only trains on H2, shore electricity and SOC; full degradation ledgers remain for evaluation')
+                        help='energy_only uses H2, shore electricity and SOC; energy_with_fc_ramp adds an actual ONBOARD FC power-change penalty; full degradation ledgers remain for evaluation')
     parser.add_argument('--reward-scale',type=float,default=.001,
                         help='uniform multiplier applied once to final economic-Q replay rewards; ledgers remain CNY')
     parser.add_argument('--failure-terminal-quota',type=int,default=2,
