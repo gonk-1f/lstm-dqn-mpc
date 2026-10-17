@@ -1,0 +1,45 @@
+{
+  "run": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2_io_resume",
+  "source_commit": "82e792e6dce32099251e333756af0c1b3a3d39b4",
+  "completed_training": true,
+  "run_status": "completed",
+  "rounds": 100,
+  "final_epsilon": 0.050000000000000044,
+  "best_checkpoint": null,
+  "eligible_rounds": [],
+  "test_payloads_opened": 0,
+  "execution_counts": {
+    "training_environment_transitions": 1153227,
+    "training_policy_calls": 1153227,
+    "bootstrap_environment_transitions": 14995,
+    "greedy_evaluation_environment_transitions": 1605296,
+    "economic_replay_insertions": 1168222,
+    "economic_optimizer_updates": 36506,
+    "target_sync_calls_including_initial_copy": 1,
+    "target_soft_update_calls": 36506,
+    "remaining_transition_credit": 30,
+    "bootstrap_economic_optimizer_updates": 468,
+    "formal_training_economic_optimizer_updates": 36038,
+    "failed_suffix_transitions_excluded_from_economic_replay": 0,
+    "unknown_discarded_economic_q_transitions": 0,
+    "unknown_retained_economic_q_transitions": 0,
+    "no_feasible_action_events_without_executed_suffix": 0,
+    "economic_success_replay_insertions": 1018377,
+    "economic_failure_replay_insertions": 149845,
+    "economic_unresolved_replay_insertions": 0,
+    "economic_failure_terminal_insertions": 6816,
+    "economic_failure_terminal_replay_size": 1400,
+    "economic_normal_terminal_replay_size": 5512
+  },
+  "final_completion": {
+    "exploratory": 29,
+    "train": 24,
+    "validation": 4
+  },
+  "fc_degradation_component_reconciliation_max_error_cny": 7.275957614183426e-11,
+  "representative_samples": [
+    "parent_006_seg01",
+    "parent_015_seg01",
+    "parent_038_seg01"
+  ]
+}

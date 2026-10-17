@@ -1,0 +1,56 @@
+{
+  "completed_rounds": 100,
+  "test_payloads_opened": 0,
+  "artifacts": [
+    {
+      "artifact": "report.json.gz",
+      "source": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2_io_resume\\report.json",
+      "source_sha256": "ebca2ee94b09e0983c1c3194408921da8acc041234291a5ae2884e5c211c8c24",
+      "original_bytes": 8173026,
+      "archive_bytes": 1403403,
+      "lossless_verified": true
+    },
+    {
+      "artifact": "round_metrics.csv.gz",
+      "source": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2_io_resume\\round_metrics.csv",
+      "source_sha256": "b94f46bfe134b0a8f1cffc135c093151003d25629dbbb33e76cd2e9dc9037189",
+      "original_bytes": 1533276,
+      "archive_bytes": 355271,
+      "lossless_verified": true
+    },
+    {
+      "artifact": "original_train.log.gz",
+      "source": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2\\train.log",
+      "source_sha256": "09537133bda255d4358c47ad7281471b6322b100f43163b2033c234c5701f4a4",
+      "original_bytes": 2125260,
+      "archive_bytes": 222030,
+      "lossless_verified": true
+    },
+    {
+      "artifact": "resume_train.log.gz",
+      "source": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2_io_resume\\train.log",
+      "source_sha256": "beba202e7515af5e0f042afde4113c9af3e11e3111c67e7029a412f7a8331395",
+      "original_bytes": 23568,
+      "archive_bytes": 2551,
+      "lossless_verified": true
+    },
+    {
+      "artifact": "output_io_fix.patch.gz",
+      "source": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2_io_resume\\output_io_fix.patch",
+      "source_sha256": "d01fa8a16bd476d0796573e8ced8d9385579aa2f45441164a69b5396bd1cce38",
+      "original_bytes": 3763,
+      "archive_bytes": 1196,
+      "lossless_verified": true
+    }
+  ],
+  "full_checkpoint_retained_locally": {
+    "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2_io_resume\\training_state_latest.pt",
+    "sha256": "07cebe10880ba22f50905303fb3e9dff0d3e1f3287af8861f043037338665f01",
+    "bytes": 106818163
+  },
+  "large_trajectories_preserved_locally_in": [
+    "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2",
+    "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2_io_resume"
+  ],
+  "network_weights_and_replay_not_committed": true
+}
