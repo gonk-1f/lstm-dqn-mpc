@@ -13,6 +13,7 @@ from torch import nn
 
 from dqn.networks.mlp_qnet import MLPQNetwork
 
+from .actions import action_values_kw, previous_grid_power_kw
 from .control import ACTION_KW, DEFAULT_STATE_MODE, STATE_FEATURES_BY_MODE, DirectTransition
 from .failure_replay import FAILURE_TERMINALS
 from .prioritized_replay import PriorityIndex
@@ -86,12 +87,18 @@ class DirectPowerDDQN:
         per_beta: float = 1.0,
         per_epsilon: float = 1e-6,
         state_mode: str = DEFAULT_STATE_MODE,
+        action_mode: str = 'absolute61',
     ) -> None:
         if state_mode not in STATE_FEATURES_BY_MODE:
             raise ValueError(f'state_mode must be one of {tuple(STATE_FEATURES_BY_MODE)}')
         self.state_mode = state_mode
         self.state_features = STATE_FEATURES_BY_MODE[state_mode]
         self.state_dim = len(self.state_features)
+        self.action_mode = action_mode
+        self.action_values_kw = action_values_kw(action_mode)
+        self.action_dim = len(self.action_values_kw)
+        if action_mode == 'increment7' and state_mode != 'minimal3':
+            raise ValueError('increment7 actions require minimal3 state')
         if not 0 <= gamma <= 1 or learning_rate <= 0 or replay_capacity < 1:
             raise ValueError("invalid Double-DQN hyperparameters")
         if type(n_step) is not int or n_step not in (1, 8):
@@ -121,8 +128,8 @@ class DirectPowerDDQN:
         self.gamma = float(gamma)
         self.random = random.Random(seed)
         torch.manual_seed(seed)
-        self.online = MLPQNetwork(self.state_dim, len(ACTION_KW), hidden_dims)
-        self.target = MLPQNetwork(self.state_dim, len(ACTION_KW), hidden_dims)
+        self.online = MLPQNetwork(self.state_dim, self.action_dim, hidden_dims)
+        self.target = MLPQNetwork(self.state_dim, self.action_dim, hidden_dims)
         self.target_sync_calls = 0
         self.target_soft_update_calls = 0
         self.economic_optimizer_updates = 0
@@ -158,33 +165,58 @@ class DirectPowerDDQN:
             raise ValueError(f'state must have {self.state_dim} finite features ({self.state_mode})')
         return state
 
-    @staticmethod
-    def _indices(actions: Sequence[int]) -> tuple[int, ...]:
+    def action_index_for_power(self, power_kw: int, state: Sequence[float] | None = None) -> int:
+        """Map an executed absolute FC power to its Q output coordinate."""
+        if type(power_kw) is not int or power_kw not in ACTION_KW:
+            raise ValueError('action must use the physical FC grid')
+        action = power_kw
+        if self.action_mode == 'increment7':
+            if state is None:
+                raise ValueError('increment action mapping requires the decision state')
+            action -= previous_grid_power_kw(self._state(state)[2] * 600.)
+        if action not in self.action_values_kw:
+            raise ValueError('executed FC power does not match an available increment action')
+        return self.action_values_kw.index(action)
+
+    def action_power_kw(self, index: int, state: Sequence[float] | None = None) -> int:
+        """Decode a Q index; never clip an out-of-range incremental output."""
+        if type(index) is not int or not 0 <= index < self.action_dim:
+            raise ValueError('invalid action index')
+        power = self.action_values_kw[index]
+        if self.action_mode == 'increment7':
+            if state is None:
+                raise ValueError('increment action mapping requires the decision state')
+            power += previous_grid_power_kw(self._state(state)[2] * 600.)
+        if power not in ACTION_KW:
+            raise ValueError('increment action exceeds the physical FC power range')
+        return power
+
+    def _indices(self, actions: Sequence[int], state: Sequence[float] | None = None) -> tuple[int, ...]:
         values = tuple(actions)
         if any(type(value) is not int or value not in ACTION_KW for value in values):
             raise ValueError("feasible actions must use the 10 kW grid")
         if len(set(values)) != len(values):
             raise ValueError("feasible actions contain duplicates")
-        return tuple(ACTION_KW.index(value) for value in values)
+        return tuple(self.action_index_for_power(value, state) for value in values)
 
     def select_power(
         self, state: Sequence[float], feasible_actions: Sequence[int], *, epsilon: float = 0.0,
     ) -> int:
         values = self._state(state)
-        indices = self._indices(feasible_actions)
+        indices = self._indices(feasible_actions, values)
         if not indices:
             raise ValueError("no feasible FC action")
         if not math.isfinite(epsilon) or not 0 <= epsilon <= 1:
             raise ValueError("epsilon must be in [0, 1]")
         if self.random.random() < epsilon:
-            return ACTION_KW[self.random.choice(indices)]
+            return self.action_power_kw(self.random.choice(indices), values)
         with torch.no_grad():
             q = self.online(torch.tensor([values], dtype=torch.float32))[0]
         if not torch.isfinite(q).all():
             raise ValueError('online Q model produced non-finite values')
         mask = torch.full_like(q, -torch.inf)
         mask[list(indices)] = q[list(indices)]
-        return ACTION_KW[int(mask.argmax().item())]
+        return self.action_power_kw(int(mask.argmax().item()), values)
 
     def remember(
         self, state: Sequence[float], action_kw: int, reward_cny: float,
@@ -202,8 +234,8 @@ class DirectPowerDDQN:
         n-step components before this boundary. Failure penalty metadata
         remains in original units, independently of this training scale.
         """
-        if type(action_kw) is not int or action_kw not in ACTION_KW:
-            raise ValueError("action must use the FC grid")
+        state_values, next_values = self._state(state), self._state(next_state)
+        action_index = self.action_index_for_power(action_kw, state_values)
         if not math.isfinite(reward_cny) or type(done) is not bool:
             raise ValueError("reward must be finite and done must be bool")
         scaled_reward = float(reward_cny) * self.reward_scale
@@ -211,7 +243,7 @@ class DirectPowerDDQN:
             raise ValueError('scaled reward must be finite')
         if type(bootstrap_steps) is not int or not 1 <= bootstrap_steps <= self.n_step:
             raise ValueError('bootstrap_steps outside configured n-step horizon')
-        next_indices = self._indices(next_feasible_actions)
+        next_indices = self._indices(next_feasible_actions, next_values)
         if (done and next_indices) or (not done and not next_indices):
             raise ValueError("next feasible actions do not match terminal flag")
         reason=('completed' if done else None) if terminal_reason is None else terminal_reason
@@ -228,8 +260,8 @@ class DirectPowerDDQN:
                        for value in (source_round, source_row_index))):
             raise ValueError('invalid replay source metadata')
         item = ReplayItem(
-            self._state(state), ACTION_KW.index(action_kw), scaled_reward,
-            self._state(next_state), done, next_indices, bootstrap_steps,
+            state_values, action_index, scaled_reward,
+            next_values, done, next_indices, bootstrap_steps,
             experience_outcome,reason,failure_penalty_equivalent_cny,
             self._next_replay_id, source_sample_id, source_round, source_row_index,
         )
@@ -283,6 +315,7 @@ class DirectPowerDDQN:
     def remember_transition(self, transition: DirectTransition) -> None:
         if self.n_step != 1:
             raise ValueError('n-step insertion requires a completed trajectory')
+        self._validate_transition_action(transition)
         self.remember(
             transition.state, transition.action_kw, transition.reward_cny,
             transition.next_state, done=transition.done,
@@ -291,6 +324,17 @@ class DirectPowerDDQN:
             terminal_reason=transition.terminal_reason,
             failure_penalty_equivalent_cny=transition.failure_penalty_equivalent_cny,
         )
+
+    def _validate_transition_action(self, transition: DirectTransition) -> None:
+        index = self.action_index_for_power(transition.action_kw, transition.state)
+        if transition.action_mode != self.action_mode:
+            raise ValueError('transition action mode does not match the agent')
+        if (transition.action_index is not None
+                and (type(transition.action_index) is not int or transition.action_index != index)):
+            raise ValueError('transition action index disagrees with the executed FC power')
+        if (self.action_mode == 'increment7' and transition.action_delta_kw is not None
+                and transition.action_delta_kw != self.action_values_kw[index]):
+            raise ValueError('transition FC delta disagrees with the executed incremental action')
 
     @staticmethod
     def _source_rows(values, rows):
@@ -314,7 +358,8 @@ class DirectPowerDDQN:
         for transition in values:
             self._state(transition.state)
             self._state(transition.next_state)
-            self._indices(transition.next_feasible_actions)
+            self._indices(transition.next_feasible_actions, transition.next_state)
+            self._validate_transition_action(transition)
             if (not math.isfinite(transition.reward_cny)
                     or type(transition.action_kw) is not int or type(transition.done) is not bool
                     or transition.action_kw not in ACTION_KW
@@ -378,7 +423,8 @@ class DirectPowerDDQN:
         for i, t in enumerate(values):
             self._state(t.state)
             self._state(t.next_state)
-            self._indices(t.next_feasible_actions)
+            self._indices(t.next_feasible_actions, t.next_state)
+            self._validate_transition_action(t)
             if (not math.isfinite(t.reward_cny) or type(t.action_kw) is not int
                     or t.action_kw not in ACTION_KW or type(t.done) is not bool
                     or t.failure_penalty_equivalent_cny
@@ -415,7 +461,7 @@ class DirectPowerDDQN:
         actions = torch.tensor([[item.action_index] for item in batch], dtype=torch.long)
         rewards = torch.tensor([[item.reward_cny] for item in batch], dtype=torch.float32)
         done = torch.tensor([[float(item.done)] for item in batch], dtype=torch.float32)
-        masks = torch.zeros((batch_size, len(ACTION_KW)), dtype=torch.bool)
+        masks = torch.zeros((batch_size, self.action_dim), dtype=torch.bool)
         for row, item in enumerate(batch):
             masks[row, list(item.next_feasible_indices)] = True
         q = self.online(states).gather(1, actions)
@@ -529,10 +575,12 @@ class DirectPowerDDQN:
         labels = {
             'soc': '<0.4' if soc < .4 else '0.4-0.6' if soc < .6 else '0.6-0.79' if soc < .79 else '>=0.79',
             'load_kw': '<200' if load < 200 else '200-600' if load < 600 else '>=600',
-            'action_kw': str(ACTION_KW[item.action_index]),
+            'action_kw': str(self.action_power_kw(item.action_index, item.state)),
             'source_sample': item.source_sample_id or 'unrecorded',
             'source_round': 'unrecorded' if item.source_round is None else str(item.source_round),
         }
+        if self.action_mode == 'increment7':
+            labels['action_delta_kw'] = str(self.action_values_kw[item.action_index])
         for dimension, label in labels.items():
             counts = coverage.setdefault(dimension, {})
             counts[label] = counts.get(label, 0) + increment
@@ -569,7 +617,7 @@ class DirectPowerDDQN:
         with torch.no_grad():
             states = torch.tensor([t.state for t in items], dtype=torch.float32)
             successors = torch.tensor([t.next_state for t in items], dtype=torch.float32)
-            masks = torch.zeros((len(items), len(ACTION_KW)), dtype=torch.bool)
+            masks = torch.zeros((len(items), self.action_dim), dtype=torch.bool)
             for i, item in enumerate(items):
                 masks[i, list(item.next_feasible_indices)] = True
             q = self.online(states).gather(1, torch.tensor([[t.action_index] for t in items]))
@@ -579,7 +627,9 @@ class DirectPowerDDQN:
                 bootstrap_steps=torch.tensor([[t.bootstrap_steps] for t in items]))
         return [{'replay_id': t.replay_id, 'source_sample_id': t.source_sample_id,
                  'source_round': t.source_round, 'source_row_index': t.source_row_index,
-                 'action_kw': ACTION_KW[t.action_index], 'done': t.done,
+                 'action_kw': self.action_power_kw(t.action_index, t.state), 'done': t.done,
+                 'action_mode': self.action_mode, 'action_index': t.action_index,
+                 'action_value_kw': self.action_values_kw[t.action_index],
                  'bootstrap_steps': t.bootstrap_steps, 'experience_outcome': t.experience_outcome,
                  'stored_reward_scaled': t.reward_cny, 'q_scaled': float(q[i].item()),
                  'target_scaled': float(y[i].item()), 'td_error_scaled': float((y[i]-q[i]).item()),
@@ -782,6 +832,8 @@ class DirectPowerDDQN:
         return {
             'state_mode': self.state_mode, 'state_dim': self.state_dim,
             'state_features': self.state_features,
+            'action_mode': self.action_mode, 'action_dim': self.action_dim,
+            'action_values_kw': self.action_values_kw,
             # Old loaders must reject a PER checkpoint instead of silently dropping priorities.
             'format_version': (PRIORITIZED_REPLAY_FORMAT_VERSION if self.replay_sampling == 'prioritized'
                                else ECONOMIC_REPLAY_FORMAT_VERSION),
@@ -809,6 +861,10 @@ class DirectPowerDDQN:
     def load_training_state(self, state: dict) -> None:
         # Pre-option checkpoints are unambiguously the historical seven-feature layout.
         # Reject incompatible layouts before touching networks, optimizer, replay or RNG.
+        if (state.get('action_mode', 'absolute61') != self.action_mode
+                or state.get('action_dim', len(ACTION_KW)) != self.action_dim
+                or tuple(state.get('action_values_kw', ACTION_KW)) != self.action_values_kw):
+            raise ValueError('checkpoint action mode/grid is incompatible; start a new run')
         if (state.get('state_mode', DEFAULT_STATE_MODE) != self.state_mode
                 or state.get('state_dim', STATE_DIM) != self.state_dim
                 or tuple(state.get('state_features', STATE_FEATURES)) != self.state_features):
@@ -827,6 +883,13 @@ class DirectPowerDDQN:
         if any(len(item.state) != self.state_dim or len(item.next_state) != self.state_dim
                for item in state['replay']):
             raise ValueError('checkpoint replay state dimension is incompatible')
+        for item in state['replay']:
+            self.action_power_kw(item.action_index, item.state)
+            if any(type(index) is not int or not 0 <= index < self.action_dim
+                   for index in item.next_feasible_indices):
+                raise ValueError('checkpoint replay action indices are incompatible')
+            for index in item.next_feasible_indices:
+                self.action_power_kw(index, item.next_state)
         # Fail before overwriting parameters if the sampler or priority state is incompatible.
         saved_sampling = state.get('sampling_config', {
             'mode': 'uniform', 'alpha': .6, 'beta': 1., 'epsilon': 1e-6,

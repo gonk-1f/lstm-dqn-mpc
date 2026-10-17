@@ -7,7 +7,8 @@ from pathlib import Path
 
 import torch
 
-from .control import ACTION_KW, DirectTransition
+from .control import DirectTransition
+from .actions import action_values_kw
 
 
 DIAGNOSTIC_SAMPLE_IDS = frozenset((
@@ -23,7 +24,7 @@ def actual_greedy_q_records(
     sample_id: str, transitions: tuple[DirectTransition, ...], agent, *,
     failed: bool = False, q_unit: str = 'scaled reward-equivalent CNY',
 ) -> list[dict]:
-    """Select a few executed decisions, then read all 61 online Q values.
+    """Select a few executed decisions, then read the complete online action-Q vector.
 
     Tags describe the observed trajectory only. No action is selected here and
     no counterfactual state, replay entry, RNG draw, or optimizer step is made.
@@ -77,13 +78,18 @@ def actual_greedy_q_records(
         physical = item.physical_feasible_actions
         candidate = item.policy_candidate_actions
         if not candidate or item.action_kw not in candidate or not set(candidate).issubset(physical):
-            raise ValueError("diagnostic decision violates the recorded Scheme A candidate mask")
-        ordered = sorted(candidate, key=lambda action: (-q[action // 10], action))
+            raise ValueError("diagnostic decision violates the recorded physical/action-space candidate mask")
+        action_mode = getattr(agent, 'action_mode', 'absolute61')
+        action_grid = action_values_kw(action_mode)
+        index_for = (lambda power: agent.action_index_for_power(power, item.state)) if action_mode == 'increment7' else (lambda power: power // 10)
+        ordered = sorted(candidate, key=lambda power: (-q[index_for(power)], power))
         records.append({
             "sample_id": sample_id, "archive_transition_index": index,
             "priority_tags": sorted(tagged[index]), "state": list(item.state),
             "physical_actions_kw": list(physical), "candidate_actions_kw": list(candidate),
-            "action_grid_kw": list(ACTION_KW), "q_values": q,
+            "action_grid_kw": list(action_grid), "action_mode":action_mode, "q_values": q,
+            "candidate_action_indices":[index_for(power) for power in candidate],
+            "selected_action_index":index_for(item.action_kw),
             "selected_action_kw": item.action_kw, "legal_action_order_kw": ordered,
             "selected_action_legal_rank": ordered.index(item.action_kw) + 1,
             "q_unit": q_unit, "reward_scale": scale,

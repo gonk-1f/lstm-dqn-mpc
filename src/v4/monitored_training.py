@@ -40,6 +40,7 @@ from .reward_feedback import BatteryEnergyValue
 from .experiment_paths import unarchived_output_path
 from .failure_replay import FailurePenalty, prepare_failure_replay
 from .independent_economics import ZhouEvaluationConfig
+from .actions import FC_ACTION_MODES, action_values_kw
 from .decision_diagnostics import (
     DIAGNOSTIC_SAMPLE_IDS, INDEPENDENT_DIAGNOSTIC_SAMPLE_IDS, MAX_DECISIONS_PER_SAMPLE,
     actual_greedy_q_records, save_diagnostic_snapshot,
@@ -50,6 +51,7 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
                     redistribute_battery_energy: bool = False, trajectory_path: Path | None = None,
                     reward_cost_mode: str = 'full_economic',
                     state_mode: str = DEFAULT_STATE_MODE,
+                    action_mode: str = 'absolute61',
                     learn_no_feasible_failures: bool = False, failure_penalty: FailurePenalty | None = None,
                     abort_on_execution_error: bool = False,
                     decision_diagnostic_sink=None,
@@ -66,7 +68,7 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
     failed_sample_lengths = []
     failure_profiles = []
     failure_events = []
-    reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
+    reason_counts={'soc_limited':0,'structural_power':0,'increment_action_limited':0,'data_truncation':0,'execution_error':0}
     event_only_count=0
     def on_failure(exc):
         nonlocal event_only_count
@@ -99,7 +101,7 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             episodes, lambda state, feasible: agent.select_power(state, feasible, epsilon=0.0),
             accountant, beta_soc=beta_soc,
             on_failure=on_failure, redistribute_battery_energy=redistribute_battery_energy,
-            reward_cost_mode=reward_cost_mode, state_mode=state_mode,
+            reward_cost_mode=reward_cost_mode, state_mode=state_mode, action_mode=action_mode,
             economic_evaluation_config=economic_evaluation_config,
         )
         if decision_diagnostic_sink is not None:
@@ -301,6 +303,7 @@ def run_monitored_training(
     dataset, *, output_dir: Path, rounds: int = 100, beta_soc: float = DEFAULT_BETA_SOC,
     reward_cost_mode: str = 'full_economic',
     state_mode: str = DEFAULT_STATE_MODE,
+    action_mode: str = 'absolute61',
     cadence: str = "replay32", target_mode: str = "soft", target_interval: int = 500,
     seed: int = 42, batch_size: int = 64, updates_per_episode: int = 16,
     epsilon_start: float = 1.0, epsilon_end: float = 0.05, progress_every_steps: int = 0,
@@ -330,9 +333,19 @@ def run_monitored_training(
         raise ValueError('independent task requires its separate economic evaluation configuration')
     if economic_evaluation_config is not None and type(economic_evaluation_config) is not ZhouEvaluationConfig:
         raise ValueError('independent evaluation configuration has an invalid type')
+    if action_mode not in FC_ACTION_MODES:
+        raise ValueError(f'action_mode must be one of {FC_ACTION_MODES}')
+    incremental = action_mode == 'increment7'
+    if incremental and (task_mode != 'independent_voyage' or state_mode != 'minimal3'
+                        or reward_cost_mode != 'zhou_joint' or n_step != 1):
+        raise ValueError('increment7 requires independent/minimal3/zhou_joint and n_step=1')
+    if reward_cost_mode == 'zhou_joint' and not incremental:
+        raise ValueError('zhou_joint is reserved for the isolated increment7 experiment')
     if task_mode == 'independent_voyage' and (
-            state_mode != 'minimal3' or reward_cost_mode != 'control_only' or redistribute_battery_energy):
-        raise ValueError('independent baseline keeps minimal3/control_only without redistribution')
+            state_mode != 'minimal3'
+            or reward_cost_mode != ('zhou_joint' if incremental else 'control_only')
+            or redistribute_battery_energy):
+        raise ValueError('independent experiments retain minimal3 and no redistribution')
     diagnostic_ids = DIAGNOSTIC_SAMPLE_IDS
     if task_mode == 'independent_voyage':
         diagnostic_ids = INDEPENDENT_DIAGNOSTIC_SAMPLE_IDS
@@ -381,9 +394,9 @@ def run_monitored_training(
         'reward_cost_mode':reward_cost_mode,
         'reward_mode':reward_cost_mode,
         'h2_reward_weight':0. if reward_cost_mode == 'control_only' else 1.,
-        'shore_purchase_reward_weight':0. if reward_cost_mode == 'control_only' else 1.,
-        'fc_degradation_reward_weight':1. if reward_cost_mode == 'full_economic' else 0.,
-        'battery_degradation_reward_weight':1. if reward_cost_mode == 'full_economic' else 0.,
+        'shore_purchase_reward_weight':0. if reward_cost_mode in ('control_only','zhou_joint') else 1.,
+        'fc_degradation_reward_weight':1. if reward_cost_mode in ('full_economic','zhou_joint') else 0.,
+        'battery_degradation_reward_weight':1. if reward_cost_mode in ('full_economic','zhou_joint') else 0.,
         'fc_ramp_reward_coefficient_cny_per_kw': (
             FC_RAMP_REWARD_CNY_PER_KW
             if reward_cost_mode in ('energy_with_fc_ramp', 'control_only') else 0.),
@@ -401,8 +414,10 @@ def run_monitored_training(
         'soc_reward_formula':'-beta_soc * (actual_post_action_onboard_soc - soc_ref)**2',
         'gamma':1.0,'learning_rate':ECONOMIC_LEARNING_RATE,'hidden_dims':list(ECONOMIC_HIDDEN_DIMS),
         'state_mode':state_mode,'state_dim':state_dim,'state_features':list(state_features),
-        'network_dims':[state_dim,*ECONOMIC_HIDDEN_DIMS,len(ACTION_KW)],
-        'action_kw':list(ACTION_KW),'replay_capacity':300000,
+        'network_dims':[state_dim,*ECONOMIC_HIDDEN_DIMS,len(action_values_kw(action_mode))],
+        'action_kw':list(action_values_kw(action_mode)), 'action_mode':action_mode,
+        'action_value_kind':'increment_kw' if incremental else 'absolute_fc_kw',
+        'replay_capacity':300000,
         'epsilon_start':epsilon_start,'epsilon_end':epsilon_end,
         'epsilon_linear_end_round':70,'epsilon_hold_from_round':71,
         'cadence':cadence,'updates_per_completed_episode':16,'target_mode':target_mode,
@@ -427,6 +442,14 @@ def run_monitored_training(
             if replay_sampling == 'prioritized' else ECONOMIC_REPLAY_FORMAT_VERSION),
         'shore_settlement':'modeled_fixed_target_soc_0.6',
     }
+    if incremental:
+        parameters.update(
+            reward_formula='-(C_H2_actual + (SOC_before-SOC_next)*624/(eta_ref*LHV)*hydrogen_price + C_FC_deg + C_Bat_deg + beta_soc*(SOC_next-soc_ref)**2 + (0.11025/60)*(actual_fc_kw-previous_actual_fc_kw)**2)',
+            fc_quadratic_ramp_reward_coefficient=FC_RAMP_REWARD_CNY_PER_KW/60.,
+            soc_equivalent_hydrogen_reward='signed per-executed-step SOC difference; telescopes to the existing Zhou evaluation; no terminal surcharge',
+            physical_fc_range_kw=[0,600], initial_maximum_fc_kw=60,
+            incremental_action_handling='reject infeasible increments; no clipping or absolute-action fallback',
+        )
     if task_mode == 'independent_voyage':
         parameters.update(
             task_mode=task_mode, shore_settlement='disabled_independent_voyage',
@@ -524,7 +547,7 @@ def run_monitored_training(
         try:
             agent, report = _run_monitored_training(dataset,output_dir=output_dir,rounds=rounds,
                 beta_soc=beta_soc,cadence=cadence,target_mode=target_mode,target_interval=target_interval,
-                reward_cost_mode=reward_cost_mode, state_mode=state_mode,
+                reward_cost_mode=reward_cost_mode, state_mode=state_mode, action_mode=action_mode,
                 seed=seed,batch_size=batch_size,updates_per_episode=updates_per_episode,
                 epsilon_start=epsilon_start,epsilon_end=epsilon_end,progress_every_steps=progress_every_steps,
                 redistribute_battery_energy=redistribute_battery_energy,n_step=n_step,
@@ -567,7 +590,7 @@ def run_monitored_training(
 
 def _run_monitored_training(
     dataset, *, output_dir: Path, rounds: int, beta_soc: float,
-    reward_cost_mode: str, state_mode: str,
+    reward_cost_mode: str, state_mode: str, action_mode: str,
     cadence: str, target_mode: str, target_interval: int,
     seed: int, batch_size: int, updates_per_episode: int,
     epsilon_start: float, epsilon_end: float, progress_every_steps: int,
@@ -608,7 +631,7 @@ def _run_monitored_training(
             for item in (*train, *validation)):
         raise ValueError('independent task requires complete ONBOARD-only samples in the fixed splits')
     agent = DirectPowerDDQN(seed=seed,n_step=n_step,reward_scale=reward_scale,
-                            state_mode=state_mode,
+                            state_mode=state_mode, action_mode=action_mode,
                             learning_rate=ECONOMIC_LEARNING_RATE, hidden_dims=ECONOMIC_HIDDEN_DIMS,
                             replay_capacity=300_000, failure_terminal_quota=failure_terminal_quota,
                             replay_sampling=replay_sampling, per_alpha=per_alpha,
@@ -629,7 +652,7 @@ def _run_monitored_training(
     failure_suffix_count = 0
     no_suffix_failure_events = 0
     initial_q_diagnostics = fixed_q_diagnostics(agent,accountant, reward_cost_mode=reward_cost_mode)
-    bootstrap_reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
+    bootstrap_reason_counts={'soc_limited':0,'structural_power':0,'increment_action_limited':0,'data_truncation':0,'execution_error':0}
     train_by_id = {str(episode.sample_id):episode for episode in train}
 
     def replay_counts():
@@ -706,7 +729,7 @@ def _run_monitored_training(
             return power
         bootstrap, bootstrap_errors = _run_episodes(
             train, bootstrap_policy, accountant, beta_soc=beta_soc,
-            reward_cost_mode=reward_cost_mode, state_mode=state_mode,
+            reward_cost_mode=reward_cost_mode, state_mode=state_mode, action_mode=action_mode,
             on_failure=bootstrap_failure,
             economic_evaluation_config=economic_evaluation_config,
             redistribute_battery_energy=redistribute_battery_energy,
@@ -838,7 +861,7 @@ def _run_monitored_training(
         failed_sample_lengths = []
         failure_profiles = []
         training_events = []
-        reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
+        reason_counts={'soc_limited':0,'structural_power':0,'increment_action_limited':0,'data_truncation':0,'execution_error':0}
         completed_voyages = 0
         unknown_discarded_round = 0
         unknown_retained_round = 0
@@ -864,7 +887,7 @@ def _run_monitored_training(
             before_episode_insertions = agent.economic_replay_insertions
             try:
                 result = replay_episode(episode,training_policy,accountant=accountant,beta_soc=beta_soc,
-                                         reward_cost_mode=reward_cost_mode, state_mode=state_mode,
+                                         reward_cost_mode=reward_cost_mode, state_mode=state_mode, action_mode=action_mode,
                                          economic_evaluation_config=economic_evaluation_config,
                                          redistribute_battery_energy=redistribute_battery_energy)
             except ReplayExecutionError as exc:
@@ -956,7 +979,7 @@ def _run_monitored_training(
                     sample_id, transitions, agent, failed=failed,
                     q_unit=run_metadata['reward_units']['economic_q']))
         greedy_train = greedy_evaluate(train,agent,accountant,beta_soc,
-            reward_cost_mode=reward_cost_mode, state_mode=state_mode,
+            reward_cost_mode=reward_cost_mode, state_mode=state_mode, action_mode=action_mode,
             economic_evaluation_config=economic_evaluation_config,
             redistribute_battery_energy=redistribute_battery_energy,
             trajectory_path=output_dir/f'round_{round_index:03d}_train_trajectories.json' if capture_trajectories else None,
@@ -967,7 +990,7 @@ def _run_monitored_training(
         runtime['phase']='greedy_validation'
         print(f"round {round_index}/{rounds} greedy_train={greedy_train['evaluable_completed']}/{greedy_train['evaluable_episodes']} validation start",flush=True)
         greedy_validation = greedy_evaluate(validation,agent,accountant,beta_soc,
-            reward_cost_mode=reward_cost_mode, state_mode=state_mode,
+            reward_cost_mode=reward_cost_mode, state_mode=state_mode, action_mode=action_mode,
             economic_evaluation_config=economic_evaluation_config,
             redistribute_battery_energy=redistribute_battery_energy,
             trajectory_path=output_dir/f'round_{round_index:03d}_validation_trajectories.json' if capture_trajectories else None,

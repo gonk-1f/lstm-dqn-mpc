@@ -1,6 +1,7 @@
 """Signed SOC-equivalent hydrogen evaluation for complete independent voyages.
 
-This evaluator never changes physical states, interval ledgers or rewards.
+This evaluator never changes physical states or interval ledgers. The signed
+SOC conversion is also shared by the explicit Zhou-joint training objective.
 The FC average efficiency is an explicit experiment parameter, not a fitted
 quantity or a default inferred from a particular controller trajectory.
 """
@@ -123,6 +124,31 @@ class ZhouEconomicEvaluation:
     evaluation_version: str = EVALUATION_VERSION
 
 
+def _soc_equivalent_hydrogen_mass_kg(
+    soc_before: float, soc_after: float, config: ZhouEvaluationConfig,
+) -> float:
+    if type(config) is not ZhouEvaluationConfig:
+        raise TypeError('SOC-equivalent economics requires an explicit ZhouEvaluationConfig')
+    before = _finite_real(soc_before, 'soc_before')
+    after = _finite_real(soc_after, 'soc_after')
+    if not 0.2 <= before <= 0.8 or not 0.2 <= after <= 0.8:
+        raise ValueError('SOC-equivalent economics requires feasible SOC endpoints')
+    return ((before - after) * BATTERY_NOMINAL_ENERGY_KWH
+            / (config.fc_average_efficiency * LHV_H2_KWH_PER_KG))
+
+
+def soc_equivalent_hydrogen_cost_cny(
+    soc_before: float, soc_after: float, config: ZhouEvaluationConfig,
+) -> float:
+    """Signed step energy value; telescopes to the complete-voyage correction.
+
+    SOC already incorporates the formal battery efficiency. Applying another
+    efficiency or terminal charge here would count stored energy twice.
+    """
+    return (_soc_equivalent_hydrogen_mass_kg(soc_before, soc_after, config)
+            * HYDROGEN_PRICE_CNY_PER_KG)
+
+
 def evaluate_zhou_economics(
     ledger: RawCnyIntervalLedger, *, soc_initial: float, soc_terminal: float,
     config: ZhouEvaluationConfig,
@@ -139,8 +165,7 @@ def evaluate_zhou_economics(
     if ledger.shore_cost_cny != 0.0:
         raise ValueError('independent evaluation cannot include shore settlement costs')
     actual_mass = ledger.h2_cost_cny / HYDROGEN_PRICE_CNY_PER_KG
-    correction = ((initial - terminal) * BATTERY_NOMINAL_ENERGY_KWH
-                  / (config.fc_average_efficiency * LHV_H2_KWH_PER_KG))
+    correction = _soc_equivalent_hydrogen_mass_kg(initial, terminal, config)
     equivalent_mass = fsum((actual_mass, correction))
     hydrogen_cost = equivalent_mass * HYDROGEN_PRICE_CNY_PER_KG
     total = fsum((hydrogen_cost, ledger.fuel_cell_degradation_cost_cny,

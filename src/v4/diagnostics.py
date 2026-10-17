@@ -6,6 +6,7 @@ import torch
 
 from v3.control import AccountState
 from .control import ACTION_KW, DEFAULT_STATE_MODE, build_state, feasible_fc_actions
+from .actions import action_values_kw, candidate_fc_actions
 from .telemetry import duration_weighted_mean
 
 
@@ -30,6 +31,8 @@ def reward_totals(transitions) -> dict:
         'excluded_degradation_cost_cny': fsum(
             getattr(t, 'excluded_degradation_cost_cny', 0.0) for t in values),
         'fc_ramp_penalty_cny': fsum(getattr(t, 'fc_ramp_penalty_cny', 0.0) for t in values),
+        'soc_equivalent_hydrogen_cost_cny': fsum(
+            getattr(t, 'soc_equivalent_hydrogen_cost_cny', 0.0) for t in values),
     }
 
 
@@ -56,6 +59,9 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None, reward
         rows.append({
             'voyage_index': voyage, 'soc_before': item.state[0], 'soc_after': item.actual_soc,
             'fc_kw': item.action_kw, 'battery_bus_kw': item.actual_battery_kw,
+            'action_mode': getattr(item, 'action_mode', 'absolute61'),
+            'action_index': getattr(item, 'action_index', None),
+            'action_delta_kw': getattr(item, 'action_delta_kw', None),
             'load_kw': item.actual_battery_kw + item.action_kw,
             'duration_s': getattr(item, 'duration_s', 30.0),
             'raw_load_kw': getattr(item, 'raw_load_kw', None),
@@ -67,6 +73,7 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None, reward
             'soc_soft_penalty': item.soc_soft_penalty_cny,
             'excluded_degradation_cost_cny': getattr(item, 'excluded_degradation_cost_cny', 0.0),
             'fc_ramp_penalty_cny': getattr(item, 'fc_ramp_penalty_cny', 0.0),
+            'soc_equivalent_hydrogen_cost_cny': getattr(item, 'soc_equivalent_hydrogen_cost_cny', 0.0),
             'original_economic_ledger': ledger_components(item.original_economic_ledger),
             'modeled_fixed_target_shore_ledger': ledger_components(item.shore_ledger),
             'shore_settlement_basis': (
@@ -184,13 +191,22 @@ def fixed_q_diagnostics(agent, accountant, *, reward_cost_mode='full_economic') 
         physical = AccountState(soc=soc, previous_fc_kw=300.)
         state = build_state(physical, (300., 300., 300.), (load, load, load),
                             state_mode=getattr(agent, 'state_mode', DEFAULT_STATE_MODE))
-        feasible = feasible_fc_actions(physical, load, accountant)
+        physical_actions = feasible_fc_actions(physical, load, accountant)
+        action_mode = getattr(agent, 'action_mode', 'absolute61')
+        feasible = candidate_fc_actions(physical_actions, physical.previous_fc_kw, action_mode)
         with torch.no_grad():
             q = agent.online(torch.tensor([state], dtype=torch.float32))[0].tolist()
-        order = sorted(ACTION_KW, key=lambda power: (-q[ACTION_KW.index(power)], power))
+        values = action_values_kw(action_mode)
+        powers = tuple(physical.previous_fc_kw + value if action_mode == 'increment7' else value
+                       for value in values)
+        index_by_power = {power:index for index,power in enumerate(powers)}
+        order = sorted(powers, key=lambda power: (-q[index_by_power[power]], power))
+        zero_index = index_by_power.get(0)
         feasible_order = [power for power in order if power in feasible]
         probes.append({
-            'label': label, 'state': list(state), 'action_kw': list(ACTION_KW),
+            'label': label, 'state': list(state), 'action_kw': list(values),
+            'action_mode':action_mode, 'executed_fc_grid_kw':list(powers),
+            'candidate_action_indices':[index_by_power[power] for power in feasible],
             'q_values': q, 'action_order_kw': order, 'feasible_actions_kw': list(feasible),
             'reward_scale': scale, 'q_unit': (
                 'scaled control reward units' if reward_cost_mode == 'control_only'
@@ -198,9 +214,10 @@ def fixed_q_diagnostics(agent, accountant, *, reward_cost_mode='full_economic') 
             'q_values_original_reward_units': [value/scale for value in q],
             'q_original_unit': ('original control reward units; not CNY expenditure'
                                 if reward_cost_mode == 'control_only' else 'original reward-equivalent CNY'),
-            'greedy_feasible_action_kw': feasible_order[0], 'fc_zero_q': q[0],
-            'fc_zero_q_original_reward_units': q[0]/scale,
-            'fc_zero_rank_among_61': order.index(0)+1,
+            'greedy_feasible_action_kw': feasible_order[0] if feasible_order else None,
+            'fc_zero_q': q[zero_index] if zero_index is not None else None,
+            'fc_zero_q_original_reward_units': q[zero_index]/scale if zero_index is not None else None,
+            'fc_zero_rank_among_61': order.index(0)+1 if zero_index is not None and action_mode == 'absolute61' else None,
             'fc_zero_feasible_rank': feasible_order.index(0)+1 if 0 in feasible else None,
             'scope': 'fixed synthetic probes, not an estimate of the training-state distribution',
         })

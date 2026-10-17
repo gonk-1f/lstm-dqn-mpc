@@ -17,6 +17,7 @@ from .train import _default_data_root
 from .experiment_paths import unarchived_output_path
 from .independent_dataset import IndependentTrainingDataset
 from .independent_economics import ZhouEvaluationConfig
+from .actions import FC_ACTION_MODES
 
 
 def fresh_output_path(path: Path) -> Path:
@@ -41,6 +42,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument('--reward-feedback',choices=('original','redistributed'),default='original')
     parser.add_argument('--state-mode',choices=STATE_MODES,default=DEFAULT_STATE_MODE,
                         help='history7 retains FC/load differences; minimal3 uses SOC, current load and previous actual FC power')
+    parser.add_argument('--action-mode',choices=FC_ACTION_MODES,default='absolute61',
+                        help='absolute61 preserves historical runs; increment7 executes previous actual FC plus one of -60,-30,-10,0,10,30,60 kW without clipping or fallback')
     parser.add_argument('--reward-cost-mode',choices=REWARD_COST_MODES,default='full_economic',
                         help='energy_only uses H2, shore electricity and SOC; energy_with_fc_ramp adds FC power changes; control_only uses only FC power changes and SOC; complete economic ledgers remain for evaluation')
     parser.add_argument('--reward-scale',type=float,default=.001,
@@ -74,16 +77,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error(str(exc))
     if (args.rounds != 100 or args.beta_soc != DEFAULT_BETA_SOC or args.reward_feedback != 'original'
             or args.reward_scale != .001 or args.failure_terminal_quota != 2
-            or args.cadence != 'replay32' or args.n_step != 8
+            or args.cadence != 'replay32'
             or args.failure_penalty_scale != 1 or args.episode_credit_scope != 'voyage'):
         parser.error('formal 100-round run uses the frozen DDQN configuration')
     if args.dataset_mode == 'legacy' and args.data_root is not None:
         parser.error('--data-root is only supported with --dataset-mode independent')
+    incremental = args.action_mode == 'increment7'
+    if incremental and (args.dataset_mode != 'independent' or args.state_mode != 'minimal3'
+                        or args.reward_cost_mode != 'zhou_joint' or args.n_step != 1):
+        parser.error('increment7 requires independent/minimal3/zhou_joint and n-step=1')
+    if not incremental and (args.n_step != 8 or args.reward_cost_mode == 'zhou_joint'):
+        parser.error('historical absolute61 formal configuration retains n-step=8 and its original rewards')
     if args.dataset_mode == 'independent' and (
-            args.state_mode != 'minimal3' or args.reward_cost_mode != 'control_only'
+            args.state_mode != 'minimal3'
+            or args.reward_cost_mode != ('zhou_joint' if incremental else 'control_only')
             or args.replay_sampling != 'prioritized'
             or (args.per_alpha,args.per_beta,args.per_epsilon) != (.6,1.,1e-6)):
-        parser.error('independent baseline requires minimal3/control_only and unchanged prioritized .6/1/1e-6')
+        parser.error('independent runs require minimal3 and unchanged prioritized .6/1/1e-6 with the selected experiment reward')
     try:
         diagnostic_rounds = tuple(int(value.strip()) for value in args.diagnostic_rounds.split(',')
                                   if value.strip())
@@ -112,6 +122,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         beta_soc=args.beta_soc,cadence=args.cadence,target_mode='soft',
         reward_cost_mode=args.reward_cost_mode,
         state_mode=args.state_mode,
+        action_mode=args.action_mode,
         target_interval=500,seed=args.seed,batch_size=64,epsilon_start=1.,epsilon_end=.05,
         redistribute_battery_energy=False,
         episode_credit_scope=args.episode_credit_scope,n_step=args.n_step,

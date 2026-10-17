@@ -8,7 +8,8 @@ from .control import DirectTransition, NoFeasibleFCActionError, ReplayExecutionE
 from .reward_feedback import BatteryEnergyValue
 
 
-FAILURE_TERMINALS = frozenset(('failure_soc_limited','failure_structural_power'))
+FAILURE_TERMINALS = frozenset(('failure_soc_limited','failure_structural_power',
+                               'failure_increment_action_limited'))
 
 
 @dataclass(frozen=True)
@@ -61,7 +62,7 @@ def prepare_failure_replay(error: ReplayExecutionError, *, penalty: FailurePenal
     """Convert only a genuine no-action failure, preserving every real state."""
     if error.failure_kind != 'no_feasible_action' or not isinstance(error.cause,NoFeasibleFCActionError):
         raise ValueError('only genuine no_feasible_action errors qualify for economic failure TD')
-    if error.failure_cause not in ('soc_limited','structural_power'):
+    if error.failure_cause not in ('soc_limited','structural_power','increment_action_limited'):
         raise ValueError('physical failure cause must be classified explicitly')
     values=tuple(error.executed_transitions)
     if any(t.terminal_reason in FAILURE_TERMINALS for t in values):
