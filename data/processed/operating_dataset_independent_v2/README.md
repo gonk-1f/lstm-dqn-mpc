@@ -4,6 +4,15 @@
 
 ## 已确认的最终划分
 
+当前正式指针为 **`splits_v2_exclude046_seg01`：Train35 / Validation8 / Test4**。
+新版仅从原Train名单排除人工确认的长待机段`parent_046_seg01`，保留`parent_046_seg02`及全部候选文件；没有重新随机分配。旧`splits_v1_seed42`的36/8/4名单和审计文件完整保留。
+
+- [当前冻结清单](metadata/splits_v2_exclude046_seg01/sample_manifest.csv)、[排除原因](metadata/splits_v2_exclude046_seg01/exclusions.csv)
+- [Train35](metadata/splits_v2_exclude046_seg01/train_ids.txt)、[Validation8](metadata/splits_v2_exclude046_seg01/validation_ids.txt)、[Test4](metadata/splits_v2_exclude046_seg01/test_ids.txt)
+- [新独立任务配置与启动/恢复命令](../../../docs/v4_independent_voyage_config_2026-10-17.md)
+
+正式入口通过`--dataset-mode independent --state-mode minimal3 --reward-cost-mode control_only --replay-sampling prioritized`显式选择新任务，读取`metadata/active_split.json`；不再读取旧工况侧车。每段SOC=0.6、FC初值0 kW，无中途SHORE和末端充电，经济评价使用独立的有符号SOC等效氢耗三成本。旧任务仍由`--dataset-mode legacy`保留。下文保留候选生成及36/8/4初次冻结的历史说明；当前训练名单及执行行为以上方入口和配置说明为准。
+
 用户固定Test：`parent_001_seg01`、`parent_004_seg01`、`parent_013_seg01`、`parent_032_seg01`。
 
 剩余39个父组按约8:2、seed42并按月份分层：Train31父组/36航段，Validation8父组/8航段，Test4父组/4航段。同父拆分段始终同组，未发现时间重叠。保留原候选清单作为生成记录，**新训练应以已冻结清单的split列为准，不能使用legacy_split**。
@@ -12,7 +21,7 @@
 - [Train清单](metadata/splits_v1_seed42/train.csv)、[Validation清单](metadata/splits_v1_seed42/validation.csv)、[Test清单](metadata/splits_v1_seed42/test.csv)
 - [划分方法、seed及哈希](metadata/splits_v1_seed42/policy.json)、[分布摘要](metadata/splits_v1_seed42/split_summary.csv)
 
-此划分尚未改变正式训练入口或接入Zhou经济模型。旧checkpoint曾接触重划分数据，不能在此新任务上续训或冒充未见Test的模型。
+初次冻结时尚未接入环境；现已增加上述显式独立任务入口。旧checkpoint曾接触重划分数据，不能在此新任务上续训或冒充未见Test的模型。
 
 ## 快速查看
 
@@ -91,4 +100,4 @@ _037按要求保留首次SHORE之前整段约0–10.183h，**没有像上一版�
 
 独立航段统一SOC=0.6、取消SHORE控制及显式末端充电，可以作为统一的仿真任务定义；它不是每次实船出发SOC均为0.6的事实证据，也不能单凭删去标签就断言训练问题已解决。选择Test后，再将Zhou等效氢耗修正、FC退化和电池退化接入统一评价；本轮不先行改训练奖励或经济模型。
 
-**Test已由用户指定，Train/Validation划分已冻结；正式环境与经济模型尚待接入。** 同父样本拆分段默认须分组防泄漏；选择一个子段为Test时，其同父其他子段不能进入Train/Validation。
+**当前35/8/4已冻结，正式环境与三成本评价通过独立任务参数接入；本次未启动训练。** 同父样本拆分段保持分组防泄漏；选择一个子段为Test时，其同父其他子段不能进入Train/Validation。

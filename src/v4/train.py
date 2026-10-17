@@ -26,15 +26,26 @@ from .control import (
 from .dqn import (
     DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, STATE_DIM, STATE_FEATURES,
 )
-from .telemetry import soc_time_occupancy
+from .telemetry import duration_weighted_mean, soc_time_occupancy
 from .diagnostics import COMPONENT_NAMES, reward_totals
 from .experiment_schedule import annotate_evaluation, fully_completed
+from .independent_economics import EVALUATION_VERSION, ZhouEconomicEvaluation
 
 
 def _summarize(
     results: list[DirectReplay], requested: int, failures: list[str],
     failed_transitions: Sequence[DirectTransition] = (),
+    *, task_mode: str = 'legacy',
 ) -> dict[str, object]:
+    if task_mode not in ('legacy', 'independent_voyage'):
+        raise ValueError('summary task_mode must be legacy or independent_voyage')
+    if any(getattr(item, 'task_mode', 'legacy') != task_mode for item in results):
+        raise ValueError('completed replay task modes differ from the summary task')
+    independent = task_mode == 'independent_voyage'
+    if independent and any(
+            not isinstance(item.economic_evaluation, ZhouEconomicEvaluation)
+            or item.economic_evaluation.evaluation_version != EVALUATION_VERSION for item in results):
+        raise ValueError('independent completed replays require matching Zhou economic evaluations')
     starts = sum(
         sum(left == 0 and right > 0 for left, right in zip((0.0, *item.fc_power_kw_by_row[:-1]), item.fc_power_kw_by_row))
         for item in results
@@ -54,9 +65,11 @@ def _summarize(
         else item.modeled_terminal_settlement.ledger.total_cost_cny
         for item in results
     )
-    comparable_cost = observed_cost + modeled_cost
+    comparable_cost = (math.fsum(item.comparable_cost_cny for item in results)
+                       if independent else observed_cost + modeled_cost)
     completed_transitions = [t for item in results for t in item.transitions]
     executed_transitions = [*completed_transitions, *failed_transitions]
+    executed_durations = [getattr(item, 'duration_s', 30.0) for item in executed_transitions]
     voyage_terminal_soc = [t.actual_soc for t in executed_transitions
                            if t.shore_ledger is not None or t.is_successful_terminal]
     completed_onboard_segments = (sum(t.shore_ledger is not None for t in executed_transitions)
@@ -74,11 +87,11 @@ def _summarize(
         name: value - math.fsum(getattr(ledger, name) for ledger in executed_modeled_shore_ledgers)
         for name, value in executed_components.items()
     }
-    return {
+    summary = {
         "episodes": requested,
         "completed": len(results),
         "failed": failures,
-        "cost_cny": comparable_cost if not failures else None,
+        "cost_cny": comparable_cost if not failures and (not independent or len(results) == requested) else None,
         "completed_cost_cny": comparable_cost,
         "completed_observed_cost_cny": observed_cost - modeled_shore_cost,
         "completed_accounted_cost_including_modeled_shore_cny": observed_cost,
@@ -114,9 +127,10 @@ def _summarize(
             sum(item.soc_soft_penalty_cny for item in results)
             + sum(item.soc_soft_penalty_cny for item in failed_transitions)
         ),
-        "soc_time_occupancy": soc_time_occupancy(all_onboard_soc),
-        "onboard_soc_mean": math.fsum(all_onboard_soc) / len(all_onboard_soc) if all_onboard_soc else None,
-        "fc_zero_fraction": sum(value == 0 for value in all_fc) / len(all_fc) if all_fc else None,
+        "soc_time_occupancy": soc_time_occupancy(
+            all_onboard_soc, durations_s=executed_durations if independent else None),
+        "onboard_soc_mean": duration_weighted_mean(all_onboard_soc, executed_durations),
+        "fc_zero_fraction": duration_weighted_mean((float(value == 0) for value in all_fc), executed_durations),
         "fc_starts": starts,
         "executed_fc_starts_including_failed_prefix": sum(
             t.state[2 if len(t.state) == 3 else 1] == 0 and t.action_kw > 0
@@ -139,18 +153,37 @@ def _summarize(
         "terminal_onboard_soc_min": min(terminal_onboard_soc) if terminal_onboard_soc else None,
         "terminal_onboard_soc_max": max(terminal_onboard_soc) if terminal_onboard_soc else None,
     }
+    if independent:
+        evaluations = [item.economic_evaluation for item in results]
+        summary.update(
+            task_mode=task_mode,
+            economic_evaluation_basis=EVALUATION_VERSION,
+            completed_three_cost_components_cny={
+                name: math.fsum(getattr(evaluation, name) for evaluation in evaluations)
+                for name in ('equivalent_hydrogen_cost_cny', 'fuel_cell_degradation_cost_cny',
+                             'battery_degradation_cost_cny')},
+            completed_hydrogen_quantities_kg={
+                'actual': math.fsum(item.actual_hydrogen_mass_kg for item in evaluations),
+                'soc_signed': math.fsum(item.soc_equivalent_hydrogen_mass_kg for item in evaluations),
+                'equivalent': math.fsum(item.equivalent_hydrogen_mass_kg for item in evaluations),
+            },
+            executed_onboard_duration_s=math.fsum(executed_durations),
+        )
+    return summary
 
 
 def _run_episodes(episodes, policy, accountant, *, on_failure=None, beta_soc: float = 0.0,
                   redistribute_battery_energy: bool = False,
-                  reward_cost_mode: str = 'full_economic', state_mode: str = DEFAULT_STATE_MODE):
+                  reward_cost_mode: str = 'full_economic', state_mode: str = DEFAULT_STATE_MODE,
+                  economic_evaluation_config=None):
     results: list[DirectReplay] = []
     failures: list[str] = []
     for episode in episodes:
         try:
             results.append(replay_episode(episode, policy, accountant=accountant, beta_soc=beta_soc,
                                           redistribute_battery_energy=redistribute_battery_energy,
-                                          reward_cost_mode=reward_cost_mode, state_mode=state_mode))
+                                          reward_cost_mode=reward_cost_mode, state_mode=state_mode,
+                                          economic_evaluation_config=economic_evaluation_config))
         except ReplayExecutionError as exc:
             exc.sample_id = str(episode.sample_id)
             failures.append(f"{episode.sample_id}: {exc}")

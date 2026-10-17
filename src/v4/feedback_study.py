@@ -15,6 +15,8 @@ from .monitored_training import (
 from .review import _manifest_hashes
 from .train import _default_data_root
 from .experiment_paths import unarchived_output_path
+from .independent_dataset import IndependentTrainingDataset
+from .independent_economics import ZhouEvaluationConfig
 
 
 def fresh_output_path(path: Path) -> Path:
@@ -25,6 +27,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir',type=Path,required=True)
     parser.add_argument('--resume-from',type=Path,default=None)
+    parser.add_argument('--dataset-mode',choices=('legacy','independent'),default='legacy',
+                        help='independent uses the active frozen voyage split, no SHORE or terminal charging')
+    parser.add_argument('--data-root',type=Path,default=None,
+                        help='independent dataset root; legacy retains its three frozen roots')
     parser.add_argument('--rounds',type=int,default=100)
     parser.add_argument('--seed',type=int,default=42,
                         help='paired runs use the same seed; subsequent repeats may use43 and44')
@@ -71,6 +77,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             or args.cadence != 'replay32' or args.n_step != 8
             or args.failure_penalty_scale != 1 or args.episode_credit_scope != 'voyage'):
         parser.error('formal 100-round run uses the frozen DDQN configuration')
+    if args.dataset_mode == 'legacy' and args.data_root is not None:
+        parser.error('--data-root is only supported with --dataset-mode independent')
+    if args.dataset_mode == 'independent' and (
+            args.state_mode != 'minimal3' or args.reward_cost_mode != 'control_only'
+            or args.replay_sampling != 'prioritized'
+            or (args.per_alpha,args.per_beta,args.per_epsilon) != (.6,1.,1e-6)):
+        parser.error('independent baseline requires minimal3/control_only and unchanged prioritized .6/1/1e-6')
     try:
         diagnostic_rounds = tuple(int(value.strip()) for value in args.diagnostic_rounds.split(',')
                                   if value.strip())
@@ -81,11 +94,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error('diagnostic-rounds must be distinct and within the requested rounds')
     output = (fresh_output_path(args.output_dir) if args.resume_from is None
               else unarchived_output_path(args.output_dir))
-    roots = tuple(_default_data_root(name) for name in (
-        'operating_dataset_zero_boundary_v2','operating_dataset_zero_boundary_v2_ais',
-        'operating_dataset_zero_boundary_v2_modes_v3'))
-    before = _manifest_hashes(roots)
-    dataset = FormalTrainingDataset.open(*roots)
+    if args.dataset_mode == 'independent':
+        roots = (args.data_root or _default_data_root('operating_dataset_independent_v2'),)
+        dataset = IndependentTrainingDataset.open(roots[0])
+        before = dataset.identity_hashes()
+        required_sizes = dataset.split_sizes
+        economic_evaluation_config = ZhouEvaluationConfig.from_formal_curve()
+    else:
+        roots = tuple(_default_data_root(name) for name in (
+            'operating_dataset_zero_boundary_v2','operating_dataset_zero_boundary_v2_ais',
+            'operating_dataset_zero_boundary_v2_modes_v3'))
+        before = _manifest_hashes(roots)
+        dataset = FormalTrainingDataset.open(*roots)
+        required_sizes = (30,8)
+        economic_evaluation_config = None
     _, report = run_monitored_training(dataset,output_dir=output,rounds=args.rounds,
         beta_soc=args.beta_soc,cadence=args.cadence,target_mode='soft',
         reward_cost_mode=args.reward_cost_mode,
@@ -93,7 +115,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         target_interval=500,seed=args.seed,batch_size=64,epsilon_start=1.,epsilon_end=.05,
         redistribute_battery_energy=False,
         episode_credit_scope=args.episode_credit_scope,n_step=args.n_step,
-        required_split_sizes=(30,8),capture_trajectories=True,progress_every_steps=50,
+        required_split_sizes=required_sizes,capture_trajectories=True,progress_every_steps=50,
         learn_no_feasible_failures=True,failure_penalty_scale=args.failure_penalty_scale,
         reward_scale=args.reward_scale,failure_terminal_quota=args.failure_terminal_quota,
         replay_sampling=args.replay_sampling,per_alpha=args.per_alpha,
@@ -102,10 +124,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         experiment_id=args.experiment_id,
         manifest_sha256=before,
         dataset_roots=tuple(str(root.resolve()) for root in roots),
+        economic_evaluation_config=economic_evaluation_config,
         abort_on_execution_error=True,capture_log=True,
         diagnostic_rounds=diagnostic_rounds,resume_from=args.resume_from)
     try:
-        after = _manifest_hashes(roots)
+        after = (dataset.identity_hashes() if args.dataset_mode == 'independent'
+                 else _manifest_hashes(roots))
         if dataset.opened_test_payloads != 0 or after != before:
             raise RuntimeError('Test opened or dataset manifests changed')
     except BaseException as exc:

@@ -13,12 +13,15 @@ from .control import ACTION_KW, DirectTransition
 DIAGNOSTIC_SAMPLE_IDS = frozenset((
     "zero_boundary_015", "zero_boundary_017", "zero_boundary_044",
 ))
+INDEPENDENT_DIAGNOSTIC_SAMPLE_IDS = frozenset((
+    "parent_015_seg01", "parent_017_seg01", "parent_044_seg01",
+))
 MAX_DECISIONS_PER_SAMPLE = 16
 
 
 def actual_greedy_q_records(
     sample_id: str, transitions: tuple[DirectTransition, ...], agent, *,
-    failed: bool = False,
+    failed: bool = False, q_unit: str = 'scaled reward-equivalent CNY',
 ) -> list[dict]:
     """Select a few executed decisions, then read all 61 online Q values.
 
@@ -83,7 +86,7 @@ def actual_greedy_q_records(
             "action_grid_kw": list(ACTION_KW), "q_values": q,
             "selected_action_kw": item.action_kw, "legal_action_order_kw": ordered,
             "selected_action_legal_rank": ordered.index(item.action_kw) + 1,
-            "q_unit": "scaled reward-equivalent CNY", "reward_scale": scale,
+            "q_unit": q_unit, "reward_scale": scale,
         })
     return records
 
@@ -131,7 +134,8 @@ def save_diagnostic_snapshot(
         "source_tree_sha256": run_metadata.get("source_tree_sha256"),
         "experiment_id": run_metadata.get("experiment_id"),
         "checkpoint": checkpoint.relative_to(output_dir).as_posix(),
-        "sample_ids": sorted(DIAGNOSTIC_SAMPLE_IDS),
+        "sample_ids": sorted(run_metadata.get('diagnostic_configuration', {}).get(
+            'train_sample_ids', DIAGNOSTIC_SAMPLE_IDS)),
         "max_decisions_per_sample": MAX_DECISIONS_PER_SAMPLE,
         "decisions": decisions,
     }

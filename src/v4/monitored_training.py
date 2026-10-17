@@ -39,8 +39,9 @@ from .learning_curves import FIGURES, write_learning_curves
 from .reward_feedback import BatteryEnergyValue
 from .experiment_paths import unarchived_output_path
 from .failure_replay import FailurePenalty, prepare_failure_replay
+from .independent_economics import ZhouEvaluationConfig
 from .decision_diagnostics import (
-    DIAGNOSTIC_SAMPLE_IDS, MAX_DECISIONS_PER_SAMPLE,
+    DIAGNOSTIC_SAMPLE_IDS, INDEPENDENT_DIAGNOSTIC_SAMPLE_IDS, MAX_DECISIONS_PER_SAMPLE,
     actual_greedy_q_records, save_diagnostic_snapshot,
 )
 
@@ -51,10 +52,14 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
                     state_mode: str = DEFAULT_STATE_MODE,
                     learn_no_feasible_failures: bool = False, failure_penalty: FailurePenalty | None = None,
                     abort_on_execution_error: bool = False,
-                    decision_diagnostic_sink=None) -> dict:
+                    decision_diagnostic_sink=None,
+                    economic_evaluation_config: ZhouEvaluationConfig | None = None) -> dict:
     """Preserve all training RNG streams; never add replay or run optimizers."""
     if reward_cost_mode not in REWARD_COST_MODES:
         raise ValueError(f'reward_cost_mode must be one of {REWARD_COST_MODES}')
+    task_mode = 'independent_voyage' if economic_evaluation_config is not None else 'legacy'
+    diagnostic_ids = (INDEPENDENT_DIAGNOSTIC_SAMPLE_IDS
+                      if task_mode == 'independent_voyage' else DIAGNOSTIC_SAMPLE_IDS)
     random_state = agent.random.getstate()
     torch_state = torch.random.get_rng_state()
     failed_transitions = []
@@ -80,12 +85,13 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             event_only_count+=int(preview.event_only)
         failed_transitions.extend(transitions)
         failed_sample_lengths.append(len(transitions))
-        if decision_diagnostic_sink is not None and exc.sample_id in DIAGNOSTIC_SAMPLE_IDS:
+        if decision_diagnostic_sink is not None and exc.sample_id in diagnostic_ids:
             decision_diagnostic_sink(exc.sample_id, transitions, failed=True)
         profile=trajectory_record(
             exc.sample_id,
-            transitions, completed=False, failure=str(exc), reward_scale=agent.reward_scale)
-        profile.update(failure_cause=cause,failed_observed_state=exc.failed_state,
+            transitions, completed=False, failure=str(exc), reward_scale=agent.reward_scale,
+            reward_cost_mode=reward_cost_mode)
+        profile.update(task_mode=task_mode, failure_cause=cause,failed_observed_state=exc.failed_state,
                        controllable_by_power_policy=False if cause=='structural_power' else None)
         failure_profiles.append(profile)
     try:
@@ -94,13 +100,14 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             accountant, beta_soc=beta_soc,
             on_failure=on_failure, redistribute_battery_energy=redistribute_battery_energy,
             reward_cost_mode=reward_cost_mode, state_mode=state_mode,
+            economic_evaluation_config=economic_evaluation_config,
         )
         if decision_diagnostic_sink is not None:
             for result in results:
-                if result.sample_id in DIAGNOSTIC_SAMPLE_IDS:
+                if result.sample_id in diagnostic_ids:
                     decision_diagnostic_sink(result.sample_id, result.transitions, failed=False)
         summary = annotate_evaluation(
-            _summarize(results, len(episodes), failures, failed_transitions),
+            _summarize(results, len(episodes), failures, failed_transitions, task_mode=task_mode),
             episodes, results, failure_events)
         summary.update(executed_transition_statistics(
             (*[t for result in results for t in result.transitions], *failed_transitions),
@@ -109,7 +116,8 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
         if trajectory_path is not None:
             _write_json(trajectory_path, {
                 'completed': [trajectory_record(r.sample_id,r.transitions,completed=True,
-                    reward_scale=agent.reward_scale) for r in results],
+                    reward_scale=agent.reward_scale, reward_cost_mode=reward_cost_mode,
+                    economic_evaluation=r.economic_evaluation) for r in results],
                 'failed': failure_profiles,
             })
             summary['trajectory_file'] = trajectory_path.name
@@ -129,6 +137,8 @@ def _replay_source(episode, transitions, source_round: int) -> dict:
     """Diagnostic origins use dataset rows, including gaps occupied by SHORE."""
     rows = tuple(index for index, mode in enumerate(episode.operating_mode)
                  if OperatingMode(mode) is OperatingMode.ONBOARD)
+    if getattr(episode, 'task_mode', 'legacy') == 'independent_voyage':
+        rows = tuple(int(value) for value in episode.source_1s_row)
     return {'source_sample_id':str(episode.sample_id), 'source_round':source_round,
             'source_rows':rows[:len(transitions)]}
 
@@ -308,10 +318,26 @@ def run_monitored_training(
     diagnostic_rounds: tuple[int, ...] = (),
     resume_from: Path | None = None,
     experiment_id: str | None = None,
+    economic_evaluation_config: ZhouEvaluationConfig | None = None,
 ):
     """Run or resume only at an atomically saved, complete round boundary."""
     validate_experiment_identity(seed, experiment_id)
     validate_replay_configuration(replay_sampling, per_alpha, per_beta, per_epsilon)
+    task_mode = getattr(dataset, 'task_mode', 'legacy')
+    if task_mode not in ('legacy', 'independent_voyage'):
+        raise ValueError('unknown training task mode')
+    if (task_mode == 'independent_voyage') != (economic_evaluation_config is not None):
+        raise ValueError('independent task requires its separate economic evaluation configuration')
+    if economic_evaluation_config is not None and type(economic_evaluation_config) is not ZhouEvaluationConfig:
+        raise ValueError('independent evaluation configuration has an invalid type')
+    if task_mode == 'independent_voyage' and (
+            state_mode != 'minimal3' or reward_cost_mode != 'control_only' or redistribute_battery_energy):
+        raise ValueError('independent baseline keeps minimal3/control_only without redistribution')
+    diagnostic_ids = DIAGNOSTIC_SAMPLE_IDS
+    if task_mode == 'independent_voyage':
+        diagnostic_ids = INDEPENDENT_DIAGNOSTIC_SAMPLE_IDS
+        if hasattr(dataset, 'split_episode_ids'):
+            diagnostic_ids &= frozenset(dataset.split_episode_ids('train'))
     if reward_cost_mode not in REWARD_COST_MODES:
         raise ValueError(f'reward_cost_mode must be one of {REWARD_COST_MODES}')
     if state_mode not in STATE_FEATURES_BY_MODE:
@@ -401,6 +427,19 @@ def run_monitored_training(
             if replay_sampling == 'prioritized' else ECONOMIC_REPLAY_FORMAT_VERSION),
         'shore_settlement':'modeled_fixed_target_soc_0.6',
     }
+    if task_mode == 'independent_voyage':
+        parameters.update(
+            task_mode=task_mode, shore_settlement='disabled_independent_voyage',
+            initial_soc=.6, initial_fc_kw=0., terminal_charging=False,
+            terminal_fc_accounting='retain final actual FC state; no synthetic shutdown interval; original zero-to-positive cycle accounting',
+            economic_evaluation=economic_evaluation_config.identity(),
+            selection_metric='complete_fixed_validation_zhou_three_cost_cny',
+        )
+        parameters['failure_penalty'].update(
+            reference_split='historical_zero_boundary_train',
+            reference_scope='unchanged historical fixed reference; not a new-split Train statistic',
+            new_split_recalibration=False,
+        )
     metadata = {
         'source_commit':source_commit,'source_worktree_dirty':dirty,
         'source_tree_sha256':_source_tree_sha256(source_root), 'experiment_id':experiment_id,
@@ -420,11 +459,15 @@ def run_monitored_training(
         'dataset_class':type(dataset).__name__,
         'diagnostic_configuration':{
             'rounds':list(diagnostic_rounds),
-            'train_sample_ids':sorted(DIAGNOSTIC_SAMPLE_IDS),
+            'train_sample_ids':sorted(diagnostic_ids),
             'max_decisions_per_sample':MAX_DECISIONS_PER_SAMPLE,
             'checkpoint_purpose':'diagnostic_only',
         },
     }
+    if task_mode == 'independent_voyage':
+        metadata['task_contract'] = dataset.task_contract
+        metadata['reward_units']['economic_ledger'] = (
+            'CNY; original physical ledgers plus separate signed SOC-equivalent hydrogen evaluation; no shore')
     preserved_diagnostics = []
     if resume_state is None:
         _write_json(output_dir/'run_metadata.json',metadata)
@@ -439,6 +482,7 @@ def run_monitored_training(
                 or saved['manifest_sha256'] != metadata['manifest_sha256']
                 or saved['dataset_roots'] != metadata['dataset_roots']
                 or saved['dataset_class'] != metadata['dataset_class']
+                or saved.get('task_contract') != metadata.get('task_contract')
                 or saved['diagnostic_configuration'] != metadata['diagnostic_configuration']
                 or json.loads((output_dir/'run_metadata.json').read_text(encoding='utf-8')) != saved):
             raise ValueError('resume source, architecture, hyperparameters, experiment identity or data manifest mismatch')
@@ -492,7 +536,8 @@ def run_monitored_training(
                 per_beta=per_beta,per_epsilon=per_epsilon,
                 unknown_replay_mode=unknown_replay_mode,
                 run_metadata=metadata,runtime=runtime,abort_on_execution_error=abort_on_execution_error,
-                diagnostic_rounds=diagnostic_rounds,resume_state=resume_state)
+                diagnostic_rounds=diagnostic_rounds,resume_state=resume_state,
+                economic_evaluation_config=economic_evaluation_config)
             report['learning_curve_artifacts'] = write_learning_curves(report,output_dir)
             _persist_report(report,output_dir)
             return agent, report
@@ -536,6 +581,7 @@ def _run_monitored_training(
     run_metadata: dict, runtime: dict, abort_on_execution_error: bool,
     diagnostic_rounds: tuple[int, ...],
     resume_state: dict | None,
+    economic_evaluation_config: ZhouEvaluationConfig | None,
 ):
     validate_replay_configuration(replay_sampling, per_alpha, per_beta, per_epsilon)
     if not 1 <= rounds <= 100 or updates_per_episode != 16 or batch_size < 1:
@@ -555,6 +601,12 @@ def _run_monitored_training(
         raise ValueError("dataset split identity differs")
     if required_split_sizes is not None and (len(train),len(validation)) != required_split_sizes:
         raise ValueError('dataset sizes differ from the required checkpoint qualification set')
+    task_mode = 'independent_voyage' if economic_evaluation_config is not None else 'legacy'
+    if task_mode == 'independent_voyage' and any(
+            getattr(item, 'task_mode', None) != task_mode
+            or any(mode != 'onboard' for mode in item.operating_mode)
+            for item in (*train, *validation)):
+        raise ValueError('independent task requires complete ONBOARD-only samples in the fixed splits')
     agent = DirectPowerDDQN(seed=seed,n_step=n_step,reward_scale=reward_scale,
                             state_mode=state_mode,
                             learning_rate=ECONOMIC_LEARNING_RATE, hidden_dims=ECONOMIC_HIDDEN_DIMS,
@@ -576,7 +628,7 @@ def _run_monitored_training(
     bootstrap_events = []
     failure_suffix_count = 0
     no_suffix_failure_events = 0
-    initial_q_diagnostics = fixed_q_diagnostics(agent,accountant)
+    initial_q_diagnostics = fixed_q_diagnostics(agent,accountant, reward_cost_mode=reward_cost_mode)
     bootstrap_reason_counts={'soc_limited':0,'structural_power':0,'data_truncation':0,'execution_error':0}
     train_by_id = {str(episode.sample_id):episode for episode in train}
 
@@ -656,6 +708,7 @@ def _run_monitored_training(
             train, bootstrap_policy, accountant, beta_soc=beta_soc,
             reward_cost_mode=reward_cost_mode, state_mode=state_mode,
             on_failure=bootstrap_failure,
+            economic_evaluation_config=economic_evaluation_config,
             redistribute_battery_energy=redistribute_battery_energy,
         )
         for result in bootstrap:
@@ -670,7 +723,7 @@ def _run_monitored_training(
         if target_mode == "round":
             agent.sync_target()
         bootstrap_summary = annotate_evaluation(
-            _summarize(bootstrap, len(train), bootstrap_errors, bootstrap_failed),
+            _summarize(bootstrap, len(train), bootstrap_errors, bootstrap_failed, task_mode=task_mode),
             train, bootstrap, bootstrap_events)
         bootstrap_summary.update(executed_transition_statistics(
             (*[t for result in bootstrap for t in result.transitions], *bootstrap_failed),
@@ -763,7 +816,9 @@ def _run_monitored_training(
                 'economic_normal_terminal_replay_size':agent.normal_terminal_replay_count,
             },
             "elapsed_seconds": elapsed_before_resume + time.monotonic()-started,
-            "cost_rule": "ONBOARD actual plus modeled fixed-target SHORE plus modeled terminal if no final SHORE; incomplete split cost is null",
+            "cost_rule": ("Complete fixed Train and Validation; signed SOC-equivalent hydrogen plus unchanged FC/battery degradation; no shore or terminal recharge"
+                          if task_mode == 'independent_voyage' else
+                          "ONBOARD actual plus modeled fixed-target SHORE plus modeled terminal if no final SHORE; incomplete split cost is null"),
             "monitoring_rng_isolation": True,
             'failure_training_semantics': ('Genuine no-feasible-action suffixes enter economic Q with a tagged terminal, once-only training penalty and potential correction; ledgers unchanged'
                 if learn_no_feasible_failures else 'Unfinished suffixes excluded from economic replay'),
@@ -810,6 +865,7 @@ def _run_monitored_training(
             try:
                 result = replay_episode(episode,training_policy,accountant=accountant,beta_soc=beta_soc,
                                          reward_cost_mode=reward_cost_mode, state_mode=state_mode,
+                                         economic_evaluation_config=economic_evaluation_config,
                                          redistribute_battery_energy=redistribute_battery_energy)
             except ReplayExecutionError as exc:
                 exc.sample_id = str(episode.sample_id)
@@ -825,8 +881,8 @@ def _run_monitored_training(
                 failed_transitions.extend(transitions)
                 failed_sample_lengths.append(len(transitions))
                 profile=trajectory_record(episode.sample_id,transitions,completed=False,failure=str(exc),
-                    reward_scale=reward_scale)
-                profile.update(failure_cause=cause,failed_observed_state=exc.failed_state,
+                    reward_scale=reward_scale, reward_cost_mode=reward_cost_mode)
+                profile.update(task_mode=task_mode, failure_cause=cause,failed_observed_state=exc.failed_state,
                                controllable_by_power_policy=False if cause=='structural_power' else None)
                 failure_profiles.append(profile)
                 prefix_voyages = 0
@@ -873,7 +929,7 @@ def _run_monitored_training(
         if target_mode == "round":
             agent.sync_target()
         explore = annotate_evaluation(
-            _summarize(results,len(train),failures,failed_transitions),
+            _summarize(results,len(train),failures,failed_transitions, task_mode=task_mode),
             train, results, training_events)
         explore.update(executed_transition_statistics(
             (*[t for result in results for t in result.transitions], *failed_transitions),
@@ -887,7 +943,8 @@ def _run_monitored_training(
         if capture_trajectories:
             path = output_dir/f'round_{round_index:03d}_exploratory_trajectories.json'
             _write_json(path,{'completed':[trajectory_record(r.sample_id,r.transitions,completed=True,
-                                reward_scale=reward_scale) for r in results],
+                reward_scale=reward_scale, reward_cost_mode=reward_cost_mode,
+                economic_evaluation=r.economic_evaluation) for r in results],
                               'failed':failure_profiles})
             explore['trajectory_file'] = path.name
         print(f"round {round_index}/{rounds} exploratory={len(results)}/{len(train)} greedy_train start",flush=True)
@@ -896,9 +953,11 @@ def _run_monitored_training(
         def diagnostic_sink(sample_id, transitions, *, failed):
             if decision_rows is not None:
                 decision_rows.extend(actual_greedy_q_records(
-                    sample_id, transitions, agent, failed=failed))
+                    sample_id, transitions, agent, failed=failed,
+                    q_unit=run_metadata['reward_units']['economic_q']))
         greedy_train = greedy_evaluate(train,agent,accountant,beta_soc,
             reward_cost_mode=reward_cost_mode, state_mode=state_mode,
+            economic_evaluation_config=economic_evaluation_config,
             redistribute_battery_energy=redistribute_battery_energy,
             trajectory_path=output_dir/f'round_{round_index:03d}_train_trajectories.json' if capture_trajectories else None,
             learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty,
@@ -909,6 +968,7 @@ def _run_monitored_training(
         print(f"round {round_index}/{rounds} greedy_train={greedy_train['evaluable_completed']}/{greedy_train['evaluable_episodes']} validation start",flush=True)
         greedy_validation = greedy_evaluate(validation,agent,accountant,beta_soc,
             reward_cost_mode=reward_cost_mode, state_mode=state_mode,
+            economic_evaluation_config=economic_evaluation_config,
             redistribute_battery_energy=redistribute_battery_energy,
             trajectory_path=output_dir/f'round_{round_index:03d}_validation_trajectories.json' if capture_trajectories else None,
             learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty,
@@ -930,7 +990,7 @@ def _run_monitored_training(
             'reward_scale':reward_scale,
             "remaining_transition_credit":schedule.remaining_transition_credit,
             'td_statistics': agent.td_statistics(),
-            'fixed_state_q_diagnostics': fixed_q_diagnostics(agent,accountant),
+            'fixed_state_q_diagnostics': fixed_q_diagnostics(agent,accountant, reward_cost_mode=reward_cost_mode),
             'completed_voyages_entering_economic_replay': completed_voyages,
             'unknown_discarded_economic_q_transitions': unknown_discarded_round,
             'unknown_discarded_economic_q_transitions_cumulative': unknown_discarded_total,

@@ -46,6 +46,12 @@ class EconomicUpdateSchedule:
 
 
 def fully_completed(summary: dict | None) -> bool:
+    if summary is not None and summary.get('task_mode') == 'independent_voyage':
+        if (summary.get('unknown_episodes', 0) != 0
+                or summary.get('data_truncated_episodes', 0) != 0
+                or summary.get('completed') != summary.get('episodes')
+                or summary.get('evaluable_episodes') != summary.get('episodes')):
+            return False
     if summary is not None and 'evaluable_episodes' in summary:
         return bool(summary['evaluable_episodes'] > 0
                     and summary['evaluable_completed'] == summary['evaluable_episodes']
@@ -63,6 +69,8 @@ def annotate_evaluation(summary: dict, episodes, results, errors) -> dict:
                     if 'unknown' not in item.operating_mode}
     unknown_ids = {str(item.sample_id) for item in episodes
                    if 'unknown' in item.operating_mode}
+    if summary.get('task_mode') == 'independent_voyage' and unknown_ids:
+        raise ValueError('independent evaluation cannot exclude UNKNOWN samples from qualification')
     result_ids = {str(item.sample_id) for item in results}
     error_ids = {str(item.sample_id) for item in errors}
     if (len(complete_ids) + len(unknown_ids) != len(episodes)

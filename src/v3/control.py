@@ -131,22 +131,26 @@ class EconomicMPC:
         self.fc_efficiency = formal_fuel_cell_efficiency_map()
         self.fc_mapping = formal_aggregate_fc_power_mapping()
 
-    def interval(self, state: AccountState, fc_kw: float, load_kw: float) -> tuple[AccountState, RawCnyIntervalLedger, float]:
+    def interval(self, state: AccountState, fc_kw: float, load_kw: float, *,
+                 duration_s: float = DT_SECONDS) -> tuple[AccountState, RawCnyIntervalLedger, float]:
         """One shared accounting function for prediction and actual execution."""
         fc = float(fc_kw)
         load = float(load_kw)
+        duration = float(duration_s)
+        if isinstance(duration_s, bool) or not math.isfinite(duration) or duration <= 0.0:
+            raise ValueError('interval duration must be finite and positive')
         if not np.isfinite([fc, load]).all() or not 0 <= fc <= self.plant.fuel_cell_rated_total_kw or load < 0:
             raise ValueError("FC and load must be finite and within physical domains")
         batt = load - fc
-        soc = next_soc(state.soc, batt, DT_SECONDS, self.plant.battery_nominal_energy_kwh, efficiency=self.efficiency)
+        soc = next_soc(state.soc, batt, duration, self.plant.battery_nominal_energy_kwh, efficiency=self.efficiency)
         fc_step = formal_aggregate_fc_voltage_loss_step_uv(
-            state.previous_fc_kw, fc, DT_SECONDS, self.plant.fuel_cell_rated_total_kw,
+            state.previous_fc_kw, fc, duration, self.plant.fuel_cell_rated_total_kw,
             is_on=fc > 0.0, mapping=self.fc_mapping,
             aggregate_start_stop_cycles=aggregate_start_cycle_count(state.previous_fc_kw, fc),
         )
         battery_step = battery_degradation_step(
             state.soc, batt * 1000.0 / BATTERY_NOMINAL_VOLTAGE_V,
-            DT_SECONDS, self.battery_normalization.nominal_charge_capacity_ah,
+            duration, self.battery_normalization.nominal_charge_capacity_ah,
         )
         next_state = AccountState(
             soc=soc, previous_fc_kw=fc,
@@ -154,7 +158,7 @@ class EconomicMPC:
             battery_weighted_ah=state.battery_weighted_ah + battery_step.weighted_ah,
         )
         ledger = build_formal_interval_ledger(
-            hydrogen_mass_kg=hydrogen_mass_from_map_kg(fc, DT_SECONDS, self.fc_efficiency),
+            hydrogen_mass_kg=hydrogen_mass_from_map_kg(fc, duration, self.fc_efficiency),
             fuel_cell_cumulative_voltage_loss_before_uv=state.fc_loss_uv,
             fuel_cell_cumulative_voltage_loss_after_uv=next_state.fc_loss_uv,
             fuel_cell_rated_kw=self.plant.fuel_cell_rated_total_kw,

@@ -1,0 +1,89 @@
+{
+  "schema": "independent_v2_split_v1",
+  "dataset_version": "operating_dataset_independent_v2",
+  "split_version": "splits_v2_exclude046_seg01",
+  "seed": 42,
+  "test_selected_by_user": [
+    "parent_001_seg01",
+    "parent_004_seg01",
+    "parent_013_seg01",
+    "parent_032_seg01"
+  ],
+  "validation_fraction_of_remaining_parent_groups": 0.2,
+  "validation_group_count": 8,
+  "remaining_parent_count": 39,
+  "group_key": "parent_sample_id",
+  "algorithm": "inherit frozen source assignments; explicitly exclude one Train sample; no resampling",
+  "month_group_counts": {
+    "3": 2,
+    "4": 10,
+    "5": 7,
+    "6": 9,
+    "7": 11
+  },
+  "validation_month_quota": {
+    "3": 1,
+    "4": 2,
+    "5": 1,
+    "6": 2,
+    "7": 2
+  },
+  "test_not_used_to_design_validation": true,
+  "no_training_or_controller_metrics_used": true,
+  "split_counts": {
+    "train": 35,
+    "validation": 8,
+    "test": 4
+  },
+  "parent_split_counts": {
+    "train": 31,
+    "validation": 8,
+    "test": 4
+  },
+  "source_candidate_manifest_sha256": "ff7dd0763873f5092ef2d477ff70753288c14eba4170c6e2a585f807c7bd7fba",
+  "sample_manifest_sha256": "3273f3b25adff6f1cb93ff8d845729bc21d8e0499fccb04f3e7039aaef140ca0",
+  "payload_hash_manifest_sha256": "306b3c10d62f7eea3a58af8861b41b500640545364fee53ef076acad1658f367",
+  "cross_parent_time_overlap_pairs": [],
+  "checked_payload_hashes": 0,
+  "payload_path_base": "dataset root, not split-manifest directory",
+  "numpy_version": "1.26.4",
+  "environment_integration_status": "INDEPENDENT_TASK_CONTRACT_IN_RUNTIME_METADATA",
+  "economic_model_status": "ZHOU_SOC_EQUIVALENT_HYDROGEN_V1",
+  "historical_checkpoints_valid_for_new_task": false,
+  "limitations": [
+    "Fixed user-selected Test must not be used for hyperparameter selection.",
+    "Existing processed interpolation and boundary provenance is inherited unchanged; no raw reconstruction.",
+    "Canonical signed load values and nonzero boundaries remain unchanged; runtime records raw loads and applies the existing [-1,0) kW control deadband, rejecting loads below -1 kW.",
+    "Execution uses existing canonical values at t=30*k<duration_s with the exact final partial duration; the original endpoint is a boundary only, without extra execution or zero forcing."
+  ],
+  "source_split_version": "splits_v1_seed42",
+  "source_split_manifest_sha256": "ff444eeb58e1b421940e8fbabb1da4d57ff4e94db3581dc83d8ce64a4c1d8e1e",
+  "source_split_policy_sha256": "743af915989392147484033a12c0363d9b50e644f8cb3833ff22d52daecf3217",
+  "source_version_files_sha256": {
+    "parent_assignments.csv": "dbcef2fc6044daae3288a8d376fec2accd13985836a7d56d7e4612de2e772785",
+    "payload_hashes.csv": "32378258965e2f572a945ea805062ea6265a10ed768d8bf08aee80a27e40832e",
+    "policy.json": "743af915989392147484033a12c0363d9b50e644f8cb3833ff22d52daecf3217",
+    "sample_manifest.csv": "ff444eeb58e1b421940e8fbabb1da4d57ff4e94db3581dc83d8ce64a4c1d8e1e",
+    "split_summary.csv": "07120491187d9af2c2e7eec61462e43d34e6cb093282063d811052435f9e1462",
+    "test.csv": "209d96d65424e79da53c68546b12687f673f1454e326b2ab97225927085043b9",
+    "test_ids.txt": "81bddcc0da5cc56be1b6222363b247f216aba032d8c5b8577f0ea3c1ca5a0457",
+    "train.csv": "8f14752356689b811a761ff05225dd9dadcd83fd04512f6ae02c6e7c13f296b7",
+    "train_ids.txt": "17f616bc06cc8653b2fe2fa20de7f1d6e1002604a80da4b5ae9cdf0754c61d7e",
+    "validation.csv": "2b17db7c97a77e7586be455dc504fd5ad45675e7799e075c302d12e449d4b68a",
+    "validation_ids.txt": "e6daa8b42c2a1c32e880e4c648c8ca79a27780bb62b1b6103b87c0a6ed42589e"
+  },
+  "source_split_algorithm": "seeded month-stratified group sampling, one parent group per month then proportional largest remainders; stable sorted IDs; numpy.default_rng(42)",
+  "payload_hash_count": 94,
+  "payload_hash_verification": "inherited frozen metadata; no payloads opened for this exclusion",
+  "exclusions_relative_path": "metadata/splits_v2_exclude046_seg01/exclusions.csv",
+  "exclusions_sha256": "2af5662830abb22a980f32481f14dcef20fbc04c03d56e80bf3c5b38196e4f6d",
+  "excluded_candidate_ids": [
+    "parent_046_seg01"
+  ],
+  "exclusion_reason": "用户人工排除：该航段约25.94 h，尾部长时间近零待机；保留parent_046_seg02，不删除任何载荷。",
+  "payloads_deleted": false,
+  "remaining_sample_manifest_record_bytes_unchanged": true,
+  "validation_and_test_assignments_unchanged": true,
+  "resampling_performed": false,
+  "frozen_at_utc": "2026-10-16T15:43:47.639485+00:00"
+}

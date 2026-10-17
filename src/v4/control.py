@@ -18,6 +18,9 @@ from v3.episode_replay import SHORE_MODES, ShoreBlock, _ledger_total
 from v3.shore import settle_shore_segment
 
 from .reward_feedback import BatteryEnergyValue
+from .independent_economics import (
+    ZhouEconomicEvaluation, ZhouEvaluationConfig, evaluate_zhou_economics,
+)
 
 
 ACTION_KW = tuple(range(0, 601, 10))
@@ -104,6 +107,9 @@ class DirectTransition:
     policy_candidate_actions: tuple[int, ...] = ()
     excluded_degradation_cost_cny: float = 0.0
     fc_ramp_penalty_cny: float = 0.0
+    duration_s: float = 30.0
+    raw_load_kw: float | None = None
+    relative_time_s: float | None = None
 
     @property
     def is_successful_terminal(self) -> bool:
@@ -144,6 +150,8 @@ class DirectReplay:
     battery_bus_kw_by_row: tuple[float, ...]
     soc_by_row: tuple[float, ...]
     modeled_terminal_settlement: ModeledTerminalSettlement | None = None
+    economic_evaluation: ZhouEconomicEvaluation | None = None
+    task_mode: str = 'legacy'
 
     @property
     def total_cost_cny(self) -> float:
@@ -151,6 +159,8 @@ class DirectReplay:
 
     @property
     def comparable_cost_cny(self) -> float:
+        if self.economic_evaluation is not None:
+            return self.economic_evaluation.total_cost_cny
         modeled = self.modeled_terminal_settlement
         return self.total_cost_cny + (0.0 if modeled is None else modeled.ledger.total_cost_cny)
 
@@ -208,16 +218,35 @@ def _validated_rows_v4(episode: object):
     try:
         modes = tuple(OperatingMode(value) for value in episode.operating_mode)
         loads = tuple(float(value) for value in episode.load_kw)
-        recorded_battery = tuple(float(value) for value in episode.battery_bus_kw)
+        independent = getattr(episode, 'task_mode', 'legacy') == 'independent_voyage'
+        recorded_battery = ((0.0,) * len(modes) if independent else
+                            tuple(float(value) for value in episode.battery_bus_kw))
     except (AttributeError, TypeError, ValueError) as exc:
         raise ValueError('episode lacks valid operating modes and power rows') from exc
     if not modes or len(modes) != len(loads) or len(modes) != len(recorded_battery):
         raise ValueError('episode mode and power rows must have the same positive length')
     if OperatingMode.UNRESOLVED in modes:
         raise ValueError('unresolved operating mode blocks v4 replay')
+    if independent and any(mode is not OperatingMode.ONBOARD for mode in modes):
+        raise ValueError('independent voyages require all rows to be ONBOARD')
     if any(not isfinite(value) for value in (*loads, *recorded_battery)):
         raise ValueError('episode power rows must be finite')
     return modes, loads, recorded_battery
+
+
+def _independent_timing(episode: object, row_count: int):
+    try:
+        times = tuple(float(value) for value in episode.time_s)
+        durations = tuple(float(value) for value in episode.dt_s)
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise ValueError('independent voyages require time_s and dt_s interval arrays') from exc
+    if (len(times) != row_count or len(durations) != row_count or times[0] != 0.0
+            or any(not isfinite(value) for value in (*times, *durations))
+            or any(duration <= 0.0 for duration in durations)
+            or any(abs(right - left - duration) > 1e-9
+                   for left, right, duration in zip(times, times[1:], durations))):
+        raise ValueError('independent interval times and durations must be finite, positive and contiguous')
+    return times, durations
 
 
 def build_state(
@@ -256,9 +285,13 @@ def _checked_action(value: object, feasible_actions: tuple[int, ...]) -> int:
 
 def feasible_fc_actions(
     physical: AccountState, measured_load_kw: float, accountant: EconomicMPC,
+    *, duration_s: float = 30.0,
 ) -> tuple[int, ...]:
     """Screen actions using the load observed before this decision only."""
     load = normalize_onboard_load_kw(measured_load_kw)
+    duration = float(duration_s)
+    if isinstance(duration_s, bool) or not isfinite(duration) or duration <= 0.0:
+        raise ValueError('mask duration must be finite and positive')
     plant = accountant.plant
     feasible: list[int] = []
     for fc_kw in ACTION_KW:
@@ -266,7 +299,7 @@ def feasible_fc_actions(
         if not plant.battery_charge_min_kw <= battery_kw <= plant.battery_discharge_max_kw:
             continue
         soc = next_soc(
-            physical.soc, battery_kw, 30.0, plant.battery_nominal_energy_kwh,
+            physical.soc, battery_kw, duration, plant.battery_nominal_energy_kwh,
             efficiency=accountant.efficiency,
         )
         if SOC_MIN <= soc <= SOC_MAX:
@@ -290,6 +323,7 @@ def replay_episode(
     redistribute_battery_energy: bool = False,
     reward_cost_mode: str = 'full_economic',
     state_mode: str = DEFAULT_STATE_MODE,
+    economic_evaluation_config: ZhouEvaluationConfig | None = None,
 ) -> DirectReplay:
     """Execute ONBOARD FC actions; route shore rows outside the DQN policy.
 
@@ -301,8 +335,25 @@ def replay_episode(
     candidate adds one ONBOARD training term; physical ledgers are unchanged.
     Control-only uses just that ONBOARD ramp term and the SOC deviation;
     all physical settlement ledgers still run without entering its reward.
+    An explicitly marked independent voyage starts from the default fresh
+    state, integrates its real interval durations, and has no shore or
+    synthetic terminal action. Its SOC-equivalent economics is evaluation only.
     """
     modes, loads, requests = _validated_rows_v4(episode)
+    task_mode = getattr(episode, 'task_mode', 'legacy')
+    if task_mode not in ('legacy', 'independent_voyage'):
+        raise ValueError('task_mode must be legacy or independent_voyage')
+    independent = task_mode == 'independent_voyage'
+    if independent:
+        if type(economic_evaluation_config) is not ZhouEvaluationConfig:
+            raise ValueError('independent voyages require an explicit ZhouEvaluationConfig')
+        if initial_state is not None and initial_state != AccountState():
+            raise ValueError('independent voyages require the default SOC 0.6, FC off and fresh loss state')
+        relative_times, durations = _independent_timing(episode, len(modes))
+    else:
+        if economic_evaluation_config is not None:
+            raise ValueError('Zhou economic evaluation applies only to independent voyages')
+        relative_times, durations = (None,) * len(modes), (30.0,) * len(modes)
     if not callable(policy):
         raise TypeError("policy must be callable")
     if not isinstance(accountant, EconomicMPC):
@@ -370,7 +421,8 @@ def replay_episode(
                 current_history = ((actual_load,) * 3 if history is None
                                    else (*history[-2:], actual_load))
                 decision_state = build_state(physical, fc_history, current_history, state_mode=state_mode)
-                physical_actions = feasible_fc_actions(physical, actual_load, accountant)
+                physical_actions = feasible_fc_actions(
+                    physical, actual_load, accountant, duration_s=durations[index])
                 if not physical_actions:
                     empty_physical_mask=True
                     raise NoFeasibleFCActionError(
@@ -379,7 +431,9 @@ def replay_episode(
                 candidate_actions = physical_actions
                 fc_kw = _checked_action(policy(decision_state, candidate_actions), candidate_actions)
                 previous_fc_kw = physical.previous_fc_kw
-                next_physical, ledger, battery_kw = accountant.interval(physical, fc_kw, actual_load)
+                next_physical, ledger, battery_kw = (
+                    accountant.interval(physical, fc_kw, actual_load, duration_s=durations[index])
+                    if independent else accountant.interval(physical, fc_kw, actual_load))
                 if not accountant.plant.battery_charge_min_kw <= battery_kw <= accountant.plant.battery_discharge_max_kw:
                     raise RuntimeError("actual battery power exceeded physical bounds")
                 if not SOC_MIN <= next_physical.soc <= SOC_MAX:
@@ -441,7 +495,7 @@ def replay_episode(
                 physical = shore.end_state
                 shore_ledger = shore.ledger
                 reward += ledger_training_reward(shore_ledger, reward_cost_mode)
-            elif last_onboard and index + 1 == len(modes):
+            elif last_onboard and index + 1 == len(modes) and not independent:
                 terminal_settlement = modeled_terminal_settlement(physical, accountant)
                 if terminal_settlement is not None:
                     modeled_ledger = terminal_settlement.ledger
@@ -484,7 +538,8 @@ def replay_episode(
             done = last_onboard and not has_next_onboard and not data_truncation
             next_load = loads[shore_end] if has_next_onboard else loads[index + 1] if not last_onboard else None
             next_physical_actions = (
-                feasible_fc_actions(physical, next_load, accountant)
+                feasible_fc_actions(physical, next_load, accountant,
+                                    duration_s=durations[shore_end if has_next_onboard else index + 1])
                 if next_load is not None else ()
             )
             next_feasible = next_physical_actions
@@ -498,14 +553,21 @@ def replay_episode(
                 policy_candidate_actions=candidate_actions,
                 excluded_degradation_cost_cny=excluded_degradation,
                 fc_ramp_penalty_cny=fc_ramp_penalty,
+                duration_s=durations[index],
+                raw_load_kw=loads[index] if independent else None,
+                relative_time_s=relative_times[index],
             ))
             if last_onboard and shore_ledger is not None:
                 index = shore_end
                 break
             index += 1
+    total_ledger = _ledger_total(ledgers)
+    economic_evaluation = (evaluate_zhou_economics(
+        total_ledger, soc_initial=0.6, soc_terminal=physical.soc,
+        config=economic_evaluation_config) if independent else None)
     return DirectReplay(
         str(episode.sample_id), str(episode.split), tuple(transitions),
-        tuple(shore_blocks), _ledger_total(ledgers), physical,
+        tuple(shore_blocks), total_ledger, physical,
         tuple(fc_trace), tuple(battery_trace), tuple(soc_trace),
-        terminal_settlement,
+        terminal_settlement, economic_evaluation, task_mode,
     )
