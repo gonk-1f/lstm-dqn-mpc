@@ -114,12 +114,8 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             sample_transition_counts=(*[len(result.transitions) for result in results], *failed_sample_lengths)))
         summary.update(failure_reason_counts=reason_counts,event_only_failures=event_only_count)
         if trajectory_path is not None:
-            _write_json(trajectory_path, {
-                'completed': [trajectory_record(r.sample_id,r.transitions,completed=True,
-                    reward_scale=agent.reward_scale, reward_cost_mode=reward_cost_mode,
-                    economic_evaluation=r.economic_evaluation) for r in results],
-                'failed': failure_profiles,
-            })
+            _write_trajectory_json(trajectory_path, results, failure_profiles,
+                reward_scale=agent.reward_scale, reward_cost_mode=reward_cost_mode)
             summary['trajectory_file'] = trajectory_path.name
         return summary
     finally:
@@ -129,7 +125,32 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
 
 def _write_json(path: Path, payload: dict) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    with temporary.open('w', encoding='utf-8') as handle:
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+    temporary.replace(path)
+
+
+def _write_trajectory_json(path: Path, results, failed_profiles, *, reward_scale: float,
+                           reward_cost_mode: str) -> None:
+    """Keep the round schema while rendering only one completed sample at a time."""
+    temporary = path.with_suffix(path.suffix + '.tmp')
+    encoder = json.JSONEncoder(ensure_ascii=False, indent=2)
+    with temporary.open('w', encoding='utf-8') as handle:
+        def write_value(value, padding):
+            for chunk in encoder.iterencode(value):
+                handle.write(chunk.replace('\n', '\n' + padding))
+
+        handle.write('{\n  "completed": [')
+        any_completed = False
+        for result in results:
+            handle.write(',\n    ' if any_completed else '\n    ')
+            any_completed = True
+            write_value(trajectory_record(result.sample_id, result.transitions, completed=True,
+                reward_scale=reward_scale, reward_cost_mode=reward_cost_mode,
+                economic_evaluation=result.economic_evaluation), '    ')
+        handle.write('\n  ],\n  "failed": ' if any_completed else '],\n  "failed": ')
+        write_value(failed_profiles, '  ')
+        handle.write('\n}')
     temporary.replace(path)
 
 
@@ -942,10 +963,8 @@ def _run_monitored_training(
         executed_training_steps += explore['executed_onboard_transitions']
         if capture_trajectories:
             path = output_dir/f'round_{round_index:03d}_exploratory_trajectories.json'
-            _write_json(path,{'completed':[trajectory_record(r.sample_id,r.transitions,completed=True,
-                reward_scale=reward_scale, reward_cost_mode=reward_cost_mode,
-                economic_evaluation=r.economic_evaluation) for r in results],
-                              'failed':failure_profiles})
+            _write_trajectory_json(path, results, failure_profiles,
+                reward_scale=reward_scale, reward_cost_mode=reward_cost_mode)
             explore['trajectory_file'] = path.name
         print(f"round {round_index}/{rounds} exploratory={len(results)}/{len(train)} greedy_train start",flush=True)
         runtime['phase']='greedy_train'
