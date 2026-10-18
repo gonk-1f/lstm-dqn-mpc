@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 from .experiment_paths import unarchived_output_path
+from .trajectory_io import iter_trajectory_records, resolve_trajectory_path
 
 
 FIGURES = ('completion_rates.png', 'validation_economic_costs.png',
@@ -121,17 +122,28 @@ def _captured_profiles(report, output):
             path = (output/name).resolve()
             if path.parent != output:
                 raise ValueError('captured trajectory must belong to this output directory')
-            if not path.exists():
+            try:
+                path = resolve_trajectory_path(path).resolve()
+            except FileNotFoundError:
                 continue
-            captured = json.loads(path.read_text(encoding='utf-8'))
-            for outcome in ('completed','failed'):
-                profile = next((item for item in captured.get(outcome,[]) if item.get('transitions')),None)
-                if profile is not None:
+            if path.parent != output:
+                raise ValueError('captured trajectory must belong to this output directory')
+            selected = set()
+            records = iter_trajectory_records(path)
+            try:
+                for outcome, profile in records:
+                    if outcome in selected or not profile.get('transitions'):
+                        continue
+                    selected.add(outcome)
                     profiles.append({
                         'figure':f'{role}_round_{row["round"]:03d}_{split}_{outcome}_trajectory.png',
                         'source':path.name,'selection':role,'round':row['round'],
                         'split':split,'outcome':outcome,'profile':profile,
                     })
+                    if len(selected) == 2:
+                        break
+            finally:
+                records.close()
     return profiles
 
 
