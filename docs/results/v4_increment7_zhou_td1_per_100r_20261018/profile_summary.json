@@ -1,0 +1,674 @@
+{
+  "round": 100,
+  "analysis_scope": "Archived greedy Train/Validation; incomplete prefixes are never complete economic totals.",
+  "groups": {
+    "Train": {
+      "samples": 35,
+      "completed": 31,
+      "failure_counts": {
+        "soc_limited": 4
+      },
+      "executed_steps": 13931,
+      "duration_s": 417612.0,
+      "mean_fc_kw": 286.6248096319071,
+      "mean_abs_internal_delta_kw": 34.655753525285554,
+      "nonzero_internal_delta_fraction": 0.966511587710833,
+      "max_abs_internal_delta_kw": 60,
+      "plus_minus60_count": 2730,
+      "adjacent_direction_reversals": 8938,
+      "direction_pair_count": 13861,
+      "starts": 35,
+      "restarts": 0,
+      "stops": 1,
+      "min_soc": 0.20024355404891592,
+      "max_soc": 0.799940278043238,
+      "soc_below_0p4_time_fraction": 0.13417478424949475,
+      "soc_near_0p21_time_fraction": 0.0021551104853308814,
+      "soc_above_0p79_time_fraction": 0.059050027298066146,
+      "fc_zero_time_fraction": 0.03570299704031493,
+      "high_soc_zero_count": 154,
+      "high_soc_zero_physical_forced_count": 1,
+      "high_soc_zero_active_with_positive_candidate_count": 153,
+      "prefix_h2_actual_cny": 37916.82520004453,
+      "prefix_soc_equivalent_cny": -737.0584554060836,
+      "prefix_equivalent_h2_cny": 37179.766744638444,
+      "prefix_fc_deg_cny": 83354.87224999999,
+      "prefix_bat_deg_cny": 4076.1734327132303,
+      "prefix_fc_subcost_cny": {
+        "low": 13146.504750000056,
+        "high": 4522.83499999997,
+        "transient": 53132.78249999992,
+        "start_stop": 12552.749999999993
+      },
+      "full_group_economic_cost_cny": null,
+      "failure_penalty_equivalent_cny": 40530.640351593174,
+      "soc_auxiliary_penalty": 68957.24838670153,
+      "ramp_auxiliary_penalty": 35551.3987499997
+    },
+    "Validation": {
+      "samples": 8,
+      "completed": 6,
+      "failure_counts": {
+        "soc_limited": 1,
+        "increment_action_limited": 1
+      },
+      "executed_steps": 3726,
+      "duration_s": 111711.0,
+      "mean_fc_kw": 308.6360340521524,
+      "mean_abs_internal_delta_kw": 34.73611970826493,
+      "nonzero_internal_delta_fraction": 0.9857362004467529,
+      "max_abs_internal_delta_kw": 60,
+      "plus_minus60_count": 680,
+      "adjacent_direction_reversals": 2394,
+      "direction_pair_count": 3710,
+      "starts": 8,
+      "restarts": 0,
+      "stops": 0,
+      "min_soc": 0.20026523832513338,
+      "max_soc": 0.7999653529059839,
+      "soc_below_0p4_time_fraction": 0.11359669146279239,
+      "soc_near_0p21_time_fraction": 0.0018798506861455004,
+      "soc_above_0p79_time_fraction": 0.03330021215457744,
+      "fc_zero_time_fraction": 0.016381555979267933,
+      "high_soc_zero_count": 0,
+      "high_soc_zero_physical_forced_count": 0,
+      "high_soc_zero_active_with_positive_candidate_count": 0,
+      "prefix_h2_actual_cny": 10970.989396384663,
+      "prefix_soc_equivalent_cny": -54.822875816547366,
+      "prefix_equivalent_h2_cny": 10916.166520568117,
+      "prefix_fc_deg_cny": 21946.31487499999,
+      "prefix_bat_deg_cny": 1169.6516100330807,
+      "prefix_fc_subcost_cny": {
+        "low": 3476.487375000015,
+        "high": 1361.8399999999885,
+        "transient": 14238.78749999996,
+        "start_stop": 2869.2000000000003
+      },
+      "full_group_economic_cost_cny": null,
+      "failure_penalty_equivalent_cny": 20265.320175796587,
+      "soc_auxiliary_penalty": 16464.311007318778,
+      "ramp_auxiliary_penalty": 9346.443749999902
+    }
+  },
+  "failures": [
+    {
+      "split": "Train",
+      "sample_id": "parent_010_seg02",
+      "metadata": {
+        "sample_id": "parent_010_seg02",
+        "completed": false,
+        "failure": "row 243 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "reward_scale": 0.001,
+        "training_reward_unit": "scaled reward-equivalent CNY",
+        "economic_evaluation": null,
+        "task_mode": "independent_voyage",
+        "executed_duration_s": 7290.0,
+        "economic_ledger_unit": "CNY",
+        "scaled_training_reward_total": -16.080954751477886,
+        "failure_cause": "soc_limited",
+        "failed_observed_state": [
+          0.2004853581229279,
+          1.1303941666666666,
+          0.9833333333333333
+        ],
+        "controllable_by_power_policy": null
+      },
+      "last_transition": {
+        "soc_after": 0.2004853581229279,
+        "fc_kw": 590,
+        "action_delta_kw": -10,
+        "load_kw": 677.0303,
+        "physical_feasible_actions_kw": [
+          560,
+          570,
+          580,
+          590,
+          600
+        ],
+        "policy_candidate_actions_kw": [
+          570,
+          590,
+          600
+        ],
+        "terminal_reason": "failure_soc_limited"
+      },
+      "algebraic_failed_state_mask": {
+        "formal_absolute_physical_kw": [],
+        "seven_increment_inrange_powers_kw": [
+          530.0,
+          560.0,
+          580.0,
+          590.0,
+          600.0
+        ],
+        "feasible_increment_powers_kw": [],
+        "next_soc_at_590": 0.19924496647875337,
+        "next_soc_at_600": 0.19938554227722388,
+        "dt_s": 30,
+        "method": "formal scalar SOC/power equations, no environment rollout"
+      }
+    },
+    {
+      "split": "Train",
+      "sample_id": "parent_015_seg01",
+      "metadata": {
+        "sample_id": "parent_015_seg01",
+        "completed": false,
+        "failure": "row 155 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "reward_scale": 0.001,
+        "training_reward_unit": "scaled reward-equivalent CNY",
+        "economic_evaluation": null,
+        "task_mode": "independent_voyage",
+        "executed_duration_s": 4650.0,
+        "economic_ledger_unit": "CNY",
+        "scaled_training_reward_total": -13.343253240647835,
+        "failure_cause": "soc_limited",
+        "failed_observed_state": [
+          0.2019579481709944,
+          1.8217530034668419,
+          1.0
+        ],
+        "controllable_by_power_policy": null
+      },
+      "last_transition": {
+        "soc_after": 0.2019579481709944,
+        "fc_kw": 600,
+        "action_delta_kw": 10,
+        "load_kw": 1093.496494584872,
+        "physical_feasible_actions_kw": [
+          470,
+          480,
+          490,
+          500,
+          510,
+          520,
+          530,
+          540,
+          550,
+          560,
+          570,
+          580,
+          590,
+          600
+        ],
+        "policy_candidate_actions_kw": [
+          530,
+          560,
+          580,
+          590,
+          600
+        ],
+        "terminal_reason": "failure_soc_limited"
+      },
+      "algebraic_failed_state_mask": {
+        "formal_absolute_physical_kw": [],
+        "seven_increment_inrange_powers_kw": [
+          540.0,
+          570.0,
+          590.0,
+          600.0
+        ],
+        "feasible_increment_powers_kw": [],
+        "next_soc_at_590": 0.19488625729604916,
+        "next_soc_at_600": 0.1950268330945197,
+        "dt_s": 30,
+        "method": "formal scalar SOC/power equations, no environment rollout"
+      }
+    },
+    {
+      "split": "Train",
+      "sample_id": "parent_017_seg01",
+      "metadata": {
+        "sample_id": "parent_017_seg01",
+        "completed": false,
+        "failure": "row 210 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "reward_scale": 0.001,
+        "training_reward_unit": "scaled reward-equivalent CNY",
+        "economic_evaluation": null,
+        "task_mode": "independent_voyage",
+        "executed_duration_s": 6300.0,
+        "economic_ledger_unit": "CNY",
+        "scaled_training_reward_total": -15.7850027055086,
+        "failure_cause": "soc_limited",
+        "failed_observed_state": [
+          0.20024355404891592,
+          1.0870606666666667,
+          1.0
+        ],
+        "controllable_by_power_policy": null
+      },
+      "last_transition": {
+        "soc_after": 0.20024355404891592,
+        "fc_kw": 600,
+        "action_delta_kw": 10,
+        "load_kw": 649.5493,
+        "physical_feasible_actions_kw": [
+          590,
+          600
+        ],
+        "policy_candidate_actions_kw": [
+          590,
+          600
+        ],
+        "terminal_reason": "failure_soc_limited"
+      },
+      "algebraic_failed_state_mask": {
+        "formal_absolute_physical_kw": [],
+        "seven_increment_inrange_powers_kw": [
+          540.0,
+          570.0,
+          590.0,
+          600.0
+        ],
+        "feasible_increment_powers_kw": [],
+        "next_soc_at_590": 0.19936866088652275,
+        "next_soc_at_600": 0.1995092366849933,
+        "dt_s": 30,
+        "method": "formal scalar SOC/power equations, no environment rollout"
+      }
+    },
+    {
+      "split": "Train",
+      "sample_id": "parent_036_seg01",
+      "metadata": {
+        "sample_id": "parent_036_seg01",
+        "completed": false,
+        "failure": "row 123 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "reward_scale": 0.001,
+        "training_reward_unit": "scaled reward-equivalent CNY",
+        "economic_evaluation": null,
+        "task_mode": "independent_voyage",
+        "executed_duration_s": 3690.0,
+        "economic_ledger_unit": "CNY",
+        "scaled_training_reward_total": -13.248693036330028,
+        "failure_cause": "soc_limited",
+        "failed_observed_state": [
+          0.20141995924437625,
+          1.700153573234568,
+          0.9666666666666667
+        ],
+        "controllable_by_power_policy": null
+      },
+      "last_transition": {
+        "soc_after": 0.20141995924437625,
+        "fc_kw": 580,
+        "action_delta_kw": 10,
+        "load_kw": 1015.0488363065951,
+        "physical_feasible_actions_kw": [
+          480,
+          490,
+          500,
+          510,
+          520,
+          530,
+          540,
+          550,
+          560,
+          570,
+          580,
+          590,
+          600
+        ],
+        "policy_candidate_actions_kw": [
+          510,
+          540,
+          560,
+          570,
+          580,
+          600
+        ],
+        "terminal_reason": "failure_soc_limited"
+      },
+      "algebraic_failed_state_mask": {
+        "formal_absolute_physical_kw": [],
+        "seven_increment_inrange_powers_kw": [
+          520.0,
+          550.0,
+          570.0,
+          580.0,
+          590.0
+        ],
+        "feasible_increment_powers_kw": [],
+        "next_soc_at_590": 0.19537390458933884,
+        "next_soc_at_600": 0.1955144803878094,
+        "dt_s": 30,
+        "method": "formal scalar SOC/power equations, no environment rollout"
+      }
+    },
+    {
+      "split": "Validation",
+      "sample_id": "parent_016_seg01",
+      "metadata": {
+        "sample_id": "parent_016_seg01",
+        "completed": false,
+        "failure": "row 254 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "reward_scale": 0.001,
+        "training_reward_unit": "scaled reward-equivalent CNY",
+        "economic_evaluation": null,
+        "task_mode": "independent_voyage",
+        "executed_duration_s": 7620.0,
+        "economic_ledger_unit": "CNY",
+        "scaled_training_reward_total": -15.940401989624622,
+        "failure_cause": "soc_limited",
+        "failed_observed_state": [
+          0.20026523832513338,
+          1.310969,
+          0.95
+        ],
+        "controllable_by_power_policy": null
+      },
+      "last_transition": {
+        "soc_after": 0.20026523832513338,
+        "fc_kw": 570,
+        "action_delta_kw": -30,
+        "load_kw": 817.4706,
+        "physical_feasible_actions_kw": [
+          560,
+          570,
+          580,
+          590,
+          600
+        ],
+        "policy_candidate_actions_kw": [
+          570,
+          590,
+          600
+        ],
+        "terminal_reason": "failure_soc_limited"
+      },
+      "algebraic_failed_state_mask": {
+        "formal_absolute_physical_kw": [],
+        "seven_increment_inrange_powers_kw": [
+          510.0,
+          540.0,
+          560.0,
+          570.0,
+          580.0,
+          600.0
+        ],
+        "feasible_increment_powers_kw": [],
+        "next_soc_at_590": 0.19750177959818782,
+        "next_soc_at_600": 0.19764235539665834,
+        "dt_s": 30,
+        "method": "formal scalar SOC/power equations, no environment rollout"
+      }
+    },
+    {
+      "split": "Validation",
+      "sample_id": "parent_044_seg01",
+      "metadata": {
+        "sample_id": "parent_044_seg01",
+        "completed": false,
+        "failure": "row 196 (onboard): no feasible FC increment; physically feasible absolute powers exist",
+        "reward_scale": 0.001,
+        "training_reward_unit": "scaled reward-equivalent CNY",
+        "economic_evaluation": null,
+        "task_mode": "independent_voyage",
+        "executed_duration_s": 5880.0,
+        "economic_ledger_unit": "CNY",
+        "scaled_training_reward_total": -14.427498527707533,
+        "failure_cause": "increment_action_limited",
+        "failed_observed_state": [
+          0.20272756011280507,
+          1.3172375,
+          0.9333333333333333
+        ],
+        "controllable_by_power_policy": null
+      },
+      "last_transition": {
+        "soc_after": 0.20272756011280507,
+        "fc_kw": 560,
+        "action_delta_kw": 10,
+        "load_kw": 799.7552000000001,
+        "physical_feasible_actions_kw": [
+          370,
+          380,
+          390,
+          400,
+          410,
+          420,
+          430,
+          440,
+          450,
+          460,
+          470,
+          480,
+          490,
+          500,
+          510,
+          520,
+          530,
+          540,
+          550,
+          560,
+          570,
+          580,
+          590,
+          600
+        ],
+        "policy_candidate_actions_kw": [
+          490,
+          520,
+          540,
+          550,
+          560,
+          580
+        ],
+        "terminal_reason": "failure_increment_action_limited"
+      },
+      "algebraic_failed_state_mask": {
+        "formal_absolute_physical_kw": [
+          600
+        ],
+        "seven_increment_inrange_powers_kw": [
+          500.0,
+          530.0,
+          550.0,
+          560.0,
+          570.0,
+          590.0
+        ],
+        "feasible_increment_powers_kw": [],
+        "next_soc_at_590": 0.19991122942229675,
+        "next_soc_at_600": 0.2000518052207673,
+        "dt_s": 30,
+        "method": "formal scalar SOC/power equations, no environment rollout"
+      }
+    }
+  ],
+  "source_files": [
+    {
+      "name": "round_100_train_trajectories.json",
+      "bytes": 46444316,
+      "samples": 35,
+      "unchanged_during_read": true
+    },
+    {
+      "name": "round_100_validation_trajectories.json",
+      "bytes": 12508729,
+      "samples": 8,
+      "unchanged_during_read": true
+    }
+  ],
+  "fc_subcost_method": "Algebraic decomposition of actual PFC, preceding actual PFC and dt using frozen four-condition model; all per-step total costs reconciled within 1e-7 CNY; no environment replay.",
+  "max_fc_subcost_step_discrepancy_cny": 8.246736626915663e-13,
+  "any_fc_eol_cap_reached": false,
+  "maximum_sample_fc_raw_voltage_loss_uv": 391.7099250000002,
+  "representative_profiles": [
+    {
+      "split": "Train",
+      "sample_id": "parent_006_seg01",
+      "completed": true,
+      "failure_cause": null
+    },
+    {
+      "split": "Train",
+      "sample_id": "parent_015_seg01",
+      "completed": false,
+      "failure_cause": "soc_limited"
+    },
+    {
+      "split": "Validation",
+      "sample_id": "parent_020_seg01",
+      "completed": true,
+      "failure_cause": null
+    }
+  ],
+  "representative_zoom": {
+    "split": "Validation",
+    "sample_id": "parent_020_seg01",
+    "first_step_1based": 54,
+    "last_step_1based": 117,
+    "mean_abs_delta_kw": 39.84375,
+    "reversals": 40,
+    "pair_count": 63,
+    "all_7_actions_legal_steps": 64,
+    "keep_fc_legal_steps": 64
+  },
+  "limitations": [
+    "No Q checkpoint/model loaded; 10 archived actual diagnostic states for Train015/017 matched trajectory states and actions. No Q ranks available for Validation020/044.",
+    "Failure-state algebraic mask uses the frozen 30-second physical balance and archived observed state, not counterfactual policy control.",
+    "All costs with prefix_ are executed, possibly truncated scope and cannot establish full-set economic improvement."
+  ],
+  "archived_q_evidence": {
+    "source": "diagnostic_checkpoints/round_100_decisions.json",
+    "record_count": 10,
+    "matched_actual_trajectory_state_action": true,
+    "all_selected_legal_rank_one": true,
+    "scope": "Only 10 preselected actual states from Train015 and017; no Q values for Validation020/044.",
+    "notable_records": [
+      {
+        "sample_id": "parent_015_seg01",
+        "archive_transition_index": 130,
+        "step_1based": 131,
+        "soc": 0.393129306937013,
+        "load_kw": 1096.8496905466723,
+        "previous_fc_kw": 500.0,
+        "selected_fc_kw": 470,
+        "selected_delta_kw": -30,
+        "selected_legal_rank": 1,
+        "selected_q": -5.256315231323242,
+        "q_margin_over_second": 0.01126718521118164,
+        "best_higher_fc_kw": 510.0,
+        "best_higher_q": -5.267582416534424,
+        "selected_q_minus_best_higher_q": 0.01126718521118164,
+        "hold_fc_q": -5.503900051116943,
+        "soc_after": 0.3843173173600523,
+        "raw_training_reward": -28.625178653346286,
+        "h2_cost_cny": 4.542338199098293,
+        "fc_deg_cny": 4.578749999999967,
+        "bat_deg_cny": 2.2218973566789506,
+        "soc_penalty": 9.303803918152877,
+        "ramp_penalty": 1.65375,
+        "candidate_indices": "[0, 1, 2, 3, 4, 5, 6]",
+        "q_unit": "scaled_reward_equivalent_cny",
+        "q_delta_-60_kw": -5.337923049926758,
+        "q_delta_-30_kw": -5.256315231323242,
+        "q_delta_-10_kw": -5.337991237640381,
+        "q_delta_+0_kw": -5.503900051116943,
+        "q_delta_+10_kw": -5.267582416534424,
+        "q_delta_+30_kw": -5.3345046043396,
+        "q_delta_+60_kw": -5.3031206130981445
+      },
+      {
+        "sample_id": "parent_015_seg01",
+        "archive_transition_index": 153,
+        "step_1based": 154,
+        "soc": 0.21599807821162365,
+        "load_kw": 1095.2621959853288,
+        "previous_fc_kw": 600.0,
+        "selected_fc_kw": 590,
+        "selected_delta_kw": -10,
+        "selected_legal_rank": 1,
+        "selected_q": -9.946135520935059,
+        "q_margin_over_second": 0.0015783309936523438,
+        "best_higher_fc_kw": 600.0,
+        "best_higher_q": -10.085744857788086,
+        "selected_q_minus_best_higher_q": 0.13960933685302734,
+        "hold_fc_q": -10.085744857788086,
+        "soc_after": 0.20889531454786228,
+        "raw_training_reward": -46.62002993239089,
+        "h2_cost_cny": 5.8797517550397895,
+        "fc_deg_cny": 2.570000000000155,
+        "bat_deg_cny": 2.296078636421815,
+        "soc_penalty": 30.59257499652312,
+        "ramp_penalty": 0.18375,
+        "candidate_indices": "[0, 1, 2, 3]",
+        "q_unit": "scaled_reward_equivalent_cny",
+        "q_delta_-60_kw": -10.17782974243164,
+        "q_delta_-30_kw": -9.947713851928711,
+        "q_delta_-10_kw": -9.946135520935059,
+        "q_delta_+0_kw": -10.085744857788086,
+        "q_delta_+10_kw": -9.893168449401855,
+        "q_delta_+30_kw": -10.14963436126709,
+        "q_delta_+60_kw": -10.222860336303711
+      },
+      {
+        "sample_id": "parent_017_seg01",
+        "archive_transition_index": 114,
+        "step_1based": 115,
+        "soc": 0.39907452922323,
+        "load_kw": 815.1936000000001,
+        "previous_fc_kw": 360.0,
+        "selected_fc_kw": 330,
+        "selected_delta_kw": -30,
+        "selected_legal_rank": 1,
+        "selected_q": -0.10711969435214996,
+        "q_margin_over_second": 0.0064851269125938416,
+        "best_higher_fc_kw": 370.0,
+        "best_higher_q": -0.1136048212647438,
+        "selected_q_minus_best_higher_q": 0.0064851269125938416,
+        "hold_fc_q": -0.1959214210510254,
+        "soc_after": 0.39225388144995066,
+        "raw_training_reward": -24.43242200807671,
+        "h2_cost_cny": 3.0910249118704396,
+        "fc_deg_cny": 4.578749999999967,
+        "bat_deg_cny": 1.5818159523132993,
+        "soc_penalty": 8.631689954522228,
+        "ramp_penalty": 1.65375,
+        "candidate_indices": "[0, 1, 2, 3, 4, 5, 6]",
+        "q_unit": "scaled_reward_equivalent_cny",
+        "q_delta_-60_kw": -0.19877418875694275,
+        "q_delta_-30_kw": -0.10711969435214996,
+        "q_delta_-10_kw": -0.16085562109947205,
+        "q_delta_+0_kw": -0.1959214210510254,
+        "q_delta_+10_kw": -0.1136048212647438,
+        "q_delta_+30_kw": -0.11808295547962189,
+        "q_delta_+60_kw": -0.15420374274253845
+      },
+      {
+        "sample_id": "parent_017_seg01",
+        "archive_transition_index": 208,
+        "step_1based": 209,
+        "soc": 0.20202086933231675,
+        "load_kw": 666.8818,
+        "previous_fc_kw": 600.0,
+        "selected_fc_kw": 590,
+        "selected_delta_kw": -10,
+        "selected_legal_rank": 1,
+        "selected_q": -10.127958297729492,
+        "q_margin_over_second": 0.02492046356201172,
+        "best_higher_fc_kw": 600.0,
+        "best_higher_q": -10.214334487915039,
+        "selected_q_minus_best_higher_q": 0.08637619018554688,
+        "hold_fc_q": -10.214334487915039,
+        "soc_after": 0.20094009729003154,
+        "raw_training_reward": -41.53571460442365,
+        "h2_cost_cny": 5.8797517550397895,
+        "fc_deg_cny": 2.569999999999927,
+        "bat_deg_cny": 0.27674792704021794,
+        "soc_penalty": 31.849761190177894,
+        "ramp_penalty": 0.18375,
+        "candidate_indices": "[0, 1, 2, 3]",
+        "q_unit": "scaled_reward_equivalent_cny",
+        "q_delta_-60_kw": -10.212371826171875,
+        "q_delta_-30_kw": -10.152878761291504,
+        "q_delta_-10_kw": -10.127958297729492,
+        "q_delta_+0_kw": -10.214334487915039,
+        "q_delta_+10_kw": -10.001428604125977,
+        "q_delta_+30_kw": -9.99042797088623,
+        "q_delta_+60_kw": -10.146049499511719
+      }
+    ]
+  }
+}
