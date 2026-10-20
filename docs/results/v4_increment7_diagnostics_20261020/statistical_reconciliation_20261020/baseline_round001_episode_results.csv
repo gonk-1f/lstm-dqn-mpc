@@ -1,0 +1,79 @@
+﻿experiment_id,round,context,sample_id,completed,failure_cause,failure,executed_steps,complete_zhou_cost_cny
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_035_seg01,True,,,310,3649.8563998759037
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_051_seg01,True,,,145,2105.820525210906
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_046_seg02,True,,,110,1476.4920078076705
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_022_seg01,True,,,183,3712.3017288700885
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_007_seg01,True,,,282,3605.9497336157892
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_015_seg01,False,soc_limited,row 123 (onboard): no feasible FC action for actual battery power and SOC bounds,123,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_010_seg01,False,increment_action_limited,row 70 (onboard): no feasible FC increment; physically feasible absolute powers exist,70,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_009_seg01,False,increment_action_limited,row 177 (onboard): no feasible FC increment; physically feasible absolute powers exist,177,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_010_seg02,False,increment_action_limited,row 153 (onboard): no feasible FC increment; physically feasible absolute powers exist,153,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_043_seg01,False,increment_action_limited,row 275 (onboard): no feasible FC increment; physically feasible absolute powers exist,275,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_008_seg01,False,soc_limited,row 62 (onboard): no feasible FC action for actual battery power and SOC bounds,62,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_029_seg01,False,increment_action_limited,row 166 (onboard): no feasible FC increment; physically feasible absolute powers exist,166,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_009_seg02,False,increment_action_limited,row 83 (onboard): no feasible FC increment; physically feasible absolute powers exist,83,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_038_seg01,False,increment_action_limited,row 382 (onboard): no feasible FC increment; physically feasible absolute powers exist,382,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_005_seg01,False,increment_action_limited,row 133 (onboard): no feasible FC increment; physically feasible absolute powers exist,133,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_050_seg01,False,increment_action_limited,row 188 (onboard): no feasible FC increment; physically feasible absolute powers exist,188,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_053_seg01,False,increment_action_limited,row 117 (onboard): no feasible FC increment; physically feasible absolute powers exist,117,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_018_seg01,False,increment_action_limited,row 475 (onboard): no feasible FC increment; physically feasible absolute powers exist,475,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_047_seg01,False,increment_action_limited,row 86 (onboard): no feasible FC increment; physically feasible absolute powers exist,86,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_049_seg01,False,increment_action_limited,row 137 (onboard): no feasible FC increment; physically feasible absolute powers exist,137,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_052_seg01,False,increment_action_limited,row 213 (onboard): no feasible FC increment; physically feasible absolute powers exist,213,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_019_seg01,False,increment_action_limited,row 179 (onboard): no feasible FC increment; physically feasible absolute powers exist,179,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_003_seg01,False,increment_action_limited,row 145 (onboard): no feasible FC increment; physically feasible absolute powers exist,145,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_041_seg01,False,increment_action_limited,row 97 (onboard): no feasible FC increment; physically feasible absolute powers exist,97,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_021_seg01,False,increment_action_limited,row 54 (onboard): no feasible FC increment; physically feasible absolute powers exist,54,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_034_seg01,False,increment_action_limited,row 132 (onboard): no feasible FC increment; physically feasible absolute powers exist,132,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_019_seg02,False,increment_action_limited,row 74 (onboard): no feasible FC increment; physically feasible absolute powers exist,74,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_042_seg01,False,increment_action_limited,row 119 (onboard): no feasible FC increment; physically feasible absolute powers exist,119,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_037_seg01,False,increment_action_limited,row 265 (onboard): no feasible FC increment; physically feasible absolute powers exist,265,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_036_seg01,False,soc_limited,row 94 (onboard): no feasible FC action for actual battery power and SOC bounds,94,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_017_seg01,False,increment_action_limited,row 69 (onboard): no feasible FC increment; physically feasible absolute powers exist,69,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_048_seg01,False,increment_action_limited,row 105 (onboard): no feasible FC increment; physically feasible absolute powers exist,105,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_012_seg01,False,increment_action_limited,row 96 (onboard): no feasible FC increment; physically feasible absolute powers exist,96,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_029_seg02,False,increment_action_limited,row 159 (onboard): no feasible FC increment; physically feasible absolute powers exist,159,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,exploratory,parent_006_seg01,False,increment_action_limited,row 202 (onboard): no feasible FC increment; physically feasible absolute powers exist,202,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_005_seg01,True,,,309,2585.4882165823083
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_010_seg02,True,,,527,4747.59318454443
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_012_seg01,True,,,596,4421.016248914742
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_019_seg01,True,,,349,2324.801665241771
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_019_seg02,True,,,296,1735.3042097962366
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_021_seg01,True,,,234,1830.560778909501
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_022_seg01,True,,,183,1468.985830894124
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_029_seg01,True,,,354,2253.0871975420246
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_029_seg02,True,,,175,1462.2805866141716
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_035_seg01,True,,,310,2701.025406456274
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_046_seg02,True,,,110,1079.1550341715974
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_047_seg01,True,,,196,1915.5381735941207
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_048_seg01,True,,,286,2333.2616839534544
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_049_seg01,True,,,269,2047.400605385904
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_051_seg01,True,,,145,1296.63710654039
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_053_seg01,True,,,255,1954.2240407051518
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_003_seg01,False,increment_action_limited,row 315 (onboard): no feasible FC increment; physically feasible absolute powers exist,315,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_006_seg01,False,increment_action_limited,row 121 (onboard): no feasible FC increment; physically feasible absolute powers exist,121,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_007_seg01,False,increment_action_limited,row 277 (onboard): no feasible FC increment; physically feasible absolute powers exist,277,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_008_seg01,False,increment_action_limited,row 304 (onboard): no feasible FC increment; physically feasible absolute powers exist,304,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_009_seg01,False,increment_action_limited,row 314 (onboard): no feasible FC increment; physically feasible absolute powers exist,314,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_009_seg02,False,increment_action_limited,row 254 (onboard): no feasible FC increment; physically feasible absolute powers exist,254,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_010_seg01,False,increment_action_limited,row 361 (onboard): no feasible FC increment; physically feasible absolute powers exist,361,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_015_seg01,False,soc_limited,row 155 (onboard): no feasible FC action for actual battery power and SOC bounds,155,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_017_seg01,False,increment_action_limited,row 351 (onboard): no feasible FC increment; physically feasible absolute powers exist,351,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_018_seg01,False,increment_action_limited,row 362 (onboard): no feasible FC increment; physically feasible absolute powers exist,362,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_034_seg01,False,increment_action_limited,row 285 (onboard): no feasible FC increment; physically feasible absolute powers exist,285,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_036_seg01,False,soc_limited,row 110 (onboard): no feasible FC action for actual battery power and SOC bounds,110,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_037_seg01,False,increment_action_limited,row 401 (onboard): no feasible FC increment; physically feasible absolute powers exist,401,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_038_seg01,False,increment_action_limited,row 344 (onboard): no feasible FC increment; physically feasible absolute powers exist,344,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_041_seg01,False,increment_action_limited,row 315 (onboard): no feasible FC increment; physically feasible absolute powers exist,315,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_042_seg01,False,increment_action_limited,row 344 (onboard): no feasible FC increment; physically feasible absolute powers exist,344,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_043_seg01,False,increment_action_limited,row 280 (onboard): no feasible FC increment; physically feasible absolute powers exist,280,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_050_seg01,False,increment_action_limited,row 450 (onboard): no feasible FC increment; physically feasible absolute powers exist,450,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,train,parent_052_seg01,False,increment_action_limited,row 212 (onboard): no feasible FC increment; physically feasible absolute powers exist,212,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,validation,parent_020_seg01,True,,,119,1025.3562180807435
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,validation,parent_033_seg01,True,,,369,2838.617311879946
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,validation,parent_002_seg01,False,increment_action_limited,row 198 (onboard): no feasible FC increment; physically feasible absolute powers exist,198,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,validation,parent_011_seg01,False,increment_action_limited,row 306 (onboard): no feasible FC increment; physically feasible absolute powers exist,306,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,validation,parent_016_seg01,False,increment_action_limited,row 374 (onboard): no feasible FC increment; physically feasible absolute powers exist,374,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,validation,parent_040_seg01,False,increment_action_limited,row 350 (onboard): no feasible FC increment; physically feasible absolute powers exist,350,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,validation,parent_044_seg01,False,soc_limited,row 219 (onboard): no feasible FC action for actual battery power and SOC bounds,219,
+V4-INDEP35-M3-DELTA7-ZHOU-TD1-PER-INTERLEAVED-S42-20261020,1,validation,parent_045_seg01,False,increment_action_limited,row 389 (onboard): no feasible FC increment; physically feasible absolute powers exist,389,

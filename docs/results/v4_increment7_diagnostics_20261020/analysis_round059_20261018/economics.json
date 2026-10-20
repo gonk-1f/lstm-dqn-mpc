@@ -1,0 +1,309 @@
+{
+  "schema_version": 1,
+  "analysis_date": "2026-10-18",
+  "created_utc": "2026-10-18T04:30:59.960355+00:00",
+  "scope": "Pinned round 59; stdlib-only report and small CSV analysis. No checkpoint loads, training changes, Test evaluation, or trajectory parsing.",
+  "sources": {
+    "new_report": {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v4-increment7-zhou\\outputs\\v4_independent35_m3_delta7_zhou_td1_per_seed42_100r\\report.json",
+      "sha256": "c350a33a0cb3ccac9a37b91e6efca43265260c36f4212c14f69adbb57611fc76",
+      "bytes": 3874595,
+      "report_max_round_at_read": 60
+    },
+    "old_report": {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\docs\\results\\v4_independent35_control_per_100r_20261017\\report.json.gz",
+      "sha256": "4d5a53fe849944b8922c462ac1e7a2e84c98e1132ab98b45e903629c72ed5b07",
+      "bytes": 1403403
+    },
+    "old_round100_csv": {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\docs\\results\\v4_independent35_control_per_100r_20261017\\round100_sample_metrics.csv",
+      "sha256": "0fa4a8a5bea6903b4f9303b9645fa15b4b84650b84a476864ac47c607d147e1b"
+    }
+  },
+  "comparability": {
+    "same_reported_manifest_hashes": true,
+    "same_task_contract": true,
+    "same_zhou_evaluation_parameters": true,
+    "same_complete_validation_sample_ids": true,
+    "validation_sample_ids": [
+      "parent_002_seg01",
+      "parent_011_seg01",
+      "parent_016_seg01",
+      "parent_020_seg01",
+      "parent_033_seg01",
+      "parent_040_seg01",
+      "parent_044_seg01",
+      "parent_045_seg01"
+    ],
+    "evaluation_version": "zhou_soc_equivalent_hydrogen_v1",
+    "initial_soc": 0.6,
+    "battery_nominal_energy_kwh": 624.0,
+    "fc_reference_efficiency": 0.5711999752720877,
+    "hydrogen_lhv_kwh_per_kg": 33.333333333333336,
+    "hydrogen_price_cny_per_kg": 21.9,
+    "soc_correction": "Signed; surplus terminal SOC gives a negative H2 correction. No clipping or terminal recharge.",
+    "old_configuration": {
+      "actions": "61 absolute FC powers 0:10:600 kW",
+      "n_step": 8,
+      "reward": "control_only",
+      "replay": "PER",
+      "seed": 42
+    },
+    "new_configuration": {
+      "actions": "7 FC increments [-60,-30,-10,0,10,30,60] kW",
+      "n_step": 1,
+      "reward": "zhou_joint",
+      "replay": "PER",
+      "seed": 42
+    }
+  },
+  "new_round59": {
+    "round": 59,
+    "qualified_checkpoint": false,
+    "validation": {
+      "episodes": 8,
+      "completed": 8,
+      "fixed_group_cost_cny": 30818.851270804673,
+      "completed_subset_cost_cny": 30818.851270804673,
+      "three_cost_components_cny": {
+        "equivalent_hydrogen_cost_cny": 13322.899128263713,
+        "fuel_cell_degradation_cost_cny": 16570.871000000054,
+        "battery_degradation_cost_cny": 925.0811425409058
+      },
+      "three_cost_shares_percent": {
+        "equivalent_hydrogen_cost_cny": 43.229707075048466,
+        "fuel_cell_degradation_cost_cny": 53.76861990861411,
+        "battery_degradation_cost_cny": 3.0016730163374197
+      },
+      "hydrogen_kg": {
+        "actual": 642.5355835225397,
+        "soc_signed": -34.18402515433356,
+        "equivalent": 608.3515583682062
+      },
+      "actual_hydrogen_cost_cny": 14071.529279143619,
+      "soc_equivalent_cost_adjustment_cny": -748.6301508799049,
+      "observed_three_cost_before_soc_adjustment_cny": 31567.481421684577,
+      "terminal_soc": {
+        "mean": 0.7303813723481287,
+        "min": 0.710017877793755,
+        "max": 0.7441599317699121
+      },
+      "onboard_soc": {
+        "min": 0.26625644128578396,
+        "max": 0.7668668334677259
+      },
+      "fc_starts": 8
+    },
+    "train": {
+      "episodes": 35,
+      "completed": 31,
+      "fixed_group_cost_cny": null,
+      "completed_subset_cost_cny": 82494.1596767975,
+      "three_cost_components_cny": {
+        "equivalent_hydrogen_cost_cny": 33275.865001036174,
+        "fuel_cell_degradation_cost_cny": 47363.342875000104,
+        "battery_degradation_cost_cny": 1854.9518007612137
+      },
+      "three_cost_shares_percent": {
+        "equivalent_hydrogen_cost_cny": 40.33723736493242,
+        "fuel_cell_degradation_cost_cny": 57.414177028488034,
+        "battery_degradation_cost_cny": 2.248585606579543
+      },
+      "hydrogen_kg": {
+        "actual": 1645.7858235942517,
+        "soc_signed": -126.33993313597891,
+        "equivalent": 1519.4458904582727
+      },
+      "actual_hydrogen_cost_cny": 36042.70953671411,
+      "soc_equivalent_cost_adjustment_cny": -2766.844535677938,
+      "observed_three_cost_before_soc_adjustment_cny": 85261.00421247544,
+      "terminal_soc": {
+        "mean": 0.7243544366610635,
+        "min": 0.6718622970210355,
+        "max": 0.7471555609264322
+      },
+      "onboard_soc": {
+        "min": 0.3670447204174346,
+        "max": 0.7632705989547262
+      },
+      "fc_starts": 31
+    },
+    "train_failures": [
+      "parent_008_seg01: row 88 (onboard): no feasible FC action for actual battery power and SOC bounds",
+      "parent_015_seg01: row 162 (onboard): no feasible FC action for actual battery power and SOC bounds",
+      "parent_017_seg01: row 222 (onboard): no feasible FC action for actual battery power and SOC bounds",
+      "parent_036_seg01: row 105 (onboard): no feasible FC action for actual battery power and SOC bounds"
+    ],
+    "train_cost_limitation": "82494.1596767975 CNY is only the 31 completed training voyages. Full fixed Train35 cost remains null; it must not be ranked against other completed subsets or full Train35.",
+    "eligible_round_count_through59": 0,
+    "best_checkpoint_at_report_read": null
+  },
+  "old_complete_validation_history": {
+    "complete_round_count": 9,
+    "rounds": [
+      {
+        "round": 3,
+        "validation_cost_cny": 35875.00589724539,
+        "train_completed": 34,
+        "qualified_checkpoint": false
+      },
+      {
+        "round": 5,
+        "validation_cost_cny": 61100.71424784278,
+        "train_completed": 34,
+        "qualified_checkpoint": false
+      },
+      {
+        "round": 24,
+        "validation_cost_cny": 69661.79719922216,
+        "train_completed": 33,
+        "qualified_checkpoint": false
+      },
+      {
+        "round": 25,
+        "validation_cost_cny": 31741.00845811413,
+        "train_completed": 32,
+        "qualified_checkpoint": false
+      },
+      {
+        "round": 47,
+        "validation_cost_cny": 45394.38378689811,
+        "train_completed": 32,
+        "qualified_checkpoint": false
+      },
+      {
+        "round": 52,
+        "validation_cost_cny": 31772.458742287945,
+        "train_completed": 33,
+        "qualified_checkpoint": false
+      },
+      {
+        "round": 54,
+        "validation_cost_cny": 32607.253653502434,
+        "train_completed": 34,
+        "qualified_checkpoint": false
+      },
+      {
+        "round": 73,
+        "validation_cost_cny": 71914.98452247656,
+        "train_completed": 33,
+        "qualified_checkpoint": false
+      },
+      {
+        "round": 96,
+        "validation_cost_cny": 83090.19639000451,
+        "train_completed": 31,
+        "qualified_checkpoint": false
+      }
+    ],
+    "minimum": {
+      "round": 25,
+      "cost_cny": 31741.00845811413
+    },
+    "maximum": {
+      "round": 96,
+      "cost_cny": 83090.19639000451
+    },
+    "last_complete": {
+      "round": 96,
+      "cost_cny": 83090.19639000451
+    },
+    "all_100_rounds_eligible_count": 0,
+    "best_checkpoint": null
+  },
+  "conditional_validation_comparisons": {
+    "versus_old_minimum_complete8": {
+      "old_round": 25,
+      "old_cost_cny": 31741.00845811413,
+      "new_minus_old_cny": -922.1571873094581,
+      "new_minus_old_percent": -2.905254848869565,
+      "component_new_minus_old_cny": {
+        "equivalent_hydrogen_cost_cny": -442.01161992075686,
+        "fuel_cell_degradation_cost_cny": 34.051249999931315,
+        "battery_degradation_cost_cny": -514.1968173886348
+      },
+      "old_hydrogen_kg": {
+        "actual": 665.4554260024803,
+        "soc_signed": -36.92068864245884,
+        "equivalent": 628.5347373600214
+      },
+      "old_three_cost_components_cny": {
+        "equivalent_hydrogen_cost_cny": 13764.91074818447,
+        "fuel_cell_degradation_cost_cny": 16536.819750000122,
+        "battery_degradation_cost_cny": 1439.2779599295407
+      },
+      "old_train_completed": 32,
+      "old_qualified_checkpoint": false
+    },
+    "versus_old_last_complete8": {
+      "old_round": 96,
+      "old_cost_cny": 83090.19639000451,
+      "new_minus_old_cny": -52271.34511919983,
+      "new_minus_old_percent": -62.90916063533088,
+      "component_new_minus_old_cny": {
+        "equivalent_hydrogen_cost_cny": -326.2115783989193,
+        "fuel_cell_degradation_cost_cny": -51620.14512499991,
+        "battery_degradation_cost_cny": -324.9884158010045
+      },
+      "old_hydrogen_kg": {
+        "actual": 661.1183218007278,
+        "soc_signed": -37.87125756955737,
+        "equivalent": 623.2470642311704
+      },
+      "old_three_cost_components_cny": {
+        "equivalent_hydrogen_cost_cny": 13649.110706662632,
+        "fuel_cell_degradation_cost_cny": 68191.01612499997,
+        "battery_degradation_cost_cny": 1250.0695583419104
+      },
+      "old_train_completed": 31,
+      "old_qualified_checkpoint": false
+    },
+    "interpretation": "The new round59 complete fixed Val8 cost is below the lowest observed complete Val8 cost in this old 100-round run. This is a conditional historical comparison, not a qualified-best or controlled causal result. Against old R25, hydrogen and battery costs fall while FC degradation rises slightly."
+  },
+  "old_round100_excluded_from_full_split_comparison": {
+    "Train": {
+      "episodes": 35,
+      "completed": 24,
+      "completed_subset_cost_cny": 97415.22684077777,
+      "fixed_group_cost_cny": null,
+      "reason": "Incomplete fixed split; completed subset cost is not the full split cost."
+    },
+    "Validation": {
+      "episodes": 8,
+      "completed": 4,
+      "completed_subset_cost_cny": 14654.610026310984,
+      "fixed_group_cost_cny": null,
+      "reason": "Incomplete fixed split; completed subset cost is not the full split cost."
+    }
+  },
+  "limitations": [
+    "New Train31/35 and old reference Train32/35 (R25), Train31/35 (R96) are incomplete; no qualifying best exists in either experiment at the stated scope.",
+    "Action representation, training reward, and n-step changed together; no observed difference can be assigned to any one of them.",
+    "Single seed42 runs and unequal observed training horizons (new59 versus old100) do not establish generalization or convergence.",
+    "No Test data was opened. No common-completed-sample subset calculation was needed; incomplete R100 costs are excluded from the fixed8 comparison.",
+    "The next completed round60 falls to Train27/35 and Val5/8; round59 economic improvement is not established as stable."
+  ],
+  "verification": {
+    "three_cost_sums_reconciled": true,
+    "hydrogen_actual_plus_signed_soc_reconciled": true,
+    "equivalent_hydrogen_price_reconciled": true,
+    "old_round100_completed_subset_csv_sums_match_report": true,
+    "new_val_cost_matches_requested_pinned_value": true
+  },
+  "subsequent_round60_stability_check": {
+    "round": 60,
+    "report_sha256_at_read": "c350a33a0cb3ccac9a37b91e6efca43265260c36f4212c14f69adbb57611fc76",
+    "train": {
+      "episodes": 35,
+      "completed": 27,
+      "cost_cny": null
+    },
+    "validation": {
+      "episodes": 8,
+      "completed": 5,
+      "cost_cny": null
+    },
+    "qualified_checkpoint": false,
+    "interpretation": "R59 is a better observed round. The following R60 drops to Train27/35 and Val5/8, so the cost improvement is not yet stable; neither incomplete R60 split has a comparable full fixed-group cost."
+  }
+}

@@ -1,0 +1,9 @@
+﻿split,category,available,evaluated
+fit,ordinary_nonterminal,159187,2000
+fit,normal_terminal,471,471
+fit,failure_prefix,28822,2000
+fit,failure_terminal,182,182
+heldout,ordinary_nonterminal,102705,2000
+heldout,normal_terminal,199,199
+heldout,failure_prefix,8406,2000
+heldout,failure_terminal,28,28

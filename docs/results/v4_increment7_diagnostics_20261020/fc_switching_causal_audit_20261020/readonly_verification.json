@@ -1,0 +1,8 @@
+{
+  "formal_source_unchanged": true,
+  "old_checkpoint_unchanged": true,
+  "new_snapshot_unchanged": true,
+  "new_training_latest_checkpoint_not_hashed_afterward": "Running trainer legitimately publishes newer rounds; audit never writes it.",
+  "test_payloads_opened": 0,
+  "wall_seconds": 180.03460788726807
+}

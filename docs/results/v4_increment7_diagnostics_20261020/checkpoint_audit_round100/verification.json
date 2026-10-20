@@ -1,0 +1,8 @@
+{
+  "checkpoint_and_original_files_unchanged": true,
+  "formal_source_files_unchanged": true,
+  "git_head_unchanged_since_readonly_task_start": true,
+  "official_masked_double_dqn_target_difference": 2.0925501956203796e-10,
+  "independent_single_state_q_matches_csv": true,
+  "optimizer_or_backward_calls": 0
+}

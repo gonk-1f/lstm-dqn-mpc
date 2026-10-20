@@ -1,0 +1,13 @@
+﻿sample_id,matched_hold_legal_steps,component,mean_actual_minus_hold,median_actual_minus_hold,p95_abs_difference,scope
+parent_020_seg01,64,h2_cost_cny,-0.004429765725188158,-0.2835050064120421,0.5863529971967274,exact existing one-step counterfactual; not a full alternative trajectory
+parent_020_seg01,64,signed_soc_equivalent_hydrogen_cost_cny,0.003662324992233519,0.2731749067840516,0.6053737546461135,exact existing one-step counterfactual; not a full alternative trajectory
+parent_020_seg01,64,fuel_cell_degradation_cost_cny,4.392773437500021,3.3075000000000525,6.615000000000104,exact existing one-step counterfactual; not a full alternative trajectory
+parent_020_seg01,64,battery_degradation_cost_cny,-0.0036256561076662462,-0.014075564182607378,0.10792651433292662,exact existing one-step counterfactual; not a full alternative trajectory
+parent_020_seg01,64,soc_auxiliary_reward_equivalent_penalty,-0.00022268455804260248,-0.013459437757055492,0.03631067659860327,exact existing one-step counterfactual; not a full alternative trajectory
+parent_020_seg01,64,squared_ramp_auxiliary_reward_equivalent_penalty,3.28166015625,1.65375,6.615,exact existing one-step counterfactual; not a full alternative trajectory
+parent_015_seg01,155,h2_cost_cny,0.038700117806189406,0.0,0.6682868280664884,exact existing one-step counterfactual; not a full alternative trajectory
+parent_015_seg01,155,signed_soc_equivalent_hydrogen_cost_cny,-0.038283562181850965,0.0,0.6053737546461133,exact existing one-step counterfactual; not a full alternative trajectory
+parent_015_seg01,155,fuel_cell_degradation_cost_cny,6.007822580645186,3.3075000000000516,6.615000000000104,exact existing one-step counterfactual; not a full alternative trajectory
+parent_015_seg01,155,battery_degradation_cost_cny,-0.00965768481281995,-0.03619814546351665,0.27388710148960804,exact existing one-step counterfactual; not a full alternative trajectory
+parent_015_seg01,155,soc_auxiliary_reward_equivalent_penalty,-0.0038644040457564734,-0.007882992028713787,0.06576718457055443,exact existing one-step counterfactual; not a full alternative trajectory
+parent_015_seg01,155,squared_ramp_auxiliary_reward_equivalent_penalty,2.5985806451612907,1.65375,6.615,exact existing one-step counterfactual; not a full alternative trajectory

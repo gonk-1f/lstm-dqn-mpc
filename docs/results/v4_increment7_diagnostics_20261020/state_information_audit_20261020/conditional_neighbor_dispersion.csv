@@ -1,0 +1,25 @@
+﻿split,horizon_steps,features,mean_neighbor_label_std,empirical_neighbor_p90_p10_width,heldout_in_neighbor_p10_p90,scope
+heldout_train_parent,1,load_only,35.115006171666614,41.14789690535421,0.7420235096557515,local empirical label spread; not calibrated conditional entropy
+heldout_train_parent,1,load_plus_causal_delta,30.124485204783056,46.254727729781266,0.7795969773299748,local empirical label spread; not calibrated conditional entropy
+heldout_train_parent,1,minimal3,34.25155289639193,53.975192032154794,0.7638539042821159,local empirical label spread; not calibrated conditional entropy
+heldout_train_parent,1,minimal3_plus_causal_delta,36.87764951305527,69.58267419482836,0.7533585222502099,local empirical label spread; not calibrated conditional entropy
+external_validation,1,load_only,36.99746991695762,42.53537538643803,0.7521505376344086,local empirical label spread; not calibrated conditional entropy
+external_validation,1,load_plus_causal_delta,34.495431844616384,53.931960164317374,0.8067204301075269,local empirical label spread; not calibrated conditional entropy
+external_validation,1,minimal3,37.72905378575092,59.64631898537624,0.7981182795698925,local empirical label spread; not calibrated conditional entropy
+external_validation,1,minimal3_plus_causal_delta,42.234898805617256,79.38984736669612,0.8483870967741935,local empirical label spread; not calibrated conditional entropy
+heldout_train_parent,8,load_only,60.550162246572846,103.82499612687933,0.7226122101680493,local empirical label spread; not calibrated conditional entropy
+heldout_train_parent,8,load_plus_causal_delta,56.28322290900634,98.24679391198785,0.7283556690065943,local empirical label spread; not calibrated conditional entropy
+heldout_train_parent,8,minimal3,58.217147023355516,108.25155939954212,0.727079344820251,local empirical label spread; not calibrated conditional entropy
+heldout_train_parent,8,minimal3_plus_causal_delta,58.349154254207654,116.05931253035496,0.757711125292491,local empirical label spread; not calibrated conditional entropy
+external_validation,8,load_only,62.14464722550428,105.66586863775593,0.7514953779227841,local empirical label spread; not calibrated conditional entropy
+external_validation,8,load_plus_causal_delta,61.01958902203448,108.2148648132027,0.7789559543230016,local empirical label spread; not calibrated conditional entropy
+external_validation,8,minimal3,60.864888244390286,110.66428252202422,0.7275693311582382,local empirical label spread; not calibrated conditional entropy
+external_validation,8,minimal3_plus_causal_delta,64.10504338258428,126.66884268433878,0.7656334964654704,local empirical label spread; not calibrated conditional entropy
+heldout_train_parent,32,load_only,108.60659540600793,238.41815373882062,0.7065774804905239,local empirical label spread; not calibrated conditional entropy
+heldout_train_parent,32,load_plus_causal_delta,103.8616285444657,227.23584407678527,0.696098104793757,local empirical label spread; not calibrated conditional entropy
+heldout_train_parent,32,minimal3,95.91071956082644,224.0708931771764,0.6162764771460424,local empirical label spread; not calibrated conditional entropy
+heldout_train_parent,32,minimal3_plus_causal_delta,96.72461269690523,228.58394355864831,0.6622073578595318,local empirical label spread; not calibrated conditional entropy
+external_validation,32,load_only,105.33272766968638,230.16737233712567,0.6864742501414828,local empirical label spread; not calibrated conditional entropy
+external_validation,32,load_plus_causal_delta,104.3787320836103,230.71040133624038,0.7059988681380871,local empirical label spread; not calibrated conditional entropy
+external_validation,32,minimal3,95.60000958647436,212.98845743456712,0.6397849462365591,local empirical label spread; not calibrated conditional entropy
+external_validation,32,minimal3_plus_causal_delta,100.32685206827122,225.49072945151335,0.669779286926995,local empirical label spread; not calibrated conditional entropy

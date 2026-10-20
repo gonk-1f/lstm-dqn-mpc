@@ -1,0 +1,66 @@
+{
+  "status": "gated_on_completion_and_reconciliation_of_interleaved_baseline",
+  "experiments_started": false,
+  "fixed": {
+    "state": "minimal3",
+    "actions": [
+      -60,
+      -30,
+      -10,
+      0,
+      10,
+      30,
+      60
+    ],
+    "reward": "zhou_joint",
+    "gamma": 1,
+    "n_step": 1,
+    "per_alpha": 0.6,
+    "per_beta": 1,
+    "per_epsilon": 1e-06,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "target_tau": 0.001,
+    "seed": 42,
+    "update_timing": "interleaved",
+    "cadence": "replay32"
+  },
+  "groups": [
+    {
+      "group": "A",
+      "reward_scale": 0.001,
+      "loss_beta": 1,
+      "output_dir": "outputs/v4_scale_interleaved_A_s001_b1_seed42_NEW"
+    },
+    {
+      "group": "B",
+      "reward_scale": 1,
+      "loss_beta": 1,
+      "output_dir": "outputs/v4_scale_interleaved_B_s1_b1_seed42_NEW"
+    },
+    {
+      "group": "C",
+      "reward_scale": 1,
+      "loss_beta": 1000,
+      "output_dir": "outputs/v4_scale_interleaved_C_s1_b1000_seed42_NEW"
+    }
+  ],
+  "blocked_interfaces": [
+    "CLI currently fixes reward_scale=.001",
+    "SmoothL1 beta is not parameterized",
+    "same round count does not imply same environment/update budgets"
+  ],
+  "command_status": "A baseline start/resume command is available; B/C runnable commands will follow required interface preparation after baseline completion. No nonexistent loss-beta option is represented as available.",
+  "metrics": [
+    "fixed Train/Validation completion",
+    "physical vs incremental failure causes",
+    "Zhou cost on identical completed set",
+    "SOC trajectories",
+    "FC mean absolute delta and reversals",
+    "per-category unweighted TD MAE/P95/P99",
+    "IS and weighted/unweighted loss",
+    "gradient norms and actual Adam displacement",
+    "masked Q margins",
+    "actual environment/replay/Adam/Target counters and epsilon exposures"
+  ]
+}

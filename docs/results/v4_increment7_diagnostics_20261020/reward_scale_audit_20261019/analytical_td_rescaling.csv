@@ -1,0 +1,21 @@
+﻿arm,category,scale,beta,scope,td_mae,quadratic_fraction,linear_fraction,unweighted_smooth_l1
+A,all,0.001,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",0.09003248795859176,0.9948733333333334,0.0051266666666666665,0.017485337076132923
+B,all,0.01,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",0.9003248795859176,0.80369,0.19631,0.5113172311585561
+C,all,1.0,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",90.03248795859177,0.00283,0.99717,89.53297357461558
+D,all,1.0,1000.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",90.03248795859177,0.9948733333333334,0.0051266666666666665,17.48533707613293
+A,ordinary_nonterminal,0.001,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",0.07696053311858223,0.9969720342736701,0.0030279657263299377,0.010151935140429362
+B,ordinary_nonterminal,0.01,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",0.7696053311858223,0.8313312357765796,0.16866876422342034,0.3844257188681556
+C,ordinary_nonterminal,1.0,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",76.96053311858222,0.0028141371252271927,0.9971858628747728,76.461018563453
+D,ordinary_nonterminal,1.0,1000.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",76.96053311858222,0.9969720342736701,0.0030279657263299377,10.151935140429359
+A,normal_terminal,0.001,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",0.14385598785189196,0.9985074626865672,0.0014925373134328358,0.01958329780993922
+B,normal_terminal,0.01,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",1.4385598785189195,0.5850746268656717,0.41492537313432837,1.0444249001261627
+C,normal_terminal,1.0,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",143.85598785189197,0.0014925373134328358,0.9985074626865672,143.35625880180712
+D,normal_terminal,1.0,1000.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",143.85598785189197,0.9985074626865672,0.0014925373134328358,19.58329780993922
+A,failure_prefix,0.001,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",0.1779881461416877,0.9803642419684109,0.019635758031589127,0.06636888651561273
+B,failure_prefix,0.01,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",1.779881461416877,0.6148866444611583,0.38511335553884174,1.364186678298076
+C,failure_prefix,1.0,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",177.9881461416877,0.002927903728376491,0.9970720962716235,177.48863059068464
+D,failure_prefix,1.0,1000.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",177.9881461416877,0.9803642419684109,0.019635758031589127,66.36888651561273
+A,failure_terminal,0.001,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",0.6279630079155877,0.9380952380952381,0.06190476190476191,0.4904228966983889
+B,failure_terminal,0.01,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",6.279630079155877,0.5,0.5,5.864012566583499
+C,failure_terminal,1.0,1.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",627.9630079155877,0.009523809523809525,0.9904761904761905,627.4645987506392
+D,failure_terminal,1.0,1000.0,"Analytical unit conversion of BOTH Q and target, not a new model or training result",627.9630079155877,0.9380952380952381,0.06190476190476191,490.4228966983888

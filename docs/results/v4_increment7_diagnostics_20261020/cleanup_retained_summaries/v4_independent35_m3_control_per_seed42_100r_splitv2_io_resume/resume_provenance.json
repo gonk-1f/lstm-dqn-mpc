@@ -1,0 +1,24 @@
+{
+  "reason": "resume round 100 after MemoryError in whole-document trajectory JSON encoding",
+  "source_output_dir": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2",
+  "source_checkpoint": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2\\training_state_latest.pt",
+  "source_checkpoint_sha256": "a49dd0d1feeeba76ec64c770b1c750697eefb54d100a1342bfbe64abdfa6d3ba",
+  "source_completed_round": 99,
+  "original_source_commit": "a765dd151a099d278725e62907deb63499020843",
+  "original_source_tree_sha256": "262780cdc268bdcf6dba1566f640154d9eda6c907255de67db528a16288a386f",
+  "continuation_source_commit": "82e792e6dce32099251e333756af0c1b3a3d39b4",
+  "continuation_source_tree_sha256": "c2628661e8d408ce7069ad77d729b787f07a7541d31900cfe7ab7a4abd808b12",
+  "changed_runtime_files": [
+    "src/v4/monitored_training.py"
+  ],
+  "change_scope": "JSON output only; no learning, reward, physical, data or schedule changes",
+  "source_checkpoint_and_prior_outputs_preserved": true,
+  "agent_training_state_digest_before": "d09b354cd1ab4286081439c1caaca259ed80b8b08b4e0c06b80d9efff4466e51",
+  "historical_trajectory_root_rounds_1_to_99": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\direct-power-mlp\\outputs\\v4_independent35_m3_control_per_seed42_100r_splitv2",
+  "continuation_rounds": [
+    100
+  ],
+  "test_payloads_opened": 0,
+  "agent_training_state_digest_after": "d09b354cd1ab4286081439c1caaca259ed80b8b08b4e0c06b80d9efff4466e51",
+  "agent_training_state_preserved": true
+}
