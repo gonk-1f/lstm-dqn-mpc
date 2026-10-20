@@ -1,0 +1,23 @@
+{
+  "status": "completed",
+  "user_confirmed_exact_scope": true,
+  "deleted_files": 579,
+  "deleted_noncritical_files": 528,
+  "deleted_verified_raw_duplicates": 51,
+  "removed_bytes": 16848850948,
+  "new_retained_gzip_bytes": 65485015,
+  "net_saved_bytes_including_compression": 16783365933,
+  "retained_key_trajectory_files": 72,
+  "retained_compressed_pairs_verified": 51,
+  "protected_file_hashes_verified": 213,
+  "free_bytes_before_delete": 113122189312,
+  "free_bytes_after_delete": 130254401536,
+  "observed_free_bytes_change": 17132212224,
+  "free_space_note": "Running training can continue writing unrelated output; net byte accounting is authoritative for this cleanup.",
+  "method": "Nonrecursive native PowerShell Remove-Item with explicit literal paths in batches of at most 12; no wildcard deletion.",
+  "automatic_review_note": "Initial manifest-driven bulk command was rejected even after confirmation. Narrowed single-file and literal-path batches were permitted.",
+  "no_formal_code_or_dataset_changes": true,
+  "no_checkpoints_deleted": true,
+  "no_current_training_or_reference_run_files_deleted": true,
+  "diagnostic_archive_commit": "5a35c168b64aa6807ef244a95be745aeba1a8a1f"
+}

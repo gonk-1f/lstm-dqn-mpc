@@ -33,3 +33,7 @@ checkpoint/Replay/模型权重仍保存在本地原实验及诊断目录，本Gi
 ## 正在运行训练的源码身份
 
 现有续训校验严格比较source_commit与源码SHA。本次归档提交会推进Git HEAD，但不会改变正在运行进程的源码或参数。若该运行中断，不能直接在新HEAD下声称可原样恢复；应使用原提交dc3c1947bc4dc400710896dfe3acca2e9ae3f54d加归档的runtime_worktree_changes.patch.gz还原到隔离工作树，再按原身份恢复。不要改checkpoint元数据绕过检查。
+
+## Completed cleanup
+
+579 explicitly approved files removed; 72 key-round gzip trajectories retained. All 51 newly compressed copies and 213 protected source/checkpoint/report hashes verified. Net logical storage saved: 16783365933 bytes. See cleanup_result.json and cleanup_deletion_log.csv. Current training and reference increment7 R100 were not touched.
