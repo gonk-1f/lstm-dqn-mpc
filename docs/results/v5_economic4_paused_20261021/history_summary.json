@@ -1,0 +1,291 @@
+{
+  "experiment_id": "V5-ECON4-DELTA7-TD1-PER-INTERLEAVED-S42",
+  "source_commit": "34712730a4423baad09549d96e261c2f2a8de028",
+  "source_tree_sha256": "06a3700e1e0c7c06427ea0cbd743f33f381df6d8bda319bc4b68d59e8142f184",
+  "source_report_path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\docs\\results\\v5_economic4_paused_20261021\\committed_checkpoint_report.json",
+  "source_report_sha256": "67ad4709ca8cd7702f7a53963e03db6d8185e70f4b7431120d8ca1ac2a416f65",
+  "completed_rounds": 32,
+  "latest_committed_round": 32,
+  "planned_rounds": 100,
+  "training_not_completed": true,
+  "source_run_status_is_stale_at_manual_stop": "running",
+  "checkpoint_authority": "committed_checkpoint_report.json extracted from saved completed_round=32 full checkpoint; partial round33 is excluded",
+  "best_completion": {
+    "greedy_train": {
+      "max_completed": 29,
+      "rounds": [
+        32
+      ],
+      "evaluable_samples": 35
+    },
+    "greedy_validation": {
+      "max_completed": 7,
+      "rounds": [
+        25
+      ],
+      "evaluable_samples": 8
+    }
+  },
+  "fully_completed_train_rounds": [],
+  "fully_completed_validation_rounds": [],
+  "eligible_rounds": [],
+  "best_checkpoint": null,
+  "latest_epsilon_exploratory": 0.5731884057971015,
+  "latest_round": {
+    "exploratory_train": {
+      "completed": 22,
+      "evaluable": 35,
+      "failure_reason_counts": {
+        "soc_limited": 6,
+        "structural_power": 0,
+        "increment_action_limited": 7,
+        "data_truncation": 0,
+        "execution_error": 0
+      },
+      "failure_messages": [
+        "parent_018_seg01: row 331 (onboard): no feasible FC increment; physically feasible absolute powers exist",
+        "parent_029_seg01: row 113 (onboard): no feasible FC increment; physically feasible absolute powers exist",
+        "parent_019_seg01: row 140 (onboard): no feasible FC increment; physically feasible absolute powers exist",
+        "parent_050_seg01: row 704 (onboard): no feasible FC increment; physically feasible absolute powers exist",
+        "parent_041_seg01: row 234 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_006_seg01: row 193 (onboard): no feasible FC increment; physically feasible absolute powers exist",
+        "parent_036_seg01: row 83 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_015_seg01: row 146 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_037_seg01: row 964 (onboard): no feasible FC increment; physically feasible absolute powers exist",
+        "parent_010_seg02: row 202 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_017_seg01: row 179 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_042_seg01: row 161 (onboard): no feasible FC increment; physically feasible absolute powers exist",
+        "parent_035_seg01: row 263 (onboard): no feasible FC action for actual battery power and SOC bounds"
+      ],
+      "executed_onboard_steps": 11133,
+      "mean_abs_fc_change_kw": 24.886619990473022,
+      "nonzero_fc_change_fraction": 0.792680405885155,
+      "fc_reversals": 3773,
+      "reversal_eligible_pairs": 7378,
+      "reversal_fraction": 0.5113851992409867,
+      "fc_starts_including_failed_prefix": 122,
+      "soc_min_including_failed_prefix": 0.2000425252607974,
+      "soc_max_including_failed_prefix": 0.7999722412115009,
+      "full_fixed_set_cost_cny": null,
+      "executed_prefix_economic_components_cny": {
+        "actual_hydrogen": 31036.157902756942,
+        "signed_soc_equivalent_hydrogen": 153.35369745571762,
+        "fc_degradation": 88663.21762500009,
+        "battery_degradation": 3758.716340581732
+      },
+      "executed_prefix_economic_total_cny": 123611.44556579448,
+      "fc_degradation_share_of_executed_prefix_economic_total": 0.7172735276994027,
+      "failure_penalty_raw_not_economic_cny": 131724.5811426778,
+      "complete_subset_cost_cny": 77168.11398988088,
+      "complete_subset_size": 22,
+      "cost_scope_warning": "Includes actually executed failed prefixes. Never a comparable complete fixed-set cost."
+    },
+    "greedy_train": {
+      "completed": 29,
+      "evaluable": 35,
+      "failure_reason_counts": {
+        "soc_limited": 6,
+        "structural_power": 0,
+        "increment_action_limited": 0,
+        "data_truncation": 0,
+        "execution_error": 0
+      },
+      "failure_messages": [
+        "parent_008_seg01: row 74 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_010_seg02: row 228 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_015_seg01: row 136 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_017_seg01: row 125 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_036_seg01: row 85 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_050_seg01: row 271 (onboard): no feasible FC action for actual battery power and SOC bounds"
+      ],
+      "executed_onboard_steps": 12333,
+      "mean_abs_fc_change_kw": 29.403984257718992,
+      "nonzero_fc_change_fraction": 0.8144168999607796,
+      "fc_reversals": 5132,
+      "reversal_eligible_pairs": 9988,
+      "reversal_fraction": 0.513816579895875,
+      "fc_starts_including_failed_prefix": 94,
+      "soc_min_including_failed_prefix": 0.20046542027653366,
+      "soc_max_including_failed_prefix": 0.6633690594787666,
+      "full_fixed_set_cost_cny": null,
+      "executed_prefix_economic_components_cny": {
+        "actual_hydrogen": 30477.72782743579,
+        "signed_soc_equivalent_hydrogen": 2191.2504486139624,
+        "fc_degradation": 86881.91575000013,
+        "battery_degradation": 4025.289014607896
+      },
+      "executed_prefix_economic_total_cny": 123576.18304065778,
+      "fc_degradation_share_of_executed_prefix_economic_total": 0.7030635969830459,
+      "failure_penalty_raw_not_economic_cny": 60795.96052738976,
+      "complete_subset_cost_cny": 111110.13894574574,
+      "complete_subset_size": 29,
+      "cost_scope_warning": "Includes actually executed failed prefixes. Never a comparable complete fixed-set cost."
+    },
+    "greedy_validation": {
+      "completed": 5,
+      "evaluable": 8,
+      "failure_reason_counts": {
+        "soc_limited": 3,
+        "structural_power": 0,
+        "increment_action_limited": 0,
+        "data_truncation": 0,
+        "execution_error": 0
+      },
+      "failure_messages": [
+        "parent_002_seg01: row 111 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_016_seg01: row 261 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_044_seg01: row 181 (onboard): no feasible FC action for actual battery power and SOC bounds"
+      ],
+      "executed_onboard_steps": 3423,
+      "mean_abs_fc_change_kw": 27.665370787173718,
+      "nonzero_fc_change_fraction": 0.8532635701967204,
+      "fc_reversals": 1305,
+      "reversal_eligible_pairs": 2900,
+      "reversal_fraction": 0.45,
+      "fc_starts_including_failed_prefix": 34,
+      "soc_min_including_failed_prefix": 0.2008304612802069,
+      "soc_max_including_failed_prefix": 0.6592360212881901,
+      "full_fixed_set_cost_cny": null,
+      "executed_prefix_economic_components_cny": {
+        "actual_hydrogen": 9171.552608862172,
+        "signed_soc_equivalent_hydrogen": 1090.6431526007905,
+        "fc_degradation": 26529.10837500005,
+        "battery_degradation": 1238.566886910199
+      },
+      "executed_prefix_economic_total_cny": 38029.87102337321,
+      "fc_degradation_share_of_executed_prefix_economic_total": 0.6975860727662007,
+      "failure_penalty_raw_not_economic_cny": 30397.98026369488,
+      "complete_subset_cost_cny": 30154.903531675493,
+      "complete_subset_size": 5,
+      "cost_scope_warning": "Includes actually executed failed prefixes. Never a comparable complete fixed-set cost."
+    }
+  },
+  "best_validation_completion_round_25": {
+    "greedy_train": {
+      "completed": 27,
+      "evaluable": 35,
+      "failure_reason_counts": {
+        "soc_limited": 7,
+        "structural_power": 0,
+        "increment_action_limited": 1,
+        "data_truncation": 0,
+        "execution_error": 0
+      },
+      "failure_messages": [
+        "parent_008_seg01: row 69 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_010_seg02: row 170 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_012_seg01: row 313 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_015_seg01: row 142 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_017_seg01: row 148 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_036_seg01: row 85 (onboard): no feasible FC action for actual battery power and SOC bounds",
+        "parent_037_seg01: row 143 (onboard): no feasible FC increment; physically feasible absolute powers exist",
+        "parent_050_seg01: row 273 (onboard): no feasible FC action for actual battery power and SOC bounds"
+      ],
+      "executed_onboard_steps": 10939,
+      "mean_abs_fc_change_kw": 12.907115757627512,
+      "nonzero_fc_change_fraction": 0.4240329132763227,
+      "fc_reversals": 2893,
+      "reversal_eligible_pairs": 4218,
+      "reversal_fraction": 0.6858700806069227,
+      "fc_starts_including_failed_prefix": 36,
+      "soc_min_including_failed_prefix": 0.20005311524419736,
+      "soc_max_including_failed_prefix": 0.6248865313484155,
+      "full_fixed_set_cost_cny": null,
+      "executed_prefix_economic_components_cny": {
+        "actual_hydrogen": 27483.571104055904,
+        "signed_soc_equivalent_hydrogen": 3109.3088106599994,
+        "fc_degradation": 39862.974750000125,
+        "battery_degradation": 3899.0457184890074
+      },
+      "executed_prefix_economic_total_cny": 74354.90038320504,
+      "fc_degradation_share_of_executed_prefix_economic_total": 0.5361176539079084,
+      "failure_penalty_raw_not_economic_cny": 81061.28070318635,
+      "complete_subset_cost_cny": 61659.38104460732,
+      "complete_subset_size": 27,
+      "cost_scope_warning": "Includes actually executed failed prefixes. Never a comparable complete fixed-set cost."
+    },
+    "greedy_validation": {
+      "completed": 7,
+      "evaluable": 8,
+      "failure_reason_counts": {
+        "soc_limited": 1,
+        "structural_power": 0,
+        "increment_action_limited": 0,
+        "data_truncation": 0,
+        "execution_error": 0
+      },
+      "failure_messages": [
+        "parent_044_seg01: row 189 (onboard): no feasible FC action for actual battery power and SOC bounds"
+      ],
+      "executed_onboard_steps": 4168,
+      "mean_abs_fc_change_kw": 17.148242110907475,
+      "nonzero_fc_change_fraction": 0.5487190978863714,
+      "fc_reversals": 1525,
+      "reversal_eligible_pairs": 2085,
+      "reversal_fraction": 0.7314148681055156,
+      "fc_starts_including_failed_prefix": 9,
+      "soc_min_including_failed_prefix": 0.20008291293157265,
+      "soc_max_including_failed_prefix": 0.6221505597058233,
+      "full_fixed_set_cost_cny": null,
+      "executed_prefix_economic_components_cny": {
+        "actual_hydrogen": 11538.055418874706,
+        "signed_soc_equivalent_hydrogen": 552.5227773348621,
+        "fc_degradation": 16111.672375000102,
+        "battery_degradation": 1409.1735382107945
+      },
+      "executed_prefix_economic_total_cny": 29611.424109420463,
+      "fc_degradation_share_of_executed_prefix_economic_total": 0.5441032594536511,
+      "failure_penalty_raw_not_economic_cny": 10132.660087898294,
+      "complete_subset_cost_cny": 27435.68427613617,
+      "complete_subset_size": 7,
+      "cost_scope_warning": "Includes actually executed failed prefixes. Never a comparable complete fixed-set cost."
+    }
+  },
+  "execution_counts": {
+    "training_environment_transitions": 232838,
+    "training_policy_calls": 232838,
+    "bootstrap_environment_transitions": 14995,
+    "greedy_evaluation_environment_transitions": 277009,
+    "economic_replay_insertions": 247833,
+    "economic_optimizer_updates": 7744,
+    "target_sync_calls_including_initial_copy": 1,
+    "target_soft_update_calls": 7744,
+    "remaining_transition_credit": 25,
+    "bootstrap_economic_optimizer_updates": 468,
+    "formal_training_economic_optimizer_updates": 7276,
+    "utd_formal_training": 0.031249194719075064,
+    "utd_including_bootstrap": 0.031246847675652556,
+    "utd_definition": "successful economic-Q optimizer steps / actually executed ONBOARD transitions; Greedy evaluation excluded",
+    "failed_suffix_transitions_excluded_from_economic_replay": 0,
+    "unknown_discarded_economic_q_transitions": 0,
+    "unknown_retained_economic_q_transitions": 0,
+    "no_feasible_action_events_without_executed_suffix": 0,
+    "economic_success_replay_insertions": 102018,
+    "economic_failure_replay_insertions": 145815,
+    "economic_unresolved_replay_insertions": 0,
+    "economic_failure_terminal_insertions": 810,
+    "economic_failure_terminal_replay_size": 810,
+    "economic_normal_terminal_replay_size": 345
+  },
+  "count_reconciliation": {
+    "formal_environment_sum": 232838,
+    "formal_optimizer_sum": 7276,
+    "onboard_callback_optimizer_sum": 7246,
+    "failure_finalize_optimizer_sum": 30,
+    "episode_end_optimizer_sum": 0,
+    "bootstrap_environment": 14995,
+    "bootstrap_optimizers": 468,
+    "including_bootstrap_environment": 247833,
+    "including_bootstrap_replay": 247833,
+    "including_bootstrap_optimizers": 7744,
+    "target_soft_updates": 7744,
+    "target_initial_hard_copy": 1,
+    "formal_utd": 0.031249194719075064,
+    "including_bootstrap_utd": 0.031246847675652556,
+    "greedy_environment_excluded_from_utd": 277009,
+    "formal_mean_optimizer_updates_per_training_episode": 6.496428571428571
+  },
+  "maximum_reward_economic_identity_error_cny": 2.9103830456733704e-11,
+  "test_payloads_opened": 0,
+  "scope": "32 complete checkpoint-committed rounds only; no trajectories/weights loaded; no evaluation/training executed; no physical model or hyperparameter modified"
+}

@@ -1,0 +1,667 @@
+{
+  "scope": "Only the explicitly identified paused V5 run trajectory JSON; checkpoints and all other runs retained",
+  "run_directory": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083",
+  "process_id_stopped": 28936,
+  "committed_checkpoint_round": 32,
+  "complete_trajectory_rounds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32
+  ],
+  "partial_uncommitted_rounds": [
+    33
+  ],
+  "trajectory_file_count": 97,
+  "trajectory_bytes": 1900303562,
+  "items": [
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_001_exploratory_trajectories.json",
+      "bytes": 20883475,
+      "round": 1,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_001_train_trajectories.json",
+      "bytes": 14750275,
+      "round": 1,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_001_validation_trajectories.json",
+      "bytes": 2854550,
+      "round": 1,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_002_exploratory_trajectories.json",
+      "bytes": 24306804,
+      "round": 2,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_002_train_trajectories.json",
+      "bytes": 15381474,
+      "round": 2,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_002_validation_trajectories.json",
+      "bytes": 3052603,
+      "round": 2,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_003_exploratory_trajectories.json",
+      "bytes": 21105415,
+      "round": 3,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_003_train_trajectories.json",
+      "bytes": 13492297,
+      "round": 3,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_003_validation_trajectories.json",
+      "bytes": 3574351,
+      "round": 3,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_004_exploratory_trajectories.json",
+      "bytes": 24978899,
+      "round": 4,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_004_train_trajectories.json",
+      "bytes": 16974218,
+      "round": 4,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_004_validation_trajectories.json",
+      "bytes": 4090927,
+      "round": 4,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_005_exploratory_trajectories.json",
+      "bytes": 23804613,
+      "round": 5,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_005_train_trajectories.json",
+      "bytes": 21424456,
+      "round": 5,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_005_validation_trajectories.json",
+      "bytes": 3153803,
+      "round": 5,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_006_exploratory_trajectories.json",
+      "bytes": 21490939,
+      "round": 6,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_006_train_trajectories.json",
+      "bytes": 25212143,
+      "round": 6,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_006_validation_trajectories.json",
+      "bytes": 4317462,
+      "round": 6,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_007_exploratory_trajectories.json",
+      "bytes": 21363028,
+      "round": 7,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_007_train_trajectories.json",
+      "bytes": 28948134,
+      "round": 7,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_007_validation_trajectories.json",
+      "bytes": 6243745,
+      "round": 7,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_008_exploratory_trajectories.json",
+      "bytes": 24768571,
+      "round": 8,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_008_train_trajectories.json",
+      "bytes": 23044929,
+      "round": 8,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_008_validation_trajectories.json",
+      "bytes": 6821016,
+      "round": 8,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_009_exploratory_trajectories.json",
+      "bytes": 26162579,
+      "round": 9,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_009_train_trajectories.json",
+      "bytes": 35565846,
+      "round": 9,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_009_validation_trajectories.json",
+      "bytes": 5569621,
+      "round": 9,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_010_exploratory_trajectories.json",
+      "bytes": 26731884,
+      "round": 10,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_010_train_trajectories.json",
+      "bytes": 33495653,
+      "round": 10,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_010_validation_trajectories.json",
+      "bytes": 6604260,
+      "round": 10,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_011_exploratory_trajectories.json",
+      "bytes": 25607787,
+      "round": 11,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_011_train_trajectories.json",
+      "bytes": 20129079,
+      "round": 11,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_011_validation_trajectories.json",
+      "bytes": 3502249,
+      "round": 11,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_012_exploratory_trajectories.json",
+      "bytes": 23859109,
+      "round": 12,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_012_train_trajectories.json",
+      "bytes": 20695885,
+      "round": 12,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_012_validation_trajectories.json",
+      "bytes": 4422663,
+      "round": 12,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_013_exploratory_trajectories.json",
+      "bytes": 24407440,
+      "round": 13,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_013_train_trajectories.json",
+      "bytes": 23523944,
+      "round": 13,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_013_validation_trajectories.json",
+      "bytes": 2978613,
+      "round": 13,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_014_exploratory_trajectories.json",
+      "bytes": 22950017,
+      "round": 14,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_014_train_trajectories.json",
+      "bytes": 18064132,
+      "round": 14,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_014_validation_trajectories.json",
+      "bytes": 2879232,
+      "round": 14,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_015_exploratory_trajectories.json",
+      "bytes": 21693974,
+      "round": 15,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_015_train_trajectories.json",
+      "bytes": 22279316,
+      "round": 15,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_015_validation_trajectories.json",
+      "bytes": 3223012,
+      "round": 15,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_016_exploratory_trajectories.json",
+      "bytes": 24922562,
+      "round": 16,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_016_train_trajectories.json",
+      "bytes": 22333802,
+      "round": 16,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_016_validation_trajectories.json",
+      "bytes": 6088608,
+      "round": 16,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_017_exploratory_trajectories.json",
+      "bytes": 26280693,
+      "round": 17,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_017_train_trajectories.json",
+      "bytes": 27579278,
+      "round": 17,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_017_validation_trajectories.json",
+      "bytes": 6434250,
+      "round": 17,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_018_exploratory_trajectories.json",
+      "bytes": 27695073,
+      "round": 18,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_018_train_trajectories.json",
+      "bytes": 34954194,
+      "round": 18,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_018_validation_trajectories.json",
+      "bytes": 8406560,
+      "round": 18,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_019_exploratory_trajectories.json",
+      "bytes": 25693558,
+      "round": 19,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_019_train_trajectories.json",
+      "bytes": 17480700,
+      "round": 19,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_019_validation_trajectories.json",
+      "bytes": 4856873,
+      "round": 19,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_020_exploratory_trajectories.json",
+      "bytes": 22008672,
+      "round": 20,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_020_train_trajectories.json",
+      "bytes": 32796289,
+      "round": 20,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_020_validation_trajectories.json",
+      "bytes": 9100758,
+      "round": 20,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_021_exploratory_trajectories.json",
+      "bytes": 26079511,
+      "round": 21,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_021_train_trajectories.json",
+      "bytes": 29476146,
+      "round": 21,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_021_validation_trajectories.json",
+      "bytes": 8937695,
+      "round": 21,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_022_exploratory_trajectories.json",
+      "bytes": 24435699,
+      "round": 22,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_022_train_trajectories.json",
+      "bytes": 39997507,
+      "round": 22,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_022_validation_trajectories.json",
+      "bytes": 9054684,
+      "round": 22,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_023_exploratory_trajectories.json",
+      "bytes": 28283418,
+      "round": 23,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_023_train_trajectories.json",
+      "bytes": 21126214,
+      "round": 23,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_023_validation_trajectories.json",
+      "bytes": 6799514,
+      "round": 23,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_024_exploratory_trajectories.json",
+      "bytes": 20889310,
+      "round": 24,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_024_train_trajectories.json",
+      "bytes": 24906662,
+      "round": 24,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_024_validation_trajectories.json",
+      "bytes": 10062615,
+      "round": 24,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_025_exploratory_trajectories.json",
+      "bytes": 32872357,
+      "round": 25,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_025_train_trajectories.json",
+      "bytes": 40067290,
+      "round": 25,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_025_validation_trajectories.json",
+      "bytes": 15349097,
+      "round": 25,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_026_exploratory_trajectories.json",
+      "bytes": 36771844,
+      "round": 26,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_026_train_trajectories.json",
+      "bytes": 18042836,
+      "round": 26,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_026_validation_trajectories.json",
+      "bytes": 2851397,
+      "round": 26,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_027_exploratory_trajectories.json",
+      "bytes": 30371252,
+      "round": 27,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_027_train_trajectories.json",
+      "bytes": 16990884,
+      "round": 27,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_027_validation_trajectories.json",
+      "bytes": 2810266,
+      "round": 27,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_028_exploratory_trajectories.json",
+      "bytes": 34572325,
+      "round": 28,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_028_train_trajectories.json",
+      "bytes": 16152662,
+      "round": 28,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_028_validation_trajectories.json",
+      "bytes": 2772735,
+      "round": 28,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_029_exploratory_trajectories.json",
+      "bytes": 39354154,
+      "round": 29,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_029_train_trajectories.json",
+      "bytes": 16458694,
+      "round": 29,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_029_validation_trajectories.json",
+      "bytes": 2794028,
+      "round": 29,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_030_exploratory_trajectories.json",
+      "bytes": 31006756,
+      "round": 30,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_030_train_trajectories.json",
+      "bytes": 36072794,
+      "round": 30,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_030_validation_trajectories.json",
+      "bytes": 8569474,
+      "round": 30,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_031_exploratory_trajectories.json",
+      "bytes": 32746465,
+      "round": 31,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_031_train_trajectories.json",
+      "bytes": 40405043,
+      "round": 31,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_031_validation_trajectories.json",
+      "bytes": 12595837,
+      "round": 31,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_032_exploratory_trajectories.json",
+      "bytes": 41103943,
+      "round": 32,
+      "phase": "exploratory"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_032_train_trajectories.json",
+      "bytes": 45260709,
+      "round": 32,
+      "phase": "train"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_032_validation_trajectories.json",
+      "bytes": 12565380,
+      "round": 32,
+      "phase": "validation"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\round_033_exploratory_trajectories.json",
+      "bytes": 34680073,
+      "round": 33,
+      "phase": "exploratory"
+    }
+  ],
+  "protected_checkpoints": [
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\diagnostic_checkpoints\\round_001.pt",
+      "bytes": 159457,
+      "sha256": "38621b3893310221a68b99447a7c0c1e340428bce17da91959c2733d095c1fd8"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\diagnostic_checkpoints\\round_010.pt",
+      "bytes": 159457,
+      "sha256": "2382f29b3be9c61a804887eb34ffbf9239b4fb64bbd9e5740b4f8f586d7b58da"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\diagnostic_checkpoints\\round_020.pt",
+      "bytes": 159457,
+      "sha256": "96fac72956f18174955a6fb9207a77085b423b2fe94ea3de8f53a89723e1eff4"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\diagnostic_checkpoints\\round_030.pt",
+      "bytes": 159457,
+      "sha256": "052a96636c1f4418a36f62b2925376b2ad16092d1642431f0bf4e430e9b4d7ea"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\pause_analysis_20261021\\round_032_weights_readonly.pt",
+      "bytes": 163349,
+      "sha256": "72b2e146eaa1070c8f22cb4c1576ee403f03e33230acde8756625593457a3196"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\pause_analysis_20261021\\training_state_before_stop.pt",
+      "bytes": 68012787,
+      "sha256": "a58f10d61f8af4e7193c3e86e4a7ce96b7564b3661018b4ff6f9cc49a7afaa6e"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\training_state_latest.pt",
+      "bytes": 68012787,
+      "sha256": "a58f10d61f8af4e7193c3e86e4a7ce96b7564b3661018b4ff6f9cc49a7afaa6e"
+    }
+  ],
+  "deletion_status": "planned_after_analysis_and_push"
+}

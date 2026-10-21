@@ -1,0 +1,44 @@
+{
+  "completed_round": 32,
+  "source_commit": "34712730a4423baad09549d96e261c2f2a8de028",
+  "source_tree_sha256": "06a3700e1e0c7c06427ea0cbd743f33f381df6d8bda319bc4b68d59e8142f184",
+  "experiment_id": "V5-ECON4-DELTA7-TD1-PER-INTERLEAVED-S42",
+  "counts": {
+    "target_sync_calls": 1,
+    "target_soft_update_calls": 7744,
+    "economic_optimizer_updates": 7744,
+    "economic_replay_insertions": 247833,
+    "economic_success_replay_insertions": 102018,
+    "economic_failure_replay_insertions": 145815,
+    "economic_failure_terminal_insertions": 810,
+    "economic_unresolved_replay_insertions": 0
+  },
+  "checkpoints": [
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\training_state_latest.pt",
+      "bytes": 68012787,
+      "sha256": "a58f10d61f8af4e7193c3e86e4a7ce96b7564b3661018b4ff6f9cc49a7afaa6e"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\pause_analysis_20261021\\training_state_before_stop.pt",
+      "bytes": 68012787,
+      "sha256": "a58f10d61f8af4e7193c3e86e4a7ce96b7564b3661018b4ff6f9cc49a7afaa6e"
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\pause_analysis_20261021\\round_032_weights_readonly.pt",
+      "bytes": 163349,
+      "sha256": "72b2e146eaa1070c8f22cb4c1576ee403f03e33230acde8756625593457a3196"
+    }
+  ],
+  "stop_record": {
+    "Pid": 28936,
+    "CommandLine": "\"D:\\py\\Python3\\python.exe\" -u -m v4.feedback_study --output-dir C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083 --dataset-mode independent --data-root C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\data\\processed\\operating_dataset_independent_v2 --experiment-id V5-ECON4-DELTA7-TD1-PER-INTERLEAVED-S42 --state-mode load_delta4 --action-mode increment7 --reward-cost-mode zhou_economic_only --beta-soc 0 --n-step 1 --rounds 100 --seed 42 --reward-feedback original --reward-scale 0.001 --replay-sampling prioritized --per-alpha 0.6 --per-beta 1 --per-epsilon 1e-6 --cadence replay32 --update-timing interleaved --failure-terminal-quota 2 --failure-penalty-scale 1 --episode-credit-scope voyage --unknown-replay-mode observed_nstep --diagnostic-rounds 1,10,20,30,40,50,60,70,80,90,100",
+    "OriginalCheckpointBytes": 68012787,
+    "BackupCheckpointBytes": 68012787,
+    "HadMainWindow": false,
+    "WindowCloseRequested": false,
+    "Method": "Specific PID termination after preserving saved checkpoint; no console-wide interrupt",
+    "Stopped": true
+  },
+  "test_payloads_opened": 0
+}
