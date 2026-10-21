@@ -1,0 +1,76 @@
+{
+  "completed_at": "2026-10-21T18:17:15.820205+08:00",
+  "status": "completed",
+  "evidence_commit_pushed_before_deletion": "74e0ca9dd3f3514c2258239f35b180d2af48334a",
+  "run_directory": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083",
+  "training_pid_stopped": 28936,
+  "checkpoint_round": 32,
+  "deleted_file_count": 97,
+  "deleted_logical_bytes": 1900303562,
+  "deleted_decimal_gb": 1.900303562,
+  "deleted_gib": 1.7697956059128046,
+  "remaining_target_files": [],
+  "protected_checkpoints": [
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\diagnostic_checkpoints\\round_001.pt",
+      "bytes": 159457,
+      "sha256": "38621b3893310221a68b99447a7c0c1e340428bce17da91959c2733d095c1fd8",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\diagnostic_checkpoints\\round_010.pt",
+      "bytes": 159457,
+      "sha256": "2382f29b3be9c61a804887eb34ffbf9239b4fb64bbd9e5740b4f8f586d7b58da",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\diagnostic_checkpoints\\round_020.pt",
+      "bytes": 159457,
+      "sha256": "96fac72956f18174955a6fb9207a77085b423b2fe94ea3de8f53a89723e1eff4",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\diagnostic_checkpoints\\round_030.pt",
+      "bytes": 159457,
+      "sha256": "052a96636c1f4418a36f62b2925376b2ad16092d1642431f0bf4e430e9b4d7ea",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\pause_analysis_20261021\\round_032_weights_readonly.pt",
+      "bytes": 163349,
+      "sha256": "72b2e146eaa1070c8f22cb4c1576ee403f03e33230acde8756625593457a3196",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\pause_analysis_20261021\\training_state_before_stop.pt",
+      "bytes": 68012787,
+      "sha256": "a58f10d61f8af4e7193c3e86e4a7ce96b7564b3661018b4ff6f9cc49a7afaa6e",
+      "unchanged": true
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v5-economic4-ddqn\\outputs\\v5_economic4_delta7_td1_per_interleaved_seed42_100r_20261021_165354_083\\training_state_latest.pt",
+      "bytes": 68012787,
+      "sha256": "a58f10d61f8af4e7193c3e86e4a7ce96b7564b3661018b4ff6f9cc49a7afaa6e",
+      "unchanged": true
+    }
+  ],
+  "retained_latest_greedy_step_archive": "round032_greedy_steps.csv.gz",
+  "retained_greedy_steps": 15756,
+  "retained_greedy_samples": 43,
+  "retained_nontrajectory_run_files": [
+    "report.json",
+    "round_history.json",
+    "round_metrics.csv",
+    "train.log",
+    "run_metadata.json"
+  ],
+  "not_touched": [
+    "other runs",
+    "datasets",
+    "source code",
+    "original Replay and optimizer state inside checkpoints"
+  ],
+  "full_early_trajectories_recoverable_from_git": false,
+  "formal_training_started": false,
+  "test_accessed": false
+}

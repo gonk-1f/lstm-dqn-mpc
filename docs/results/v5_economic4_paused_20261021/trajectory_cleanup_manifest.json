@@ -663,5 +663,5 @@
       "sha256": "a58f10d61f8af4e7193c3e86e4a7ce96b7564b3661018b4ff6f9cc49a7afaa6e"
     }
   ],
-  "deletion_status": "planned_after_analysis_and_push"
+  "deletion_status": "completed; see trajectory_cleanup_receipt.json"
 }
