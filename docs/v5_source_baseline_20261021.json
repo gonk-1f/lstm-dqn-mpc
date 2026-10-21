@@ -1,0 +1,25 @@
+{
+  "original_worktree": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v4-increment7-zhou",
+  "base_head": "a5713bde00c1202175f2b1b2a428a6408eb77eb1",
+  "original_status": " M src/v4/control.py\n M src/v4/dqn.py\n M src/v4/feedback_study.py\n M src/v4/monitored_training.py\n M tests/test_v4_increment_entry.py\n?? src/v4/interleaved_replay.py\n?? tests/test_v4_interleaved_updates.py\n",
+  "copied_local_changes": [
+    "src/v4/control.py",
+    "src/v4/dqn.py",
+    "src/v4/feedback_study.py",
+    "src/v4/monitored_training.py",
+    "tests/test_v4_increment_entry.py",
+    "src/v4/interleaved_replay.py",
+    "tests/test_v4_interleaved_updates.py"
+  ],
+  "original_source_sha256": "f8be52530a6fc8575f7ece4feeda2c6c62335879e628fdbe2a7119dae65547dd",
+  "isolated_initial_source_sha256": "f8be52530a6fc8575f7ece4feeda2c6c62335879e628fdbe2a7119dae65547dd",
+  "original_changed_file_sha256": {
+    "src/v4/control.py": "6db65cf4b7b303d4e3e26e219e30d29277abb2bcddfba734454cfe4d1ab64c76",
+    "src/v4/dqn.py": "ded3608245cd64165749dd5efff5615f6f61a26723266d4afe812a629976467b",
+    "src/v4/feedback_study.py": "b9815ffdd4be258b0d2ac169251aaf90454d5553a97dce18b9c5c27bede6efe9",
+    "src/v4/monitored_training.py": "1a9ed6c2f2896c1e5756056999fe24af2acf86434d2533d939bfd52f430ec35c",
+    "tests/test_v4_increment_entry.py": "c168a98812a7f3b69edbed1a51d73f63fcd03d5e33367a2ad28eeced76d8ccdd",
+    "src/v4/interleaved_replay.py": "8e1eed6dee7aba56cdd3bad4fa27ecba7783eb774d9af3cb1e152427a4023ba7",
+    "tests/test_v4_interleaved_updates.py": "e0055e2aad3754027bb9d9fb712221badb57ecbeb5edbf2dcd8fb2143b18776b"
+  }
+}

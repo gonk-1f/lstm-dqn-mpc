@@ -24,7 +24,7 @@ from v3.control import EconomicMPC
 from .control import (
     ACTION_KW, DEFAULT_BETA_SOC, DEFAULT_STATE_MODE, FC_RAMP_REWARD_CNY_PER_KW,
     REWARD_COST_MODES, SOC_REF, STATE_FEATURES_BY_MODE,
-    ReplayExecutionError, replay_episode,
+    ReplayExecutionError, replay_episode, state_feature_value,
 )
 from .dqn import (
     DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, ECONOMIC_REPLAY_FORMAT_VERSION,
@@ -41,6 +41,7 @@ from .experiment_paths import unarchived_output_path
 from .failure_replay import FailurePenalty, prepare_failure_replay
 from .independent_economics import ZhouEvaluationConfig
 from .actions import FC_ACTION_MODES, action_values_kw
+from .interleaved_replay import InterleavedReplayWriter
 from .decision_diagnostics import (
     DIAGNOSTIC_SAMPLE_IDS, INDEPENDENT_DIAGNOSTIC_SAMPLE_IDS, MAX_DECISIONS_PER_SAMPLE,
     actual_greedy_q_records, save_diagnostic_snapshot,
@@ -55,6 +56,7 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
                     learn_no_feasible_failures: bool = False, failure_penalty: FailurePenalty | None = None,
                     abort_on_execution_error: bool = False,
                     decision_diagnostic_sink=None,
+                    economic_action_pair_diagnostics: bool = False,
                     economic_evaluation_config: ZhouEvaluationConfig | None = None) -> dict:
     """Preserve all training RNG streams; never add replay or run optimizers."""
     if reward_cost_mode not in REWARD_COST_MODES:
@@ -70,6 +72,15 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
     failure_events = []
     reason_counts={'soc_limited':0,'structural_power':0,'increment_action_limited':0,'data_truncation':0,'execution_error':0}
     event_only_count=0
+    action_pair_rows = []
+    episode_by_id = {str(item.sample_id): item for item in episodes}
+    def capture_economic_action_pairs(sample_id, transitions):
+        if economic_action_pair_diagnostics:
+            from .v5_metrics import economic_action_pair_statistics
+            action_pair_rows.append({'sample_id':str(sample_id),
+                **economic_action_pair_statistics(transitions, agent, accountant,
+                    economic_evaluation_config, failure_penalty or FailurePenalty.from_reference(),
+                    episode=episode_by_id[str(sample_id)])})
     def on_failure(exc):
         nonlocal event_only_count
         failure_events.append(exc)
@@ -87,6 +98,7 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             event_only_count+=int(preview.event_only)
         failed_transitions.extend(transitions)
         failed_sample_lengths.append(len(transitions))
+        capture_economic_action_pairs(exc.sample_id, transitions)
         if decision_diagnostic_sink is not None and exc.sample_id in diagnostic_ids:
             decision_diagnostic_sink(exc.sample_id, transitions, failed=True)
         profile=trajectory_record(
@@ -108,6 +120,8 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             for result in results:
                 if result.sample_id in diagnostic_ids:
                     decision_diagnostic_sink(result.sample_id, result.transitions, failed=False)
+        for result in results:
+            capture_economic_action_pairs(result.sample_id, result.transitions)
         summary = annotate_evaluation(
             _summarize(results, len(episodes), failures, failed_transitions, task_mode=task_mode),
             episodes, results, failure_events)
@@ -115,6 +129,11 @@ def greedy_evaluate(episodes, agent, accountant, beta_soc: float, *,
             (*[t for result in results for t in result.transitions], *failed_transitions),
             sample_transition_counts=(*[len(result.transitions) for result in results], *failed_sample_lengths)))
         summary.update(failure_reason_counts=reason_counts,event_only_failures=event_only_count)
+        if economic_action_pair_diagnostics:
+            summary['economic_action_pair_diagnostics'] = {
+                'samples':action_pair_rows,
+                'scope':'bounded, deterministic actual-change/hold pairs on real Greedy states; exact candidate transitions and frozen masked 1-step DDQN targets; no learning',
+            }
         if trajectory_path is not None:
             _write_trajectory_json(trajectory_path, results, failure_profiles,
                 reward_scale=agent.reward_scale, reward_cost_mode=reward_cost_mode)
@@ -336,6 +355,7 @@ def run_monitored_training(
     replay_sampling: str = 'uniform', per_alpha: float = .6,
     per_beta: float = 1.0, per_epsilon: float = 1e-6,
     unknown_replay_mode: str = 'observed_nstep',
+    update_timing: str = 'episode_end',
     manifest_sha256: dict[str,str] | None = None,
     dataset_roots: tuple[str,...] | None = None,
     abort_on_execution_error: bool = False, capture_log: bool = False,
@@ -357,14 +377,35 @@ def run_monitored_training(
     if action_mode not in FC_ACTION_MODES:
         raise ValueError(f'action_mode must be one of {FC_ACTION_MODES}')
     incremental = action_mode == 'increment7'
-    if incremental and (task_mode != 'independent_voyage' or state_mode != 'minimal3'
+    v5 = state_mode == 'load_delta4' or reward_cost_mode == 'zhou_economic_only'
+    if v5 and (
+            task_mode != 'independent_voyage' or not incremental
+            or state_mode != 'load_delta4' or reward_cost_mode != 'zhou_economic_only'
+            or n_step != 1 or beta_soc != 0. or update_timing != 'interleaved'
+            or cadence != 'replay32' or target_mode != 'soft' or experiment_id is None
+            or rounds != 100 or batch_size != 64 or updates_per_episode != 16
+            or (epsilon_start,epsilon_end) != (1.,.05) or redistribute_battery_energy
+            or episode_credit_scope != 'voyage' or not learn_no_feasible_failures
+            or failure_penalty_scale != 1. or failure_terminal_quota != 2
+            or reward_scale != .001 or replay_sampling != 'prioritized'
+            or (per_alpha,per_beta,per_epsilon) != (.6,1.,1e-6)
+            or unknown_replay_mode != 'observed_nstep'):
+        raise ValueError('V5 requires the frozen independent/load_delta4/zhou_economic_only/increment7 100-round, 1-step, beta_soc=0, interleaved/replay32/PER configuration')
+    if update_timing not in ('episode_end', 'interleaved'):
+        raise ValueError('update_timing must be episode_end or interleaved')
+    if update_timing == 'interleaved' and (
+            task_mode != 'independent_voyage' or not incremental or n_step != 1
+            or cadence != 'replay32' or target_mode != 'soft'
+            or not learn_no_feasible_failures or experiment_id is None):
+        raise ValueError('interleaved updates require independent increment7/1-step/replay32/soft, failure learning and an experiment-id')
+    if incremental and not v5 and (task_mode != 'independent_voyage' or state_mode != 'minimal3'
                         or reward_cost_mode != 'zhou_joint' or n_step != 1):
         raise ValueError('increment7 requires independent/minimal3/zhou_joint and n_step=1')
-    if reward_cost_mode == 'zhou_joint' and not incremental:
+    if reward_cost_mode in ('zhou_joint','zhou_economic_only') and not incremental:
         raise ValueError('zhou_joint is reserved for the isolated increment7 experiment')
     if task_mode == 'independent_voyage' and (
-            state_mode != 'minimal3'
-            or reward_cost_mode != ('zhou_joint' if incremental else 'control_only')
+            state_mode != ('load_delta4' if v5 else 'minimal3')
+            or reward_cost_mode != ('zhou_economic_only' if v5 else 'zhou_joint' if incremental else 'control_only')
             or redistribute_battery_energy):
         raise ValueError('independent experiments retain minimal3 and no redistribution')
     diagnostic_ids = DIAGNOSTIC_SAMPLE_IDS
@@ -415,9 +456,9 @@ def run_monitored_training(
         'reward_cost_mode':reward_cost_mode,
         'reward_mode':reward_cost_mode,
         'h2_reward_weight':0. if reward_cost_mode == 'control_only' else 1.,
-        'shore_purchase_reward_weight':0. if reward_cost_mode in ('control_only','zhou_joint') else 1.,
-        'fc_degradation_reward_weight':1. if reward_cost_mode in ('full_economic','zhou_joint') else 0.,
-        'battery_degradation_reward_weight':1. if reward_cost_mode in ('full_economic','zhou_joint') else 0.,
+        'shore_purchase_reward_weight':0. if reward_cost_mode in ('control_only','zhou_joint','zhou_economic_only') else 1.,
+        'fc_degradation_reward_weight':1. if reward_cost_mode in ('full_economic','zhou_joint','zhou_economic_only') else 0.,
+        'battery_degradation_reward_weight':1. if reward_cost_mode in ('full_economic','zhou_joint','zhou_economic_only') else 0.,
         'fc_ramp_reward_coefficient_cny_per_kw': (
             FC_RAMP_REWARD_CNY_PER_KW
             if reward_cost_mode in ('energy_with_fc_ramp', 'control_only') else 0.),
@@ -442,6 +483,7 @@ def run_monitored_training(
         'epsilon_start':epsilon_start,'epsilon_end':epsilon_end,
         'epsilon_linear_end_round':70,'epsilon_hold_from_round':71,
         'cadence':cadence,'updates_per_completed_episode':16,'target_mode':target_mode,
+        'update_timing':update_timing,
         'target_interval_optimizer_updates':target_interval if target_mode=='optimizer' else None,
         'target_tau':0.001 if target_mode=='soft' else None,
         'loss':'smooth_l1','huber_delta':1.0,'gradient_max_norm':10.0,
@@ -470,6 +512,23 @@ def run_monitored_training(
             soc_equivalent_hydrogen_reward='signed per-executed-step SOC difference; telescopes to the existing Zhou evaluation; no terminal surcharge',
             physical_fc_range_kw=[0,600], initial_maximum_fc_kw=60,
             incremental_action_handling='reject infeasible increments; no clipping or absolute-action fallback',
+        )
+    if v5:
+        parameters.update(
+            reward_formula='-(C_H2_actual + C_H2_Bat_equ_signed_step + C_FC_deg + C_Bat_deg)',
+            soc_reward_formula='disabled; no SOC auxiliary penalty',
+            soc_equivalent_hydrogen_reward_weight=1.,
+            soc_auxiliary_reward_weight=0.,
+            fc_quadratic_ramp_reward_coefficient=0.,
+            fc_ramp_reward_coefficient_cny_per_kw=0.,
+            reward_identity='v5_zhou_economic_only_signed_soc_step_v1',
+            state_identity='v5_load_delta4_causal_v1',
+        )
+    if update_timing == 'interleaved':
+        parameters.update(
+            bootstrap_update_timing='unchanged concentrated prefill before exploratory training',
+            interleaved_transition_semantics='insert once after a real feasible successor or successful terminal; withhold infeasible-next-state tail until existing failure handling',
+            sampled_category_semantics='known outcome at draw time; ongoing prefixes are ordinary, final replay provenance is relabeled on failure without changing TD data',
         )
     if task_mode == 'independent_voyage':
         parameters.update(
@@ -508,6 +567,21 @@ def run_monitored_training(
             'checkpoint_purpose':'diagnostic_only',
         },
     }
+    if v5:
+        metadata['framework_version'] = 'v5_economic4'
+        metadata['metrics_contract'] = {
+            'completion':'independent fixed Train/Validation qualification sets; incomplete comparable total cost remains null',
+            'failure_reason_counts':['soc_limited','structural_power','increment_action_limited','data_truncation','execution_error'],
+            'economic_components':'step ledger actual H2/FC degradation/battery degradation plus signed step SOC-equivalent H2; failure penalty excluded from economy',
+            'fc_behavior':'mean absolute executed change, nonzero fraction, reversal count and actual zero-to-positive startup count; sample boundaries reset',
+            'economic_action_pair_diagnostics':{
+                'rounds':list(diagnostic_rounds), 'splits':['train','validation'],
+                'comparisons':'actual change versus legal hold: Q difference, exact immediate reward difference and frozen masked 1-step DDQN target ranking',
+                'sampling':'deterministic bounded states per sample; full trajectories remain available for offline audit',
+            },
+            'td_statistics':'sampled unweighted and IS-weighted TD MAE, weighted/unweighted Huber loss, categories and replay coverage',
+            'update_counts':'executed ONBOARD steps separate from policy calls and evaluation; optimizer/Replay/Target counts with bootstrap and formal scopes; UTD=gradient_updates/executed_steps',
+        }
     if task_mode == 'independent_voyage':
         metadata['task_contract'] = dataset.task_contract
         metadata['reward_units']['economic_ledger'] = (
@@ -579,6 +653,7 @@ def run_monitored_training(
                 replay_sampling=replay_sampling,per_alpha=per_alpha,
                 per_beta=per_beta,per_epsilon=per_epsilon,
                 unknown_replay_mode=unknown_replay_mode,
+                update_timing=update_timing,
                 run_metadata=metadata,runtime=runtime,abort_on_execution_error=abort_on_execution_error,
                 diagnostic_rounds=diagnostic_rounds,resume_state=resume_state,
                 economic_evaluation_config=economic_evaluation_config)
@@ -622,6 +697,7 @@ def _run_monitored_training(
     reward_scale: float, failure_terminal_quota: int,
     replay_sampling: str, per_alpha: float, per_beta: float, per_epsilon: float,
     unknown_replay_mode: str,
+    update_timing: str,
     run_metadata: dict, runtime: dict, abort_on_execution_error: bool,
     diagnostic_rounds: tuple[int, ...],
     resume_state: dict | None,
@@ -743,7 +819,7 @@ def _run_monitored_training(
         def bootstrap_policy(state, feasible):
             nonlocal bootstrap_policy_calls
             power = min(feasible, key=lambda value: abs(
-                value-state[1 if state_mode == 'minimal3' else 4]*600))
+                value-state_feature_value(state, 'current_load_kw_over_600', state_mode=state_mode)*600))
             bootstrap_policy_calls += 1
             if progress_every_steps and bootstrap_policy_calls % progress_every_steps == 0:
                 print(f'bootstrap progress step={bootstrap_policy_calls} soc={state[0]:.4f} fc={power}',flush=True)
@@ -816,6 +892,7 @@ def _run_monitored_training(
         elapsed_before_resume = report['elapsed_seconds']
         print(f"resume after round {len(history)}/{rounds}", flush=True)
     hyperparameters = run_metadata['hyperparameters']
+    v5 = reward_cost_mode == 'zhou_economic_only'
     source_commit = run_metadata['source_commit']
     source_worktree_dirty = run_metadata['source_worktree_dirty']
 
@@ -848,6 +925,12 @@ def _run_monitored_training(
                 "remaining_transition_credit": schedule.remaining_transition_credit,
                 'bootstrap_economic_optimizer_updates': len(bootstrap_losses),
                 'formal_training_economic_optimizer_updates': agent.economic_optimizer_updates-len(bootstrap_losses),
+                'utd_formal_training': ((agent.economic_optimizer_updates-len(bootstrap_losses))/executed_training_steps
+                    if executed_training_steps else None),
+                'utd_including_bootstrap': (agent.economic_optimizer_updates/(
+                    executed_training_steps+bootstrap_summary['executed_onboard_transitions'])
+                    if executed_training_steps+bootstrap_summary['executed_onboard_transitions'] else None),
+                'utd_definition':'successful economic-Q optimizer steps / actually executed ONBOARD transitions; Greedy evaluation excluded',
                 'failed_suffix_transitions_excluded_from_economic_replay': failure_suffix_count,
                 'unknown_discarded_economic_q_transitions': unknown_discarded_total,
                 'unknown_retained_economic_q_transitions': unknown_retained_total,
@@ -879,8 +962,10 @@ def _run_monitored_training(
         epsilon = epsilon_start + (epsilon_end-epsilon_start)*min(round_index-1, 69)/69
         print(f"round {round_index}/{rounds} start epsilon={epsilon:.4f}",flush=True)
         results, failures, failed_transitions, losses = [], [], [], []
+        onboard_callback_updates = failure_finalize_updates = episode_end_updates = 0
         failed_sample_lengths = []
         failure_profiles = []
+        episode_training_results = []
         training_events = []
         reason_counts={'soc_limited':0,'structural_power':0,'increment_action_limited':0,'data_truncation':0,'execution_error':0}
         completed_voyages = 0
@@ -889,6 +974,7 @@ def _run_monitored_training(
         agent.reset_td_statistics()
         before_insertions = agent.economic_replay_insertions
         before_updates = agent.economic_optimizer_updates
+        before_target_soft_updates = agent.target_soft_update_calls
         before_success=agent.economic_success_replay_insertions
         before_failure=agent.economic_failure_replay_insertions
         before_unresolved=agent.economic_unresolved_replay_insertions
@@ -906,14 +992,20 @@ def _run_monitored_training(
                 return action
 
             before_episode_insertions = agent.economic_replay_insertions
+            before_episode_updates = agent.economic_optimizer_updates
+            writer = (InterleavedReplayWriter(agent, schedule, episode, source_round=round_index,
+                batch_size=batch_size, losses=losses) if update_timing == 'interleaved' else None)
             try:
                 result = replay_episode(episode,training_policy,accountant=accountant,beta_soc=beta_soc,
                                          reward_cost_mode=reward_cost_mode, state_mode=state_mode, action_mode=action_mode,
                                          economic_evaluation_config=economic_evaluation_config,
-                                         redistribute_battery_energy=redistribute_battery_energy)
+                                         redistribute_battery_energy=redistribute_battery_energy,
+                                         **({'on_transition':writer.observe} if writer is not None else {}))
             except ReplayExecutionError as exc:
                 exc.sample_id = str(episode.sample_id)
                 training_events.append(exc)
+                if writer is not None and exc.failure_kind != 'no_feasible_action':
+                    raise  # Partial live updates are never committed as a completed round.
                 if abort_on_execution_error and exc.failure_kind not in ('no_feasible_action','data_truncation'):
                     raise
                 failures.append(f"{episode.sample_id}: {exc}")
@@ -933,6 +1025,8 @@ def _run_monitored_training(
                 if exc.failure_kind == 'no_feasible_action' and (
                         not exc.executed_transitions or exc.executed_transitions[-1].done):
                     no_suffix_failure_events += 1
+                    if writer is not None:
+                        writer.finish_failure(())
                 if exc.failure_kind == 'data_truncation' and exc.executed_transitions:
                     remember = (agent.remember_observed_prefix if unknown_replay_mode == 'observed_nstep'
                                 else agent.remember_completed_prefix)
@@ -946,8 +1040,9 @@ def _run_monitored_training(
                     completed_voyages += prefix_voyages
                 elif exc.failure_kind == "no_feasible_action" and exc.executed_transitions:
                     if view is not None:
-                        retained=agent.remember_trajectory(view.transitions,
-                            **_replay_source(episode, view.transitions, round_index))
+                        retained=(writer.finish_failure(view.transitions) if writer is not None else
+                            agent.remember_trajectory(view.transitions,
+                                **_replay_source(episode, view.transitions, round_index)))
                         prefix=exc.executed_transitions[:view.successful_prefix_transitions]
                     else:
                         retained=agent.remember_completed_prefix(exc.executed_transitions,
@@ -957,19 +1052,46 @@ def _run_monitored_training(
                                          for t in prefix)
                     completed_voyages += prefix_voyages
                     failure_suffix_count += len(exc.executed_transitions)-retained
-                schedule.grant(insertions=agent.economic_replay_insertions-before_episode_insertions,
-                               completed_episodes=(prefix_voyages if episode_credit_scope == 'voyage' else 0))
-                losses.extend(schedule.consume(agent,batch_size=batch_size))
+                if writer is None:
+                    schedule.grant(insertions=agent.economic_replay_insertions-before_episode_insertions,
+                                   completed_episodes=(prefix_voyages if episode_credit_scope == 'voyage' else 0))
+                    episode_end_updates += len(schedule_losses := schedule.consume(agent,batch_size=batch_size))
+                    losses.extend(schedule_losses)
+                else:
+                    onboard_callback_updates += writer.callback_optimizer_updates
+                    failure_finalize_updates += writer.finalization_optimizer_updates
+                if v5:
+                    episode_training_results.append({
+                        'sample_id':str(episode.sample_id), 'status':cause,
+                        'executed_onboard_transitions':len(exc.executed_transitions),
+                        'economic_replay_insertions':agent.economic_replay_insertions-before_episode_insertions,
+                        'economic_optimizer_updates':agent.economic_optimizer_updates-before_episode_updates,
+                        'comparable_complete_cost_cny':None,
+                    })
                 continue
             results.append(result)
-            agent.remember_trajectory(result.transitions,
-                **_replay_source(episode, result.transitions, round_index))
+            if writer is None:
+                agent.remember_trajectory(result.transitions,
+                    **_replay_source(episode, result.transitions, round_index))
+            else:
+                writer.finish_success(result.transitions)
+                onboard_callback_updates += writer.callback_optimizer_updates
             voyages = sum(t.shore_ledger is not None or t.is_successful_terminal
                           for t in result.transitions)
             completed_voyages += voyages
-            schedule.grant(insertions=agent.economic_replay_insertions-before_episode_insertions,
-                           completed_episodes=(voyages if episode_credit_scope == 'voyage' else 1))
-            losses.extend(schedule.consume(agent,batch_size=batch_size))
+            if writer is None:
+                schedule.grant(insertions=agent.economic_replay_insertions-before_episode_insertions,
+                               completed_episodes=(voyages if episode_credit_scope == 'voyage' else 1))
+                episode_end_updates += len(schedule_losses := schedule.consume(agent,batch_size=batch_size))
+                losses.extend(schedule_losses)
+            if v5:
+                episode_training_results.append({
+                    'sample_id':str(episode.sample_id), 'status':'completed',
+                    'executed_onboard_transitions':len(result.transitions),
+                    'economic_replay_insertions':agent.economic_replay_insertions-before_episode_insertions,
+                    'economic_optimizer_updates':agent.economic_optimizer_updates-before_episode_updates,
+                    'comparable_complete_cost_cny':result.comparable_cost_cny,
+                })
         if target_mode == "round":
             agent.sync_target()
         explore = annotate_evaluation(
@@ -1004,7 +1126,8 @@ def _run_monitored_training(
             trajectory_path=output_dir/f'round_{round_index:03d}_train_trajectories.json' if capture_trajectories else None,
             learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty,
             abort_on_execution_error=abort_on_execution_error,
-            decision_diagnostic_sink=diagnostic_sink if decision_rows is not None else None)
+            decision_diagnostic_sink=diagnostic_sink if decision_rows is not None else None,
+            economic_action_pair_diagnostics=v5 and round_index in diagnostic_rounds)
         evaluation_steps += greedy_train["executed_onboard_transitions"]
         runtime['phase']='greedy_validation'
         print(f"round {round_index}/{rounds} greedy_train={greedy_train['evaluable_completed']}/{greedy_train['evaluable_episodes']} validation start",flush=True)
@@ -1014,7 +1137,8 @@ def _run_monitored_training(
             redistribute_battery_energy=redistribute_battery_energy,
             trajectory_path=output_dir/f'round_{round_index:03d}_validation_trajectories.json' if capture_trajectories else None,
             learn_no_feasible_failures=learn_no_feasible_failures,failure_penalty=failure_penalty,
-            abort_on_execution_error=abort_on_execution_error)
+            abort_on_execution_error=abort_on_execution_error,
+            economic_action_pair_diagnostics=v5 and round_index in diagnostic_rounds)
         evaluation_steps += greedy_validation["executed_onboard_transitions"]
         row = {
             "round":round_index,"epsilon":epsilon,"exploratory_train":explore,
@@ -1022,6 +1146,15 @@ def _run_monitored_training(
             "validation_skip_reason":None,
             "mean_loss":sum(losses)/len(losses) if losses else None,
             "economic_optimizer_updates":agent.economic_optimizer_updates-before_updates,
+            'training_environment_transitions':explore['executed_onboard_transitions'],
+            'utd_this_round':((agent.economic_optimizer_updates-before_updates)/explore['executed_onboard_transitions']
+                if explore['executed_onboard_transitions'] else None),
+            'mean_optimizer_updates_per_training_episode':(agent.economic_optimizer_updates-before_updates)/len(train),
+            'target_soft_update_calls_this_round':agent.target_soft_update_calls-before_target_soft_updates,
+            "update_timing":update_timing,
+            "onboard_callback_optimizer_updates":onboard_callback_updates,
+            "failure_finalize_optimizer_updates":failure_finalize_updates,
+            "episode_end_optimizer_updates":episode_end_updates,
             "economic_optimizer_updates_cumulative":agent.economic_optimizer_updates,
             "economic_replay_insertions":agent.economic_replay_insertions-before_insertions,
             "economic_replay_insertions_cumulative":agent.economic_replay_insertions,
@@ -1050,6 +1183,8 @@ def _run_monitored_training(
             'economic_normal_terminal_replay_size':agent.normal_terminal_replay_count,
             'economic_replay_outcome_counts_cumulative':replay_counts(),
         }
+        if v5:
+            row['episode_training_results'] = episode_training_results
         improved = selector.consider(round_index,greedy_train,greedy_validation)
         row["qualified_checkpoint"] = fully_completed(greedy_train) and fully_completed(greedy_validation)
         row["best_checkpoint_improved"] = improved
@@ -1068,7 +1203,7 @@ def _run_monitored_training(
             }
             temporary = output_dir/"best_agent.pt.tmp"
             torch.save({
-                "architecture":"v4_mlp_double_dqn_direct_power",
+                "architecture":"v5_economic4_mlp_double_dqn_direct_power" if v5 else "v4_mlp_double_dqn_direct_power",
                 "model_state":{key:value.detach().cpu().clone() for key,value in agent.online.state_dict().items()},
                 "hyperparameters":hyperparameters,"selection":best_record,
                 "source_commit":source_commit,"test_payloads_opened":0,

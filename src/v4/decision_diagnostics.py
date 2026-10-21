@@ -7,8 +7,8 @@ from pathlib import Path
 
 import torch
 
-from .control import DirectTransition
-from .actions import action_values_kw
+from .control import DirectTransition, state_feature_value
+from .actions import action_values_kw, previous_grid_power_kw
 
 
 DIAGNOSTIC_SAMPLE_IDS = frozenset((
@@ -50,7 +50,7 @@ def actual_greedy_q_records(
             low_fc_run = 0
         if item.state[0] >= .79:
             tags.add("near_soc_ceiling")
-        if (item.action_kw == 0 and item.state[2 if len(item.state) == 3 else 1] > 0
+        if (item.action_kw == 0 and state_feature_value(item.state, 'previous_fc_kw_over_600') > 0
                 and item.physical_feasible_actions == (0,)):
             tags.add("forced_stop")
     if failed:
@@ -71,9 +71,11 @@ def actual_greedy_q_records(
         # GEMM can change final-bit rounding and a near-tie action ranking.
         q_rows = [agent.online(torch.tensor([values[index].state], dtype=torch.float32))[0].tolist()
                   for index in indices]
+        target_rows = [agent.target(torch.tensor([values[index].state], dtype=torch.float32))[0].tolist()
+                       for index in indices]
     scale = agent.reward_scale
     records = []
-    for index, q in zip(indices, q_rows):
+    for index, q, target_q in zip(indices, q_rows, target_rows):
         item = values[index]
         physical = item.physical_feasible_actions
         candidate = item.policy_candidate_actions
@@ -83,15 +85,34 @@ def actual_greedy_q_records(
         action_grid = action_values_kw(action_mode)
         index_for = (lambda power: agent.action_index_for_power(power, item.state)) if action_mode == 'increment7' else (lambda power: power // 10)
         ordered = sorted(candidate, key=lambda power: (-q[index_for(power)], power))
+        target_ordered = sorted(candidate, key=lambda power: (-target_q[index_for(power)], power))
+        previous_fc = previous_grid_power_kw(state_feature_value(
+            item.state, 'previous_fc_kw_over_600') * 600.)
+        hold_legal = previous_fc in candidate
+        selected_q = q[index_for(item.action_kw)]
+        hold_q = q[index_for(previous_fc)] if hold_legal else None
+        best_q = q[index_for(ordered[0])]
+        second_q = q[index_for(ordered[1])] if len(ordered) > 1 else None
         records.append({
             "sample_id": sample_id, "archive_transition_index": index,
             "priority_tags": sorted(tagged[index]), "state": list(item.state),
             "physical_actions_kw": list(physical), "candidate_actions_kw": list(candidate),
             "action_grid_kw": list(action_grid), "action_mode":action_mode, "q_values": q,
+            "target_q_values": target_q,
             "candidate_action_indices":[index_for(power) for power in candidate],
             "selected_action_index":index_for(item.action_kw),
             "selected_action_kw": item.action_kw, "legal_action_order_kw": ordered,
             "selected_action_legal_rank": ordered.index(item.action_kw) + 1,
+            "selected_action_q": selected_q,
+            "hold_action_kw": previous_fc, "hold_action_legal": hold_legal,
+            "hold_action_q": hold_q,
+            "selected_minus_hold_q": selected_q - hold_q if hold_legal else None,
+            "best_action_kw": ordered[0], "best_action_q": best_q,
+            "second_action_q": second_q,
+            "best_minus_second_q": best_q - second_q if second_q is not None else None,
+            "target_greedy_action_kw": target_ordered[0],
+            "online_target_greedy_agree": ordered[0] == target_ordered[0],
+            "q_comparison_scope": "Same-state Online/Target predictions; no counterfactual Bellman target is inferred",
             "q_unit": q_unit, "reward_scale": scale,
         })
     return records
@@ -113,7 +134,9 @@ def save_diagnostic_snapshot(
         raise FileExistsError("diagnostic snapshot for this round already exists")
     payload = {
         "purpose": "diagnostic_only", "eligible_for_best_model_selection": False,
-        "architecture": "v4_mlp_double_dqn_direct_power", "round": round_index,
+        "architecture": ("v5_economic4_mlp_double_dqn_direct_power"
+                         if agent.state_mode == 'load_delta4' else "v4_mlp_double_dqn_direct_power"),
+        "round": round_index,
         "online_state": {key: value.detach().cpu().clone()
                          for key, value in agent.online.state_dict().items()},
         "target_state": {key: value.detach().cpu().clone()

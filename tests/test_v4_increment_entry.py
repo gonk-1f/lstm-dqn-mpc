@@ -7,7 +7,8 @@ import pytest
 from v4.independent_economics import ZhouEvaluationConfig
 
 
-def test_increment_cli_routes_one_step_without_loading_payloads(tmp_path, monkeypatch):
+@pytest.mark.parametrize('cadence', ['replay32', 'replay16'])
+def test_increment_cli_routes_one_step_without_loading_payloads(tmp_path, monkeypatch, cadence):
     from v4 import feedback_study
     dataset = SimpleNamespace(opened_test_payloads=0, split_sizes=(35, 8),
         identity_hashes=lambda: {'split': 'frozen'})
@@ -18,14 +19,79 @@ def test_increment_cli_routes_one_step_without_loading_payloads(tmp_path, monkey
         kwargs['output_dir'].mkdir()
         return None, {'rounds': [], 'best_checkpoint': None}
     monkeypatch.setattr(feedback_study, 'run_monitored_training', capture)
+    study_args = ([] if cadence == 'replay32' else
+                  ['--cadence', 'replay16', '--experiment-id', 'V4-DELTA7-R16-S42'])
     assert feedback_study.main(['--output-dir', str(tmp_path/'run'),
         '--dataset-mode', 'independent', '--state-mode', 'minimal3',
         '--action-mode', 'increment7', '--reward-cost-mode', 'zhou_joint',
-        '--n-step', '1', '--replay-sampling', 'prioritized']) == 0
+        '--n-step', '1', '--replay-sampling', 'prioritized', *study_args]) == 0
     assert captured['action_mode'] == 'increment7'
     assert captured['n_step'] == 1 and captured['required_split_sizes'] == (35, 8)
     assert captured['reward_cost_mode'] == 'zhou_joint'
     assert captured['per_alpha'] == .6 and captured['per_beta'] == 1.
+    assert captured['cadence'] == cadence
+    assert captured['batch_size'] == 64 and captured['reward_scale'] == .001
+    assert captured['beta_soc'] == 200. and captured['target_mode'] == 'soft'
+    assert captured['rounds'] == 100 and captured['seed'] == 42
+    assert captured['experiment_id'] == (None if cadence == 'replay32' else 'V4-DELTA7-R16-S42')
+
+
+@pytest.mark.parametrize('scope', ['without_id', 'legacy', 'absolute61'])
+def test_replay16_cannot_bypass_experiment_scope(tmp_path, monkeypatch, scope):
+    from v4 import feedback_study
+    monkeypatch.setattr(feedback_study.IndependentTrainingDataset, 'open',
+                        lambda *args: pytest.fail('reject invalid scope before data loading'))
+    args = ['--output-dir', str(tmp_path/'run'), '--cadence', 'replay16']
+    if scope == 'without_id':
+        args += ['--dataset-mode', 'independent', '--state-mode', 'minimal3',
+                 '--action-mode', 'increment7', '--reward-cost-mode', 'zhou_joint',
+                 '--n-step', '1', '--replay-sampling', 'prioritized']
+    else:
+        args += ['--experiment-id', 'V4-R16-S42']
+        if scope == 'absolute61':
+            args += ['--dataset-mode', 'independent', '--state-mode', 'minimal3',
+                     '--action-mode', 'absolute61', '--reward-cost-mode', 'control_only',
+                     '--n-step', '8', '--replay-sampling', 'prioritized']
+    with pytest.raises(SystemExit) as exc:
+        feedback_study.main(args)
+    assert exc.value.code == 2
+    assert not (tmp_path/'run').exists()
+
+
+def test_replay16_only_changes_cadence_and_rejects_replay32_resume(tmp_path, monkeypatch):
+    from v4 import monitored_training
+
+    class BeforeAgent(Exception):
+        pass
+
+    def stop(**kwargs):
+        raise BeforeAgent()
+
+    monkeypatch.setattr(monitored_training, 'DirectPowerDDQN', stop)
+    monkeypatch.setattr(monitored_training, 'write_learning_curves', lambda *args: {})
+    item = lambda split: SimpleNamespace(sample_id=split, split=split,
+        task_mode='independent_voyage', operating_mode=('onboard',))
+    dataset = SimpleNamespace(task_mode='independent_voyage', task_contract={'version': 'synthetic'},
+        opened_test_payloads=0, load_train=lambda: (item('train'),),
+        load_validation=lambda: (item('validation'),))
+    config = dict(state_mode='minimal3', action_mode='increment7', reward_cost_mode='zhou_joint',
+        n_step=1, replay_sampling='prioritized', experiment_id='V4-DELTA7-R16-S42',
+        economic_evaluation_config=ZhouEvaluationConfig.from_formal_curve())
+    metadata = {}
+    for cadence in ('replay32', 'replay16'):
+        output = tmp_path/cadence
+        with pytest.raises(BeforeAgent):
+            monitored_training.run_monitored_training(dataset, output_dir=output,
+                                                      cadence=cadence, **config)
+        metadata[cadence] = json.loads((output/'run_metadata.json').read_text(encoding='utf-8'))
+    old, new = (metadata[c]['hyperparameters'] for c in ('replay32', 'replay16'))
+    assert {key for key in old if old[key] != new[key]} == {'cadence'}
+    monkeypatch.setattr(monitored_training.torch, 'load', lambda *args, **kwargs:
+        {'format_version': 1, 'metadata': metadata['replay32']})
+    dataset.load_train = lambda: pytest.fail('cadence mismatch must reject before payload loading')
+    with pytest.raises(ValueError, match='resume source, architecture, hyperparameters'):
+        monitored_training.run_monitored_training(dataset, output_dir=tmp_path/'replay32',
+            cadence='replay16', resume_from=tmp_path/'replay32/training_state_latest.pt', **config)
 
 
 def test_increment_metadata_binds_action_and_reward_identity(tmp_path, monkeypatch):

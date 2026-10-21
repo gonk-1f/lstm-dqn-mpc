@@ -21,7 +21,7 @@ from v3.control import EconomicMPC
 
 from .control import (
     ACTION_KW, DEFAULT_STATE_MODE, SOC_REF, DirectReplay, DirectTransition,
-    ReplayExecutionError, replay_episode,
+    ReplayExecutionError, replay_episode, state_feature_value,
 )
 from .dqn import (
     DirectPowerDDQN, ECONOMIC_HIDDEN_DIMS, ECONOMIC_LEARNING_RATE, STATE_DIM, STATE_FEATURES,
@@ -133,7 +133,7 @@ def _summarize(
         "fc_zero_fraction": duration_weighted_mean((float(value == 0) for value in all_fc), executed_durations),
         "fc_starts": starts,
         "executed_fc_starts_including_failed_prefix": sum(
-            t.state[2 if len(t.state) == 3 else 1] == 0 and t.action_kw > 0
+            state_feature_value(t.state, 'previous_fc_kw_over_600') == 0 and t.action_kw > 0
             for t in executed_transitions),
         "completed_voyages": completed_onboard_segments,
         "completed_onboard_segments": completed_onboard_segments,
@@ -256,7 +256,8 @@ def run_train_validation(
         print(f"bootstrap start episodes={len(train)}", flush=True)
     bootstrap, bootstrap_failures = _run_episodes(
         train,
-        lambda state, feasible: min(feasible, key=lambda power: abs(power - state[4] * 600.0)),
+        lambda state, feasible: min(feasible, key=lambda power: abs(
+            power - state_feature_value(state, 'current_load_kw_over_600') * 600.0)),
         accountant,
         on_failure=remember_bootstrap_failure,
         beta_soc=beta_soc,
@@ -299,7 +300,8 @@ def run_train_validation(
                 episode_steps += 1
                 if progress_every_steps:
                     if selected_steps % progress_every_steps == 0:
-                        load_kw = state[4] * accountant.plant.fuel_cell_rated_total_kw
+                        load_kw = (state_feature_value(state, 'current_load_kw_over_600')
+                                   * accountant.plant.fuel_cell_rated_total_kw)
                         print(
                             f"progress step={selected_steps} phase=train round={round_index + 1}/{rounds} "
                             f"episode={episode_index}/{len(train)} sample={episode.sample_id} "

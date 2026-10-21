@@ -1,0 +1,431 @@
+{
+  "purpose": "one fixed archived Train action sequence; no policy learning or optimization",
+  "branch": "feat/v5-economic4-ddqn",
+  "head": "a5713bde00c1202175f2b1b2a428a6408eb77eb1",
+  "sample_id": "parent_006_seg01",
+  "split": "train",
+  "sample_sha256": "ceddea80358e5c144dc806524b8e6c4982b8ae3d439b523a96d5ad39af67d90f",
+  "dataset_identity_hashes": {
+    "metadata/active_split.json": "fe00778e08ce1bf41b4ae34638c3aab3334872cd83bf1771a2ec06488f4b92a0",
+    "metadata/splits_v2_exclude046_seg01/sample_manifest.csv": "3273f3b25adff6f1cb93ff8d845729bc21d8e0499fccb04f3e7039aaef140ca0",
+    "metadata/splits_v2_exclude046_seg01/policy.json": "d328544d4bff1ff148a19abd6c2ee204e74bbd96af9d8733a7852db4ea286b40",
+    "metadata/splits_v2_exclude046_seg01/payload_hashes.csv": "306b3c10d62f7eea3a58af8861b41b500640545364fee53ef076acad1658f367",
+    "metadata/splits_v2_exclude046_seg01/exclusions.csv": "2af5662830abb22a980f32481f14dcef20fbc04c03d56e80bf3c5b38196e4f6d"
+  },
+  "archive_path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v4-increment7-zhou\\outputs\\v4_independent35_m3_delta7_zhou_td1_per_seed42_100r\\round_100_train_trajectories.json.gz",
+  "archive_sha256": "875cc0028c8944bb8925e7666b2b89ff5b33fc0d9322ce9e09c3f29db9bc066e",
+  "archive_sample_completed": true,
+  "state_mode": "load_delta4",
+  "action_mode": "increment7",
+  "reward_cost_mode": "zhou_economic_only",
+  "beta_soc": 0.0,
+  "reward_scale": 0.001,
+  "recorded_actions_executed": 352,
+  "duration_s": 10550.0,
+  "states_dimension": 4,
+  "all_current_and_next_masks_match_archive": true,
+  "all_action_indices_and_deltas_match_archive": true,
+  "terminal_done_matches": true,
+  "state_next_state_continuity": true,
+  "max_perstep_reward_formula_error_cny": 1.7763568394002505e-15,
+  "max_interval_ledger_difference_vs_archive_cny": 0.0,
+  "max_soc_difference_vs_archive": 0.0,
+  "four_cost_sums_cny": {
+    "hydrogen_actual": 509.6291535428835,
+    "hydrogen_battery_equivalent": -101.50407387401766,
+    "fuel_cell_degradation": 2163.712500000003,
+    "battery_degradation": 45.89422478380546
+  },
+  "sum_raw_economic_training_cost_cny": 2617.7318044526737,
+  "zhou_complete_voyage_cost_cny": 2617.731804452674,
+  "zhou_cost_difference_cny": -4.547473508864641e-13,
+  "old_archived_zhou_cost_cny": 2617.731804452674,
+  "soc_equivalent_step_sum_cny": -101.50407387401766,
+  "soc_equivalent_net_cny": -101.50407387401766,
+  "soc_telescoping_error_cny": 0.0,
+  "initial_soc": 0.6,
+  "terminal_soc": 0.7414235366829973,
+  "max_fc_loss_uv": 144.24750000000017,
+  "max_battery_weighted_ah": 796.7747358299558,
+  "reference_efficiency": 0.5711999752720877,
+  "all_auxiliary_costs_and_shore_settlements_zero": true,
+  "test_payloads_opened": 0,
+  "train_payloads_opened": 1,
+  "validation_payloads_opened": 0,
+  "optimizer_updates": 0,
+  "bound_scope": "35Train +8Validation metadata durations only; no payloads except parent006",
+  "life_caps": {
+    "fc_eol_uv": 70000.0,
+    "battery_lifetime_weighted_ah": 21666666.666666664,
+    "fc_bound_formula": "max(runtime_rate)*duration_hours + ceil(duration/30)*(.0441*60/6) + ceil(ceil(duration/30)/2)*23.91",
+    "fc_start_bound_reason": "fresh off; every new startup after the first needs a distinct intervening off step",
+    "battery_bound_formula": "ceil(duration/30) * max(official battery_degradation_step(.2, physical_extreme_current, 30s))",
+    "battery_bound_reason": "SOC stress maximized at .2; current stress times absolute throughput monotone at each sign; any shorter tail is bounded by30s",
+    "max_battery_step_weighted_ah": 140.88148148148147,
+    "max_fc_case": {
+      "sample_id": "parent_037_seg01",
+      "split": "train",
+      "steps": 1222,
+      "duration_s": 36660.0,
+      "fc_loss_uv_upper_bound": 15267.464333333333,
+      "battery_weighted_ah_upper_bound": 172157.17037037035
+    },
+    "max_battery_case": {
+      "sample_id": "parent_037_seg01",
+      "split": "train",
+      "steps": 1222,
+      "duration_s": 36660.0,
+      "fc_loss_uv_upper_bound": 15267.464333333333,
+      "battery_weighted_ah_upper_bound": 172157.17037037035
+    },
+    "all_train_validation_eol_caps_unreachable_from_fresh_state_under_frozen_constraints": true,
+    "fc_bound_fraction": 0.21810663333333333,
+    "battery_bound_fraction": 0.007945715555555555,
+    "per_sample_metadata_bounds": [
+      {
+        "sample_id": "parent_002_seg01",
+        "split": "validation",
+        "steps": 406,
+        "duration_s": 12168.0,
+        "fc_loss_uv_upper_bound": 5072.457200000001,
+        "battery_weighted_ah_upper_bound": 57197.881481481476
+      },
+      {
+        "sample_id": "parent_003_seg01",
+        "split": "train",
+        "steps": 716,
+        "duration_s": 21480.0,
+        "fc_loss_uv_upper_bound": 8945.584666666668,
+        "battery_weighted_ah_upper_bound": 100871.14074074074
+      },
+      {
+        "sample_id": "parent_005_seg01",
+        "split": "train",
+        "steps": 309,
+        "duration_s": 9258.0,
+        "fc_loss_uv_upper_bound": 3872.510366666667,
+        "battery_weighted_ah_upper_bound": 43532.37777777777
+      },
+      {
+        "sample_id": "parent_006_seg01",
+        "split": "train",
+        "steps": 352,
+        "duration_s": 10550.0,
+        "fc_loss_uv_upper_bound": 4397.796722222222,
+        "battery_weighted_ah_upper_bound": 49590.28148148148
+      },
+      {
+        "sample_id": "parent_007_seg01",
+        "split": "train",
+        "steps": 282,
+        "duration_s": 8448.0,
+        "fc_loss_uv_upper_bound": 3523.2218666666668,
+        "battery_weighted_ah_upper_bound": 39728.57777777778
+      },
+      {
+        "sample_id": "parent_008_seg01",
+        "split": "train",
+        "steps": 762,
+        "duration_s": 22856.0,
+        "fc_loss_uv_upper_bound": 9520.287955555557,
+        "battery_weighted_ah_upper_bound": 107351.68888888888
+      },
+      {
+        "sample_id": "parent_009_seg01",
+        "split": "train",
+        "steps": 316,
+        "duration_s": 9480.0,
+        "fc_loss_uv_upper_bound": 3948.0513333333333,
+        "battery_weighted_ah_upper_bound": 44518.54814814815
+      },
+      {
+        "sample_id": "parent_009_seg02",
+        "split": "train",
+        "steps": 259,
+        "duration_s": 7755.0,
+        "fc_loss_uv_upper_bound": 3247.808916666667,
+        "battery_weighted_ah_upper_bound": 36488.3037037037
+      },
+      {
+        "sample_id": "parent_010_seg01",
+        "split": "train",
+        "steps": 373,
+        "duration_s": 11190.0,
+        "fc_loss_uv_upper_bound": 4672.154833333333,
+        "battery_weighted_ah_upper_bound": 52548.79259259259
+      },
+      {
+        "sample_id": "parent_010_seg02",
+        "split": "train",
+        "steps": 527,
+        "duration_s": 15781.0,
+        "fc_loss_uv_upper_bound": 6596.110594444444,
+        "battery_weighted_ah_upper_bound": 74244.54074074073
+      },
+      {
+        "sample_id": "parent_011_seg01",
+        "split": "validation",
+        "steps": 774,
+        "duration_s": 23196.0,
+        "fc_loss_uv_upper_bound": 9670.148733333333,
+        "battery_weighted_ah_upper_bound": 109042.26666666666
+      },
+      {
+        "sample_id": "parent_012_seg01",
+        "split": "train",
+        "steps": 596,
+        "duration_s": 17873.0,
+        "fc_loss_uv_upper_bound": 7446.3018388888895,
+        "battery_weighted_ah_upper_bound": 83965.36296296296
+      },
+      {
+        "sample_id": "parent_015_seg01",
+        "split": "train",
+        "steps": 338,
+        "duration_s": 10115.0,
+        "fc_loss_uv_upper_bound": 4222.834138888888,
+        "battery_weighted_ah_upper_bound": 47617.940740740734
+      },
+      {
+        "sample_id": "parent_016_seg01",
+        "split": "validation",
+        "steps": 703,
+        "duration_s": 21070.0,
+        "fc_loss_uv_upper_bound": 8795.05461111111,
+        "battery_weighted_ah_upper_bound": 99039.68148148147
+      },
+      {
+        "sample_id": "parent_017_seg01",
+        "split": "train",
+        "steps": 978,
+        "duration_s": 29323.0,
+        "fc_loss_uv_upper_bound": 12218.91356111111,
+        "battery_weighted_ah_upper_bound": 137782.0888888889
+      },
+      {
+        "sample_id": "parent_018_seg01",
+        "split": "train",
+        "steps": 911,
+        "duration_s": 27310.0,
+        "fc_loss_uv_upper_bound": 11393.771944444445,
+        "battery_weighted_ah_upper_bound": 128343.02962962961
+      },
+      {
+        "sample_id": "parent_019_seg01",
+        "split": "train",
+        "steps": 349,
+        "duration_s": 10470.0,
+        "fc_loss_uv_upper_bound": 4372.302833333333,
+        "battery_weighted_ah_upper_bound": 49167.637037037035
+      },
+      {
+        "sample_id": "parent_019_seg02",
+        "split": "train",
+        "steps": 296,
+        "duration_s": 8868.0,
+        "fc_loss_uv_upper_bound": 3698.135533333333,
+        "battery_weighted_ah_upper_bound": 41700.91851851851
+      },
+      {
+        "sample_id": "parent_020_seg01",
+        "split": "validation",
+        "steps": 119,
+        "duration_s": 3558.0,
+        "fc_loss_uv_upper_bound": 1498.6820333333333,
+        "battery_weighted_ah_upper_bound": 16764.896296296294
+      },
+      {
+        "sample_id": "parent_021_seg01",
+        "split": "train",
+        "steps": 234,
+        "duration_s": 6996.0,
+        "fc_loss_uv_upper_bound": 2923.478733333333,
+        "battery_weighted_ah_upper_bound": 32966.26666666666
+      },
+      {
+        "sample_id": "parent_022_seg01",
+        "split": "train",
+        "steps": 183,
+        "duration_s": 5490.0,
+        "fc_loss_uv_upper_bound": 2298.3264999999997,
+        "battery_weighted_ah_upper_bound": 25781.31111111111
+      },
+      {
+        "sample_id": "parent_029_seg01",
+        "split": "train",
+        "steps": 354,
+        "duration_s": 10620.0,
+        "fc_loss_uv_upper_bound": 4422.817,
+        "battery_weighted_ah_upper_bound": 49872.044444444444
+      },
+      {
+        "sample_id": "parent_029_seg02",
+        "split": "train",
+        "steps": 175,
+        "duration_s": 5221.0,
+        "fc_loss_uv_upper_bound": 2198.2812611111112,
+        "battery_weighted_ah_upper_bound": 24654.25925925926
+      },
+      {
+        "sample_id": "parent_033_seg01",
+        "split": "validation",
+        "steps": 369,
+        "duration_s": 11070.0,
+        "fc_loss_uv_upper_bound": 4622.1795,
+        "battery_weighted_ah_upper_bound": 51985.26666666666
+      },
+      {
+        "sample_id": "parent_034_seg01",
+        "split": "train",
+        "steps": 324,
+        "duration_s": 9720.0,
+        "fc_loss_uv_upper_bound": 4048.002,
+        "battery_weighted_ah_upper_bound": 45645.6
+      },
+      {
+        "sample_id": "parent_035_seg01",
+        "split": "train",
+        "steps": 310,
+        "duration_s": 9300.0,
+        "fc_loss_uv_upper_bound": 3873.0883333333336,
+        "battery_weighted_ah_upper_bound": 43673.259259259255
+      },
+      {
+        "sample_id": "parent_036_seg01",
+        "split": "train",
+        "steps": 223,
+        "duration_s": 6661.0,
+        "fc_loss_uv_upper_bound": 2797.985261111111,
+        "battery_weighted_ah_upper_bound": 31416.57037037037
+      },
+      {
+        "sample_id": "parent_037_seg01",
+        "split": "train",
+        "steps": 1222,
+        "duration_s": 36660.0,
+        "fc_loss_uv_upper_bound": 15267.464333333333,
+        "battery_weighted_ah_upper_bound": 172157.17037037035
+      },
+      {
+        "sample_id": "parent_038_seg01",
+        "split": "train",
+        "steps": 704,
+        "duration_s": 21091.0,
+        "fc_loss_uv_upper_bound": 8795.564094444444,
+        "battery_weighted_ah_upper_bound": 99180.56296296295
+      },
+      {
+        "sample_id": "parent_040_seg01",
+        "split": "validation",
+        "steps": 518,
+        "duration_s": 15540.0,
+        "fc_loss_uv_upper_bound": 6471.805666666666,
+        "battery_weighted_ah_upper_bound": 72976.6074074074
+      },
+      {
+        "sample_id": "parent_041_seg01",
+        "split": "train",
+        "steps": 643,
+        "duration_s": 19261.0,
+        "fc_loss_uv_upper_bound": 8045.395261111112,
+        "battery_weighted_ah_upper_bound": 90586.79259259258
+      },
+      {
+        "sample_id": "parent_042_seg01",
+        "split": "train",
+        "steps": 615,
+        "duration_s": 18421.0,
+        "fc_loss_uv_upper_bound": 7695.567927777777,
+        "battery_weighted_ah_upper_bound": 86642.11111111111
+      },
+      {
+        "sample_id": "parent_043_seg01",
+        "split": "train",
+        "steps": 393,
+        "duration_s": 11761.0,
+        "fc_loss_uv_upper_bound": 4921.936927777778,
+        "battery_weighted_ah_upper_bound": 55366.422222222216
+      },
+      {
+        "sample_id": "parent_044_seg01",
+        "split": "validation",
+        "steps": 817,
+        "duration_s": 24481.0,
+        "fc_loss_uv_upper_bound": 10219.322261111112,
+        "battery_weighted_ah_upper_bound": 115100.17037037037
+      },
+      {
+        "sample_id": "parent_045_seg01",
+        "split": "validation",
+        "steps": 1090,
+        "duration_s": 32679.0,
+        "fc_loss_uv_upper_bound": 13618.209850000001,
+        "battery_weighted_ah_upper_bound": 153560.8148148148
+      },
+      {
+        "sample_id": "parent_046_seg02",
+        "split": "train",
+        "steps": 110,
+        "duration_s": 3272.0,
+        "fc_loss_uv_upper_bound": 1374.2303555555554,
+        "battery_weighted_ah_upper_bound": 15496.962962962962
+      },
+      {
+        "sample_id": "parent_047_seg01",
+        "split": "train",
+        "steps": 196,
+        "duration_s": 5880.0,
+        "fc_loss_uv_upper_bound": 2448.791333333333,
+        "battery_weighted_ah_upper_bound": 27612.77037037037
+      },
+      {
+        "sample_id": "parent_048_seg01",
+        "split": "train",
+        "steps": 286,
+        "duration_s": 8580.0,
+        "fc_loss_uv_upper_bound": 3573.2363333333333,
+        "battery_weighted_ah_upper_bound": 40292.1037037037
+      },
+      {
+        "sample_id": "parent_049_seg01",
+        "split": "train",
+        "steps": 269,
+        "duration_s": 8070.0,
+        "fc_loss_uv_upper_bound": 3372.7961666666665,
+        "battery_weighted_ah_upper_bound": 37897.11851851852
+      },
+      {
+        "sample_id": "parent_050_seg01",
+        "split": "train",
+        "steps": 1024,
+        "duration_s": 30691.0,
+        "fc_loss_uv_upper_bound": 12793.59076111111,
+        "battery_weighted_ah_upper_bound": 144262.63703703703
+      },
+      {
+        "sample_id": "parent_051_seg01",
+        "split": "train",
+        "steps": 145,
+        "duration_s": 4350.0,
+        "fc_loss_uv_upper_bound": 1823.5608333333334,
+        "battery_weighted_ah_upper_bound": 20427.814814814814
+      },
+      {
+        "sample_id": "parent_052_seg01",
+        "split": "train",
+        "steps": 237,
+        "duration_s": 7110.0,
+        "fc_loss_uv_upper_bound": 2972.9935,
+        "battery_weighted_ah_upper_bound": 33388.91111111111
+      },
+      {
+        "sample_id": "parent_053_seg01",
+        "split": "train",
+        "steps": 255,
+        "duration_s": 7650.0,
+        "fc_loss_uv_upper_bound": 3197.8825,
+        "battery_weighted_ah_upper_bound": 35924.777777777774
+      }
+    ]
+  }
+}

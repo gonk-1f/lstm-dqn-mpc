@@ -29,7 +29,7 @@ ACTION_KW = tuple(range(0, 601, 10))
 SOC_REF = 0.60
 DEFAULT_BETA_SOC = 200.0
 DEFAULT_STATE_MODE = 'history7'
-STATE_MODES = ('history7', 'minimal3')
+STATE_MODES = ('history7', 'minimal3', 'load_delta4')
 STATE_FEATURES_BY_MODE = {
     'history7': (
         'soc', 'previous_fc_kw_over_600', 'previous_fc_delta_kw_over_600',
@@ -37,8 +37,13 @@ STATE_FEATURES_BY_MODE = {
         'current_load_delta_kw_over_600', 'previous_load_delta_kw_over_600',
     ),
     'minimal3': ('soc', 'current_load_kw_over_600', 'previous_fc_kw_over_600'),
+    'load_delta4': (
+        'soc', 'current_load_kw_over_600', 'previous_fc_kw_over_600',
+        'current_load_delta_kw_over_600',
+    ),
 }
-REWARD_COST_MODES = ('full_economic', 'energy_only', 'energy_with_fc_ramp', 'control_only', 'zhou_joint')
+REWARD_COST_MODES = ('full_economic', 'energy_only', 'energy_with_fc_ramp', 'control_only',
+                     'zhou_joint', 'zhou_economic_only')
 # Fixed CNY/kW slope of formal aggregate FC transient degradation before EOL clipping.
 # This is a separate training term; the four-component ledger is not changed.
 FC_RAMP_REWARD_CNY_PER_KW = (
@@ -54,7 +59,7 @@ def ledger_training_reward(ledger: RawCnyIntervalLedger, reward_cost_mode: str) 
         raise ValueError(f'reward_cost_mode must be one of {REWARD_COST_MODES}')
     if reward_cost_mode == 'control_only':
         return 0.0
-    if reward_cost_mode in ('full_economic', 'zhou_joint'):
+    if reward_cost_mode in ('full_economic', 'zhou_joint', 'zhou_economic_only'):
         return ledger.reward_cny
     return -fsum((ledger.h2_cost_cny, ledger.shore_cost_cny))
 
@@ -274,12 +279,37 @@ def build_state(
     rated = float(ACTION_KW[-1])
     if state_mode == 'minimal3':
         return float(physical.soc), current / rated, fc_previous / rated
+    if state_mode == 'load_delta4':
+        return (float(physical.soc), current / rated, fc_previous / rated,
+                (current - load_prior1) / rated)
     return (
         float(physical.soc), fc_previous / rated,
         (fc_previous - fc_prior1) / rated, (fc_prior1 - fc_prior2) / rated,
         current / rated, (current - load_prior1) / rated,
         (load_prior1 - load_prior2) / rated,
     )
+
+
+def state_feature_value(
+    state: tuple[float, ...], feature_name: str, *, state_mode: str | None = None,
+) -> float:
+    """Resolve a named input feature without assuming a layout-specific index."""
+    if state_mode is None:
+        matches = [mode for mode, features in STATE_FEATURES_BY_MODE.items()
+                   if len(features) == len(state)]
+        if len(matches) != 1:
+            raise ValueError('state dimension does not identify a unique state mode')
+        state_mode = matches[0]
+    if state_mode not in STATE_FEATURES_BY_MODE:
+        raise ValueError(f'state_mode must be one of {STATE_MODES}')
+    features = STATE_FEATURES_BY_MODE[state_mode]
+    if len(state) != len(features):
+        raise ValueError('state dimension does not match its named features')
+    if any(not isfinite(value) for value in state):
+        raise ValueError('state features must be finite')
+    if feature_name not in features:
+        raise ValueError(f'{feature_name!r} is not a feature of {state_mode}')
+    return float(state[features.index(feature_name)])
 
 
 def _checked_action(value: object, feasible_actions: tuple[int, ...]) -> int:
@@ -332,6 +362,7 @@ def replay_episode(
     state_mode: str = DEFAULT_STATE_MODE,
     economic_evaluation_config: ZhouEvaluationConfig | None = None,
     action_mode: str = 'absolute61',
+    on_transition: Callable[[int, DirectTransition], None] | None = None,
 ) -> DirectReplay:
     """Execute ONBOARD FC actions; route shore rows outside the DQN policy.
 
@@ -345,9 +376,10 @@ def replay_episode(
     all physical settlement ledgers still run without entering its reward.
     An explicitly marked independent voyage starts from the default fresh
     state, integrates its real interval durations, and has no shore or
-    synthetic terminal action. Zhou-joint reward uses the signed per-step SOC
+    synthetic terminal action. Zhou rewards use the signed per-step SOC
     conversion, whose sum equals its evaluation correction without another
-    terminal reward. Increment actions restrict executed FC candidates only;
+    terminal reward. Economic-only removes auxiliary SOC/ramp terms while
+    retaining all original physical depreciation. Increment actions restrict executed FC candidates only;
     there is no clipping or fallback to the absolute action set.
     """
     modes, loads, requests = _validated_rows_v4(episode)
@@ -355,6 +387,10 @@ def replay_episode(
     if task_mode not in ('legacy', 'independent_voyage'):
         raise ValueError('task_mode must be legacy or independent_voyage')
     independent = task_mode == 'independent_voyage'
+    if on_transition is not None and (
+            not callable(on_transition) or not independent
+            or any(mode is not OperatingMode.ONBOARD for mode in modes)):
+        raise ValueError('transition notifications require an independent ONBOARD-only voyage')
     if independent:
         if type(economic_evaluation_config) is not ZhouEvaluationConfig:
             raise ValueError('independent voyages require an explicit ZhouEvaluationConfig')
@@ -381,11 +417,13 @@ def replay_episode(
         raise ValueError(f'state_mode must be one of {STATE_MODES}')
     if action_mode not in FC_ACTION_MODES:
         raise ValueError(f'action_mode must be one of {FC_ACTION_MODES}')
-    if action_mode == 'increment7' and (not independent or state_mode != 'minimal3'):
-        raise ValueError('increment7 requires independent voyages with minimal3 states')
-    if reward_cost_mode == 'zhou_joint' and not independent:
-        raise ValueError('zhou_joint requires independent voyages')
-    if reward_cost_mode in ('control_only', 'zhou_joint') and redistribute_battery_energy:
+    if action_mode == 'increment7' and (not independent or state_mode not in ('minimal3', 'load_delta4')):
+        raise ValueError('increment7 requires independent voyages with minimal3 or load_delta4 states')
+    if reward_cost_mode in ('zhou_joint', 'zhou_economic_only') and not independent:
+        raise ValueError(f'{reward_cost_mode} requires independent voyages')
+    if reward_cost_mode == 'zhou_economic_only' and beta_soc != 0.0:
+        raise ValueError('zhou_economic_only requires beta_soc=0')
+    if reward_cost_mode in ('control_only', 'zhou_joint', 'zhou_economic_only') and redistribute_battery_energy:
         raise ValueError(f'{reward_cost_mode} does not allow battery energy redistribution')
     energy_value = BatteryEnergyValue.from_accountant(accountant)
     physical = initial_state or AccountState()
@@ -436,8 +474,12 @@ def replay_episode(
             empty_increment_mask=False
             try:
                 actual_load = normalize_onboard_load_kw(loads[index])
-                current_history = ((actual_load,) * 3 if history is None
-                                   else (*history[-2:], actual_load))
+                # V5 exposes the measured causal load difference, including
+                # small raw negative readings. Physical execution retains its
+                # existing normalization; historical state modes are unchanged.
+                observed_load = loads[index] if state_mode == 'load_delta4' else actual_load
+                current_history = ((observed_load,) * 3 if history is None
+                                   else (*history[-2:], observed_load))
                 decision_state = build_state(physical, fc_history, current_history, state_mode=state_mode)
                 physical_actions = feasible_fc_actions(
                     physical, actual_load, accountant, duration_s=durations[index])
@@ -486,14 +528,17 @@ def replay_episode(
             shore_ledger = None
             modeled_ledger = None
             # Once per executed ONBOARD action, before any SHORE/terminal charge.
-            soc_penalty = beta_soc * soc_deviation_squared(next_physical.soc)
+            soc_penalty = (0.0 if reward_cost_mode == 'zhou_economic_only'
+                           else beta_soc * soc_deviation_squared(next_physical.soc))
             fc_ramp_penalty = (FC_RAMP_REWARD_CNY_PER_KW * abs(fc_kw - previous_fc_kw)
                                if reward_cost_mode in ('energy_with_fc_ramp', 'control_only') else 0.0)
             soc_energy_cost = 0.0
-            if reward_cost_mode == 'zhou_joint':
-                fc_ramp_penalty = FC_SQUARED_RAMP_REWARD_PER_KW2 * (fc_kw - previous_fc_kw) ** 2
+            if reward_cost_mode in ('zhou_joint', 'zhou_economic_only'):
+                if reward_cost_mode == 'zhou_joint':
+                    fc_ramp_penalty = FC_SQUARED_RAMP_REWARD_PER_KW2 * (fc_kw - previous_fc_kw) ** 2
                 soc_energy_cost = soc_equivalent_hydrogen_cost_cny(
-                    decision_state[0], next_physical.soc, economic_evaluation_config)
+                    state_feature_value(decision_state, 'soc', state_mode=state_mode),
+                    next_physical.soc, economic_evaluation_config)
             reward = (ledger_training_reward(ledger, reward_cost_mode)
                       - soc_energy_cost - soc_penalty - fc_ramp_penalty)
             if last_onboard and index + 1 < len(modes) and modes[index + 1] in SHORE_MODES:
@@ -538,7 +583,7 @@ def replay_episode(
                 if attached_ledger is not None
                 for cost in (attached_ledger.fuel_cell_degradation_cost_cny,
                              attached_ledger.battery_degradation_cost_cny)
-            ) if reward_cost_mode not in ('full_economic', 'zhou_joint') else 0.0)
+            ) if reward_cost_mode not in ('full_economic', 'zhou_joint', 'zhou_economic_only') else 0.0)
             original_reward = reward
             # Actual onboard SOC comes from next_physical, before any shore
             # settlement changes physical. No extra efficiency is applied.
@@ -549,13 +594,16 @@ def replay_episode(
                     correction = energy_value.terminal_correction(voyage_initial_soc,next_physical.soc)
                 reward = original_reward + adjustment + correction
             if shore_ledger is not None:
-                successor_load = (normalize_onboard_load_kw(loads[shore_end])
+                successor_load = ((loads[shore_end] if state_mode == 'load_delta4'
+                                   else normalize_onboard_load_kw(loads[shore_end]))
                                   if shore_end < len(modes) and modes[shore_end] is OperatingMode.ONBOARD
-                                  else actual_load)
+                                  else observed_load)
                 successor_history = (successor_load,) * 3
                 successor_fc_history = (physical.previous_fc_kw,) * 3
             elif index + 1 < len(modes) and modes[index + 1] is OperatingMode.ONBOARD:
-                successor_history = (*history[-2:], normalize_onboard_load_kw(loads[index + 1]))
+                successor_load = (loads[index + 1] if state_mode == 'load_delta4'
+                                  else normalize_onboard_load_kw(loads[index + 1]))
+                successor_history = (*history[-2:], successor_load)
                 successor_fc_history = fc_history
             else:
                 successor_history = history
@@ -595,6 +643,10 @@ def replay_episode(
                 action_delta_kw=int(fc_kw - previous_fc_kw),
                 soc_equivalent_hydrogen_cost_cny=soc_energy_cost,
             ))
+            # An empty nonterminal successor must first pass through the existing
+            # physical-failure handler. Never expose its unpenalized tail to TD.
+            if on_transition is not None and (done or next_feasible):
+                on_transition(index, transitions[-1])
             if last_onboard and shore_ledger is not None:
                 index = shore_end
                 break

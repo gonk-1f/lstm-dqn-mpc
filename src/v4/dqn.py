@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 import random
 from typing import Sequence
@@ -14,7 +14,10 @@ from torch import nn
 from dqn.networks.mlp_qnet import MLPQNetwork
 
 from .actions import action_values_kw, previous_grid_power_kw
-from .control import ACTION_KW, DEFAULT_STATE_MODE, STATE_FEATURES_BY_MODE, DirectTransition
+from .control import (
+    ACTION_KW, DEFAULT_STATE_MODE, STATE_FEATURES_BY_MODE, DirectTransition,
+    state_feature_value,
+)
 from .failure_replay import FAILURE_TERMINALS
 from .prioritized_replay import PriorityIndex
 
@@ -97,8 +100,8 @@ class DirectPowerDDQN:
         self.action_mode = action_mode
         self.action_values_kw = action_values_kw(action_mode)
         self.action_dim = len(self.action_values_kw)
-        if action_mode == 'increment7' and state_mode != 'minimal3':
-            raise ValueError('increment7 actions require minimal3 state')
+        if action_mode == 'increment7' and state_mode not in ('minimal3', 'load_delta4'):
+            raise ValueError('increment7 actions require minimal3 or load_delta4 state')
         if not 0 <= gamma <= 1 or learning_rate <= 0 or replay_capacity < 1:
             raise ValueError("invalid Double-DQN hyperparameters")
         if type(n_step) is not int or n_step not in (1, 8):
@@ -173,7 +176,8 @@ class DirectPowerDDQN:
         if self.action_mode == 'increment7':
             if state is None:
                 raise ValueError('increment action mapping requires the decision state')
-            action -= previous_grid_power_kw(self._state(state)[2] * 600.)
+            action -= previous_grid_power_kw(state_feature_value(
+                self._state(state), 'previous_fc_kw_over_600', state_mode=self.state_mode) * 600.)
         if action not in self.action_values_kw:
             raise ValueError('executed FC power does not match an available increment action')
         return self.action_values_kw.index(action)
@@ -186,7 +190,8 @@ class DirectPowerDDQN:
         if self.action_mode == 'increment7':
             if state is None:
                 raise ValueError('increment action mapping requires the decision state')
-            power += previous_grid_power_kw(self._state(state)[2] * 600.)
+            power += previous_grid_power_kw(state_feature_value(
+                self._state(state), 'previous_fc_kw_over_600', state_mode=self.state_mode) * 600.)
         if power not in ACTION_KW:
             raise ValueError('increment action exceeds the physical FC power range')
         return power
@@ -324,6 +329,35 @@ class DirectPowerDDQN:
             terminal_reason=transition.terminal_reason,
             failure_penalty_equivalent_cny=transition.failure_penalty_equivalent_cny,
         )
+
+    def finalize_streamed_failure_prefix(self, replay_ids: Sequence[int]) -> None:
+        """Set eventual outcome provenance after failure, without changing TD data.
+
+        A streaming prefix is sampled before its voyage outcome is known. Its
+        historical draw statistics keep that observed-at-draw classification;
+        the final live replay and insertion counters use the completed outcome.
+        Priority masses, masks, rewards and replay IDs are untouched.
+        """
+        ids = tuple(replay_ids)
+        if len(set(ids)) != len(ids):
+            raise ValueError('streamed prefix must contain distinct replay IDs')
+        live_count = min(len(ids), len(self.replay))
+        if not live_count:
+            return
+        tail = tuple(self.replay)[-live_count:]
+        if (tuple(t.replay_id for t in tail) != ids[-live_count:]
+                or any(t.done or t.experience_outcome != 'success' for t in tail)):
+            raise ValueError('streamed failure prefix must be the unfinalized live replay tail')
+        for old in tail:
+            item = replace(old, experience_outcome='failure')
+            self._ordinary_pool[self._ordinary_positions[old.replay_id]] = (old.replay_id, item)
+        for _ in range(live_count):
+            self.replay.pop()
+        self.replay.extend(replace(t, experience_outcome='failure') for t in tail)
+        self._pool_categories['ordinary_nonterminal'] -= live_count
+        self._pool_categories['failure_prefix'] = self._pool_categories.get('failure_prefix', 0) + live_count
+        self.economic_success_replay_insertions -= len(ids)
+        self.economic_failure_replay_insertions += len(ids)
 
     def _validate_transition_action(self, transition: DirectTransition) -> None:
         index = self.action_index_for_power(transition.action_kw, transition.state)
@@ -507,6 +541,9 @@ class DirectPowerDDQN:
                                          else float(sample_loss.mean().item()))
             self._td_sum += float(error.sum().item())
             self._td_abs_sum += float(error.abs().sum().item())
+            self._weighted_td_abs_sum += math.fsum(
+                weight * absolute_error for weight, absolute_error
+                in zip(weights, error.abs().flatten().tolist()))
             self._td_square_sum += float(error.square().sum().item())
             self._td_abs_max = max(self._td_abs_max, float(error.abs().max().item()))
             norm = float(preclip_norm.item())
@@ -570,8 +607,8 @@ class DirectPowerDDQN:
         return 'ordinary_nonterminal'
 
     def _record_coverage(self, coverage, item, increment):
-        soc = item.state[0]
-        load = item.state[self.state_features.index('current_load_kw_over_600')]*600.
+        soc = state_feature_value(item.state, 'soc', state_mode=self.state_mode)
+        load = state_feature_value(item.state, 'current_load_kw_over_600', state_mode=self.state_mode)*600.
         labels = {
             'soc': '<0.4' if soc < .4 else '0.4-0.6' if soc < .6 else '0.6-0.79' if soc < .79 else '>=0.79',
             'load_kw': '<200' if load < 200 else '200-600' if load < 600 else '>=600',
@@ -697,6 +734,7 @@ class DirectPowerDDQN:
 
     def _reset_extended_statistics(self) -> None:
         self._sampling_weight_sum = self._sampling_weight_max = 0.
+        self._weighted_td_abs_sum = 0.
         self._unweighted_loss_sum = 0.
         self._sampling_weight_min = math.inf
         self._sampling_repeated_draws = 0
@@ -759,6 +797,13 @@ class DirectPowerDDQN:
                 'importance_reference': ('all-pool uniform objective' if self.failure_terminal_quota == 0
                     else 'existing fixed failure-quota objective; not all-pool uniform'),
                 'mean_importance_weight': self._sampling_weight_sum / n if n else None,
+                'mean_is_weighted_absolute_td_error': self._weighted_td_abs_sum / n if n else None,
+                'is_normalized_absolute_td_error': (
+                    self._weighted_td_abs_sum / self._sampling_weight_sum
+                    if self._sampling_weight_sum else None),
+                'weighted_td_error_definition': (
+                    'sum(IS_weight*abs(target_minus_Q))/sample_count; normalized counterpart '
+                    'uses sum(IS_weight); both use the same pre-update TD and draws as loss'),
                 'mean_unweighted_smooth_l1_loss': self._unweighted_loss_sum / self._td_updates
                     if self._td_updates else None,
                 'min_importance_weight': self._sampling_weight_min if n else None,

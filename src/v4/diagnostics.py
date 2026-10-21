@@ -5,7 +5,9 @@ from math import fsum, isfinite, sqrt
 import torch
 
 from v3.control import AccountState
-from .control import ACTION_KW, DEFAULT_STATE_MODE, build_state, feasible_fc_actions
+from .control import (
+    ACTION_KW, DEFAULT_STATE_MODE, build_state, feasible_fc_actions, state_feature_value,
+)
 from .actions import action_values_kw, candidate_fc_actions
 from .telemetry import duration_weighted_mean
 
@@ -84,7 +86,7 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None, reward
             'policy_candidate_actions_kw': list(candidate_actions),
             'fc_stop_reason': (
                 'forced_no_positive_action' if item.action_kw == 0
-                and item.state[2 if len(item.state) == 3 else 1] > 0
+                and state_feature_value(item.state, 'previous_fc_kw_over_600') > 0
                 and physical_actions == (0,) else
                 'delayed_or_continued_off' if item.action_kw == 0 else None
             ),
@@ -92,6 +94,10 @@ def trajectory_record(sample_id, transitions, *, completed, failure=None, reward
             'successful_terminal':item.is_successful_terminal,
             'failure_penalty_equivalent_cny':item.failure_penalty_equivalent_cny,
         })
+        if reward_cost_mode == 'zhou_economic_only':
+            # Keep the exact causal observations for V5 counterfactual audits.
+            # Historical reward modes retain their existing archive size/layout.
+            rows[-1].update(state=list(item.state), next_state=list(item.next_state))
         voyage += int(item.done)
     return {'sample_id': str(sample_id), 'completed': completed, 'failure': failure,
             'transitions': rows, 'reward_feedback_totals': reward_totals(transitions),
@@ -134,19 +140,21 @@ def executed_transition_statistics(transitions, *, sample_transition_counts=None
     values = tuple(transitions)
     durations = tuple(getattr(item, 'duration_s', 30.0) for item in values)
     power = [item.action_kw for item in values]
-    raw_change = [item.action_kw-item.state[2 if len(item.state) == 3 else 1]*ACTION_KW[-1]
+    raw_change = [item.action_kw-state_feature_value(item.state, 'previous_fc_kw_over_600')*ACTION_KW[-1]
                   for item in values]
     # Undo machine roundoff from normalized FC state before strict threshold
     # comparisons, in diagnostic kW only; FC actions are on the 10 kW grid.
     change = [0.0 if abs(value) <= 1e-9 else round(value, 9) for value in raw_change]
     n = len(values)
     groups = None
+    reversals = eligible_direction_pairs = comparison_pairs = None
     if sample_transition_counts is not None:
         counts = tuple(sample_transition_counts)
         if any(type(count) is not int or count < 0 for count in counts) or sum(counts) != n:
             raise ValueError('sample_transition_counts must be nonnegative integer lengths summing to executed steps')
         grouped_change = {name: [] for name in ('sample_initial', 'shore_departure', 'continuous_onboard')}
         grouped_durations = {name: [] for name in grouped_change}
+        reversals = eligible_direction_pairs = comparison_pairs = 0
         offset = 0
         for count in counts:
             for index in range(offset, offset + count):
@@ -156,10 +164,22 @@ def executed_transition_statistics(transitions, *, sample_transition_counts=None
                          'continuous_onboard')
                 grouped_change[group].append(change[index])
                 grouped_durations[group].append(durations[index])
+                if group == 'continuous_onboard':
+                    comparison_pairs += 1
+                    if change[index - 1] != 0 and change[index] != 0:
+                        eligible_direction_pairs += 1
+                        reversals += int(change[index - 1] * change[index] < 0)
             offset += count
         groups = {name: _fc_change_statistics(changes, durations_s=grouped_durations[name])
                   for name, changes in grouped_change.items()}
     return {
+        'fc_direction_reversals': reversals,
+        'fc_direction_reversal_eligible_pairs': eligible_direction_pairs,
+        'fc_direction_comparison_pairs': comparison_pairs,
+        'fc_direction_reversal_definition': (
+            'Consecutive nonzero actual FC changes with opposite signs; excludes pairs '
+            'across sample/terminal/SHORE boundaries and does not bridge hold actions; '
+            'unavailable without explicit sample lengths'),
         'onboard_soc_max_including_failed_prefix': max((item.actual_soc for item in values),default=None),
         'fc_power_statistics_kw': {
             'sample_count': n, 'mean': duration_weighted_mean(power, durations),
