@@ -1,0 +1,104 @@
+{
+  "status": "completed",
+  "completed_at": "2026-10-26T12:39:34.186914+08:00",
+  "evidence_commit_pushed_and_verified_before_deletion": "f147fb56c6dbe11cc5a8ca1b6b101c76a55d38db",
+  "branch": "feat/v6-dqn-1s",
+  "scope": "Only V6 run01/run02 generated outputs and matching top-level log/PID files in this worktree; other worktrees and data inputs untouched.",
+  "removed_output_targets": [
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261024_run01",
+      "files": 36,
+      "bytes": 48525473.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02",
+      "files": 262,
+      "bytes": 348922182.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261024_run01.pid",
+      "files": 1,
+      "bytes": 7.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261024_run01.report.stderr.log",
+      "files": 1,
+      "bytes": 0.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261024_run01.report.stdout.log",
+      "files": 1,
+      "bytes": 0.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261024_run01.stderr.log",
+      "files": 1,
+      "bytes": 2739.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261024_run01.stdout.log",
+      "files": 1,
+      "bytes": 17668.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02.pid",
+      "files": 1,
+      "bytes": 7.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02.resume_20261025_162027.stderr.log",
+      "files": 1,
+      "bytes": 2819.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02.resume_20261025_162027.stdout.log",
+      "files": 1,
+      "bytes": 97620.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02.resume_20261026_093751.stderr.log",
+      "files": 1,
+      "bytes": 0.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02.resume_20261026_093751.stdout.log",
+      "files": 1,
+      "bytes": 106891.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02.stderr.log",
+      "files": 1,
+      "bytes": 1841.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02.stdout.log",
+      "files": 1,
+      "bytes": 16033.0
+    }
+  ],
+  "removed_output_file_count": 310,
+  "removed_output_logical_bytes": 397693280.0,
+  "local_archive_excluded_by_sparse_checkout": [
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\docs\\results\\v6_dqn_1s_20261026\\raw",
+      "files": 334,
+      "bytes": 402949036.0
+    },
+    {
+      "path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\docs\\results\\v6_dqn_1s_20261026\\browser",
+      "files": 57,
+      "bytes": 41622531.0
+    }
+  ],
+  "excluded_archive_file_count": 391,
+  "excluded_archive_logical_bytes": 444571567.0,
+  "cleanup_method": "After successful push and exact remote-ref confirmation: explicit-path git clean -fdX, then worktree-specific sparse checkout excludes only this archive raw/ and browser/.",
+  "retained_formal_input_file_count": 17,
+  "v6_output_targets_remaining": [],
+  "raw_archive_present": false,
+  "browser_archive_present": false,
+  "remote_materials_retained": true,
+  "git_object_database_retained": true,
+  "restore_local_materials": "git sparse-checkout disable",
+  "training_automatically_resumed": false
+}
