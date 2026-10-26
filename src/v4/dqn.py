@@ -8,6 +8,7 @@ import math
 import random
 from typing import Sequence
 
+import numpy as np
 import torch
 from torch import nn
 
@@ -54,6 +55,18 @@ def masked_double_dqn_targets(
     # A terminal never uses next-Q, even when that unused value is NaN/Inf.
     continuation=torch.where(done==0,discount*target_next_q.gather(1,selected),torch.zeros_like(rewards))
     return rewards+continuation
+
+
+def masked_dqn_targets(
+    rewards: torch.Tensor, target_next_q: torch.Tensor, done: torch.Tensor, *,
+    next_action_masks: torch.Tensor, gamma: float,
+) -> torch.Tensor:
+    """Ordinary one-step DQN: maximize the target network over legal actions."""
+    if ((done == 0).flatten() & ~next_action_masks.any(dim=1)).any():
+        raise ValueError('a nonterminal next state needs a feasible action')
+    maximum = target_next_q.masked_fill(~next_action_masks, -torch.inf).amax(dim=1, keepdim=True)
+    continuation = torch.where(done == 0, gamma * maximum, torch.zeros_like(rewards))
+    return rewards + continuation
 
 
 @dataclass(frozen=True)
@@ -981,3 +994,233 @@ class DirectPowerDDQN:
     def _sampling_config(self) -> dict:
         return {'mode': self.replay_sampling, 'alpha': self.per_alpha, 'beta': self.per_beta,
                 'epsilon': self.per_epsilon, 'failure_terminal_quota': self.failure_terminal_quota}
+
+
+class _UniformDQNReplay:
+    """Numeric FIFO ring; a uniform draw only touches the requested batch."""
+
+    _array_names = ('states', 'actions', 'rewards', 'next_states', 'done', 'masks',
+                    'outcomes', 'reasons', 'failure_penalties')
+    _outcome_names = ('success', 'failure', 'unresolved')
+    _reason_names = (None, 'completed', *sorted(FAILURE_TERMINALS))
+
+    def __init__(self, capacity: int):
+        self.maxlen = capacity
+        self.insertions = 0
+        self.states = np.empty((capacity, 5), dtype=np.float32)
+        self.actions = np.empty((capacity, 1), dtype=np.int64)
+        self.rewards = np.empty((capacity, 1), dtype=np.float32)
+        self.next_states = np.empty((capacity, 5), dtype=np.float32)
+        self.done = np.empty((capacity, 1), dtype=np.float32)
+        self.masks = np.empty((capacity, 13), dtype=np.bool_)
+        self.outcomes = np.empty(capacity, dtype=np.uint8)
+        self.reasons = np.empty(capacity, dtype=np.uint8)
+        self.failure_penalties = np.empty(capacity, dtype=np.float32)
+
+    def __len__(self):
+        return min(self.insertions, self.maxlen)
+
+    def __getitem__(self, index: int) -> ReplayItem:
+        size = len(self)
+        if index < 0:
+            index += size
+        if not 0 <= index < size:
+            raise IndexError(index)
+        replay_id = max(0, self.insertions - self.maxlen) + index
+        slot = replay_id % self.maxlen
+        return ReplayItem(
+            tuple(float(value) for value in self.states[slot]), int(self.actions[slot, 0]),
+            float(self.rewards[slot, 0]),
+            tuple(float(value) for value in self.next_states[slot]), bool(self.done[slot, 0]),
+            tuple(int(value) for value in np.flatnonzero(self.masks[slot])),
+            experience_outcome=self._outcome_names[self.outcomes[slot]],
+            terminal_reason=self._reason_names[self.reasons[slot]],
+            failure_penalty_equivalent_cny=float(self.failure_penalties[slot]), replay_id=replay_id,
+        )
+
+    def append(self, state, action_index, reward, next_state, done, next_indices,
+               outcome, reason, failure_penalty):
+        slot = self.insertions % self.maxlen
+        self.states[slot] = state
+        self.actions[slot, 0] = action_index
+        self.rewards[slot, 0] = reward
+        self.next_states[slot] = next_state
+        self.done[slot, 0] = done
+        self.masks[slot].fill(False)
+        self.masks[slot, list(next_indices)] = True
+        self.outcomes[slot] = self._outcome_names.index(outcome)
+        self.reasons[slot] = self._reason_names.index(reason)
+        self.failure_penalties[slot] = failure_penalty
+        self.insertions += 1
+
+    def sample(self, random_source: random.Random, batch_size: int, device: torch.device):
+        indices = np.asarray(random_source.sample(range(len(self)), batch_size), dtype=np.int64)
+        self.last_sample_indices = indices
+        return tuple(torch.as_tensor(values[indices], device=device) for values in (
+            self.states, self.actions, self.rewards, self.next_states, self.done, self.masks))
+
+    def state_dict(self) -> dict:
+        return {'capacity': self.maxlen, 'insertions': self.insertions,
+                **{name: getattr(self, name)[:len(self)].copy() for name in self._array_names}}
+
+    def load_state_dict(self, state: dict):
+        self.insertions = state['insertions']
+        for name in self._array_names:
+            getattr(self, name)[:len(self)] = state[name]
+
+
+class DirectPowerDQN:
+    """Frozen V6 DQN, isolated from the historical DDQN modes above."""
+
+    algorithm = 'dqn'
+    state_mode = 'history5'
+    action_mode = 'increment13'
+    state_dim, action_dim = 5, 13
+    gamma = reward_scale = 1.0
+    n_step = 1
+    replay_sampling = 'uniform'
+    failure_terminal_quota = 0
+    replay_diagnostics = False
+    target_update_mode = 'hard'
+    target_update_interval = 1000
+
+    def __init__(self, *, seed: int = 42, replay_capacity: int = 1_000_000,
+                 device: str = 'cpu', learning_rate: float = .0001,
+                 td_diagnostics: bool = True):
+        from .v6_td_diagnostics import OnlineTDDiagnostics
+
+        self.state_features = STATE_FEATURES_BY_MODE[self.state_mode]
+        self.action_values_kw = action_values_kw(self.action_mode)
+        self.device = torch.device(device)
+        self.random = random.Random(seed)
+        torch.manual_seed(seed)
+        self.online = MLPQNetwork(5, 13, (256, 256)).to(self.device)
+        self.target = MLPQNetwork(5, 13, (256, 256)).to(self.device)
+        self.target.requires_grad_(False)
+        self.target.eval()
+        self.optimizer = torch.optim.Adam(self.online.parameters(), lr=learning_rate,
+                                          betas=(.9, .999), eps=1e-8)
+        self.replay = _UniformDQNReplay(replay_capacity)
+        self.td_diagnostics = OnlineTDDiagnostics(seed) if td_diagnostics else None
+        self.economic_optimizer_updates = 0
+        self.economic_replay_insertions = 0
+        self.target_sync_calls = self.target_soft_update_calls = 0
+        self.sync_target()
+
+    def action_index_for_power(self, power_kw: int, state: Sequence[float]) -> int:
+        previous = previous_grid_power_kw(float(state[2]) * 600.)
+        return self.action_values_kw.index(power_kw - previous)
+
+    def action_power_kw(self, index: int, state: Sequence[float]) -> int:
+        power = previous_grid_power_kw(float(state[2]) * 600.) + self.action_values_kw[index]
+        if power not in ACTION_KW:
+            raise ValueError('increment action exceeds the physical FC power range')
+        return power
+
+    def _indices(self, powers: Sequence[int], state: Sequence[float]) -> tuple[int, ...]:
+        return tuple(self.action_index_for_power(power, state) for power in powers)
+
+    def select_power(self, state: Sequence[float], feasible_actions: Sequence[int], *,
+                     epsilon: float = 0.) -> int:
+        indices = self._indices(feasible_actions, state)
+        if not indices:
+            raise ValueError('no feasible FC action')
+        if self.random.random() < epsilon:
+            return self.action_power_kw(self.random.choice(indices), state)
+        with torch.no_grad():
+            q = self.online(torch.as_tensor([state], dtype=torch.float32, device=self.device))[0]
+        if not torch.isfinite(q).all():
+            raise FloatingPointError('non-finite V6 online Q values')
+        mask = torch.zeros(13, dtype=torch.bool, device=self.device)
+        mask[list(indices)] = True
+        index = int(q.masked_fill(~mask, -torch.inf).argmax().item())
+        return self.action_power_kw(index, state)
+
+    def remember(self, state: Sequence[float], action_kw: int, reward_cny: float,
+                 next_state: Sequence[float], *, done: bool,
+                 next_feasible_actions: Sequence[int], experience_outcome: str = 'success',
+                 terminal_reason: str | None = None,
+                 failure_penalty_equivalent_cny: float = 0.):
+        action_index = self.action_index_for_power(action_kw, state)
+        next_indices = self._indices(next_feasible_actions, next_state)
+        if not done and not next_indices:
+            raise ValueError('a nonterminal replay item needs a feasible next action')
+        if not math.isfinite(reward_cny):
+            raise FloatingPointError('non-finite V6 reward')
+        reason = terminal_reason if terminal_reason is not None else ('completed' if done else None)
+        self.replay.append(state, action_index, reward_cny, next_state, done, next_indices,
+                           experience_outcome, reason, failure_penalty_equivalent_cny)
+        self.economic_replay_insertions += 1
+        return self.replay.insertions - 1
+
+    def remember_transition(self, transition: DirectTransition):
+        self.remember(transition.state, transition.action_kw, transition.reward_cny,
+            transition.next_state, done=transition.done,
+            next_feasible_actions=transition.next_feasible_actions,
+            experience_outcome='failure' if transition.terminal_reason in FAILURE_TERMINALS else 'success',
+            terminal_reason=transition.terminal_reason,
+            failure_penalty_equivalent_cny=transition.failure_penalty_equivalent_cny)
+
+    def finalize_streamed_failure_prefix(self, replay_ids: Sequence[int]):
+        first_live = max(0, self.replay.insertions - self.replay.maxlen)
+        for replay_id in replay_ids:
+            if first_live <= replay_id < self.replay.insertions:
+                self.replay.outcomes[replay_id % self.replay.maxlen] = 1
+
+    def learn(self, *, batch_size: int = 64) -> float | None:
+        if len(self.replay) < batch_size:
+            return None
+        states, actions, rewards, next_states, done, masks = self.replay.sample(
+            self.random, batch_size, self.device)
+        all_q = self.online(states)
+        q = all_q.gather(1, actions)
+        with torch.no_grad():
+            next_q = self.target(next_states)
+            target = masked_dqn_targets(rewards, next_q, done,
+                next_action_masks=masks, gamma=self.gamma)
+        td_error = target - q
+        loss = nn.functional.smooth_l1_loss(q, target, beta=1.)
+        if not (torch.isfinite(all_q).all() and torch.isfinite(next_q).all()
+                and torch.isfinite(td_error).all() and torch.isfinite(loss)):
+            raise FloatingPointError('non-finite V6 Q, TD error or loss; Adam was not updated')
+        self.optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        nn.utils.clip_grad_norm_(self.online.parameters(), 10., error_if_nonfinite=True)
+        self.optimizer.step()
+        self.economic_optimizer_updates += 1
+        if self.td_diagnostics is not None:
+            self.td_diagnostics.observe(self.replay, q, target, td_error)
+        if self.economic_optimizer_updates % self.target_update_interval == 0:
+            self.sync_target()
+        return float(loss.item())
+
+    def sync_target(self):
+        self.target.load_state_dict(self.online.state_dict())
+        self.target_sync_calls += 1
+
+    def training_state(self) -> dict:
+        return {
+            'algorithm': self.algorithm, 'state_mode': self.state_mode,
+            'action_mode': self.action_mode, 'state_features': self.state_features,
+            'state_dim': self.state_dim, 'action_dim': self.action_dim,
+            'action_values_kw': self.action_values_kw,
+            'online': self.online.state_dict(), 'target': self.target.state_dict(),
+            'optimizer': self.optimizer.state_dict(), 'replay': self.replay.state_dict(),
+            'td_diagnostics': self.td_diagnostics.state_dict() if self.td_diagnostics is not None else None,
+            'random_state': self.random.getstate(), 'torch_rng_state': torch.random.get_rng_state(),
+            'counts': {name: getattr(self, name) for name in (
+                'economic_optimizer_updates', 'economic_replay_insertions',
+                'target_sync_calls', 'target_soft_update_calls')},
+        }
+
+    def load_training_state(self, state: dict):
+        self.online.load_state_dict(state['online'])
+        self.target.load_state_dict(state['target'])
+        self.optimizer.load_state_dict(state['optimizer'])
+        self.replay.load_state_dict(state['replay'])
+        if self.td_diagnostics is not None and state['td_diagnostics'] is not None:
+            self.td_diagnostics.load_state_dict(state['td_diagnostics'])
+        self.random.setstate(state['random_state'])
+        torch.random.set_rng_state(state['torch_rng_state'])
+        for name, value in state['counts'].items():
+            setattr(self, name, value)

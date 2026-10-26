@@ -1,0 +1,533 @@
+{
+  "round": 2,
+  "configuration": {
+    "algorithm": "DQN",
+    "network": [
+      5,
+      256,
+      256,
+      13
+    ],
+    "seed": 42,
+    "state_mode": "history5",
+    "action_mode": "increment13",
+    "sample_seconds": 1,
+    "actions_kw": [
+      -60,
+      -50,
+      -40,
+      -30,
+      -20,
+      -10,
+      0,
+      10,
+      20,
+      30,
+      40,
+      50,
+      60
+    ],
+    "action_semantics": "actual increment per 1-second decision",
+    "gamma": 1.0,
+    "n_step": 1,
+    "learning_rate": 0.0001,
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "loss": "SmoothL1",
+    "huber_beta": 1.0,
+    "gradient_clip_norm": 10.0,
+    "reward_scale": 1.0,
+    "soc_reference": 0.5,
+    "soc_denominator": 0.1,
+    "soc_weight": 0.2,
+    "fc_ramp_weight": 0.05,
+    "fc_ramp_denominator": 600.0,
+    "replay_sampling": "uniform",
+    "failure_terminal_quota": 0,
+    "replay_capacity": 1000000,
+    "batch_size": 64,
+    "warmup_transitions": 50000,
+    "train_freq": 1,
+    "gradient_steps": 1,
+    "target_update": "hard",
+    "target_interval": 1000,
+    "rounds": 8,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay_rounds": 6,
+    "physical_ramp_status": "simulation assumption; not vessel-calibrated",
+    "candidate_selection": "Validation completed count, then duration coverage; full-set economic cost when all complete",
+    "failure_penalty": 10132.660087898294
+  },
+  "train": {
+    "episodes": 35,
+    "completed": 28,
+    "failure_reasons": {
+      "soc_limited": 4,
+      "structural_power": 0,
+      "increment_action_limited": 3
+    },
+    "environment_steps": 358449,
+    "failure_boundary_counts": {
+      "upper": 1,
+      "lower": 6,
+      "interior": 0
+    },
+    "executed_duration_s": 358449.0,
+    "mean_duration_coverage": 0.8709596685021539,
+    "fixed_complete_set_cost_cny": null,
+    "executed_prefix_cost_cny": 3420279.089117951,
+    "fc_changes_per_hour": 3220.8565235221745,
+    "fc_reversals_per_hour": 1515.4390164291153,
+    "fc_mean_absolute_ramp_kw_per_s": 28.503050643187734,
+    "fc_h2_kg": 1382.522114017582,
+    "fc_h2_cost_cny": 30277.234296985047,
+    "battery_h2eq_cost_cny": 2840.3287129982386,
+    "fc_degradation_cost_cny": 3383290.4061250696,
+    "battery_degradation_cost_cny": 3871.1199828985,
+    "shore_electricity_cost_cny": 0.0,
+    "ledger_total_cost_cny": 3417438.760404953,
+    "soc_min": 0.2000292446863175,
+    "soc_max": 0.7999864011238125,
+    "failure_classification_note": "SOC boundary side and action/physical failure reason are overlapping classifications.",
+    "all_executed": {
+      "fc_h2_cost_cny": 30277.234296985047,
+      "battery_h2eq_cost_cny": 2840.3287129982386,
+      "fc_degradation_cost_cny": 3383290.4061250696,
+      "battery_degradation_cost_cny": 3871.1199828985,
+      "shore_electricity_cost_cny": 0.0,
+      "ledger_total_cost_cny": 3417438.760404953,
+      "episodes": 35,
+      "executed_duration_s": 358449.0,
+      "fc_h2_kg": 1382.522114017582,
+      "economic_cost_cny": 3420279.089117951
+    },
+    "failed_prefixes": {
+      "fc_h2_cost_cny": 4743.854758864728,
+      "battery_h2eq_cost_cny": 1578.6274851801356,
+      "fc_degradation_cost_cny": 515914.6956666805,
+      "battery_degradation_cost_cny": 812.3141541236079,
+      "shore_electricity_cost_cny": 0.0,
+      "ledger_total_cost_cny": 521470.86457966885,
+      "episodes": 7,
+      "executed_duration_s": 52974.0,
+      "fc_h2_kg": 216.6143725509008,
+      "economic_cost_cny": 523049.492064849
+    },
+    "completed_voyages": {
+      "fc_h2_cost_cny": 25533.379538120316,
+      "battery_h2eq_cost_cny": 1261.7012278181032,
+      "fc_degradation_cost_cny": 2867375.710458389,
+      "battery_degradation_cost_cny": 3058.8058287748922,
+      "shore_electricity_cost_cny": 0.0,
+      "ledger_total_cost_cny": 2895967.895825284,
+      "episodes": 28,
+      "executed_duration_s": 305475.0,
+      "fc_h2_kg": 1165.9077414666813,
+      "economic_cost_cny": 2897229.597053102
+    }
+  },
+  "validation": {
+    "episodes": 8,
+    "completed": 7,
+    "failure_reasons": {
+      "soc_limited": 1,
+      "structural_power": 0,
+      "increment_action_limited": 0
+    },
+    "environment_steps": 126155,
+    "failure_boundary_counts": {
+      "upper": 0,
+      "lower": 1,
+      "interior": 0
+    },
+    "executed_duration_s": 126155.0,
+    "mean_duration_coverage": 0.9100986479310486,
+    "fixed_complete_set_cost_cny": null,
+    "executed_prefix_cost_cny": 38750.62342985715,
+    "fc_changes_per_hour": 44.06008481629741,
+    "fc_reversals_per_hour": 3.395822599183544,
+    "fc_mean_absolute_ramp_kw_per_s": 0.5557449169672228,
+    "fc_h2_kg": 528.1598636379599,
+    "fc_h2_cost_cny": 11566.701013671323,
+    "battery_h2eq_cost_cny": 905.413565257879,
+    "fc_degradation_cost_cny": 25468.334041665454,
+    "battery_degradation_cost_cny": 810.1748092624996,
+    "shore_electricity_cost_cny": 0.0,
+    "ledger_total_cost_cny": 37845.209864599274,
+    "soc_min": 0.20007478515995117,
+    "soc_max": 0.6,
+    "failure_classification_note": "SOC boundary side and action/physical failure reason are overlapping classifications.",
+    "all_executed": {
+      "fc_h2_cost_cny": 11566.701013671323,
+      "battery_h2eq_cost_cny": 905.413565257879,
+      "fc_degradation_cost_cny": 25468.334041665454,
+      "battery_degradation_cost_cny": 810.1748092624996,
+      "shore_electricity_cost_cny": 0.0,
+      "ledger_total_cost_cny": 37845.209864599274,
+      "episodes": 8,
+      "executed_duration_s": 126155.0,
+      "fc_h2_kg": 528.1598636379599,
+      "economic_cost_cny": 38750.62342985715
+    },
+    "failed_prefixes": {
+      "fc_h2_cost_cny": 1055.3504506672934,
+      "battery_h2eq_cost_cny": 287.0387737664824,
+      "fc_degradation_cost_cny": 1807.3638333336214,
+      "battery_degradation_cost_cny": 83.10443542566726,
+      "shore_electricity_cost_cny": 0.0,
+      "ledger_total_cost_cny": 2945.818719426582,
+      "episodes": 1,
+      "executed_duration_s": 6874.0,
+      "fc_h2_kg": 48.18951829531021,
+      "economic_cost_cny": 3232.8574931930643
+    },
+    "completed_voyages": {
+      "fc_h2_cost_cny": 10511.350563004029,
+      "battery_h2eq_cost_cny": 618.3747914913966,
+      "fc_degradation_cost_cny": 23660.97020833183,
+      "battery_degradation_cost_cny": 727.0703738368323,
+      "shore_electricity_cost_cny": 0.0,
+      "ledger_total_cost_cny": 34899.39114517269,
+      "episodes": 7,
+      "executed_duration_s": 119281.0,
+      "fc_h2_kg": 479.97034534264975,
+      "economic_cost_cny": 35517.76593666409
+    }
+  },
+  "epsilon_start": 0.8416666666666667,
+  "epsilon_end": 0.6833333333333333,
+  "adam_updates": 358449,
+  "target_copies": 358,
+  "cumulative_adam_updates": 632575,
+  "cumulative_target_copies": 633,
+  "q_diagnostics": {
+    "training_td_fit": {
+      "scope": "actual optimizer minibatch draws before Adam; count includes repeat draws",
+      "residual_definition": "target minus Q(s, executed_action)",
+      "prefix_label_note": "A streaming prefix remains normal_nonterminal until its voyage fails; historical draws retain their label at draw time.",
+      "reservoir_capacity_per_class": 8192,
+      "groups": {
+        "normal_nonterminal": {
+          "sample_count": 15215879,
+          "mae": 0.4235066186585783,
+          "absolute_residual_p95": 1.2699768066406245,
+          "p95_sample_count": 8192,
+          "p95_method": "uniform_reservoir_estimate",
+          "q": {
+            "mean": -108.00976175793909,
+            "min": -1122.568115234375,
+            "max": 33.691829681396484
+          },
+          "target": {
+            "mean": -107.9947405966258,
+            "min": -1121.97412109375,
+            "max": 32.96491622924805
+          },
+          "residual_target_minus_q": {
+            "mean": 0.015021161313549095,
+            "min": -43.73199462890625,
+            "max": 48.60601806640625
+          }
+        },
+        "normal_terminal": {
+          "sample_count": 1601,
+          "mae": 65.92737159702105,
+          "absolute_residual_p95": 285.30975341796875,
+          "p95_sample_count": 1601,
+          "p95_method": "exact_all_draws",
+          "q": {
+            "mean": -64.39063866076518,
+            "min": -416.91925048828125,
+            "max": 20.79659080505371
+          },
+          "target": {
+            "mean": -0.29814246731422267,
+            "min": -0.8858068585395813,
+            "max": -0.007850212045013905
+          },
+          "residual_target_minus_q": {
+            "mean": 64.09249643730622,
+            "min": -20.922658920288086,
+            "max": 416.033447265625
+          }
+        },
+        "failure_terminal": {
+          "sample_count": 1147,
+          "mae": 9354.32997169927,
+          "absolute_residual_p95": 9666.74248046875,
+          "p95_sample_count": 1147,
+          "p95_method": "exact_all_draws",
+          "q": {
+            "mean": -780.4133990686046,
+            "min": -1548.9945068359375,
+            "max": -420.6755676269531
+          },
+          "target": {
+            "mean": -10134.743374359743,
+            "min": -10135.08984375,
+            "max": -10134.486328125
+          },
+          "residual_target_minus_q": {
+            "mean": -9354.32997169927,
+            "min": -9714.15234375,
+            "max": -8586.0283203125
+          }
+        },
+        "failure_prefix": {
+          "sample_count": 7722109,
+          "mae": 0.4893490108633027,
+          "absolute_residual_p95": 1.4972436904907223,
+          "p95_sample_count": 8192,
+          "p95_method": "uniform_reservoir_estimate",
+          "q": {
+            "mean": -214.94284307372178,
+            "min": -1554.4844970703125,
+            "max": 26.674646377563477
+          },
+          "target": {
+            "mean": -214.9472020889837,
+            "min": -1560.144287109375,
+            "max": 26.31638526916504
+          },
+          "residual_target_minus_q": {
+            "mean": -0.004359015261799405,
+            "min": -107.54248046875,
+            "max": 57.69305419921875
+          }
+        }
+      },
+      "failure_terminal_draws_total": {
+        "16888": 147,
+        "35491": 188,
+        "1940": 159,
+        "41212": 152,
+        "20338": 184,
+        "63649": 151,
+        "66204": 164,
+        "71842": 158,
+        "74050": 134,
+        "84909": 133,
+        "87471": 139,
+        "107809": 109,
+        "144528": 97,
+        "168005": 104,
+        "214021": 74,
+        "210068": 67,
+        "255791": 73,
+        "278005": 56,
+        "275153": 64,
+        "281901": 43,
+        "347929": 50,
+        "428831": 29,
+        "460603": 27,
+        "463588": 23,
+        "481053": 20,
+        "485296": 31,
+        "652513": 5
+      },
+      "failure_terminal_draws_window": {
+        "255791": 49,
+        "63649": 64,
+        "168005": 60,
+        "41212": 53,
+        "275153": 55,
+        "281901": 36,
+        "66204": 52,
+        "71842": 46,
+        "144528": 49,
+        "84909": 49,
+        "1940": 45,
+        "87471": 48,
+        "107809": 48,
+        "20338": 47,
+        "278005": 45,
+        "35491": 52,
+        "214021": 47,
+        "16888": 36,
+        "74050": 34,
+        "210068": 47,
+        "347929": 50,
+        "428831": 29,
+        "460603": 27,
+        "463588": 23,
+        "481053": 20,
+        "485296": 31,
+        "652513": 5
+      }
+    },
+    "checkpoint_replay_fit": {
+      "round": 2,
+      "replay_count": 682575,
+      "measured_count": 16461,
+      "scope": "read-only stratified replay diagnostic; measured_count is not the replay population or actual optimizer draws",
+      "target_formula": "reward + gamma*(1-done)*max_legal Q_target(next_state, action)",
+      "residual_definition": "target minus Q_online(state, executed_action)",
+      "sampling": "up to 8192 distinct entries per class; entire class when at most 8192",
+      "p95_note": "P95 is exact for the saved diagnostic sample; it is not asserted to be the full-replay P95.",
+      "raw_samples": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02\\round_02_replay_td_fit.csv.gz",
+      "groups": {
+        "normal_nonterminal": {
+          "sample_count": 8192,
+          "mae": 0.6002190192039052,
+          "absolute_residual_p95": 1.8509388923645018,
+          "p95_sample_count": 8192,
+          "p95_method": "exact_on_saved_diagnostic_sample",
+          "q": {
+            "mean": -114.82554181334774,
+            "min": -1114.6378173828125,
+            "max": 26.38364028930664
+          },
+          "target": {
+            "mean": -114.8331046465164,
+            "min": -1117.2208251953125,
+            "max": 26.326282501220703
+          },
+          "residual_target_minus_q": {
+            "mean": -0.007562833162410243,
+            "min": -24.049072265625,
+            "max": 47.91925048828125
+          },
+          "replay_count": 502329,
+          "measured_count": 8192
+        },
+        "normal_terminal": {
+          "sample_count": 50,
+          "mae": 61.24454381465912,
+          "absolute_residual_p95": 335.04633789062495,
+          "p95_sample_count": 50,
+          "p95_method": "exact_on_saved_diagnostic_sample",
+          "q": {
+            "mean": -57.54629886060953,
+            "min": -420.9384460449219,
+            "max": 20.9948673248291
+          },
+          "target": {
+            "mean": -0.236321361400187,
+            "min": -0.8858068585395813,
+            "max": -0.007850212045013905
+          },
+          "residual_target_minus_q": {
+            "mean": 57.30997750163078,
+            "min": -21.021644592285156,
+            "max": 420.0526428222656
+          },
+          "replay_count": 50,
+          "measured_count": 50
+        },
+        "failure_terminal": {
+          "sample_count": 27,
+          "mae": 9028.634440104166,
+          "absolute_residual_p95": 9334.74853515625,
+          "p95_sample_count": 27,
+          "p95_method": "exact_on_saved_diagnostic_sample",
+          "q": {
+            "mean": -1106.127369068287,
+            "min": -1571.9376220703125,
+            "max": -782.4212646484375
+          },
+          "target": {
+            "mean": -10134.761899594907,
+            "min": -10135.08984375,
+            "max": -10134.486328125
+          },
+          "residual_target_minus_q": {
+            "mean": -9028.634440104166,
+            "min": -9352.1083984375,
+            "max": -8563.0849609375
+          },
+          "replay_count": 27,
+          "measured_count": 27
+        },
+        "failure_prefix": {
+          "sample_count": 8192,
+          "mae": 0.835161829532808,
+          "absolute_residual_p95": 2.5610080718994137,
+          "p95_sample_count": 8192,
+          "p95_method": "exact_on_saved_diagnostic_sample",
+          "q": {
+            "mean": -292.2319460742365,
+            "min": -1505.12353515625,
+            "max": 25.37337875366211
+          },
+          "target": {
+            "mean": -292.273556577004,
+            "min": -1506.103515625,
+            "max": 25.675594329833984
+          },
+          "residual_target_minus_q": {
+            "mean": -0.04161050276343303,
+            "min": -83.184326171875,
+            "max": 32.46075439453125
+          },
+          "replay_count": 180169,
+          "measured_count": 8192
+        }
+      }
+    },
+    "fixed_probes": {
+      "file": "q_probes/round_02.json",
+      "count": 44
+    },
+    "train_failure_value": {
+      "file": "round_02_train_failure_values.csv.gz",
+      "prefix_file": "round_02_train_failure_prefixes.csv.gz",
+      "recorded_prefix_rows": 2121,
+      "probes_count": 606,
+      "events": [
+        {
+          "boundary_side": "lower",
+          "sample_id": "parent_015_seg01",
+          "origin_round": 1,
+          "terminal_replay_id": 63649,
+          "actual_training_draws": 151,
+          "terminal_q": -1514.0223388671875,
+          "terminal_target": -10135.0263671875,
+          "terminal_signed_residual": -8621.004028320312,
+          "terminal_mae": 8621.004028320312,
+          "prefix_td_mae": 0.8232725029749586,
+          "full_q_rows": 303
+        },
+        {
+          "boundary_side": "upper",
+          "sample_id": "parent_010_seg01",
+          "origin_round": 1,
+          "terminal_replay_id": 66204,
+          "actual_training_draws": 164,
+          "terminal_q": -782.4212646484375,
+          "terminal_target": -10134.529296875,
+          "terminal_signed_residual": -9352.108032226562,
+          "terminal_mae": 9352.108032226562,
+          "prefix_td_mae": 0.7853954390974234,
+          "full_q_rows": 303
+        }
+      ],
+      "interpretation": "Only actual Train transitions; read-only checkpoint inference. Observed return is the realized epsilon-greedy trajectory return, not Q* or a counterfactual benefit. TD targets use current target-network masked max; they are moving learning targets. The first upper/lower failures are fixed for checkpoint comparisons; no report rows enter Replay."
+    }
+  },
+  "trends_vs_previous_round": {
+    "validation_completed_delta": 0,
+    "validation_boundary_failures_delta": 0,
+    "validation_changes_per_hour_delta": -1601.8974697039168,
+    "validation_reversals_per_hour_delta": -1461.3101993433736,
+    "td_error_source": "checkpoint_replay_fit",
+    "td_error_metric": "sample_weighted_mae",
+    "td_error_delta": 3.6043836457058003
+  },
+  "interpretation_notes": [
+    "TD target 不是 Q*。训练时 Online/Target 参数变化会改变目标；拟合误差仅衡量对对应时刻 bootstrap 目标的拟合。",
+    "Loss、TD 误差或单个状态 Q 值不能单独证明控制改善；同时检查完整航段完成数、边界失败和物理时间尺度的功率波动。",
+    "固定 Validation 探针仅用于报告，不加入 Replay、不训练；Test 不读取。",
+    "失败前缀成本只覆盖实际执行区间；完整航段子集成本不是固定全套成本。SOC/ramp/失败惩罚不计入经济账本。",
+    "SOC 上/下边界计数与增量动作不可达计数是交叉分类，不可相加作为失败总数。",
+    "在线 draw 与 checkpoint 分层诊断样本的分布不同；加权 MAE 仅在同一统计口径内作轮间比较，并同时保留各类别误差。",
+    "分层诊断样本和 TD 目标均随轮次变化；weighted MAE 的变化仅作描述，不能解释为对 Q* 的拟合改善。",
+    "实际失败轨迹回报来自当时行为策略，不是最优 Q 的真值；未知终局的历史 draw 分类不会在航段失败后追改。",
+    "失败终止诊断样本平均 target−Q=-9028.634440；Q仍偏高，平均低估已观测失败代价。该判断针对已执行失败动作，不将此前行为轨迹回报当作Q*。",
+    "固定Train lower失败 parent_015_seg01 的终止经验累计实际抽样 151 次；终止 target−Q=-8621.004028，终止MAE=8621.004028。前缀与终止拟合及Validation需同时查看。",
+    "固定Train upper失败 parent_010_seg01 的终止经验累计实际抽样 164 次；终止 target−Q=-9352.108032，终止MAE=9352.108032。前缀与终止拟合及Validation需同时查看。"
+  ]
+}

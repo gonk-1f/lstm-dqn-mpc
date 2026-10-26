@@ -1,0 +1,1533 @@
+{
+  "analysis_type": "read-only algebra and existing trajectory statistics; no simulation, no new Q evaluation",
+  "failures": [
+    {
+      "sample_id": "parent_002_seg01",
+      "failed_time_s": 10087.0,
+      "failed_timestamp": "2024-03-27 10:19:36+08:00",
+      "load_kw": 42.16380258370371,
+      "soc": 0.7999443470462804,
+      "soc_previous_second": 0.7998309375403652,
+      "previous_fc_kw": 310.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 173.76253441094582,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 170,
+      "all13_raw_candidates_kw": [
+        250.0,
+        260.0,
+        270.0,
+        280.0,
+        290.0,
+        300.0,
+        310.0,
+        320.0,
+        330.0,
+        340.0,
+        350.0,
+        360.0,
+        370.0
+      ],
+      "all13_inbounds_candidates_kw": [
+        250.0,
+        260.0,
+        270.0,
+        280.0,
+        290.0,
+        300.0,
+        310.0,
+        320.0,
+        330.0,
+        340.0,
+        350.0,
+        360.0,
+        370.0
+      ],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "required_continuous_delta_kw": -136.23746558905418,
+      "required_10kw_grid_delta_kw": -140.0,
+      "continuous_feasible": true,
+      "range_failure": true,
+      "legal_actions_25_same_range": [],
+      "final_load_jump_kw": 0.3355016237037134,
+      "last_action_delta_kw": 0.0,
+      "last_action_q": -193.57325744628906,
+      "last_action_hold_rank": "1",
+      "last_action_q_ranking": [
+        {
+          "delta_kw": 0,
+          "fc_kw": 310.0,
+          "q": -193.57325744628906
+        },
+        {
+          "delta_kw": -30,
+          "fc_kw": 280.0,
+          "q": -193.59332275390625
+        },
+        {
+          "delta_kw": 30,
+          "fc_kw": 340.0,
+          "q": -193.63302612304688
+        },
+        {
+          "delta_kw": -50,
+          "fc_kw": 260.0,
+          "q": -193.64418029785156
+        },
+        {
+          "delta_kw": 10,
+          "fc_kw": 320.0,
+          "q": -193.64572143554688
+        },
+        {
+          "delta_kw": -20,
+          "fc_kw": 290.0,
+          "q": -193.69921875
+        },
+        {
+          "delta_kw": -10,
+          "fc_kw": 300.0,
+          "q": -193.7782440185547
+        },
+        {
+          "delta_kw": -60,
+          "fc_kw": 250.0,
+          "q": -193.9431915283203
+        },
+        {
+          "delta_kw": -40,
+          "fc_kw": 270.0,
+          "q": -193.95225524902344
+        },
+        {
+          "delta_kw": 20,
+          "fc_kw": 330.0,
+          "q": -193.9799041748047
+        },
+        {
+          "delta_kw": 40,
+          "fc_kw": 350.0,
+          "q": -194.42433166503906
+        },
+        {
+          "delta_kw": 60,
+          "fc_kw": 370.0,
+          "q": -194.44204711914062
+        },
+        {
+          "delta_kw": 50,
+          "fc_kw": 360.0,
+          "q": -194.515625
+        }
+      ],
+      "last60_max_abs_load_jump_kw": 3.4662791808093516,
+      "last60_soc_change": 0.006200445878645433,
+      "last60_fc_min_kw": 210.0,
+      "last60_fc_max_kw": 380.0,
+      "last60_battery_bus_energy_kwh": -4.072713924500176,
+      "observed_prefix_max_abs_load_jump_kw": 27.08434529240867,
+      "consecutive_same_battery_direction_seconds": 306,
+      "battery_direction": "charging",
+      "observed_terminal_reward": -10133.574862019903,
+      "observed_terminal_td_target_minus_q": -9940.001604573614,
+      "window_mean_battery_kw": {
+        "60": -244.36283547001054,
+        "30": -258.3401037870816,
+        "5": -268.6712887940741
+      }
+    },
+    {
+      "sample_id": "parent_011_seg01",
+      "failed_time_s": 7854.0,
+      "failed_timestamp": "2024-04-17 11:56:00+08:00",
+      "load_kw": 68.24081529758497,
+      "soc": 0.7999513102898966,
+      "soc_previous_second": 0.799861760689209,
+      "previous_fc_kw": 280.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 183.37404137790378,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 180,
+      "all13_raw_candidates_kw": [
+        220.0,
+        230.0,
+        240.0,
+        250.0,
+        260.0,
+        270.0,
+        280.0,
+        290.0,
+        300.0,
+        310.0,
+        320.0,
+        330.0,
+        340.0
+      ],
+      "all13_inbounds_candidates_kw": [
+        220.0,
+        230.0,
+        240.0,
+        250.0,
+        260.0,
+        270.0,
+        280.0,
+        290.0,
+        300.0,
+        310.0,
+        320.0,
+        330.0,
+        340.0
+      ],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "required_continuous_delta_kw": -96.62595862209622,
+      "required_10kw_grid_delta_kw": -100.0,
+      "continuous_feasible": true,
+      "range_failure": true,
+      "legal_actions_25_same_range": [],
+      "final_load_jump_kw": -0.007371034272466659,
+      "last_action_delta_kw": 0.0,
+      "last_action_q": -194.13511657714844,
+      "last_action_hold_rank": "1",
+      "last_action_q_ranking": [
+        {
+          "delta_kw": 0,
+          "fc_kw": 280.0,
+          "q": -194.13511657714844
+        },
+        {
+          "delta_kw": -30,
+          "fc_kw": 250.0,
+          "q": -194.14794921875
+        },
+        {
+          "delta_kw": -50,
+          "fc_kw": 230.0,
+          "q": -194.16049194335938
+        },
+        {
+          "delta_kw": 30,
+          "fc_kw": 310.0,
+          "q": -194.19412231445312
+        },
+        {
+          "delta_kw": 10,
+          "fc_kw": 290.0,
+          "q": -194.21676635742188
+        },
+        {
+          "delta_kw": -20,
+          "fc_kw": 260.0,
+          "q": -194.25729370117188
+        },
+        {
+          "delta_kw": -10,
+          "fc_kw": 270.0,
+          "q": -194.3293914794922
+        },
+        {
+          "delta_kw": -60,
+          "fc_kw": 220.0,
+          "q": -194.4739990234375
+        },
+        {
+          "delta_kw": -40,
+          "fc_kw": 240.0,
+          "q": -194.50161743164062
+        },
+        {
+          "delta_kw": 20,
+          "fc_kw": 300.0,
+          "q": -194.55618286132812
+        },
+        {
+          "delta_kw": 40,
+          "fc_kw": 320.0,
+          "q": -194.99365234375
+        },
+        {
+          "delta_kw": 60,
+          "fc_kw": 340.0,
+          "q": -195.0205078125
+        },
+        {
+          "delta_kw": 50,
+          "fc_kw": 330.0,
+          "q": -195.08653259277344
+        }
+      ],
+      "last60_max_abs_load_jump_kw": 0.4244442115497975,
+      "last60_soc_change": 0.005732899181777773,
+      "last60_fc_min_kw": 270.0,
+      "last60_fc_max_kw": 360.0,
+      "last60_battery_bus_energy_kwh": -3.76560956782029,
+      "observed_prefix_max_abs_load_jump_kw": 14.706184734814826,
+      "consecutive_same_battery_direction_seconds": 317,
+      "battery_direction": "charging",
+      "observed_terminal_reward": -10133.582098803523,
+      "observed_terminal_td_target_minus_q": -9939.446982226375,
+      "window_mean_battery_kw": {
+        "60": -225.9365740692174,
+        "30": -211.62506172090357,
+        "5": -211.73560209415882
+      }
+    },
+    {
+      "sample_id": "parent_016_seg01",
+      "failed_time_s": 7215.0,
+      "failed_timestamp": "2024-04-30 10:19:25+08:00",
+      "load_kw": 574.458292,
+      "soc": 0.20000078207456407,
+      "soc_previous_second": 0.20022347378552968,
+      "previous_fc_kw": 100.0,
+      "continuous_fc_min_kw": 572.7892823143435,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 580,
+      "physical_grid_max_kw": 600,
+      "all13_raw_candidates_kw": [
+        40.0,
+        50.0,
+        60.0,
+        70.0,
+        80.0,
+        90.0,
+        100.0,
+        110.0,
+        120.0,
+        130.0,
+        140.0,
+        150.0,
+        160.0
+      ],
+      "all13_inbounds_candidates_kw": [
+        40.0,
+        50.0,
+        60.0,
+        70.0,
+        80.0,
+        90.0,
+        100.0,
+        110.0,
+        120.0,
+        130.0,
+        140.0,
+        150.0,
+        160.0
+      ],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "required_continuous_delta_kw": 472.7892823143435,
+      "required_10kw_grid_delta_kw": 480.0,
+      "continuous_feasible": true,
+      "range_failure": true,
+      "legal_actions_25_same_range": [],
+      "final_load_jump_kw": -0.7836345374814755,
+      "last_action_delta_kw": -10.0,
+      "last_action_q": -199.55722045898438,
+      "last_action_hold_rank": "4",
+      "last_action_q_ranking": [
+        {
+          "delta_kw": -10,
+          "fc_kw": 100.0,
+          "q": -199.55722045898438
+        },
+        {
+          "delta_kw": 10,
+          "fc_kw": 120.0,
+          "q": -199.55953979492188
+        },
+        {
+          "delta_kw": 20,
+          "fc_kw": 130.0,
+          "q": -199.65402221679688
+        },
+        {
+          "delta_kw": 0,
+          "fc_kw": 110.0,
+          "q": -199.65408325195312
+        },
+        {
+          "delta_kw": 50,
+          "fc_kw": 160.0,
+          "q": -199.68978881835938
+        },
+        {
+          "delta_kw": 30,
+          "fc_kw": 140.0,
+          "q": -199.91119384765625
+        },
+        {
+          "delta_kw": 40,
+          "fc_kw": 150.0,
+          "q": -200.52389526367188
+        },
+        {
+          "delta_kw": 60,
+          "fc_kw": 170.0,
+          "q": -201.01641845703125
+        }
+      ],
+      "last60_max_abs_load_jump_kw": 0.7836345374814755,
+      "last60_soc_change": -0.01193494427000552,
+      "last60_fc_min_kw": 90.0,
+      "last60_fc_max_kw": 220.0,
+      "last60_battery_bus_energy_kwh": 7.075034963259262,
+      "observed_prefix_max_abs_load_jump_kw": 15.876698478820458,
+      "consecutive_same_battery_direction_seconds": 1719,
+      "battery_direction": "discharging",
+      "observed_terminal_reward": -10133.765388748448,
+      "observed_terminal_td_target_minus_q": -9934.208168289464,
+      "window_mean_battery_kw": {
+        "60": 424.5020977955557,
+        "30": 458.62139273777774,
+        "5": 474.7603637866667
+      }
+    },
+    {
+      "sample_id": "parent_020_seg01",
+      "failed_time_s": 3362.0,
+      "failed_timestamp": "2024-05-10 09:19:44+08:00",
+      "load_kw": 30.749883656381716,
+      "soc": 0.7999396493577817,
+      "soc_previous_second": 0.7998173193028422,
+      "previous_fc_kw": 320.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 173.45691805557752,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 170,
+      "all13_raw_candidates_kw": [
+        260.0,
+        270.0,
+        280.0,
+        290.0,
+        300.0,
+        310.0,
+        320.0,
+        330.0,
+        340.0,
+        350.0,
+        360.0,
+        370.0,
+        380.0
+      ],
+      "all13_inbounds_candidates_kw": [
+        260.0,
+        270.0,
+        280.0,
+        290.0,
+        300.0,
+        310.0,
+        320.0,
+        330.0,
+        340.0,
+        350.0,
+        360.0,
+        370.0,
+        380.0
+      ],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "required_continuous_delta_kw": -146.54308194442248,
+      "required_10kw_grid_delta_kw": -150.0,
+      "continuous_feasible": true,
+      "range_failure": true,
+      "legal_actions_25_same_range": [],
+      "final_load_jump_kw": 0.015394620699087369,
+      "last_action_delta_kw": 0.0,
+      "last_action_q": -189.70620727539062,
+      "last_action_hold_rank": "1",
+      "last_action_q_ranking": [
+        {
+          "delta_kw": 0,
+          "fc_kw": 320.0,
+          "q": -189.70620727539062
+        },
+        {
+          "delta_kw": -30,
+          "fc_kw": 290.0,
+          "q": -189.7159423828125
+        },
+        {
+          "delta_kw": -50,
+          "fc_kw": 270.0,
+          "q": -189.72848510742188
+        },
+        {
+          "delta_kw": 30,
+          "fc_kw": 350.0,
+          "q": -189.80551147460938
+        },
+        {
+          "delta_kw": -20,
+          "fc_kw": 300.0,
+          "q": -189.83599853515625
+        },
+        {
+          "delta_kw": 10,
+          "fc_kw": 330.0,
+          "q": -189.85015869140625
+        },
+        {
+          "delta_kw": -10,
+          "fc_kw": 310.0,
+          "q": -189.92262268066406
+        },
+        {
+          "delta_kw": -60,
+          "fc_kw": 260.0,
+          "q": -190.00921630859375
+        },
+        {
+          "delta_kw": -40,
+          "fc_kw": 280.0,
+          "q": -190.02931213378906
+        },
+        {
+          "delta_kw": 20,
+          "fc_kw": 340.0,
+          "q": -190.18601989746094
+        },
+        {
+          "delta_kw": 40,
+          "fc_kw": 360.0,
+          "q": -190.62550354003906
+        },
+        {
+          "delta_kw": 60,
+          "fc_kw": 380.0,
+          "q": -190.6574249267578
+        },
+        {
+          "delta_kw": 50,
+          "fc_kw": 370.0,
+          "q": -190.7526397705078
+        }
+      ],
+      "last60_max_abs_load_jump_kw": 0.015394620699087369,
+      "last60_soc_change": 0.007345286410934904,
+      "last60_fc_min_kw": 320.0,
+      "last60_fc_max_kw": 320.0,
+      "last60_battery_bus_energy_kwh": -4.824693389919233,
+      "observed_prefix_max_abs_load_jump_kw": 11.072624429874963,
+      "consecutive_same_battery_direction_seconds": 1285,
+      "battery_direction": "charging",
+      "observed_terminal_reward": -10133.57169910837,
+      "observed_terminal_td_target_minus_q": -9943.86549183298,
+      "window_mean_battery_kw": {
+        "60": -289.48160339515397,
+        "30": -289.4375435479435,
+        "5": -289.29161663255525
+      }
+    },
+    {
+      "sample_id": "parent_033_seg01",
+      "failed_time_s": 6112.0,
+      "failed_timestamp": "2024-06-05 09:50:07+08:00",
+      "load_kw": 145.8979420562949,
+      "soc": 0.7998364633108836,
+      "soc_previous_second": 0.7996444340764698,
+      "previous_fc_kw": 600.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 532.6019614574203,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 530,
+      "all13_raw_candidates_kw": [
+        540.0,
+        550.0,
+        560.0,
+        570.0,
+        580.0,
+        590.0,
+        600.0,
+        610.0,
+        620.0,
+        630.0,
+        640.0,
+        650.0,
+        660.0
+      ],
+      "all13_inbounds_candidates_kw": [
+        540.0,
+        550.0,
+        560.0,
+        570.0,
+        580.0,
+        590.0,
+        600.0
+      ],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "required_continuous_delta_kw": -67.39803854257968,
+      "required_10kw_grid_delta_kw": -70.0,
+      "continuous_feasible": true,
+      "range_failure": true,
+      "legal_actions_25_same_range": [],
+      "final_load_jump_kw": -0.023666167680687522,
+      "last_action_delta_kw": 10.0,
+      "last_action_q": -192.62954711914062,
+      "last_action_hold_rank": "5",
+      "last_action_q_ranking": [
+        {
+          "delta_kw": 10,
+          "fc_kw": 600.0,
+          "q": -192.62954711914062
+        },
+        {
+          "delta_kw": -30,
+          "fc_kw": 560.0,
+          "q": -192.63351440429688
+        },
+        {
+          "delta_kw": -50,
+          "fc_kw": 540.0,
+          "q": -192.74285888671875
+        },
+        {
+          "delta_kw": -20,
+          "fc_kw": 570.0,
+          "q": -192.8141326904297
+        },
+        {
+          "delta_kw": 0,
+          "fc_kw": 590.0,
+          "q": -192.8399658203125
+        },
+        {
+          "delta_kw": -10,
+          "fc_kw": 580.0,
+          "q": -192.86386108398438
+        },
+        {
+          "delta_kw": -60,
+          "fc_kw": 530.0,
+          "q": -192.92970275878906
+        },
+        {
+          "delta_kw": -40,
+          "fc_kw": 550.0,
+          "q": -192.99441528320312
+        }
+      ],
+      "last60_max_abs_load_jump_kw": 6.636850160109333,
+      "last60_soc_change": 0.01083119429888657,
+      "last60_fc_min_kw": 550.0,
+      "last60_fc_max_kw": 600.0,
+      "last60_battery_bus_energy_kwh": -7.114384465794903,
+      "observed_prefix_max_abs_load_jump_kw": 17.325630451197924,
+      "consecutive_same_battery_direction_seconds": 765,
+      "battery_direction": "charging",
+      "observed_terminal_reward": -10133.637898862771,
+      "observed_terminal_td_target_minus_q": -9941.00835174363,
+      "window_mean_battery_kw": {
+        "60": -426.8630679476942,
+        "30": -438.80192681218267,
+        "5": -442.02040070336506
+      }
+    },
+    {
+      "sample_id": "parent_040_seg01",
+      "failed_time_s": 9638.0,
+      "failed_timestamp": "2024-06-26 10:48:06+08:00",
+      "load_kw": 33.43750044410326,
+      "soc": 0.7999989368724025,
+      "soc_previous_second": 0.7999327041272538,
+      "previous_fc_kw": 190.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 35.951405533629355,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 30,
+      "all13_raw_candidates_kw": [
+        130.0,
+        140.0,
+        150.0,
+        160.0,
+        170.0,
+        180.0,
+        190.0,
+        200.0,
+        210.0,
+        220.0,
+        230.0,
+        240.0,
+        250.0
+      ],
+      "all13_inbounds_candidates_kw": [
+        130.0,
+        140.0,
+        150.0,
+        160.0,
+        170.0,
+        180.0,
+        190.0,
+        200.0,
+        210.0,
+        220.0,
+        230.0,
+        240.0,
+        250.0
+      ],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "required_continuous_delta_kw": -154.04859446637064,
+      "required_10kw_grid_delta_kw": -160.0,
+      "continuous_feasible": true,
+      "range_failure": true,
+      "legal_actions_25_same_range": [],
+      "final_load_jump_kw": 0.05354118308846978,
+      "last_action_delta_kw": -50.0,
+      "last_action_q": -191.48080444335938,
+      "last_action_hold_rank": "",
+      "last_action_q_ranking": [
+        {
+          "delta_kw": -50,
+          "fc_kw": 190.0,
+          "q": -191.48080444335938
+        },
+        {
+          "delta_kw": -60,
+          "fc_kw": 180.0,
+          "q": -191.68017578125
+        }
+      ],
+      "last60_max_abs_load_jump_kw": 1.849729893629629,
+      "last60_soc_change": 0.006041491200135973,
+      "last60_fc_min_kw": 190.0,
+      "last60_fc_max_kw": 340.0,
+      "last60_battery_bus_energy_kwh": -3.968305798826098,
+      "observed_prefix_max_abs_load_jump_kw": 25.13557454013346,
+      "consecutive_same_battery_direction_seconds": 364,
+      "battery_direction": "charging",
+      "observed_terminal_reward": -10133.985984403704,
+      "observed_terminal_td_target_minus_q": -9942.505179960344,
+      "window_mean_battery_kw": {
+        "60": -238.0983479295659,
+        "30": -227.01478040461436,
+        "5": -196.69701728089103
+      }
+    },
+    {
+      "sample_id": "parent_044_seg01",
+      "failed_time_s": 13255.0,
+      "failed_timestamp": "2024-07-03 12:03:17+08:00",
+      "load_kw": 54.32447373185968,
+      "soc": 0.7999900798889897,
+      "soc_previous_second": 0.7999284025888517,
+      "previous_fc_kw": 200.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 77.78188149349901,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 70,
+      "all13_raw_candidates_kw": [
+        140.0,
+        150.0,
+        160.0,
+        170.0,
+        180.0,
+        190.0,
+        200.0,
+        210.0,
+        220.0,
+        230.0,
+        240.0,
+        250.0,
+        260.0
+      ],
+      "all13_inbounds_candidates_kw": [
+        140.0,
+        150.0,
+        160.0,
+        170.0,
+        180.0,
+        190.0,
+        200.0,
+        210.0,
+        220.0,
+        230.0,
+        240.0,
+        250.0,
+        260.0
+      ],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "required_continuous_delta_kw": -122.21811850650099,
+      "required_10kw_grid_delta_kw": -130.0,
+      "continuous_feasible": true,
+      "range_failure": true,
+      "legal_actions_25_same_range": [],
+      "final_load_jump_kw": 0.16856534265933476,
+      "last_action_delta_kw": -30.0,
+      "last_action_q": -189.97958374023438,
+      "last_action_hold_rank": "",
+      "last_action_q_ranking": [
+        {
+          "delta_kw": -30,
+          "fc_kw": 200.0,
+          "q": -189.97958374023438
+        },
+        {
+          "delta_kw": -50,
+          "fc_kw": 180.0,
+          "q": -189.9888153076172
+        },
+        {
+          "delta_kw": -20,
+          "fc_kw": 210.0,
+          "q": -190.08953857421875
+        },
+        {
+          "delta_kw": -10,
+          "fc_kw": 220.0,
+          "q": -190.15911865234375
+        },
+        {
+          "delta_kw": -60,
+          "fc_kw": 170.0,
+          "q": -190.29754638671875
+        },
+        {
+          "delta_kw": -40,
+          "fc_kw": 190.0,
+          "q": -190.3115234375
+        }
+      ],
+      "last60_max_abs_load_jump_kw": 0.19817156701729033,
+      "last60_soc_change": 0.004514689783806647,
+      "last60_fc_min_kw": 200.0,
+      "last60_fc_max_kw": 230.0,
+      "last60_battery_bus_energy_kwh": -2.965438342205571,
+      "observed_prefix_max_abs_load_jump_kw": 26.86968450819211,
+      "consecutive_same_battery_direction_seconds": 5762,
+      "battery_direction": "charging",
+      "observed_terminal_reward": -10133.725755772191,
+      "observed_terminal_td_target_minus_q": -9943.746172031957,
+      "window_mean_battery_kw": {
+        "60": -177.92630053233424,
+        "30": -177.12723776677794,
+        "5": -170.2105818531689
+      }
+    },
+    {
+      "sample_id": "parent_045_seg01",
+      "failed_time_s": 16021.0,
+      "failed_timestamp": "2024-07-10 13:17:24+08:00",
+      "load_kw": 80.35804637037039,
+      "soc": 0.7999850397616699,
+      "soc_previous_second": 0.7999259882792981,
+      "previous_fc_kw": 220.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 115.73349835440231,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 110,
+      "all13_raw_candidates_kw": [
+        160.0,
+        170.0,
+        180.0,
+        190.0,
+        200.0,
+        210.0,
+        220.0,
+        230.0,
+        240.0,
+        250.0,
+        260.0,
+        270.0,
+        280.0
+      ],
+      "all13_inbounds_candidates_kw": [
+        160.0,
+        170.0,
+        180.0,
+        190.0,
+        200.0,
+        210.0,
+        220.0,
+        230.0,
+        240.0,
+        250.0,
+        260.0,
+        270.0,
+        280.0
+      ],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "required_continuous_delta_kw": -104.26650164559769,
+      "required_10kw_grid_delta_kw": -110.0,
+      "continuous_feasible": true,
+      "range_failure": true,
+      "legal_actions_25_same_range": [],
+      "final_load_jump_kw": -0.00695362962962065,
+      "last_action_delta_kw": -50.0,
+      "last_action_q": -193.77267456054688,
+      "last_action_hold_rank": "",
+      "last_action_q_ranking": [
+        {
+          "delta_kw": -50,
+          "fc_kw": 220.0,
+          "q": -193.77267456054688
+        },
+        {
+          "delta_kw": -30,
+          "fc_kw": 240.0,
+          "q": -193.7791748046875
+        },
+        {
+          "delta_kw": -20,
+          "fc_kw": 250.0,
+          "q": -193.87799072265625
+        },
+        {
+          "delta_kw": -60,
+          "fc_kw": 210.0,
+          "q": -194.09652709960938
+        },
+        {
+          "delta_kw": -40,
+          "fc_kw": 230.0,
+          "q": -194.11431884765625
+        }
+      ],
+      "last60_max_abs_load_jump_kw": 0.25669914074074995,
+      "last60_soc_change": 0.004877124898726715,
+      "last60_fc_min_kw": 220.0,
+      "last60_fc_max_kw": 270.0,
+      "last60_battery_bus_energy_kwh": -3.2035009861111106,
+      "observed_prefix_max_abs_load_jump_kw": 21.882346711094954,
+      "consecutive_same_battery_direction_seconds": 174,
+      "battery_direction": "charging",
+      "observed_terminal_reward": -10134.00077832972,
+      "observed_terminal_td_target_minus_q": -9940.228103769174,
+      "window_mean_battery_kw": {
+        "60": -192.21005916666664,
+        "30": -190.45344000000003,
+        "5": -179.73021481481481
+      }
+    }
+  ],
+  "windows": [
+    {
+      "sample_id": "parent_002_seg01",
+      "seconds_before_failure": 60,
+      "time_s": 10027.0,
+      "load_kw": 104.20111809199932,
+      "soc_before_decision": 0.7937439011676349,
+      "previous_fc_kw": 270.0,
+      "selected_fc_kw": 270.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_002_seg01",
+      "seconds_before_failure": 30,
+      "time_s": 10057.0,
+      "load_kw": 42.38524957898632,
+      "soc_before_decision": 0.7966667949816743,
+      "previous_fc_kw": 240.0,
+      "selected_fc_kw": 250.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_002_seg01",
+      "seconds_before_failure": 5,
+      "time_s": 10082.0,
+      "load_kw": 40.925816242962966,
+      "soc_before_decision": 0.7993762431370159,
+      "previous_fc_kw": 310.0,
+      "selected_fc_kw": 310.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_002_seg01",
+      "seconds_before_failure": 1,
+      "time_s": 10086.0,
+      "load_kw": 41.82830096,
+      "soc_before_decision": 0.7998309375403652,
+      "previous_fc_kw": 310.0,
+      "selected_fc_kw": 310.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 441.59873182715984,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 440
+    },
+    {
+      "sample_id": "parent_002_seg01",
+      "seconds_before_failure": 0,
+      "time_s": 10087.0,
+      "load_kw": 42.16380258370371,
+      "soc_before_decision": 0.7999443470462804,
+      "previous_fc_kw": 310.0,
+      "selected_fc_kw": null,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 173.76253441094582,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 170
+    },
+    {
+      "sample_id": "parent_011_seg01",
+      "seconds_before_failure": 60,
+      "time_s": 7794.0,
+      "load_kw": 71.65135851885789,
+      "soc_before_decision": 0.7942184111081189,
+      "previous_fc_kw": 360.0,
+      "selected_fc_kw": 330.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_011_seg01",
+      "seconds_before_failure": 30,
+      "time_s": 7824.0,
+      "load_kw": 68.49049592623969,
+      "soc_before_decision": 0.7972664303668883,
+      "previous_fc_kw": 280.0,
+      "selected_fc_kw": 280.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_011_seg01",
+      "seconds_before_failure": 5,
+      "time_s": 7849.0,
+      "load_kw": 68.28124647367942,
+      "soc_before_decision": 0.7995035965657392,
+      "previous_fc_kw": 280.0,
+      "selected_fc_kw": 280.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_011_seg01",
+      "seconds_before_failure": 1,
+      "time_s": 7853.0,
+      "load_kw": 68.24818633185744,
+      "soc_before_decision": 0.799861760689209,
+      "previous_fc_kw": 280.0,
+      "selected_fc_kw": 280.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 395.1332260802799,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 390
+    },
+    {
+      "sample_id": "parent_011_seg01",
+      "seconds_before_failure": 0,
+      "time_s": 7854.0,
+      "load_kw": 68.24081529758497,
+      "soc_before_decision": 0.7999513102898966,
+      "previous_fc_kw": 280.0,
+      "selected_fc_kw": null,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 183.37404137790378,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 180
+    },
+    {
+      "sample_id": "parent_016_seg01",
+      "seconds_before_failure": 60,
+      "time_s": 7155.0,
+      "load_kw": 582.9749400000001,
+      "soc_before_decision": 0.21193572634456959,
+      "previous_fc_kw": 220.0,
+      "selected_fc_kw": 220.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_016_seg01",
+      "seconds_before_failure": 30,
+      "time_s": 7185.0,
+      "load_kw": 582.263892,
+      "soc_before_decision": 0.20644788892254232,
+      "previous_fc_kw": 150.0,
+      "selected_fc_kw": 130.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_016_seg01",
+      "seconds_before_failure": 5,
+      "time_s": 7210.0,
+      "load_kw": 578.2369451851853,
+      "soc_before_decision": 0.20111311236158863,
+      "previous_fc_kw": 100.0,
+      "selected_fc_kw": 110.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_016_seg01",
+      "seconds_before_failure": 1,
+      "time_s": 7214.0,
+      "load_kw": 575.2419265374815,
+      "soc_before_decision": 0.20022347378552968,
+      "previous_fc_kw": 110.0,
+      "selected_fc_kw": 100.0,
+      "continuous_fc_min_kw": 98.33099031432147,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 100,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_016_seg01",
+      "seconds_before_failure": 0,
+      "time_s": 7215.0,
+      "load_kw": 574.458292,
+      "soc_before_decision": 0.20000078207456407,
+      "previous_fc_kw": 100.0,
+      "selected_fc_kw": null,
+      "continuous_fc_min_kw": 572.7892823143435,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 580,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_020_seg01",
+      "seconds_before_failure": 60,
+      "time_s": 3302.0,
+      "load_kw": 30.549739959948905,
+      "soc_before_decision": 0.7925943629468468,
+      "previous_fc_kw": 320.0,
+      "selected_fc_kw": 320.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_020_seg01",
+      "seconds_before_failure": 30,
+      "time_s": 3332.0,
+      "load_kw": 30.43932567681929,
+      "soc_before_decision": 0.7962675651380896,
+      "previous_fc_kw": 320.0,
+      "selected_fc_kw": 320.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_020_seg01",
+      "seconds_before_failure": 5,
+      "time_s": 3357.0,
+      "load_kw": 30.68258665360535,
+      "soc_before_decision": 0.7993279438827975,
+      "previous_fc_kw": 320.0,
+      "selected_fc_kw": 320.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_020_seg01",
+      "seconds_before_failure": 1,
+      "time_s": 3361.0,
+      "load_kw": 30.73448903568263,
+      "soc_before_decision": 0.7998173193028422,
+      "previous_fc_kw": 320.0,
+      "selected_fc_kw": 320.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 462.70703439932083,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 460
+    },
+    {
+      "sample_id": "parent_020_seg01",
+      "seconds_before_failure": 0,
+      "time_s": 3362.0,
+      "load_kw": 30.749883656381716,
+      "soc_before_decision": 0.7999396493577817,
+      "previous_fc_kw": 320.0,
+      "selected_fc_kw": null,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 173.45691805557752,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 170
+    },
+    {
+      "sample_id": "parent_033_seg01",
+      "seconds_before_failure": 60,
+      "time_s": 6052.0,
+      "load_kw": 211.6071520040835,
+      "soc_before_decision": 0.7890052690119971,
+      "previous_fc_kw": 600.0,
+      "selected_fc_kw": 600.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_033_seg01",
+      "seconds_before_failure": 30,
+      "time_s": 6082.0,
+      "load_kw": 149.74483929772433,
+      "soc_before_decision": 0.7942693982671926,
+      "previous_fc_kw": 580.0,
+      "selected_fc_kw": 590.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_033_seg01",
+      "seconds_before_failure": 5,
+      "time_s": 6107.0,
+      "load_kw": 146.0428653391428,
+      "soc_before_decision": 0.7989018136922311,
+      "previous_fc_kw": 590.0,
+      "selected_fc_kw": 600.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_033_seg01",
+      "seconds_before_failure": 1,
+      "time_s": 6111.0,
+      "load_kw": 145.9216082239756,
+      "soc_before_decision": 0.7996444340764698,
+      "previous_fc_kw": 590.0,
+      "selected_fc_kw": 600.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_033_seg01",
+      "seconds_before_failure": 0,
+      "time_s": 6112.0,
+      "load_kw": 145.8979420562949,
+      "soc_before_decision": 0.7998364633108836,
+      "previous_fc_kw": 600.0,
+      "selected_fc_kw": null,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 532.6019614574203,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 530
+    },
+    {
+      "sample_id": "parent_040_seg01",
+      "seconds_before_failure": 60,
+      "time_s": 9578.0,
+      "load_kw": 43.26208893908035,
+      "soc_before_decision": 0.7939574456722666,
+      "previous_fc_kw": 310.0,
+      "selected_fc_kw": 310.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_040_seg01",
+      "seconds_before_failure": 30,
+      "time_s": 9608.0,
+      "load_kw": 63.75123571496296,
+      "soc_before_decision": 0.7971188081145982,
+      "previous_fc_kw": 290.0,
+      "selected_fc_kw": 290.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_040_seg01",
+      "seconds_before_failure": 5,
+      "time_s": 9633.0,
+      "load_kw": 33.23567282153202,
+      "soc_before_decision": 0.7995830221501429,
+      "previous_fc_kw": 240.0,
+      "selected_fc_kw": 240.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_040_seg01",
+      "seconds_before_failure": 1,
+      "time_s": 9637.0,
+      "load_kw": 33.38395926101479,
+      "soc_before_decision": 0.7999327041272538,
+      "previous_fc_kw": 240.0,
+      "selected_fc_kw": 190.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 192.5139050895771,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 190
+    },
+    {
+      "sample_id": "parent_040_seg01",
+      "seconds_before_failure": 0,
+      "time_s": 9638.0,
+      "load_kw": 33.43750044410326,
+      "soc_before_decision": 0.7999989368724025,
+      "previous_fc_kw": 190.0,
+      "selected_fc_kw": null,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 35.951405533629355,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 30
+    },
+    {
+      "sample_id": "parent_044_seg01",
+      "seconds_before_failure": 60,
+      "time_s": 13195.0,
+      "load_kw": 51.67404070154524,
+      "soc_before_decision": 0.7954753901051831,
+      "previous_fc_kw": 230.0,
+      "selected_fc_kw": 230.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_044_seg01",
+      "seconds_before_failure": 30,
+      "time_s": 13225.0,
+      "load_kw": 50.82461292461369,
+      "soc_before_decision": 0.7977428726790746,
+      "previous_fc_kw": 230.0,
+      "selected_fc_kw": 230.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_044_seg01",
+      "seconds_before_failure": 5,
+      "time_s": 13250.0,
+      "load_kw": 53.41170415775891,
+      "soc_before_decision": 0.7996301705835221,
+      "previous_fc_kw": 230.0,
+      "selected_fc_kw": 230.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_044_seg01",
+      "seconds_before_failure": 1,
+      "time_s": 13254.0,
+      "load_kw": 54.15590838920035,
+      "soc_before_decision": 0.7999284025888517,
+      "previous_fc_kw": 230.0,
+      "selected_fc_kw": 200.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 223.457407761519,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 220
+    },
+    {
+      "sample_id": "parent_044_seg01",
+      "seconds_before_failure": 0,
+      "time_s": 13255.0,
+      "load_kw": 54.32447373185968,
+      "soc_before_decision": 0.7999900798889897,
+      "previous_fc_kw": 200.0,
+      "selected_fc_kw": null,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 77.78188149349901,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 70
+    },
+    {
+      "sample_id": "parent_045_seg01",
+      "seconds_before_failure": 60,
+      "time_s": 15961.0,
+      "load_kw": 76.89363845925926,
+      "soc_before_decision": 0.7951079148629432,
+      "previous_fc_kw": 270.0,
+      "selected_fc_kw": 270.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_045_seg01",
+      "seconds_before_failure": 30,
+      "time_s": 15991.0,
+      "load_kw": 75.2401578074074,
+      "soc_before_decision": 0.7975687634796187,
+      "previous_fc_kw": 270.0,
+      "selected_fc_kw": 270.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_045_seg01",
+      "seconds_before_failure": 5,
+      "time_s": 16016.0,
+      "load_kw": 80.11515632592592,
+      "soc_before_decision": 0.7996050012465478,
+      "previous_fc_kw": 270.0,
+      "selected_fc_kw": 270.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 600.0,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 600
+    },
+    {
+      "sample_id": "parent_045_seg01",
+      "seconds_before_failure": 1,
+      "time_s": 16020.0,
+      "load_kw": 80.36500000000001,
+      "soc_before_decision": 0.7999259882792981,
+      "previous_fc_kw": 270.0,
+      "selected_fc_kw": 220.0,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 255.3754519841418,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 250
+    },
+    {
+      "sample_id": "parent_045_seg01",
+      "seconds_before_failure": 0,
+      "time_s": 16021.0,
+      "load_kw": 80.35804637037039,
+      "soc_before_decision": 0.7999850397616699,
+      "previous_fc_kw": 220.0,
+      "selected_fc_kw": null,
+      "continuous_fc_min_kw": 0.0,
+      "continuous_fc_max_kw": 115.73349835440231,
+      "physical_grid_min_kw": 0,
+      "physical_grid_max_kw": 110
+    }
+  ]
+}

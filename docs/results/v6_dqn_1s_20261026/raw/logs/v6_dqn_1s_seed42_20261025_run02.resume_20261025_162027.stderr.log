@@ -1,0 +1,38 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\src\v4\v6_training.py", line 471, in <module>
+    if __name__=='__main__': main()
+                             ^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\src\v4\v6_training.py", line 468, in main
+    run(args.data_root,args.output_dir,args.v5_root,resume=args.resume,stop_after_round=args.stop_after_round)
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\src\v4\v6_training.py", line 389, in run
+    values,status=execute(episode,lambda s,a:agent.select_power(s,a,epsilon=eps),
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\src\v4\v6_training.py", line 130, in execute
+    result = replay_episode(episode, policy, accountant=accountant,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\src\v4\control.py", line 721, in replay_episode
+    on_transition(index, transitions[-1])
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\src\v4\v6_training.py", line 390, in <lambda>
+    accountant,economics,penalty,lambda index,t:remember(t,True))
+                                                ^^^^^^^^^^^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\src\v4\v6_training.py", line 341, in remember
+    if learning: agent.learn(batch_size=64)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\src\v4\dqn.py", line 1186, in learn
+    self.optimizer.zero_grad(set_to_none=True)
+  File "D:\py\Python3\Lib\site-packages\torch\_compile.py", line 53, in inner
+    return disable_fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\py\Python3\Lib\site-packages\torch\_dynamo\eval_frame.py", line 929, in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\py\Python3\Lib\site-packages\torch\optim\optimizer.py", line 1027, in zero_grad
+    with torch.autograd.profiler.record_function(self._zero_grad_profile_name):
+  File "D:\py\Python3\Lib\site-packages\torch\autograd\profiler.py", line 793, in __exit__
+    torch.ops.profiler._record_function_exit._RecordFunction(record)
+  File "D:\py\Python3\Lib\site-packages\torch\_ops.py", line 1056, in __call__
+    def __call__(self, /, *args: _P.args, **kwargs: _P.kwargs) -> _T:
+
+KeyboardInterrupt

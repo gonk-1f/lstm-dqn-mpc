@@ -1,0 +1,29 @@
+{
+  "checks": {
+    "configuration_matches": true,
+    "online_equal": true,
+    "target_equal": true,
+    "optimizer_equal": true,
+    "replay_equal": true,
+    "python_rng_equal": true,
+    "torch_rng_equal": true,
+    "counts_equal": true,
+    "diagnostic_rng_equal": true,
+    "diagnostic_draws_equal": true,
+    "diagnostic_groups_equal": true,
+    "no_round2_logged": true
+  },
+  "completed_rounds": 1,
+  "next_round": 2,
+  "remaining_rounds": 7,
+  "total_rounds": 8,
+  "next_round_epsilon_start": 0.8416666666666667,
+  "warmup_repeated": false,
+  "adam_updates": 274126,
+  "target_copies": 275,
+  "replay_entries": 324126,
+  "fixed_q_probes": 44,
+  "fixed_train_failure_cases": 2,
+  "gradient_updates_during_verification": 0,
+  "environment_steps_during_verification": 0
+}

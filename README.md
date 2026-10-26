@@ -1,10 +1,18 @@
 # 船舶燃料电池与锂电池能量管理
 
-当前分支 `feat/direct-power-mlp-ddqn` 使用 **30 s 直接功率 MLP Double-DQN**。
-FC 动作为 0–600 kW、间隔 10 kW，电池承担剩余负载；单步物理 mask 保持功率与 SOC 硬边界。
-物理、退化和经济模型复用 v2/v3，当前控制器不调用 MPC 求解、不启用 KAN。
+当前分支 `feat/v6-dqn-1s` 使用 **1秒普通DQN、单步TD和13档FC实际增量**。
+学习率0.0001，SOC权重0.2，FC波动权重0.05；8轮正式训练已完成，末轮Greedy Validation完成3/8，控制效果尚未稳定。
+物理、退化和经济模型复用v2/v3。最大增量±60 kW/s是仿真假设。
 
-## 当前入口与文档
+## V6源码与完整训练资料
+
+- **[完整资料与阅读入口](docs/results/v6_dqn_1s_20261026/README.md)**：所有逐轮checkpoint、完整Replay断点、64条Validation轨迹、64幅功率/SOC图、逐轮日志及可直接浏览的13动作Q排序。
+- [控制与逐航段失败分析](docs/results/v6_dqn_1s_20261026/ANALYSIS_CONTROL.md)、[Q价值与TD拟合分析](docs/results/v6_dqn_1s_20261026/ANALYSIS_Q.md)。
+- [给网页版GPT的审查说明](docs/results/v6_dqn_1s_20261026/WEB_GPT_PROMPT.md)、[实际训练入口](src/v4/v6_training.py)、[当前配置及记录口径](docs/v6_lr1e4_q_reporting.md)。
+
+以下V4入口保留作历史方法与共享源码参考，不代表V6当前配置。
+
+## 历史V4入口与文档
 
 - [文档总索引](docs/README.md)：当前方法、实施报告、模型依据及历史资料分类。
 - [v4 方法与默认配置](docs/v4_direct_power.md)：奖励、失败终止、经济账本与选模资格。
@@ -26,13 +34,13 @@ Test 不参与训练或选模。实现验证不能当成正式完成率或经济
 
 | 路径 | 用途 |
 |---|---|
-| `src/v4/` | 当前控制、Double-DQN、奖励重分配、失败 TD、训练监控 |
+| `src/v4/` | V6普通DQN与训练记录；保留V4/V5 Double-DQN及共享控制依赖 |
 | `src/v2/`、`src/v3/` | 保留 MPC 与当前共享物理/经济/数据依赖 |
 | `src/dqn/networks/` | MLP/KAN 实现，当前只启用 MLP |
 | `tests/` | 当前与共享依赖回归；文件较旧不代表可删除 |
 | `docs/results/`、`docs/figures/` | 已审核实验、评估和原始归档证据 |
 | `docs/history/` | 旧报告、研究资料和已执行计划；不代表当前默认值 |
-| `outputs/` | 本地生成物及必要校准输入，不能整体清空 |
+| `outputs/` | 本地生成物已归档清理；17个旧版正式校准/预检输入保留，不能整体删除 |
 | `data/` | 正式数据和冻结划分，本次不改动 |
 
 旧 `v4.train`、`v4.review`、`v4.staged_study` 和 v2/v3 入口保留用于历史复现。

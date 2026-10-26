@@ -1,0 +1,112 @@
+{"status": "warmup", "round": 1, "training_environment_steps": 0, "warmup_environment_steps": 5000, "adam_updates": 0, "target_copies": 1, "elapsed_seconds": 11.64100000000326}
+{"status": "warmup", "round": 1, "training_environment_steps": 0, "warmup_environment_steps": 10000, "adam_updates": 0, "target_copies": 1, "elapsed_seconds": 23.03200000000652}
+{"status": "warmup", "round": 1, "training_environment_steps": 0, "warmup_environment_steps": 15000, "adam_updates": 0, "target_copies": 1, "elapsed_seconds": 34.125}
+{"status": "warmup", "round": 1, "training_environment_steps": 0, "warmup_environment_steps": 20000, "adam_updates": 0, "target_copies": 1, "elapsed_seconds": 45.421999999991385}
+{"status": "warmup", "round": 1, "training_environment_steps": 0, "warmup_environment_steps": 25000, "adam_updates": 0, "target_copies": 1, "elapsed_seconds": 56.65700000000652}
+{"status": "warmup", "round": 1, "training_environment_steps": 0, "warmup_environment_steps": 30000, "adam_updates": 0, "target_copies": 1, "elapsed_seconds": 68.23499999998603}
+{"status": "warmup", "round": 1, "training_environment_steps": 0, "warmup_environment_steps": 35000, "adam_updates": 0, "target_copies": 1, "elapsed_seconds": 79.06299999999464}
+{"status": "warmup", "round": 1, "training_environment_steps": 0, "warmup_environment_steps": 40000, "adam_updates": 0, "target_copies": 1, "elapsed_seconds": 90.35999999998603}
+{"status": "warmup", "round": 1, "training_environment_steps": 0, "warmup_environment_steps": 45000, "adam_updates": 0, "target_copies": 1, "elapsed_seconds": 101.54699999999139}
+{"status": "warmup", "round": 1, "training_environment_steps": 0, "warmup_environment_steps": 50000, "adam_updates": 0, "target_copies": 1, "elapsed_seconds": 112.875}
+{"status": "training", "round": 1, "training_environment_steps": 5000, "warmup_environment_steps": 50000, "adam_updates": 5000, "target_copies": 6, "elapsed_seconds": 227.59400000001187}
+train round=1/8 sample=parent_035_seg01 status=completed steps=9300 epsilon=1.000000
+{"status": "training", "round": 1, "training_environment_steps": 10000, "warmup_environment_steps": 50000, "adam_updates": 10000, "target_copies": 11, "elapsed_seconds": 358.0320000000065}
+train round=1/8 sample=parent_015_seg01 status=soc_limited steps=4341 epsilon=0.995476
+{"status": "training", "round": 1, "training_environment_steps": 15000, "warmup_environment_steps": 50000, "adam_updates": 15000, "target_copies": 16, "elapsed_seconds": 491.3289999999979}
+train round=1/8 sample=parent_010_seg01 status=increment_action_limited steps=2511 epsilon=0.990952
+{"status": "training", "round": 1, "training_environment_steps": 20000, "warmup_environment_steps": 50000, "adam_updates": 20000, "target_copies": 21, "elapsed_seconds": 628.75}
+train round=1/8 sample=parent_009_seg01 status=increment_action_limited steps=7878 epsilon=0.986429
+{"status": "training", "round": 1, "training_environment_steps": 25000, "warmup_environment_steps": 50000, "adam_updates": 25000, "target_copies": 26, "elapsed_seconds": 695.5629999999946}
+train round=1/8 sample=parent_010_seg02 status=increment_action_limited steps=2362 epsilon=0.981905
+{"status": "training", "round": 1, "training_environment_steps": 30000, "warmup_environment_steps": 50000, "adam_updates": 30000, "target_copies": 31, "elapsed_seconds": 712.6879999999946}
+{"status": "training", "round": 1, "training_environment_steps": 35000, "warmup_environment_steps": 50000, "adam_updates": 35000, "target_copies": 36, "elapsed_seconds": 808.6719999999914}
+train round=1/8 sample=parent_043_seg01 status=increment_action_limited steps=11260 epsilon=0.977381
+{"status": "training", "round": 1, "training_environment_steps": 40000, "warmup_environment_steps": 50000, "adam_updates": 40000, "target_copies": 41, "elapsed_seconds": 935.0320000000065}
+train round=1/8 sample=parent_008_seg01 status=increment_action_limited steps=2450 epsilon=0.972857
+train round=1/8 sample=parent_051_seg01 status=completed steps=4350 epsilon=0.968333
+{"status": "training", "round": 1, "training_environment_steps": 45000, "warmup_environment_steps": 50000, "adam_updates": 45000, "target_copies": 46, "elapsed_seconds": 968.6719999999914}
+{"status": "training", "round": 1, "training_environment_steps": 50000, "warmup_environment_steps": 50000, "adam_updates": 50000, "target_copies": 51, "elapsed_seconds": 987.75}
+{"status": "training", "round": 1, "training_environment_steps": 55000, "warmup_environment_steps": 50000, "adam_updates": 55000, "target_copies": 56, "elapsed_seconds": 1007.9379999999946}
+train round=1/8 sample=parent_029_seg01 status=completed steps=10620 epsilon=0.963810
+train round=1/8 sample=parent_046_seg02 status=completed steps=3272 epsilon=0.959286
+{"status": "training", "round": 1, "training_environment_steps": 60000, "warmup_environment_steps": 50000, "adam_updates": 60000, "target_copies": 61, "elapsed_seconds": 1033.75}
+train round=1/8 sample=parent_009_seg02 status=increment_action_limited steps=1943 epsilon=0.954762
+{"status": "training", "round": 1, "training_environment_steps": 65000, "warmup_environment_steps": 50000, "adam_updates": 65000, "target_copies": 66, "elapsed_seconds": 1139.0629999999946}
+{"status": "training", "round": 1, "training_environment_steps": 70000, "warmup_environment_steps": 50000, "adam_updates": 70000, "target_copies": 71, "elapsed_seconds": 1341.4219999999914}
+train round=1/8 sample=parent_038_seg01 status=increment_action_limited steps=12895 epsilon=0.950238
+{"status": "training", "round": 1, "training_environment_steps": 75000, "warmup_environment_steps": 50000, "adam_updates": 75000, "target_copies": 76, "elapsed_seconds": 1539.6719999999914}
+{"status": "training", "round": 1, "training_environment_steps": 80000, "warmup_environment_steps": 50000, "adam_updates": 80000, "target_copies": 81, "elapsed_seconds": 1749.6410000000033}
+train round=1/8 sample=parent_005_seg01 status=completed steps=9258 epsilon=0.945714
+{"status": "training", "round": 1, "training_environment_steps": 85000, "warmup_environment_steps": 50000, "adam_updates": 85000, "target_copies": 86, "elapsed_seconds": 1874.2190000000119}
+train round=1/8 sample=parent_050_seg01 status=soc_limited steps=6055 epsilon=0.941190
+{"status": "training", "round": 1, "training_environment_steps": 90000, "warmup_environment_steps": 50000, "adam_updates": 90000, "target_copies": 91, "elapsed_seconds": 2074.1410000000033}
+{"status": "training", "round": 1, "training_environment_steps": 95000, "warmup_environment_steps": 50000, "adam_updates": 95000, "target_copies": 96, "elapsed_seconds": 2283.125}
+train round=1/8 sample=parent_053_seg01 status=completed steps=7650 epsilon=0.936667
+{"status": "training", "round": 1, "training_environment_steps": 100000, "warmup_environment_steps": 50000, "adam_updates": 100000, "target_copies": 101, "elapsed_seconds": 2491.6879999999946}
+{"status": "training", "round": 1, "training_environment_steps": 105000, "warmup_environment_steps": 50000, "adam_updates": 105000, "target_copies": 106, "elapsed_seconds": 2697.6719999999914}
+{"status": "training", "round": 1, "training_environment_steps": 110000, "warmup_environment_steps": 50000, "adam_updates": 110000, "target_copies": 111, "elapsed_seconds": 2904.719000000012}
+train round=1/8 sample=parent_018_seg01 status=increment_action_limited steps=16014 epsilon=0.932143
+{"status": "training", "round": 1, "training_environment_steps": 115000, "warmup_environment_steps": 50000, "adam_updates": 115000, "target_copies": 116, "elapsed_seconds": 3111.8129999999946}
+train round=1/8 sample=parent_047_seg01 status=completed steps=5880 epsilon=0.927619
+{"status": "training", "round": 1, "training_environment_steps": 120000, "warmup_environment_steps": 50000, "adam_updates": 120000, "target_copies": 121, "elapsed_seconds": 3318.094000000012}
+{"status": "training", "round": 1, "training_environment_steps": 125000, "warmup_environment_steps": 50000, "adam_updates": 125000, "target_copies": 126, "elapsed_seconds": 3525.844000000012}
+train round=1/8 sample=parent_049_seg01 status=completed steps=8070 epsilon=0.923095
+{"status": "training", "round": 1, "training_environment_steps": 130000, "warmup_environment_steps": 50000, "adam_updates": 130000, "target_copies": 131, "elapsed_seconds": 3733.3910000000033}
+train round=1/8 sample=parent_052_seg01 status=completed steps=7110 epsilon=0.918571
+{"status": "training", "round": 1, "training_environment_steps": 135000, "warmup_environment_steps": 50000, "adam_updates": 135000, "target_copies": 136, "elapsed_seconds": 3942.578999999998}
+{"status": "training", "round": 1, "training_environment_steps": 140000, "warmup_environment_steps": 50000, "adam_updates": 140000, "target_copies": 141, "elapsed_seconds": 4150.641000000003}
+train round=1/8 sample=parent_019_seg01 status=completed steps=10470 epsilon=0.914048
+{"status": "training", "round": 1, "training_environment_steps": 145000, "warmup_environment_steps": 50000, "adam_updates": 145000, "target_copies": 146, "elapsed_seconds": 4359.953999999998}
+train round=1/8 sample=parent_022_seg01 status=completed steps=5490 epsilon=0.909524
+{"status": "training", "round": 1, "training_environment_steps": 150000, "warmup_environment_steps": 50000, "adam_updates": 150000, "target_copies": 151, "elapsed_seconds": 4568.109999999986}
+train round=1/8 sample=parent_003_seg01 status=soc_limited steps=4860 epsilon=0.905000
+{"status": "training", "round": 1, "training_environment_steps": 155000, "warmup_environment_steps": 50000, "adam_updates": 155000, "target_copies": 156, "elapsed_seconds": 4777.5}
+train round=1/8 sample=parent_041_seg01 status=increment_action_limited steps=4033 epsilon=0.900476
+{"status": "training", "round": 1, "training_environment_steps": 160000, "warmup_environment_steps": 50000, "adam_updates": 160000, "target_copies": 161, "elapsed_seconds": 4986.5320000000065}
+{"status": "training", "round": 1, "training_environment_steps": 165000, "warmup_environment_steps": 50000, "adam_updates": 165000, "target_copies": 166, "elapsed_seconds": 5194.921999999991}
+train round=1/8 sample=parent_021_seg01 status=completed steps=6996 epsilon=0.895952
+train round=1/8 sample=parent_034_seg01 status=increment_action_limited steps=3902 epsilon=0.891429
+{"status": "training", "round": 1, "training_environment_steps": 170000, "warmup_environment_steps": 50000, "adam_updates": 170000, "target_copies": 171, "elapsed_seconds": 5406.0320000000065}
+train round=1/8 sample=parent_019_seg02 status=increment_action_limited steps=3282 epsilon=0.886905
+{"status": "training", "round": 1, "training_environment_steps": 175000, "warmup_environment_steps": 50000, "adam_updates": 175000, "target_copies": 176, "elapsed_seconds": 5616.578999999998}
+{"status": "training", "round": 1, "training_environment_steps": 180000, "warmup_environment_steps": 50000, "adam_updates": 180000, "target_copies": 181, "elapsed_seconds": 5826.516000000003}
+train round=1/8 sample=parent_007_seg01 status=completed steps=8448 epsilon=0.882381
+{"status": "training", "round": 1, "training_environment_steps": 185000, "warmup_environment_steps": 50000, "adam_updates": 185000, "target_copies": 186, "elapsed_seconds": 6035.891000000003}
+train round=1/8 sample=parent_042_seg01 status=increment_action_limited steps=4736 epsilon=0.877857
+{"status": "training", "round": 1, "training_environment_steps": 190000, "warmup_environment_steps": 50000, "adam_updates": 190000, "target_copies": 191, "elapsed_seconds": 6246.859999999986}
+{"status": "training", "round": 1, "training_environment_steps": 195000, "warmup_environment_steps": 50000, "adam_updates": 195000, "target_copies": 196, "elapsed_seconds": 6460.062999999995}
+{"status": "training", "round": 1, "training_environment_steps": 200000, "warmup_environment_steps": 50000, "adam_updates": 200000, "target_copies": 201, "elapsed_seconds": 6560.703999999998}
+train round=1/8 sample=parent_037_seg01 status=increment_action_limited steps=15950 epsilon=0.873333
+train round=1/8 sample=parent_036_seg01 status=increment_action_limited steps=2907 epsilon=0.868810
+{"status": "training", "round": 1, "training_environment_steps": 205000, "warmup_environment_steps": 50000, "adam_updates": 205000, "target_copies": 206, "elapsed_seconds": 6602.2820000000065}
+train round=1/8 sample=parent_017_seg01 status=increment_action_limited steps=3413 epsilon=0.864286
+{"status": "training", "round": 1, "training_environment_steps": 210000, "warmup_environment_steps": 50000, "adam_updates": 210000, "target_copies": 211, "elapsed_seconds": 6807.859999999986}
+{"status": "training", "round": 1, "training_environment_steps": 215000, "warmup_environment_steps": 50000, "adam_updates": 215000, "target_copies": 216, "elapsed_seconds": 7019.891000000003}
+train round=1/8 sample=parent_048_seg01 status=completed steps=8580 epsilon=0.859762
+{"status": "training", "round": 1, "training_environment_steps": 220000, "warmup_environment_steps": 50000, "adam_updates": 220000, "target_copies": 221, "elapsed_seconds": 7231.25}
+{"status": "training", "round": 1, "training_environment_steps": 225000, "warmup_environment_steps": 50000, "adam_updates": 225000, "target_copies": 226, "elapsed_seconds": 7441.25}
+train round=1/8 sample=parent_012_seg01 status=soc_limited steps=9121 epsilon=0.855238
+{"status": "training", "round": 1, "training_environment_steps": 230000, "warmup_environment_steps": 50000, "adam_updates": 230000, "target_copies": 231, "elapsed_seconds": 7651.719000000012}
+train round=1/8 sample=parent_029_seg02 status=completed steps=5221 epsilon=0.850714
+{"status": "training", "round": 1, "training_environment_steps": 235000, "warmup_environment_steps": 50000, "adam_updates": 235000, "target_copies": 236, "elapsed_seconds": 7755.437999999995}
+train round=1/8 sample=parent_006_seg01 status=increment_action_limited steps=5469 epsilon=0.846190
+validation round=1 sample=parent_002_seg01 status=increment_action_limited steps=10087
+validation round=1 sample=parent_011_seg01 status=increment_action_limited steps=7854
+validation round=1 sample=parent_016_seg01 status=increment_action_limited steps=7215
+validation round=1 sample=parent_020_seg01 status=increment_action_limited steps=3362
+validation round=1 sample=parent_033_seg01 status=increment_action_limited steps=6112
+validation round=1 sample=parent_040_seg01 status=increment_action_limited steps=9638
+validation round=1 sample=parent_044_seg01 status=increment_action_limited steps=13255
+validation round=1 sample=parent_045_seg01 status=increment_action_limited steps=16021
+ROUND_COMPLETE {"round": 1, "epsilon_start": 1.0, "epsilon_end": 0.8416666666666667, "train": {"episodes": 35, "completed": 15, "failure_reasons": {"soc_limited": 4, "structural_power": 0, "increment_action_limited": 16}, "environment_steps": 236097, "executed_duration_s": 236097.0, "mean_duration_coverage": 0.6521525052691212, "fixed_complete_set_cost_cny": null, "executed_prefix_cost_cny": 1553228.0203544872, "fc_changes_per_hour": 3256.0820340792134, "fc_reversals_per_hour": 1521.2289863911867, "soc_min": 0.2000111484238619, "soc_max": 0.7999999258364351}, "validation": {"episodes": 8, "completed": 0, "failure_reasons": {"soc_limited": 0, "structural_power": 0, "increment_action_limited": 8}, "environment_steps": 73544, "executed_duration_s": 73544.0, "mean_duration_coverage": 0.5823670162399787, "fixed_complete_set_cost_cny": null, "executed_prefix_cost_cny": 112892.93680898528, "fc_changes_per_hour": 1977.7874469705212, "fc_reversals_per_hour": 827.5535733710432, "soc_min": 0.20000078207456407, "soc_max": 0.7999999923540514}, "adam_updates": 236097, "target_copies": 236, "cumulative_adam_updates": 236097, "cumulative_target_copies": 237}
+{"status": "training", "round": 2, "training_environment_steps": 240000, "warmup_environment_steps": 50000, "adam_updates": 240000, "target_copies": 241, "elapsed_seconds": 8255.657000000007}
+{"status": "training", "round": 2, "training_environment_steps": 245000, "warmup_environment_steps": 50000, "adam_updates": 245000, "target_copies": 246, "elapsed_seconds": 8468.657000000007}
+{"status": "training", "round": 2, "training_environment_steps": 250000, "warmup_environment_steps": 50000, "adam_updates": 250000, "target_copies": 251, "elapsed_seconds": 8578.016000000003}
+train round=2/8 sample=parent_037_seg01 status=increment_action_limited steps=16585 epsilon=0.841667
+{"status": "training", "round": 2, "training_environment_steps": 255000, "warmup_environment_steps": 50000, "adam_updates": 255000, "target_copies": 256, "elapsed_seconds": 8598.437999999995}
+{"status": "training", "round": 2, "training_environment_steps": 260000, "warmup_environment_steps": 50000, "adam_updates": 260000, "target_copies": 261, "elapsed_seconds": 8755.016000000003}
+train round=2/8 sample=parent_053_seg01 status=completed steps=7650 epsilon=0.837143
+{"status": "training", "round": 2, "training_environment_steps": 265000, "warmup_environment_steps": 50000, "adam_updates": 265000, "target_copies": 266, "elapsed_seconds": 8967.421999999991}
+{"status": "training", "round": 2, "training_environment_steps": 270000, "warmup_environment_steps": 50000, "adam_updates": 270000, "target_copies": 271, "elapsed_seconds": 9099.157000000007}
+train round=2/8 sample=parent_019_seg01 status=completed steps=10470 epsilon=0.832619
+{"status": "training", "round": 2, "training_environment_steps": 275000, "warmup_environment_steps": 50000, "adam_updates": 275000, "target_copies": 276, "elapsed_seconds": 9313.671999999991}

@@ -1,6 +1,14 @@
-# 文档索引：当前 v4 与历史资料
+# 文档索引：当前V6与历史资料
 
-## 当前主线
+## 当前V6
+
+- [完整8轮训练与分析资料](results/v6_dqn_1s_20261026/README.md)：checkpoint、Replay、功率/SOC图、全量Validation轨迹、Q排序及可读CSV。
+- [控制及逐航段分析](results/v6_dqn_1s_20261026/ANALYSIS_CONTROL.md)、[Q/TD与排序分析](results/v6_dqn_1s_20261026/ANALYSIS_Q.md)。
+- [网页版GPT审查入口](results/v6_dqn_1s_20261026/WEB_GPT_PROMPT.md)、[正式配置和报告契约](v6_lr1e4_q_reporting.md)、[暂停/恢复历史](v6_checkpoint_resume.md)。
+
+以下V4方法说明为历史配置，不应混入V6结论。
+
+## 历史V4主线
 
 1. [v4 方法与默认配置](v4_direct_power.md)：当前正式入口、8维状态、61动作、奖励与经济账本。
 2. [失败轨迹经济 TD 修复](v4_failure_economic_td_2026-10-08.md)：d111c99 的实现和合成证据。

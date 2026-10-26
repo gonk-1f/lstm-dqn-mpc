@@ -1,0 +1,109 @@
+{
+  "round": 2,
+  "replay_count": 682575,
+  "measured_count": 16461,
+  "scope": "read-only stratified replay diagnostic; measured_count is not the replay population or actual optimizer draws",
+  "target_formula": "reward + gamma*(1-done)*max_legal Q_target(next_state, action)",
+  "residual_definition": "target minus Q_online(state, executed_action)",
+  "sampling": "up to 8192 distinct entries per class; entire class when at most 8192",
+  "p95_note": "P95 is exact for the saved diagnostic sample; it is not asserted to be the full-replay P95.",
+  "raw_samples": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02\\round_02_replay_td_fit.csv.gz",
+  "groups": {
+    "normal_nonterminal": {
+      "sample_count": 8192,
+      "mae": 0.6002190192039052,
+      "absolute_residual_p95": 1.8509388923645018,
+      "p95_sample_count": 8192,
+      "p95_method": "exact_on_saved_diagnostic_sample",
+      "q": {
+        "mean": -114.82554181334774,
+        "min": -1114.6378173828125,
+        "max": 26.38364028930664
+      },
+      "target": {
+        "mean": -114.8331046465164,
+        "min": -1117.2208251953125,
+        "max": 26.326282501220703
+      },
+      "residual_target_minus_q": {
+        "mean": -0.007562833162410243,
+        "min": -24.049072265625,
+        "max": 47.91925048828125
+      },
+      "replay_count": 502329,
+      "measured_count": 8192
+    },
+    "normal_terminal": {
+      "sample_count": 50,
+      "mae": 61.24454381465912,
+      "absolute_residual_p95": 335.04633789062495,
+      "p95_sample_count": 50,
+      "p95_method": "exact_on_saved_diagnostic_sample",
+      "q": {
+        "mean": -57.54629886060953,
+        "min": -420.9384460449219,
+        "max": 20.9948673248291
+      },
+      "target": {
+        "mean": -0.236321361400187,
+        "min": -0.8858068585395813,
+        "max": -0.007850212045013905
+      },
+      "residual_target_minus_q": {
+        "mean": 57.30997750163078,
+        "min": -21.021644592285156,
+        "max": 420.0526428222656
+      },
+      "replay_count": 50,
+      "measured_count": 50
+    },
+    "failure_terminal": {
+      "sample_count": 27,
+      "mae": 9028.634440104166,
+      "absolute_residual_p95": 9334.74853515625,
+      "p95_sample_count": 27,
+      "p95_method": "exact_on_saved_diagnostic_sample",
+      "q": {
+        "mean": -1106.127369068287,
+        "min": -1571.9376220703125,
+        "max": -782.4212646484375
+      },
+      "target": {
+        "mean": -10134.761899594907,
+        "min": -10135.08984375,
+        "max": -10134.486328125
+      },
+      "residual_target_minus_q": {
+        "mean": -9028.634440104166,
+        "min": -9352.1083984375,
+        "max": -8563.0849609375
+      },
+      "replay_count": 27,
+      "measured_count": 27
+    },
+    "failure_prefix": {
+      "sample_count": 8192,
+      "mae": 0.835161829532808,
+      "absolute_residual_p95": 2.5610080718994137,
+      "p95_sample_count": 8192,
+      "p95_method": "exact_on_saved_diagnostic_sample",
+      "q": {
+        "mean": -292.2319460742365,
+        "min": -1505.12353515625,
+        "max": 25.37337875366211
+      },
+      "target": {
+        "mean": -292.273556577004,
+        "min": -1506.103515625,
+        "max": 25.675594329833984
+      },
+      "residual_target_minus_q": {
+        "mean": -0.04161050276343303,
+        "min": -83.184326171875,
+        "max": 32.46075439453125
+      },
+      "replay_count": 180169,
+      "measured_count": 8192
+    }
+  }
+}

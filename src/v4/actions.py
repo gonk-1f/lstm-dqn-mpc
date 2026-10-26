@@ -6,14 +6,17 @@ import math
 from typing import Sequence
 
 
-FC_ACTION_MODES = ('absolute61', 'increment7')
+FC_ACTION_MODES = ('absolute61', 'increment7', 'increment13')
 FC_INCREMENT_KW = (-60, -30, -10, 0, 10, 30, 60)
+FC_INCREMENT_13_KW = tuple(range(-60, 61, 10))
 FC_ABSOLUTE_KW = tuple(range(0, 601, 10))
 
 
 def action_values_kw(action_mode: str = 'absolute61') -> tuple[int, ...]:
     if action_mode not in FC_ACTION_MODES:
         raise ValueError(f'action_mode must be one of {FC_ACTION_MODES}')
+    if action_mode == 'increment13':
+        return FC_INCREMENT_13_KW
     return FC_INCREMENT_KW if action_mode == 'increment7' else FC_ABSOLUTE_KW
 
 

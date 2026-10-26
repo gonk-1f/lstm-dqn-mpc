@@ -1,0 +1,8 @@
+{
+  "runpath": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02",
+  "round": 1,
+  "checkpointpath": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-dqn-1s\\outputs\\v6_dqn_1s_seed42_20261025_run02\\models\\training_state_latest.pt",
+  "parentpid": 16044,
+  "reporterpid": 30636,
+  "status": "ready_for_normal_stop"
+}

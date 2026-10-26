@@ -1,0 +1,12 @@
+{
+  "status": "paused_by_user",
+  "round": 2,
+  "training_environment_steps": 275000,
+  "warmup_environment_steps": 50000,
+  "adam_updates": 275000,
+  "target_copies": 276,
+  "elapsed_seconds": 9313.671999999991,
+  "last_progress_is_pre_interrupt_snapshot": true,
+  "saved_checkpoint_round": 1,
+  "saved_checkpoint_adam_updates": 236097
+}

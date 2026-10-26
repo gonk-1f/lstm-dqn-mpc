@@ -1,0 +1,14 @@
+{
+  "captured_at": "2026-10-26T12:24:55.046627+08:00",
+  "python_executable": "D:\\py\\Python3\\python.exe",
+  "python_version": "3.11.5",
+  "pytorch_version": "2.8.0+cu128",
+  "numpy_version": "1.26.4",
+  "pandas_version": "3.0.1",
+  "scipy_version": "1.17.1",
+  "matplotlib_version": "3.10.8",
+  "cuda_build": "12.8",
+  "cuda_available": true,
+  "training_device_from_source": "cpu",
+  "scope": "Archive-time environment snapshot using the same D:/py/Python3/python.exe launcher; this is not an independently saved per-round environment lockfile."
+}

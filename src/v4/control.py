@@ -6,6 +6,8 @@ from dataclasses import dataclass, replace
 from math import ceil, fsum, isfinite
 from typing import Callable
 
+import numpy as np
+
 from v2.data.supervisory_rules import OperatingMode, normalize_onboard_load_kw
 from v2.economics import RawCnyIntervalLedger, ShoreEnergyClassification
 from v2.models.battery_energy import next_soc
@@ -26,10 +28,11 @@ from .actions import FC_ACTION_MODES, action_values_kw, candidate_fc_actions
 
 
 ACTION_KW = tuple(range(0, 601, 10))
+_ACTION_ARRAY_KW = np.asarray(ACTION_KW)
 SOC_REF = 0.60
 DEFAULT_BETA_SOC = 200.0
 DEFAULT_STATE_MODE = 'history7'
-STATE_MODES = ('history7', 'minimal3', 'load_delta4')
+STATE_MODES = ('history7', 'minimal3', 'load_delta4', 'history5')
 STATE_FEATURES_BY_MODE = {
     'history7': (
         'soc', 'previous_fc_kw_over_600', 'previous_fc_delta_kw_over_600',
@@ -41,9 +44,13 @@ STATE_FEATURES_BY_MODE = {
         'soc', 'current_load_kw_over_600', 'previous_fc_kw_over_600',
         'current_load_delta_kw_over_600',
     ),
+    'history5': (
+        'soc', 'current_load_kw_over_600', 'previous_fc_kw_over_600',
+        'current_load_delta_30s_kw_over_600', 'mean_load_300s_kw_over_600',
+    ),
 }
 REWARD_COST_MODES = ('full_economic', 'energy_only', 'energy_with_fc_ramp', 'control_only',
-                     'zhou_joint', 'zhou_economic_only')
+                     'zhou_joint', 'zhou_economic_only', 'v6_energy_soc_ramp')
 # Fixed CNY/kW slope of formal aggregate FC transient degradation before EOL clipping.
 # This is a separate training term; the four-component ledger is not changed.
 FC_RAMP_REWARD_CNY_PER_KW = (
@@ -265,6 +272,8 @@ def build_state(
     physical: AccountState, fc_history_kw: tuple[float, float, float],
     observed_loads_kw: tuple[float, float, float],
     *, state_mode: str = DEFAULT_STATE_MODE,
+    load_30s_ago_kw: float | None = None,
+    mean_load_300s_kw: float | None = None,
 ) -> tuple[float, ...]:
     """Select causal features; FC history contains executed commands only."""
     if state_mode not in STATE_FEATURES_BY_MODE:
@@ -277,6 +286,11 @@ def build_state(
     fc_prior2, fc_prior1, fc_previous = fc_history_kw
     load_prior2, load_prior1, current = observed_loads_kw
     rated = float(ACTION_KW[-1])
+    if state_mode == 'history5':
+        if load_30s_ago_kw is None or mean_load_300s_kw is None:
+            raise ValueError('history5 requires causal 30 s and 300 s load features')
+        return (float(physical.soc), current / rated, fc_previous / rated,
+                (current - load_30s_ago_kw) / rated, mean_load_300s_kw / rated)
     if state_mode == 'minimal3':
         return float(physical.soc), current / rated, fc_previous / rated
     if state_mode == 'load_delta4':
@@ -288,6 +302,22 @@ def build_state(
         current / rated, (current - load_prior1) / rated,
         (load_prior1 - load_prior2) / rated,
     )
+
+
+def _causal_load_history(loads: tuple[float, ...], times: tuple[float, ...]):
+    """Precompute prefix-only time windows in one pass; the mean includes now."""
+    prefix = np.concatenate(([0.0], np.cumsum(loads, dtype=np.float64)))
+    lagged_load = np.empty(len(loads), dtype=np.float64)
+    mean_load = np.empty(len(loads), dtype=np.float64)
+    lag = start = 0
+    for index, time_s in enumerate(times):
+        while lag < index and times[lag + 1] <= time_s - 30.0:
+            lag += 1
+        while times[start] < time_s - 300.0:
+            start += 1
+        lagged_load[index] = loads[lag]
+        mean_load[index] = (prefix[index + 1] - prefix[start]) / (index - start + 1)
+    return lagged_load, mean_load
 
 
 def state_feature_value(
@@ -344,6 +374,22 @@ def feasible_fc_actions(
     return tuple(feasible)
 
 
+def _v6_feasible_fc_actions(
+    physical: AccountState, measured_load_kw: float, accountant: EconomicMPC,
+    *, duration_s: float,
+) -> tuple[int, ...]:
+    """Apply the same formal SOC equation to all 61 powers in one array."""
+    plant = accountant.plant
+    eta_chg, eta_dis = accountant.efficiency.require_calibrated()
+    battery = normalize_onboard_load_kw(measured_load_kw) - _ACTION_ARRAY_KW
+    cell_power = np.where(battery > 0.0, battery / eta_dis, eta_chg * battery)
+    soc = physical.soc - cell_power * (duration_s / 3600.0) / plant.battery_nominal_energy_kwh
+    legal = ((battery >= plant.battery_charge_min_kw)
+             & (battery <= plant.battery_discharge_max_kw)
+             & (soc >= SOC_MIN) & (soc <= SOC_MAX))
+    return tuple(_ACTION_ARRAY_KW[legal].tolist())
+
+
 def infeasibility_cause(measured_load_kw: float, accountant: EconomicMPC) -> str:
     """Diagnose an empty physical mask without changing its definition."""
     load = normalize_onboard_load_kw(measured_load_kw)
@@ -362,6 +408,8 @@ def replay_episode(
     state_mode: str = DEFAULT_STATE_MODE,
     economic_evaluation_config: ZhouEvaluationConfig | None = None,
     action_mode: str = 'absolute61',
+    v6_soc_weight: float = 0.2,
+    v6_fc_ramp_weight: float = 0.05,
     on_transition: Callable[[int, DirectTransition], None] | None = None,
 ) -> DirectReplay:
     """Execute ONBOARD FC actions; route shore rows outside the DQN policy.
@@ -419,12 +467,19 @@ def replay_episode(
         raise ValueError(f'action_mode must be one of {FC_ACTION_MODES}')
     if action_mode == 'increment7' and (not independent or state_mode not in ('minimal3', 'load_delta4')):
         raise ValueError('increment7 requires independent voyages with minimal3 or load_delta4 states')
-    if reward_cost_mode in ('zhou_joint', 'zhou_economic_only') and not independent:
+    if action_mode == 'increment13' and (not independent or state_mode != 'history5'):
+        raise ValueError('increment13 requires independent voyages with history5 states')
+    if state_mode == 'history5' and not independent:
+        raise ValueError('history5 requires independent voyage time windows')
+    if reward_cost_mode in ('zhou_joint', 'zhou_economic_only', 'v6_energy_soc_ramp') and not independent:
         raise ValueError(f'{reward_cost_mode} requires independent voyages')
     if reward_cost_mode == 'zhou_economic_only' and beta_soc != 0.0:
         raise ValueError('zhou_economic_only requires beta_soc=0')
-    if reward_cost_mode in ('control_only', 'zhou_joint', 'zhou_economic_only') and redistribute_battery_energy:
+    if reward_cost_mode in ('control_only', 'zhou_joint', 'zhou_economic_only', 'v6_energy_soc_ramp') and redistribute_battery_energy:
         raise ValueError(f'{reward_cost_mode} does not allow battery energy redistribution')
+    if state_mode == 'history5':
+        lagged_load, mean_load = _causal_load_history(loads, relative_times)
+    mask_actions = _v6_feasible_fc_actions if action_mode == 'increment13' else feasible_fc_actions
     energy_value = BatteryEnergyValue.from_accountant(accountant)
     physical = initial_state or AccountState()
     transitions: list[DirectTransition] = []
@@ -469,6 +524,7 @@ def replay_episode(
         history: tuple[float, float, float] | None = None
         fc_history = (physical.previous_fc_kw,) * 3
         voyage_initial_soc = physical.soc
+        cached_physical_actions = None
         while index < len(modes) and modes[index] is OperatingMode.ONBOARD:
             empty_physical_mask=False
             empty_increment_mask=False
@@ -477,12 +533,16 @@ def replay_episode(
                 # V5 exposes the measured causal load difference, including
                 # small raw negative readings. Physical execution retains its
                 # existing normalization; historical state modes are unchanged.
-                observed_load = loads[index] if state_mode == 'load_delta4' else actual_load
+                observed_load = loads[index] if state_mode in ('load_delta4', 'history5') else actual_load
                 current_history = ((observed_load,) * 3 if history is None
                                    else (*history[-2:], observed_load))
-                decision_state = build_state(physical, fc_history, current_history, state_mode=state_mode)
-                physical_actions = feasible_fc_actions(
-                    physical, actual_load, accountant, duration_s=durations[index])
+                decision_state = build_state(
+                    physical, fc_history, current_history, state_mode=state_mode,
+                    load_30s_ago_kw=lagged_load[index] if state_mode == 'history5' else None,
+                    mean_load_300s_kw=mean_load[index] if state_mode == 'history5' else None)
+                physical_actions = (cached_physical_actions if cached_physical_actions is not None
+                                    else mask_actions(physical, actual_load, accountant,
+                                                      duration_s=durations[index]))
                 if not physical_actions:
                     empty_physical_mask=True
                     raise NoFeasibleFCActionError(
@@ -528,14 +588,19 @@ def replay_episode(
             shore_ledger = None
             modeled_ledger = None
             # Once per executed ONBOARD action, before any SHORE/terminal charge.
-            soc_penalty = (0.0 if reward_cost_mode == 'zhou_economic_only'
-                           else beta_soc * soc_deviation_squared(next_physical.soc))
+            if reward_cost_mode == 'v6_energy_soc_ramp':
+                soc_penalty = v6_soc_weight * ((next_physical.soc - 0.5) / 0.1) ** 2
+            else:
+                soc_penalty = (0.0 if reward_cost_mode == 'zhou_economic_only'
+                               else beta_soc * soc_deviation_squared(next_physical.soc))
             fc_ramp_penalty = (FC_RAMP_REWARD_CNY_PER_KW * abs(fc_kw - previous_fc_kw)
                                if reward_cost_mode in ('energy_with_fc_ramp', 'control_only') else 0.0)
             soc_energy_cost = 0.0
-            if reward_cost_mode in ('zhou_joint', 'zhou_economic_only'):
+            if reward_cost_mode in ('zhou_joint', 'zhou_economic_only', 'v6_energy_soc_ramp'):
                 if reward_cost_mode == 'zhou_joint':
                     fc_ramp_penalty = FC_SQUARED_RAMP_REWARD_PER_KW2 * (fc_kw - previous_fc_kw) ** 2
+                elif reward_cost_mode == 'v6_energy_soc_ramp':
+                    fc_ramp_penalty = v6_fc_ramp_weight * (fc_kw - previous_fc_kw) ** 2 / 600.0
                 soc_energy_cost = soc_equivalent_hydrogen_cost_cny(
                     state_feature_value(decision_state, 'soc', state_mode=state_mode),
                     next_physical.soc, economic_evaluation_config)
@@ -594,21 +659,26 @@ def replay_episode(
                     correction = energy_value.terminal_correction(voyage_initial_soc,next_physical.soc)
                 reward = original_reward + adjustment + correction
             if shore_ledger is not None:
-                successor_load = ((loads[shore_end] if state_mode == 'load_delta4'
+                successor_load = ((loads[shore_end] if state_mode in ('load_delta4', 'history5')
                                    else normalize_onboard_load_kw(loads[shore_end]))
                                   if shore_end < len(modes) and modes[shore_end] is OperatingMode.ONBOARD
                                   else observed_load)
                 successor_history = (successor_load,) * 3
                 successor_fc_history = (physical.previous_fc_kw,) * 3
             elif index + 1 < len(modes) and modes[index + 1] is OperatingMode.ONBOARD:
-                successor_load = (loads[index + 1] if state_mode == 'load_delta4'
+                successor_load = (loads[index + 1] if state_mode in ('load_delta4', 'history5')
                                   else normalize_onboard_load_kw(loads[index + 1]))
                 successor_history = (*history[-2:], successor_load)
                 successor_fc_history = fc_history
             else:
                 successor_history = history
                 successor_fc_history = fc_history
-            next_state = build_state(physical, successor_fc_history, successor_history, state_mode=state_mode)
+            successor_index = (shore_end if shore_ledger is not None and shore_end < len(modes)
+                               else index + 1 if not last_onboard else index)
+            next_state = build_state(
+                physical, successor_fc_history, successor_history, state_mode=state_mode,
+                load_30s_ago_kw=lagged_load[successor_index] if state_mode == 'history5' else None,
+                mean_load_300s_kw=mean_load[successor_index] if state_mode == 'history5' else None)
             has_next_onboard = (shore_ledger is not None and shore_end < len(modes)
                                 and modes[shore_end] is OperatingMode.ONBOARD)
             data_truncation = ((shore_ledger is not None and shore_end < len(modes)
@@ -618,10 +688,12 @@ def replay_episode(
             done = last_onboard and not has_next_onboard and not data_truncation
             next_load = loads[shore_end] if has_next_onboard else loads[index + 1] if not last_onboard else None
             next_physical_actions = (
-                feasible_fc_actions(physical, next_load, accountant,
-                                    duration_s=durations[shore_end if has_next_onboard else index + 1])
+                mask_actions(physical, next_load, accountant,
+                             duration_s=durations[shore_end if has_next_onboard else index + 1])
                 if next_load is not None else ()
             )
+            if action_mode == 'increment13':
+                cached_physical_actions = next_physical_actions
             next_feasible = candidate_fc_actions(
                 next_physical_actions, physical.previous_fc_kw, action_mode=action_mode)
             transitions.append(DirectTransition(
@@ -639,7 +711,7 @@ def replay_episode(
                 relative_time_s=relative_times[index],
                 action_mode=action_mode,
                 action_index=action_values_kw(action_mode).index(
-                    int(fc_kw - previous_fc_kw) if action_mode == 'increment7' else fc_kw),
+                    int(fc_kw - previous_fc_kw) if action_mode != 'absolute61' else fc_kw),
                 action_delta_kw=int(fc_kw - previous_fc_kw),
                 soc_equivalent_hydrogen_cost_cny=soc_energy_cost,
             ))

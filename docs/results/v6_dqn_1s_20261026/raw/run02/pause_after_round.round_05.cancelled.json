@@ -1,0 +1,4 @@
+{
+  "round": 5,
+  "reason": "User requested a complete checkpoint pause before closing desktop; do not start the following round."
+}

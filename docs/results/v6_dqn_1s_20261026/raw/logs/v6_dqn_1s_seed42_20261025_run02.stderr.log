@@ -1,0 +1,31 @@
+Traceback (most recent call last):
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\scripts\report_v6.py", line 482, in <module>
+    if __name__=='__main__': main()
+                             ^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\scripts\report_v6.py", line 479, in main
+    time.sleep(.5)
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\src\v4\v6_training.py", line 417, in <module>
+    if round_index == CONFIG['rounds']:
+                 ^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\src\v4\v6_training.py", line 414, in main
+    train_failure_value=failure_values))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-dqn-1s\src\v4\v6_training.py", line 390, in run
+    accountant,economics,penalty,lambda index,t:remember(t,True))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\py\Python3\Lib\subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\py\Python3\Lib\subprocess.py", line 1201, in communicate
+    self.wait()
+  File "D:\py\Python3\Lib\subprocess.py", line 1264, in wait
+    return self._wait(timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\py\Python3\Lib\subprocess.py", line 1588, in _wait
+    result = _winapi.WaitForSingleObject(self._handle,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

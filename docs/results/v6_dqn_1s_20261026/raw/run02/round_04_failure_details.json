@@ -1,0 +1,1220 @@
+{
+  "round": 4,
+  "notes": [
+    "Postprocessed existing executed results only; no environment interval, policy inference or new experiment.",
+    "Failure time is the next decision after executed_steps; no action was executed at that failed decision.",
+    "train_exploration identifies the epsilon-greedy phase. Per-action random-choice flags were not stored, so these records do not establish that a random action caused the failure.",
+    "Warmup failures are excluded because full-precision terminal SOC was not saved in warmup metrics."
+  ],
+  "failures": [
+    {
+      "round": 4,
+      "phase": "train_exploration",
+      "sample_id": "parent_017_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.46166666666666667,
+      "executed_steps": 5080,
+      "failed_elapsed_time_s": 5080.0,
+      "failed_source_time_s": 5530.0,
+      "failed_timestamp": "2024-05-07 10:22:11+08:00",
+      "source_1s_row": 5530,
+      "soc": 0.20009237823055687,
+      "raw_load_kw": 656.1530666666666,
+      "physical_load_kw": 656.1530666666666,
+      "observed_load_over_600": 1.0935884444444444,
+      "previous_fc_kw": 330,
+      "physical_legal_fc_kw": [
+        460,
+        470,
+        480,
+        490,
+        500,
+        510,
+        520,
+        530,
+        540,
+        550,
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 460,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 270,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 280,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 290,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 300,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 310,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 320,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 330,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 340,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 350,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 360,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 370,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 380,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 390,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC and previous FC: recorded float64 terminal sample metrics; load/time: recorded source row"
+    },
+    {
+      "round": 4,
+      "phase": "train_exploration",
+      "sample_id": "parent_036_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.4571428571428572,
+      "executed_steps": 3230,
+      "failed_elapsed_time_s": 3230.0,
+      "failed_source_time_s": 3230.0,
+      "failed_timestamp": "2024-06-12 15:24:25+08:00",
+      "source_1s_row": 3230,
+      "soc": 0.20025172368541377,
+      "raw_load_kw": 990.5082351667938,
+      "physical_load_kw": 990.5082351667938,
+      "observed_load_over_600": 1.650847058611323,
+      "previous_fc_kw": 310,
+      "physical_legal_fc_kw": [
+        460,
+        470,
+        480,
+        490,
+        500,
+        510,
+        520,
+        530,
+        540,
+        550,
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 460,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 250,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 260,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 270,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 280,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 290,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 300,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 310,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 320,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 330,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 340,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 350,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 360,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 370,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC and previous FC: recorded float64 terminal sample metrics; load/time: recorded source row"
+    },
+    {
+      "round": 4,
+      "phase": "train_exploration",
+      "sample_id": "parent_015_seg01",
+      "failure_reason": "soc_limited",
+      "epsilon": 0.43000000000000005,
+      "executed_steps": 4267,
+      "failed_elapsed_time_s": 4267.0,
+      "failed_source_time_s": 4267.0,
+      "failed_timestamp": "2024-04-28 10:00:41+08:00",
+      "source_1s_row": 4267,
+      "soc": 0.20011583755271653,
+      "raw_load_kw": 1093.2490827851852,
+      "physical_load_kw": 1093.2490827851852,
+      "observed_load_over_600": 1.8220818046419753,
+      "previous_fc_kw": 570,
+      "physical_legal_fc_kw": [],
+      "physical_legal_fc_min_kw": null,
+      "physical_legal_fc_max_kw": null,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 510,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 520,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 530,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 540,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 550,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 560,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 570,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 580,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 590,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 600,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 610,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 620,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 630,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC and previous FC: recorded float64 terminal sample metrics; load/time: recorded source row"
+    },
+    {
+      "round": 4,
+      "phase": "train_exploration",
+      "sample_id": "parent_008_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.3711904761904763,
+      "executed_steps": 3966,
+      "failed_elapsed_time_s": 3966.0,
+      "failed_source_time_s": 3966.0,
+      "failed_timestamp": "2024-04-12 09:59:39+08:00",
+      "source_1s_row": 3966,
+      "soc": 0.20001473543862935,
+      "raw_load_kw": 533.0716103201185,
+      "physical_load_kw": 533.0716103201185,
+      "observed_load_over_600": 0.888452683866864,
+      "previous_fc_kw": 350,
+      "physical_legal_fc_kw": [
+        510,
+        520,
+        530,
+        540,
+        550,
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 510,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 290,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 300,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 310,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 320,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 330,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 340,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 350,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 360,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 370,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 380,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 390,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 400,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 410,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC and previous FC: recorded float64 terminal sample metrics; load/time: recorded source row"
+    },
+    {
+      "round": 4,
+      "phase": "greedy_validation",
+      "sample_id": "parent_002_seg01",
+      "failure_reason": "soc_limited",
+      "epsilon": 0.0,
+      "executed_steps": 3748,
+      "failed_elapsed_time_s": 3748.0,
+      "failed_source_time_s": 3748.0,
+      "failed_timestamp": "2024-03-27 08:33:57+08:00",
+      "source_1s_row": 3748,
+      "soc": 0.20001324045216118,
+      "raw_load_kw": 811.0391771729112,
+      "physical_load_kw": 811.0391771729112,
+      "observed_load_over_600": 1.351731961954852,
+      "previous_fc_kw": 530,
+      "physical_legal_fc_kw": [],
+      "physical_legal_fc_min_kw": null,
+      "physical_legal_fc_max_kw": null,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 490,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 500,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 510,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 520,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 530,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 540,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 550,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 560,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 570,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 580,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 590,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    },
+    {
+      "round": 4,
+      "phase": "greedy_validation",
+      "sample_id": "parent_016_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.0,
+      "executed_steps": 5519,
+      "failed_elapsed_time_s": 5519.0,
+      "failed_source_time_s": 5519.0,
+      "failed_timestamp": "2024-04-30 09:51:09+08:00",
+      "source_1s_row": 5519,
+      "soc": 0.20005754083730182,
+      "raw_load_kw": 676.3905409185185,
+      "physical_load_kw": 676.3905409185185,
+      "observed_load_over_600": 1.1273175681975307,
+      "previous_fc_kw": 110,
+      "physical_legal_fc_kw": [
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 560,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 50,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 60,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 70,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 80,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 90,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 100,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 110,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 120,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 130,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 140,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 150,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 160,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 170,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    },
+    {
+      "round": 4,
+      "phase": "greedy_validation",
+      "sample_id": "parent_044_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.0,
+      "executed_steps": 4301,
+      "failed_elapsed_time_s": 4301.0,
+      "failed_source_time_s": 4301.0,
+      "failed_timestamp": "2024-07-03 09:34:03+08:00",
+      "source_1s_row": 4301,
+      "soc": 0.20011150701621447,
+      "raw_load_kw": 775.8976128296296,
+      "physical_load_kw": 775.8976128296296,
+      "observed_load_over_600": 1.2931626880493825,
+      "previous_fc_kw": 440,
+      "physical_legal_fc_kw": [
+        540,
+        550,
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 540,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 380,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 390,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 400,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 410,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 420,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 430,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 440,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 450,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 460,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 490,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 500,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    },
+    {
+      "round": 4,
+      "phase": "greedy_validation",
+      "sample_id": "parent_045_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.0,
+      "executed_steps": 5701,
+      "failed_elapsed_time_s": 5701.0,
+      "failed_source_time_s": 5701.0,
+      "failed_timestamp": "2024-07-10 10:25:24+08:00",
+      "source_1s_row": 5701,
+      "soc": 0.20006071844258488,
+      "raw_load_kw": 667.9247575751219,
+      "physical_load_kw": 667.9247575751219,
+      "observed_load_over_600": 1.11320792929187,
+      "previous_fc_kw": 420,
+      "physical_legal_fc_kw": [
+        540,
+        550,
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 540,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 360,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 370,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 380,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 390,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 400,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 410,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 420,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 430,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 440,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 450,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 460,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    }
+  ]
+}

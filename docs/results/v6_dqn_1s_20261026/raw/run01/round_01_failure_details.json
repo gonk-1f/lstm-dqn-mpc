@@ -1,0 +1,4496 @@
+{
+  "round": 1,
+  "notes": [
+    "Postprocessed existing executed results only; no environment interval, policy inference or new experiment.",
+    "Failure time is the next decision after executed_steps; no action was executed at that failed decision.",
+    "train_exploration identifies the epsilon-greedy phase. Per-action random-choice flags were not stored, so these records do not establish that a random action caused the failure.",
+    "Warmup failures are excluded because full-precision terminal SOC was not saved in warmup metrics."
+  ],
+  "failures": [
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_015_seg01",
+      "failure_reason": "soc_limited",
+      "epsilon": 0.9954761904761905,
+      "executed_steps": 4341,
+      "failed_elapsed_time_s": 4341.0,
+      "failed_source_time_s": 4341.0,
+      "failed_timestamp": "2024-04-28 10:01:55+08:00",
+      "source_1s_row": 4341,
+      "soc": 0.20019430875487498,
+      "raw_load_kw": 1096.6818,
+      "physical_load_kw": 1096.6818,
+      "observed_load_over_600": 1.827803,
+      "previous_fc_kw": 350,
+      "physical_legal_fc_kw": [],
+      "physical_legal_fc_min_kw": null,
+      "physical_legal_fc_max_kw": null,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 290,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 300,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 310,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 320,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 330,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 340,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 350,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 360,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 370,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 380,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 390,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 400,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 410,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_010_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.9909523809523809,
+      "executed_steps": 2511,
+      "failed_elapsed_time_s": 2511.0,
+      "failed_source_time_s": 2511.0,
+      "failed_timestamp": "2024-04-16 09:02:01+08:00",
+      "source_1s_row": 2511,
+      "soc": 0.7999988889883226,
+      "raw_load_kw": 63.44975168,
+      "physical_load_kw": 63.44975168,
+      "observed_load_over_600": 0.10574958613333334,
+      "previous_fc_kw": 480,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 60,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 420,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 430,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 440,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 450,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 460,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 490,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 500,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 510,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 520,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 530,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 540,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_009_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.9864285714285714,
+      "executed_steps": 7878,
+      "failed_elapsed_time_s": 7878.0,
+      "failed_source_time_s": 7878.0,
+      "failed_timestamp": "2024-04-15 10:22:26+08:00",
+      "source_1s_row": 7878,
+      "soc": 0.7999888750949212,
+      "raw_load_kw": 248.6372488,
+      "physical_load_kw": 248.6372488,
+      "observed_load_over_600": 0.4143954146666667,
+      "previous_fc_kw": 580,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170,
+        180,
+        190,
+        200,
+        210,
+        220,
+        230,
+        240,
+        250,
+        260,
+        270
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 270,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 520,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 530,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 540,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 550,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 560,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 570,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 580,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 590,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 600,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 610,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 620,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 630,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 640,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_010_seg02",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.981904761904762,
+      "executed_steps": 2362,
+      "failed_elapsed_time_s": 2362.0,
+      "failed_source_time_s": 24382.0,
+      "failed_timestamp": "2024-04-16 15:06:32+08:00",
+      "source_1s_row": 24382,
+      "soc": 0.7999490019180633,
+      "raw_load_kw": 90.22079719756276,
+      "physical_load_kw": 90.22079719756276,
+      "observed_load_over_600": 0.15036799532927125,
+      "previous_fc_kw": 430,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170,
+        180,
+        190,
+        200,
+        210
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 210,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 370,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 380,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 390,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 400,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 410,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 420,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 430,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 440,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 450,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 460,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 490,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_043_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.9773809523809524,
+      "executed_steps": 11260,
+      "failed_elapsed_time_s": 11260.0,
+      "failed_source_time_s": 11260.0,
+      "failed_timestamp": "2024-07-02 17:27:29+08:00",
+      "source_1s_row": 11260,
+      "soc": 0.7999286210445422,
+      "raw_load_kw": 33.931239265433675,
+      "physical_load_kw": 33.931239265433675,
+      "observed_load_over_600": 0.05655206544238946,
+      "previous_fc_kw": 510,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170,
+        180,
+        190,
+        200
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 200,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 450,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 460,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 490,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 500,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 510,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 520,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 530,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 540,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 550,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 560,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 570,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_008_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.9728571428571429,
+      "executed_steps": 2450,
+      "failed_elapsed_time_s": 2450.0,
+      "failed_source_time_s": 2450.0,
+      "failed_timestamp": "2024-04-12 09:34:23+08:00",
+      "source_1s_row": 2450,
+      "soc": 0.20021318370096602,
+      "raw_load_kw": 932.9491148148148,
+      "physical_load_kw": 932.9491148148148,
+      "observed_load_over_600": 1.5549151913580248,
+      "previous_fc_kw": 260,
+      "physical_legal_fc_kw": [
+        480,
+        490,
+        500,
+        510,
+        520,
+        530,
+        540,
+        550,
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 480,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 200,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 210,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 220,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 230,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 240,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 250,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 260,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 270,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 280,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 290,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 300,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 310,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 320,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_009_seg02",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.9547619047619048,
+      "executed_steps": 1943,
+      "failed_elapsed_time_s": 1943.0,
+      "failed_source_time_s": 25073.0,
+      "failed_timestamp": "2024-04-15 15:09:01+08:00",
+      "source_1s_row": 25073,
+      "soc": 0.7999625019255353,
+      "raw_load_kw": 52.587951351969636,
+      "physical_load_kw": 52.587951351969636,
+      "observed_load_over_600": 0.08764658558661606,
+      "previous_fc_kw": 490,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 140,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 430,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 440,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 450,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 460,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 490,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 500,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 510,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 520,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 530,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 540,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 550,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_038_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.9502380952380952,
+      "executed_steps": 12895,
+      "failed_elapsed_time_s": 12895.0,
+      "failed_source_time_s": 12895.0,
+      "failed_timestamp": "2024-06-17 13:00:51+08:00",
+      "source_1s_row": 12895,
+      "soc": 0.799985855573704,
+      "raw_load_kw": 52.55064694066848,
+      "physical_load_kw": 52.55064694066848,
+      "observed_load_over_600": 0.0875844115677808,
+      "previous_fc_kw": 480,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 80,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 420,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 430,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 440,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 450,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 460,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 490,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 500,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 510,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 520,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 530,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 540,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_050_seg01",
+      "failure_reason": "soc_limited",
+      "epsilon": 0.9411904761904761,
+      "executed_steps": 6055,
+      "failed_elapsed_time_s": 6055.0,
+      "failed_source_time_s": 6055.0,
+      "failed_timestamp": "2024-07-25 09:58:00+08:00",
+      "source_1s_row": 6055,
+      "soc": 0.2000733935957424,
+      "raw_load_kw": 808.0942518518519,
+      "physical_load_kw": 808.0942518518519,
+      "observed_load_over_600": 1.34682375308642,
+      "previous_fc_kw": 480,
+      "physical_legal_fc_kw": [],
+      "physical_legal_fc_min_kw": null,
+      "physical_legal_fc_max_kw": null,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 420,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 430,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 440,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 450,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 460,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 490,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 500,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 510,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 520,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 530,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 540,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_018_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.9321428571428572,
+      "executed_steps": 16014,
+      "failed_elapsed_time_s": 16014.0,
+      "failed_source_time_s": 16014.0,
+      "failed_timestamp": "2024-05-08 13:05:58+08:00",
+      "source_1s_row": 16014,
+      "soc": 0.7999710490266274,
+      "raw_load_kw": 41.20933233006654,
+      "physical_load_kw": 41.20933233006654,
+      "observed_load_over_600": 0.06868222055011089,
+      "previous_fc_kw": 460,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 100,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 400,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 410,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 420,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 430,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 440,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 450,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 460,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 490,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 500,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 510,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 520,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_003_seg01",
+      "failure_reason": "soc_limited",
+      "epsilon": 0.905,
+      "executed_steps": 4860,
+      "failed_elapsed_time_s": 4860.0,
+      "failed_source_time_s": 4860.0,
+      "failed_timestamp": "2024-03-29 09:58:05+08:00",
+      "source_1s_row": 4860,
+      "soc": 0.2000111484238619,
+      "raw_load_kw": 623.8143,
+      "physical_load_kw": 623.8143,
+      "observed_load_over_600": 1.0396905,
+      "previous_fc_kw": 580,
+      "physical_legal_fc_kw": [],
+      "physical_legal_fc_min_kw": null,
+      "physical_legal_fc_max_kw": null,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 520,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 530,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 540,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 550,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 560,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 570,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 580,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 590,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 600,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 610,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 620,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 630,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 640,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_041_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.9004761904761904,
+      "executed_steps": 4033,
+      "failed_elapsed_time_s": 4033.0,
+      "failed_source_time_s": 4423.0,
+      "failed_timestamp": "2024-06-28 10:05:46+08:00",
+      "source_1s_row": 4423,
+      "soc": 0.20016848105491092,
+      "raw_load_kw": 613.6449941037037,
+      "physical_load_kw": 613.6449941037037,
+      "observed_load_over_600": 1.022741656839506,
+      "previous_fc_kw": 170,
+      "physical_legal_fc_kw": [
+        260,
+        270,
+        280,
+        290,
+        300,
+        310,
+        320,
+        330,
+        340,
+        350,
+        360,
+        370,
+        380,
+        390,
+        400,
+        410,
+        420,
+        430,
+        440,
+        450,
+        460,
+        470,
+        480,
+        490,
+        500,
+        510,
+        520,
+        530,
+        540,
+        550,
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 260,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 110,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 120,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 130,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 140,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 150,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 160,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 170,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 180,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 190,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 200,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 210,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 220,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 230,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_034_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.8914285714285715,
+      "executed_steps": 3902,
+      "failed_elapsed_time_s": 3902.0,
+      "failed_source_time_s": 29642.0,
+      "failed_timestamp": "2024-06-07 10:04:08+08:00",
+      "source_1s_row": 29642,
+      "soc": 0.7999894120104772,
+      "raw_load_kw": 148.85950514074074,
+      "physical_load_kw": 148.85950514074074,
+      "observed_load_over_600": 0.2480991752345679,
+      "previous_fc_kw": 520,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 170,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 460,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 490,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 500,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 510,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 520,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 530,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 540,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 550,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 560,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 570,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 580,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_019_seg02",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.8869047619047619,
+      "executed_steps": 3282,
+      "failed_elapsed_time_s": 3282.0,
+      "failed_source_time_s": 23052.0,
+      "failed_timestamp": "2024-05-09 14:37:50+08:00",
+      "source_1s_row": 23052,
+      "soc": 0.799991793989399,
+      "raw_load_kw": 27.822862432,
+      "physical_load_kw": 27.822862432,
+      "observed_load_over_600": 0.046371437386666665,
+      "previous_fc_kw": 140,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 40,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 80,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 90,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 100,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 110,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 120,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 130,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 140,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 150,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 160,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 170,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 180,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 190,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 200,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_042_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.8778571428571429,
+      "executed_steps": 4736,
+      "failed_elapsed_time_s": 4736.0,
+      "failed_source_time_s": 5036.0,
+      "failed_timestamp": "2024-06-30 06:43:36+08:00",
+      "source_1s_row": 5036,
+      "soc": 0.20009592459707393,
+      "raw_load_kw": 563.4919949684958,
+      "physical_load_kw": 563.4919949684958,
+      "observed_load_over_600": 0.9391533249474929,
+      "previous_fc_kw": 10,
+      "physical_legal_fc_kw": [
+        360,
+        370,
+        380,
+        390,
+        400,
+        410,
+        420,
+        430,
+        440,
+        450,
+        460,
+        470,
+        480,
+        490,
+        500,
+        510,
+        520,
+        530,
+        540,
+        550,
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 360,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": -50,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": -40,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": -30,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": -20,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": -10,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 0,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 10,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 20,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 30,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 40,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 50,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 60,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 70,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_037_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.8733333333333333,
+      "executed_steps": 15950,
+      "failed_elapsed_time_s": 15950.0,
+      "failed_source_time_s": 15950.0,
+      "failed_timestamp": "2024-06-14 13:30:34+08:00",
+      "source_1s_row": 15950,
+      "soc": 0.7999399870378922,
+      "raw_load_kw": 50.068450552592594,
+      "physical_load_kw": 50.068450552592594,
+      "observed_load_over_600": 0.08344741758765432,
+      "previous_fc_kw": 310,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170,
+        180,
+        190
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 190,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 250,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 260,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 270,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 280,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 290,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 300,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 310,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 320,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 330,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 340,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 350,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 360,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 370,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_036_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.8688095238095238,
+      "executed_steps": 2907,
+      "failed_elapsed_time_s": 2907.0,
+      "failed_source_time_s": 2907.0,
+      "failed_timestamp": "2024-06-12 15:19:02+08:00",
+      "source_1s_row": 2907,
+      "soc": 0.20033786297305403,
+      "raw_load_kw": 1003.3459257875769,
+      "physical_load_kw": 1003.3459257875769,
+      "observed_load_over_600": 1.6722432096459614,
+      "previous_fc_kw": 50,
+      "physical_legal_fc_kw": [
+        290,
+        300,
+        310,
+        320,
+        330,
+        340,
+        350,
+        360,
+        370,
+        380,
+        390,
+        400,
+        410,
+        420,
+        430,
+        440,
+        450,
+        460,
+        470,
+        480,
+        490,
+        500,
+        510,
+        520,
+        530,
+        540,
+        550,
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 290,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": -10,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 0,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 10,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 20,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 30,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 40,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 50,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 60,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 70,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 80,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 90,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 100,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 110,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_017_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.8642857142857143,
+      "executed_steps": 3413,
+      "failed_elapsed_time_s": 3413.0,
+      "failed_source_time_s": 3863.0,
+      "failed_timestamp": "2024-05-07 09:54:24+08:00",
+      "source_1s_row": 3863,
+      "soc": 0.20023890690107765,
+      "raw_load_kw": 821.5951055318501,
+      "physical_load_kw": 821.5951055318501,
+      "observed_load_over_600": 1.369325175886417,
+      "previous_fc_kw": 100,
+      "physical_legal_fc_kw": [
+        320,
+        330,
+        340,
+        350,
+        360,
+        370,
+        380,
+        390,
+        400,
+        410,
+        420,
+        430,
+        440,
+        450,
+        460,
+        470,
+        480,
+        490,
+        500,
+        510,
+        520,
+        530,
+        540,
+        550,
+        560,
+        570,
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 320,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 40,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 50,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 60,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 70,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 80,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 90,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 100,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 110,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 120,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 130,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 140,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 150,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 160,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_012_seg01",
+      "failure_reason": "soc_limited",
+      "epsilon": 0.8552380952380952,
+      "executed_steps": 9121,
+      "failed_elapsed_time_s": 9121.0,
+      "failed_source_time_s": 9121.0,
+      "failed_timestamp": "2024-04-18 14:44:14+08:00",
+      "source_1s_row": 9121,
+      "soc": 0.2000136677291557,
+      "raw_load_kw": 657.2335080874382,
+      "physical_load_kw": 657.2335080874382,
+      "observed_load_over_600": 1.0953891801457303,
+      "previous_fc_kw": 450,
+      "physical_legal_fc_kw": [],
+      "physical_legal_fc_min_kw": null,
+      "physical_legal_fc_max_kw": null,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 390,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 400,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 410,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 420,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 430,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 440,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 450,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 460,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 470,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 480,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 490,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 500,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 510,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "train_exploration",
+      "sample_id": "parent_006_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.8461904761904762,
+      "executed_steps": 5469,
+      "failed_elapsed_time_s": 5469.0,
+      "failed_source_time_s": 5469.0,
+      "failed_timestamp": "2024-04-08 10:11:05+08:00",
+      "source_1s_row": 5469,
+      "soc": 0.7999367713649103,
+      "raw_load_kw": 152.9987367784728,
+      "physical_load_kw": 152.9987367784728,
+      "observed_load_over_600": 0.254997894630788,
+      "previous_fc_kw": 370,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170,
+        180,
+        190,
+        200,
+        210,
+        220,
+        230,
+        240,
+        250,
+        260,
+        270,
+        280,
+        290,
+        300
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 300,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 310,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 320,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 330,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 340,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 350,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 360,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 370,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 380,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 390,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 400,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 410,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 420,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 430,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: terminal Replay next_state decoded to exact 10 kW grid; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "greedy_validation",
+      "sample_id": "parent_002_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.0,
+      "executed_steps": 10087,
+      "failed_elapsed_time_s": 10087.0,
+      "failed_source_time_s": 10087.0,
+      "failed_timestamp": "2024-03-27 10:19:36+08:00",
+      "source_1s_row": 10087,
+      "soc": 0.7999443470462804,
+      "raw_load_kw": 42.16380258370371,
+      "physical_load_kw": 42.16380258370371,
+      "observed_load_over_600": 0.07027300430617285,
+      "previous_fc_kw": 310,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 170,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 250,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 260,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 270,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 280,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 290,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 300,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 310,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 320,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 330,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 340,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 350,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 360,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 370,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "greedy_validation",
+      "sample_id": "parent_011_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.0,
+      "executed_steps": 7854,
+      "failed_elapsed_time_s": 7854.0,
+      "failed_source_time_s": 9594.0,
+      "failed_timestamp": "2024-04-17 11:56:00+08:00",
+      "source_1s_row": 9594,
+      "soc": 0.7999513102898966,
+      "raw_load_kw": 68.24081529758497,
+      "physical_load_kw": 68.24081529758497,
+      "observed_load_over_600": 0.11373469216264162,
+      "previous_fc_kw": 280,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170,
+        180
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 180,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 220,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 230,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 240,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 250,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 260,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 270,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 280,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 290,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 300,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 310,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 320,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 330,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 340,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "greedy_validation",
+      "sample_id": "parent_016_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.0,
+      "executed_steps": 7215,
+      "failed_elapsed_time_s": 7215.0,
+      "failed_source_time_s": 7215.0,
+      "failed_timestamp": "2024-04-30 10:19:25+08:00",
+      "source_1s_row": 7215,
+      "soc": 0.20000078207456407,
+      "raw_load_kw": 574.458292,
+      "physical_load_kw": 574.458292,
+      "observed_load_over_600": 0.9574304866666667,
+      "previous_fc_kw": 100,
+      "physical_legal_fc_kw": [
+        580,
+        590,
+        600
+      ],
+      "physical_legal_fc_min_kw": 580,
+      "physical_legal_fc_max_kw": 600,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 40,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 50,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 60,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 70,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 80,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 90,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 100,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 110,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 120,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 130,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 140,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 150,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 160,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "greedy_validation",
+      "sample_id": "parent_020_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.0,
+      "executed_steps": 3362,
+      "failed_elapsed_time_s": 3362.0,
+      "failed_source_time_s": 3362.0,
+      "failed_timestamp": "2024-05-10 09:19:44+08:00",
+      "source_1s_row": 3362,
+      "soc": 0.7999396493577817,
+      "raw_load_kw": 30.749883656381716,
+      "physical_load_kw": 30.749883656381716,
+      "observed_load_over_600": 0.05124980609396953,
+      "previous_fc_kw": 320,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 170,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 260,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 270,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 280,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 290,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 300,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 310,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 320,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 330,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 340,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 350,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 360,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 370,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 380,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "greedy_validation",
+      "sample_id": "parent_033_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.0,
+      "executed_steps": 6112,
+      "failed_elapsed_time_s": 6112.0,
+      "failed_source_time_s": 6112.0,
+      "failed_timestamp": "2024-06-05 09:50:07+08:00",
+      "source_1s_row": 6112,
+      "soc": 0.7998364633108836,
+      "raw_load_kw": 145.8979420562949,
+      "physical_load_kw": 145.8979420562949,
+      "observed_load_over_600": 0.2431632367604915,
+      "previous_fc_kw": 600,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110,
+        120,
+        130,
+        140,
+        150,
+        160,
+        170,
+        180,
+        190,
+        200,
+        210,
+        220,
+        230,
+        240,
+        250,
+        260,
+        270,
+        280,
+        290,
+        300,
+        310,
+        320,
+        330,
+        340,
+        350,
+        360,
+        370,
+        380,
+        390,
+        400,
+        410,
+        420,
+        430,
+        440,
+        450,
+        460,
+        470,
+        480,
+        490,
+        500,
+        510,
+        520,
+        530
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 530,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 540,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 550,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 560,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 570,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 580,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 590,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 600,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 610,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 620,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 630,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 640,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 650,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 660,
+          "in_fc_bounds": false,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "greedy_validation",
+      "sample_id": "parent_040_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.0,
+      "executed_steps": 9638,
+      "failed_elapsed_time_s": 9638.0,
+      "failed_source_time_s": 9638.0,
+      "failed_timestamp": "2024-06-26 10:48:06+08:00",
+      "source_1s_row": 9638,
+      "soc": 0.7999989368724025,
+      "raw_load_kw": 33.43750044410326,
+      "physical_load_kw": 33.43750044410326,
+      "observed_load_over_600": 0.05572916740683876,
+      "previous_fc_kw": 190,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 30,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 130,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 140,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 150,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 160,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 170,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 180,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 190,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 200,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 210,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 220,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 230,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 240,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 250,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "greedy_validation",
+      "sample_id": "parent_044_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.0,
+      "executed_steps": 13255,
+      "failed_elapsed_time_s": 13255.0,
+      "failed_source_time_s": 13255.0,
+      "failed_timestamp": "2024-07-03 12:03:17+08:00",
+      "source_1s_row": 13255,
+      "soc": 0.7999900798889897,
+      "raw_load_kw": 54.32447373185968,
+      "physical_load_kw": 54.32447373185968,
+      "observed_load_over_600": 0.09054078955309947,
+      "previous_fc_kw": 200,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 70,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 140,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 150,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 160,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 170,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 180,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 190,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 200,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 210,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 220,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 230,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 240,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 250,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 260,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    },
+    {
+      "round": 1,
+      "phase": "greedy_validation",
+      "sample_id": "parent_045_seg01",
+      "failure_reason": "increment_action_limited",
+      "epsilon": 0.0,
+      "executed_steps": 16021,
+      "failed_elapsed_time_s": 16021.0,
+      "failed_source_time_s": 16021.0,
+      "failed_timestamp": "2024-07-10 13:17:24+08:00",
+      "source_1s_row": 16021,
+      "soc": 0.7999850397616699,
+      "raw_load_kw": 80.35804637037039,
+      "physical_load_kw": 80.35804637037039,
+      "observed_load_over_600": 0.13393007728395065,
+      "previous_fc_kw": 220,
+      "physical_legal_fc_kw": [
+        0,
+        10,
+        20,
+        30,
+        40,
+        50,
+        60,
+        70,
+        80,
+        90,
+        100,
+        110
+      ],
+      "physical_legal_fc_min_kw": 0,
+      "physical_legal_fc_max_kw": 110,
+      "increment_legal_fc_kw": [],
+      "all13_legal_mask": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "all13_candidates": [
+        {
+          "action_index": 0,
+          "delta_kw": -60,
+          "fc_kw": 160,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 1,
+          "delta_kw": -50,
+          "fc_kw": 170,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 2,
+          "delta_kw": -40,
+          "fc_kw": 180,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 3,
+          "delta_kw": -30,
+          "fc_kw": 190,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 4,
+          "delta_kw": -20,
+          "fc_kw": 200,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 5,
+          "delta_kw": -10,
+          "fc_kw": 210,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 6,
+          "delta_kw": 0,
+          "fc_kw": 220,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 7,
+          "delta_kw": 10,
+          "fc_kw": 230,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 8,
+          "delta_kw": 20,
+          "fc_kw": 240,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 9,
+          "delta_kw": 30,
+          "fc_kw": 250,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 10,
+          "delta_kw": 40,
+          "fc_kw": 260,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 11,
+          "delta_kw": 50,
+          "fc_kw": 270,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        },
+        {
+          "action_index": 12,
+          "delta_kw": 60,
+          "fc_kw": 280,
+          "in_fc_bounds": true,
+          "physical_legal": false,
+          "allowed": false
+        }
+      ],
+      "state_provenance": "SOC: float64 sample metric; previous FC: last executed Validation profile row; load/time: recorded source row"
+    }
+  ]
+}

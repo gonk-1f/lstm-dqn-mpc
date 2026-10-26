@@ -1,0 +1,9 @@
+{
+  "status": "completed",
+  "round": 8,
+  "training_environment_steps": 2782159,
+  "warmup_environment_steps": 50000,
+  "adam_updates": 2782159,
+  "target_copies": 2783,
+  "elapsed_seconds": 35457.46800000001
+}

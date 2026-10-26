@@ -1,0 +1,35 @@
+{
+  "file": "round_04_train_failure_values.csv.gz",
+  "prefix_file": "round_04_train_failure_prefixes.csv.gz",
+  "recorded_prefix_rows": 1212,
+  "probes_count": 606,
+  "events": [
+    {
+      "boundary_side": "lower",
+      "sample_id": "parent_015_seg01",
+      "origin_round": 1,
+      "terminal_replay_id": 63649,
+      "actual_training_draws": 186,
+      "terminal_q": -2987.90966796875,
+      "terminal_target": -10135.0263671875,
+      "terminal_signed_residual": -7147.11669921875,
+      "terminal_mae": 7147.11669921875,
+      "prefix_td_mae": 1.804651070904258,
+      "full_q_rows": 303
+    },
+    {
+      "boundary_side": "upper",
+      "sample_id": "parent_010_seg01",
+      "origin_round": 1,
+      "terminal_replay_id": 66204,
+      "actual_training_draws": 189,
+      "terminal_q": -1123.15869140625,
+      "terminal_target": -10134.529296875,
+      "terminal_signed_residual": -9011.37060546875,
+      "terminal_mae": 9011.37060546875,
+      "prefix_td_mae": 3.6723755590173583,
+      "full_q_rows": 303
+    }
+  ],
+  "interpretation": "Only actual Train transitions; read-only checkpoint inference. Observed return is the realized epsilon-greedy trajectory return, not Q* or a counterfactual benefit. TD targets use current target-network masked max; they are moving learning targets. The first upper/lower failures are fixed for checkpoint comparisons; no report rows enter Replay."
+}
