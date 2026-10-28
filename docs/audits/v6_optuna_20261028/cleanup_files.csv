@@ -1,0 +1,4 @@
+﻿action,original,destination,reason,content_preserved,allowed_edit,dependency_deleted
+archive,tests/test_v2_history_study_cli.py,tests/history/test_v2_history_study_cli.py,仅历史 H1/H2 DQN study 的 CLI 默认值、输出防覆盖与 replay reward 路由测试；不再默认收集。,True,仅 ROOT parents[1] 改为 parents[2]；适配新增 history 层。,False
+archive,scripts/v4_per_frozen_probe.py,scripts/history/v4_per_frozen_probe.py,历史 V4 PER frozen-target 拟合研究工具，非当前 V6 入口。,True,未编辑源码；与 Git HEAD 仅有工作区既有 CRLF/LF 换行差异，无 __file__/ROOT/相对脚本导入。,False
+archive,scripts/v4_per_jointfit_state_probe.py,scripts/history/v4_per_jointfit_state_probe.py,历史 V4 PER 7d/clock 联合拟合及少量 Train 闭环研究工具，非当前 V6 入口。,True,未编辑源码；与 Git HEAD 仅有工作区既有 CRLF/LF 换行差异，无 __file__/ROOT/相对脚本导入。,False
