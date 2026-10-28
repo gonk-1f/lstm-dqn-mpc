@@ -1,5 +1,12 @@
 # 文档索引：当前V6与历史资料
 
+## 当前SB3对照结果
+
+- **[8遍正式训练结果与奖励曲线](results/sb3_dqn_1s_20261028/README.md)**：完整报告、Q排序、功率/SOC图、模型和已有Test输出归档。
+- [PyCharm终端训练、恢复和最终Test命令](v6_sb3_pycharm.md)。第5轮为冻结选定模型。
+- [官方SB3/CleanRL源码核对与14项差异](v6_sb3_source_audit.md)、[实际commit/版本](sb3_reference_versions.json)。
+- [实现计划与预算边界](v6_sb3_plan.md)。用户选择固定8遍35条，而非固定总更新次数。
+
 ## 当前V6
 
 - [完整8轮训练与分析资料](results/v6_dqn_1s_20261026/README.md)：checkpoint、Replay、功率/SOC图、全量Validation轨迹、Q排序及可读CSV。

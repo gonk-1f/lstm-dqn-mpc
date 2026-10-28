@@ -1,0 +1,40 @@
+{
+  "episodes": 4,
+  "completed": 4,
+  "failure_reasons": {
+    "soc_limited": 0,
+    "structural_power": 0,
+    "increment_action_limited": 0
+  },
+  "environment_steps": 34474,
+  "failure_boundary_counts": {
+    "upper": 0,
+    "lower": 0,
+    "interior": 0
+  },
+  "executed_duration_s": 34474.0,
+  "mean_duration_coverage": 1.0,
+  "fixed_complete_set_cost_cny": 705008.4212311902,
+  "executed_prefix_cost_cny": 705008.4212311902,
+  "fc_changes_per_hour": 3558.3338167894644,
+  "fc_reversals_per_hour": 1426.0486163485525,
+  "fc_mean_absolute_ramp_kw_per_s": 18.681034982885652,
+  "fc_h2_kg": 107.91799521372751,
+  "fc_h2_cost_cny": 2363.4040951806323,
+  "battery_h2eq_cost_cny": 126.75105946029285,
+  "fc_degradation_cost_cny": 702221.0009166506,
+  "battery_degradation_cost_cny": 297.2651598986154,
+  "shore_electricity_cost_cny": 0.0,
+  "ledger_total_cost_cny": 704881.6701717299,
+  "soc_min": 0.5180175491015343,
+  "soc_max": 0.6011419770102399,
+  "split": "test",
+  "selected_round": 5,
+  "checkpoint": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\sb3_dqn_1s_seed42_run01\\models\\round_05\\model.zip",
+  "selection_basis": "Validation completed count, then mean duration coverage, then lower full-set economic cost when all voyages complete",
+  "evaluation_epsilon": 0.0,
+  "test_payloads_opened": 4,
+  "evaluation_adam_updates": 0,
+  "mean_episode_return": -1505.093114128688,
+  "mean_nonzero_fc_delta_kw": 18.8997798972854
+}

@@ -1,0 +1,45 @@
+{
+  "captured_at": "2026-10-27T10:10:28.088802+08:00",
+  "python_executable": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\.venv\\Scripts\\python.exe",
+  "python_version": "3.11.5",
+  "pytorch_version": "2.8.0+cu128",
+  "stable_baselines3_version": "2.9.0",
+  "gymnasium_version": "1.2.3",
+  "numpy_version": "1.26.4",
+  "pandas_version": "3.0.1",
+  "device": "cpu",
+  "torch_threads": 1,
+  "sb3_package_file": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\.venv\\Lib\\site-packages\\stable_baselines3\\__init__.py",
+  "online_trainable_parameters": 70669,
+  "target_has_trainable_parameters": false,
+  "optimizer": {
+    "learning_rate": 0.0001,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08
+  },
+  "replay_array_bytes": 79000256,
+  "baseline_commit": "fce060ca12fd842d8496aba8d6f922eae179075e",
+  "official_sb3_commit": "8908708f10c8ff29759c67f55c8acb56cab27463",
+  "project_head": "fce060ca12fd842d8496aba8d6f922eae179075e",
+  "project_worktree_changes": [
+    " M README.md",
+    " M docs/README.md",
+    "?? data/reference/",
+    "?? docs/sb3_installed_source_match.json",
+    "?? docs/sb3_reference_versions.json",
+    "?? docs/third_party/",
+    "?? docs/v6_sb3_consistency_checks.json",
+    "?? docs/v6_sb3_plan.md",
+    "?? docs/v6_sb3_pycharm.md",
+    "?? docs/v6_sb3_source_audit.md",
+    "?? requirements-sb3.txt",
+    "?? scripts/start_v6_sb3.ps1",
+    "?? src/v6_sb3/",
+    "?? tests/test_sb3_environment.py",
+    "?? tests/test_sb3_masked_dqn.py",
+    "?? tests/test_sb3_training_integration.py"
+  ]
+}

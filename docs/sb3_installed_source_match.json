@@ -1,0 +1,12 @@
+{
+  "version": "2.9.0",
+  "official_git_commit": "8908708f10c8ff29759c67f55c8acb56cab27463",
+  "comparison": "source text after universal-newline normalization; git Windows checkout uses CRLF, wheel uses LF",
+  "source_text_equal": {
+    "dqn/dqn.py": true,
+    "dqn/policies.py": true,
+    "common/buffers.py": true,
+    "common/off_policy_algorithm.py": true,
+    "common/torch_layers.py": true
+  }
+}

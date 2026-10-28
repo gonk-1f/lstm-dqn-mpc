@@ -1,5 +1,10 @@
 # 船舶燃料电池与锂电池能量管理
 
+**当前工作分支 `feat/v6-sb3-baseline`：官方Stable-Baselines3 2.9.0 DQN对照已完成8遍Train，共3,128,257次正式Adam更新。**
+**[奖励曲线与完整训练结果](docs/results/sb3_dqn_1s_20261028/README.md)**：Validation完成数为7、7、7、7、8、7、8、5；按预定规则选择第5轮，末轮回退，尚无稳定收敛证据。
+见[训练与Test终端命令](docs/v6_sb3_pycharm.md)、[14项源码差异审查](docs/v6_sb3_source_audit.md)。
+本分支的基准是下述已完成的V6 run02；新增实现位于`src/v6_sb3/`，原V6源码和历史结果保持原样。
+
 当前分支 `feat/v6-dqn-1s` 使用 **1秒普通DQN、单步TD和13档FC实际增量**。
 学习率0.0001，SOC权重0.2，FC波动权重0.05；8轮正式训练已完成，末轮Greedy Validation完成3/8，控制效果尚未稳定。
 物理、退化和经济模型复用v2/v3。最大增量±60 kW/s是仿真假设。

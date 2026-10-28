@@ -1,0 +1,14 @@
+{
+  "status": "complete",
+  "checkpoint_name": "round_08",
+  "completed_rounds": 8,
+  "adam_updates": 3128257,
+  "target_copies": 3129,
+  "replay_insertions": 3178257,
+  "directory": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\sb3_dqn_1s_seed42_run01\\models\\round_08",
+  "files": [
+    "model.zip",
+    "replay.pkl",
+    "training_state.pt"
+  ]
+}
