@@ -1,0 +1,167 @@
+Loading hyperparameters from: C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\experiments\sb3_manual\zoo_vessel\dqn_vessel.yml
+Default hyperparameters for environment (ones being tuned will be overridden):
+OrderedDict([('batch_size', 32),
+             ('buffer_size', 8192),
+             ('exploration_final_eps', 0.05),
+             ('exploration_fraction', 0.8),
+             ('exploration_initial_eps', 1.0),
+             ('gamma', 1.0),
+             ('gradient_steps', 1),
+             ('learning_rate', 0.0001),
+             ('learning_starts', 64),
+             ('n_envs', 1),
+             ('n_timesteps', 1024),
+             ('normalize', False),
+             ('optimize_memory_usage', False),
+             ('policy', 'MlpPolicy'),
+             ('policy_kwargs', 'dict(net_arch=[32, 32])'),
+             ('target_update_interval', 128),
+             ('train_freq', 32)])
+Using 1 environments
+Overwriting n_timesteps with n=4096
+env_kwargs={'data_root': 'C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\data\\processed\\operating_dataset_v6_1s', 'split': 'train'}
+eval_env_kwargs={'data_root': 'C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\data\\processed\\operating_dataset_v6_1s', 'split': 'validation'}
+Using cpu device
+Log path: C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\outputs\zoo_vessel_dev\real_train_4096/dqn_vessel/VesselEnergy-v0_1
+Logging to C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\outputs\zoo_vessel_dev\real_train_4096\tensorboard\VesselEnergy-v0\DQN_1
+--------------------------------------------
+| replay/               |                  |
+|    buffer_size        | 999              |
+|    insertions         | 999              |
+|    pending_transition | 1                |
+| rollout/              |                  |
+|    exploration_rate   | 0.71             |
+| time/                 |                  |
+|    episodes           | 0                |
+|    fps                | 237              |
+|    time_elapsed       | 4                |
+|    total_timesteps    | 1000             |
+| train/                |                  |
+|    learning_rate      | 0.0001           |
+|    loss               | 0.0768           |
+|    n_updates          | 29               |
+|    td_mae             | 0.352            |
+| vessel/               |                  |
+|    economic_cost_cny  | 4.03e+03         |
+|    fc_power_kw        | 530              |
+|    fc_start_count     | 1                |
+|    formal_env_steps   | 935              |
+|    sample_id          | parent_007_seg01 |
+|    soc                | 0.687            |
+--------------------------------------------
+--------------------------------------------
+| replay/               |                  |
+|    buffer_size        | 1999             |
+|    insertions         | 1999             |
+|    pending_transition | 1                |
+| rollout/              |                  |
+|    exploration_rate   | 0.42             |
+| time/                 |                  |
+|    episodes           | 0                |
+|    fps                | 239              |
+|    time_elapsed       | 8                |
+|    total_timesteps    | 2000             |
+| train/                |                  |
+|    learning_rate      | 0.0001           |
+|    loss               | 0.0745           |
+|    n_updates          | 60               |
+|    td_mae             | 0.338            |
+| vessel/               |                  |
+|    economic_cost_cny  | 7.54e+03         |
+|    fc_power_kw        | 590              |
+|    fc_start_count     | 1                |
+|    formal_env_steps   | 1935             |
+|    sample_id          | parent_007_seg01 |
+|    soc                | 0.723            |
+--------------------------------------------
+--------------------------------------------
+| replay/               |                  |
+|    buffer_size        | 2999             |
+|    insertions         | 2999             |
+|    pending_transition | 1                |
+| rollout/              |                  |
+|    ep_len_mean        | 2.77e+03         |
+|    ep_rew_mean        | 746              |
+|    exploration_rate   | 0.131            |
+| time/                 |                  |
+|    episodes           | 1                |
+|    fps                | 237              |
+|    time_elapsed       | 12               |
+|    total_timesteps    | 3000             |
+| train/                |                  |
+|    learning_rate      | 0.0001           |
+|    loss               | 0.0702           |
+|    n_updates          | 91               |
+|    td_mae             | 0.331            |
+| vessel/               |                  |
+|    economic_cost_cny  | 1.49e+03         |
+|    fc_power_kw        | 580              |
+|    fc_start_count     | 2                |
+|    formal_env_steps   | 2935             |
+|    sample_id          | parent_046_seg02 |
+|    soc                | 0.624            |
+--------------------------------------------
+--------------------------------------------
+| replay/               |                  |
+|    buffer_size        | 3999             |
+|    insertions         | 3999             |
+|    pending_transition | 1                |
+| rollout/              |                  |
+|    ep_len_mean        | 2.77e+03         |
+|    ep_rew_mean        | 746              |
+|    exploration_rate   | 0.05             |
+| time/                 |                  |
+|    episodes           | 1                |
+|    fps                | 234              |
+|    time_elapsed       | 17               |
+|    total_timesteps    | 4000             |
+| train/                |                  |
+|    learning_rate      | 0.0001           |
+|    loss               | 0.0471           |
+|    n_updates          | 122              |
+|    td_mae             | 0.286            |
+| vessel/               |                  |
+|    economic_cost_cny  | 4.59e+03         |
+|    fc_power_kw        | 580              |
+|    fc_start_count     | 2                |
+|    formal_env_steps   | 3935             |
+|    sample_id          | parent_046_seg02 |
+|    soc                | 0.782            |
+--------------------------------------------
+-------------------------------------------------
+| replay/                    |                  |
+|    buffer_size             | 4096             |
+|    insertions              | 4096             |
+|    pending_transition      | 0                |
+| rollout/                   |                  |
+|    ep_len_mean             | 2.77e+03         |
+|    ep_rew_mean             | 746              |
+|    exploration_rate        | 0.05             |
+| time/                      |                  |
+|    episodes                | 1                |
+|    fps                     | 57               |
+|    time_elapsed            | 71               |
+|    total_timesteps         | 4096             |
+| train/                     |                  |
+|    learning_rate           | 0.0001           |
+|    loss                    | 0.0802           |
+|    n_updates               | 126              |
+|    td_mae                  | 0.343            |
+| validation/                |                  |
+|    completion_rate         | 0                |
+|    economic_cost_available | 0                |
+|    economic_cost_cny       | None             |
+|    evaluated_adam_updates  | 125              |
+|    evaluated_env_steps     | 4096             |
+|    mean_duration_coverage  | 0.131            |
+|    objective_score         | 0.0657           |
+| vessel/                    |                  |
+|    economic_cost_cny       | 4.88e+03         |
+|    fc_power_kw             | 580              |
+|    fc_start_count          | 2                |
+|    formal_env_steps        | 4032             |
+|    sample_id               | parent_046_seg02 |
+|    soc                     | 0.796            |
+-------------------------------------------------
+Saving to C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\outputs\zoo_vessel_dev\real_train_4096/dqn_vessel/VesselEnergy-v0_1
+Saving replay buffer

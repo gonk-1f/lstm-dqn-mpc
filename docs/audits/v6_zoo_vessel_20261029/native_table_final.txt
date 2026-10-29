@@ -1,0 +1,35 @@
+-------------------------------------------------
+| replay/                    |                  |
+|    buffer_size             | 4096             |
+|    insertions              | 4096             |
+|    pending_transition      | 0                |
+| rollout/                   |                  |
+|    ep_len_mean             | 2.77e+03         |
+|    ep_rew_mean             | 746              |
+|    exploration_rate        | 0.05             |
+| time/                      |                  |
+|    episodes                | 1                |
+|    fps                     | 57               |
+|    time_elapsed            | 71               |
+|    total_timesteps         | 4096             |
+| train/                     |                  |
+|    learning_rate           | 0.0001           |
+|    loss                    | 0.0802           |
+|    n_updates               | 126              |
+|    td_mae                  | 0.343            |
+| validation/                |                  |
+|    completion_rate         | 0                |
+|    economic_cost_available | 0                |
+|    economic_cost_cny       | None             |
+|    evaluated_adam_updates  | 125              |
+|    evaluated_env_steps     | 4096             |
+|    mean_duration_coverage  | 0.131            |
+|    objective_score         | 0.0657           |
+| vessel/                    |                  |
+|    economic_cost_cny       | 4.88e+03         |
+|    fc_power_kw             | 580              |
+|    fc_start_count          | 2                |
+|    formal_env_steps        | 4032             |
+|    sample_id               | parent_046_seg02 |
+|    soc                     | 0.796            |
+-------------------------------------------------

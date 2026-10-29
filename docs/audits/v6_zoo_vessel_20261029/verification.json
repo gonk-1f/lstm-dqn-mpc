@@ -1,0 +1,41 @@
+{
+  "base_commit": "17f3da89c0c83d56980d35cecf6c33c55ace9aa7",
+  "versions": {
+    "rl_zoo3": "2.9.0",
+    "stable-baselines3": "2.9.2",
+    "sb3-contrib": "2.9.2",
+    "gymnasium": "1.2.3",
+    "torch": "2.8.0+cu128",
+    "optuna": "4.9.0",
+    "tensorboard": "2.21.0",
+    "numpy": "1.26.4",
+    "pandas": "3.0.1",
+    "scipy": "1.17.1"
+  },
+  "pip_check": "No broken requirements found.",
+  "unit_tests": {
+    "passed": 104,
+    "elapsed_s": 55.69,
+    "exit_code": 0
+  },
+  "real_train": {
+    "total_steps": 4096,
+    "warmup_steps": 64,
+    "formal_steps": 4032,
+    "adam_updates": 126,
+    "replay_insertions": 4096
+  },
+  "real_optuna": {
+    "trials": 1,
+    "total_train_steps": 1024,
+    "warmup_steps": 64,
+    "formal_steps": 960,
+    "adam_updates": 30,
+    "state": "COMPLETE"
+  },
+  "independent_validation_voyages": 8,
+  "test_payloads_opened": 0,
+  "formal500_started": false,
+  "long_search_started": false,
+  "large_runtime_artifacts_committed": false
+}

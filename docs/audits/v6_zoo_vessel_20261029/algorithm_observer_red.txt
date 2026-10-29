@@ -1,0 +1,12 @@
+Command: .venv-zoo/Scripts/python.exe -m pytest tests/test_zoo_algorithm.py -k after_update_observer -q --tb=line
+Exit code: 1
+F                                                                        [100%]
+================================== FAILURES ===================================
+E   assert [None, 0.9630757570266724] == [0.9630757570...7390341758728]
+
+      At index 0 diff: None != 0.9630757570266724
+      Use -v to get more diff
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_algorithm.py:151: assert [None, 0.9630757570266724] == [0.9630757570...7390341758728]
+=========================== short test summary info ===========================
+FAILED tests/test_zoo_algorithm.py::test_after_update_observer_sees_the_current_completed_minibatch_td_mae
+1 failed, 10 deselected in 17.78s

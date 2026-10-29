@@ -1,0 +1,609 @@
+{
+  "passed": true,
+  "real_train_steps": 4096,
+  "warmup_steps": 64,
+  "formal_steps": 4032,
+  "adam_updates": 126,
+  "replay_insertions": 4096,
+  "target_sync_unit": "formal_env_steps",
+  "target_sync_history": [
+    {
+      "formal_env_steps": 128,
+      "adam_updates": 3
+    },
+    {
+      "formal_env_steps": 256,
+      "adam_updates": 7
+    },
+    {
+      "formal_env_steps": 384,
+      "adam_updates": 11
+    },
+    {
+      "formal_env_steps": 512,
+      "adam_updates": 15
+    },
+    {
+      "formal_env_steps": 640,
+      "adam_updates": 19
+    },
+    {
+      "formal_env_steps": 768,
+      "adam_updates": 23
+    },
+    {
+      "formal_env_steps": 896,
+      "adam_updates": 27
+    },
+    {
+      "formal_env_steps": 1024,
+      "adam_updates": 31
+    },
+    {
+      "formal_env_steps": 1152,
+      "adam_updates": 35
+    },
+    {
+      "formal_env_steps": 1280,
+      "adam_updates": 39
+    },
+    {
+      "formal_env_steps": 1408,
+      "adam_updates": 43
+    },
+    {
+      "formal_env_steps": 1536,
+      "adam_updates": 47
+    },
+    {
+      "formal_env_steps": 1664,
+      "adam_updates": 51
+    },
+    {
+      "formal_env_steps": 1792,
+      "adam_updates": 55
+    },
+    {
+      "formal_env_steps": 1920,
+      "adam_updates": 59
+    },
+    {
+      "formal_env_steps": 2048,
+      "adam_updates": 63
+    },
+    {
+      "formal_env_steps": 2176,
+      "adam_updates": 67
+    },
+    {
+      "formal_env_steps": 2304,
+      "adam_updates": 71
+    },
+    {
+      "formal_env_steps": 2432,
+      "adam_updates": 75
+    },
+    {
+      "formal_env_steps": 2560,
+      "adam_updates": 79
+    },
+    {
+      "formal_env_steps": 2688,
+      "adam_updates": 83
+    },
+    {
+      "formal_env_steps": 2816,
+      "adam_updates": 87
+    },
+    {
+      "formal_env_steps": 2944,
+      "adam_updates": 91
+    },
+    {
+      "formal_env_steps": 3072,
+      "adam_updates": 95
+    },
+    {
+      "formal_env_steps": 3200,
+      "adam_updates": 99
+    },
+    {
+      "formal_env_steps": 3328,
+      "adam_updates": 103
+    },
+    {
+      "formal_env_steps": 3456,
+      "adam_updates": 107
+    },
+    {
+      "formal_env_steps": 3584,
+      "adam_updates": 111
+    },
+    {
+      "formal_env_steps": 3712,
+      "adam_updates": 115
+    },
+    {
+      "formal_env_steps": 3840,
+      "adam_updates": 119
+    },
+    {
+      "formal_env_steps": 3968,
+      "adam_updates": 123
+    }
+  ],
+  "predecessor_mask_actions_checked": 4094,
+  "runtime_illegal_actions": 0,
+  "train_episode_terminals": 1,
+  "train_failure_terminals": 1,
+  "all_weights_rewards_finite": true,
+  "terminal_bootstrap_zero": true,
+  "train_logs": {
+    "csv": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-zoo-vessel\\outputs\\zoo_vessel_dev\\real_train_4096\\tensorboard\\VesselEnergy-v0\\DQN_1\\progress.csv",
+    "dump_steps": [
+      1000,
+      2000,
+      3000,
+      4000,
+      4096
+    ],
+    "tensorboard_tags": [
+      "replay/buffer_size",
+      "replay/insertions",
+      "replay/pending_transition",
+      "rollout/exploration_rate",
+      "time/fps",
+      "train/learning_rate",
+      "train/loss",
+      "train/n_updates",
+      "train/td_mae",
+      "vessel/economic_cost_cny",
+      "vessel/fc_power_kw",
+      "vessel/fc_start_count",
+      "vessel/formal_env_steps",
+      "vessel/soc",
+      "rollout/ep_len_mean",
+      "rollout/ep_rew_mean",
+      "validation/completion_rate",
+      "validation/economic_cost_available",
+      "validation/evaluated_adam_updates",
+      "validation/evaluated_env_steps",
+      "validation/mean_duration_coverage",
+      "validation/objective_score"
+    ]
+  },
+  "inline_validation": {
+    "episodes": 8,
+    "completed": 0,
+    "completion_rate": 0.0,
+    "mean_duration_coverage": 0.1314956367186604,
+    "fixed_complete_set_cost_cny": null,
+    "environment_steps": 13300,
+    "samples": [
+      {
+        "sample_id": "parent_002_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 885,
+        "episode_env_steps": 885,
+        "duration_coverage": 0.07273175542406311,
+        "soc_final": 0.7999175809095667,
+        "return_sum": 228.8270313005907,
+        "economic_cost_cny": 3073.1226530647887,
+        "executed_prefix_economic_cost_cny": 3073.1226530647887,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_011_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 1659,
+        "episode_env_steps": 1659,
+        "duration_coverage": 0.07152095188825659,
+        "soc_final": 0.799995800794193,
+        "return_sum": 424.38177925031573,
+        "economic_cost_cny": 5535.945872800508,
+        "executed_prefix_economic_cost_cny": 5535.945872800508,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_016_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 873,
+        "episode_env_steps": 873,
+        "duration_coverage": 0.04143331751305173,
+        "soc_final": 0.7999459844875021,
+        "return_sum": 225.79146993127446,
+        "economic_cost_cny": 3035.0794278619937,
+        "executed_prefix_economic_cost_cny": 3035.0794278619937,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_020_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 1264,
+        "episode_env_steps": 1264,
+        "duration_coverage": 0.3552557616638561,
+        "soc_final": 0.7999484310586876,
+        "return_sum": 324.65899385381016,
+        "economic_cost_cny": 4275.794964136452,
+        "executed_prefix_economic_cost_cny": 4275.794964136452,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_033_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 872,
+        "episode_env_steps": 872,
+        "duration_coverage": 0.07877145438121048,
+        "soc_final": 0.7999239544451383,
+        "return_sum": 225.61802899498977,
+        "economic_cost_cny": 3032.6559303655754,
+        "executed_prefix_economic_cost_cny": 3032.6559303655754,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_040_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 5318,
+        "episode_env_steps": 5318,
+        "duration_coverage": 0.3422136422136422,
+        "soc_final": 0.7999966415957714,
+        "return_sum": 1313.722717229769,
+        "economic_cost_cny": 17952.368287471967,
+        "executed_prefix_economic_cost_cny": 17952.368287471967,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_044_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 1533,
+        "episode_env_steps": 1533,
+        "duration_coverage": 0.062619991013439,
+        "soc_final": 0.7999642921259406,
+        "return_sum": 392.6004080905664,
+        "economic_cost_cny": 5130.974967095854,
+        "executed_prefix_economic_cost_cny": 5130.974967095854,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_045_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 896,
+        "episode_env_steps": 896,
+        "duration_coverage": 0.02741821965176413,
+        "soc_final": 0.799937814105548,
+        "return_sum": 231.6846378478439,
+        "economic_cost_cny": 3108.8409435632852,
+        "executed_prefix_economic_cost_cny": 3108.8409435632852,
+        "complete_economic_cost_cny": null
+      }
+    ],
+    "selection_split": "validation",
+    "test_payloads_opened": 0,
+    "evaluation_adam_updates": 0,
+    "evaluation_replay_insertions": 0,
+    "score": 0.0657478183593302,
+    "training_env_steps": 4096,
+    "formal_env_steps": 4031,
+    "adam_updates": 125,
+    "replay_insertions": 4095,
+    "evaluation_position": "native callback before current transition storage and next Adam"
+  },
+  "independent_final_model_validation": {
+    "episodes": 8,
+    "completed": 0,
+    "completion_rate": 0.0,
+    "mean_duration_coverage": 0.11645380917683287,
+    "fixed_complete_set_cost_cny": null,
+    "environment_steps": 11430,
+    "samples": [
+      {
+        "sample_id": "parent_002_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 885,
+        "episode_env_steps": 885,
+        "duration_coverage": 0.07273175542406311,
+        "soc_final": 0.7999175809095667,
+        "return_sum": 228.8270313005907,
+        "economic_cost_cny": 3073.1226530647887,
+        "executed_prefix_economic_cost_cny": 3073.1226530647887,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_011_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 1659,
+        "episode_env_steps": 1659,
+        "duration_coverage": 0.07152095188825659,
+        "soc_final": 0.799995800794193,
+        "return_sum": 424.38177925031573,
+        "economic_cost_cny": 5535.945872800508,
+        "executed_prefix_economic_cost_cny": 5535.945872800508,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_016_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 873,
+        "episode_env_steps": 873,
+        "duration_coverage": 0.04143331751305173,
+        "soc_final": 0.7999459844875021,
+        "return_sum": 225.79146993127446,
+        "economic_cost_cny": 3035.0794278619937,
+        "executed_prefix_economic_cost_cny": 3035.0794278619937,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_020_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 1264,
+        "episode_env_steps": 1264,
+        "duration_coverage": 0.3552557616638561,
+        "soc_final": 0.7999484310586876,
+        "return_sum": 324.65899385381016,
+        "economic_cost_cny": 4275.794964136452,
+        "executed_prefix_economic_cost_cny": 4275.794964136452,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_033_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 872,
+        "episode_env_steps": 872,
+        "duration_coverage": 0.07877145438121048,
+        "soc_final": 0.7999239544451383,
+        "return_sum": 225.61802899498977,
+        "economic_cost_cny": 3032.6559303655754,
+        "executed_prefix_economic_cost_cny": 3032.6559303655754,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_040_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 3448,
+        "episode_env_steps": 3448,
+        "duration_coverage": 0.2218790218790219,
+        "soc_final": 0.7999998934357012,
+        "return_sum": 852.0039348125694,
+        "economic_cost_cny": 11776.292986571563,
+        "executed_prefix_economic_cost_cny": 11776.292986571563,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_044_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 1533,
+        "episode_env_steps": 1533,
+        "duration_coverage": 0.062619991013439,
+        "soc_final": 0.7999642921259406,
+        "return_sum": 392.6004080905664,
+        "economic_cost_cny": 5130.974967095854,
+        "executed_prefix_economic_cost_cny": 5130.974967095854,
+        "complete_economic_cost_cny": null
+      },
+      {
+        "sample_id": "parent_045_seg01",
+        "split": "validation",
+        "completed": false,
+        "terminal_reason": "increment_action_limited",
+        "executed_steps": 896,
+        "episode_env_steps": 896,
+        "duration_coverage": 0.02741821965176413,
+        "soc_final": 0.799937814105548,
+        "return_sum": 231.6846378478439,
+        "economic_cost_cny": 3108.8409435632852,
+        "executed_prefix_economic_cost_cny": 3108.8409435632852,
+        "complete_economic_cost_cny": null
+      }
+    ],
+    "selection_split": "validation",
+    "test_payloads_opened": 0,
+    "evaluation_adam_updates": 0,
+    "evaluation_replay_insertions": 0,
+    "score": 0.05822690458841644
+  },
+  "optuna": {
+    "state": "COMPLETE",
+    "value": 0.07792733312109677,
+    "seed": 42,
+    "train_steps": 1024,
+    "adam_updates": 30,
+    "formal_steps": 960,
+    "logs": {
+      "csv": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-zoo-vessel\\outputs\\zoo_vessel_dev\\real_optuna_one_trial\\trials\\trial_0\\native_logs\\progress.csv",
+      "dump_steps": [
+        1000,
+        1024
+      ],
+      "tensorboard_tags": [
+        "replay/buffer_size",
+        "replay/insertions",
+        "replay/pending_transition",
+        "rollout/exploration_rate",
+        "time/fps",
+        "train/learning_rate",
+        "train/loss",
+        "train/n_updates",
+        "train/td_mae",
+        "vessel/economic_cost_cny",
+        "vessel/fc_power_kw",
+        "vessel/fc_start_count",
+        "vessel/formal_env_steps",
+        "vessel/soc",
+        "validation/completion_rate",
+        "validation/economic_cost_available",
+        "validation/evaluated_adam_updates",
+        "validation/evaluated_env_steps",
+        "validation/mean_duration_coverage",
+        "validation/objective_score"
+      ]
+    },
+    "validation": {
+      "episodes": 8,
+      "completed": 0,
+      "completion_rate": 0.0,
+      "mean_duration_coverage": 0.15585466624219355,
+      "fixed_complete_set_cost_cny": null,
+      "environment_steps": 16330,
+      "samples": [
+        {
+          "sample_id": "parent_002_seg01",
+          "split": "validation",
+          "completed": false,
+          "terminal_reason": "increment_action_limited",
+          "executed_steps": 885,
+          "episode_env_steps": 885,
+          "duration_coverage": 0.07273175542406311,
+          "soc_final": 0.7998752910235278,
+          "return_sum": 228.918661400338,
+          "economic_cost_cny": 3070.9025829948464,
+          "executed_prefix_economic_cost_cny": 3070.9025829948464,
+          "complete_economic_cost_cny": null
+        },
+        {
+          "sample_id": "parent_011_seg01",
+          "split": "validation",
+          "completed": false,
+          "terminal_reason": "increment_action_limited",
+          "executed_steps": 1663,
+          "episode_env_steps": 1663,
+          "duration_coverage": 0.07169339541300224,
+          "soc_final": 0.7999895236992398,
+          "return_sum": 423.6594261389789,
+          "economic_cost_cny": 5581.9369625210165,
+          "executed_prefix_economic_cost_cny": 5581.9369625210165,
+          "complete_economic_cost_cny": null
+        },
+        {
+          "sample_id": "parent_016_seg01",
+          "split": "validation",
+          "completed": false,
+          "terminal_reason": "increment_action_limited",
+          "executed_steps": 873,
+          "episode_env_steps": 873,
+          "duration_coverage": 0.04143331751305173,
+          "soc_final": 0.7999036946014598,
+          "return_sum": 225.88312647935686,
+          "economic_cost_cny": 3032.859355202784,
+          "executed_prefix_economic_cost_cny": 3032.859355202784,
+          "complete_economic_cost_cny": null
+        },
+        {
+          "sample_id": "parent_020_seg01",
+          "split": "validation",
+          "completed": false,
+          "terminal_reason": "increment_action_limited",
+          "executed_steps": 1264,
+          "episode_env_steps": 1264,
+          "duration_coverage": 0.3552557616638561,
+          "soc_final": 0.7999230571270624,
+          "return_sum": 324.7497481062218,
+          "economic_cost_cny": 4275.786337854128,
+          "executed_prefix_economic_cost_cny": 4275.786337854128,
+          "complete_economic_cost_cny": null
+        },
+        {
+          "sample_id": "parent_033_seg01",
+          "split": "validation",
+          "completed": false,
+          "terminal_reason": "increment_action_limited",
+          "executed_steps": 872,
+          "episode_env_steps": 872,
+          "duration_coverage": 0.07877145438121048,
+          "soc_final": 0.799890122536307,
+          "return_sum": 225.58918817714337,
+          "economic_cost_cny": 3030.439319727237,
+          "executed_prefix_economic_cost_cny": 3030.439319727237,
+          "complete_economic_cost_cny": null
+        },
+        {
+          "sample_id": "parent_040_seg01",
+          "split": "validation",
+          "completed": false,
+          "terminal_reason": "increment_action_limited",
+          "executed_steps": 8343,
+          "episode_env_steps": 8343,
+          "duration_coverage": 0.5368725868725869,
+          "soc_final": 0.7998598817727081,
+          "return_sum": 2053.267458743155,
+          "economic_cost_cny": 27953.82787562501,
+          "executed_prefix_economic_cost_cny": 27953.82787562501,
+          "complete_economic_cost_cny": null
+        },
+        {
+          "sample_id": "parent_044_seg01",
+          "split": "validation",
+          "completed": false,
+          "terminal_reason": "increment_action_limited",
+          "executed_steps": 1534,
+          "episode_env_steps": 1534,
+          "duration_coverage": 0.06266083901801398,
+          "soc_final": 0.7999805609639046,
+          "return_sum": 392.98485921222886,
+          "economic_cost_cny": 5131.149993645196,
+          "executed_prefix_economic_cost_cny": 5131.149993645196,
+          "complete_economic_cost_cny": null
+        },
+        {
+          "sample_id": "parent_045_seg01",
+          "split": "validation",
+          "completed": false,
+          "terminal_reason": "increment_action_limited",
+          "executed_steps": 896,
+          "episode_env_steps": 896,
+          "duration_coverage": 0.02741821965176413,
+          "soc_final": 0.7999039821967165,
+          "return_sum": 231.65641111622654,
+          "economic_cost_cny": 3106.6243317299927,
+          "executed_prefix_economic_cost_cny": 3106.6243317299927,
+          "complete_economic_cost_cny": null
+        }
+      ],
+      "selection_split": "validation",
+      "test_payloads_opened": 0,
+      "evaluation_adam_updates": 0,
+      "evaluation_replay_insertions": 0,
+      "score": 0.07792733312109677,
+      "training_env_steps": 1024,
+      "formal_env_steps": 959,
+      "adam_updates": 29,
+      "replay_insertions": 1023,
+      "evaluation_position": "native callback before current transition storage and next Adam"
+    }
+  },
+  "no_dataset_payloads_opened_by_this_check": true,
+  "limits": [
+    "Predecessor Replay masks independently cover non-reset actions; all actions also passed the environment runtime legality guard.",
+    "Inline best Validation precedes the final Adam; independent evaluation uses the saved final model.",
+    "Short bounded results validate integration, not learned policy quality."
+  ]
+}

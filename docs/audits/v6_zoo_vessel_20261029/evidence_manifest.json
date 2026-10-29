@@ -1,0 +1,28 @@
+{
+  "hash_method": "sha256 UTF8 LF text with trailing whitespace removed; artifact binary files are not committed",
+  "files": {
+    "algorithm_final_green.txt": "761b894073e756ca965dc92732970115f7a4b53fa4e4cbb71698dcc4570541bd",
+    "algorithm_observer_red.txt": "0526b1283cc417113012f2ffedeffce7ec82c4f4acb4458a21d4fbc4ddb30fea",
+    "algorithm_red.txt": "d00f0d7aa55eb2863b91feed091725b58a1d1ed7350e0dc915e89b88116e836d",
+    "artifacts_final_check.txt": "f5ddca265240b587c1bc424d5058d7efa030617a788cdbe55d911c042a76c6da",
+    "artifacts_verification.json": "d429a4d177154e51d3608b5835c5e250edad405956516b78296ee9f9c53a802c",
+    "callback_green.txt": "ad700b236f44588a4b98f5fe2492568e55eb16ac9b0684a3864cd6407b37a642",
+    "callback_red.txt": "44ac8bc14ae27b259048bc515ed0915652ddfae0b9ea59135f1391a677eec679",
+    "env_green.txt": "eb6ce1ac7dc9115ec011ee914c3351553d3c47021285dcffaf7a96ce5b803cd3",
+    "env_loader_red.txt": "26cffd8ce54207e004780e8d9e2c2123b8e8ef25d1a774cf1c1264d7ca99a80f",
+    "env_red.txt": "a33eedc83263c556110439124f23a7660dc4a1e302740b28249d1ed8f2f5e0c8",
+    "final_unit.txt": "4b1b4fcc16f29a94cb0709cb2cd9b845d5af0cf5bea66470c9db6398a6f51c91",
+    "independent_eval_console.txt": "0dcb1060374407259bf9290a2d1f18b8974275e8bbd95603a5254c89851a5dde",
+    "independent_validation.json": "a8eb13b417e0aa3f47a51caab4f6d1e1a67ee935fb6e616553eaaabd72629aa2",
+    "inline_validation.json": "c79965014e4d82d337cfee2699e89662f3eca98282cbdc7285d6caef1fca2b65",
+    "isolation.json": "8a5413fd38eb2aa67be27200d11afc4baedc35cd684431ce0e5a95c228c5e276",
+    "logging_invariance.txt": "28cd2ecbe1f36db73e18a353fefdc357da99d8ceeb01830192d6bc0086bc731a",
+    "native_table_final.txt": "b17bece88323e48d4fff51cb0851822a13ad9389f35561eed8de4b5906d709e1",
+    "native_train_progress.csv": "c4f6d6ba77ad0d95694702569dd918bf0fa4a06b2a659b5bdb42364dc6fb1ccb",
+    "native_trial_progress.csv": "317c7e989d1c1b09499868478d114429c403f1959d1eab301c6580ab57973438",
+    "real_optuna_console.txt": "04be660c5541673b1d28f0648e2d89e415e757096e2180f7c839e4a83ba6d33d",
+    "real_train_4096_console.txt": "c61b00f22dff9f5109ed3dab809291ea2a7cad68a13234b61976bac0872bc5f8",
+    "verification.json": "a0dfd341f990619268cc5d0075b98065d2a8e4c13a70ca87a11a05691fa60847",
+    "verification.md": "044a422f1a8f608b82372b97e4bf0db9ce16005df45b1de28c23aeb4db53f546"
+  }
+}

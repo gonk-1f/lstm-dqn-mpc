@@ -1,0 +1,74 @@
+............FF.                                                          [100%]
+================================== FAILURES ===================================
+______ test_loader_data_value_errors_are_fatal_runtime_errors[metadata] _______
+
+fake_dataset = (<module 'zoo_vessel_env_under_test' from 'C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees...zoo-vessel\\experiments\\sb3_manual\\zoo_vessel\\env.py'>, <class 'test_zoo_vessel_env.fake_dataset.<locals>.Dataset'>)
+tmp_path = WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest-222/test_loader_data_value_errors_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001EABB69B650>
+phase = 'metadata'
+
+    @pytest.mark.parametrize('phase',['metadata','payload'])
+    def test_loader_data_value_errors_are_fatal_runtime_errors(fake_dataset,tmp_path,monkeypatch,phase):
+        loaded,data = fake_dataset
+        def broken(*args,**kwargs):
+            raise ValueError('corrupt canonical data')
+        if phase=='metadata':
+            monkeypatch.setattr(loaded.V6TrainingDataset,'open',broken)
+        else:
+            monkeypatch.setattr(data,'load_train',broken)
+        with pytest.raises(RuntimeError,match='corrupt canonical data') as error:
+>           loaded.VesselEnergyEnv(data_root=tmp_path)
+
+tests\test_zoo_vessel_env.py:228:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+experiments\sb3_manual\zoo_vessel\env.py:50: in __init__
+    dataset = V6TrainingDataset.open(self._data_root)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest-222/test_loader_data_value_errors_0'),)
+kwargs = {}
+
+    def broken(*args,**kwargs):
+>       raise ValueError('corrupt canonical data')
+E       ValueError: corrupt canonical data
+
+tests\test_zoo_vessel_env.py:222: ValueError
+_______ test_loader_data_value_errors_are_fatal_runtime_errors[payload] _______
+
+fake_dataset = (<module 'zoo_vessel_env_under_test' from 'C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees...zoo-vessel\\experiments\\sb3_manual\\zoo_vessel\\env.py'>, <class 'test_zoo_vessel_env.fake_dataset.<locals>.Dataset'>)
+tmp_path = WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest-222/test_loader_data_value_errors_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001EABB6D7F10>
+phase = 'payload'
+
+    @pytest.mark.parametrize('phase',['metadata','payload'])
+    def test_loader_data_value_errors_are_fatal_runtime_errors(fake_dataset,tmp_path,monkeypatch,phase):
+        loaded,data = fake_dataset
+        def broken(*args,**kwargs):
+            raise ValueError('corrupt canonical data')
+        if phase=='metadata':
+            monkeypatch.setattr(loaded.V6TrainingDataset,'open',broken)
+        else:
+            monkeypatch.setattr(data,'load_train',broken)
+        with pytest.raises(RuntimeError,match='corrupt canonical data') as error:
+>           loaded.VesselEnergyEnv(data_root=tmp_path)
+
+tests\test_zoo_vessel_env.py:228:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+experiments\sb3_manual\zoo_vessel\env.py:58: in __init__
+    episodes = dataset.load_train() if split=='train' else dataset.load_validation()
+               ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (<test_zoo_vessel_env.fake_dataset.<locals>.Dataset object at 0x000001EABB1721D0>,)
+kwargs = {}
+
+    def broken(*args,**kwargs):
+>       raise ValueError('corrupt canonical data')
+E       ValueError: corrupt canonical data
+
+tests\test_zoo_vessel_env.py:222: ValueError
+=========================== short test summary info ===========================
+FAILED tests/test_zoo_vessel_env.py::test_loader_data_value_errors_are_fatal_runtime_errors[metadata]
+FAILED tests/test_zoo_vessel_env.py::test_loader_data_value_errors_are_fatal_runtime_errors[payload]
+2 failed, 13 passed in 13.12s
