@@ -1,0 +1,762 @@
+Command: python -m pytest tests/test_one_plus_reward.py -q
+Exit code: 1
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                         [100%]
+================================== FAILURES ===================================
+______ test_exact_one_plus_map_includes_zero_and_negative_cost[0.0-1.0] _______
+
+cost = 0.0, expected = 1.0
+
+    @pytest.mark.parametrize('cost,expected', [(0., 1.), (1., .5), (3., .25), (-.5, 2.),
+                                             (-0.00000068368235145, 1. / (1. - 0.00000068368235145))])
+    def test_exact_one_plus_map_includes_zero_and_negative_cost(cost, expected):
+>       assert rewards_module().inverse_one_plus_economic_reward(cost) == expected
+               ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+______ test_exact_one_plus_map_includes_zero_and_negative_cost[1.0-0.5] _______
+
+cost = 1.0, expected = 0.5
+
+    @pytest.mark.parametrize('cost,expected', [(0., 1.), (1., .5), (3., .25), (-.5, 2.),
+                                             (-0.00000068368235145, 1. / (1. - 0.00000068368235145))])
+    def test_exact_one_plus_map_includes_zero_and_negative_cost(cost, expected):
+>       assert rewards_module().inverse_one_plus_economic_reward(cost) == expected
+               ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+______ test_exact_one_plus_map_includes_zero_and_negative_cost[3.0-0.25] ______
+
+cost = 3.0, expected = 0.25
+
+    @pytest.mark.parametrize('cost,expected', [(0., 1.), (1., .5), (3., .25), (-.5, 2.),
+                                             (-0.00000068368235145, 1. / (1. - 0.00000068368235145))])
+    def test_exact_one_plus_map_includes_zero_and_negative_cost(cost, expected):
+>       assert rewards_module().inverse_one_plus_economic_reward(cost) == expected
+               ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+______ test_exact_one_plus_map_includes_zero_and_negative_cost[-0.5-2.0] ______
+
+cost = -0.5, expected = 2.0
+
+    @pytest.mark.parametrize('cost,expected', [(0., 1.), (1., .5), (3., .25), (-.5, 2.),
+                                             (-0.00000068368235145, 1. / (1. - 0.00000068368235145))])
+    def test_exact_one_plus_map_includes_zero_and_negative_cost(cost, expected):
+>       assert rewards_module().inverse_one_plus_economic_reward(cost) == expected
+               ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+_ test_exact_one_plus_map_includes_zero_and_negative_cost[-6.8368235145e-07-1.0000006836828188] _
+
+cost = -6.8368235145e-07, expected = 1.0000006836828188
+
+    @pytest.mark.parametrize('cost,expected', [(0., 1.), (1., .5), (3., .25), (-.5, 2.),
+                                             (-0.00000068368235145, 1. / (1. - 0.00000068368235145))])
+    def test_exact_one_plus_map_includes_zero_and_negative_cost(cost, expected):
+>       assert rewards_module().inverse_one_plus_economic_reward(cost) == expected
+               ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+____ test_one_plus_uses_no_cost_floor_and_remains_unbounded_near_minus_one ____
+
+    def test_one_plus_uses_no_cost_floor_and_remains_unbounded_near_minus_one():
+>       reward = rewards_module().inverse_one_plus_economic_reward
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:43: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+______ test_invalid_cost_rejected_even_for_physical_failure[False--1.0] _______
+
+cost = -1.0, physical_failure = False
+
+    @pytest.mark.parametrize('cost', [-1., -2., float('nan'), float('inf'), -float('inf')])
+    @pytest.mark.parametrize('physical_failure', [False, True])
+    def test_invalid_cost_rejected_even_for_physical_failure(cost, physical_failure):
+>       reward = rewards_module().inverse_one_plus_economic_reward
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+______ test_invalid_cost_rejected_even_for_physical_failure[False--2.0] _______
+
+cost = -2.0, physical_failure = False
+
+    @pytest.mark.parametrize('cost', [-1., -2., float('nan'), float('inf'), -float('inf')])
+    @pytest.mark.parametrize('physical_failure', [False, True])
+    def test_invalid_cost_rejected_even_for_physical_failure(cost, physical_failure):
+>       reward = rewards_module().inverse_one_plus_economic_reward
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+_______ test_invalid_cost_rejected_even_for_physical_failure[False-nan] _______
+
+cost = nan, physical_failure = False
+
+    @pytest.mark.parametrize('cost', [-1., -2., float('nan'), float('inf'), -float('inf')])
+    @pytest.mark.parametrize('physical_failure', [False, True])
+    def test_invalid_cost_rejected_even_for_physical_failure(cost, physical_failure):
+>       reward = rewards_module().inverse_one_plus_economic_reward
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+_______ test_invalid_cost_rejected_even_for_physical_failure[False-inf] _______
+
+cost = inf, physical_failure = False
+
+    @pytest.mark.parametrize('cost', [-1., -2., float('nan'), float('inf'), -float('inf')])
+    @pytest.mark.parametrize('physical_failure', [False, True])
+    def test_invalid_cost_rejected_even_for_physical_failure(cost, physical_failure):
+>       reward = rewards_module().inverse_one_plus_economic_reward
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+______ test_invalid_cost_rejected_even_for_physical_failure[False--inf] _______
+
+cost = -inf, physical_failure = False
+
+    @pytest.mark.parametrize('cost', [-1., -2., float('nan'), float('inf'), -float('inf')])
+    @pytest.mark.parametrize('physical_failure', [False, True])
+    def test_invalid_cost_rejected_even_for_physical_failure(cost, physical_failure):
+>       reward = rewards_module().inverse_one_plus_economic_reward
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+_______ test_invalid_cost_rejected_even_for_physical_failure[True--1.0] _______
+
+cost = -1.0, physical_failure = True
+
+    @pytest.mark.parametrize('cost', [-1., -2., float('nan'), float('inf'), -float('inf')])
+    @pytest.mark.parametrize('physical_failure', [False, True])
+    def test_invalid_cost_rejected_even_for_physical_failure(cost, physical_failure):
+>       reward = rewards_module().inverse_one_plus_economic_reward
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+_______ test_invalid_cost_rejected_even_for_physical_failure[True--2.0] _______
+
+cost = -2.0, physical_failure = True
+
+    @pytest.mark.parametrize('cost', [-1., -2., float('nan'), float('inf'), -float('inf')])
+    @pytest.mark.parametrize('physical_failure', [False, True])
+    def test_invalid_cost_rejected_even_for_physical_failure(cost, physical_failure):
+>       reward = rewards_module().inverse_one_plus_economic_reward
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+_______ test_invalid_cost_rejected_even_for_physical_failure[True-nan] ________
+
+cost = nan, physical_failure = True
+
+    @pytest.mark.parametrize('cost', [-1., -2., float('nan'), float('inf'), -float('inf')])
+    @pytest.mark.parametrize('physical_failure', [False, True])
+    def test_invalid_cost_rejected_even_for_physical_failure(cost, physical_failure):
+>       reward = rewards_module().inverse_one_plus_economic_reward
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+_______ test_invalid_cost_rejected_even_for_physical_failure[True-inf] ________
+
+cost = inf, physical_failure = True
+
+    @pytest.mark.parametrize('cost', [-1., -2., float('nan'), float('inf'), -float('inf')])
+    @pytest.mark.parametrize('physical_failure', [False, True])
+    def test_invalid_cost_rejected_even_for_physical_failure(cost, physical_failure):
+>       reward = rewards_module().inverse_one_plus_economic_reward
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+_______ test_invalid_cost_rejected_even_for_physical_failure[True--inf] _______
+
+cost = -inf, physical_failure = True
+
+    @pytest.mark.parametrize('cost', [-1., -2., float('nan'), float('inf'), -float('inf')])
+    @pytest.mark.parametrize('physical_failure', [False, True])
+    def test_invalid_cost_rejected_even_for_physical_failure(cost, physical_failure):
+>       reward = rewards_module().inverse_one_plus_economic_reward
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+_____ test_real_failure_replaces_normal_reward_after_validating_cost[0.0] _____
+
+cost = 0.0
+
+    @pytest.mark.parametrize('cost', [0., 1., -.5])
+    def test_real_failure_replaces_normal_reward_after_validating_cost(cost):
+>       assert rewards_module().inverse_one_plus_economic_reward(cost, physical_failure=True) == -1.
+               ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+_____ test_real_failure_replaces_normal_reward_after_validating_cost[1.0] _____
+
+cost = 1.0
+
+    @pytest.mark.parametrize('cost', [0., 1., -.5])
+    def test_real_failure_replaces_normal_reward_after_validating_cost(cost):
+>       assert rewards_module().inverse_one_plus_economic_reward(cost, physical_failure=True) == -1.
+               ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+____ test_real_failure_replaces_normal_reward_after_validating_cost[-0.5] _____
+
+cost = -0.5
+
+    @pytest.mark.parametrize('cost', [0., 1., -.5])
+    def test_real_failure_replaces_normal_reward_after_validating_cost(cost):
+>       assert rewards_module().inverse_one_plus_economic_reward(cost, physical_failure=True) == -1.
+               ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+_______ test_cost_helper_preserves_raw_components_and_signed_soc_value ________
+
+    def test_cost_helper_preserves_raw_components_and_signed_soc_value():
+>       module = rewards_module()
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+________ test_reward_contract_is_explicit_json_safe_and_mode_specific _________
+
+    def test_reward_contract_is_explicit_json_safe_and_mode_specific():
+>       module = rewards_module()
+                 ^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def rewards_module():
+>       assert importlib.util.find_spec('v6_sb3.rewards') is not None, (
+            'the explicit inverse_one_plus_economic reward implementation is missing')
+E       AssertionError: the explicit inverse_one_plus_economic reward implementation is missing
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001E62112F4C0>('v6_sb3.rewards')
+E        +    where <function find_spec at 0x000001E62112F4C0> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+tests\test_one_plus_reward.py:24: AssertionError
+___________ test_idle_zero_cost_completes_normally_with_reward_one ____________
+
+    def test_idle_zero_cost_completes_normally_with_reward_one():
+>       env = DirectVesselEnv(episode((0.,)), reward_mode=MODE)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:84: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E6106EFF50>
+episode = namespace(sample_id='one_plus_synthetic', split='train', task_mode='independent_voyage', operating_mode=('onboard',), load_kw=(0.0,), time_s=(0.0,), dt_s=(1.0,), duration_s=1.0)
+accountant = None, economics = None, penalty = None
+reward_mode = 'inverse_one_plus_economic'
+
+    def __init__(self, episode=None, *, accountant=None, economics=None, penalty=None,
+                 reward_mode='zhou_economic_only'):
+        super().__init__()
+        if reward_mode not in REWARD_MODES:
+>           raise ValueError(f'reward_mode must be one of {REWARD_MODES}')
+E           ValueError: reward_mode must be one of ('zhou_economic_only', 'v6_energy_soc_ramp')
+
+src\v6_sb3\direct_environment.py:44: ValueError
+_______ test_new_mode_preserves_executed_physics_cost_and_action_masks ________
+
+    def test_new_mode_preserves_executed_physics_cost_and_action_masks():
+        data = episode((0., 100., 20., 100.))
+>       env = DirectVesselEnv(data, reward_mode=MODE)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E61070EA10>
+episode = namespace(sample_id='one_plus_synthetic', split='train', task_mode='independent_voyage', operating_mode=('onboard', 'o... 'onboard'), load_kw=(0.0, 100.0, 20.0, 100.0), time_s=(0.0, 1.0, 2.0, 3.0), dt_s=(1.0, 1.0, 1.0, 1.0), duration_s=4.0)
+accountant = None, economics = None, penalty = None
+reward_mode = 'inverse_one_plus_economic'
+
+    def __init__(self, episode=None, *, accountant=None, economics=None, penalty=None,
+                 reward_mode='zhou_economic_only'):
+        super().__init__()
+        if reward_mode not in REWARD_MODES:
+>           raise ValueError(f'reward_mode must be one of {REWARD_MODES}')
+E           ValueError: reward_mode must be one of ('zhou_economic_only', 'v6_energy_soc_ramp')
+
+src\v6_sb3\direct_environment.py:44: ValueError
+_ test_failure_replaces_only_last_real_step_without_ledger_penalty[1400.0-increment_action_limited] _
+
+next_load = 1400.0, cause = 'increment_action_limited'
+
+    @pytest.mark.parametrize('next_load,cause', [(1400., 'increment_action_limited'), (1900., 'structural_power')])
+    def test_failure_replaces_only_last_real_step_without_ledger_penalty(next_load, cause):
+        accountant = CountingAccountant(nominal_cost_cny=1.)
+>       env = DirectVesselEnv(episode((100., next_load)), accountant=accountant, reward_mode=MODE)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:143: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E610256D50>
+episode = namespace(sample_id='one_plus_synthetic', split='train', task_mode='independent_voyage', operating_mode=('onboard', 'onboard'), load_kw=(100.0, 1400.0), time_s=(0.0, 1.0), dt_s=(1.0, 1.0), duration_s=2.0)
+accountant = <test_one_plus_reward.CountingAccountant object at 0x000001E610765150>
+economics = None, penalty = None, reward_mode = 'inverse_one_plus_economic'
+
+    def __init__(self, episode=None, *, accountant=None, economics=None, penalty=None,
+                 reward_mode='zhou_economic_only'):
+        super().__init__()
+        if reward_mode not in REWARD_MODES:
+>           raise ValueError(f'reward_mode must be one of {REWARD_MODES}')
+E           ValueError: reward_mode must be one of ('zhou_economic_only', 'v6_energy_soc_ramp')
+
+src\v6_sb3\direct_environment.py:44: ValueError
+_ test_failure_replaces_only_last_real_step_without_ledger_penalty[1900.0-structural_power] _
+
+next_load = 1900.0, cause = 'structural_power'
+
+    @pytest.mark.parametrize('next_load,cause', [(1400., 'increment_action_limited'), (1900., 'structural_power')])
+    def test_failure_replaces_only_last_real_step_without_ledger_penalty(next_load, cause):
+        accountant = CountingAccountant(nominal_cost_cny=1.)
+>       env = DirectVesselEnv(episode((100., next_load)), accountant=accountant, reward_mode=MODE)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:143: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E6106D1ED0>
+episode = namespace(sample_id='one_plus_synthetic', split='train', task_mode='independent_voyage', operating_mode=('onboard', 'onboard'), load_kw=(100.0, 1900.0), time_s=(0.0, 1.0), dt_s=(1.0, 1.0), duration_s=2.0)
+accountant = <test_one_plus_reward.CountingAccountant object at 0x000001E6106D2510>
+economics = None, penalty = None, reward_mode = 'inverse_one_plus_economic'
+
+    def __init__(self, episode=None, *, accountant=None, economics=None, penalty=None,
+                 reward_mode='zhou_economic_only'):
+        super().__init__()
+        if reward_mode not in REWARD_MODES:
+>           raise ValueError(f'reward_mode must be one of {REWARD_MODES}')
+E           ValueError: reward_mode must be one of ('zhou_economic_only', 'v6_energy_soc_ramp')
+
+src\v6_sb3\direct_environment.py:44: ValueError
+____________ test_short_soc_failure_uses_same_terminal_replacement ____________
+
+    def test_short_soc_failure_uses_same_terminal_replacement():
+        data = episode((100., 1248.))
+>       env = DirectVesselEnv(data, reward_mode=MODE)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:169: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E61074EF10>
+episode = namespace(sample_id='one_plus_synthetic', split='train', task_mode='independent_voyage', operating_mode=('onboard', 'onboard'), load_kw=(100.0, 1248.0), time_s=(0.0, 1.0), dt_s=(1.0, 1.0), duration_s=2.0)
+accountant = None, economics = None, penalty = None
+reward_mode = 'inverse_one_plus_economic'
+
+    def __init__(self, episode=None, *, accountant=None, economics=None, penalty=None,
+                 reward_mode='zhou_economic_only'):
+        super().__init__()
+        if reward_mode not in REWARD_MODES:
+>           raise ValueError(f'reward_mode must be one of {REWARD_MODES}')
+E           ValueError: reward_mode must be one of ('zhou_economic_only', 'v6_energy_soc_ramp')
+
+src\v6_sb3\direct_environment.py:44: ValueError
+____ test_infeasible_reset_has_no_fabricated_transition_or_reward[1400.0] _____
+
+load = 1400.0
+
+    @pytest.mark.parametrize('load', [1400., 1900.])
+    def test_infeasible_reset_has_no_fabricated_transition_or_reward(load):
+>       env = DirectVesselEnv(episode((load,)), reward_mode=MODE)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E610729490>
+episode = namespace(sample_id='one_plus_synthetic', split='train', task_mode='independent_voyage', operating_mode=('onboard',), load_kw=(1400.0,), time_s=(0.0,), dt_s=(1.0,), duration_s=1.0)
+accountant = None, economics = None, penalty = None
+reward_mode = 'inverse_one_plus_economic'
+
+    def __init__(self, episode=None, *, accountant=None, economics=None, penalty=None,
+                 reward_mode='zhou_economic_only'):
+        super().__init__()
+        if reward_mode not in REWARD_MODES:
+>           raise ValueError(f'reward_mode must be one of {REWARD_MODES}')
+E           ValueError: reward_mode must be one of ('zhou_economic_only', 'v6_energy_soc_ramp')
+
+src\v6_sb3\direct_environment.py:44: ValueError
+____ test_infeasible_reset_has_no_fabricated_transition_or_reward[1900.0] _____
+
+load = 1900.0
+
+    @pytest.mark.parametrize('load', [1400., 1900.])
+    def test_infeasible_reset_has_no_fabricated_transition_or_reward(load):
+>       env = DirectVesselEnv(episode((load,)), reward_mode=MODE)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E610719210>
+episode = namespace(sample_id='one_plus_synthetic', split='train', task_mode='independent_voyage', operating_mode=('onboard',), load_kw=(1900.0,), time_s=(0.0,), dt_s=(1.0,), duration_s=1.0)
+accountant = None, economics = None, penalty = None
+reward_mode = 'inverse_one_plus_economic'
+
+    def __init__(self, episode=None, *, accountant=None, economics=None, penalty=None,
+                 reward_mode='zhou_economic_only'):
+        super().__init__()
+        if reward_mode not in REWARD_MODES:
+>           raise ValueError(f'reward_mode must be one of {REWARD_MODES}')
+E           ValueError: reward_mode must be one of ('zhou_economic_only', 'v6_energy_soc_ramp')
+
+src\v6_sb3\direct_environment.py:44: ValueError
+_________ test_new_mode_never_reads_or_uses_legacy_failure_reference __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001E610723B50>
+
+    def test_new_mode_never_reads_or_uses_legacy_failure_reference(monkeypatch):
+        def forbidden(*args, **kwargs):
+            raise AssertionError('legacy F path must not be used by the new mode')
+        monkeypatch.setattr(FailurePenalty, 'from_reference', forbidden)
+        monkeypatch.setattr('v6_sb3.direct_environment.prepare_failure_replay', forbidden)
+        data = episode((100., 1900.))
+>       env = DirectVesselEnv(data, reward_mode=MODE)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E610723A50>
+episode = namespace(sample_id='one_plus_synthetic', split='train', task_mode='independent_voyage', operating_mode=('onboard', 'onboard'), load_kw=(100.0, 1900.0), time_s=(0.0, 1.0), dt_s=(1.0, 1.0), duration_s=2.0)
+accountant = None, economics = None, penalty = None
+reward_mode = 'inverse_one_plus_economic'
+
+    def __init__(self, episode=None, *, accountant=None, economics=None, penalty=None,
+                 reward_mode='zhou_economic_only'):
+        super().__init__()
+        if reward_mode not in REWARD_MODES:
+>           raise ValueError(f'reward_mode must be one of {REWARD_MODES}')
+E           ValueError: reward_mode must be one of ('zhou_economic_only', 'v6_energy_soc_ramp')
+
+src\v6_sb3\direct_environment.py:44: ValueError
+___________ test_new_mode_rejects_explicit_legacy_penalty_argument ____________
+
+    def test_new_mode_rejects_explicit_legacy_penalty_argument():
+        penalty = FailurePenalty.from_reference(scale=0.)
+>       with pytest.raises(ValueError, match='penalty'):
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'penalty'
+E         Actual message: "reward_mode must be one of ('zhou_economic_only', 'v6_energy_soc_ramp')"
+
+tests\test_one_plus_reward.py:225: AssertionError
+_ test_new_mode_snapshot_restores_without_replaying_and_rejects_other_contract _
+
+    def test_new_mode_snapshot_restores_without_replaying_and_rejects_other_contract():
+        data = episode((100., 50., 40.))
+>       env = DirectVesselEnv(data, reward_mode=MODE)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:231: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E623D91190>
+episode = namespace(sample_id='one_plus_synthetic', split='train', task_mode='independent_voyage', operating_mode=('onboard', 'onboard', 'onboard'), load_kw=(100.0, 50.0, 40.0), time_s=(0.0, 1.0, 2.0), dt_s=(1.0, 1.0, 1.0), duration_s=3.0)
+accountant = None, economics = None, penalty = None
+reward_mode = 'inverse_one_plus_economic'
+
+    def __init__(self, episode=None, *, accountant=None, economics=None, penalty=None,
+                 reward_mode='zhou_economic_only'):
+        super().__init__()
+        if reward_mode not in REWARD_MODES:
+>           raise ValueError(f'reward_mode must be one of {REWARD_MODES}')
+E           ValueError: reward_mode must be one of ('zhou_economic_only', 'v6_energy_soc_ramp')
+
+src\v6_sb3\direct_environment.py:44: ValueError
+_________ test_program_fault_is_not_transformed_into_terminal_failure _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001E6106ED490>
+
+    def test_program_fault_is_not_transformed_into_terminal_failure(monkeypatch):
+>       env = DirectVesselEnv(episode((100., 1900.)), reward_mode=MODE)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_one_plus_reward.py:257: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E6106EE750>
+episode = namespace(sample_id='one_plus_synthetic', split='train', task_mode='independent_voyage', operating_mode=('onboard', 'onboard'), load_kw=(100.0, 1900.0), time_s=(0.0, 1.0), dt_s=(1.0, 1.0), duration_s=2.0)
+accountant = None, economics = None, penalty = None
+reward_mode = 'inverse_one_plus_economic'
+
+    def __init__(self, episode=None, *, accountant=None, economics=None, penalty=None,
+                 reward_mode='zhou_economic_only'):
+        super().__init__()
+        if reward_mode not in REWARD_MODES:
+>           raise ValueError(f'reward_mode must be one of {REWARD_MODES}')
+E           ValueError: reward_mode must be one of ('zhou_economic_only', 'v6_energy_soc_ramp')
+
+src\v6_sb3\direct_environment.py:44: ValueError
+=========================== short test summary info ===========================
+FAILED tests/test_one_plus_reward.py::test_exact_one_plus_map_includes_zero_and_negative_cost[0.0-1.0]
+FAILED tests/test_one_plus_reward.py::test_exact_one_plus_map_includes_zero_and_negative_cost[1.0-0.5]
+FAILED tests/test_one_plus_reward.py::test_exact_one_plus_map_includes_zero_and_negative_cost[3.0-0.25]
+FAILED tests/test_one_plus_reward.py::test_exact_one_plus_map_includes_zero_and_negative_cost[-0.5-2.0]
+FAILED tests/test_one_plus_reward.py::test_exact_one_plus_map_includes_zero_and_negative_cost[-6.8368235145e-07-1.0000006836828188]
+FAILED tests/test_one_plus_reward.py::test_one_plus_uses_no_cost_floor_and_remains_unbounded_near_minus_one
+FAILED tests/test_one_plus_reward.py::test_invalid_cost_rejected_even_for_physical_failure[False--1.0]
+FAILED tests/test_one_plus_reward.py::test_invalid_cost_rejected_even_for_physical_failure[False--2.0]
+FAILED tests/test_one_plus_reward.py::test_invalid_cost_rejected_even_for_physical_failure[False-nan]
+FAILED tests/test_one_plus_reward.py::test_invalid_cost_rejected_even_for_physical_failure[False-inf]
+FAILED tests/test_one_plus_reward.py::test_invalid_cost_rejected_even_for_physical_failure[False--inf]
+FAILED tests/test_one_plus_reward.py::test_invalid_cost_rejected_even_for_physical_failure[True--1.0]
+FAILED tests/test_one_plus_reward.py::test_invalid_cost_rejected_even_for_physical_failure[True--2.0]
+FAILED tests/test_one_plus_reward.py::test_invalid_cost_rejected_even_for_physical_failure[True-nan]
+FAILED tests/test_one_plus_reward.py::test_invalid_cost_rejected_even_for_physical_failure[True-inf]
+FAILED tests/test_one_plus_reward.py::test_invalid_cost_rejected_even_for_physical_failure[True--inf]
+FAILED tests/test_one_plus_reward.py::test_real_failure_replaces_normal_reward_after_validating_cost[0.0]
+FAILED tests/test_one_plus_reward.py::test_real_failure_replaces_normal_reward_after_validating_cost[1.0]
+FAILED tests/test_one_plus_reward.py::test_real_failure_replaces_normal_reward_after_validating_cost[-0.5]
+FAILED tests/test_one_plus_reward.py::test_cost_helper_preserves_raw_components_and_signed_soc_value
+FAILED tests/test_one_plus_reward.py::test_reward_contract_is_explicit_json_safe_and_mode_specific
+FAILED tests/test_one_plus_reward.py::test_idle_zero_cost_completes_normally_with_reward_one
+FAILED tests/test_one_plus_reward.py::test_new_mode_preserves_executed_physics_cost_and_action_masks
+FAILED tests/test_one_plus_reward.py::test_failure_replaces_only_last_real_step_without_ledger_penalty[1400.0-increment_action_limited]
+FAILED tests/test_one_plus_reward.py::test_failure_replaces_only_last_real_step_without_ledger_penalty[1900.0-structural_power]
+FAILED tests/test_one_plus_reward.py::test_short_soc_failure_uses_same_terminal_replacement
+FAILED tests/test_one_plus_reward.py::test_infeasible_reset_has_no_fabricated_transition_or_reward[1400.0]
+FAILED tests/test_one_plus_reward.py::test_infeasible_reset_has_no_fabricated_transition_or_reward[1900.0]
+FAILED tests/test_one_plus_reward.py::test_new_mode_never_reads_or_uses_legacy_failure_reference
+FAILED tests/test_one_plus_reward.py::test_new_mode_rejects_explicit_legacy_penalty_argument
+FAILED tests/test_one_plus_reward.py::test_new_mode_snapshot_restores_without_replaying_and_rejects_other_contract
+FAILED tests/test_one_plus_reward.py::test_program_fault_is_not_transformed_into_terminal_failure
+32 failed in 19.70s

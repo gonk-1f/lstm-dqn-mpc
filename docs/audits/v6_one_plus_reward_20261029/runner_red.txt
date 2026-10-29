@@ -1,0 +1,211 @@
+FFFFFFFFF.                                                               [100%]
+================================== FAILURES ===================================
+__________ test_new_mode_exact_live_resume_validation_and_checkpoint __________
+
+tmp_path = WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest-207/test_new_mode_exact_live_resum0')
+
+    def test_new_mode_exact_live_resume_validation_and_checkpoint(tmp_path):
+        train, validation = runner._smoke_episodes()
+>       full = runner.run_episode_training(options(), train, validation, tmp_path/'full')
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_v6_one_plus_runner.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\v6_sb3\episode_training.py:268: in run_episode_training
+    config = _configuration(config)
+             ^^^^^^^^^^^^^^^^^^^^^^
+src\v6_sb3\episode_training.py:94: in _configuration
+    return EpisodeTrainingConfig(**options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:24: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = EpisodeTrainingConfig(episodes=2, learning_starts=64, train_freq=32, gradient_steps=1, target_update_interval=64, lear...checkpoint_keep=2, epsilon_initial=1.0, epsilon_final=0.05, epsilon_decay_fraction=0.8, max_env_steps=None, smoke=True)
+
+    def __post_init__(self):
+        if self.train_freq != 32 or self.gradient_steps != 1:
+            raise ValueError('the episode runner requires train_freq=32 and gradient_steps=1')
+        if min(self.episodes, self.batch_size, self.network_width, self.target_update_interval,
+               self.validation_every, self.checkpoint_keep) < 1 or self.learning_starts < 0:
+            raise ValueError('positive training budgets and nonnegative learning_starts are required')
+        if self.buffer_size < max(self.batch_size, 32):
+            raise ValueError('buffer_size must accommodate the minibatch and collection block')
+        if not np.isfinite(self.learning_rate) or self.learning_rate <= 0:
+            raise ValueError('learning_rate must be positive and finite')
+        if self.max_env_steps is not None and self.max_env_steps < 1:
+            raise ValueError('max_env_steps must be positive')
+        if self.reward_mode not in ('zhou_economic_only', 'v6_energy_soc_ramp'):
+>           raise ValueError('unsupported audited reward mode')
+E           ValueError: unsupported audited reward mode
+
+src\v6_sb3\episode_training.py:75: ValueError
+___________ test_new_identity_never_loads_legacy_failure_reference ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000018381C5A890>
+
+    def test_new_identity_never_loads_legacy_failure_reference(monkeypatch):
+        from v4.failure_replay import FailurePenalty
+        from v6_sb3.identity import execution_identity
+        def forbidden(*args, **kwargs):
+            raise AssertionError('new reward must not load the old monetary penalty')
+        monkeypatch.setattr(FailurePenalty, 'from_reference', forbidden)
+>       identity = execution_identity(runner.ROOT, {'train':[], 'validation':[]}, reward_mode=MODE)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: execution_identity() got an unexpected keyword argument 'reward_mode'
+
+tests\test_v6_one_plus_runner.py:64: TypeError
+________ test_parameter_import_rejects_old_reward_and_unlabelled_data _________
+
+tmp_path = WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest-207/test_parameter_import_rejects_0')
+
+    def test_parameter_import_rejects_old_reward_and_unlabelled_data(tmp_path):
+        path = tmp_path/'parameters.json'
+        for value in (
+            {'learning_rate':1e-4},
+            {'schema':'v6_episode_parameters_v1', 'parameters':{'learning_rate':1e-4},
+             'reward_mode':'zhou_economic_only', 'target_sync_unit':'formal_env_steps'},
+        ):
+            path.write_text(json.dumps(value), encoding='utf-8')
+            with pytest.raises(ValueError, match='reward|contract|schema'):
+>               runner.load_parameter_export(path, MODE)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: module 'v6_sb3.episode_training' has no attribute 'load_parameter_export'
+
+tests\test_v6_one_plus_runner.py:78: AttributeError
+_ test_parameter_import_checks_the_export_envelope[reward_mode-zhou_economic_only] _
+
+tmp_path = WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest-207/test_parameter_import_checks_t0')
+field = 'reward_mode', value = 'zhou_economic_only'
+
+    @pytest.mark.parametrize('field,value', [
+        ('reward_mode','zhou_economic_only'), ('target_sync_unit','adam_updates'),
+        ('selection_split','test'), ('economics',{}), ('reward_contract',{}),
+    ])
+    def test_parameter_import_checks_the_export_envelope(tmp_path, field, value):
+        path = tmp_path/'export.json'
+>       exported = new_export()
+                   ^^^^^^^^^^^^
+
+tests\test_v6_one_plus_runner.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def new_export():
+        from v4.independent_economics import ZhouEvaluationConfig
+>       from v6_sb3.rewards import reward_contract
+E       ModuleNotFoundError: No module named 'v6_sb3.rewards'
+
+tests\test_v6_one_plus_runner.py:84: ModuleNotFoundError
+_ test_parameter_import_checks_the_export_envelope[target_sync_unit-adam_updates] _
+
+tmp_path = WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest-207/test_parameter_import_checks_t1')
+field = 'target_sync_unit', value = 'adam_updates'
+
+    @pytest.mark.parametrize('field,value', [
+        ('reward_mode','zhou_economic_only'), ('target_sync_unit','adam_updates'),
+        ('selection_split','test'), ('economics',{}), ('reward_contract',{}),
+    ])
+    def test_parameter_import_checks_the_export_envelope(tmp_path, field, value):
+        path = tmp_path/'export.json'
+>       exported = new_export()
+                   ^^^^^^^^^^^^
+
+tests\test_v6_one_plus_runner.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def new_export():
+        from v4.independent_economics import ZhouEvaluationConfig
+>       from v6_sb3.rewards import reward_contract
+E       ModuleNotFoundError: No module named 'v6_sb3.rewards'
+
+tests\test_v6_one_plus_runner.py:84: ModuleNotFoundError
+___ test_parameter_import_checks_the_export_envelope[selection_split-test] ____
+
+tmp_path = WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest-207/test_parameter_import_checks_t2')
+field = 'selection_split', value = 'test'
+
+    @pytest.mark.parametrize('field,value', [
+        ('reward_mode','zhou_economic_only'), ('target_sync_unit','adam_updates'),
+        ('selection_split','test'), ('economics',{}), ('reward_contract',{}),
+    ])
+    def test_parameter_import_checks_the_export_envelope(tmp_path, field, value):
+        path = tmp_path/'export.json'
+>       exported = new_export()
+                   ^^^^^^^^^^^^
+
+tests\test_v6_one_plus_runner.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def new_export():
+        from v4.independent_economics import ZhouEvaluationConfig
+>       from v6_sb3.rewards import reward_contract
+E       ModuleNotFoundError: No module named 'v6_sb3.rewards'
+
+tests\test_v6_one_plus_runner.py:84: ModuleNotFoundError
+_____ test_parameter_import_checks_the_export_envelope[economics-value3] ______
+
+tmp_path = WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest-207/test_parameter_import_checks_t3')
+field = 'economics', value = {}
+
+    @pytest.mark.parametrize('field,value', [
+        ('reward_mode','zhou_economic_only'), ('target_sync_unit','adam_updates'),
+        ('selection_split','test'), ('economics',{}), ('reward_contract',{}),
+    ])
+    def test_parameter_import_checks_the_export_envelope(tmp_path, field, value):
+        path = tmp_path/'export.json'
+>       exported = new_export()
+                   ^^^^^^^^^^^^
+
+tests\test_v6_one_plus_runner.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def new_export():
+        from v4.independent_economics import ZhouEvaluationConfig
+>       from v6_sb3.rewards import reward_contract
+E       ModuleNotFoundError: No module named 'v6_sb3.rewards'
+
+tests\test_v6_one_plus_runner.py:84: ModuleNotFoundError
+__ test_parameter_import_checks_the_export_envelope[reward_contract-value4] ___
+
+tmp_path = WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest-207/test_parameter_import_checks_t4')
+field = 'reward_contract', value = {}
+
+    @pytest.mark.parametrize('field,value', [
+        ('reward_mode','zhou_economic_only'), ('target_sync_unit','adam_updates'),
+        ('selection_split','test'), ('economics',{}), ('reward_contract',{}),
+    ])
+    def test_parameter_import_checks_the_export_envelope(tmp_path, field, value):
+        path = tmp_path/'export.json'
+>       exported = new_export()
+                   ^^^^^^^^^^^^
+
+tests\test_v6_one_plus_runner.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def new_export():
+        from v4.independent_economics import ZhouEvaluationConfig
+>       from v6_sb3.rewards import reward_contract
+E       ModuleNotFoundError: No module named 'v6_sb3.rewards'
+
+tests\test_v6_one_plus_runner.py:84: ModuleNotFoundError
+_______ test_comparison_rejects_old_mode_even_with_same_validation_data _______
+
+tmp_path = WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest-207/test_comparison_rejects_old_mo0')
+
+    def test_comparison_rejects_old_mode_even_with_same_validation_data(tmp_path):
+        from v4.independent_economics import ZhouEvaluationConfig
+>       from v6_sb3.rewards import reward_contract
+E       ModuleNotFoundError: No module named 'v6_sb3.rewards'
+
+tests\test_v6_one_plus_runner.py:108: ModuleNotFoundError
+=========================== short test summary info ===========================
+FAILED tests/test_v6_one_plus_runner.py::test_new_mode_exact_live_resume_validation_and_checkpoint
+FAILED tests/test_v6_one_plus_runner.py::test_new_identity_never_loads_legacy_failure_reference
+FAILED tests/test_v6_one_plus_runner.py::test_parameter_import_rejects_old_reward_and_unlabelled_data
+FAILED tests/test_v6_one_plus_runner.py::test_parameter_import_checks_the_export_envelope[reward_mode-zhou_economic_only]
+FAILED tests/test_v6_one_plus_runner.py::test_parameter_import_checks_the_export_envelope[target_sync_unit-adam_updates]
+FAILED tests/test_v6_one_plus_runner.py::test_parameter_import_checks_the_export_envelope[selection_split-test]
+FAILED tests/test_v6_one_plus_runner.py::test_parameter_import_checks_the_export_envelope[economics-value3]
+FAILED tests/test_v6_one_plus_runner.py::test_parameter_import_checks_the_export_envelope[reward_contract-value4]
+FAILED tests/test_v6_one_plus_runner.py::test_comparison_rejects_old_mode_even_with_same_validation_data
+9 failed, 1 passed in 16.51s
