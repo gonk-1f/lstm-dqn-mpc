@@ -1,0 +1,14 @@
+{
+  "interpreter": ".venv-optuna/Scripts/python.exe",
+  "command": ".venv-optuna/Scripts/python.exe -m pytest tests/test_v6_optuna_contracts.py tests/test_v6_optuna_budget.py tests/test_v6_optuna_integration.py tests/test_v6_optuna_study.py -q",
+  "exit_code": 0,
+  "passed": 49,
+  "seconds": 90.07,
+  "verified_on_client_date": "2026-10-29",
+  "code_commit": "201b033ff7ed511e8ade86e633bb85acdfdcfc6d",
+  "log": "delivery_optuna_regression.txt",
+  "log_sha256": "42f167b16c7821acde511956951dce4f740f7fbccdb387b4a1a1d780b2b712cb",
+  "formal_training_run": false,
+  "test_split_evaluation_run": false,
+  "scope": "Synthetic integration and no-training contracts only; not the full historical suite."
+}

@@ -1,0 +1,38 @@
+{
+  "trial_number": 0,
+  "score": 3.497652245483576,
+  "parameters": {
+    "network_width": 32,
+    "learning_rate": 0.0001,
+    "batch_size": 8,
+    "buffer_size": 64,
+    "target_update_interval": 4
+  },
+  "user_attrs": {
+    "best_checkpoint": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\optuna_delivery_smoke_economic_20261029\\trial_0000\\checkpoints\\step_6_1793237436492518700",
+    "experiment_id": "synthetic_v6_optuna_zhou_economic_only",
+    "seed": 42,
+    "trial_directory": "trial_0000",
+    "validation_history": [
+      {
+        "formal_steps": 2,
+        "score": 3.497652245483576,
+        "completed": 2,
+        "episodes": 2,
+        "coverage": 1.0,
+        "full_set_cost_cny": 737.5822091869661,
+        "evaluation_adam_updates": 0
+      },
+      {
+        "formal_steps": 4,
+        "score": 3.497652245483576,
+        "completed": 2,
+        "episodes": 2,
+        "coverage": 1.0,
+        "full_set_cost_cny": 737.5822091869661,
+        "evaluation_adam_updates": 0
+      }
+    ]
+  },
+  "selection_data": "Train updates and Validation only; Test payloads opened: 0"
+}

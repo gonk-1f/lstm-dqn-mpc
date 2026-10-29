@@ -1,0 +1,18 @@
+{
+  "interpreter": ".venv-optuna/Scripts/python.exe",
+  "environment": {
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "PYTHONUTF8": "1"
+  },
+  "scope": "Current SB3 physics/economics/data/checkpoint regression set, plus explicitly selected archived CLI regression; not the full historical suite.",
+  "passed": 143,
+  "subtests_passed": 285,
+  "seconds": 96.93,
+  "exit_code": 0,
+  "log": "delivery_regression.txt",
+  "log_sha256": "2396f011fae88698d77c0aca84847a039eb3c766e0a13bb80c6dee1f6670d42e",
+  "formal_training_run": false,
+  "test_split_evaluation_run": false,
+  "command": ".venv-optuna/Scripts/python.exe -m pytest tests/test_sb3_environment.py tests/test_sb3_masked_dqn.py tests/test_sb3_training_integration.py tests/test_v2_degradation_models.py tests/test_v2_energy_models.py tests/test_v2_economic_interval_semantics.py tests/test_v2_parameter_freeze.py tests/test_v4_independent_economics.py tests/test_v4_independent_dataset.py tests/test_v4_failure_td.py tests/history/test_v2_history_study_cli.py tests/test_v6_economic_reward_audit.py tests/test_v6_control.py -q"
+}
