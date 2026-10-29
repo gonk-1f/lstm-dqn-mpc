@@ -1,0 +1,94 @@
+{
+  "scope": "Mathematical candidate illustrations, not an enabled production model",
+  "cases": {
+    "eta_formal_average": 0.5711999752720877,
+    "efficiencies": {
+      "0": 0.0,
+      "10": 0.14056503782479807,
+      "60": 0.6249841286561743,
+      "70": 0.6385366677349289,
+      "100": 0.633546278470874,
+      "300": 0.587302169363016,
+      "600": 0.5476352421776668
+    },
+    "charge_60kw_load_20kw_1s": {
+      "stored_kwh": 0.010555555555555556,
+      "actual_hydrogen_kg": 0.0008000203158360003,
+      "allocated_hydrogen_kg": 0.0005333468772240002,
+      "direct_load_hydrogen_kg": 0.00026667343861200006,
+      "allocated_cost_cny": 0.011680296611205605,
+      "fc_off_discharge_kw_to_close_energy_cycle": 36.1,
+      "delivered_kwh": 0.010027777777777778,
+      "round_trip_efficiency": 0.9025
+    },
+    "equal_energy_inventory_cycle": {
+      "initial_energy_kwh": 1.0,
+      "initial_value_kg": 0.06,
+      "charged_energy_kwh": 1.0,
+      "charged_value_kg": 0.05,
+      "final_energy_kwh": 1.0,
+      "final_value_kg": 0.055,
+      "soc_correction_kg": 0.0049999999999999975,
+      "total_actual_plus_correction_kg": 0.055
+    },
+    "history5_alias": {
+      "identical_current_observation": [
+        0.2016025641025641,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "next_discharge_energy_kwh": 0.01,
+      "state_a_inventory_kg": 0.06,
+      "state_b_inventory_kg": 0.055,
+      "state_a_soc_cost_cny": 0.013139999999999997,
+      "state_b_soc_cost_cny": 0.012045,
+      "same_next_energy": true
+    },
+    "same_zero_load_legal_prefix_alias": {
+      "fc_sequence_a_kw": [
+        40.0,
+        40.0,
+        40.0,
+        0.0
+      ],
+      "fc_sequence_b_kw": [
+        60.0,
+        60.0,
+        0.0,
+        0.0
+      ],
+      "all_four_loads_kw": 0.0,
+      "same_energy_added_kwh": 0.03166666666666667,
+      "same_current_soc": 0.6000507478632477,
+      "inventory_hydrogen_a_kg": 12.613697293754015,
+      "inventory_hydrogen_b_kg": 12.613288724800029,
+      "initial_value_convention": "same illustrative replenishment-at-60-kW basis in both prefixes",
+      "next_fc_off_load_kw": 36.1,
+      "next_soc_cost_a_cny": 0.01168067495873041,
+      "next_soc_cost_b_cny": 0.011680296611205601,
+      "next_soc_cost_difference_cny": 3.783475248073358e-07
+    },
+    "dynamic_potential_revaluation_without_energy_change": {
+      "start_value_kg": 0.06,
+      "end_value_kg": 0.05,
+      "full_potential_soc_cost_kg": 0.009999999999999995,
+      "energy_only_term_kg": 0.0
+    },
+    "nonlinear_inverse_breaks_potential_invariance": {
+      "same_total_cost_cny": 2.0,
+      "base_costs_cny": [
+        1.0,
+        1.0
+      ],
+      "redistributed_costs_cny": [
+        1.5,
+        0.5
+      ],
+      "base_inverse_return": 2.0,
+      "redistributed_inverse_return": 2.6666666666666665
+    },
+    "fixed_average_credit_ratio_at_70kw_zero_load": 1.061992052886955
+  }
+}

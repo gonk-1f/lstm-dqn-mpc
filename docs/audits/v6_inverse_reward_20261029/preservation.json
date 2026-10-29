@@ -1,0 +1,8 @@
+{
+  "baseline": "814994e",
+  "production_data_results_diff": [],
+  "production_reward_changed": false,
+  "production_economics_changed": false,
+  "training_mechanism_changed": false,
+  "scope": "Tracked source/data/results compared with baseline; audit-only additions are outside production"
+}
