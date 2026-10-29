@@ -462,7 +462,12 @@ def _run_study(directory, *, trials, train_steps, learning_starts, eval_every, s
 
 
 def main():
+    if '--episode-search' in sys.argv[1:]:
+        from .episode_tuning import main as episode_main
+        return episode_main([arg for arg in sys.argv[1:] if arg!='--episode-search'])
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--episode-search', action='store_true',
+                        help='use the shared economic episode runner; combine with --help for its options')
     parser.add_argument('--study-dir', type=Path, required=True)
     parser.add_argument('--smoke', action='store_true', help='one tiny synthetic trial; no formal data')
     parser.add_argument('--trials', type=int)

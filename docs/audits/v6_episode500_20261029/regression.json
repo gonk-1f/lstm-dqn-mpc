@@ -1,0 +1,15 @@
+{
+  "verified_on_client_date": "2026-10-29",
+  "passed": 286,
+  "subtests_passed": 283,
+  "seconds": 164.3,
+  "exit_code": 0,
+  "interpreter": ".venv-optuna/Scripts/python.exe",
+  "scope": "All new episode/environment/Target/audit/Optuna tests plus affected old SB3, control, economic, data, parameter-freeze and Optuna regressions; not the whole historical suite.",
+  "log": "regression.txt",
+  "sha256": "1eeb990291fdf4ba8c919d2ce85d3e37f22d7aa32954b994d647390c66c75af2",
+  "formal_500_episode_training_started": false,
+  "long_optuna_search_started": false,
+  "test_split_evaluation_started": false,
+  "code_commit": "e4730f6b862818b2649cf19c937d8774d5df277c"
+}

@@ -78,6 +78,38 @@ def soc_deviation_squared(soc: float) -> float:
     return (soc - SOC_REF) ** 2
 
 
+def onboard_reward_components(
+    ledger: RawCnyIntervalLedger, *, reward_cost_mode: str,
+    soc_before: float, soc_after: float, fc_kw: float, previous_fc_kw: float,
+    economic_evaluation_config: ZhouEvaluationConfig | None,
+    beta_soc: float = 0.0, v6_soc_weight: float = 0.2,
+    v6_fc_ramp_weight: float = 0.05,
+) -> tuple[float, float, float, float]:
+    """Shared executed ONBOARD reward, SOC/ramp terms and signed energy cost.
+
+    Both replay and the direct Gym adapter use this function; physical costs
+    always come from the original interval ledger.
+    """
+    if reward_cost_mode == 'v6_energy_soc_ramp':
+        soc_penalty = v6_soc_weight * ((soc_after - 0.5) / 0.1) ** 2
+    else:
+        soc_penalty = (0.0 if reward_cost_mode == 'zhou_economic_only'
+                       else beta_soc * soc_deviation_squared(soc_after))
+    fc_ramp_penalty = (FC_RAMP_REWARD_CNY_PER_KW * abs(fc_kw - previous_fc_kw)
+                      if reward_cost_mode in ('energy_with_fc_ramp', 'control_only') else 0.0)
+    soc_energy_cost = 0.0
+    if reward_cost_mode in ('zhou_joint', 'zhou_economic_only', 'v6_energy_soc_ramp'):
+        if reward_cost_mode == 'zhou_joint':
+            fc_ramp_penalty = FC_SQUARED_RAMP_REWARD_PER_KW2 * (fc_kw - previous_fc_kw) ** 2
+        elif reward_cost_mode == 'v6_energy_soc_ramp':
+            fc_ramp_penalty = v6_fc_ramp_weight * (fc_kw - previous_fc_kw) ** 2 / 600.0
+        soc_energy_cost = soc_equivalent_hydrogen_cost_cny(
+            soc_before, soc_after, economic_evaluation_config)
+    reward = (ledger_training_reward(ledger, reward_cost_mode)
+              - soc_energy_cost - soc_penalty - fc_ramp_penalty)
+    return reward, soc_penalty, fc_ramp_penalty, soc_energy_cost
+
+
 class ReplayExecutionError(RuntimeError):
     def __init__(
         self, row_index: int, mode: OperatingMode, cause: Exception, *,
@@ -588,24 +620,12 @@ def replay_episode(
             shore_ledger = None
             modeled_ledger = None
             # Once per executed ONBOARD action, before any SHORE/terminal charge.
-            if reward_cost_mode == 'v6_energy_soc_ramp':
-                soc_penalty = v6_soc_weight * ((next_physical.soc - 0.5) / 0.1) ** 2
-            else:
-                soc_penalty = (0.0 if reward_cost_mode == 'zhou_economic_only'
-                               else beta_soc * soc_deviation_squared(next_physical.soc))
-            fc_ramp_penalty = (FC_RAMP_REWARD_CNY_PER_KW * abs(fc_kw - previous_fc_kw)
-                               if reward_cost_mode in ('energy_with_fc_ramp', 'control_only') else 0.0)
-            soc_energy_cost = 0.0
-            if reward_cost_mode in ('zhou_joint', 'zhou_economic_only', 'v6_energy_soc_ramp'):
-                if reward_cost_mode == 'zhou_joint':
-                    fc_ramp_penalty = FC_SQUARED_RAMP_REWARD_PER_KW2 * (fc_kw - previous_fc_kw) ** 2
-                elif reward_cost_mode == 'v6_energy_soc_ramp':
-                    fc_ramp_penalty = v6_fc_ramp_weight * (fc_kw - previous_fc_kw) ** 2 / 600.0
-                soc_energy_cost = soc_equivalent_hydrogen_cost_cny(
-                    state_feature_value(decision_state, 'soc', state_mode=state_mode),
-                    next_physical.soc, economic_evaluation_config)
-            reward = (ledger_training_reward(ledger, reward_cost_mode)
-                      - soc_energy_cost - soc_penalty - fc_ramp_penalty)
+            reward, soc_penalty, fc_ramp_penalty, soc_energy_cost = onboard_reward_components(
+                ledger, reward_cost_mode=reward_cost_mode,
+                soc_before=state_feature_value(decision_state, 'soc', state_mode=state_mode),
+                soc_after=next_physical.soc, fc_kw=fc_kw, previous_fc_kw=previous_fc_kw,
+                economic_evaluation_config=economic_evaluation_config, beta_soc=beta_soc,
+                v6_soc_weight=v6_soc_weight, v6_fc_ramp_weight=v6_fc_ramp_weight)
             if last_onboard and index + 1 < len(modes) and modes[index + 1] in SHORE_MODES:
                 shore_start = index + 1
                 shore_end = shore_start

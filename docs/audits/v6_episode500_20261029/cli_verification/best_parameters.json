@@ -1,0 +1,17 @@
+{
+  "schema": "v6_episode_parameters_v1",
+  "parameters": {
+    "learning_rate": 0.0001,
+    "batch_size": 8,
+    "buffer_size": 256,
+    "network_width": 16,
+    "target_update_interval": 32
+  },
+  "target_sync_unit": "formal_env_steps",
+  "reward_mode": "zhou_economic_only",
+  "source_study": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_optuna_smoke_20261029_r01",
+  "source_trial": 0,
+  "source_score": 3.4930775359734376,
+  "source_budget_episodes": 2,
+  "retraining": "Initialize a new model and Replay; do not load the Trial checkpoint."
+}

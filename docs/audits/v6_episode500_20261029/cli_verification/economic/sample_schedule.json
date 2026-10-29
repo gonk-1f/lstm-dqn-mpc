@@ -1,0 +1,11 @@
+{
+  "order": [
+    "smoke_train_0",
+    "smoke_train_0",
+    "smoke_train_1"
+  ],
+  "counts": {
+    "smoke_train_0": 2,
+    "smoke_train_1": 1
+  }
+}

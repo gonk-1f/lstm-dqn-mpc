@@ -1,0 +1,2 @@
+Trial 0 paused safely; resume the same episode study.
+[I 2026-10-29 11:32:16,461] A new study created in RDB with name: v6_economic_episode_dqn

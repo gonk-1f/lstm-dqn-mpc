@@ -1,0 +1,5 @@
+Episode 1 | EnvSteps 64 | AdamUpdates 2 | Epsilon 1.000000 | LossMean 3.219858765602112 | TDMAE 3.6863389015197754 | Return -592.497236 | Completed True | SOC_Final 0.601751
+Validation | Episode 1 | 2/2 | Coverage 1.000000 | EconomicCost 2175.09913293233 | BestCheckpoint True
+Episode 2 | EnvSteps 128 | AdamUpdates 4 | Epsilon 0.050000 | LossMean 68.49462127685547 | TDMAE 68.85432052612305 | Return -6922.246502 | Completed True | SOC_Final 0.597994
+Validation | Episode 2 | 2/2 | Coverage 1.000000 | EconomicCost 2175.09913293233 | BestCheckpoint False
+[I 2026-10-29 11:27:37,495] A new study created in RDB with name: v6_economic_episode_dqn

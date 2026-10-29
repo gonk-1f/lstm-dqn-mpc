@@ -153,7 +153,13 @@ class MaskedDQN(DQN):
     target_soft_update_calls = 0
 
     def __init__(self, policy='MlpPolicy', env=None, *, td_diagnostics=True,
-                 train_step_observer=None, after_update_observer=None, **kwargs):
+                 train_step_observer=None, after_update_observer=None,
+                 target_sync_unit='adam_updates', **kwargs):
+        if target_sync_unit not in ('adam_updates', 'formal_env_steps'):
+            raise ValueError('Target synchronization unit must be adam_updates or formal_env_steps')
+        self.target_sync_unit = target_sync_unit
+        self.formal_env_steps = 0
+        self.target_sync_history = []
         defaults = dict(learning_rate=.0001, buffer_size=1_000_000, learning_starts=50_000,
             batch_size=64, tau=1., gamma=1., train_freq=1, gradient_steps=1,
             replay_buffer_class=MaskedReplayBuffer, optimize_memory_usage=False, n_steps=1,
@@ -200,6 +206,21 @@ class MaskedDQN(DQN):
         # is copied only after real optimizer steps, never during random warmup.
         self._n_calls += 1
         self.logger.record('rollout/exploration_rate', self.exploration_rate)
+
+    def record_formal_transition(self):
+        """Advance only after storing one actual formal transition.
+
+        The episode runner calls this before an Adam update due at this step.
+        Warmup and Greedy evaluation do not advance this clock.
+        """
+        if self.target_sync_unit != 'formal_env_steps':
+            raise ValueError('formal transition clock requires formal_env_steps Target mode')
+        self.formal_env_steps += 1
+        if self.formal_env_steps % self.target_update_interval == 0:
+            self.q_net_target.load_state_dict(self.q_net.state_dict())
+            self.target_sync_calls += 1
+            self.target_sync_history.append(dict(formal_env_steps=self.formal_env_steps,
+                                                 adam_updates=int(self._n_updates)))
 
     def masked_predict(self, observation, action_masks, *, deterministic=False, epsilon=None):
         observation = np.asarray(observation, dtype=np.float32)
@@ -265,7 +286,7 @@ class MaskedDQN(DQN):
             self.last_training_loss = float(loss.item())
             self.training_loss_sum += self.last_training_loss
             self.training_loss_count += 1
-            if self._n_updates % self.target_update_interval == 0:
+            if self.target_sync_unit == 'adam_updates' and self._n_updates % self.target_update_interval == 0:
                 self.q_net_target.load_state_dict(self.q_net.state_dict())
                 self.target_sync_calls += 1
             self.logger.record('train/n_updates', self._n_updates, exclude='tensorboard')

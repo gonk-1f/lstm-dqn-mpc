@@ -1,0 +1,23 @@
+{
+  "episodes": 3,
+  "learning_starts": 64,
+  "train_freq": 32,
+  "gradient_steps": 1,
+  "target_update_interval": 64,
+  "learning_rate": 0.0001,
+  "batch_size": 8,
+  "buffer_size": 512,
+  "network_width": 16,
+  "seed": 42,
+  "order_seed": 42,
+  "warmup_seed": 43,
+  "validation_every": 1,
+  "reward_mode": "zhou_economic_only",
+  "acknowledge_failure_penalty": false,
+  "checkpoint_keep": 2,
+  "epsilon_initial": 1.0,
+  "epsilon_final": 0.05,
+  "epsilon_decay_fraction": 0.8,
+  "max_env_steps": null,
+  "smoke": true
+}

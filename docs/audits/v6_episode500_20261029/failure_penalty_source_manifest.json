@@ -1,0 +1,97 @@
+[
+  {
+    "path": "data/processed/operating_dataset_independent_v2/metadata/active_split.json",
+    "sha256": "fe00778e08ce1bf41b4ae34638c3aab3334872cd83bf1771a2ec06488f4b92a0",
+    "kind": "split_metadata_only"
+  },
+  {
+    "path": "data/processed/operating_dataset_independent_v2/metadata/splits_v2_exclude046_seg01/sample_manifest.csv",
+    "sha256": "3273f3b25adff6f1cb93ff8d845729bc21d8e0499fccb04f3e7039aaef140ca0",
+    "kind": "split_identity_and_Train_duration_metadata_only"
+  },
+  {
+    "path": "src/v4/failure_penalty_reference.json",
+    "sha256": "28957a8d39657a0f2e4884c5585f31a0f2d6a896173abb5d29f85ab0bbf0f91e",
+    "kind": "inherited_reference_provenance_not_recalibration"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_01_train_samples.csv",
+    "sha256": "9f9f8e0cc404d414cd1eba8609df0da8f2523bd6ed072f0c1b36ba36bb1660e0",
+    "kind": "Train_cumulative_summary"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_02_train_samples.csv",
+    "sha256": "0615c2251736c43db3c88f2755f6c70ab65e6b22f35b07757b6407f23eeb908d",
+    "kind": "Train_cumulative_summary"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_03_train_samples.csv",
+    "sha256": "78c441c37f3f374c2d71ae9721cbe9f5db66d3476238105576701e789de3560e",
+    "kind": "Train_cumulative_summary"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_04_train_samples.csv",
+    "sha256": "e1b53f86bc490b5bda6f4b0191a27f58d4b2f4a045ffd10279fcf5b6b1fa368f",
+    "kind": "Train_cumulative_summary"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_05_train_samples.csv",
+    "sha256": "79adbdd64a233b77d9bf3bf1c64a2936ffdc0c2248f4e173b4302b753881d074",
+    "kind": "Train_cumulative_summary"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_06_train_samples.csv",
+    "sha256": "c00135bd09709e572c0ad058b0c44c7edd2cdee75e5a974441a3aef3a36193ce",
+    "kind": "Train_cumulative_summary"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_07_train_samples.csv",
+    "sha256": "e6363f4cfc9e2cd4e237b4fe092b67d9797360084b63288117af7d97b6b710df",
+    "kind": "Train_cumulative_summary"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_08_train_samples.csv",
+    "sha256": "2bbb6ad334e08248fd560a2140f9aff451344a430bbe45b43f3d2786d1a9ad94",
+    "kind": "Train_cumulative_summary"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_01_train_failure_prefixes.csv.gz",
+    "sha256": "b64139ba93a019b2c716ce2fda9c30291e26eb9677c5e4195006dd645c9daf53",
+    "kind": "Train_sparse_observation_no_full_step_ledger"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_02_train_failure_prefixes.csv.gz",
+    "sha256": "fd1e294591ddbe028b92aefcc2552c05677489bfaadfd21cc1a86959e926897e",
+    "kind": "Train_sparse_observation_no_full_step_ledger"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_03_train_failure_prefixes.csv.gz",
+    "sha256": "b4ce7681114cc0a2d82a440290d1bffea960b88e298d43a874248ef2f6c6dade",
+    "kind": "Train_sparse_observation_no_full_step_ledger"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_04_train_failure_prefixes.csv.gz",
+    "sha256": "45b50dfe90d31ec541726573b5ddf794752deb4ad8b3cb4a3ad790a067209f72",
+    "kind": "Train_sparse_observation_no_full_step_ledger"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_05_train_failure_prefixes.csv.gz",
+    "sha256": "cfcab6bab9735fa14b58abce40a936adc3bd4f1f926fa4a836f9b1ab3dbaf1a6",
+    "kind": "Train_sparse_observation_no_full_step_ledger"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_06_train_failure_prefixes.csv.gz",
+    "sha256": "5088507b33b41015f33cd89a4187ae7d8672433b0d74f020e9f35adeeb87c91d",
+    "kind": "Train_sparse_observation_no_full_step_ledger"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_07_train_failure_prefixes.csv.gz",
+    "sha256": "d795e75357a40a366a52cddaae0a385bb0bd11ee267816d11fb3e0ab2716d620",
+    "kind": "Train_sparse_observation_no_full_step_ledger"
+  },
+  {
+    "path": "docs/results/sb3_dqn_1s_20261028/raw/round_08_train_failure_prefixes.csv.gz",
+    "sha256": "2281ea40e35639c25d2fea86fe0f30172beb0524c88dd724ba9d3595c9d5a059",
+    "kind": "Train_sparse_observation_no_full_step_ledger"
+  }
+]
