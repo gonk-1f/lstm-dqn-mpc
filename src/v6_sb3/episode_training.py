@@ -1,7 +1,7 @@
 """Single-thread, complete-episode SB3 DQN with exact safe-point recovery.
 
-Only the explicit CLI starts work. Formal training requires acknowledgement
-of the unchanged, uncalibrated legacy failure penalty and early-failure risk.
+Only the explicit CLI starts work. Legacy reward modes retain their existing
+failure-penalty acknowledgement; the one-plus mode uses a terminal replacement.
 """
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ from .environment import InfeasibleReset
 from .identity import execution_identity
 from .masked_dqn import MaskedDQN
 from .search import validation_objective
+from .rewards import INVERSE_ONE_PLUS_ECONOMIC, REWARD_MODES, reward_contract
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -71,7 +72,7 @@ class EpisodeTrainingConfig:
             raise ValueError('learning_rate must be positive and finite')
         if self.max_env_steps is not None and self.max_env_steps < 1:
             raise ValueError('max_env_steps must be positive')
-        if self.reward_mode not in ('zhou_economic_only', 'v6_energy_soc_ramp'):
+        if self.reward_mode not in REWARD_MODES:
             raise ValueError('unsupported audited reward mode')
         epsilon_at_episode(1, self.episodes, initial=self.epsilon_initial, final=self.epsilon_final,
                            decay_fraction=self.epsilon_decay_fraction)
@@ -97,6 +98,19 @@ def _configuration(value):
 def _make_env(config):
     from .direct_environment import DirectVesselEnv
     return DirectVesselEnv(reward_mode=config.reward_mode)
+
+
+def _requires_legacy_ack(config):
+    return not config.smoke and config.reward_mode != INVERSE_ONE_PLUS_ECONOMIC
+
+
+def _check_model_reward(model, config):
+    mode = getattr(model, 'reward_mode', None)
+    if mode is not None and mode != config.reward_mode:
+        raise ValueError('model reward mode differs from the requested environment')
+    if config.reward_mode == INVERSE_ONE_PLUS_ECONOMIC:
+        if mode != config.reward_mode or getattr(model, 'reward_contract', None) != reward_contract(mode):
+            raise ValueError('model reward contract is missing or incompatible')
 
 
 def _write_json(path, value):
@@ -210,6 +224,7 @@ def _save_checkpoint(directory, model, state, schedule, warmup_rng, env, active,
 
 def _validation(config, validation, model):
     """Same physical environment; no Replay, optimizer or training RNG changes."""
+    _check_model_reward(model, config)
     rng = _rng_snapshot()
     was_training = model.policy.training
     before = (model.num_timesteps, model.formal_env_steps, model._n_updates, model.replay_buffer.insertions)
@@ -252,6 +267,8 @@ def _validation(config, validation, model):
         evaluation_epsilon=0., evaluation_adam_updates=0, evaluation_replay_insertions=0,
         test_payloads_opened=0, samples=rows)
     summary['score'] = validation_objective(summary)
+    if config.reward_mode == INVERSE_ONE_PLUS_ECONOMIC:
+        summary.update(reward_mode=config.reward_mode, reward_contract=reward_contract(config.reward_mode))
     return summary
 
 
@@ -266,7 +283,7 @@ def run_episode_training(config, train, validation, directory, *, resume=False,
     Optuna's TrialPruned may propagate without losing the completed evaluation.
     """
     config = _configuration(config)
-    if not config.smoke and not config.acknowledge_failure_penalty:
+    if _requires_legacy_ack(config) and not config.acknowledge_failure_penalty:
         raise ValueError('formal training requires acknowledge_failure_penalty=True: the unchanged '
             'legacy 10132.66 CNY penalty is uncalibrated for current Train and may reward early failure')
     train, validation = tuple(train), tuple(validation)
@@ -287,7 +304,9 @@ def run_episode_training(config, train, validation, directory, *, resume=False,
 
 
 def _run_locked(config, train, validation, directory, resume, stop_requested, on_validation, stop_after_steps):
-    identity = execution_identity(ROOT, _episode_identity(train, validation))
+    data = _episode_identity(train, validation)
+    identity = (execution_identity(ROOT, data, reward_mode=config.reward_mode)
+                if config.reward_mode == INVERSE_ONE_PLUS_ECONOMIC else execution_identity(ROOT, data))
     torch.set_num_threads(1)
     env = _make_env(config)
     by_id = {episode.sample_id: episode for episode in train}
@@ -301,6 +320,7 @@ def _run_locked(config, train, validation, directory, resume, stop_requested, on
             env.close()
             raise ValueError('resume config, data, code or dependency identity differs')
         model = MaskedDQN.load(latest/'model.zip', env=env, device='cpu')
+        _check_model_reward(model, config)
         model.load_replay_buffer(latest/'replay.pkl', truncate_last_traj=False)
         state = saved['state']
         schedule = EpisodeSchedule.restore(saved['schedule'])
@@ -324,6 +344,9 @@ def _run_locked(config, train, validation, directory, resume, stop_requested, on
             buffer_size=config.buffer_size, batch_size=config.batch_size, train_freq=32,
             gradient_steps=1, target_update_interval=config.target_update_interval, gamma=1.,
             policy_kwargs=dict(net_arch=[config.network_width]*2), seed=config.seed, device='cpu')
+        if config.reward_mode == INVERSE_ONE_PLUS_ECONOMIC:
+            model.reward_mode = config.reward_mode
+            model.reward_contract = reward_contract(config.reward_mode)
         state = dict(status='running', completed_episodes=0, warmup_env_steps=0,
             validation_history=[], best_score=None, best_checkpoint=None, checkpoint_sequence=0,
             elapsed_seconds=0., validation_seconds=0., checkpoint_seconds=0.)
@@ -514,6 +537,67 @@ def inspect_run(directory):
     return dict(directory=str(directory), progress=progress, best_validation=best)
 
 
+def load_parameter_export(path, reward_mode, *, with_provenance=False):
+    """Import numerical settings without discarding their experiment identity."""
+    from v4.independent_economics import ZhouEvaluationConfig
+    value = json.loads(Path(path).read_text(encoding='utf-8'))
+    if not isinstance(value, dict):
+        raise ValueError('parameter export must be a JSON object')
+    if 'reward_mode' in value and value['reward_mode'] != reward_mode:
+        raise ValueError('parameter export reward mode differs from the requested mode')
+    if 'target_sync_unit' in value and value['target_sync_unit'] != 'formal_env_steps':
+        raise ValueError('parameter export uses a different Target synchronization unit')
+    if reward_mode == INVERSE_ONE_PLUS_ECONOMIC:
+        current = execution_identity(ROOT, {}, reward_mode=reward_mode)
+        required = dict(schema='v6_episode_parameters_v2', reward_mode=reward_mode,
+            reward_contract=reward_contract(reward_mode),
+            economics=ZhouEvaluationConfig.from_formal_curve().identity(),
+            target_sync_unit='formal_env_steps', selection_split='validation',
+            source_files=current['source_files'])
+        if any(value.get(key) != expected for key, expected in required.items()):
+            raise ValueError('new reward requires a matching v2 reward/economics/Validation contract')
+    if 'parameters' in value and 'model_parameters' in value:
+        raise ValueError('parameter export contains ambiguous parameter objects')
+    selected = value.get('model_parameters', value.get('parameters', value))
+    allowed = {'learning_rate', 'batch_size', 'target_update_interval', 'buffer_size',
+               'network_width', 'policy_kwargs'}
+    if not isinstance(selected, dict) or set(selected)-allowed:
+        raise ValueError('parameter export contains unsupported model parameter names')
+    return (selected, value) if with_provenance else selected
+
+
+def compare_runs(baseline, retrained):
+    """Compare saved Validation economics only under the same task/reward contract."""
+    directories = [Path(path).resolve() for path in (baseline, retrained)]
+    reports = [inspect_run(path) for path in directories]
+    if any(report['best_validation'] is None for report in reports):
+        raise ValueError('both runs need a saved Validation result')
+    configurations = [json.loads((path/'configuration.json').read_text(encoding='utf-8'))
+                      for path in directories]
+    identities = [json.loads((path/'identity.json').read_text(encoding='utf-8')) for path in directories]
+    modes = [config['reward_mode'] for config in configurations]
+    if modes[0] != modes[1]:
+        raise ValueError('runs use different reward modes')
+    mode = modes[0]
+    if mode not in REWARD_MODES:
+        raise ValueError('unsupported saved reward mode')
+    if identities[0]['data']['validation'] != identities[1]['data']['validation']:
+        raise ValueError('runs use different Validation voyages/data')
+    if identities[0].get('economics') != identities[1].get('economics'):
+        raise ValueError('runs use different economic accounting')
+    if identities[0].get('reward_contract') != identities[1].get('reward_contract'):
+        raise ValueError('runs use different reward contracts')
+    if mode == INVERSE_ONE_PLUS_ECONOMIC:
+        expected = reward_contract(mode)
+        for identity, report in zip(identities, reports):
+            summary = report['best_validation']
+            if (identity.get('reward_contract') != expected or summary.get('reward_mode') != mode
+                    or summary.get('reward_contract') != expected or identity.get('economics') is None):
+                raise ValueError('saved Validation is missing the new reward/economic contract')
+    preferred = int(reports[1]['best_validation']['score'] > reports[0]['best_validation']['score'])
+    return dict(runs=reports, reward_mode=mode, preferred=str(directories[preferred]))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--run-dir', type=Path, help='new output directory, or existing directory with --resume')
@@ -540,24 +624,19 @@ def main():
     parser.add_argument('--epsilon-initial', type=float, default=1.)
     parser.add_argument('--epsilon-final', type=float, default=.05)
     parser.add_argument('--epsilon-decay-fraction', type=float, default=.8)
-    parser.add_argument('--reward-mode', choices=('zhou_economic_only', 'v6_energy_soc_ramp'),
-                        default='zhou_economic_only')
+    parser.add_argument('--reward-mode', choices=REWARD_MODES,
+                        help='default: zhou_economic_only; resume uses the saved mode')
     parser.add_argument('--max-env-steps', type=int, help='soft formal budget; stop only after a complete episode')
     parser.add_argument('--stop-after-steps', type=int, help='pause after N real transitions, preserving live state')
     parser.add_argument('--acknowledge-failure-penalty', action='store_true', help='accept unchanged legacy '
         '10132.66 CNY penalty: not calibrated on current Train; early failure may beat completion')
     args = parser.parse_args()
     if args.compare_runs:
-        reports = [inspect_run(path) for path in args.compare_runs]
-        if any(report['best_validation'] is None for report in reports):
-            parser.error('both runs need a saved Validation result')
-        identities = [json.loads((path/'identity.json').read_text(encoding='utf-8'))['data']['validation']
-                      for path in args.compare_runs]
-        if identities[0] != identities[1]:
-            parser.error('runs use different Validation voyages/data')
-        print(json.dumps(dict(runs=reports,
-            preferred=str(args.compare_runs[int(reports[1]['best_validation']['score'] >
-                                                 reports[0]['best_validation']['score'])])), indent=2))
+        try:
+            comparison = compare_runs(*args.compare_runs)
+        except ValueError as error:
+            parser.error(str(error))
+        print(json.dumps(comparison, indent=2))
         return
     if args.run_dir is None:
         parser.error('--run-dir is required')
@@ -565,24 +644,35 @@ def main():
         print(json.dumps(inspect_run(args.run_dir), indent=2))
         return
     options = {field.name:getattr(args, field.name) for field in fields(EpisodeTrainingConfig)}
+    options['reward_mode'] = args.reward_mode or 'zhou_economic_only'
     if args.resume:
         if args.parameters_json:
             parser.error('--parameters-json requires a fresh run and cannot be combined with --resume')
         options = json.loads((args.run_dir/'configuration.json').read_text(encoding='utf-8'))
-        if not options['smoke'] and not args.acknowledge_failure_penalty:
+        if args.reward_mode is not None and args.reward_mode != options['reward_mode']:
+            parser.error('explicit reward mode conflicts with the saved resume mode')
+        if _requires_legacy_ack(_configuration(options)) and not args.acknowledge_failure_penalty:
             parser.error('formal resume requires --acknowledge-failure-penalty')
     elif args.parameters_json:
-        selected = json.loads(args.parameters_json.read_text(encoding='utf-8'))
-        selected = selected.get('model_parameters', selected.get('parameters', selected))
-        allowed = {'learning_rate', 'batch_size', 'target_update_interval', 'buffer_size', 'network_width', 'policy_kwargs'}
-        if set(selected)-allowed:
-            parser.error('parameter export contains unsupported model parameter names')
+        try:
+            selected, parameter_snapshot = load_parameter_export(
+                args.parameters_json, options['reward_mode'], with_provenance=True)
+        except ValueError as error:
+            parser.error(str(error))
         options.update(selected)
     if args.smoke and not args.resume:
-        options.update(episodes=3, learning_starts=64, buffer_size=512, batch_size=8,
-                       network_width=16, target_update_interval=64, validation_every=1)
+        smoke_models = dict(buffer_size=512, batch_size=8, network_width=16, target_update_interval=64)
+        options.update(episodes=3, learning_starts=64, validation_every=1)
+        if args.parameters_json and options['reward_mode'] == INVERSE_ONE_PLUS_ECONOMIC:
+            options.update({key:value for key, value in smoke_models.items() if key not in selected})
+        else:
+            options.update(smoke_models)
     config = _configuration(options)
-    if not config.smoke and not config.acknowledge_failure_penalty:
+    if args.smoke and args.parameters_json and config.reward_mode == INVERSE_ONE_PLUS_ECONOMIC:
+        if config.buffer_size > 512 or config.batch_size > 64 or config.network_width > 32:
+            parser.error('smoke parameter import requires buffer_size<=512, batch_size<=64, network_width<=32; '
+                         'use a bounded smoke export')
+    if _requires_legacy_ack(config) and not config.acknowledge_failure_penalty:
         parser.error('--acknowledge-failure-penalty is required before formal training')
     if config.smoke:
         train, validation = _smoke_episodes()
@@ -599,6 +689,10 @@ def main():
     try:
         result = run_episode_training(config, train, validation, args.run_dir, resume=args.resume,
             stop_requested=lambda:stopping[0], stop_after_steps=args.stop_after_steps)
+        if args.parameters_json:
+            _write_json(args.run_dir/'parameter_source.json',
+                dict(path=str(args.parameters_json.resolve()),
+                     export=parameter_snapshot))
         print(f'{result["status"]} | episodes {result["completed_episodes"]}/{config.episodes}'
               f' | formal steps {result["formal_env_steps"]} | Adam {result["adam_updates"]}', flush=True)
     finally:

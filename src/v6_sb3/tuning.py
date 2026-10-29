@@ -47,6 +47,8 @@ class PauseTrial(BaseException):
 
 
 def execute_experiment(episode, policy, accountant, economics, penalty, reward_mode, callback=None):
+    if reward_mode not in ('v6_energy_soc_ramp', 'zhou_economic_only'):
+        raise ValueError('unsupported step-budget reward; use --episode-search for the one-plus mode')
     if reward_mode == 'v6_energy_soc_ramp':
         from v4.v6_training import execute
         return execute(episode, policy, accountant, economics, penalty, callback=callback)
@@ -344,6 +346,8 @@ def trial_configuration(trial, identity, data_identity):
 
 
 def run_study(directory, **kwargs):
+    if kwargs.get('reward_mode', 'v6_energy_soc_ramp') not in ('v6_energy_soc_ramp', 'zhou_economic_only'):
+        raise ValueError('unsupported step-budget reward; use --episode-search for the one-plus mode')
     directory = Path(directory).resolve()
     directory.parent.mkdir(parents=True, exist_ok=True)
     # SQLite search is intentionally single-writer, including separate CLI

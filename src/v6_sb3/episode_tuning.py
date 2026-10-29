@@ -12,9 +12,17 @@ from filelock import FileLock
 import optuna
 
 from .identity import dataset_identity, execution_identity
+from .rewards import INVERSE_ONE_PLUS_ECONOMIC, REWARD_MODES, reward_contract
 
 ROOT = Path(__file__).resolve().parents[2]
 STUDY_NAME = 'v6_economic_episode_dqn'
+ONE_PLUS_STUDY_NAME = 'v6_one_plus_episode_dqn'
+
+
+def _study_name(reward_mode):
+    if reward_mode not in REWARD_MODES:
+        raise ValueError(f'unsupported reward_mode: {reward_mode}')
+    return ONE_PLUS_STUDY_NAME if reward_mode == INVERSE_ONE_PLUS_ECONOMIC else STUDY_NAME
 
 
 def write_json(path, value):
@@ -76,24 +84,30 @@ def sample_parameters(trial, smoke=False):
 def trial_config(identity, parameters):
     return dict(episodes=identity['episodes_per_trial'], learning_starts=identity['learning_starts'],
         train_freq=32, gradient_steps=1, validation_every=identity['validation_every'],
-        reward_mode='zhou_economic_only', seed=identity['seed'], order_seed=identity['order_seed'],
+        reward_mode=identity['reward_mode'], seed=identity['seed'], order_seed=identity['order_seed'],
         smoke=identity['smoke'], acknowledge_failure_penalty=identity['acknowledge_failure_penalty'],
         **parameters)
 
 
-def _export(study, directory):
+def _export(study, directory, identity):
     study.trials_dataframe().to_csv(directory/'trials.csv', index=False, encoding='utf-8-sig')
     if any(t.state==optuna.trial.TrialState.COMPLETE for t in study.trials):
         best = study.best_trial
-        write_json(directory/'selected_trial.json', dict(number=best.number, score=best.value,
-            parameters=best.params, user_attrs=best.user_attrs, selection_split='validation'))
+        selected = dict(number=best.number, score=best.value,
+            parameters=best.params, user_attrs=best.user_attrs, selection_split='validation')
+        if identity['reward_mode'] == INVERSE_ONE_PLUS_ECONOMIC:
+            selected.update(reward_mode=identity['reward_mode'],
+                reward_contract=identity['reward_contract'], economics=identity['execution']['economics'])
+        write_json(directory/'selected_trial.json', selected)
 
 
 def run_study(directory, *, trials, episodes_per_trial, learning_starts=50000,
               validation_every=50, seed=42, order_seed=42, sampler_seed=42,
               smoke=False, acknowledge_failure_penalty=False, resume=False, pruner='median',
-              stop_after_steps=None):
-    if not smoke and not acknowledge_failure_penalty:
+              stop_after_steps=None, reward_mode='zhou_economic_only'):
+    study_name = _study_name(reward_mode)
+    one_plus = reward_mode == INVERSE_ONE_PLUS_ECONOMIC
+    if not one_plus and not smoke and not acknowledge_failure_penalty:
         raise ValueError('Review the Train-only failure penalty audit and explicitly acknowledge the legacy failure penalty before formal search.')
     if min(trials, episodes_per_trial, validation_every) < 1 or learning_starts < 1:
         raise ValueError('Episode, Trial, warmup and Validation budgets must be positive.')
@@ -106,12 +120,17 @@ def run_study(directory, *, trials, episodes_per_trial, learning_starts=50000,
     with FileLock(str(directory)+'.lock', timeout=0):
         directory.mkdir(parents=True, exist_ok=resume)
         train, validation, data = inputs(smoke)
+        execution = (execution_identity(ROOT, data, reward_mode=reward_mode) if one_plus
+                     else execution_identity(ROOT, data))
         identity = dict(schema=1, base_commit='b212483', episodes_per_trial=episodes_per_trial,
             trial_budget=trials, learning_starts=learning_starts, validation_every=validation_every,
             seed=seed, order_seed=order_seed, sampler_seed=sampler_seed, smoke=smoke, pruner=pruner,
-            acknowledge_failure_penalty=bool(acknowledge_failure_penalty or smoke),
-            reward_mode='zhou_economic_only', gamma=1., train_freq=32, gradient_steps=1,
-            target_sync_unit='formal_env_steps', execution=execution_identity(ROOT, data))
+            acknowledge_failure_penalty=False if one_plus else bool(acknowledge_failure_penalty or smoke),
+            reward_mode=reward_mode, gamma=1., train_freq=32, gradient_steps=1,
+            target_sync_unit='formal_env_steps', execution=execution)
+        if one_plus:
+            identity.update(schema=2, base_commit='c517553', study_name=study_name,
+                            reward_contract=reward_contract(reward_mode))
         identity_path = directory/'study_identity.json'
         sampler_path = directory/'sampler.pkl'
         if resume:
@@ -124,7 +143,7 @@ def run_study(directory, *, trials, episodes_per_trial, learning_starts=50000,
             save_sampler(sampler_path, sampler)
         pruning = (optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=validation_every)
                    if pruner=='median' else optuna.pruners.NopPruner())
-        study = optuna.create_study(study_name=STUDY_NAME, storage='sqlite:///'+str(directory/'study.sqlite3'),
+        study = optuna.create_study(study_name=study_name, storage='sqlite:///'+str(directory/'study.sqlite3'),
             direction='maximize', sampler=sampler, pruner=pruning, load_if_exists=resume)
         stopped = [False]
         previous = signal.getsignal(signal.SIGINT)
@@ -161,6 +180,9 @@ def run_study(directory, *, trials, episodes_per_trial, learning_starts=50000,
                 trial.set_user_attr('order_seed', order_seed)
                 trial.set_user_attr('budget_episodes', episodes_per_trial)
                 trial.set_user_attr('target_sync_unit', 'formal_env_steps')
+                if one_plus:
+                    trial.set_user_attr('reward_mode', reward_mode)
+                    trial.set_user_attr('reward_contract', identity['reward_contract'])
 
                 def evaluate(summary, progress):
                     step = progress['completed_episodes']
@@ -177,7 +199,7 @@ def run_study(directory, *, trials, episodes_per_trial, learning_starts=50000,
                         stop_after_steps=stop_after_steps)
                     if result['status']=='paused':
                         save_sampler(sampler_path, study.sampler)
-                        _export(study, directory)
+                        _export(study, directory, identity)
                         print(f'Trial {trial.number} paused safely; resume the same episode study.', flush=True)
                         break
                     trial.set_user_attr('best_checkpoint', result['best_checkpoint'])
@@ -189,12 +211,12 @@ def run_study(directory, *, trials, episodes_per_trial, learning_starts=50000,
                     study.tell(trial, state=optuna.trial.TrialState.FAIL)
                     active_path.unlink()
                     save_sampler(sampler_path, study.sampler)
-                    _export(study, directory)
+                    _export(study, directory, identity)
                     raise
                 active_path.unlink()
                 save_sampler(sampler_path, study.sampler)
-                _export(study, directory)
-            _export(study, directory)
+                _export(study, directory, identity)
+            _export(study, directory, identity)
         finally:
             signal.signal(signal.SIGINT, previous)
         return study
@@ -203,13 +225,21 @@ def run_study(directory, *, trials, episodes_per_trial, learning_starts=50000,
 def export_best(directory, output):
     directory = Path(directory).resolve()
     identity = json.loads((directory/'study_identity.json').read_text(encoding='utf-8'))
-    study = optuna.load_study(study_name=STUDY_NAME, storage='sqlite:///'+str(directory/'study.sqlite3'))
+    mode = identity['reward_mode']
+    study_name = _study_name(mode)
+    if identity.get('study_name', study_name) != study_name:
+        raise ValueError('Study name does not match the saved reward identity.')
+    study = optuna.load_study(study_name=study_name, storage='sqlite:///'+str(directory/'study.sqlite3'))
     best = study.best_trial
     value = dict(schema='v6_episode_parameters_v1', parameters=best.params,
-        target_sync_unit='formal_env_steps', reward_mode='zhou_economic_only',
+        target_sync_unit='formal_env_steps', reward_mode=mode,
         source_study=str(directory), source_trial=best.number, source_score=best.value,
         source_budget_episodes=identity['episodes_per_trial'],
         retraining='Initialize a new model and Replay; do not load the Trial checkpoint.')
+    if mode == INVERSE_ONE_PLUS_ECONOMIC:
+        value.update(schema='v6_episode_parameters_v2', reward_contract=identity['reward_contract'],
+            economics=identity['execution']['economics'], selection_split='validation',
+            source_files=identity['execution']['source_files'])
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     write_json(output, value)
     return value
@@ -227,12 +257,22 @@ def main(argv=None):
     parser.add_argument('--sampler-seed', type=int, default=42)
     parser.add_argument('--smoke', action='store_true')
     parser.add_argument('--resume', action='store_true')
+    parser.add_argument('--reward-mode', choices=REWARD_MODES,
+                        help='explicit reward mode; defaults to the historical mode for a fresh study')
     parser.add_argument('--stop-after-steps', type=int,
                         help='request a safe resumable pause after N transitions in this invocation')
     parser.add_argument('--acknowledge-failure-penalty', action='store_true')
     parser.add_argument('--pruner', choices=('median','none'), default='median')
     parser.add_argument('--export-best-parameters', type=Path)
     args = parser.parse_args(argv)
+    mode = args.reward_mode
+    if args.resume or args.export_best_parameters:
+        saved = json.loads((args.study_dir/'study_identity.json').read_text(encoding='utf-8'))
+        if mode is not None and mode != saved['reward_mode']:
+            parser.error('--reward-mode conflicts with the saved study reward identity')
+        mode = saved['reward_mode']
+    if mode is None:
+        mode = 'zhou_economic_only'
     if args.export_best_parameters:
         export_best(args.study_dir, args.export_best_parameters)
         print(f'Fresh-retraining parameters written to {args.export_best_parameters}')
@@ -245,7 +285,7 @@ def main(argv=None):
         validation_every=args.validation_every if args.validation_every is not None else (1 if args.smoke else 50),
         seed=args.seed, order_seed=args.order_seed, sampler_seed=args.sampler_seed, smoke=args.smoke,
         acknowledge_failure_penalty=args.acknowledge_failure_penalty, resume=args.resume, pruner=args.pruner,
-        stop_after_steps=args.stop_after_steps)
+        stop_after_steps=args.stop_after_steps, reward_mode=mode)
 
 
 if __name__=='__main__':
