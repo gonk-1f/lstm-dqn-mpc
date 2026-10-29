@@ -1,0 +1,1318 @@
+[
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_035_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 7891.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.05357386444048158,
+      "p95": 0.13373951694918979,
+      "max": 0.1689137358556786
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.009105830226097867,
+      "median": 0.16168881218654318,
+      "p95": 0.21188382709756348,
+      "max": 0.2252086360865647
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_015_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 4288.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.10303416372901467,
+      "p95": 0.18804995951304654,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.03487846446861129,
+      "median": 0.2540920069530523,
+      "p95": 0.3444416551297443,
+      "max": 0.36800317829771756
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_010_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 2242.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.013310349179606936,
+      "median": 0.16181738294854547,
+      "p95": 0.195991725167993,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.16435493581389105,
+      "median": -0.1338066669806906,
+      "p95": -0.04871300264570837,
+      "max": 0.0064315962568621465
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_009_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 9224.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01583229128103745,
+      "median": 0.11960711127186416,
+      "p95": 0.19202508988008166,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.17146136748254845,
+      "median": -0.10488784586453126,
+      "p95": -0.04319518798681543,
+      "max": 0.06885200666644452
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_010_seg02",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 2226.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.1265908527153033,
+      "p95": 0.18804995951304654,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.15762316169368826,
+      "median": -0.09661931101771479,
+      "p95": 0.0006249503748043463,
+      "max": 0.032025342216049295
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_043_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 10284.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01385258009056768,
+      "median": 0.14794028667274128,
+      "p95": 0.19202508988008166,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.15774887166413357,
+      "median": -0.11572595899461435,
+      "p95": -0.06710222395449189,
+      "max": -0.009105830226097867
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_008_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 2762.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.04102678119747571,
+      "p95": 0.10957285832108905,
+      "max": 0.18804995951304654
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.009105830226097867,
+      "median": 0.2696554470689321,
+      "p95": 0.3112517338388613,
+      "max": 0.3201174755636339
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_029_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 10487.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.09977336527872709,
+      "p95": 0.18804995951304654,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.17733400047246994,
+      "median": -0.09003816112080718,
+      "p95": -0.011024697648421516,
+      "max": 0.05070710323749679
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_009_seg02",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 2455.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.07647124472856202,
+      "p95": 0.1583345033860091,
+      "max": 0.19202508988008166
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.15656479068772042,
+      "median": -0.050959713128670925,
+      "p95": 0.009468632507423155,
+      "max": 0.02418720052553076
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_038_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 8010.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.013310349179606936,
+      "median": 0.12307069419342515,
+      "p95": 0.18804995951304654,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.04480772655461955,
+      "median": 0.017732699615380106,
+      "p95": 0.07344986477838907,
+      "max": 0.13647982017061
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_050_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 6123.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.12307069419342515,
+      "p95": 0.19202508988008166,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.059114561854494395,
+      "median": 0.12476725347194562,
+      "p95": 0.25663561931070533,
+      "max": 0.28091918417222544
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_018_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 16392.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.044123697560080166,
+      "p95": 0.1689137358556786,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.16779432657063853,
+      "median": -0.0302715513784827,
+      "p95": 0.01152429482562688,
+      "max": 0.018237893017908076
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_003_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 5089.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01298331383280885,
+      "median": 0.1583345033860091,
+      "p95": 0.195991725167993,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.0030352767420326224,
+      "median": 0.042269813783404483,
+      "p95": 0.1285043991016186,
+      "max": 0.18625157897681818
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_041_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 4592.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.013310349179606936,
+      "median": 0.12307069419342515,
+      "p95": 0.19202508988008166,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.016806829264710728,
+      "median": 0.07800153385738944,
+      "p95": 0.17208959325719678,
+      "max": 0.20228763132637437
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_037_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 19502.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.037953638793759445,
+      "p95": 0.13373951694918979,
+      "max": 0.1689137358556786
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.13424239780407896,
+      "median": -0.020029385270093215,
+      "p95": 0.02062367214701779,
+      "max": 0.02404536577271256
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_036_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 2818.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01385258009056768,
+      "median": 0.15487115707962534,
+      "p95": 0.195991725167993,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.009105830226097867,
+      "median": 0.17605025215679307,
+      "p95": 0.25008598062673304,
+      "max": 0.27060925057449636
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_01_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_017_seg01",
+    "origin_round": "1",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 3703.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.013310349179606936,
+      "median": 0.15141127330327647,
+      "p95": 0.195991725167993,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.0640009091864958,
+      "median": 0.08959777586960427,
+      "p95": 0.2265338013029872,
+      "max": 0.2641612980460378
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_02_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_037_seg01",
+    "origin_round": "2",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 22222.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.037953638793759445,
+      "p95": 0.12307069419342515,
+      "max": 0.15487115707962534
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.12743211273430188,
+      "median": -0.023088404751694797,
+      "p95": 0.01704760868423552,
+      "max": 0.02257125016124773
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_02_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_010_seg02",
+    "origin_round": "2",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 7173.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01298331383280885,
+      "median": 0.17633381835974032,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.017012952082859734,
+      "median": 0.043703188183544336,
+      "p95": 0.09380273054616385,
+      "max": 0.12928808400997135
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_02_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_008_seg01",
+    "origin_round": "2",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 2661.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01298331383280885,
+      "median": 0.18018079290742597,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.0030352767420326224,
+      "median": 0.1313632968569347,
+      "p95": 0.18387931394459908,
+      "max": 0.23080388616686204
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_02_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_036_seg01",
+    "origin_round": "2",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 3024.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.1689137358556786,
+      "p95": 0.195991725167993,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.1635243832087629,
+      "p95": 0.24004722810417295,
+      "max": 0.28876722315554887
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_02_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_015_seg01",
+    "origin_round": "2",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 4257.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.013310349179606936,
+      "median": 0.15141127330327647,
+      "p95": 0.195991725167993,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.036283601895438444,
+      "median": 0.21050578942521775,
+      "p95": 0.2566108920698102,
+      "max": 0.2796607062851514
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_02_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_041_seg01",
+    "origin_round": "2",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 5094.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.013310349179606936,
+      "median": 0.1689137358556786,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.004665722296500555,
+      "median": 0.03255322537210778,
+      "p95": 0.07434043441370876,
+      "max": 0.15099145866570401
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_02_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_017_seg01",
+    "origin_round": "2",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 4720.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01298331383280885,
+      "median": 0.1689137358556786,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.008994197750783955,
+      "median": 0.05460729362070342,
+      "p95": 0.18792498408638872,
+      "max": 0.2247653141027081
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_03_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_017_seg01",
+    "origin_round": "3",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 5491.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.017520444916808407,
+      "median": 0.18409361055076176,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.0009885667560629596,
+      "median": 0.032143548110316916,
+      "p95": 0.06075002614312321,
+      "max": 0.11979035141348252
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_03_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_036_seg01",
+    "origin_round": "3",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 3064.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.013310349179606936,
+      "median": 0.18804995951304654,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.006070553484065245,
+      "median": 0.147141611676772,
+      "p95": 0.17501909966389217,
+      "max": 0.19923628511978977
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_03_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_010_seg02",
+    "origin_round": "3",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 7600.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01583229128103745,
+      "median": 0.18018079290742597,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.021225557514656226,
+      "median": 0.042161198186635995,
+      "p95": 0.07988019499057726,
+      "max": 0.10587638380036678
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_03_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_008_seg01",
+    "origin_round": "3",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 3021.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01298331383280885,
+      "median": 0.17257270838333716,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.02220308882665879,
+      "median": 0.1203875047835239,
+      "p95": 0.1625135403871654,
+      "max": 0.1980236383728726
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_03_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_015_seg01",
+    "origin_round": "3",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 4344.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.014662849975309183,
+      "median": 0.18409361055076176,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.04898816794020683,
+      "median": 0.17922350993309827,
+      "p95": 0.21667609909710436,
+      "max": 0.2570517610322433
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_04_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_010_seg02",
+    "origin_round": "4",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 8306.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01298331383280885,
+      "median": 0.18409361055076176,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.018173929832136594,
+      "median": 0.038125889021343104,
+      "p95": 0.09491957915563304,
+      "max": 0.12274648101097897
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_04_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_017_seg01",
+    "origin_round": "4",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 5581.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.17633381835974032,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.009843123571539252,
+      "median": 0.03788179925244116,
+      "p95": 0.1123374760799223,
+      "max": 0.1364023614104716
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_04_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_036_seg01",
+    "origin_round": "4",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 3226.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01385258009056768,
+      "median": 0.18018079290742597,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.009105830226097867,
+      "median": 0.15067806564142283,
+      "p95": 0.18697333047540896,
+      "max": 0.23707577452895442
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_04_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_015_seg01",
+    "origin_round": "4",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 4188.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.1689137358556786,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.010048362838394068,
+      "median": 0.19240414485634005,
+      "p95": 0.3591364242279008,
+      "max": 0.3692190416591616
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_05_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_017_seg01",
+    "origin_round": "5",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 6339.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.014662849975309183,
+      "median": 0.18804995951304654,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.005631010225021352,
+      "median": 0.030639277365765022,
+      "p95": 0.07037198815868746,
+      "max": 0.14040632791507127
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_05_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_036_seg01",
+    "origin_round": "5",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 3109.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01298331383280885,
+      "median": 0.18018079290742597,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.0030352767420326224,
+      "median": 0.15130943035862068,
+      "p95": 0.21477709758771582,
+      "max": 0.28176081097985006
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_05_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_015_seg01",
+    "origin_round": "5",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 4388.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01298331383280885,
+      "median": 0.18018079290742597,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.11895208873481294,
+      "median": 0.18284536474883895,
+      "p95": 0.2749931299539487,
+      "max": 0.3084896234205971
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_05_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_008_seg01",
+    "origin_round": "5",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 2862.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.013310349179606936,
+      "median": 0.17257270838333716,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.006070553484065245,
+      "median": 0.13873639728680054,
+      "p95": 0.2606116800743515,
+      "max": 0.2809385320490812
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_06_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_015_seg01",
+    "origin_round": "6",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 4187.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.06649661073915109,
+      "p95": 0.13015278061954863,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.05580373105945617,
+      "median": 0.29313364570783407,
+      "p95": 0.3609785139739651,
+      "max": 0.36868573989379727
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_06_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_017_seg01",
+    "origin_round": "6",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 7210.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01298331383280885,
+      "median": 0.17633381835974032,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.02245165370960778,
+      "median": 0.055098173269958646,
+      "p95": 0.12729330083409018,
+      "max": 0.14447753880418177
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_06_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_036_seg01",
+    "origin_round": "6",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 3120.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01298331383280885,
+      "median": 0.11960711127186416,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.0030352767420326224,
+      "median": 0.2063885532633591,
+      "p95": 0.28269740709877855,
+      "max": 0.30882862007013456
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_07_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_017_seg01",
+    "origin_round": "7",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 5468.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.08657555529388096,
+      "p95": 0.19202508988008166,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.008994197750783955,
+      "median": 0.12715135192273358,
+      "p95": 0.2155181630389253,
+      "max": 0.2230157372590309
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_07_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_010_seg02",
+    "origin_round": "7",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 8288.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.013310349179606936,
+      "median": 0.18804995951304654,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01797521370464492,
+      "median": 0.03253706940320657,
+      "p95": 0.04663526733315216,
+      "max": 0.060204291889158844
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_07_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_036_seg01",
+    "origin_round": "7",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 3311.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01298331383280885,
+      "median": 0.19995060866531192,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.0030352767420326224,
+      "median": 0.13562234577533655,
+      "p95": 0.1516425234166996,
+      "max": 0.170573333389391
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_07_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_015_seg01",
+    "origin_round": "7",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 4484.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.18018079290742597,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.11215427452355198,
+      "median": 0.18210777988397117,
+      "p95": 0.35470000489186265,
+      "max": 0.3685534303872767
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_08_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_017_seg01",
+    "origin_round": "8",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 6997.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.01385258009056768,
+      "median": 0.19995060866531192,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.008994197750783955,
+      "median": 0.022326965787944613,
+      "p95": 0.03985042516298756,
+      "max": 0.046379358365579014
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_08_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_036_seg01",
+    "origin_round": "8",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 2938.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.15141127330327647,
+      "p95": 0.195991725167993,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": -0.0030352767420326224,
+      "median": 0.17595025451689714,
+      "p95": 0.3121011383521988,
+      "max": 0.33946891300518395
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  },
+  {
+    "source": "round_08_train_failure_prefixes.csv.gz",
+    "sample_id": "parent_015_seg01",
+    "origin_round": "8",
+    "recorded_steps": 303,
+    "first_time_s": 0.0,
+    "last_time_s": 4594.0,
+    "contiguous_from_reset": false,
+    "has_complete_step_ledger": false,
+    "economic_prefix_cost_cny": null,
+    "complete_economic_cost_cny": null,
+    "step_economic_cost_distribution_cny": null,
+    "recorded_h2_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.18409361055076176,
+      "p95": 0.19995060866531192,
+      "max": 0.19995060866531192
+    },
+    "recorded_signed_soc_step_cost_distribution_cny": {
+      "count": 303,
+      "min": 0.0,
+      "median": 0.1766550493446089,
+      "p95": 0.2713180345840083,
+      "max": 0.2948023312036427
+    },
+    "note": "Sparse observed rows omit intermediate actions and both degradation ledgers; do not sum as a voyage."
+  }
+]

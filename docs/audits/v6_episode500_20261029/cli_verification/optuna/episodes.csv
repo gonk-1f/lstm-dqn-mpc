@@ -1,0 +1,3 @@
+episode,env_steps,adam_updates,epsilon,sample_id,completed,terminal_reason,episode_env_steps,duration_coverage,return_sum,soc_final,loss_mean,td_mae,episode_adam_updates,executed_prefix_economic_cost_cny,complete_economic_cost_cny
+1,64,2,1.0,synthetic_episode_train_a,True,completed,64,1.0,-592.4972363981898,0.601751152721547,3.219858765602112,3.6863389015197754,2,592.4972363981898,592.4972363981898
+2,128,4,0.050000000000000044,synthetic_episode_train_a,True,completed,64,1.0,-6922.246502379381,0.5979939950704751,68.49462127685547,68.85432052612305,2,6922.246502379383,6922.246502379383

@@ -1,0 +1,44 @@
+[
+  {
+    "name": "episode_tuning_final_help",
+    "args": [
+      "-m",
+      "v6_sb3.tuning",
+      "--episode-search",
+      "--help"
+    ],
+    "seconds": 9.469513900003221,
+    "exit_code": 0
+  },
+  {
+    "name": "optuna_active_pause",
+    "args": [
+      "-u",
+      "-m",
+      "v6_sb3.tuning",
+      "--episode-search",
+      "--study-dir",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_optuna_pause_20261029_r02",
+      "--smoke",
+      "--stop-after-steps",
+      "37"
+    ],
+    "seconds": 27.496908599998278,
+    "exit_code": 0
+  },
+  {
+    "name": "optuna_active_resume",
+    "args": [
+      "-u",
+      "-m",
+      "v6_sb3.tuning",
+      "--episode-search",
+      "--study-dir",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_optuna_pause_20261029_r02",
+      "--smoke",
+      "--resume"
+    ],
+    "seconds": 24.398380999999063,
+    "exit_code": 0
+  }
+]

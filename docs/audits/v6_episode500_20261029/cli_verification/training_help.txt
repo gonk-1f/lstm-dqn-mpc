@@ -1,0 +1,67 @@
+usage: episode_training.py [-h] [--run-dir RUN_DIR] [--data-root DATA_ROOT]
+                           [--resume] [--smoke]
+                           [--parameters-json PARAMETERS_JSON] [--inspect]
+                           [--compare-runs BASELINE RETRAINED]
+                           [--episodes EPISODES]
+                           [--learning-starts LEARNING_STARTS]
+                           [--train-freq TRAIN_FREQ]
+                           [--gradient-steps GRADIENT_STEPS]
+                           [--target-update-interval TARGET_UPDATE_INTERVAL]
+                           [--learning-rate LEARNING_RATE]
+                           [--batch-size BATCH_SIZE]
+                           [--buffer-size BUFFER_SIZE]
+                           [--network-width NETWORK_WIDTH] [--seed SEED]
+                           [--order-seed ORDER_SEED]
+                           [--warmup-seed WARMUP_SEED]
+                           [--validation-every VALIDATION_EVERY]
+                           [--checkpoint-keep CHECKPOINT_KEEP]
+                           [--epsilon-initial EPSILON_INITIAL]
+                           [--epsilon-final EPSILON_FINAL]
+                           [--epsilon-decay-fraction EPSILON_DECAY_FRACTION]
+                           [--reward-mode {zhou_economic_only,v6_energy_soc_ramp}]
+                           [--max-env-steps MAX_ENV_STEPS]
+                           [--stop-after-steps STOP_AFTER_STEPS]
+                           [--acknowledge-failure-penalty]
+
+Single-thread, complete-episode SB3 DQN with exact safe-point recovery. Only
+the explicit CLI starts work. Formal training requires acknowledgement of the
+unchanged, uncalibrated legacy failure penalty and early-failure risk.
+
+options:
+  -h, --help            show this help message and exit
+  --run-dir RUN_DIR     new output directory, or existing directory with
+                        --resume
+  --data-root DATA_ROOT
+  --resume
+  --smoke               tiny synthetic voyages through real direct physics
+  --parameters-json PARAMETERS_JSON
+                        exported Optuna parameters; fresh directory required
+  --inspect             print current counters and best Validation; no
+                        training
+  --compare-runs BASELINE RETRAINED
+  --episodes EPISODES
+  --learning-starts LEARNING_STARTS
+  --train-freq TRAIN_FREQ
+  --gradient-steps GRADIENT_STEPS
+  --target-update-interval TARGET_UPDATE_INTERVAL
+  --learning-rate LEARNING_RATE
+  --batch-size BATCH_SIZE
+  --buffer-size BUFFER_SIZE
+  --network-width NETWORK_WIDTH
+  --seed SEED
+  --order-seed ORDER_SEED
+  --warmup-seed WARMUP_SEED
+  --validation-every VALIDATION_EVERY
+  --checkpoint-keep CHECKPOINT_KEEP
+  --epsilon-initial EPSILON_INITIAL
+  --epsilon-final EPSILON_FINAL
+  --epsilon-decay-fraction EPSILON_DECAY_FRACTION
+  --reward-mode {zhou_economic_only,v6_energy_soc_ramp}
+  --max-env-steps MAX_ENV_STEPS
+                        soft formal budget; stop only after a complete episode
+  --stop-after-steps STOP_AFTER_STEPS
+                        pause after N real transitions, preserving live state
+  --acknowledge-failure-penalty
+                        accept unchanged legacy 10132.66 CNY penalty: not
+                        calibrated on current Train; early failure may beat
+                        completion

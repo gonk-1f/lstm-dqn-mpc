@@ -1,0 +1,159 @@
+[
+  {
+    "name": "training_help",
+    "args": [
+      "-m",
+      "v6_sb3.episode_training",
+      "--help"
+    ],
+    "exit_code": 0,
+    "seconds": 14.063283699993917
+  },
+  {
+    "name": "tuning_legacy_help",
+    "args": [
+      "-m",
+      "v6_sb3.tuning",
+      "--help"
+    ],
+    "exit_code": 0,
+    "seconds": 15.45610029999807
+  },
+  {
+    "name": "episode_tuning_help",
+    "args": [
+      "-m",
+      "v6_sb3.tuning",
+      "--episode-search",
+      "--help"
+    ],
+    "exit_code": 0,
+    "seconds": 9.447847299998102
+  },
+  {
+    "name": "economic_pause",
+    "args": [
+      "-u",
+      "-m",
+      "v6_sb3.episode_training",
+      "--run-dir",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_smoke_economic_20261029_r01",
+      "--smoke",
+      "--stop-after-steps",
+      "65"
+    ],
+    "exit_code": 0,
+    "seconds": 24.401754300000903
+  },
+  {
+    "name": "economic_resume",
+    "args": [
+      "-u",
+      "-m",
+      "v6_sb3.episode_training",
+      "--run-dir",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_smoke_economic_20261029_r01",
+      "--smoke",
+      "--resume"
+    ],
+    "exit_code": 0,
+    "seconds": 21.87134949999745
+  },
+  {
+    "name": "historical_smoke",
+    "args": [
+      "-u",
+      "-m",
+      "v6_sb3.episode_training",
+      "--run-dir",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_smoke_history_20261029_r01",
+      "--smoke",
+      "--reward-mode",
+      "v6_energy_soc_ramp"
+    ],
+    "exit_code": 0,
+    "seconds": 21.72122080000554
+  },
+  {
+    "name": "inspect",
+    "args": [
+      "-m",
+      "v6_sb3.episode_training",
+      "--run-dir",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_smoke_economic_20261029_r01",
+      "--inspect"
+    ],
+    "exit_code": 0,
+    "seconds": 8.465606499994465
+  },
+  {
+    "name": "compare",
+    "args": [
+      "-m",
+      "v6_sb3.episode_training",
+      "--compare-runs",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_smoke_economic_20261029_r01",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_smoke_history_20261029_r01"
+    ],
+    "exit_code": 0,
+    "seconds": 8.484659400004603
+  },
+  {
+    "name": "optuna_smoke",
+    "args": [
+      "-u",
+      "-m",
+      "v6_sb3.tuning",
+      "--episode-search",
+      "--study-dir",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_optuna_smoke_20261029_r01",
+      "--smoke"
+    ],
+    "exit_code": 0,
+    "seconds": 31.684493500004464
+  },
+  {
+    "name": "optuna_completed_resume",
+    "args": [
+      "-u",
+      "-m",
+      "v6_sb3.tuning",
+      "--episode-search",
+      "--study-dir",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_optuna_smoke_20261029_r01",
+      "--smoke",
+      "--resume"
+    ],
+    "exit_code": 0,
+    "seconds": 18.492088999999396
+  },
+  {
+    "name": "export_best",
+    "args": [
+      "-m",
+      "v6_sb3.tuning",
+      "--episode-search",
+      "--study-dir",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_optuna_smoke_20261029_r01",
+      "--export-best-parameters",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_optuna_smoke_20261029_r01\\best_parameters.json"
+    ],
+    "exit_code": 0,
+    "seconds": 19.710249899995688
+  },
+  {
+    "name": "fresh_parameter_smoke",
+    "args": [
+      "-u",
+      "-m",
+      "v6_sb3.episode_training",
+      "--run-dir",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_smoke_retrained_20261029_r01",
+      "--smoke",
+      "--parameters-json",
+      "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\episode500_optuna_smoke_20261029_r01\\best_parameters.json"
+    ],
+    "exit_code": 0,
+    "seconds": 18.76910140000109
+  }
+]

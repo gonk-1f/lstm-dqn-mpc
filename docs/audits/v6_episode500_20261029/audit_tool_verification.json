@@ -1,0 +1,28 @@
+{
+  "verification_date": "2026-10-29",
+  "commands": [
+    {
+      "command": ".venv-optuna/Scripts/python.exe -m pytest tests/test_v6_episode_audit.py -q",
+      "result": "11 passed in 0.30s"
+    },
+    {
+      "command": ".venv-optuna/Scripts/python.exe -m pytest tests/test_v6_episode_audit.py tests/test_v4_failure_td.py -q",
+      "result": "27 passed in 58.60s; before the final metadata-budget test was added"
+    },
+    {
+      "command": ".venv-optuna/Scripts/python.exe scripts/audit_episode_failure_penalty.py",
+      "result": "exit 0; 280 summaries, 47 sparse groups, 125 same-ID comparisons"
+    },
+    {
+      "command": ".venv-optuna/Scripts/python.exe scripts/benchmark_v6_environment.py --steps 32 64 128 --repeats 3 --measure-adam --adam-repeats 3 --torch-threads 1",
+      "result": "exit 0; 672 equivalent step pairs, 32 real economic steps, 3 disposable single Adam calls"
+    },
+    {
+      "command": ".venv-optuna/Scripts/python.exe scripts/benchmark_v6_environment.py --budget-only",
+      "result": "exit 0; no new steps or Adam; Validation metadata total143762"
+    }
+  ],
+  "formal_training_started": false,
+  "test_payloads_opened": 0,
+  "penalty_changed": false
+}
