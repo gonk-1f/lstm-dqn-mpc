@@ -15,6 +15,6 @@
 
 ## 实现与验证状态
 
-此索引的修改前版本尚未宣告生产实现或测试通过。完成后的实际命令、输出、Smoke 边界、改动摘要和后续命令将记录在 `verification.md` 与 `commands.md`；正式 500 episode、长 Optuna 搜索及 Test 均不在本次执行授权范围。
+独立模式 `inverse_one_plus_economic` 已实现；最终回归 283 passed、3 subtests passed，有界合成 CLI 流程 8 条命令全部 exit 0。详见 [最终交付与测试证据](verification.md)、[机器核对](verification.json)、[实际 CLI 参数与输出](cli_final.json) 和 [后续终端命令](commands.md)。正式 500 episode、长 Optuna 搜索及 Test 均未启动。
 
 历史 checkpoint 与 study 的源码哈希校验保持严格。历史产物不迁移或重写；需要续训旧产物时，应回到其原始提交和依赖。新模式使用独立新目录与身份，不能载入旧 Replay 作为其训练状态。

@@ -410,7 +410,124 @@
       "floating_negative_zeroed": 0
     },
     "measurement_scope": "Only the current Train parent raw channels were read; 1s total load is derived/interpolated, not independently measured.",
-    "aligned_derived_sample_exactly_at_target": false
+    "aligned_derived_sample_exactly_at_target": false,
+    "raw_source_files": [
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇1_4月28日08_00_4月28日12_00.csv",
+        "sha256": "deb07fda81487e04a98987f9e92b68e6a390d8798eca6c795e2311ba95df2454",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇2_4月28日08_00_4月28日12_00.csv",
+        "sha256": "31b63b499b742e01b963ce81c12686fef7fadcd71d7a3673f11f74dec0e43e80",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇3_4月28日08_00_4月28日12_00.csv",
+        "sha256": "9b7bc8f35cb1997c2cedef9c05411ce3303ade6bfbf10ff65d6ce4086434f7d4",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇4_4月28日08_00_4月28日12_00.csv",
+        "sha256": "993d5309a5b9e67a49d0fbd76a2d8ef5f91d3caa0aefe42c0ff5d7dd7f418059",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇5_4月28日08_00_4月28日12_00.csv",
+        "sha256": "782de9ace590ff518732d581d120884925ac4da799dd3d28f53d31e69a40c525",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇6_4月28日08_00_4月28日12_00.csv",
+        "sha256": "4aa7c0d4831db8a5baeeffa3d2cdc94b893617034a72dbcb2d7677458a146f12",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池系统BDM_4月28日08_00_4月28日12_00.csv",
+        "sha256": "9952168f36d63c4a55c8c2ea411338d622fe8a2e354990d7f0f882d7bdab223d",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇1_4月28日08_00_4月28日12_00.csv",
+        "sha256": "d03ddf3530fc4497dfedd16426291d48df50ccfd333365ac5801a7c65f2c5f5d",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇2_4月28日08_00_4月28日12_00.csv",
+        "sha256": "1f91e7bdc7a3a68023be28c5400022276085b2e3af1ac158e977a33cc648a3e4",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇3_4月28日08_00_4月28日12_00.csv",
+        "sha256": "937f059ed8dfea5b0e6cdcdc330bee1c8539fb486cd7c1abbce494ad1bd9f8dd",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇4_4月28日08_00_4月28日12_00.csv",
+        "sha256": "0e1e403c6d7dc094ba4454719f0af81dbc5fc0da95e1aeddace1ed99309013eb",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇5_4月28日08_00_4月28日12_00.csv",
+        "sha256": "6d5160de23ea64cc079dec331c27f4157e05f0e3a73b550bb12998f341e981a8",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇6_4月28日08_00_4月28日12_00.csv",
+        "sha256": "2f292ebae319c1250e1a1eb25f992f1ddaf6608d8692f293ab241769a8ddf34f",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池系统BDM_4月28日08_00_4月28日12_00.csv",
+        "sha256": "8e8440f64ac59a36c0b1e22b2e80d597aed1c33f4634fd5fca9149fd6237bedb",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\推进系统\\AIS航速_4月28日08_00_4月28日12_00.csv",
+        "sha256": "6e4960d5e524d2c683804f34120cac168dfe6f78527de134ce8a93c15fda3e5c",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\右氢燃料电池#1_4月28日08_00_4月28日12_00.csv",
+        "sha256": "f87472e0cb9e8f394ae2247cb7fc0efe4ce8605974ca83cb8794d1f1963bf87c",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\右氢燃料电池#2_4月28日08_00_4月28日12_00.csv",
+        "sha256": "23e0ec82904cac7f92c31c3632cbd0ab51dfae5976c5531a2668e71552576843",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\右氢燃料电池#3_4月28日08_00_4月28日12_00.csv",
+        "sha256": "2f303dc525289bffd429ead83759d9715aa8fbeef2698804080acd3efe395044",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\右氢燃料电池#4_4月28日08_00_4月28日12_00.csv",
+        "sha256": "9e2850aad170ee6b7c504638166ec6248996835c8c35df5892e206d19bd835e3",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\左氢燃料电池#1_4月28日08_00_4月28日12_00.csv",
+        "sha256": "aad39fd8f74fd31c31753a9ef155e2f0486db3ea83020366b173dddf723bfe2b",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\左氢燃料电池#2_4月28日08_00_4月28日12_00.csv",
+        "sha256": "43ded1e52f7df04dfa99d151ab4e552fff54664a88b6473fb862b1ca4e31f60e",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\左氢燃料电池#3_4月28日08_00_4月28日12_00.csv",
+        "sha256": "f63c008c67759da56b20d828d063b711b27d350de0d42e8dd50ac3c4fd188e74",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\左氢燃料电池#4_4月28日08_00_4月28日12_00.csv",
+        "sha256": "19c47d0514961d71e1982ec3a6630762a8ba84d561cc55157cd2d1bf1487eeb7",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      }
+    ]
   },
   "normalize_contract": {
     "negative_inclusive_range_kw": [
@@ -946,5 +1063,6 @@
     "CSV precision does not establish instrument accuracy or physical relevance of sub-kW values.",
     "Most small nodes lack an existing full policy trajectory; diagnostic fields stay null.",
     "30s component sidecar may contain aligned/cubic/PCHIP values; source provenance is retained, never called independent 1s measurement."
-  ]
+  ],
+  "counterfactual_step_budget": 5382
 }

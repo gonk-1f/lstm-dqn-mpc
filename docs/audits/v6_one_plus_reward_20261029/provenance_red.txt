@@ -1,0 +1,21 @@
+.FF                                                                      [100%]
+================================== FAILURES ===================================
+E   AssertionError: assert {} == {'schema': 'v...)', ...}, ...}
+
+      Right contains 8 more items:
+      {'economics': {'actual_hydrogen_method': 'original instantaneous formal '
+                                               'fuel-cell efficiency curve',
+                     'battery_energy_source': 'existing formal plant capacity',
+                     'battery_nominal_energy_kwh': 624.0,
+                     'degradation_costs': 'unchanged original formal interval '...
+
+      ...Full output truncated (388 lines hidden), use '-vv' to show
+---------------------------- Captured stdout call -----------------------------
+complete | episodes 3/3 | formal steps 192 | Adam 6
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-sb3-baseline\tests\test_v6_one_plus_runner.py:224: AssertionError: assert {} == {'schema': 'v...)', ...}, ...}
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\20883\\AppData\\Local\\Temp\\pytest-of-20883\\pytest-214\\test_new_mode_smoke_retraining2\\parameters.json'
+D:\py\Python3\Lib\pathlib.py:1044: FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\20883\\AppData\\Local\\Temp\\pytest-of-20883\\pytest-214\\test_new_mode_smoke_retraining2\\parameters.json'
+=========================== short test summary info ===========================
+FAILED tests/test_v6_one_plus_runner.py::test_new_mode_smoke_retraining_keeps_exported_model_parameters[overwrite]
+FAILED tests/test_v6_one_plus_runner.py::test_new_mode_smoke_retraining_keeps_exported_model_parameters[delete]
+2 failed, 1 passed, 17 deselected in 21.14s

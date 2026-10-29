@@ -9,7 +9,7 @@ tmp_path = WindowsPath('C:/Users/20883/AppData/Local/Temp/pytest-of-20883/pytest
 >       full = runner.run_episode_training(options(), train, validation, tmp_path/'full')
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests\test_v6_one_plus_runner.py:23: 
+tests\test_v6_one_plus_runner.py:23:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 src\v6_sb3\episode_training.py:268: in run_episode_training
     config = _configuration(config)
@@ -87,7 +87,7 @@ field = 'reward_mode', value = 'zhou_economic_only'
 >       exported = new_export()
                    ^^^^^^^^^^^^
 
-tests\test_v6_one_plus_runner.py:97: 
+tests\test_v6_one_plus_runner.py:97:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def new_export():
@@ -110,7 +110,7 @@ field = 'target_sync_unit', value = 'adam_updates'
 >       exported = new_export()
                    ^^^^^^^^^^^^
 
-tests\test_v6_one_plus_runner.py:97: 
+tests\test_v6_one_plus_runner.py:97:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def new_export():
@@ -133,7 +133,7 @@ field = 'selection_split', value = 'test'
 >       exported = new_export()
                    ^^^^^^^^^^^^
 
-tests\test_v6_one_plus_runner.py:97: 
+tests\test_v6_one_plus_runner.py:97:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def new_export():
@@ -156,7 +156,7 @@ field = 'economics', value = {}
 >       exported = new_export()
                    ^^^^^^^^^^^^
 
-tests\test_v6_one_plus_runner.py:97: 
+tests\test_v6_one_plus_runner.py:97:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def new_export():
@@ -179,7 +179,7 @@ field = 'reward_contract', value = {}
 >       exported = new_export()
                    ^^^^^^^^^^^^
 
-tests\test_v6_one_plus_runner.py:97: 
+tests\test_v6_one_plus_runner.py:97:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def new_export():

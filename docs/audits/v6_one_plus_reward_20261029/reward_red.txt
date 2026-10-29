@@ -12,7 +12,7 @@ cost = 0.0, expected = 1.0
 >       assert rewards_module().inverse_one_plus_economic_reward(cost) == expected
                ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:39: 
+tests\test_one_plus_reward.py:39:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -35,7 +35,7 @@ cost = 1.0, expected = 0.5
 >       assert rewards_module().inverse_one_plus_economic_reward(cost) == expected
                ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:39: 
+tests\test_one_plus_reward.py:39:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -58,7 +58,7 @@ cost = 3.0, expected = 0.25
 >       assert rewards_module().inverse_one_plus_economic_reward(cost) == expected
                ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:39: 
+tests\test_one_plus_reward.py:39:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -81,7 +81,7 @@ cost = -0.5, expected = 2.0
 >       assert rewards_module().inverse_one_plus_economic_reward(cost) == expected
                ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:39: 
+tests\test_one_plus_reward.py:39:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -104,7 +104,7 @@ cost = -6.8368235145e-07, expected = 1.0000006836828188
 >       assert rewards_module().inverse_one_plus_economic_reward(cost) == expected
                ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:39: 
+tests\test_one_plus_reward.py:39:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -123,7 +123,7 @@ ____ test_one_plus_uses_no_cost_floor_and_remains_unbounded_near_minus_one ____
 >       reward = rewards_module().inverse_one_plus_economic_reward
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:43: 
+tests\test_one_plus_reward.py:43:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -146,7 +146,7 @@ cost = -1.0, physical_failure = False
 >       reward = rewards_module().inverse_one_plus_economic_reward
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:53: 
+tests\test_one_plus_reward.py:53:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -169,7 +169,7 @@ cost = -2.0, physical_failure = False
 >       reward = rewards_module().inverse_one_plus_economic_reward
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:53: 
+tests\test_one_plus_reward.py:53:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -192,7 +192,7 @@ cost = nan, physical_failure = False
 >       reward = rewards_module().inverse_one_plus_economic_reward
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:53: 
+tests\test_one_plus_reward.py:53:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -215,7 +215,7 @@ cost = inf, physical_failure = False
 >       reward = rewards_module().inverse_one_plus_economic_reward
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:53: 
+tests\test_one_plus_reward.py:53:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -238,7 +238,7 @@ cost = -inf, physical_failure = False
 >       reward = rewards_module().inverse_one_plus_economic_reward
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:53: 
+tests\test_one_plus_reward.py:53:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -261,7 +261,7 @@ cost = -1.0, physical_failure = True
 >       reward = rewards_module().inverse_one_plus_economic_reward
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:53: 
+tests\test_one_plus_reward.py:53:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -284,7 +284,7 @@ cost = -2.0, physical_failure = True
 >       reward = rewards_module().inverse_one_plus_economic_reward
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:53: 
+tests\test_one_plus_reward.py:53:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -307,7 +307,7 @@ cost = nan, physical_failure = True
 >       reward = rewards_module().inverse_one_plus_economic_reward
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:53: 
+tests\test_one_plus_reward.py:53:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -330,7 +330,7 @@ cost = inf, physical_failure = True
 >       reward = rewards_module().inverse_one_plus_economic_reward
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:53: 
+tests\test_one_plus_reward.py:53:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -353,7 +353,7 @@ cost = -inf, physical_failure = True
 >       reward = rewards_module().inverse_one_plus_economic_reward
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:53: 
+tests\test_one_plus_reward.py:53:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -375,7 +375,7 @@ cost = 0.0
 >       assert rewards_module().inverse_one_plus_economic_reward(cost, physical_failure=True) == -1.
                ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:60: 
+tests\test_one_plus_reward.py:60:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -397,7 +397,7 @@ cost = 1.0
 >       assert rewards_module().inverse_one_plus_economic_reward(cost, physical_failure=True) == -1.
                ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:60: 
+tests\test_one_plus_reward.py:60:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -419,7 +419,7 @@ cost = -0.5
 >       assert rewards_module().inverse_one_plus_economic_reward(cost, physical_failure=True) == -1.
                ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:60: 
+tests\test_one_plus_reward.py:60:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -438,7 +438,7 @@ _______ test_cost_helper_preserves_raw_components_and_signed_soc_value ________
 >       module = rewards_module()
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:64: 
+tests\test_one_plus_reward.py:64:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -457,7 +457,7 @@ ________ test_reward_contract_is_explicit_json_safe_and_mode_specific _________
 >       module = rewards_module()
                  ^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:71: 
+tests\test_one_plus_reward.py:71:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
     def rewards_module():
@@ -476,7 +476,7 @@ ___________ test_idle_zero_cost_completes_normally_with_reward_one ____________
 >       env = DirectVesselEnv(episode((0.,)), reward_mode=MODE)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:84: 
+tests\test_one_plus_reward.py:84:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E6106EFF50>
@@ -499,7 +499,7 @@ _______ test_new_mode_preserves_executed_physics_cost_and_action_masks ________
 >       env = DirectVesselEnv(data, reward_mode=MODE)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:103: 
+tests\test_one_plus_reward.py:103:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E61070EA10>
@@ -525,7 +525,7 @@ next_load = 1400.0, cause = 'increment_action_limited'
 >       env = DirectVesselEnv(episode((100., next_load)), accountant=accountant, reward_mode=MODE)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:143: 
+tests\test_one_plus_reward.py:143:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E610256D50>
@@ -551,7 +551,7 @@ next_load = 1900.0, cause = 'structural_power'
 >       env = DirectVesselEnv(episode((100., next_load)), accountant=accountant, reward_mode=MODE)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:143: 
+tests\test_one_plus_reward.py:143:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E6106D1ED0>
@@ -574,7 +574,7 @@ ____________ test_short_soc_failure_uses_same_terminal_replacement ____________
 >       env = DirectVesselEnv(data, reward_mode=MODE)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:169: 
+tests\test_one_plus_reward.py:169:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E61074EF10>
@@ -599,7 +599,7 @@ load = 1400.0
 >       env = DirectVesselEnv(episode((load,)), reward_mode=MODE)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:188: 
+tests\test_one_plus_reward.py:188:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E610729490>
@@ -624,7 +624,7 @@ load = 1900.0
 >       env = DirectVesselEnv(episode((load,)), reward_mode=MODE)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:188: 
+tests\test_one_plus_reward.py:188:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E610719210>
@@ -653,7 +653,7 @@ monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001E610723B50>
 >       env = DirectVesselEnv(data, reward_mode=MODE)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:205: 
+tests\test_one_plus_reward.py:205:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E610723A50>
@@ -686,7 +686,7 @@ _ test_new_mode_snapshot_restores_without_replaying_and_rejects_other_contract _
 >       env = DirectVesselEnv(data, reward_mode=MODE)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:231: 
+tests\test_one_plus_reward.py:231:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E623D91190>
@@ -710,7 +710,7 @@ monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001E6106ED490>
 >       env = DirectVesselEnv(episode((100., 1900.)), reward_mode=MODE)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests\test_one_plus_reward.py:257: 
+tests\test_one_plus_reward.py:257:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <v6_sb3.direct_environment.DirectVesselEnv object at 0x000001E6106EE750>

@@ -8,12 +8,12 @@
 
 **Tech stack:** Python, Gymnasium, SB3 MaskedDQN, pytest, Optuna SQLite; existing isolated interpreter.
 
-- [ ] Audit source lineage, asymmetric normalization, contracts and tests; scan all 35 Train load arrays, with explicit provenance for associated physical values. Write a standalone report and commit it before production edits.
-- [ ] Add failing numeric/domain and environment terminal tests. Implement `1.0 / (1.0 + total_cost_cny)` for finite CNY costs with finite positive denominator. Keep old formulas unchanged. A real physical failure replaces the last real reward with -1 and terminates, without a synthetic action or ledger penalty.
-- [ ] Add failing runner/interface tests. Propagate reward mode and contract through configuration, validation, checkpoints, resume and comparison. Reject incompatible exports and ambiguous imports for the new mode. Preserve strict code/data/dependency checks on resume.
-- [ ] Extend only the complete-episode Optuna adapter with explicit mode selection, a distinct study name for the new mode, identity binding and mode-correct exports. Reject accidental use through the old step-budget path.
-- [ ] Run necessary unit/regression checks and bounded synthetic smoke: three 64-step episodes, exact pause/resume, at most one two-episode Optuna Trial, fresh export/retrain and comparison. No real Validation or Test payload is needed for these checks.
-- [ ] Review the diff independently, fix material findings, record actual commands/output and preservation evidence. Provide paths, known limitations and future commands; do not execute formal commands.
+- [x] Audit source lineage, asymmetric normalization, contracts and tests; scan all 35 Train load arrays, with explicit provenance for associated physical values. Write a standalone report and commit it before production edits.
+- [x] Add failing numeric/domain and environment terminal tests. Implement `1.0 / (1.0 + total_cost_cny)` for finite CNY costs with finite positive denominator. Keep old formulas unchanged. A real physical failure replaces the last real reward with -1 and terminates, without a synthetic action or ledger penalty.
+- [x] Add failing runner/interface tests. Propagate reward mode and contract through configuration, validation, checkpoints, resume and comparison. Reject incompatible exports and ambiguous imports for the new mode. Preserve strict code/data/dependency checks on resume.
+- [x] Extend only the complete-episode Optuna adapter with explicit mode selection, a distinct study name for the new mode, identity binding and mode-correct exports. Reject accidental use through the old step-budget path.
+- [x] Run necessary unit/regression checks and bounded synthetic smoke: three 64-step episodes, exact pause/resume, one two-episode Optuna Trial per independent smoke study, fresh export/retrain and comparison; repeated after the final provenance fix. No real Validation or Test payload is needed for these checks.
+- [x] Review the diff independently, fix material findings, record actual commands/output and preservation evidence. Provide paths, known limitations and future commands; do not execute formal commands.
 
 New reward contract: numeric costs remain CNY; reward is dimensionless; C=0 gives 1; negative C greater than -1 is allowed and gives reward above 1; C<=-1 and nonfinite inputs fail before Replay insertion. Normal completion has no bonus. Existing failure penalty 10132.66 applies only to legacy modes. This change does not resolve the separately deferred real-time SOC inventory design and does not establish equivalence between reward maximization and minimum cumulative economic cost.
 

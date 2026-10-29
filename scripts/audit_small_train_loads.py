@@ -63,6 +63,9 @@ def trace_target(manifest_row, raw_root, source_rows):
     if manifest_row['split'] != 'train' or manifest_row['candidate_id'] != 'parent_015_seg01':
         raise ValueError('source trace requires the selected Train parent identity')
     parent = manifest_row['parent_name']
+    raw_paths = (list((raw_root/parent/'燃料电池系统').glob('*.csv'))
+                 +list((raw_root/parent/'BMS').glob('*.csv'))
+                 +list((raw_root/parent/'推进系统').glob('AIS航速_*.csv')))
     measured = load_parent_power_series(raw_root, parent)
     filled = interpolate_power_gaps(measured.timestamps, measured.fc_total_kw,
                                    measured.battery_raw_total_kw, step_seconds=30.)
@@ -86,6 +89,8 @@ def trace_target(manifest_row, raw_root, source_rows):
             battery_bus_kw=-float(measured.battery_raw_total_kw[i]),
             derived_total_kw=float(measured.source_total_kw[i])))
     return dict(parent=parent, sample_id=manifest_row['candidate_id'],
+        raw_source_files=[dict(path=str(path.resolve()), sha256=sha(path), role='current_Train_parent_raw_FC_BMS_or_AIS')
+                          for path in sorted(raw_paths)],
         reconstructed_nodes=len(values), source_nodes=len(original),
         source_reconstruction_max_abs_difference_kw=float(np.max(abs(values-original))),
         target_timestamp=rebuilt.timestamp.iloc[1].isoformat(),
@@ -183,6 +188,8 @@ def main(argv=None):
             # Every counterfactual is a separate fixed fresh state, never a voyage.
             cf = None
             if scope == 'control':
+                if counters['counterfactual_steps'] >= 5382:
+                    raise ValueError('approved independent one-step audit budget exceeded')
                 after, ledger, batt = accountant.interval(fixed_state, 0., normalized, duration_s=1.)
                 soc_cost = soc_equivalent_hydrogen_cost_cny(.6, after.soc, config)
                 cf = dict(normalized_load_kw=normalized, fc_kw=0., battery_kw=batt,
@@ -230,7 +237,7 @@ def main(argv=None):
             if row['parent_name']=='4月18日12_00_4月18日18_00'],
         used_for_statistics_or_parameters=False, reopened=False)
     result = dict(scope='35 Train full canonical curves; descriptive bins only; no data/production change',
-        counts=dict(counters), train_voyages=len(train), per_voyage=per_voyage,
+        counts=dict(counters), counterfactual_step_budget=5382, train_voyages=len(train), per_voyage=per_voyage,
         bins=[dict(node_scope=key[0],abs_load_bin=key[1],sign=key[2],count=count) for key,count in sorted(bins.items())],
         small_negative=sum(row['raw_load_kw']<0 for row in small), small_zero=sum(row['raw_load_kw']==0 for row in small),
         small_positive=sum(row['raw_load_kw']>0 for row in small),
