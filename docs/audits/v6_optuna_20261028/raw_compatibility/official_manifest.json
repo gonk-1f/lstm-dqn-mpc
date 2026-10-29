@@ -1,0 +1,66 @@
+{
+  "rl_zoo3": {
+    "repository": "DLR-RM/rl-baselines3-zoo",
+    "tag": "v2.9.1",
+    "commit": "ecfecc9ed2460c46e8357413a471bcb2b7600087"
+  },
+  "sb3_contrib": {
+    "repository": "Stable-Baselines-Team/stable-baselines3-contrib",
+    "tag": "v2.9.0",
+    "commit": "075bd5be8d43848b0f0cd3bc8a32f6892d0d58fb"
+  },
+  "optuna": {
+    "repository": "optuna/optuna",
+    "tag": "v4.9.0",
+    "commit": "4db42e31c24b200e52595df9d4c00e2cdeefea2b"
+  },
+  "sources": [
+    {
+      "url": "https://api.github.com/repos/DLR-RM/rl-baselines3-zoo/contents/setup.py?ref=ecfecc9ed2460c46e8357413a471bcb2b7600087",
+      "file": "docs\\audits\\v6_optuna_20261028\\raw_compatibility\\zoo_setup.py",
+      "sha256": "d3548c667d767143dd8de40e0578029a0f3816b8230d5c90b472098f7e3d0471",
+      "installed_file_matches": null,
+      "installed_file_exists": false
+    },
+    {
+      "url": "https://api.github.com/repos/DLR-RM/rl-baselines3-zoo/contents/rl_zoo3/hyperparams_opt.py?ref=ecfecc9ed2460c46e8357413a471bcb2b7600087",
+      "file": "docs\\audits\\v6_optuna_20261028\\raw_compatibility\\zoo_rl_zoo3__hyperparams_opt.py",
+      "sha256": "55f5842b5a55c5768b7a564bdc7bc724b9cb755ff716493f3804738a97bc2b72",
+      "installed_file_matches": true,
+      "installed_file_exists": true
+    },
+    {
+      "url": "https://api.github.com/repos/DLR-RM/rl-baselines3-zoo/contents/rl_zoo3/exp_manager.py?ref=ecfecc9ed2460c46e8357413a471bcb2b7600087",
+      "file": "docs\\audits\\v6_optuna_20261028\\raw_compatibility\\zoo_rl_zoo3__exp_manager.py",
+      "sha256": "14f10126879e6b7d3e6c099980a332288ee25eccb2232e6472dd779770494db8",
+      "installed_file_matches": true,
+      "installed_file_exists": true
+    },
+    {
+      "url": "https://api.github.com/repos/DLR-RM/rl-baselines3-zoo/contents/rl_zoo3/callbacks.py?ref=ecfecc9ed2460c46e8357413a471bcb2b7600087",
+      "file": "docs\\audits\\v6_optuna_20261028\\raw_compatibility\\zoo_rl_zoo3__callbacks.py",
+      "sha256": "c9b054a4281219acdb55a2c28de0f5808bf36c1f5c53f83886a1249f0f7e0f3f",
+      "installed_file_matches": true,
+      "installed_file_exists": true
+    },
+    {
+      "url": "https://api.github.com/repos/DLR-RM/rl-baselines3-zoo/contents/hyperparams/dqn.yml?ref=ecfecc9ed2460c46e8357413a471bcb2b7600087",
+      "file": "docs\\audits\\v6_optuna_20261028\\raw_compatibility\\zoo_hyperparams__dqn.yml",
+      "sha256": "c39d6e4dde50299f32147db9ef3b327440de3c0b59090f64ef32cd7488b0b764",
+      "installed_file_matches": true,
+      "installed_file_exists": true
+    },
+    {
+      "url": "https://api.github.com/repos/DLR-RM/rl-baselines3-zoo/contents/docs/guide/tuning.md?ref=ecfecc9ed2460c46e8357413a471bcb2b7600087",
+      "file": "docs\\audits\\v6_optuna_20261028\\raw_compatibility\\zoo_docs__guide__tuning.md",
+      "sha256": "faf9e3e3e61f516e7aec1e4a67d2d089f1cb0935a6aab366de8eba595898cd18",
+      "installed_file_matches": null,
+      "installed_file_exists": false
+    },
+    {
+      "url": "https://api.github.com/repos/DLR-RM/rl-baselines3-zoo/contents/LICENSE?ref=ecfecc9ed2460c46e8357413a471bcb2b7600087",
+      "file": "docs\\audits\\v6_optuna_20261028\\raw_compatibility\\zoo_LICENSE",
+      "sha256": "1bbe2a963174a5e2d7e9b0f0c22347f84e9c564496c8280df001b7ec4b517aae"
+    }
+  ]
+}

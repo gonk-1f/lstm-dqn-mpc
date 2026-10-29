@@ -135,6 +135,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.venv-optuna/
 env/
 venv/
 ENV/
