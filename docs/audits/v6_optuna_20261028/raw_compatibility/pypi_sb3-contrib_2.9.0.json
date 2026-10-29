@@ -1,0 +1,145 @@
+{
+  "info": {
+    "author": "Antonin Raffin",
+    "author_email": "antonin.raffin@dlr.de",
+    "bugtrack_url": null,
+    "classifiers": [
+      "Programming Language :: Python :: 3",
+      "Programming Language :: Python :: 3.10",
+      "Programming Language :: Python :: 3.11",
+      "Programming Language :: Python :: 3.12",
+      "Programming Language :: Python :: 3.13"
+    ],
+    "description": "\n\n# Stable-Baselines3 - Contrib (SB3-Contrib)\n\nContrib package for [Stable-Baselines3](https://github.com/DLR-RM/stable-baselines3) - Experimental reinforcement learning (RL) code.\n\"sb3-contrib\" for short.\n\n### What is SB3-Contrib?\n\nA place for RL algorithms and tools that are considered experimental, e.g. implementations of the latest publications. Goal is to keep the simplicity, documentation and style of stable-baselines3 but for less matured implementations.\n\n### Why create this repository?\n\nOver the span of stable-baselines and stable-baselines3, the community has been eager to contribute in form of better logging utilities, environment wrappers, extended support (e.g. different action spaces) and learning algorithms.\n\nHowever sometimes these utilities were too niche to be considered for stable-baselines or proved to be too difficult to integrate well into the existing code without creating a mess. sb3-contrib aims to fix this by not requiring the neatest code integration with existing code and not setting limits on what is too niche: almost everything remotely useful goes!\nWe hope this allows us to provide reliable implementations following stable-baselines usual standards (consistent style, documentation, etc) beyond the relatively small scope of utilities in the main repository.\n\n\n## Features\n\nSee documentation for the full list of included features.\n\n**RL Algorithms**:\n- [Augmented Random Search (ARS)](https://arxiv.org/abs/1803.07055)\n- [Quantile Regression DQN (QR-DQN)](https://arxiv.org/abs/1710.10044)\n- [PPO with invalid action masking (MaskablePPO)](https://arxiv.org/abs/2006.14171)\n- [PPO with recurrent policy (RecurrentPPO aka PPO LSTM)](https://ppo-details.cleanrl.dev//2021/11/05/ppo-implementation-details/)\n- [Truncated Quantile Critics (TQC)](https://arxiv.org/abs/2005.04269)\n- [Trust Region Policy Optimization (TRPO)](https://arxiv.org/abs/1502.05477)\n- [Batch Normalization in Deep Reinforcement Learning (CrossQ)](https://openreview.net/forum?id=PczQtTsTIX)\n\n**Gym Wrappers**:\n- [Time Feature Wrapper](https://arxiv.org/abs/1712.00378)\n\n## Documentation\n\nDocumentation is available online: [https://sb3-contrib.readthedocs.io/](https://sb3-contrib.readthedocs.io/)\n\n\n## Installation\n\n**Note:** You need the `master` version of [Stable Baselines3](https://github.com/DLR-RM/stable-baselines3/).\n\nTo install Stable Baselines3 `master` version:\n```\npip install git+https://github.com/DLR-RM/stable-baselines3\n```\n\nTo install Stable Baselines3 contrib `master` version:\n```\npip install git+https://github.com/Stable-Baselines-Team/stable-baselines3-contrib\n\n",
+    "description_content_type": "text/markdown",
+    "docs_url": null,
+    "download_url": null,
+    "downloads": {
+      "last_day": -1,
+      "last_month": -1,
+      "last_week": -1
+    },
+    "dynamic": [
+      "Author",
+      "Author-Email",
+      "Classifier",
+      "Description",
+      "Description-Content-Type",
+      "Home-Page",
+      "Keywords",
+      "License",
+      "License-File",
+      "Project-Url",
+      "Requires-Dist",
+      "Requires-Python",
+      "Summary"
+    ],
+    "home_page": "https://github.com/Stable-Baselines-Team/stable-baselines3-contrib",
+    "keywords": "reinforcement-learning-algorithms reinforcement-learning machine-learning gym openai stable baselines toolbox python data-science",
+    "license": "MIT",
+    "license_expression": null,
+    "license_files": [
+      "LICENSE"
+    ],
+    "maintainer": null,
+    "maintainer_email": null,
+    "name": "sb3-contrib",
+    "package_url": "https://pypi.org/project/sb3-contrib/",
+    "platform": null,
+    "project_url": "https://pypi.org/project/sb3-contrib/",
+    "project_urls": {
+      "Changelog": "https://stable-baselines3.readthedocs.io/en/master/misc/changelog.html",
+      "Code": "https://github.com/Stable-Baselines-Team/stable-baselines3-contrib",
+      "Documentation": "https://sb3-contrib.readthedocs.io/",
+      "Homepage": "https://github.com/Stable-Baselines-Team/stable-baselines3-contrib",
+      "RL-Zoo": "https://github.com/DLR-RM/rl-baselines3-zoo",
+      "SBX": "https://github.com/araffin/sbx",
+      "Stable-Baselines3": "https://github.com/DLR-RM/stable-baselines3"
+    },
+    "provides_extra": null,
+    "release_url": "https://pypi.org/project/sb3-contrib/2.9.0/",
+    "requires_dist": [
+      "stable_baselines3<3.0,>=2.9.0"
+    ],
+    "requires_python": ">=3.10",
+    "summary": "Contrib package of Stable Baselines3, experimental code.",
+    "version": "2.9.0",
+    "yanked": false,
+    "yanked_reason": null
+  },
+  "last_serial": 42754679,
+  "ownership": {
+    "organization": null,
+    "roles": [
+      {
+        "role": "Owner",
+        "user": "Miffyli"
+      },
+      {
+        "role": "Owner",
+        "user": "araffin"
+      },
+      {
+        "role": "Owner",
+        "user": "ernestum"
+      },
+      {
+        "role": "Owner",
+        "user": "hill-a"
+      },
+      {
+        "role": "Maintainer",
+        "user": "AdamGleave"
+      }
+    ]
+  },
+  "urls": [
+    {
+      "comment_text": null,
+      "core-metadata": {
+        "sha256": "1a3162c33d441b0100eb527e7870129e489577e3343f3908f6e84055e8e38cbb"
+      },
+      "digests": {
+        "blake2b_256": "c306add3f1d6250f58ca493830ddb2118975aa3c4433bc07662d5ac5089eb691",
+        "md5": "f7fb82a57482d6205771a72ef88dae26",
+        "sha256": "b492b2be792f8f8214ff6b984e94812dc877f809ae82302cbe00626442ae316a"
+      },
+      "downloads": -1,
+      "filename": "sb3_contrib-2.9.0-py3-none-any.whl",
+      "has_sig": false,
+      "md5_digest": "f7fb82a57482d6205771a72ef88dae26",
+      "packagetype": "bdist_wheel",
+      "python_version": "py3",
+      "requires_python": ">=3.10",
+      "size": 93042,
+      "upload_time": "2026-06-15T17:06:07",
+      "upload_time_iso_8601": "2026-06-15T17:06:07.452938Z",
+      "url": "https://files.pythonhosted.org/packages/c3/06/add3f1d6250f58ca493830ddb2118975aa3c4433bc07662d5ac5089eb691/sb3_contrib-2.9.0-py3-none-any.whl",
+      "yanked": false,
+      "yanked_reason": null
+    },
+    {
+      "comment_text": null,
+      "core-metadata": false,
+      "digests": {
+        "blake2b_256": "8f8e476222d88ba09dce0feebf6fb30b55e4dd0c80be5b19dc7b40d12d70752a",
+        "md5": "c6c9a6e898969e14ea22cc83b59406e0",
+        "sha256": "6e839c669552ecb3deb616a42ea98ed5e6c599eb5ac5f86232415b87a3873699"
+      },
+      "downloads": -1,
+      "filename": "sb3_contrib-2.9.0.tar.gz",
+      "has_sig": false,
+      "md5_digest": "c6c9a6e898969e14ea22cc83b59406e0",
+      "packagetype": "sdist",
+      "python_version": "source",
+      "requires_python": ">=3.10",
+      "size": 90312,
+      "upload_time": "2026-06-15T17:06:08",
+      "upload_time_iso_8601": "2026-06-15T17:06:08.800366Z",
+      "url": "https://files.pythonhosted.org/packages/8f/8e/476222d88ba09dce0feebf6fb30b55e4dd0c80be5b19dc7b40d12d70752a/sb3_contrib-2.9.0.tar.gz",
+      "yanked": false,
+      "yanked_reason": null
+    }
+  ],
+  "vulnerabilities": []
+}

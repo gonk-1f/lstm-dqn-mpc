@@ -1,0 +1,1893 @@
+{
+  "scope": "仅本 worktree 的三项已批准历史 DQN 专用测试/脚本归档；不删除文件内容或依赖。",
+  "base_commit": "544908d67ae9c36f8101ba5a27d290eaf4c49dd2",
+  "branch": "feat/v6-sb3-optuna-audit",
+  "before_snapshot": "2026-10-28T07:20:29.452605+00:00",
+  "after_snapshot": "2026-10-28T07:28:30.559987+00:00",
+  "archive": [
+    {
+      "action": "archive",
+      "original": "tests/test_v2_history_study_cli.py",
+      "destination": "tests/history/test_v2_history_study_cli.py",
+      "reason": "仅历史 H1/H2 DQN study 的 CLI 默认值、输出防覆盖与 replay reward 路由测试；不再默认收集。",
+      "content_preserved": true,
+      "allowed_edit": "仅 ROOT parents[1] 改为 parents[2]；适配新增 history 层。",
+      "dependency_deleted": false
+    },
+    {
+      "action": "archive",
+      "original": "scripts/v4_per_frozen_probe.py",
+      "destination": "scripts/history/v4_per_frozen_probe.py",
+      "reason": "历史 V4 PER frozen-target 拟合研究工具，非当前 V6 入口。",
+      "content_preserved": true,
+      "allowed_edit": "未编辑源码；与 Git HEAD 仅有工作区既有 CRLF/LF 换行差异，无 __file__/ROOT/相对脚本导入。",
+      "dependency_deleted": false
+    },
+    {
+      "action": "archive",
+      "original": "scripts/v4_per_jointfit_state_probe.py",
+      "destination": "scripts/history/v4_per_jointfit_state_probe.py",
+      "reason": "历史 V4 PER 7d/clock 联合拟合及少量 Train 闭环研究工具，非当前 V6 入口。",
+      "content_preserved": true,
+      "allowed_edit": "未编辑源码；与 Git HEAD 仅有工作区既有 CRLF/LF 换行差异，无 __file__/ROOT/相对脚本导入。",
+      "dependency_deleted": false
+    }
+  ],
+  "delete": [],
+  "retain": [
+    {
+      "path": "pytest.ini",
+      "category": "dependency_entry",
+      "reason": "Dependency/test configuration is retained."
+    },
+    {
+      "path": "requirements-optuna-lock.txt",
+      "category": "dependency_entry",
+      "reason": "Dependency/test configuration is retained."
+    },
+    {
+      "path": "requirements-optuna.txt",
+      "category": "dependency_entry",
+      "reason": "Dependency/test configuration is retained."
+    },
+    {
+      "path": "requirements-sb3.txt",
+      "category": "dependency_entry",
+      "reason": "Dependency/test configuration is retained."
+    },
+    {
+      "path": "requirements.txt",
+      "category": "dependency_entry",
+      "reason": "Dependency/test configuration is retained."
+    },
+    {
+      "path": "scripts/audit_v4_round40_train_alignment.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/audit_v4_train_load_mapping.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/audit_v6_dependencies.py",
+      "category": "audit_tool",
+      "reason": "Static inspection only; no project imports or payload reads."
+    },
+    {
+      "path": "scripts/audit_v6_rewards.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/build_v6_dataset.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "scripts/check_v4_increment_reachability.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/crop_current_voyage_candidates.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/exclude_independent_voyage_sample.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/finish_v6_report.ps1",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "scripts/freeze_independent_voyage_split.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/independent_candidate_figures.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/migrate_v4_soc_mask_checkpoint.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/report_v6.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "scripts/start_v5_economic4.ps1",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/start_v6_dqn.ps1",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/start_v6_sb3.ps1",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "scripts/v4_td_scale_diagnostic.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/v4_trajectory_archive.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "scripts/verify_v4_scheme_a_train_witnesses.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/dqn/__init__.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/dqn/agents/dqn_agent.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/dqn/memory/replay_buffer.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/dqn/networks/__init__.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/dqn/networks/factory.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/dqn/networks/kan_qnet.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/dqn/networks/mlp_qnet.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/dqn/policies/epsilon_greedy.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/dqn/utils/action_mapper.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/dqn/utils/legacy_reward.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/dqn/utils/reward.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/dqn/utils/state_builder.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/dqn/utils/training_metrics.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/envs/__init__.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/envs/dqn_mpc_weight_env.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/audit_fixed_physical_l2_84_train.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/audit_ideal_reference_84_train.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/audit_rms_l2_84_train.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/audit_rms_marginals_84_train.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/build_final_operating_dataset.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/build_operating_segment_dataset.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/build_rebuilt_operating_segment_dataset.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/build_spline_1s_diagnostics.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/build_total_load_dataset_721.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/build_zero_boundary_operating_dataset.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/build_zero_boundary_power_review.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/calibrate_unified_mpc_actions_train.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/compare_mpc_vs_dqn.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/formal_paths.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/mpc_solvers/__init__.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/mpc_solvers/dqn_mpc_solver_bank.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/mpc_solvers/formal_config.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/mpc_solvers/mpc_qp_formulation.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/mpc_solvers/n6_qp_scaling.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/mpc_solvers/osqp_runtime.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/refine_operating_segment_split.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/run_dqn_mpc_causal_training.py",
+      "category": "historical_experiment",
+      "reason": "Historical DQN experiment/training entrypoint; keep dependencies and source."
+    },
+    {
+      "path": "src/main/run_v2_objective_scale_audit.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/test_dqn_mpc_causal.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/test_mpc_nominal_causal.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/main/train_dqn_mpc_mlp.py",
+      "category": "historical_experiment",
+      "reason": "Historical DQN experiment/training entrypoint; keep dependencies and source."
+    },
+    {
+      "path": "src/main/zero_residual_numerical_negative_loads.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/mpc/__init__.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/mpc/solvers/fc_dp0_curve.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/common_types.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/data_aligner.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/data_loader.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/final_dataset_feasibility.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/final_dataset_semantics.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/final_dataset_source.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/final_dataset_split.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/final_dataset_verification.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/formal_operating_dataset.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/operating_segment_dataset.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/physical_config.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/utils/rebuilt_operating_dataset.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/__init__.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/analysis/__init__.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/analysis/action_screening.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/analysis/objective_scale_audit.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/analysis/solver_audit.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/analysis/timescale_audit.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/analysis/train_objective_scale_runner.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/analysis/train_state_audit.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/config.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/contracts.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/control/__init__.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/control/causal_base_load.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/control/nonlinear_mpc.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/data/__init__.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/data/ais_speed_sidecar.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/data/formal_training_dataset.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/data/power_gap_interpolation.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/data/raw_inventory.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/data/segment_power_source.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/data/shore_mode_sidecar.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/data/supervisory_aggregation.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/data/supervisory_rules.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/data/train_supervisory_audit.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/data/zero_boundary_dataset.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/data/zero_boundary_power_review.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/dqn/__init__.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/dqn/action_space.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/dqn/history.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/dqn/state.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/economics.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/envs/__init__.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/envs/formal_episode.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/envs/multirate_weight_env.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/evaluation/__init__.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/evaluation/checkpoint_selection.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/evaluation/final_test.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/evaluation/formal_policy.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/evaluation/power_trace_plots.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/evaluation/study_selection.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/evaluation/tau_lpf_screen.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/failure_policy.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/__init__.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/build_ais_speed_sidecar.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/build_shore_mode_sidecar.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/compare_m5_m10_validation.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/evaluate_formal_dqn_test.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/history_dqn_evaluation.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/run_failure_penalty_audit.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/run_m10_reward_scale_calibration.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/run_preflight.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/run_reward_scale_calibration.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/run_tau_lpf_validation_screen.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/run_train_only_timescale_audit.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/run_train_state_audit.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/select_formal_dqn_checkpoint.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/select_history_dqn_study.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/train_formal_dqn.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/train_history_dqn_study.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/main/train_m10_dqn_study.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/models/__init__.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/models/battery_degradation.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/models/battery_energy.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/models/fuel_cell_degradation.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/models/fuel_cell_efficiency.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v2/preflight.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/training/__init__.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/training/artifacts.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/training/checkpoint.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/training/diagnostics.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/training/dqn.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/training/experiments.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/training/reward_scaling.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v2/training/schedule.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v3/__init__.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v3/action_calibration.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v3/closed_loop_screen.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v3/control.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v3/dqn.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v3/episode_replay.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v3/forecasting.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v3/metrics.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v3/shore.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v3/test_diagnostic.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v3/training.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/__init__.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/actions.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/control.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/decision_diagnostics.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/diagnostics.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/dqn.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/experiment_paths.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/experiment_schedule.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/failure_replay.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/feedback_study.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/independent_dataset.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/independent_economics.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/interleaved_replay.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/learning_curves.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/mode_labels.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/monitored_training.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/prioritized_replay.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/review.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/reward_feedback.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/soc_beta_study.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/staged_study.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/telemetry.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/train.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/trajectory_io.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/v5_metrics.py",
+      "category": "unused_unconfirmed",
+      "reason": "Outside selected V6 closure does not prove unused; retained without deletion."
+    },
+    {
+      "path": "src/v4/v6_dataset.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/v6_q_probes.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/v6_td_diagnostics.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/v6_train_values.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v4/v6_training.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v6_sb3/__init__.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v6_sb3/curriculum.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v6_sb3/environment.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v6_sb3/evaluation.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v6_sb3/masked_dqn.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v6_sb3/performance.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v6_sb3/reporting.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v6_sb3/search.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "src/v6_sb3/training.py",
+      "category": "v6_production_closure",
+      "reason": "Conservative static reachability from current V6 entrypoints."
+    },
+    {
+      "path": "tests/test_dqn_mpc_mlp_smoke.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_dqn_mpc_mlp_training.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_dqn_mpc_reward.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_dqn_mpc_solver_bank.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_dqn_mpc_weight_env.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_dqn_network_backends.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_dqn_round_boundary_training.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_dqn_runtime_robustness.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_dqn_state_builder.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_dqn_training_state_resume.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_dqn_weight_action_table.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_executed_reward_contract.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_fc_dp0_curve.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_final_dataset_builder.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_final_dataset_feasibility.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_final_dataset_semantics.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_final_dataset_source.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_formal_checkpoint_paths.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_formal_operating_dataset.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_ideal_reference_84_audit.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_mpc_soc_reference.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_operating_segment_dataset.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_operating_segment_repartition.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_rebuilt_operating_dataset.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_sb3_environment.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_sb3_masked_dqn.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_sb3_training_integration.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_spline_1s_diagnostics.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_total_load_dataset_721.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_unified_objective_calibration.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_action_space.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_ais_speed_sidecar.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_artifacts.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_checkpoint_resume.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_checkpoint_selection.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_contracts.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_data_guards.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_degradation_models.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_dqn_diagnostics.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_dqn_experiments.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_dqn_training.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_economic_interval_semantics.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_energy_models.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_failure_policy.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_final_test_evaluation.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_formal_episode.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_formal_policy_evaluation.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_formal_preflight.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_formal_state.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_formal_training_cli.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_formal_training_dataset.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_history_evaluation_profile.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_history_state.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_history_study_selection.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_m10_ablation.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_multirate_env.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_nonlinear_mpc.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_objective_scale_audit.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_parameter_freeze.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_power_gap_interpolation.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_power_trace_plots.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_reward_scale_calibration.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_segment_power_source.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_shore_mode_sidecar.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_state_and_economics.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_supervisory_aggregation.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_supervisory_rules.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_tau_lpf_validation_screen.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_train_objective_scale_runner.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_train_only_audits.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_train_state_audit.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_train_supervisory_audit.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_validation_selection_cli.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_zero_boundary_dataset.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v2_zero_boundary_power_review.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v3_action_calibration.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v3_closed_loop_screen.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v3_double_dqn.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v3_episode_replay.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v3_persistence_control.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v3_shore_settlement.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_control.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_decision_diagnostics.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_dqn.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_economic_100r.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_energy_reward.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_energy_training_entry.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_experiment_schedule.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_failure_td.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_feedback_monitoring.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_increment_control.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_increment_ddqn.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_increment_entry.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_independent_dataset.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_independent_economics.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_independent_training_entry.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_interleaved_updates.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_monitored_training.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_n_step.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_per_dqn.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_per_training_entry.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_prioritized_replay.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_review_metrics.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_reward_feedback.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_reward_scaling.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_scaled_diagnostics.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_scaled_training_entry.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_scheme_a_gate.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_soc_mask_checkpoint_migration.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_streaming_output.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_td_scale_diagnostic.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v4_training.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v5_agent.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v5_control.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v5_entry.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v5_metrics.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v6_control.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v6_dqn.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v6_economic_reward_audit.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_v6_optuna_contracts.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_validation_q_diagnostics.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    },
+    {
+      "path": "tests/test_zero_residual_numerical_negative_loads.py",
+      "category": "current_regression",
+      "reason": "Retained regression coverage; historical shared contracts are intentionally preserved."
+    }
+  ],
+  "retain_immutable_historical_artifacts": [
+    {
+      "path": "docs/results/sb3_dqn_1s_20261028/raw/source_snapshot/__init__.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/sb3_dqn_1s_20261028/raw/source_snapshot/curriculum.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/sb3_dqn_1s_20261028/raw/source_snapshot/environment.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/sb3_dqn_1s_20261028/raw/source_snapshot/masked_dqn.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/sb3_dqn_1s_20261028/raw/source_snapshot/reporting.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/sb3_dqn_1s_20261028/raw/source_snapshot/requirements-sb3.txt",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/sb3_dqn_1s_20261028/raw/source_snapshot/training.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/action_mask_audit_20261019/audit.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/action_mask_audit_20261019/report.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/analyze_category_history.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/audit_support.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/bootstrap_action_comparison.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/counterfactual_audit.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/energy_necessary_conditions.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/jointfit_history_20261019/diagnose.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/jointfit_history_20261019/history_conditioned.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/online_target_review.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/q_action_audit.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/replay_root_cause_review.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/reward_audit.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/verify_audit.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/checkpoint_audit_round100/witness_review.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/fc_switching_causal_audit_20261020/diagnose.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/fc_switching_causal_audit_20261020/write_report.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/loss_per_audit_20261020/audit.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/reward_scale_audit_20261019/audit.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/reward_scale_audit_20261019/cpu_checkpoint.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/reward_scale_audit_20261019/finish_report.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/state_information_audit_20261020/audit.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/state_information_audit_20261020/report.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/statistical_reconciliation_20261020/audit.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_increment7_diagnostics_20261020/statistical_reconciliation_20261020/report.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_staged_beta_cadence_seed42/raw/archive_paused.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_staged_beta_cadence_seed42/raw/monitor.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v4_staged_beta_cadence_seed42/raw/summarize_stage1.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    },
+    {
+      "path": "docs/results/v5_economic4_paused_20261021/extract_paused_profiles.py",
+      "content_opened": false,
+      "action": "retain_immutable"
+    }
+  ],
+  "tracked_nonartifact_python_preserved_count": 313,
+  "expected_after_paths_all_present": true,
+  "pytest_configuration": {
+    "testpaths": [
+      "tests"
+    ],
+    "pythonpath": [
+      "src",
+      "src/main"
+    ],
+    "norecursedirs": [
+      "history",
+      ".git",
+      ".venv",
+      ".venv-*",
+      ".worktrees"
+    ],
+    "explicit_history_command": "python -m pytest tests/history/test_v2_history_study_cli.py -q"
+  },
+  "regression_execution": "主线程统一运行；本清理任务未运行 pytest、训练、Test 或历史 probe。",
+  "rollback": [
+    {
+      "from": "tests/history/test_v2_history_study_cli.py",
+      "to": "tests/test_v2_history_study_cli.py",
+      "restore_edit": "ROOT parents[2] 恢复为 parents[1]"
+    },
+    {
+      "from": "scripts/history/v4_per_frozen_probe.py",
+      "to": "scripts/v4_per_frozen_probe.py",
+      "restore_edit": "无需修改内容"
+    },
+    {
+      "from": "scripts/history/v4_per_jointfit_state_probe.py",
+      "to": "scripts/v4_per_jointfit_state_probe.py",
+      "restore_edit": "无需修改内容"
+    }
+  ],
+  "notes": [
+    "Git 暂未暂存时，旧路径可能显示 D、新路径显示 ??；这代表归档移动，不代表丢弃源码。",
+    "before/after 快照包含同一 worktree 并行任务新增的未跟踪源码，均单独标注 tracked=false。",
+    "历史文档与结果快照中的旧命令/旧路径保留原貌；本映射提供新路径。",
+    "before/after 扫描期间其他 9 个 worktree 的 HEAD、branch、完整 status 与 untracked 文件名完全一致。"
+  ],
+  "concurrent_new_v6_roots": [
+    "src/v6_sb3/performance.py",
+    "src/v6_sb3/search.py"
+  ]
+}

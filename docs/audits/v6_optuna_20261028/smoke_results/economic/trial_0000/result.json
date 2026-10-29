@@ -1,0 +1,29 @@
+{
+  "status": "completed",
+  "checkpoint": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\optuna_delivery_smoke_economic_20261029\\trial_0000\\checkpoints\\step_8_1793237436746497100",
+  "best_checkpoint": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\optuna_delivery_smoke_economic_20261029\\trial_0000\\checkpoints\\step_6_1793237436492518700",
+  "best_score": 3.497652245483576,
+  "adam_updates": 4,
+  "replay_insertions": 8,
+  "test_payloads_opened": 0,
+  "evaluation_history": [
+    {
+      "formal_steps": 2,
+      "score": 3.497652245483576,
+      "completed": 2,
+      "episodes": 2,
+      "coverage": 1.0,
+      "full_set_cost_cny": 737.5822091869661,
+      "evaluation_adam_updates": 0
+    },
+    {
+      "formal_steps": 4,
+      "score": 3.497652245483576,
+      "completed": 2,
+      "episodes": 2,
+      "coverage": 1.0,
+      "full_set_cost_cny": 737.5822091869661,
+      "evaluation_adam_updates": 0
+    }
+  ]
+}

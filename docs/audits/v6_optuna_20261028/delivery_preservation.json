@@ -1,0 +1,71 @@
+{
+  "verified_on_client_date": "2026-10-29",
+  "other_worktrees": [
+    {
+      "path": "C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc",
+      "head_unchanged": true,
+      "branch_unchanged": true,
+      "status_and_paths_unchanged": true,
+      "changed_path_count": 0
+    },
+    {
+      "path": "C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/direct-power-mlp",
+      "head_unchanged": true,
+      "branch_unchanged": true,
+      "status_and_paths_unchanged": true,
+      "changed_path_count": 1153
+    },
+    {
+      "path": "C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v4-energy-soc-per",
+      "head_unchanged": true,
+      "branch_unchanged": true,
+      "status_and_paths_unchanged": true,
+      "changed_path_count": 12
+    },
+    {
+      "path": "C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v4-increment7-zhou",
+      "head_unchanged": true,
+      "branch_unchanged": true,
+      "status_and_paths_unchanged": true,
+      "changed_path_count": 7
+    },
+    {
+      "path": "C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v4-per-prep",
+      "head_unchanged": true,
+      "branch_unchanged": true,
+      "status_and_paths_unchanged": true,
+      "changed_path_count": 33
+    },
+    {
+      "path": "C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v5-2x2-control",
+      "head_unchanged": true,
+      "branch_unchanged": true,
+      "status_and_paths_unchanged": true,
+      "changed_path_count": 6
+    },
+    {
+      "path": "C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v5-all-legal-bellman",
+      "head_unchanged": true,
+      "branch_unchanged": true,
+      "status_and_paths_unchanged": true,
+      "changed_path_count": 11
+    },
+    {
+      "path": "C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v5-economic4-ddqn",
+      "head_unchanged": true,
+      "branch_unchanged": true,
+      "status_and_paths_unchanged": true,
+      "changed_path_count": 0
+    },
+    {
+      "path": "C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-dqn-1s",
+      "head_unchanged": true,
+      "branch_unchanged": true,
+      "status_and_paths_unchanged": true,
+      "changed_path_count": 0
+    }
+  ],
+  "all_other_worktree_statuses_unchanged": true,
+  "protected_tracked_paths_changed_vs_544908d": [],
+  "scope": "Git HEAD/branch/status/path comparison; not a byte-level proof of ignored external artifacts."
+}

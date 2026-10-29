@@ -1,0 +1,76 @@
+{
+  "clock": "perf_counter wall time",
+  "note": "Nested inclusive timings must not be added. Exclusive timings subtract nested scopes. Only exited scopes are included; failed/paused calls also count. Restore continues cumulative totals without counting downtime or state reconstruction. environment_step includes physical execution and queue waiting. policy_prediction includes observation/mask preparation and epsilon-random choices, which need no NN forward. online_forward includes both action inference and training forwards; target_forward is the TD-target forward. replay_store/sample are buffer insertion/sampling only. adam_step excludes backward/clip. training_update_total includes forward/backward/clipping/diagnostics and Replay sampling; its calls equal Adam updates only for the fixed one-update-per-call runner on successful updates. validation_executor includes validation_prediction (Greedy selection plus NN inference). report_write measures Validation CSV/JSON writes only; checkpoint_write measures model, Replay and state serialization, excluding the subsequent JSON markers and performance file.",
+  "stages": {
+    "adam_step": {
+      "calls": 4,
+      "inclusive_seconds": 0.011508699994010385,
+      "exclusive_seconds": 0.011508699994010385
+    },
+    "checkpoint_write": {
+      "calls": 2,
+      "inclusive_seconds": 0.1347724000006565,
+      "exclusive_seconds": 0.1347724000006565
+    },
+    "environment_step": {
+      "calls": 8,
+      "inclusive_seconds": 0.02729360000375891,
+      "exclusive_seconds": 0.02729360000375891
+    },
+    "formal_collect_total": {
+      "calls": 2,
+      "inclusive_seconds": 0.14779339999950025,
+      "exclusive_seconds": 0.007711399986874312
+    },
+    "online_forward": {
+      "calls": 4,
+      "inclusive_seconds": 0.0022102999937487766,
+      "exclusive_seconds": 0.0022102999937487766
+    },
+    "policy_prediction": {
+      "calls": 4,
+      "inclusive_seconds": 0.0018423000001348555,
+      "exclusive_seconds": 0.0018423000001348555
+    },
+    "replay_sample": {
+      "calls": 4,
+      "inclusive_seconds": 0.0031606000047759153,
+      "exclusive_seconds": 0.0031606000047759153
+    },
+    "replay_store": {
+      "calls": 8,
+      "inclusive_seconds": 0.001554200003738515,
+      "exclusive_seconds": 0.001554200003738515
+    },
+    "report_write": {
+      "calls": 2,
+      "inclusive_seconds": 0.03560510000534123,
+      "exclusive_seconds": 0.03560510000534123
+    },
+    "target_forward": {
+      "calls": 4,
+      "inclusive_seconds": 0.0028993000014452264,
+      "exclusive_seconds": 0.0028993000014452264
+    },
+    "training_update_total": {
+      "calls": 4,
+      "inclusive_seconds": 0.12378909999824828,
+      "exclusive_seconds": 0.10401020000426797
+    },
+    "validation_executor": {
+      "calls": 4,
+      "inclusive_seconds": 0.04634030000306666,
+      "exclusive_seconds": 0.03368899999622954
+    },
+    "validation_prediction": {
+      "calls": 12,
+      "inclusive_seconds": 0.012651300006837118,
+      "exclusive_seconds": 0.012651300006837118
+    },
+    "warmup_collect_total": {
+      "calls": 1,
+      "inclusive_seconds": 0.02689680000185035,
+      "exclusive_seconds": 0.012499600008595735
+    }
+  }
+}

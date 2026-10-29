@@ -1,0 +1,183 @@
+{
+  "info": {
+    "author": "Takuya Akiba",
+    "author_email": null,
+    "bugtrack_url": null,
+    "classifiers": [
+      "Development Status :: 5 - Production/Stable",
+      "Intended Audience :: Developers",
+      "Intended Audience :: Science/Research",
+      "License :: OSI Approved :: MIT License",
+      "Programming Language :: Python :: 3",
+      "Programming Language :: Python :: 3 :: Only",
+      "Programming Language :: Python :: 3.10",
+      "Programming Language :: Python :: 3.11",
+      "Programming Language :: Python :: 3.12",
+      "Programming Language :: Python :: 3.13",
+      "Programming Language :: Python :: 3.14",
+      "Programming Language :: Python :: 3.9",
+      "Topic :: Scientific/Engineering",
+      "Topic :: Scientific/Engineering :: Artificial Intelligence",
+      "Topic :: Scientific/Engineering :: Mathematics",
+      "Topic :: Software Development",
+      "Topic :: Software Development :: Libraries",
+      "Topic :: Software Development :: Libraries :: Python Modules"
+    ],
+    "description": "<div align=\"center\"><img src=\"https://raw.githubusercontent.com/optuna/optuna/master/docs/image/optuna-logo.png\" width=\"800\"/></div>\n\n# Optuna: A hyperparameter optimization framework\n\n[![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://www.python.org)\n[![pypi](https://img.shields.io/pypi/v/optuna.svg)](https://pypi.python.org/pypi/optuna)\n[![conda](https://img.shields.io/conda/vn/conda-forge/optuna.svg)](https://anaconda.org/conda-forge/optuna)\n[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/optuna/optuna)\n[![Read the Docs](https://readthedocs.org/projects/optuna/badge/?version=stable)](https://optuna.readthedocs.io/en/stable/)\n\n:link: [**Website**](https://optuna.org/)\n| :page_with_curl: [**Docs**](https://optuna.readthedocs.io/en/stable/)\n| :gear: [**Install Guide**](https://optuna.readthedocs.io/en/stable/installation.html)\n| :pencil: [**Tutorial**](https://optuna.readthedocs.io/en/stable/tutorial/index.html)\n| :bulb: [**Examples**](https://github.com/optuna/optuna-examples)\n| [**Twitter**](https://twitter.com/OptunaAutoML)\n| [**LinkedIn**](https://www.linkedin.com/showcase/optuna/)\n| [**Medium**](https://medium.com/optuna)\n\n*Optuna* is an automatic hyperparameter optimization software framework, particularly designed\nfor machine learning. It features an imperative, *define-by-run* style user API. Thanks to our\n*define-by-run* API, the code written with Optuna enjoys high modularity, and the user of\nOptuna can dynamically construct the search spaces for the hyperparameters.\n\n## :loudspeaker: News\n\n<!-- TODO: when you add a new line, please delete the oldest line -->\n* **Mar 16, 2026**: Optuna 4.8.0 is out! Check out [the release note](https://github.com/optuna/optuna/releases/tag/v4.8.0) for details.\n* **Jan 19, 2026**: Optuna 4.7.0 is out! Check out [the release note](https://github.com/optuna/optuna/releases/tag/v4.7.0) for details.\n* **Nov 10, 2025**: A new article [Announcing Optuna 4.6](https://medium.com/optuna/announcing-optuna-4-6-a9e82183ab07) has been published.\n* **Oct 28, 2025**: A new article [AutoSampler: Full Support for Multi-Objective & Constrained Optimization](https://medium.com/optuna/autosampler-full-support-for-multi-objective-constrained-optimization-c1c4fc957ba2) has been published.\n* **Sep 22, 2025**: A new article [[Optuna v4.5] Gaussian Process-Based Sampler (GPSampler) Can Now Perform Constrained Multi-Objective Optimization](https://medium.com/optuna/optuna-v4-5-81e78d8e077a) has been published.\n* **Jun 16, 2025**: Optuna 4.4.0 has been released! Check out [the release blog](https://medium.com/optuna/announcing-optuna-4-4-ece661493126).\n\n## :fire: Key Features\n\nOptuna has modern functionalities as follows:\n\n- [Lightweight, versatile, and platform agnostic architecture](https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/001_first.html)\n  - Handle a wide variety of tasks with a simple installation that has few requirements.\n- [Pythonic search spaces](https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/002_configurations.html)\n  - Define search spaces using familiar Python syntax including conditionals and loops.\n- [Efficient optimization algorithms](https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/003_efficient_optimization_algorithms.html)\n  - Adopt state-of-the-art algorithms for sampling hyperparameters and efficiently pruning unpromising trials.\n- [Easy parallelization](https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/004_distributed.html)\n  - Scale studies to tens or hundreds of workers with little or no changes to the code.\n- [Quick visualization](https://optuna.readthedocs.io/en/stable/tutorial/10_key_features/005_visualization.html)\n  - Inspect optimization histories from a variety of plotting functions.\n\n\n## Basic Concepts\n\nWe use the terms *study* and *trial* as follows:\n\n- Study: optimization based on an objective function\n- Trial: a single execution of the objective function\n\nPlease refer to the sample code below. The goal of a *study* is to find out the optimal set of\nhyperparameter values (e.g., `regressor` and `svr_c`) through multiple *trials* (e.g.,\n`n_trials=100`). Optuna is a framework designed for automation and acceleration of\noptimization *studies*.\n\n<details open>\n<summary>Sample code with scikit-learn</summary>\n\n[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](http://colab.research.google.com/github/optuna/optuna-examples/blob/main/quickstart.ipynb)\n\n```python\nimport optuna\nimport sklearn\n\n\n# Define an objective function to be minimized.\ndef objective(trial):\n\n    # Invoke suggest methods of a Trial object to generate hyperparameters.\n    regressor_name = trial.suggest_categorical(\"regressor\", [\"SVR\", \"RandomForest\"])\n    if regressor_name == \"SVR\":\n        svr_c = trial.suggest_float(\"svr_c\", 1e-10, 1e10, log=True)\n        regressor_obj = sklearn.svm.SVR(C=svr_c)\n    else:\n        rf_max_depth = trial.suggest_int(\"rf_max_depth\", 2, 32)\n        regressor_obj = sklearn.ensemble.RandomForestRegressor(max_depth=rf_max_depth)\n\n    X, y = sklearn.datasets.fetch_california_housing(return_X_y=True)\n    X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(X, y, random_state=0)\n\n    regressor_obj.fit(X_train, y_train)\n    y_pred = regressor_obj.predict(X_val)\n\n    error = sklearn.metrics.mean_squared_error(y_val, y_pred)\n\n    return error  # An objective value linked with the Trial object.\n\n\nstudy = optuna.create_study()  # Create a new study.\nstudy.optimize(objective, n_trials=100)  # Invoke optimization of the objective function.\n```\n</details>\n\n> [!NOTE]\n> More examples can be found in [optuna/optuna-examples](https://github.com/optuna/optuna-examples).\n>\n> The examples cover diverse problem setups such as multi-objective optimization, constrained optimization, pruning, and distributed optimization.\n\n## Installation\n\nOptuna is available at [the Python Package Index](https://pypi.org/project/optuna/) and on [Anaconda Cloud](https://anaconda.org/conda-forge/optuna).\n\n```bash\n# PyPI\n$ pip install optuna\n```\n\n```bash\n# Anaconda Cloud\n$ conda install -c conda-forge optuna\n```\n\n> [!IMPORTANT]\n> Optuna supports Python 3.9 or newer.\n\n## Integrations\n\nOptuna has integration features with various third-party libraries. Integrations can be found in [optuna/optuna-integration](https://github.com/optuna/optuna-integration) and the document is available [here](https://optuna-integration.readthedocs.io/en/stable/index.html).\n\n<details>\n<summary>Supported integration libraries</summary>\n\n* [Catboost](https://github.com/optuna/optuna-examples/tree/main/catboost/catboost_pruning.py)\n* [Dask](https://github.com/optuna/optuna-examples/tree/main/dask/dask_simple.py)\n* [fastai](https://github.com/optuna/optuna-examples/tree/main/fastai/fastai_simple.py)\n* [Keras](https://github.com/optuna/optuna-examples/tree/main/keras/keras_integration.py)\n* [LightGBM](https://github.com/optuna/optuna-examples/tree/main/lightgbm/lightgbm_integration.py)\n* [PyTorch](https://github.com/optuna/optuna-examples/tree/main/pytorch/pytorch_simple.py)\n* [PyTorch Ignite](https://github.com/optuna/optuna-examples/tree/main/pytorch/pytorch_ignite_simple.py)\n* [PyTorch Lightning](https://github.com/optuna/optuna-examples/tree/main/pytorch/pytorch_lightning_simple.py)\n* [TensorFlow](https://github.com/optuna/optuna-examples/tree/main/tensorflow/tensorflow_estimator_integration.py)\n* [tf.keras](https://github.com/optuna/optuna-examples/tree/main/tfkeras/tfkeras_integration.py)\n* [XGBoost](https://github.com/optuna/optuna-examples/tree/main/xgboost/xgboost_integration.py)\n</details>\n\n## Web Dashboard\n\n[Optuna Dashboard](https://github.com/optuna/optuna-dashboard) is a real-time web dashboard for Optuna.\nYou can check the optimization history, hyperparameter importance, etc. in graphs and tables.\nYou don't need to create a Python script to call [Optuna's visualization](https://optuna.readthedocs.io/en/stable/reference/visualization/index.html) functions.\nFeature requests and bug reports are welcome!\n\n![optuna-dashboard](https://user-images.githubusercontent.com/5564044/204975098-95c2cb8c-0fb5-4388-abc4-da32f56cb4e5.gif)\n\n`optuna-dashboard` can be installed via pip:\n\n```shell\n$ pip install optuna-dashboard\n```\n\n> [!TIP]\n> Please check out the convenience of Optuna Dashboard using the sample code below.\n\n<details>\n<summary>Sample code to launch Optuna Dashboard</summary>\n\nSave the following code as `optimize_toy.py`.\n\n```python\nimport optuna\n\n\ndef objective(trial):\n    x1 = trial.suggest_float(\"x1\", -100, 100)\n    x2 = trial.suggest_float(\"x2\", -100, 100)\n    return x1**2 + 0.01 * x2**2\n\n\nstudy = optuna.create_study(storage=\"sqlite:///db.sqlite3\")  # Create a new study with database.\nstudy.optimize(objective, n_trials=100)\n```\n\nThen try the commands below:\n\n```shell\n# Run the study specified above\n$ python optimize_toy.py\n\n# Launch the dashboard based on the storage `sqlite:///db.sqlite3`\n$ optuna-dashboard sqlite:///db.sqlite3\n...\nListening on http://localhost:8080/\nHit Ctrl-C to quit.\n```\n\n</details>\n\n\n## OptunaHub\n\n[OptunaHub](https://hub.optuna.org/) is a feature-sharing platform for Optuna.\nYou can use the registered features and publish your packages.\n\n### Use registered features\n\n`optunahub` can be installed via pip:\n\n```shell\n$ pip install optunahub\n# Install AutoSampler dependencies (CPU only is sufficient for PyTorch)\n$ pip install cmaes scipy torch --extra-index-url https://download.pytorch.org/whl/cpu\n```\n\nYou can load registered module with `optunahub.load_module`.\n\n```python\nimport optuna\nimport optunahub\n\n\ndef objective(trial: optuna.Trial) -> float:\n    x = trial.suggest_float(\"x\", -5, 5)\n    y = trial.suggest_float(\"y\", -5, 5)\n    return x**2 + y**2\n\n\nmodule = optunahub.load_module(package=\"samplers/auto_sampler\")\nstudy = optuna.create_study(sampler=module.AutoSampler())\nstudy.optimize(objective, n_trials=10)\n\nprint(study.best_trial.value, study.best_trial.params)\n```\n\nFor more details, please refer to [the optunahub documentation](https://optuna.github.io/optunahub/).\n\n### Publish your packages\n\nYou can publish your package via [optunahub-registry](https://github.com/optuna/optunahub-registry).\nSee the [Tutorials for Contributors](https://optuna.github.io/optunahub/tutorials_for_contributors.html) in OptunaHub.\n\n\n## Communication\n\n- [GitHub Discussions] for questions.\n- [GitHub Issues] for bug reports and feature requests.\n\n[GitHub Discussions]: https://github.com/optuna/optuna/discussions\n[GitHub issues]: https://github.com/optuna/optuna/issues\n\n\n## Contribution\n\nAny contributions to Optuna are more than welcome!\n\nIf you are new to Optuna, please check the [good first issues](https://github.com/optuna/optuna/labels/good%20first%20issue). They are relatively simple, well-defined, and often good starting points for you to get familiar with the contribution workflow and other developers.\n\nIf you already have contributed to Optuna, we recommend the other [contribution-welcome issues](https://github.com/optuna/optuna/labels/contribution-welcome).\n\nFor general guidelines on how to contribute to the project, take a look at [CONTRIBUTING.md](./CONTRIBUTING.md).\n\n\n## Reference\n\nIf you use Optuna in one of your research projects, please cite [our KDD paper](https://doi.org/10.1145/3292500.3330701) \"Optuna: A Next-generation Hyperparameter Optimization Framework\":\n\n<details open>\n<summary>BibTeX</summary>\n\n```bibtex\n@inproceedings{akiba2019optuna,\n  title={{O}ptuna: A Next-Generation Hyperparameter Optimization Framework},\n  author={Akiba, Takuya and Sano, Shotaro and Yanase, Toshihiko and Ohta, Takeru and Koyama, Masanori},\n  booktitle={The 25th ACM SIGKDD International Conference on Knowledge Discovery \\& Data Mining},\n  pages={2623--2631},\n  year={2019}\n}\n```\n</details>\n\n\n## License\n\nMIT License (see [LICENSE](./LICENSE)).\n\nOptuna uses the codes from SciPy and fdlibm projects (see [LICENSE_THIRD_PARTY](./LICENSE_THIRD_PARTY)).\n",
+    "description_content_type": "text/markdown",
+    "docs_url": null,
+    "download_url": null,
+    "downloads": {
+      "last_day": -1,
+      "last_month": -1,
+      "last_week": -1
+    },
+    "dynamic": [
+      "License-File"
+    ],
+    "home_page": null,
+    "keywords": null,
+    "license": null,
+    "license_expression": null,
+    "license_files": [
+      "LICENSE",
+      "LICENSE_THIRD_PARTY"
+    ],
+    "maintainer": null,
+    "maintainer_email": null,
+    "name": "optuna",
+    "package_url": "https://pypi.org/project/optuna/",
+    "platform": null,
+    "project_url": "https://pypi.org/project/optuna/",
+    "project_urls": {
+      "bugtracker": "https://github.com/optuna/optuna/issues",
+      "documentation": "https://optuna.readthedocs.io",
+      "homepage": "https://optuna.org/",
+      "repository": "https://github.com/optuna/optuna"
+    },
+    "provides_extra": [
+      "document",
+      "optional"
+    ],
+    "release_url": "https://pypi.org/project/optuna/4.9.0/",
+    "requires_dist": [
+      "alembic>=1.5.0",
+      "colorlog",
+      "numpy",
+      "packaging>=20.0",
+      "sqlalchemy>=1.4.2",
+      "tqdm",
+      "PyYAML",
+      "ase; extra == \"document\"",
+      "cmaes>=0.12.0; extra == \"document\"",
+      "fvcore; extra == \"document\"",
+      "kaleido!=0.2.1.post1,<0.4; extra == \"document\"",
+      "lightgbm; extra == \"document\"",
+      "matplotlib!=3.6.0; extra == \"document\"",
+      "pandas; extra == \"document\"",
+      "pillow; extra == \"document\"",
+      "plotly>=4.9.0; extra == \"document\"",
+      "scikit-learn; extra == \"document\"",
+      "sphinx; extra == \"document\"",
+      "sphinx-copybutton; extra == \"document\"",
+      "sphinx-gallery; extra == \"document\"",
+      "sphinx-notfound-page; extra == \"document\"",
+      "sphinx_rtd_theme>=1.2.0; extra == \"document\"",
+      "torch; extra == \"document\"",
+      "torchvision; extra == \"document\"",
+      "boto3; extra == \"optional\"",
+      "cmaes>=0.12.0; extra == \"optional\"",
+      "google-cloud-storage; extra == \"optional\"",
+      "matplotlib!=3.6.0; extra == \"optional\"",
+      "pandas; extra == \"optional\"",
+      "plotly>=4.9.0; extra == \"optional\"",
+      "redis; extra == \"optional\"",
+      "scikit-learn>=0.24.2; extra == \"optional\"",
+      "scipy; extra == \"optional\"",
+      "torch; extra == \"optional\"",
+      "greenlet; extra == \"optional\"",
+      "grpcio; extra == \"optional\"",
+      "protobuf>=5.28.1; extra == \"optional\""
+    ],
+    "requires_python": ">=3.9",
+    "summary": "A hyperparameter optimization framework",
+    "version": "4.9.0",
+    "yanked": false,
+    "yanked_reason": null
+  },
+  "last_serial": 40808138,
+  "ownership": {
+    "organization": null,
+    "roles": [
+      {
+        "role": "Owner",
+        "user": "c-bata"
+      },
+      {
+        "role": "Owner",
+        "user": "disktnk"
+      },
+      {
+        "role": "Owner",
+        "user": "not"
+      },
+      {
+        "role": "Owner",
+        "user": "pfn"
+      },
+      {
+        "role": "Owner",
+        "user": "y0z"
+      }
+    ]
+  },
+  "urls": [
+    {
+      "comment_text": null,
+      "core-metadata": {
+        "sha256": "178c18d42bbb66eef92d0446fae6538283b5afc0f88f86b5d59d70cdfb8f9851"
+      },
+      "digests": {
+        "blake2b_256": "abf3e5fcd5d9b15771ed6dc10e3a7eeddc672e418f4f4c4653d216cc1d857e2d",
+        "md5": "d85d297985b65a25d5653818d55241c4",
+        "sha256": "f52f3be6148654850c92a5860d398fd88ec6b2c84ab68d9c3d07dcff02e7afee"
+      },
+      "downloads": -1,
+      "filename": "optuna-4.9.0-py3-none-any.whl",
+      "has_sig": false,
+      "md5_digest": "d85d297985b65a25d5653818d55241c4",
+      "packagetype": "bdist_wheel",
+      "python_version": "py3",
+      "requires_python": ">=3.9",
+      "size": 425553,
+      "upload_time": "2026-06-01T06:23:28",
+      "upload_time_iso_8601": "2026-06-01T06:23:28.804645Z",
+      "url": "https://files.pythonhosted.org/packages/ab/f3/e5fcd5d9b15771ed6dc10e3a7eeddc672e418f4f4c4653d216cc1d857e2d/optuna-4.9.0-py3-none-any.whl",
+      "yanked": false,
+      "yanked_reason": null
+    },
+    {
+      "comment_text": null,
+      "core-metadata": false,
+      "digests": {
+        "blake2b_256": "f4aa05f5e3f662cc96a4c478fc3446b8ed6359825a2b504ecb614a9ac84e4a4d",
+        "md5": "5213c9deaa001a66a2dce87c7e6ea6b3",
+        "sha256": "b322e5cbdf1655fb84c37646c4a7a1f391de1b47806bbe222e015825d0a82b87"
+      },
+      "downloads": -1,
+      "filename": "optuna-4.9.0.tar.gz",
+      "has_sig": false,
+      "md5_digest": "5213c9deaa001a66a2dce87c7e6ea6b3",
+      "packagetype": "sdist",
+      "python_version": "source",
+      "requires_python": ">=3.9",
+      "size": 485834,
+      "upload_time": "2026-06-01T06:23:30",
+      "upload_time_iso_8601": "2026-06-01T06:23:30.424933Z",
+      "url": "https://files.pythonhosted.org/packages/f4/aa/05f5e3f662cc96a4c478fc3446b8ed6359825a2b504ecb614a9ac84e4a4d/optuna-4.9.0.tar.gz",
+      "yanked": false,
+      "yanked_reason": null
+    }
+  ],
+  "vulnerabilities": []
+}

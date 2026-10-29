@@ -1,0 +1,52 @@
+{
+  "scope": "stage2 economic reward audit only",
+  "environment": "existing .venv/Scripts/python.exe; no packages installed",
+  "frozen_production_files_changed": false,
+  "formal_training_executed": false,
+  "new_train_validation_trajectories_generated": false,
+  "test_rerun": false,
+  "test_payload_opened_by_this_audit": false,
+  "archived_test_aggregate_read": "docs/results/sb3_dqn_1s_20261028/raw/test_round_05/test_summary.json",
+  "checks": [
+    {
+      "phase": "initial entrypoint diagnosis",
+      "command": ".venv\\Scripts\\python.exe -m pytest tests/test_v6_economic_reward_audit.py -q",
+      "result": "collection error: No module named v2; fixed invocation by setting PYTHONPATH=src, without installing packages or changing production code"
+    },
+    {
+      "phase": "TDD RED",
+      "command": "$env:PYTHONPATH = (Join-Path (Get-Location) 'src'); .venv\\Scripts\\python.exe -m pytest tests/test_v6_economic_reward_audit.py -q",
+      "result": "2 passed, 8 failed in 1.34s; failures explicitly asserted the missing new offline tool"
+    },
+    {
+      "phase": "formula discrepancy diagnosis",
+      "result": "9 passed, 1 failed in 1.80s; four-mode comparison exposed offline tool using Zhou SOC reference 0.50 rather than frozen SOC_REF=0.60. Only the new tool was corrected."
+    },
+    {
+      "phase": "TDD GREEN",
+      "command": "$env:PYTHONPATH = (Join-Path (Get-Location) 'src'); .venv\\Scripts\\python.exe -m pytest tests/test_v6_economic_reward_audit.py -q",
+      "result": "10 passed in 1.15s"
+    },
+    {
+      "phase": "final targeted regression including two additional characterization checks",
+      "command": "$env:PYTHONPATH = (Join-Path (Get-Location) 'src'); .venv\\Scripts\\python.exe -m pytest tests/test_v6_economic_reward_audit.py tests/test_v4_independent_economics.py tests/test_v6_control.py -q",
+      "exit_code": 0,
+      "passed": 44,
+      "duration_seconds": 1.47,
+      "new_file_collected_tests": 12
+    },
+    {
+      "phase": "archived log offline comparison",
+      "command": ".venv\\Scripts\\python.exe scripts/audit_v6_rewards.py --source-root docs/results/sb3_dqn_1s_20261028/raw --output docs/audits/v6_optuna_20261028",
+      "exit_code": 0,
+      "source_files": 72,
+      "validation_trajectories": 64,
+      "validation_recorded_rows": 1019485,
+      "sparse_train_groups": 47,
+      "max_abs_zhou_return_identity_residual_cny": 1.1641532182693481e-10,
+      "max_abs_soc_telescoping_residual_cny": 5.684341886080802e-14,
+      "max_fc_step_reconstruction_residual_cny": 1.460875864722766e-11,
+      "max_v6_reward_step_residual": 4.440892098500626e-16
+    }
+  ]
+}
