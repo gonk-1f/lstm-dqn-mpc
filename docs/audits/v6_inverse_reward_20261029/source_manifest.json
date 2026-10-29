@@ -197,11 +197,16 @@
     }
   ],
   "audit_artifacts": {
-    "pre_audit.json": "cf4c421920f4d7f1a3039eb87065695224c080e9000848ee9f2ccd342222f27b",
-    "boundary_cases.csv": "32966e07dfb8dc30b43e769a982e66e602015b0eda2ec433b6a01674fa80e5ab",
-    "train_prefix_steps.csv": "a90dce1f398777d782f7f6c6333f046278d1504b35af59d448b6e9b2a3e1d88f",
-    "train_full_steps.csv": "a6920c20e849dcd1b956529bd3bd8ef0f0f14f91e0bc6418753840fbed88a466",
-    "candidate_numeric_cases.json": "2532fc368d953787a3703c46ef95c3375206322a88f3c3ca9ae776c7cb379d99"
+    "pre_audit.json": "bfaf16131ab2681d655226c55fdd04b78a30ad9bcf67acf8aeb2db4f0ae7669c",
+    "boundary_cases.csv": "757c805e9d4002ab8177e54518c2336dbe9a361a3d0c8c644a0bee4edde00a4b",
+    "train_prefix_steps.csv": "5896c9791d1bd7591fc38cb579fd84ae83c696713df103960d49f115df0959c8",
+    "train_full_steps.csv": "4ec408474f00e259773cd51411f64f989dcd3d2b0619cb4e08d39bb6ec1530ff",
+    "candidate_numeric_cases.json": "10a05982430f531b4af900d9d6c74b8e96200e15d0f4ff78f86a41cbec3f25c1"
   },
-  "validation_test_payloads_hashed": 0
+  "validation_test_payloads_hashed": 0,
+  "digest_conventions": {
+    "audit_artifacts": "UTF-8/LF normalized repository evidence",
+    "production_sources": "original bytes read in the execution workspace",
+    "train_payloads": "original source bytes; no held-out payload hashed"
+  }
 }
