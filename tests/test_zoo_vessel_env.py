@@ -71,6 +71,19 @@ def test_test_split_rejected_before_opening_any_dataset(fake_dataset,tmp_path):
     assert data.calls==[]
 
 
+def test_maximum_voyage_horizon_is_read_only_and_split_local(fake_dataset,tmp_path):
+    loaded,data = fake_dataset
+    env = loaded.VesselEnergyEnv(data_root=tmp_path,split='train')
+    try:
+        assert env.max_episode_steps == 3
+        assert env.max_episode_steps < env.evaluation_step_budget
+        with pytest.raises(AttributeError):
+            env.max_episode_steps = 1
+        assert [item for item in data.calls if item[0]=='payload'] == [('payload','train')]
+    finally:
+        env.close()
+
+
 def test_train_draws_match_seeded_gym_uniform_rng_with_replacement(fake_dataset,tmp_path):
     loaded,_ = fake_dataset
     a = loaded.VesselEnergyEnv(data_root=tmp_path)

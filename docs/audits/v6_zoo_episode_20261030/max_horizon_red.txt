@@ -1,0 +1,8 @@
+Command: .venv-zoo\Scripts\python.exe -m pytest tests/test_zoo_vessel_env.py::test_maximum_voyage_horizon_is_read_only_and_split_local -q --tb=short
+Exit code: 1
+
+F                                                                        [100%]
+AttributeError: 'VesselEnergyEnv' object has no attribute 'max_episode_steps'
+1 failed in 14.31s
+
+The failure was observed before adding the read-only split-local metadata property.

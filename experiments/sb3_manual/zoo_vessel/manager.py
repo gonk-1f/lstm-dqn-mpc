@@ -30,6 +30,54 @@ def check_versions():
     return actual
 
 
+def episode_safety_limit(learning_starts, n_episodes, max_episode_steps):
+    """A conservative natural-horizon bound, never an equivalent step budget.
+
+    At most one voyage straddles warmup. Each counted voyage lasts no longer
+    than the largest real Train horizon. One extra step keeps native learn's
+    while condition above an exactly-on-boundary completion.
+    """
+    if learning_starts < 0 or n_episodes < 1 or max_episode_steps < 1:
+        raise ValueError('nonnegative warmup and positive episode/horizon bounds required')
+    return int(learning_starts + (n_episodes + 1) * max_episode_steps + 1)
+
+
+def training_summary(model, *, requested_n_timesteps=None, internal_safety_limit=None,
+                     model_path=None, best_model_path=None):
+    """Actual training state shared by normal runs and official Zoo Trials."""
+    validation = getattr(model, 'last_validation_summary', None)
+    mode = getattr(model, 'budget_mode', 'timestep')
+    return dict(n_timesteps=int(model.num_timesteps), requested_n_timesteps=requested_n_timesteps,
+        budget_mode=mode, requested_n_episodes=getattr(model, 'n_episodes', None),
+        exploration_schedule_mode=getattr(model, 'exploration_schedule_mode', 'timestep'),
+        exploration_episode_target=getattr(model, 'exploration_episode_target', 500),
+        internal_safety_limit=internal_safety_limit,
+        completed_formal_episodes=int(getattr(model, 'completed_formal_episodes', 0)),
+        train_successes=int(getattr(model, 'formal_successes', 0)),
+        train_failures=int(getattr(model, 'formal_failures', 0)),
+        warmup_env_steps=int(getattr(model, 'warmup_env_steps', min(model.num_timesteps, model.learning_starts))),
+        warmup_bridge_env_steps=int(getattr(model, 'warmup_bridge_env_steps', 0)),
+        formal_env_steps=int(model.formal_env_steps), adam_updates=int(model._n_updates),
+        replay_insertions=int(model.replay_buffer.insertions),
+        target_sync_count=len(model.target_sync_history),
+        target_sync_calls_including_initial=int(model.target_sync_calls),
+        target_sync_history=model.target_sync_history, final_epsilon=float(model.exploration_rate),
+        final_validation_completion_rate=validation['completion_rate'] if validation else None,
+        final_validation=validation,
+        model=str(model_path) if model_path is not None else None,
+        final_model=str(model_path) if model_path is not None else None,
+        best_model=str(best_model_path) if best_model_path is not None else None,
+        budget_unit=('complete_formal_train_episodes' if mode == 'episode'
+                     else 'SB3_total_env_steps_including_warmup'), test_payloads_opened=0)
+
+
+def _callback_is_pruned(callback):
+    if isinstance(callback, (list, tuple)):
+        return any(_callback_is_pruned(item) for item in callback)
+    return bool(getattr(callback, 'is_pruned', False)) or any(
+        _callback_is_pruned(item) for item in getattr(callback, 'callbacks', ()))
+
+
 def convert_vessel_params(params):
     values = dict(params)
     width = values.pop('network_width')
@@ -91,7 +139,9 @@ class _FatalDataErrors(VecEnvWrapper):
 
 
 class VesselExperimentManager(zoo.ExperimentManager):
-    def __init__(self, *args, data_root, bounded=False, **kwargs):
+    def __init__(self, *args, data_root, bounded=False, n_episodes=None,
+                 exploration_schedule_mode='timestep', exploration_episode_target=500,
+                 eval_every_episodes=50, max_env_steps=None, **kwargs):
         from .env import register_envs
         check_versions()
         register_envs()
@@ -101,10 +151,29 @@ class VesselExperimentManager(zoo.ExperimentManager):
             raise ValueError('Vessel Validation requires one environment')
         self.bounded = bounded
         self._trial_envs = []
+        self.n_episodes = n_episodes
+        self.budget_mode = 'episode' if n_episodes is not None else 'timestep'
+        self.exploration_schedule_mode = exploration_schedule_mode
+        self.exploration_episode_target = n_episodes or exploration_episode_target
+        self.eval_every_episodes = eval_every_episodes
+        self.max_env_steps = max_env_steps
+        hyperparams = dict(kwargs.get('hyperparams') or {})
+        self._episode_learning_starts = hyperparams.get('learning_starts', 50000)
+        hyperparams.update(self._model_budget_parameters())
+        kwargs['hyperparams'] = hyperparams
         kwargs.update(env_kwargs=dict(data_root=str(Path(data_root).resolve()), split='train'),
             eval_env_kwargs=dict(data_root=str(Path(data_root).resolve()), split='validation'),
             vec_env_type='dummy', n_eval_envs=1, n_jobs=1, device='cpu')
         super().__init__(*args, **kwargs)
+
+    def _model_budget_parameters(self):
+        # __new__-based wiring tests for the earlier timestep API have no new
+        # attributes; their fake algorithms must keep their original signature.
+        if not hasattr(self, 'budget_mode'):
+            return {}
+        return dict(n_episodes=self.n_episodes,
+            exploration_schedule_mode=self.exploration_schedule_mode,
+            exploration_episode_target=self.exploration_episode_target)
 
     def create_envs(self, n_envs, eval_env=False, no_log=False):
         if n_envs != 1 or self.n_envs != 1:
@@ -114,6 +183,10 @@ class VesselExperimentManager(zoo.ExperimentManager):
         if kwargs.get('split') != expected:
             raise ValueError('Train/Validation environment split mismatch')
         env = _FatalDataErrors(super().create_envs(n_envs, eval_env=eval_env, no_log=no_log))
+        if not eval_env and self.n_episodes is not None:
+            horizon = int(env.get_attr('max_episode_steps')[0])
+            self.n_timesteps = self.max_env_steps or episode_safety_limit(
+                self._episode_learning_starts, self.n_episodes, horizon)
         if self.optimize_hyperparameters:
             self._trial_envs.append(env)
         return env
@@ -128,7 +201,8 @@ class VesselExperimentManager(zoo.ExperimentManager):
         if self.eval_freq > 0 and not self.optimize_hyperparameters:
             self.callbacks.append(VesselEvalCallback(self.create_envs(1, eval_env=True),
                 n_eval_episodes=8, eval_freq=self.eval_freq, log_path=self.save_path,
-                best_model_save_path=self.save_path, deterministic=True, verbose=self.verbose))
+                best_model_save_path=self.save_path, deterministic=True, verbose=self.verbose,
+                eval_every_episodes=self.eval_every_episodes))
 
     def objective(self, trial):
         from .callbacks import VesselTrialEvalCallback
@@ -137,9 +211,18 @@ class VesselExperimentManager(zoo.ExperimentManager):
         algorithm = zoo.ALGOS[ALGO_KEY]
         previous_callback = zoo.TrialEvalCallback
         trial_seed = self.seed + trial.number
+        owner = self
+        episode_mode = getattr(self, 'budget_mode', 'timestep') == 'episode'
+        trial_folder = (Path(self.optimization_log_path)/f'trial_{trial.number}'
+                        if getattr(self, 'optimization_log_path', None) else None)
         trial.set_user_attr('model_seed', trial_seed)
-        trial.set_user_attr('budget_unit', 'SB3_total_env_steps_including_warmup')
-        trial.set_user_attr('n_timesteps', self.n_timesteps)
+        trial.set_user_attr('budget_unit', 'complete_formal_train_episodes' if episode_mode
+                            else 'SB3_total_env_steps_including_warmup')
+        trial.set_user_attr('n_timesteps', None if episode_mode else self.n_timesteps)
+        trial.set_user_attr('n_episodes', getattr(self, 'n_episodes', None))
+        trial.set_user_attr('internal_safety_limit', self.n_timesteps if episode_mode else None)
+        trial.set_user_attr('exploration_schedule_mode', getattr(self, 'exploration_schedule_mode', 'timestep'))
+        trial.set_user_attr('eval_every_episodes', getattr(self, 'eval_every_episodes', 50))
         if getattr(self, 'optimization_log_path', None):
             identity_path = Path(self.log_folder)/'vessel_identity.json'
             write_json(Path(self.optimization_log_path)/f'trial_{trial.number}'/'vessel_identity.json',
@@ -147,16 +230,55 @@ class VesselExperimentManager(zoo.ExperimentManager):
         class SeededTrialAlgorithm(algorithm):
             def __init__(self, *args, **kwargs):
                 kwargs['seed'] = trial_seed
+                kwargs.update(owner._model_budget_parameters())
                 super().__init__(*args, **kwargs)
 
             def learn(self, *args, **kwargs):
                 # Zoo objective omits log_interval, whose DQN default would
                 # otherwise create extra episode-based native dumps.
                 kwargs.setdefault('log_interval', None)
-                return super().learn(*args, **kwargs)
+                if trial_folder is not None:
+                    self.final_model_path = str(trial_folder/'final_model.zip')
+                    self.best_model_path = str(trial_folder/'best_model.zip')
+                outcome = 'FAIL'
+                try:
+                    result = super().learn(*args, **kwargs)
+                    # Timestep callbacks may stop native collection by returning
+                    # False. Official Zoo checks is_pruned only AFTER learn has
+                    # returned; do not write a fake COMPLETE model meanwhile.
+                    callback = kwargs.get('callback', args[1] if len(args) > 1 else None)
+                    if _callback_is_pruned(callback):
+                        outcome = 'PRUNED'
+                        return result
+                    if episode_mode and self.completed_formal_episodes != owner.n_episodes:
+                        raise RuntimeError('Episode Trial stopped before its complete formal Episode budget')
+                    outcome = 'COMPLETE'
+                    return result
+                except optuna.TrialPruned:
+                    outcome = 'PRUNED'
+                    raise
+                finally:
+                    final_path = trial_folder/'final_model.zip' if trial_folder is not None else None
+                    best_path = trial_folder/'best_model.zip' if trial_folder is not None else None
+                    summary = training_summary(self,
+                        requested_n_timesteps=None if episode_mode else owner.n_timesteps,
+                        internal_safety_limit=owner.n_timesteps if episode_mode else None,
+                        model_path=final_path if outcome == 'COMPLETE' else None,
+                        best_model_path=best_path if best_path is not None and best_path.exists() else None)
+                    summary.update(outcome=outcome, hyperparameters=dict(trial.params),
+                                   model_seed=trial_seed)
+                    trial.set_user_attr('training_summary', summary)
+                    if trial_folder is not None:
+                        if outcome == 'COMPLETE':
+                            self.save(final_path)
+                        write_json(trial_folder/'run_summary.json', summary)
+        class ScopedTrialCallback(VesselTrialEvalCallback):
+            def __init__(self, *args, **kwargs):
+                kwargs.setdefault('eval_every_episodes', getattr(owner, 'eval_every_episodes', 50))
+                super().__init__(*args, **kwargs)
         self._trial_envs = []
         zoo.ALGOS[ALGO_KEY] = SeededTrialAlgorithm
-        zoo.TrialEvalCallback = VesselTrialEvalCallback
+        zoo.TrialEvalCallback = ScopedTrialCallback
         try:
             return super().objective(trial)
         except optuna.TrialPruned as error:
@@ -180,10 +302,10 @@ def build_identity(data_root):
         raise ValueError('Vessel Zoo requires the frozen 35 Train / 8 Validation split')
     identity = execution_identity(ROOT, dataset_identity(data), reward_mode=INVERSE_ONE_PLUS_ECONOMIC)
     package = Path(__file__).parent
-    identity.update(adapter='vessel_rl_zoo_v1', zoo_versions=check_versions(),
+    identity.update(adapter='vessel_rl_zoo_v2', zoo_versions=check_versions(),
         adapter_files={path.relative_to(ROOT).as_posix():file_digest(path)
                        for path in sorted((*package.glob('*.py'), *package.glob('*.yml')))},
-        budget_semantics='explicit SB3 total env steps including warmup; no episode equivalence',
+        budget_semantics='explicit timestep OR complete formal Episode budget; no estimated equivalence',
         validation_scope='all eight fixed Validation voyages; natural completion or physical failure',
         test_payloads_opened=0)
     return identity

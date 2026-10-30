@@ -103,6 +103,11 @@ class VesselEnergyEnv(gym.Env):
         return self._evaluation_step_budget
 
     @property
+    def max_episode_steps(self):
+        """Maximum natural split-local horizon; metadata for a safety bound only."""
+        return max(len(episode.load_kw) for episode in self._episodes)
+
+    @property
     def last_transition(self):
         return self._direct.last_transition
 

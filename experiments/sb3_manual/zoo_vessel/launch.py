@@ -1,4 +1,4 @@
-"""Explicit timestep-budget Zoo training, one-study optimization and Validation."""
+"""Explicit timestep or complete formal-Episode Zoo training and optimization."""
 import argparse
 import json
 from pathlib import Path
@@ -6,7 +6,7 @@ from pathlib import Path
 import torch
 
 from .manager import (ALGO_KEY, CONFIG_PATH, ROOT, VesselExperimentManager,
-    build_identity, guard_study, prepare_output, write_json, zoo_bindings)
+    build_identity, guard_study, prepare_output, training_summary, write_json, zoo_bindings)
 
 
 def _parser():
@@ -20,11 +20,22 @@ def _parser():
         if command == 'evaluate':
             sub.add_argument('--model', type=Path, required=True)
         else:
-            sub.add_argument('--n-timesteps', type=int, required=True,
+            budget = sub.add_mutually_exclusive_group(required=True)
+            budget.add_argument('--n-timesteps', type=int,
                 help='SB3 total Train environment steps including warmup; not an episode budget')
+            budget.add_argument('--n-episodes', type=int, nargs='?', const=500,
+                help='complete formal Train Episodes, excluding warmup voyages; default selected value: 500')
+            sub.add_argument('--exploration-schedule', choices=('timestep', 'episode'),
+                help='default follows budget mode; an explicit selection is never replaced')
+            sub.add_argument('--exploration-episode-target', type=int,
+                help='Episode epsilon horizon for a timestep budget (default 500)')
+            sub.add_argument('--max-env-steps', type=int,
+                help='Episode mode only: hard safety ceiling, never an equivalent timestep budget')
             sub.add_argument('--bounded', action='store_true',
                 help='small Train/model budget; all eight real Validation voyages are still evaluated fully')
             sub.add_argument('--eval-freq', type=int)
+            sub.add_argument('--eval-every-episodes', type=int,
+                help='Episode mode only: full eight-voyage Validation every N formal Episodes (default 50)')
             sub.add_argument('--save-freq', type=int, default=-1)
             if command == 'optimize':
                 sub.add_argument('--n-trials', type=int, default=1)
@@ -34,17 +45,40 @@ def _parser():
     return parser
 
 
+def resolve_budget(args, parser):
+    """Validate and expose the two independent choices before any output/data IO."""
+    if args.command == 'evaluate':
+        return
+    episode_mode = args.n_episodes is not None
+    args.budget_mode = 'episode' if episode_mode else 'timestep'
+    if (episode_mode and args.n_episodes < 1) or (not episode_mode and args.n_timesteps < 1):
+        parser.error('positive explicit Episode or timestep budget required')
+    if args.exploration_schedule is None:
+        args.exploration_schedule = args.budget_mode
+    if args.exploration_episode_target is not None and args.exploration_episode_target < 1:
+        parser.error('--exploration-episode-target must be positive')
+    if episode_mode and args.exploration_episode_target is not None:
+        parser.error('Episode budget already specifies its exploration Episode target')
+    args.exploration_episode_target = args.n_episodes if episode_mode else (args.exploration_episode_target or 500)
+    if args.max_env_steps is not None and (not episode_mode or args.max_env_steps < 1):
+        parser.error('--max-env-steps is a positive safety limit for Episode budgets only')
+    if args.eval_freq is not None and (episode_mode or args.eval_freq < 1):
+        parser.error('--eval-freq is a positive timestep-mode setting; use --eval-every-episodes for Episodes')
+    if args.eval_every_episodes is not None and (not episode_mode or args.eval_every_episodes < 1):
+        parser.error('--eval-every-episodes is a positive Episode-mode setting')
+    args.eval_every_episodes = args.eval_every_episodes or 50
+    if args.command == 'optimize' and (args.n_trials < 1 or args.n_evaluations < 1):
+        parser.error('positive Trial/evaluation budgets are required')
+    if args.bounded and ((episode_mode and args.n_episodes > 3) or
+                         (not episode_mode and args.n_timesteps > 8192) or
+                         (args.command == 'optimize' and args.n_trials != 1)):
+        parser.error('--bounded permits at most three complete formal Episodes OR 8192 timesteps, and one Trial')
+
+
 def main(argv=None):
     parser = _parser()
     args = parser.parse_args(argv)
-    if args.command != 'evaluate':
-        if args.n_timesteps < 1 or (args.eval_freq is not None and args.eval_freq < 1):
-            parser.error('positive explicit timestep and evaluation budgets are required')
-        if args.command == 'optimize' and (args.n_trials < 1 or args.n_evaluations < 1):
-            parser.error('positive Trial/evaluation budgets are required')
-        if args.bounded and (args.n_timesteps > 8192 or
-                            (args.command == 'optimize' and args.n_trials != 1)):
-            parser.error('--bounded permits at most 8192 Train steps and exactly one Trial')
+    resolve_budget(args, parser)
     output = args.output_dir.resolve()
     if not output.is_relative_to((ROOT/'outputs/zoo_vessel_dev').resolve()):
         parser.error('output-dir must stay inside this worktree outputs/zoo_vessel_dev')
@@ -86,10 +120,16 @@ def main(argv=None):
     if optimizing:
         guard_study(storage, args.study_name, identity, resume=resume)
     with zoo_bindings(ZooMaskedDQN, bounded=args.bounded):
+        # The positive placeholder is replaced from the actual Train horizon
+        # during official setup_experiment.create_envs, before model.learn.
+        learn_limit = args.n_timesteps if args.n_timesteps is not None else (args.max_env_steps or 1)
         manager = VesselExperimentManager(args, algo=ALGO_KEY, env_id=ENV_ID,
             data_root=args.data_root, bounded=args.bounded, log_folder=str(output),
-            tensorboard_log=str(output/'tensorboard'), n_timesteps=args.n_timesteps,
-            eval_freq=args.eval_freq or args.n_timesteps, n_eval_episodes=8, save_freq=args.save_freq,
+            tensorboard_log=str(output/'tensorboard'), n_timesteps=learn_limit,
+            n_episodes=args.n_episodes, exploration_schedule_mode=args.exploration_schedule,
+            exploration_episode_target=args.exploration_episode_target,
+            eval_every_episodes=args.eval_every_episodes, max_env_steps=args.max_env_steps,
+            eval_freq=args.eval_freq or learn_limit, n_eval_episodes=8, save_freq=args.save_freq,
             hyperparams=hyperparams, optimize_hyperparameters=optimizing,
             optimization_log_path=str(output/'trials') if optimizing else None,
             storage=storage, study_name=args.study_name if optimizing else None,
@@ -105,14 +145,26 @@ def main(argv=None):
             manager.hyperparameters_optimization()
             return None
         model, _ = result
-        manager.learn(model)
+        model.final_model_path = str(Path(manager.save_path)/f'{ENV_ID}.zip')
+        model.best_model_path = str(Path(manager.save_path)/'best_model.zip')
+        try:
+            manager.learn(model)
+            if args.n_episodes is not None and model.completed_formal_episodes != args.n_episodes:
+                raise RuntimeError('Episode training ended before its complete formal Episode budget')
+        except BaseException:
+            value = training_summary(model, requested_n_timesteps=args.n_timesteps,
+                internal_safety_limit=manager.n_timesteps if args.n_episodes is not None else None)
+            value['outcome'] = 'FAIL'
+            write_json(output/'run_summary.json', value)
+            raise
         manager.save_trained_model(model)
-        write_json(output/'run_summary.json', dict(n_timesteps=model.num_timesteps,
-            requested_n_timesteps=args.n_timesteps, adam_updates=model._n_updates,
-            formal_env_steps=model.formal_env_steps, replay_insertions=model.replay_buffer.insertions,
-            target_sync_history=model.target_sync_history,
-            model=str(Path(manager.save_path)/f'{ENV_ID}.zip'),
-            budget_unit='SB3_total_env_steps_including_warmup', test_payloads_opened=0))
+        best_path = Path(manager.save_path)/'best_model.zip'
+        summary = training_summary(model, requested_n_timesteps=args.n_timesteps,
+            internal_safety_limit=manager.n_timesteps if args.n_episodes is not None else None,
+            model_path=Path(manager.save_path)/f'{ENV_ID}.zip',
+            best_model_path=best_path if best_path.exists() else None)
+        summary.update(outcome='COMPLETE', eval_every_episodes=args.eval_every_episodes)
+        write_json(output/'run_summary.json', summary)
         return model
 
 

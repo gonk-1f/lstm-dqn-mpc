@@ -1,5 +1,7 @@
 VesselEnergy-v0:
-  # The launcher requires an explicit n_timesteps; this is only a Zoo schema key.
+  # CLI requires --n-episodes [N=500] OR --n-timesteps N.
+  # This n_timesteps value is a Zoo schema key, never an episode approximation.
+  # Episode mode obtains an explicit safety ceiling from natural Train horizons.
   n_timesteps: 1024
   n_envs: 1
   policy: MlpPolicy
@@ -13,6 +15,9 @@ VesselEnergy-v0:
   target_update_interval: 10000
   exploration_initial_eps: 1.0
   exploration_final_eps: 0.05
+  # Native timestep mode: fraction of total timesteps.
+  # Episode mode: fraction of the formal episode target; epsilon is fixed per voyage.
+  # For 500 formal episodes: epsilon reaches .05 after 400 formal terminals.
   exploration_fraction: 0.8
   optimize_memory_usage: false
   normalize: false
