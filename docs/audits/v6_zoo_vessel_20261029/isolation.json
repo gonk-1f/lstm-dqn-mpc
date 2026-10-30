@@ -1,0 +1,20 @@
+{
+  "old_worktree": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline",
+  "old_head": "17f3da89c0c83d56980d35cecf6c33c55ace9aa7",
+  "old_branch": "feat/v6-sb3-one-plus-reward",
+  "old_src_diff": [],
+  "new_shared_src_diff": [],
+  "old_train_status": "paused",
+  "old_completed_episodes": 11,
+  "old_formal_steps": 50000,
+  "old_adam_updates": 1562,
+  "old_training_latest_file_mtime": "2026-10-29T08:49:20.179784+00:00",
+  "old_user_files_retained": [
+    "AM experiments/sb3_manual/benchmark_cpu_gpu.py",
+    "AM experiments/sb3_manual/test_masked_dqn.py",
+    "?? experiments/sb3_manual/compare_models.py",
+    "?? experiments/sb3_manual/dqn_custom.yml",
+    "?? experiments/sb3_manual/zoo_smoke/"
+  ],
+  "no_old_environment_or_checkpoint_written": true
+}

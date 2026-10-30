@@ -1,0 +1,288 @@
+EEEEEEEEEEEEF                                                            [100%]
+=================================== ERRORS ====================================
+_ ERROR at setup of test_train_constructor_reads_only_train_and_split_is_fixed _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194F232290>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+____ ERROR at setup of test_test_split_rejected_before_opening_any_dataset ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194F2EB350>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+_ ERROR at setup of test_train_draws_match_seeded_gym_uniform_rng_with_replacement _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194F269A90>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+_ ERROR at setup of test_validation_cycle_is_sorted_and_explicitly_restarts_after_autoreset _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194F2C8D90>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+_ ERROR at setup of test_training_cannot_be_switched_into_an_evaluation_cycle _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194FF267D0>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+_ ERROR at setup of test_legally_masked_steps_keep_gym_shape_and_terminal_economics _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194FFB42D0>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+____ ERROR at setup of test_start_count_counts_off_to_positive_events_once ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194FF3DD10>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+_ ERROR at setup of test_illegal_actions_raise_without_advancing_or_fabricating_steps _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194FFE9850>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+_ ERROR at setup of test_real_failure_replaces_last_reward_without_a_fake_transition _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194FFF15D0>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+____ ERROR at setup of test_infeasible_reset_is_an_event_with_no_fake_step ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194D395F50>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+__ ERROR at setup of test_reset_cannot_override_the_frozen_episode_or_split ___
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194FF3B850>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+_ ERROR at setup of test_nonphysical_errors_propagate_as_errors_not_failure_rewards _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002194FF3F5D0>
+
+    @pytest.fixture
+    def fake_dataset(monkeypatch):
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:22:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+================================== FAILURES ===================================
+____________ test_registration_is_idempotent_and_has_no_time_limit ____________
+
+    def test_registration_is_idempotent_and_has_no_time_limit():
+>       loaded = module()
+                 ^^^^^^^^
+
+tests\test_zoo_vessel_env.py:214:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def module():
+        path = Path(__file__).parents[1]/'experiments/sb3_manual/zoo_vessel/env.py'
+>       assert path.is_file(), 'the isolated Zoo vessel environment must exist'
+E       AssertionError: the isolated Zoo vessel environment must exist
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = WindowsPath('C:/Users/20883/OneDrive/Desktop/lstm-dqn-mpc/lstm-dqn-mpc/.worktrees/v6-zoo-vessel/experiments/sb3_manual/zoo_vessel/env.py').is_file
+
+tests\test_zoo_vessel_env.py:13: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_zoo_vessel_env.py::test_registration_is_idempotent_and_has_no_time_limit
+ERROR tests/test_zoo_vessel_env.py::test_train_constructor_reads_only_train_and_split_is_fixed
+ERROR tests/test_zoo_vessel_env.py::test_test_split_rejected_before_opening_any_dataset
+ERROR tests/test_zoo_vessel_env.py::test_train_draws_match_seeded_gym_uniform_rng_with_replacement
+ERROR tests/test_zoo_vessel_env.py::test_validation_cycle_is_sorted_and_explicitly_restarts_after_autoreset
+ERROR tests/test_zoo_vessel_env.py::test_training_cannot_be_switched_into_an_evaluation_cycle
+ERROR tests/test_zoo_vessel_env.py::test_legally_masked_steps_keep_gym_shape_and_terminal_economics
+ERROR tests/test_zoo_vessel_env.py::test_start_count_counts_off_to_positive_events_once
+ERROR tests/test_zoo_vessel_env.py::test_illegal_actions_raise_without_advancing_or_fabricating_steps
+ERROR tests/test_zoo_vessel_env.py::test_real_failure_replaces_last_reward_without_a_fake_transition
+ERROR tests/test_zoo_vessel_env.py::test_infeasible_reset_is_an_event_with_no_fake_step
+ERROR tests/test_zoo_vessel_env.py::test_reset_cannot_override_the_frozen_episode_or_split
+ERROR tests/test_zoo_vessel_env.py::test_nonphysical_errors_propagate_as_errors_not_failure_rewards
+1 failed, 12 errors in 0.81s

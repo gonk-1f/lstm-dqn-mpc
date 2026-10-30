@@ -1,0 +1,66 @@
+{
+  "checked_local": "2026-10-30T14:24:52.4514641+08:00",
+  "new_worktree": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-zoo-vessel",
+  "new_branch": "feat/v6-zoo-vessel",
+  "initial_pr_head": "7df880d1aea073e664918cde36389e97370b159c",
+  "new_protected_diff": [],
+  "old_worktree": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline",
+  "old_head": "17f3da89c0c83d56980d35cecf6c33c55ace9aa7",
+  "old_protected_diff": [],
+  "old_cached_protected_diff": [],
+  "old_user_file_status": [
+    "AM experiments/sb3_manual/benchmark_cpu_gpu.py",
+    "AM experiments/sb3_manual/test_masked_dqn.py",
+    "?? experiments/sb3_manual/compare_models.py",
+    "?? experiments/sb3_manual/dqn_custom.yml",
+    "?? experiments/sb3_manual/zoo_smoke/"
+  ],
+  "old_training_snapshot": {
+    "status": "running",
+    "completed_episodes": 448,
+    "total_env_steps": 2945000,
+    "formal_env_steps": 2895000,
+    "adam_updates": 90468
+  },
+  "source_checks": [
+    {
+      "path": "experiments/sb3_manual/zoo_vessel/__init__.py",
+      "sha256": "ca084335f45896cebce55bc21cf73568d8311f86969f055a2b89b4d8d1f20f69",
+      "matches_real_model_identity": true
+    },
+    {
+      "path": "experiments/sb3_manual/zoo_vessel/algorithm.py",
+      "sha256": "2862955ce76418d58e506932ebb01cf0e000bc5c28741b6bd1ad459bfcf3ab88",
+      "matches_real_model_identity": true
+    },
+    {
+      "path": "experiments/sb3_manual/zoo_vessel/callbacks.py",
+      "sha256": "c57eacc07253b618a6231fa5fbe3828bcb4ee01ac1204f3c2912979557bd3a63",
+      "matches_real_model_identity": true
+    },
+    {
+      "path": "experiments/sb3_manual/zoo_vessel/dqn_vessel.yml",
+      "sha256": "17e38534ce4144345c44a9e53a47c8a331b62cd636f8c0cd145fbb7ffe6db322",
+      "matches_real_model_identity": true
+    },
+    {
+      "path": "experiments/sb3_manual/zoo_vessel/env.py",
+      "sha256": "cd81f443b6a36a69d53cdf1fe73c4c9dec10249a470ea31a4ab9876eebdffd0a",
+      "matches_real_model_identity": true
+    },
+    {
+      "path": "experiments/sb3_manual/zoo_vessel/launch.py",
+      "sha256": "227ad08be04a4b09529167f5ad81dd495795399e253fac35ec71b80836c5d4bf",
+      "matches_real_model_identity": true
+    },
+    {
+      "path": "experiments/sb3_manual/zoo_vessel/manager.py",
+      "sha256": "39dc569ef5e6377a2ee82769f6f5bf9805b3d848812e23eef6bb4d0fc02807dd",
+      "matches_real_model_identity": true
+    }
+  ],
+  "new_zoo_processes": [],
+  "third_party_packages_modified": false,
+  "no_manual_writes_to_old_training": true,
+  "test_payloads_opened": 0
+}

@@ -1,0 +1,55 @@
+-------------------------------------------------------------------------------
+| replay/                              |                                      |
+|    buffer_size                       | 4096                                 |
+|    insertions                        | 4096                                 |
+|    pending_transition                | 0                                    |
+| rollout/                             |                                      |
+|    ep_len_mean                       | 2.77e+03                             |
+|    ep_rew_mean                       | 746                                  |
+|    exploration_rate                  | 0.05                                 |
+| summary/                             |                                      |
+|    best_model_path                   | C:\Users\20883\OneDrive\Desktop\l... |
+|    final_epsilon                     | 0.05                                 |
+|    final_model_path                  | C:\Users\20883\OneDrive\Desktop\l... |
+|    final_validation_completion_rate  | 0                                    |
+|    target_sync_calls_including_in... | 32                                   |
+|    target_sync_count                 | 31                                   |
+| time/                                |                                      |
+|    episodes                          | 1                                    |
+|    fps                               | 51                                   |
+|    time_elapsed                      | 79                                   |
+|    total_timesteps                   | 4096                                 |
+| train/                               |                                      |
+|    adam_updates                      | 126                                  |
+|    budget_mode                       | timestep                             |
+|    completed_formal_episodes         | 0                                    |
+|    exploration_schedule_mode         | timestep                             |
+|    failure_rate                      | None                                 |
+|    formal_env_steps                  | 4032                                 |
+|    formal_failures                   | 0                                    |
+|    formal_successes                  | 0                                    |
+|    learning_rate                     | 0.0001                               |
+|    loss                              | 0.0802                               |
+|    n_updates                         | 126                                  |
+|    success_rate                      | None                                 |
+|    target_episodes                   | None                                 |
+|    td_mae                            | 0.343                                |
+|    warmup_bridge_env_steps           | 2704                                 |
+|    warmup_env_steps                  | 64                                   |
+| validation/                          |                                      |
+|    completion_rate                   | 0                                    |
+|    economic_cost_available           | 0                                    |
+|    economic_cost_cny                 | None                                 |
+|    evaluated_adam_updates            | 125                                  |
+|    evaluated_env_steps               | 4096                                 |
+|    evaluated_formal_episodes         | 0                                    |
+|    mean_duration_coverage            | 0.131                                |
+|    objective_score                   | 0.0657                               |
+| vessel/                              |                                      |
+|    economic_cost_cny                 | 4.88e+03                             |
+|    fc_power_kw                       | 580                                  |
+|    fc_start_count                    | 2                                    |
+|    formal_env_steps                  | 4032                                 |
+|    sample_id                         | parent_046_seg02                     |
+|    soc                               | 0.796                                |
+-------------------------------------------------------------------------------

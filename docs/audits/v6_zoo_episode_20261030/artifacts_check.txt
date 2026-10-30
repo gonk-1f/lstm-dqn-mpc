@@ -1,0 +1,2 @@
+{"passed": true, "real_train_steps": 71761, "formal_episodes": 3, "formal_steps": 21761, "warmup_steps": 50000, "warmup_bridge_steps": 442, "adam_updates": 680, "train_successes": 3, "train_failures": 0}
+Exit code: 0

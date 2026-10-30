@@ -1,0 +1,76 @@
+Command: .venv-zoo/Scripts/python.exe -m pytest tests/test_zoo_algorithm.py -q --tb=line
+Exit code: 1
+FFFFFFFFFF                                                               [100%]
+================================== FAILURES ===================================
+E   AssertionError: the ZooMaskedDQN adapter must exist
+    assert None is not None
+     +  where None = <function find_spec at 0x000001625021F600>('experiments.sb3_manual.zoo_vessel.algorithm')
+     +    where <function find_spec at 0x000001625021F600> = <module 'importlib.util' (frozen)>.find_spec
+     +      where <module 'importlib.util' (frozen)> = importlib.util
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_algorithm.py:21: AssertionError: the ZooMaskedDQN adapter must exist
+E   AssertionError: the ZooMaskedDQN adapter must exist
+    assert None is not None
+     +  where None = <function find_spec at 0x000001625021F600>('experiments.sb3_manual.zoo_vessel.algorithm')
+     +    where <function find_spec at 0x000001625021F600> = <module 'importlib.util' (frozen)>.find_spec
+     +      where <module 'importlib.util' (frozen)> = importlib.util
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_algorithm.py:21: AssertionError: the ZooMaskedDQN adapter must exist
+E   AssertionError: the ZooMaskedDQN adapter must exist
+    assert None is not None
+     +  where None = <function find_spec at 0x000001625021F600>('experiments.sb3_manual.zoo_vessel.algorithm')
+     +    where <function find_spec at 0x000001625021F600> = <module 'importlib.util' (frozen)>.find_spec
+     +      where <module 'importlib.util' (frozen)> = importlib.util
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_algorithm.py:21: AssertionError: the ZooMaskedDQN adapter must exist
+E   AssertionError: the ZooMaskedDQN adapter must exist
+    assert None is not None
+     +  where None = <function find_spec at 0x000001625021F600>('experiments.sb3_manual.zoo_vessel.algorithm')
+     +    where <function find_spec at 0x000001625021F600> = <module 'importlib.util' (frozen)>.find_spec
+     +      where <module 'importlib.util' (frozen)> = importlib.util
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_algorithm.py:21: AssertionError: the ZooMaskedDQN adapter must exist
+E   AssertionError: the ZooMaskedDQN adapter must exist
+    assert None is not None
+     +  where None = <function find_spec at 0x000001625021F600>('experiments.sb3_manual.zoo_vessel.algorithm')
+     +    where <function find_spec at 0x000001625021F600> = <module 'importlib.util' (frozen)>.find_spec
+     +      where <module 'importlib.util' (frozen)> = importlib.util
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_algorithm.py:21: AssertionError: the ZooMaskedDQN adapter must exist
+E   AssertionError: the ZooMaskedDQN adapter must exist
+    assert None is not None
+     +  where None = <function find_spec at 0x000001625021F600>('experiments.sb3_manual.zoo_vessel.algorithm')
+     +    where <function find_spec at 0x000001625021F600> = <module 'importlib.util' (frozen)>.find_spec
+     +      where <module 'importlib.util' (frozen)> = importlib.util
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_algorithm.py:21: AssertionError: the ZooMaskedDQN adapter must exist
+E   AssertionError: the ZooMaskedDQN adapter must exist
+    assert None is not None
+     +  where None = <function find_spec at 0x000001625021F600>('experiments.sb3_manual.zoo_vessel.algorithm')
+     +    where <function find_spec at 0x000001625021F600> = <module 'importlib.util' (frozen)>.find_spec
+     +      where <module 'importlib.util' (frozen)> = importlib.util
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_algorithm.py:21: AssertionError: the ZooMaskedDQN adapter must exist
+E   AssertionError: the ZooMaskedDQN adapter must exist
+    assert None is not None
+     +  where None = <function find_spec at 0x000001625021F600>('experiments.sb3_manual.zoo_vessel.algorithm')
+     +    where <function find_spec at 0x000001625021F600> = <module 'importlib.util' (frozen)>.find_spec
+     +      where <module 'importlib.util' (frozen)> = importlib.util
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_algorithm.py:21: AssertionError: the ZooMaskedDQN adapter must exist
+E   AssertionError: the ZooMaskedDQN adapter must exist
+    assert None is not None
+     +  where None = <function find_spec at 0x000001625021F600>('experiments.sb3_manual.zoo_vessel.algorithm')
+     +    where <function find_spec at 0x000001625021F600> = <module 'importlib.util' (frozen)>.find_spec
+     +      where <module 'importlib.util' (frozen)> = importlib.util
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_algorithm.py:21: AssertionError: the ZooMaskedDQN adapter must exist
+E   AssertionError: the ZooMaskedDQN adapter must exist
+    assert None is not None
+     +  where None = <function find_spec at 0x000001625021F600>('experiments.sb3_manual.zoo_vessel.algorithm')
+     +    where <function find_spec at 0x000001625021F600> = <module 'importlib.util' (frozen)>.find_spec
+     +      where <module 'importlib.util' (frozen)> = importlib.util
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_algorithm.py:21: AssertionError: the ZooMaskedDQN adapter must exist
+=========================== short test summary info ===========================
+FAILED tests/test_zoo_algorithm.py::test_native_learn_splits_nonmultiple_warmup_before_formal_32_to_1_updates
+FAILED tests/test_zoo_algorithm.py::test_warmup_collection_is_masked_and_never_advances_formal_target_clock
+FAILED tests/test_zoo_algorithm.py::test_epsilon_uses_native_total_step_schedule_including_warmup
+FAILED tests/test_zoo_algorithm.py::test_native_logger_and_td_mae_dump_do_not_change_learning_counts
+FAILED tests/test_zoo_algorithm.py::test_eval_mask_context_uses_its_own_env_and_restores_training_source
+FAILED tests/test_zoo_algorithm.py::test_native_evaluate_policy_cannot_read_training_mask_or_change_training_state
+FAILED tests/test_zoo_algorithm.py::test_failure_replay_keeps_terminal_successor_mask_and_no_bootstrap
+FAILED tests/test_zoo_algorithm.py::test_loaded_model_requires_explicit_mask_without_env_and_excludes_eval_source
+FAILED tests/test_zoo_algorithm.py::test_target_clock_cannot_be_silently_switched_to_optimizer_updates
+FAILED tests/test_zoo_algorithm.py::test_episode_collection_frequency_is_rejected_in_step_clock_adapter
+10 failed in 20.05s

@@ -1,0 +1,7 @@
+[I 2026-10-30 14:08:16,886] A new study created in RDB with name: vessel_zoo_dqn
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\.venv-zoo\Lib\site-packages\rl_zoo3\exp_manager.py:906: UserWarning: Tensorboard log is deactivated when running hyperparameter optimization
+  warnings.warn("Tensorboard log is deactivated when running hyperparameter optimization")
+D:\py\Python3\Lib\site-packages\optuna\_experimental.py:33: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+[I 2026-10-30 14:08:38,796] Using an existing study with name 'vessel_zoo_dqn' instead of creating a new one.
+[I 2026-10-30 14:14:18,938] Trial 0 finished with value: 1.133028858324654 and parameters: {'learning_rate': 4.745232567282912e-05, 'batch_size': 32, 'buffer_size': 1000000, 'network_width': 128, 'target_update_interval': 5000}. Best is trial 0 with value: 1.133028858324654.

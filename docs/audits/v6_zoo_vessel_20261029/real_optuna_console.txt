@@ -1,0 +1,106 @@
+[I 2026-10-29 20:39:58,091] A new study created in RDB with name: vessel_zoo_dqn
+Loading hyperparameters from: C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\experiments\sb3_manual\zoo_vessel\dqn_vessel.yml
+Default hyperparameters for environment (ones being tuned will be overridden):
+OrderedDict([('batch_size', 32),
+             ('buffer_size', 8192),
+             ('exploration_final_eps', 0.05),
+             ('exploration_fraction', 0.8),
+             ('exploration_initial_eps', 1.0),
+             ('gamma', 1.0),
+             ('gradient_steps', 1),
+             ('learning_rate', 0.0001),
+             ('learning_starts', 64),
+             ('n_envs', 1),
+             ('n_timesteps', 1024),
+             ('normalize', False),
+             ('optimize_memory_usage', False),
+             ('policy', 'MlpPolicy'),
+             ('policy_kwargs', 'dict(net_arch=[32, 32])'),
+             ('target_update_interval', 128),
+             ('train_freq', 32)])
+Using 1 environments
+Overwriting n_timesteps with n=1024
+env_kwargs={'data_root': 'C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\data\\processed\\operating_dataset_v6_1s', 'split': 'train'}
+eval_env_kwargs={'data_root': 'C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\data\\processed\\operating_dataset_v6_1s', 'split': 'validation'}
+Optimizing hyperparameters
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\.venv-zoo\Lib\site-packages\rl_zoo3\exp_manager.py:906: UserWarning: Tensorboard log is deactivated when running hyperparameter optimization
+  warnings.warn("Tensorboard log is deactivated when running hyperparameter optimization")
+D:\py\Python3\Lib\site-packages\optuna\_experimental.py:33: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  optuna_warn(
+Sampler: tpe - Pruner: none
+[I 2026-10-29 20:40:16,545] Using an existing study with name 'vessel_zoo_dqn' instead of creating a new one.
+Logging to C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\outputs\zoo_vessel_dev\real_optuna_one_trial\trials\trial_0\native_logs
+--------------------------------------------
+| replay/               |                  |
+|    buffer_size        | 999              |
+|    insertions         | 999              |
+|    pending_transition | 1                |
+| rollout/              |                  |
+|    exploration_rate   | 0.05             |
+| time/                 |                  |
+|    episodes           | 0                |
+|    fps                | 219              |
+|    time_elapsed       | 4                |
+|    total_timesteps    | 1000             |
+| train/                |                  |
+|    learning_rate      | 0.0001           |
+|    loss               | 0.0905           |
+|    n_updates          | 29               |
+|    td_mae             | 0.358            |
+| vessel/               |                  |
+|    economic_cost_cny  | 3.87e+03         |
+|    fc_power_kw        | 560              |
+|    fc_start_count     | 1                |
+|    formal_env_steps   | 935              |
+|    sample_id          | parent_007_seg01 |
+|    soc                | 0.718            |
+--------------------------------------------
+-------------------------------------------------
+| replay/                    |                  |
+|    buffer_size             | 1024             |
+|    insertions              | 1024             |
+|    pending_transition      | 0                |
+| rollout/                   |                  |
+|    exploration_rate        | 0.05             |
+| time/                      |                  |
+|    episodes                | 0                |
+|    fps                     | 14               |
+|    time_elapsed            | 68               |
+|    total_timesteps         | 1024             |
+| train/                     |                  |
+|    learning_rate           | 0.0001           |
+|    loss                    | 0.0864           |
+|    n_updates               | 30               |
+|    td_mae                  | 0.37             |
+| validation/                |                  |
+|    completion_rate         | 0                |
+|    economic_cost_available | 0                |
+|    economic_cost_cny       | None             |
+|    evaluated_adam_updates  | 29               |
+|    evaluated_env_steps     | 1024             |
+|    mean_duration_coverage  | 0.156            |
+|    objective_score         | 0.0779           |
+| vessel/                    |                  |
+|    economic_cost_cny       | 3.95e+03         |
+|    fc_power_kw             | 530              |
+|    fc_start_count          | 1                |
+|    formal_env_steps        | 960              |
+|    sample_id               | parent_007_seg01 |
+|    soc                     | 0.719            |
+-------------------------------------------------
+[I 2026-10-29 20:41:59,721] Trial 0 finished with value: 0.07792733312109677 and parameters: {'learning_rate': 0.0001, 'batch_size': 32, 'buffer_size': 8192, 'network_width': 32, 'target_update_interval': 128}. Best is trial 0 with value: 0.07792733312109677.
+Number of finished trials:  1
+Best trial:
+Value:  0.07792733312109677
+Params:
+    learning_rate: 0.0001
+    batch_size: 32
+    buffer_size: 8192
+    network_width: 32
+    target_update_interval: 128
+User Attributes:
+    budget_unit: SB3_total_env_steps_including_warmup
+    model_seed: 42
+    n_timesteps: 1024
+    validation: {'episodes': 8, 'completed': 0, 'completion_rate': 0.0, 'mean_duration_coverage': 0.15585466624219355, 'fixed_complete_set_cost_cny': None, 'environment_steps': 16330, 'samples': [{'sample_id': 'parent_002_seg01', 'split': 'validation', 'completed': False, 'terminal_reason': 'increment_action_limited', 'executed_steps': 885, 'episode_env_steps': 885, 'duration_coverage': 0.07273175542406311, 'soc_final': 0.7998752910235278, 'return_sum': 228.918661400338, 'economic_cost_cny': 3070.9025829948464, 'executed_prefix_economic_cost_cny': 3070.9025829948464, 'complete_economic_cost_cny': None}, {'sample_id': 'parent_011_seg01', 'split': 'validation', 'completed': False, 'terminal_reason': 'increment_action_limited', 'executed_steps': 1663, 'episode_env_steps': 1663, 'duration_coverage': 0.07169339541300224, 'soc_final': 0.7999895236992398, 'return_sum': 423.6594261389789, 'economic_cost_cny': 5581.9369625210165, 'executed_prefix_economic_cost_cny': 5581.9369625210165, 'complete_economic_cost_cny': None}, {'sample_id': 'parent_016_seg01', 'split': 'validation', 'completed': False, 'terminal_reason': 'increment_action_limited', 'executed_steps': 873, 'episode_env_steps': 873, 'duration_coverage': 0.04143331751305173, 'soc_final': 0.7999036946014598, 'return_sum': 225.88312647935686, 'economic_cost_cny': 3032.859355202784, 'executed_prefix_economic_cost_cny': 3032.859355202784, 'complete_economic_cost_cny': None}, {'sample_id': 'parent_020_seg01', 'split': 'validation', 'completed': False, 'terminal_reason': 'increment_action_limited', 'executed_steps': 1264, 'episode_env_steps': 1264, 'duration_coverage': 0.3552557616638561, 'soc_final': 0.7999230571270624, 'return_sum': 324.7497481062218, 'economic_cost_cny': 4275.786337854128, 'executed_prefix_economic_cost_cny': 4275.786337854128, 'complete_economic_cost_cny': None}, {'sample_id': 'parent_033_seg01', 'split': 'validation', 'completed': False, 'terminal_reason': 'increment_action_limited', 'executed_steps': 872, 'episode_env_steps': 872, 'duration_coverage': 0.07877145438121048, 'soc_final': 0.799890122536307, 'return_sum': 225.58918817714337, 'economic_cost_cny': 3030.439319727237, 'executed_prefix_economic_cost_cny': 3030.439319727237, 'complete_economic_cost_cny': None}, {'sample_id': 'parent_040_seg01', 'split': 'validation', 'completed': False, 'terminal_reason': 'increment_action_limited', 'executed_steps': 8343, 'episode_env_steps': 8343, 'duration_coverage': 0.5368725868725869, 'soc_final': 0.7998598817727081, 'return_sum': 2053.267458743155, 'economic_cost_cny': 27953.82787562501, 'executed_prefix_economic_cost_cny': 27953.82787562501, 'complete_economic_cost_cny': None}, {'sample_id': 'parent_044_seg01', 'split': 'validation', 'completed': False, 'terminal_reason': 'increment_action_limited', 'executed_steps': 1534, 'episode_env_steps': 1534, 'duration_coverage': 0.06266083901801398, 'soc_final': 0.7999805609639046, 'return_sum': 392.98485921222886, 'economic_cost_cny': 5131.149993645196, 'executed_prefix_economic_cost_cny': 5131.149993645196, 'complete_economic_cost_cny': None}, {'sample_id': 'parent_045_seg01', 'split': 'validation', 'completed': False, 'terminal_reason': 'increment_action_limited', 'executed_steps': 896, 'episode_env_steps': 896, 'duration_coverage': 0.02741821965176413, 'soc_final': 0.7999039821967165, 'return_sum': 231.65641111622654, 'economic_cost_cny': 3106.6243317299927, 'executed_prefix_economic_cost_cny': 3106.6243317299927, 'complete_economic_cost_cny': None}], 'selection_split': 'validation', 'test_payloads_opened': 0, 'evaluation_adam_updates': 0, 'evaluation_replay_insertions': 0, 'score': 0.07792733312109677, 'training_env_steps': 1024, 'formal_env_steps': 959, 'adam_updates': 29, 'replay_insertions': 1023, 'evaluation_position': 'native callback before current transition storage and next Adam'}
+Writing report to C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\outputs\zoo_vessel_dev\real_optuna_one_trial\dqn_vessel\report_VesselEnergy-v0_1-trials-1024-tpe-none_1793277719

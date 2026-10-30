@@ -1,0 +1,7 @@
+# Install only in the independent worktree's .venv-zoo.
+rl_zoo3==2.9.0
+stable-baselines3==2.9.2
+sb3-contrib==2.9.2
+gymnasium==1.2.3
+optuna==4.9.0
+tensorboard==2.21.0

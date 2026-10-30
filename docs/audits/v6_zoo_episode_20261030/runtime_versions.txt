@@ -1,0 +1,2 @@
+python=C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\.venv-zoo\Scripts\python.exe
+{'rl-zoo3': '2.9.0', 'stable-baselines3': '2.9.2', 'sb3-contrib': '2.9.2', 'gymnasium': '1.2.3', 'torch': '2.8.0+cu128', 'optuna': '4.9.0', 'tensorboard': '2.21.0'}

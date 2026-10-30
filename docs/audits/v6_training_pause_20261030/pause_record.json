@@ -1,0 +1,163 @@
+{
+  "requested_local": "2026-10-30T14:34:40.7630281+08:00",
+  "run": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\v6_one_plus_baseline500_seed42",
+  "control": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\v6_one_plus_control_20261030_123500",
+  "backup": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\v6_one_plus_pause_backup_20261030_143440",
+  "checkpoint_directories_before": [
+    "checkpoint_000041",
+    "checkpoint_000042"
+  ],
+  "backup_files_before": [
+    {
+      "checkpoint": "checkpoint_000041",
+      "file": "model.zip",
+      "bytes": 1180137,
+      "sha256": "3648ea1f0de1696b1989bad3b8542f87f49144c4b6a9af875b6acb19afd77657"
+    },
+    {
+      "checkpoint": "checkpoint_000041",
+      "file": "replay.pkl",
+      "bytes": 79002021,
+      "sha256": "392fbb4661a25162a0abc787f77daca4389373a5fd0d42331536dfbb815a06c9"
+    },
+    {
+      "checkpoint": "checkpoint_000041",
+      "file": "state.pkl",
+      "bytes": 70127,
+      "sha256": "9935178425d226609a0eeb238d201d6220debea5560d1712e28203d0be21420b"
+    },
+    {
+      "checkpoint": "checkpoint_000041",
+      "file": "summary.json",
+      "bytes": 177,
+      "sha256": "e76c53ce971f3a0469940bfd57d64726162589307599302719d08684f59989a8"
+    },
+    {
+      "checkpoint": "checkpoint_000042",
+      "file": "model.zip",
+      "bytes": 1181067,
+      "sha256": "e5b2f369f353b1c439d4fe75a2cf2348bc1ff79773715e7099b628051be093e8"
+    },
+    {
+      "checkpoint": "checkpoint_000042",
+      "file": "replay.pkl",
+      "bytes": 79002024,
+      "sha256": "a7945adc2cb7218a102e7169ceed18fee29ebcf2c3b2b843cf9fa2ce027892db"
+    },
+    {
+      "checkpoint": "checkpoint_000042",
+      "file": "state.pkl",
+      "bytes": 70793,
+      "sha256": "b5011bc930e0db1e65cbdcbc9bcf4aafb5e15ef30ce10c12771c40b0d1a12ba0"
+    },
+    {
+      "checkpoint": "checkpoint_000042",
+      "file": "summary.json",
+      "bytes": 177,
+      "sha256": "7af50d6987da116e57deb7a934a3e3451aa34f54732a9ddc7b11988684043903"
+    }
+  ],
+  "status": "paused",
+  "pause_file": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\v6_one_plus_control_20261030_123500\\pause.request",
+  "confirmed_local": "2026-10-30T14:38:06.6549940+08:00",
+  "controller_status": "paused_by_request",
+  "controller_exited": true,
+  "training_exit_code": 0,
+  "training_ended_utc": "2026-10-30T06:35:13.6263314Z",
+  "completed_episodes": 477,
+  "planned_episodes": 500,
+  "warmup_env_steps": 50000,
+  "formal_env_steps": 3150064,
+  "total_env_steps": 3200064,
+  "adam_updates": 98439,
+  "latest_checkpoint": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\v6_one_plus_baseline500_seed42\\checkpoints\\checkpoint_000043",
+  "retained_in_run": [
+    "checkpoint_000042",
+    "checkpoint_000043"
+  ],
+  "preserved_checkpoint_generations": [
+    "checkpoint_000041",
+    "checkpoint_000042",
+    "checkpoint_000043"
+  ],
+  "checkpoint_backup_manifest": [
+    {
+      "checkpoint": "checkpoint_000041",
+      "file": "model.zip",
+      "bytes": 1180137,
+      "sha256": "3648ea1f0de1696b1989bad3b8542f87f49144c4b6a9af875b6acb19afd77657"
+    },
+    {
+      "checkpoint": "checkpoint_000041",
+      "file": "replay.pkl",
+      "bytes": 79002021,
+      "sha256": "392fbb4661a25162a0abc787f77daca4389373a5fd0d42331536dfbb815a06c9"
+    },
+    {
+      "checkpoint": "checkpoint_000041",
+      "file": "state.pkl",
+      "bytes": 70127,
+      "sha256": "9935178425d226609a0eeb238d201d6220debea5560d1712e28203d0be21420b"
+    },
+    {
+      "checkpoint": "checkpoint_000041",
+      "file": "summary.json",
+      "bytes": 177,
+      "sha256": "e76c53ce971f3a0469940bfd57d64726162589307599302719d08684f59989a8"
+    },
+    {
+      "checkpoint": "checkpoint_000042",
+      "file": "model.zip",
+      "bytes": 1181067,
+      "sha256": "e5b2f369f353b1c439d4fe75a2cf2348bc1ff79773715e7099b628051be093e8"
+    },
+    {
+      "checkpoint": "checkpoint_000042",
+      "file": "replay.pkl",
+      "bytes": 79002024,
+      "sha256": "a7945adc2cb7218a102e7169ceed18fee29ebcf2c3b2b843cf9fa2ce027892db"
+    },
+    {
+      "checkpoint": "checkpoint_000042",
+      "file": "state.pkl",
+      "bytes": 70793,
+      "sha256": "b5011bc930e0db1e65cbdcbc9bcf4aafb5e15ef30ce10c12771c40b0d1a12ba0"
+    },
+    {
+      "checkpoint": "checkpoint_000042",
+      "file": "summary.json",
+      "bytes": 177,
+      "sha256": "7af50d6987da116e57deb7a934a3e3451aa34f54732a9ddc7b11988684043903"
+    },
+    {
+      "checkpoint": "checkpoint_000043",
+      "file": "model.zip",
+      "bytes": 1182028,
+      "sha256": "d243cd2218f921be19716d3670b233b18f3a334b19cb002dfca62ddc95638e3c"
+    },
+    {
+      "checkpoint": "checkpoint_000043",
+      "file": "replay.pkl",
+      "bytes": 79002024,
+      "sha256": "2a447153fe6a50e2a840479893ea9327ee69997a0e9a6d07cb134dcb9f757f79"
+    },
+    {
+      "checkpoint": "checkpoint_000043",
+      "file": "state.pkl",
+      "bytes": 70868,
+      "sha256": "4776030baf6313aecc4175c53797964c40990446d1d2d6d059bd6a8d7a012e7f"
+    },
+    {
+      "checkpoint": "checkpoint_000043",
+      "file": "summary.json",
+      "bytes": 177,
+      "sha256": "2a306cec03df7db3c7381c80229b4a9fdf79f2442ee487ff97e0a38e7c82fecb"
+    }
+  ],
+  "best_model_preserved_before_and_after": true,
+  "active_training_processes": 0,
+  "tests_run_for_this_request": 0,
+  "forced_termination_used": false,
+  "training_source_or_configuration_modified": false,
+  "binary_checkpoints_submitted_to_git": false
+}

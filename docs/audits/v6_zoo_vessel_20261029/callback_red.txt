@@ -1,0 +1,10 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+E   ModuleNotFoundError: No module named 'experiments.sb3_manual.zoo_vessel.callbacks'
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_callbacks.py:69: ModuleNotFoundError: No module named 'experiments.sb3_manual.zoo_vessel.callbacks'
+E   ModuleNotFoundError: No module named 'experiments.sb3_manual.zoo_vessel.callbacks'
+C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-zoo-vessel\tests\test_zoo_callbacks.py:89: ModuleNotFoundError: No module named 'experiments.sb3_manual.zoo_vessel.callbacks'
+=========================== short test summary info ===========================
+FAILED tests/test_zoo_callbacks.py::test_full_validation_uses_its_own_mask_and_preserves_training_state
+FAILED tests/test_zoo_callbacks.py::test_native_logger_stdout_csv_and_tensorboard_without_fake_incomplete_cost
+2 failed in 10.63s
