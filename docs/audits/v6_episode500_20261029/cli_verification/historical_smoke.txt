@@ -1,7 +1,0 @@
-Episode 1 | EnvSteps 64 | AdamUpdates 2 | Epsilon 1.000000 | LossMean 0.01613918924704194 | TDMAE 0.1434452161192894 | Return -21.973862 | Completed True | SOC_Final 0.604066
-Validation | Episode 1 | 2/2 | Coverage 1.000000 | EconomicCost 2174.987676062585 | BestCheckpoint True
-Episode 2 | EnvSteps 128 | AdamUpdates 4 | Epsilon 0.525000 | LossMean 0.020516506396234035 | TDMAE 0.17611143738031387 | Return -19.552467 | Completed True | SOC_Final 0.599127
-Validation | Episode 2 | 2/2 | Coverage 1.000000 | EconomicCost 2174.987676062585 | BestCheckpoint False
-Episode 3 | EnvSteps 192 | AdamUpdates 6 | Epsilon 0.050000 | LossMean 0.019062899984419346 | TDMAE 0.18226952850818634 | Return -15.899589 | Completed True | SOC_Final 0.597938
-Validation | Episode 3 | 2/2 | Coverage 1.000000 | EconomicCost 2174.987676062585 | BestCheckpoint False
-complete | episodes 3/3 | formal steps 192 | Adam 6

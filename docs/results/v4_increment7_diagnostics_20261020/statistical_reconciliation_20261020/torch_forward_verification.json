@@ -1,8 +1,0 @@
-{
-  "real_checkpoint_round": 100,
-  "paired_states": 450,
-  "max_q_difference_from_existing_numpy_values": 1.9073486328125e-06,
-  "cpu_eval": true,
-  "inference_mode": true,
-  "optimizer_calls": 0
-}

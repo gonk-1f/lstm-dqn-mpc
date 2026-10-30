@@ -1,2 +1,0 @@
-Trial 0 completed | score 3.497652
-[I 2026-10-29 09:29:39,980] A new study created in RDB with name: v6_masked_dqn

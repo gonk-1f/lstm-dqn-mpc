@@ -1,8 +1,0 @@
-{
-  "protected_files_unchanged": true,
-  "actual_r100_train_states_matched": 12517,
-  "validation_payloads_read": 0,
-  "test_payloads_read": 0,
-  "models": "Ridge alpha1 and kNN32 only, no Q-network optimization",
-  "caveat": "R100 exploratory path selection; incomplete prefixes are selection-biased. No counterfactual full-voyage states."
-}

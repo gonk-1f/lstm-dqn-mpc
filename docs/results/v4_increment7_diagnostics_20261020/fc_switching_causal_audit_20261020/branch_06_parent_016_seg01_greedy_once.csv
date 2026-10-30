@@ -1,2 +1,0 @@
-﻿step_1based,time_s,fc_kw,delta_kw,load_kw,soc_before,soc_after,scaled_reward,done,terminal_reason,failure_penalty,h2,soc_equivalent,fc_deg,bat_deg
-254,7590.0,570,-30,817.4706,0.20374407604443162,0.20026523832513338,-10.180176529463319,True,failure_soc_limited,10132.660087898294,5.641498785391396,2.4968701047752933,4.775000000000038,0.9917467366061792
