@@ -1,7 +1,0 @@
-# Install only in .venv-optuna; preserve the formal .venv.
-# Exact upstream releases audited in docs/audits/v6_optuna_20261028/.
--c requirements-optuna-lock.txt
--r requirements-sb3.txt
-optuna==4.9.0
-sb3-contrib==2.9.0
-rl-zoo3==2.9.1

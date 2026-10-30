@@ -1,2 +1,0 @@
-"""Upper-layer MPC package."""
-
