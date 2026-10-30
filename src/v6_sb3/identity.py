@@ -23,14 +23,21 @@ def dataset_identity(dataset):
                 test_payloads_opened=0)
 
 
-def execution_identity(root, data):
+def execution_identity(root, data, *, reward_mode=None):
     from v4.independent_economics import ZhouEvaluationConfig
     from v4.failure_replay import FailurePenalty
     root = Path(root)
     sources = sorted((root/'src').rglob('*.py'))
-    return dict(schema=1, data=data, python_version=platform.python_version(),
+    identity = dict(schema=1, data=data, python_version=platform.python_version(),
         source_files={path.relative_to(root).as_posix():file_digest(path) for path in sources},
         dependencies={name:version(name) for name in (
             'numpy','pandas','scipy','torch','stable-baselines3','gymnasium','optuna')},
-        economics=ZhouEvaluationConfig.from_formal_curve().identity(),
-        failure_penalty=asdict(FailurePenalty.from_reference()))
+        economics=ZhouEvaluationConfig.from_formal_curve().identity())
+    if reward_mode is not None:
+        from .rewards import INVERSE_ONE_PLUS_ECONOMIC, reward_contract
+        identity['reward_contract'] = reward_contract(reward_mode)
+        if reward_mode == INVERSE_ONE_PLUS_ECONOMIC:
+            identity['failure_penalty'] = None
+            return identity
+    identity['failure_penalty'] = asdict(FailurePenalty.from_reference())
+    return identity

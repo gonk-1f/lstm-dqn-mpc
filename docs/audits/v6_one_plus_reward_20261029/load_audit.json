@@ -1,0 +1,1068 @@
+{
+  "scope": "35 Train full canonical curves; descriptive bins only; no data/production change",
+  "counts": {
+    "all_nodes": 457597,
+    "small_nodes": 5414,
+    "small_control": 5382,
+    "small_with_diagnostic": 522,
+    "counterfactual_steps": 5382,
+    "small_terminal_metadata": 32,
+    "small_without_diagnostic": 4892
+  },
+  "train_voyages": 35,
+  "per_voyage": [
+    {
+      "sample_id": "parent_003_seg01",
+      "nodes": 21481,
+      "control_intervals": 21480,
+      "small_control": 11,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_005_seg01",
+      "nodes": 9259,
+      "control_intervals": 9258,
+      "small_control": 22,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_006_seg01",
+      "nodes": 10551,
+      "control_intervals": 10550,
+      "small_control": 24,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_007_seg01",
+      "nodes": 8449,
+      "control_intervals": 8448,
+      "small_control": 8,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_008_seg01",
+      "nodes": 22857,
+      "control_intervals": 22856,
+      "small_control": 29,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_009_seg01",
+      "nodes": 9481,
+      "control_intervals": 9480,
+      "small_control": 11
+    },
+    {
+      "sample_id": "parent_009_seg02",
+      "nodes": 7756,
+      "control_intervals": 7755,
+      "small_control": 1,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_010_seg01",
+      "nodes": 11191,
+      "control_intervals": 11190,
+      "small_control": 28,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_010_seg02",
+      "nodes": 15782,
+      "control_intervals": 15781,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_012_seg01",
+      "nodes": 17874,
+      "control_intervals": 17873,
+      "small_control": 11,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_015_seg01",
+      "nodes": 10116,
+      "control_intervals": 10115,
+      "small_control": 30,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_017_seg01",
+      "nodes": 29324,
+      "control_intervals": 29323,
+      "small_control": 2,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_018_seg01",
+      "nodes": 27311,
+      "control_intervals": 27310,
+      "small_control": 16,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_019_seg01",
+      "nodes": 10471,
+      "control_intervals": 10470,
+      "small_control": 17
+    },
+    {
+      "sample_id": "parent_019_seg02",
+      "nodes": 8869,
+      "control_intervals": 8868,
+      "small_control": 694,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_021_seg01",
+      "nodes": 6997,
+      "control_intervals": 6996,
+      "small_control": 19,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_022_seg01",
+      "nodes": 5491,
+      "control_intervals": 5490,
+      "small_control": 29,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_029_seg01",
+      "nodes": 10621,
+      "control_intervals": 10620,
+      "small_control": 12,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_029_seg02",
+      "nodes": 5222,
+      "control_intervals": 5221,
+      "small_control": 10,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_034_seg01",
+      "nodes": 9721,
+      "control_intervals": 9720,
+      "small_control": 32,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_035_seg01",
+      "nodes": 9301,
+      "control_intervals": 9300,
+      "small_control": 31,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_036_seg01",
+      "nodes": 6662,
+      "control_intervals": 6661,
+      "small_control": 44,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_037_seg01",
+      "nodes": 36661,
+      "control_intervals": 36660,
+      "small_control": 3922
+    },
+    {
+      "sample_id": "parent_038_seg01",
+      "nodes": 21092,
+      "control_intervals": 21091,
+      "small_control": 27,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_041_seg01",
+      "nodes": 19262,
+      "control_intervals": 19261,
+      "small_control": 28,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_042_seg01",
+      "nodes": 18422,
+      "control_intervals": 18421,
+      "small_control": 14,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_043_seg01",
+      "nodes": 11762,
+      "control_intervals": 11761,
+      "small_control": 33,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_046_seg02",
+      "nodes": 3273,
+      "control_intervals": 3272,
+      "small_control": 10,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_047_seg01",
+      "nodes": 5881,
+      "control_intervals": 5880,
+      "small_control": 26,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_048_seg01",
+      "nodes": 8581,
+      "control_intervals": 8580,
+      "small_control": 35,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_049_seg01",
+      "nodes": 8071,
+      "control_intervals": 8070,
+      "small_control": 39,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_050_seg01",
+      "nodes": 30692,
+      "control_intervals": 30691,
+      "small_control": 36,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_051_seg01",
+      "nodes": 4351,
+      "control_intervals": 4350,
+      "small_control": 31,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_052_seg01",
+      "nodes": 7111,
+      "control_intervals": 7110,
+      "small_control": 48,
+      "small_terminal_metadata": 1
+    },
+    {
+      "sample_id": "parent_053_seg01",
+      "nodes": 7651,
+      "control_intervals": 7650,
+      "small_control": 52,
+      "small_terminal_metadata": 1
+    }
+  ],
+  "bins": [
+    {
+      "node_scope": "control",
+      "abs_load_bin": "(0.001,0.01]",
+      "sign": "negative",
+      "count": 15
+    },
+    {
+      "node_scope": "control",
+      "abs_load_bin": "(0.001,0.01]",
+      "sign": "positive",
+      "count": 17
+    },
+    {
+      "node_scope": "control",
+      "abs_load_bin": "(0.01,0.1]",
+      "sign": "negative",
+      "count": 4245
+    },
+    {
+      "node_scope": "control",
+      "abs_load_bin": "(0.01,0.1]",
+      "sign": "positive",
+      "count": 218
+    },
+    {
+      "node_scope": "control",
+      "abs_load_bin": "(0.1,1]",
+      "sign": "negative",
+      "count": 9
+    },
+    {
+      "node_scope": "control",
+      "abs_load_bin": "(0.1,1]",
+      "sign": "positive",
+      "count": 849
+    },
+    {
+      "node_scope": "control",
+      "abs_load_bin": "(1e-4,0.001]",
+      "sign": "negative",
+      "count": 2
+    },
+    {
+      "node_scope": "control",
+      "abs_load_bin": "(1e-4,0.001]",
+      "sign": "positive",
+      "count": 2
+    },
+    {
+      "node_scope": "control",
+      "abs_load_bin": ">1",
+      "sign": "positive",
+      "count": 452180
+    },
+    {
+      "node_scope": "control",
+      "abs_load_bin": "exact_zero",
+      "sign": "zero",
+      "count": 25
+    },
+    {
+      "node_scope": "terminal_metadata",
+      "abs_load_bin": "(0.01,0.1]",
+      "sign": "negative",
+      "count": 1
+    },
+    {
+      "node_scope": "terminal_metadata",
+      "abs_load_bin": "(0.1,1]",
+      "sign": "positive",
+      "count": 2
+    },
+    {
+      "node_scope": "terminal_metadata",
+      "abs_load_bin": ">1",
+      "sign": "positive",
+      "count": 3
+    },
+    {
+      "node_scope": "terminal_metadata",
+      "abs_load_bin": "exact_zero",
+      "sign": "zero",
+      "count": 29
+    }
+  ],
+  "small_negative": 4272,
+  "small_zero": 54,
+  "small_positive": 1088,
+  "raw_zero_terminal": 29,
+  "small_with_exact_component_sidecar": 185,
+  "target_trace": {
+    "parent": "4月28日08_00_4月28日12_00",
+    "sample_id": "parent_015_seg01",
+    "reconstructed_nodes": 10116,
+    "source_nodes": 10116,
+    "source_reconstruction_max_abs_difference_kw": 0.0,
+    "target_timestamp": "2024-04-28T08:49:35+08:00",
+    "target_pchip_kw": 0.0017413563970556567,
+    "first_three_anchor_pchip_t1_kw": 0.0017413563970556567,
+    "first_interval_coefficients_descending": [
+      -1.7248688021076253e-05,
+      0.0017586050850767329,
+      0.0,
+      0.0
+    ],
+    "aligned_measured_points": 456,
+    "cubic_gap_count": 2,
+    "cubic_imputed_points": 24,
+    "trimmed_anchor_points": 339,
+    "first_three_anchors": [
+      {
+        "timestamp": "2024-04-28T08:49:34+08:00",
+        "relative_time_s": 0.0,
+        "canonical_source_total_kw": 0.0,
+        "fc_kw": 0.0,
+        "battery_raw_kw": -0.48561800000000005,
+        "cubic_imputed": false
+      },
+      {
+        "timestamp": "2024-04-28T08:50:04+08:00",
+        "relative_time_s": 30.0,
+        "canonical_source_total_kw": 1.1170300000000006,
+        "fc_kw": 0.0,
+        "battery_raw_kw": -1.1170300000000006,
+        "cubic_imputed": false
+      },
+      {
+        "timestamp": "2024-04-28T08:50:34+08:00",
+        "relative_time_s": 60.0,
+        "canonical_source_total_kw": 5.358458092904364,
+        "fc_kw": 0.0,
+        "battery_raw_kw": -5.358458092904364,
+        "cubic_imputed": true
+      }
+    ],
+    "aligned_source_at_start": [
+      {
+        "timestamp": "2024-04-28T08:49:34+08:00",
+        "fc_kw": 0.0,
+        "battery_raw_kw": -0.48561800000000005,
+        "battery_bus_kw": 0.48561800000000005,
+        "derived_total_kw": 0.48561800000000005
+      }
+    ],
+    "start_original_derived_kw": 0.48561800000000005,
+    "start_canonical_kw": 0.0,
+    "start_boundary_kind": "OBSERVED_DEADBAND",
+    "end_boundary_kind": "CONSTRUCTED_CROSSING",
+    "pchip_qa": {
+      "source_points": 339,
+      "output_points": 10116,
+      "raw_min_kw": 0.0,
+      "pchip_min_kw": 0.0,
+      "floating_negative_zeroed": 0
+    },
+    "measurement_scope": "Only the current Train parent raw channels were read; 1s total load is derived/interpolated, not independently measured.",
+    "aligned_derived_sample_exactly_at_target": false,
+    "raw_source_files": [
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇1_4月28日08_00_4月28日12_00.csv",
+        "sha256": "deb07fda81487e04a98987f9e92b68e6a390d8798eca6c795e2311ba95df2454",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇2_4月28日08_00_4月28日12_00.csv",
+        "sha256": "31b63b499b742e01b963ce81c12686fef7fadcd71d7a3673f11f74dec0e43e80",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇3_4月28日08_00_4月28日12_00.csv",
+        "sha256": "9b7bc8f35cb1997c2cedef9c05411ce3303ade6bfbf10ff65d6ce4086434f7d4",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇4_4月28日08_00_4月28日12_00.csv",
+        "sha256": "993d5309a5b9e67a49d0fbd76a2d8ef5f91d3caa0aefe42c0ff5d7dd7f418059",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇5_4月28日08_00_4月28日12_00.csv",
+        "sha256": "782de9ace590ff518732d581d120884925ac4da799dd3d28f53d31e69a40c525",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池簇6_4月28日08_00_4月28日12_00.csv",
+        "sha256": "4aa7c0d4831db8a5baeeffa3d2cdc94b893617034a72dbcb2d7677458a146f12",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\右电池系统BDM_4月28日08_00_4月28日12_00.csv",
+        "sha256": "9952168f36d63c4a55c8c2ea411338d622fe8a2e354990d7f0f882d7bdab223d",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇1_4月28日08_00_4月28日12_00.csv",
+        "sha256": "d03ddf3530fc4497dfedd16426291d48df50ccfd333365ac5801a7c65f2c5f5d",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇2_4月28日08_00_4月28日12_00.csv",
+        "sha256": "1f91e7bdc7a3a68023be28c5400022276085b2e3af1ac158e977a33cc648a3e4",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇3_4月28日08_00_4月28日12_00.csv",
+        "sha256": "937f059ed8dfea5b0e6cdcdc330bee1c8539fb486cd7c1abbce494ad1bd9f8dd",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇4_4月28日08_00_4月28日12_00.csv",
+        "sha256": "0e1e403c6d7dc094ba4454719f0af81dbc5fc0da95e1aeddace1ed99309013eb",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇5_4月28日08_00_4月28日12_00.csv",
+        "sha256": "6d5160de23ea64cc079dec331c27f4157e05f0e3a73b550bb12998f341e981a8",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池簇6_4月28日08_00_4月28日12_00.csv",
+        "sha256": "2f292ebae319c1250e1a1eb25f992f1ddaf6608d8692f293ab241769a8ddf34f",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\BMS\\左电池系统BDM_4月28日08_00_4月28日12_00.csv",
+        "sha256": "8e8440f64ac59a36c0b1e22b2e80d597aed1c33f4634fd5fca9149fd6237bedb",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\推进系统\\AIS航速_4月28日08_00_4月28日12_00.csv",
+        "sha256": "6e4960d5e524d2c683804f34120cac168dfe6f78527de134ce8a93c15fda3e5c",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\右氢燃料电池#1_4月28日08_00_4月28日12_00.csv",
+        "sha256": "f87472e0cb9e8f394ae2247cb7fc0efe4ce8605974ca83cb8794d1f1963bf87c",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\右氢燃料电池#2_4月28日08_00_4月28日12_00.csv",
+        "sha256": "23e0ec82904cac7f92c31c3632cbd0ab51dfae5976c5531a2668e71552576843",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\右氢燃料电池#3_4月28日08_00_4月28日12_00.csv",
+        "sha256": "2f303dc525289bffd429ead83759d9715aa8fbeef2698804080acd3efe395044",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\右氢燃料电池#4_4月28日08_00_4月28日12_00.csv",
+        "sha256": "9e2850aad170ee6b7c504638166ec6248996835c8c35df5892e206d19bd835e3",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\左氢燃料电池#1_4月28日08_00_4月28日12_00.csv",
+        "sha256": "aad39fd8f74fd31c31753a9ef155e2f0486db3ea83020366b173dddf723bfe2b",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\左氢燃料电池#2_4月28日08_00_4月28日12_00.csv",
+        "sha256": "43ded1e52f7df04dfa99d151ab4e552fff54664a88b6473fb862b1ca4e31f60e",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\左氢燃料电池#3_4月28日08_00_4月28日12_00.csv",
+        "sha256": "f63c008c67759da56b20d828d063b711b27d350de0d42e8dd50ac3c4fd188e74",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      },
+      {
+        "path": "C:\\Users\\20883\\OneDrive\\Desktop\\氢舟一号\\4月28日08_00_4月28日12_00\\燃料电池系统\\左氢燃料电池#4_4月28日08_00_4月28日12_00.csv",
+        "sha256": "19c47d0514961d71e1982ec3a6630762a8ba84d561cc55157cd2d1bf1487eeb7",
+        "role": "current_Train_parent_raw_FC_BMS_or_AIS"
+      }
+    ]
+  },
+  "normalize_contract": {
+    "negative_inclusive_range_kw": [
+      -1.0,
+      0.0
+    ],
+    "negative_result_kw": 0.0,
+    "positive_policy": "all strictly positive finite values retained",
+    "below_minus_one": "ValueError"
+  },
+  "diagnostic_files": [
+    {
+      "path": "docs/audits/v6_inverse_reward_20261029/train_prefix_steps.csv",
+      "sha256": "5896c9791d1bd7591fc38cb579fd84ae83c696713df103960d49f115df0959c8"
+    },
+    {
+      "path": "docs/audits/v6_inverse_reward_20261029/train_full_steps.csv",
+      "sha256": "4ec408474f00e259773cd51411f64f989dcd3d2b0619cb4e08d39bb6ec1530ff"
+    }
+  ],
+  "source_files": [
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/test/zero_boundary_003.csv",
+      "sha256": "e49273bec76896e75a279d9345748fb44181416cfe3b62aa08f74b042c9823d9",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/test/zero_boundary_003.csv",
+      "sha256": "794e719aff325b9d4d9088e12dabc91f52d50a97b5259c96910e52fa73531a05",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_003_seg01.csv.gz",
+      "sha256": "c9a402847467f67d1f33ffe6b1a87fd9521304d4b279b09ccbb89a97c0a2f146",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_005.csv",
+      "sha256": "a27b6754c30c178b73f189c1126f843dbc6255f811f9e9ff54b70024d43d5f49",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_005.csv",
+      "sha256": "8253fb92470702cc2a6773c216795e6fb76e999d7f61d0952864e05119627d80",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_005_seg01.csv.gz",
+      "sha256": "16d68dde8689d4833f6b4d311722d5f4b54eac6529b10322da8de95e0ba764f6",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_006.csv",
+      "sha256": "38f715e4d8af698ddac0e5496a0b5fbeb1e2af6c4457ca1f29eee4050906223c",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_006.csv",
+      "sha256": "8776c6a224b380081844d8f33c0ffe0928a126e495e49eddec85a8e9d7d1d24f",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_006_seg01.csv.gz",
+      "sha256": "ceddea80358e5c144dc806524b8e6c4982b8ae3d439b523a96d5ad39af67d90f",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_007.csv",
+      "sha256": "42007cd96902b83aa6e0e6ad4b057f7543f52ce571c6c0ffb5d0d1d0171704cb",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_007.csv",
+      "sha256": "83306d551a34c244cabe78a5a76b7a69eddb913ea0c8a3d219a71f17f50ba20d",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_007_seg01.csv.gz",
+      "sha256": "227bd7ede8dfd153a0756bcf11d2f5df871f7072001ff9175c3b2c94dbc6d9d4",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_008.csv",
+      "sha256": "d077451727123193e5820e2dc2fa4a9ea89173557a5e13bac395772f2c445d80",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_008.csv",
+      "sha256": "5e5c70526b5fc2392bdff9748ee66e2f0e7cfe273140a7aa1edff967912017d8",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_008_seg01.csv.gz",
+      "sha256": "1f205b58d2d1272858247c6826d6601ab73e3babbe6740417f52064f064bf062",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/validation/zero_boundary_009.csv",
+      "sha256": "bb171611d2271f460457b3c83fdbe6f30def3b018013546912c35fad3bf743a0",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/validation/zero_boundary_009.csv",
+      "sha256": "042974b87283ae7af2be92c25ed416e7ddee6d34fb76271337f1b325346fbd07",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_009_seg01.csv.gz",
+      "sha256": "e9c4d6825cffee8d6a8264b351d3230849733df4af6a11eec92cc15c11ae5c1a",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_009_seg02.csv.gz",
+      "sha256": "7ec96472b33c5a5fe30759ac045bd20b66253a849751ca21ad830bd17021403a",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/validation/zero_boundary_010.csv",
+      "sha256": "1f5c7a4e8516f12a2f76a5110400c9fe807129e175d173992b54fc08882f2157",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/validation/zero_boundary_010.csv",
+      "sha256": "2b3aecbcd1d2f93a7c01455161bd04b60b22b4430c8731000151b5c18ef67cc2",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_010_seg01.csv.gz",
+      "sha256": "854d598d79203c8291df06d735f27ff18b0f57d9d35936c8e8b7e68d0167bb84",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_010_seg02.csv.gz",
+      "sha256": "6cf3817b73c5ffc5e284867c614a7585d0df31958ec1e769f49b4356fc771d75",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/test/zero_boundary_012.csv",
+      "sha256": "0a9b9e18736b2e37c77a2d798c899429740b03c75e26d6a1fc1c82129ed10625",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/test/zero_boundary_012.csv",
+      "sha256": "94f6f47e403da905ac4be99a49fcb9f5331e6efad847b07b9bb3361037d31fd4",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_012_seg01.csv.gz",
+      "sha256": "6162e58ab1deaaafea832ba9a1bf5a86046bcd283005c2b088e63f03555db794",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_015.csv",
+      "sha256": "1031e7458155f93563a68db82a51c6c57334fd0f00a65f1fb05920d7795f88d8",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_015.csv",
+      "sha256": "44f9b388df328bbfd6e83870ccba04dde7f75cd737ef0314d6a28a6455968b6d",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_015_seg01.csv.gz",
+      "sha256": "f23b24141783446b39295a9a0b1a587465f5dc59d7533ce5ead30a340edaeb73",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_017.csv",
+      "sha256": "72ee87bf57e89cd9b3a1eae65ba394057f809d92bb37883c9ee49b7b365e8c32",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_017.csv",
+      "sha256": "c7eb1d1d273f56b8b3f04445a9b11706de858c9915e37d5353820bd6001668a9",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_017_seg01.csv.gz",
+      "sha256": "58483ca86463da959e7d4c6139c3195cee6ee6672e0a74a7cf181109324b01e8",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/test/zero_boundary_018.csv",
+      "sha256": "b3e69067a995dbce228b4d4511597a905980268607c3deab6f8e7f62b4e5df46",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/test/zero_boundary_018.csv",
+      "sha256": "5b2c3210e221b7b4e48b79b0ba1a09291b6271d1d487b59742e257d0b4c06c1b",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_018_seg01.csv.gz",
+      "sha256": "3d9064e630ab9fefd00022b69c8178c83b869ff23f1832bccbb38136020be55e",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/validation/zero_boundary_019.csv",
+      "sha256": "f039d2a40b37fd41575d3d95307d2d07252983285a44a756b52d81b3613be8f3",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/validation/zero_boundary_019.csv",
+      "sha256": "0d6fb2afb2a0b4676d239a4eeb60dc6808f1ce7b5df92772e2bc2328a418099f",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_019_seg01.csv.gz",
+      "sha256": "a9036dac6f4f60a0c1c4359510430dd032559c355a721681406597569d74dddd",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_019_seg02.csv.gz",
+      "sha256": "061f1e23209cf4e862cac28101904a2fc0b69844a504646c5d750aa195459e51",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_021.csv",
+      "sha256": "3ace321c01bf6add94f8bffa55f635b9ce0811e18fbf1574a661ac1daec128b2",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_021.csv",
+      "sha256": "75479abb5ed236de4de8101a1970007486d36b573a76141db287a26e7f364799",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_021_seg01.csv.gz",
+      "sha256": "dcf0a38c5d253b5e6d2b86ea21dfbcaa2fcd9565f888199575680fdb255f8236",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_022.csv",
+      "sha256": "a36215e56aff729f381e44225a253ef7d796684502c79e847021d3a0562eb71a",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_022.csv",
+      "sha256": "3e80b7c4d555af0e922ef1336cdc7b85d0f4797c0d1da3e49effa7a4947c8014",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_022_seg01.csv.gz",
+      "sha256": "564a49a05f7da3594c009a3ba50966c70857fdd3ef6594b89150f3eda3fae98c",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_029.csv",
+      "sha256": "936bf4264781fc3f83c12769f24a325fe3f6366d07d0aea0060473bd8fc32208",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_029.csv",
+      "sha256": "d5e095ebd241290730d1c0bdf8a2e5cc3ec4778a7758546b0b29296d2a7c9f12",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_029_seg01.csv.gz",
+      "sha256": "13cc3720c47bd9dcbe19a3a3b7bb80023019ad7a3ea34433763786c21fcac260",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_029_seg02.csv.gz",
+      "sha256": "5b3ca2e43a2be18dad98ab0f813b6d53b8d312eb31ab5385d4678eab4ff1ed2b",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_034.csv",
+      "sha256": "d5e09dec053e6d298759d5e1d13f6b5c574f83d8182073105cb83d3674260ccd",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_034.csv",
+      "sha256": "37e1bf5aef1cc8e0c7add8049b3ea8c8c7bfafe45f06b66b3fdde6d2941f9ba7",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_034_seg01.csv.gz",
+      "sha256": "8a97512fad74d324dae087ec4ec5b4220a42138af29f7066f112a49156aaa927",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/test/zero_boundary_035.csv",
+      "sha256": "7a37a139e766f05dc7fd20da7af6f054f96fa493e22a2ab037e6468282ed22de",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/test/zero_boundary_035.csv",
+      "sha256": "d7ad9011613b447f07bed0b6e2b45dedca32079a6d0a07f124488561942c4f1b",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_035_seg01.csv.gz",
+      "sha256": "70b975cd8785903fac8ab91364250caa9e439916adc8124efbd22d114e2608af",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/validation/zero_boundary_036.csv",
+      "sha256": "e959204af1f5816123fd29aa4f62218305a1ac0e2d0f5c934559ce01bea0a568",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/validation/zero_boundary_036.csv",
+      "sha256": "3e0117abea6882562e1e5e62d883050c4a94d3137dd37cbaa8e34fa0bc686f3f",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_036_seg01.csv.gz",
+      "sha256": "d6b1e457e375b2722bff4355a665d14624d8a83e95ae118d8861567e397b356c",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_037.csv",
+      "sha256": "f8dddf12473d1bab2827aef94c9ad87ccfa9aef61fb2b7af7940bc64301e6d0d",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_037.csv",
+      "sha256": "7f1ed69c098af87ebe8ab875a571dc156b82e64fe12dd2fb536196c92ac56d7b",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_037_seg01.csv.gz",
+      "sha256": "504ca214cc60f802d2aa523818bf434f7888867b89cdd7c7b72b69e5b1847d4b",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_038.csv",
+      "sha256": "6b4a7b64a3c2995644620356939b650ba0d7eeb6d5998afa24eff3157051b30a",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_038.csv",
+      "sha256": "39a158f966ef33983a6ebfd7f2fec916ab1af7e56c3da7ed41a896aab7cd276b",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_038_seg01.csv.gz",
+      "sha256": "6172ae8bd0c39beb5c0e26a8b27885457e5b836440f756560dde6ebb7b8358b6",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_041.csv",
+      "sha256": "0026eae4e0323f77616a6931cf9ac20e81660f2c6afbb9a27beaf1d5221dfc1a",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_041.csv",
+      "sha256": "f0df89339b5f3bc8391e2b55f84f174822e42998c5f41eaf39d6405eb4dfb436",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_041_seg01.csv.gz",
+      "sha256": "bf595d699550d678eeca52771a02ee7d3d1dac65b02781aefe5ad1ca582e3193",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_042.csv",
+      "sha256": "a5183dff6efa3e581aa9475daf3400da5c852ff300e76d9a85224f8feec936f2",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_042.csv",
+      "sha256": "9f580c3f291ba5388a2e14ff05aebeb30081af46c6379a1e7bca3c06b2966ddf",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_042_seg01.csv.gz",
+      "sha256": "2cc9d4ac2138e519c75c0ee52d8c0b6c06cc5634e8db2fb7296b46a5653b0ad3",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/validation/zero_boundary_043.csv",
+      "sha256": "7af7b2cd01ed2d69eb14a6ad7829252b31926b5728cd5cc04066afac9b138df4",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/validation/zero_boundary_043.csv",
+      "sha256": "14b5adf38a576e5c4aab55c65b3fc4076a4984bdbbf4386556a18d54d593a1df",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_043_seg01.csv.gz",
+      "sha256": "e214217882ee6d3340f69afbfdf3b4edbfd26481282550a24fab7abed990950d",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_046.csv",
+      "sha256": "70146363c67022bb192d5b1955051b86471e77f98e3c7c664acb75b9ca37fca8",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_046.csv",
+      "sha256": "4f725112bf7787e46305ad61ea4ff373685d4f75f8e7bb153cbe50281f48d738",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_046_seg02.csv.gz",
+      "sha256": "87698f0428e590708bb842b3b4c821bd8cd252d432c09c7339bf1d3f457decb7",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/validation/zero_boundary_047.csv",
+      "sha256": "2514ddaeae6e73e798951df746a85805801ac76ddad03e411a86258c60eb1a65",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/validation/zero_boundary_047.csv",
+      "sha256": "485af71ed2bce5a5ef1062ab236099a6e1ae2b2469fd60036c246d724b5c1fd7",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_047_seg01.csv.gz",
+      "sha256": "0f3ad8aacf99a7c0350495eaf13097f55fe7c007763c8bd29e3512a5aff3e361",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_048.csv",
+      "sha256": "5776ff38850576bea25e16c6befdbbeb5a0a2a01bf3f8e5ff0ec328eec1595b8",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_048.csv",
+      "sha256": "886ac3e34d80342e92834d747e5898425f6b70521194eb32eded9655576d58d7",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_048_seg01.csv.gz",
+      "sha256": "ff647fe55d76a836365664c6c035df717b175e9eea69a1ede6d19da62028a499",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_049.csv",
+      "sha256": "44150bf0f6cea4cef8639315895fde87d37a87f2e4cabd03365c32f490ff7082",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_049.csv",
+      "sha256": "25656a9418af6a52bbd12b9e1d57bdea662882c0d0a7a82e753304c7997ac0b2",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_049_seg01.csv.gz",
+      "sha256": "e38dcb3dccbe9841c553bf6a86fbd59643b04530f82b06bfd591e61ddb339031",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_050.csv",
+      "sha256": "d7737029500eee0af2a72e9743c63743fc5c59d6c71cc4b86c21088a99616895",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_050.csv",
+      "sha256": "1bdcf9e3bd20d3a12a2c117aa0d1c9f294817b2dabf5ff8197fb74a5d204d1d4",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_050_seg01.csv.gz",
+      "sha256": "3ee77d2b86c4f7ebe98ce40cef420b852282f5f7f59950acc7df29c79f4232bf",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_051.csv",
+      "sha256": "b3925016fd28db68fe73066888dde2976c2ce7e66af0e2a6d36efb581afb0a53",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_051.csv",
+      "sha256": "56bcf134b678860598ecaa9f74fe2df8909fd5187b9b15726e749ddb1fc24f0a",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_051_seg01.csv.gz",
+      "sha256": "a2a5c5be9f6a8a1e22341736eabfa8e189156453ee1b38bea7f731ddb6c0033a",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_052.csv",
+      "sha256": "ff483096e66a05d0e45afd55e1afd13ebb6d160ac73d805d2fa49bdaf4dba2dc",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_052.csv",
+      "sha256": "dadfebaba50c5c377523dba7219176959ea1dd7a3e54bb090b0e7395f252d357",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_052_seg01.csv.gz",
+      "sha256": "6db15cd467404149130fefe813f20c2ec90229c6acb0e732331a2b33249fa880",
+      "role": "current_Train_v6_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2/train/zero_boundary_053.csv",
+      "sha256": "d555e1ae94a0aa9b5551e8756fb7adae4e3d40b0f902343af6a69be05701dbd9",
+      "role": "current_Train_parent_canonical_1s"
+    },
+    {
+      "path": "data/processed/operating_dataset_zero_boundary_v2_modes/train/zero_boundary_053.csv",
+      "sha256": "15ff762fa49cb6717fff08fcaf2da970a95e7cc6361da06e56eb0b9f4698c370",
+      "role": "current_Train_parent_30s_component_sidecar_not_new_1s_telemetry"
+    },
+    {
+      "path": "data/processed/operating_dataset_v6_1s/candidates/parent_053_seg01.csv.gz",
+      "sha256": "0ef28b4dfba12b71463608fa94615fc67cebe10324228b739367be3455d31e95",
+      "role": "current_Train_v6_canonical_1s"
+    }
+  ],
+  "read_scope_events": [
+    {
+      "path": "data/processed/operating_dataset_final/metadata/aligned_30s/parent_015.csv",
+      "action": "read_header_and_first_seven_rows_during_initial_source_search",
+      "reason_excluded": "legacy numeric ID refers to 4月18 parent, not current parent_015 (4月28)",
+      "current_split_metadata_match": [
+        {
+          "sample_id": "parent_012_seg01",
+          "split": "train"
+        }
+      ],
+      "used_for_statistics_or_parameters": false,
+      "reopened": false
+    }
+  ],
+  "current_Validation_payloads_opened": 0,
+  "current_Test_payloads_opened": 0,
+  "read_scope_basis": "Legacy mistaken lookup was subsequently identified by current manifest parent_name as Train parent_012; excluded, not reopened.",
+  "raw_source_parent_payloads_opened": [
+    "4月28日08_00_4月28日12_00"
+  ],
+  "new_voyage_control_executions": 0,
+  "counterfactual_assumptions": "5382 independent 1-second fixed fresh SOC .6 / FC0 states; terminal nodes excluded; no learning or state carryover",
+  "unknowns": [
+    "No independent load sensor establishes true 1.741 W at t1.",
+    "CSV precision does not establish instrument accuracy or physical relevance of sub-kW values.",
+    "Most small nodes lack an existing full policy trajectory; diagnostic fields stay null.",
+    "30s component sidecar may contain aligned/cubic/PCHIP values; source provenance is retained, never called independent 1s measurement."
+  ],
+  "counterfactual_step_budget": 5382
+}

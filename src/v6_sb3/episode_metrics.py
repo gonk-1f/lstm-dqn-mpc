@@ -20,6 +20,9 @@ class EpisodeMetrics:
         cost = (ledger.h2_cost_cny+ledger.fuel_cell_degradation_cost_cny+
                 ledger.battery_degradation_cost_cny+ledger.shore_cost_cny+
                 transition.soc_equivalent_hydrogen_cost_cny)
+        if getattr(env, 'reward_mode', None) == 'inverse_one_plus_economic':
+            from .rewards import economic_cost_cny
+            cost = economic_cost_cny(ledger, transition.soc_equivalent_hydrogen_cost_cny)
         if not all(isfinite(float(value)) for value in (reward, cost, transition.actual_soc)):
             raise FloatingPointError('non-finite reward, economic cost or SOC')
         self.steps += 1

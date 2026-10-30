@@ -1,7 +1,7 @@
 """Single-thread, one-second V6 Gym environment over the formal shared physics."""
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from math import fsum, isfinite
 
 import gymnasium as gym
@@ -20,9 +20,10 @@ from v4.independent_economics import ZhouEvaluationConfig
 from v4.reward_feedback import BatteryEnergyValue
 
 from .environment import ACTION_DELTAS, InfeasibleReset, _action_mask
-
-
-REWARD_MODES = ('zhou_economic_only', 'v6_energy_soc_ramp')
+from .rewards import (
+    INVERSE_ONE_PLUS_ECONOMIC, REWARD_MODES, economic_cost_cny,
+    inverse_one_plus_economic_reward, reward_contract,
+)
 
 
 class DirectVesselEnv(gym.Env):
@@ -42,6 +43,8 @@ class DirectVesselEnv(gym.Env):
         super().__init__()
         if reward_mode not in REWARD_MODES:
             raise ValueError(f'reward_mode must be one of {REWARD_MODES}')
+        if reward_mode == INVERSE_ONE_PLUS_ECONOMIC and penalty is not None:
+            raise ValueError('inverse_one_plus_economic does not accept a legacy penalty argument')
         self.action_space = gym.spaces.Discrete(13)
         self.observation_space = gym.spaces.Box(-np.inf, np.inf, shape=(5,), dtype=np.float32)
         self.episode = episode
@@ -51,9 +54,11 @@ class DirectVesselEnv(gym.Env):
         self.economics = economics or ZhouEvaluationConfig.from_formal_curve()
         if type(self.economics) is not ZhouEvaluationConfig:
             raise TypeError('economics must be an explicit ZhouEvaluationConfig')
-        self.penalty = penalty or FailurePenalty.from_reference()
+        self.penalty = (None if reward_mode == INVERSE_ONE_PLUS_ECONOMIC
+                        else penalty or FailurePenalty.from_reference())
         self.reward_mode = reward_mode
-        self._energy_value = BatteryEnergyValue.from_accountant(self.accountant)
+        self._energy_value = (None if reward_mode == INVERSE_ONE_PLUS_ECONOMIC
+                              else BatteryEnergyValue.from_accountant(self.accountant))
         self._physical = AccountState()
         self._index = 0
         self._history = None
@@ -140,8 +145,13 @@ class DirectVesselEnv(gym.Env):
         if not SOC_MIN <= next_physical.soc <= SOC_MAX:
             raise RuntimeError('actual SOC exceeded physical bounds')
         reward, soc_penalty, ramp_penalty, energy_cost = onboard_reward_components(ledger,
-            reward_cost_mode=self.reward_mode, soc_before=state[0], soc_after=next_physical.soc,
+            reward_cost_mode=('zhou_economic_only' if self.reward_mode == INVERSE_ONE_PLUS_ECONOMIC
+                              else self.reward_mode),
+            soc_before=state[0], soc_after=next_physical.soc,
             fc_kw=fc_kw, previous_fc_kw=previous_fc, economic_evaluation_config=self.economics)
+        if self.reward_mode == INVERSE_ONE_PLUS_ECONOMIC:
+            total_cost = economic_cost_cny(ledger, energy_cost)
+            reward = inverse_one_plus_economic_reward(total_cost)
         self._physical = next_physical
         self._fc_history = (*self._fc_history[-2:], float(fc_kw))
         self._history = current_history
@@ -164,12 +174,17 @@ class DirectVesselEnv(gym.Env):
             action_delta_kw=int(fc_kw - previous_fc), soc_equivalent_hydrogen_cost_cny=energy_cost)
         if not done and not next_candidates:
             cause = self._failure_cause(self._index, next_physical_actions)
-            error = ReplayExecutionError(self._index, OperatingMode.ONBOARD,
-                NoFeasibleFCActionError('no feasible FC action at successor decision'),
-                executed_transitions=(transition,), failure_kind='no_feasible_action',
-                failure_cause=cause, failed_state=next_state)
-            transition = prepare_failure_replay(error, penalty=self.penalty,
-                energy_value=self._energy_value, redistribute_battery_energy=False).transitions[-1]
+            if self.reward_mode == INVERSE_ONE_PLUS_ECONOMIC:
+                transition = replace(transition,
+                    reward_cny=inverse_one_plus_economic_reward(total_cost, physical_failure=True),
+                    done=True, next_feasible_actions=(), terminal_reason='failure_' + cause)
+            else:
+                error = ReplayExecutionError(self._index, OperatingMode.ONBOARD,
+                    NoFeasibleFCActionError('no feasible FC action at successor decision'),
+                    executed_transitions=(transition,), failure_kind='no_feasible_action',
+                    failure_cause=cause, failed_state=next_state)
+                transition = prepare_failure_replay(error, penalty=self.penalty,
+                    energy_value=self._energy_value, redistribute_battery_energy=False).transitions[-1]
             self.episode_status = cause
         elif done:
             self.episode_status = 'completed'
@@ -181,6 +196,8 @@ class DirectVesselEnv(gym.Env):
         info = {'sample_id': self.episode.sample_id, 'transition': transition,
             'next_action_mask': self.action_masks(), 'terminal_reason': transition.terminal_reason,
             'failure_penalty_equivalent_cny': transition.failure_penalty_equivalent_cny}
+        if self.reward_mode == INVERSE_ONE_PLUS_ECONOMIC:
+            info['total_cost_cny'] = total_cost
         if transition.done:
             info.update(status=self.episode_status, executed_steps=self._index)
         return (np.asarray(next_state, dtype=np.float32), float(transition.reward_cny),
@@ -188,21 +205,27 @@ class DirectVesselEnv(gym.Env):
 
     def snapshot(self):
         """Small JSON-compatible state: no trajectory or action-prefix replay."""
-        return {'version': 1, 'sample_id': None if self.episode is None else self.episode.sample_id,
-            'reward_mode': self.reward_mode, 'failure_penalty': self.penalty.amount,
+        snapshot = {'version': 1, 'sample_id': None if self.episode is None else self.episode.sample_id,
+            'reward_mode': self.reward_mode,
+            'failure_penalty': None if self.penalty is None else self.penalty.amount,
             'fc_average_efficiency': self.economics.fc_average_efficiency,
             'index': self._index, 'physical': asdict(self._physical),
             'history': None if self._history is None else list(self._history),
             'fc_history': list(self._fc_history),
             'current_state': None if self.current_decision_state is None else list(self.current_decision_state),
             'terminated': self._terminated, 'episode_status': self.episode_status}
+        if self.reward_mode == INVERSE_ONE_PLUS_ECONOMIC:
+            snapshot['reward_contract'] = reward_contract(self.reward_mode)
+        return snapshot
 
     def restore(self, snapshot, episode):
         """Restore the physical state directly; return the current Gym decision."""
         if (snapshot.get('version') != 1 or snapshot.get('sample_id') != episode.sample_id
                 or snapshot.get('reward_mode') != self.reward_mode
-                or snapshot.get('failure_penalty') != self.penalty.amount
-                or snapshot.get('fc_average_efficiency') != self.economics.fc_average_efficiency):
+                or snapshot.get('failure_penalty') != (None if self.penalty is None else self.penalty.amount)
+                or snapshot.get('fc_average_efficiency') != self.economics.fc_average_efficiency
+                or (self.reward_mode == INVERSE_ONE_PLUS_ECONOMIC
+                    and snapshot.get('reward_contract') != reward_contract(self.reward_mode))):
             raise ValueError('snapshot episode or reward configuration differs from this environment')
         self.close()
         self._load_episode(episode)
