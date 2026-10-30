@@ -1,0 +1,1 @@
+D:\py\Python3\python.exe -m rl_zoo3.train --algo dqn --env CartPole-v1 -n 3000 --device cpu --num-threads 1 --eval-freq 1000 --eval-episodes 3 --log-folder experiments/sb3_manual/zoo_smoke
