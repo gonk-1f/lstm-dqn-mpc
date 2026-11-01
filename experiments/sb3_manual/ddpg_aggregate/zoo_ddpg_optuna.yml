@@ -1,0 +1,21 @@
+AggregateShipDDPG-v0:
+  # 8 * Train35 median(9720), rounded up to a multiple of 32.
+  n_timesteps: 77760
+  policy: MlpPolicy
+  n_envs: 1
+  learning_rate: 0.001
+  gamma: 0.999
+  batch_size: 64
+  buffer_size: 1000000
+  learning_starts: 5000
+  train_freq: 32
+  gradient_steps: 1
+  tau: 0.005
+  noise_type: normal
+  noise_std: 0.1
+  policy_kwargs: "dict(net_arch=[256, 256])"
+  env_kwargs:
+    data_root: data/processed/operating_dataset_v6_1s
+    split: train
+  callback:
+  - experiments.sb3_manual.ddpg_aggregate.zoo_trial_logging.TrialParametersCallback
