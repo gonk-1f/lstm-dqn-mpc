@@ -1,5 +1,5 @@
 AggregateShipDDPG-v0:
-  n_timesteps: 500000
+  n_timesteps: 20000000
   policy: MlpPolicy
   n_envs: 1
   learning_rate: 0.001
@@ -9,14 +9,14 @@ AggregateShipDDPG-v0:
   learning_starts: 5000
   train_freq: 32
   gradient_steps: 1
-  tau: 0.005
+  tau: 0.03
   noise_type: normal
-  noise_std: 0.1
+  noise_std: 0.12
   policy_kwargs: "dict(net_arch=[256, 256])"
   env_kwargs:
     data_root: data/processed/operating_dataset_v6_1s
     split: train
   callback:
   - stable_baselines3.common.callbacks.StopTrainingOnMaxEpisodes:
-      max_episodes: 484
+      max_episodes: 500
       verbose: 1

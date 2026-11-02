@@ -1,10 +1,10 @@
 # DDPG 固定参数与原生 Zoo Optuna
 
-## 固定配置
+## 正式训练配置（500 Episode）
 
 基准提交：`b45e6e472e8fb1538207b73e80e15fd6d986c52d`。Python 3.11.5、SB3 2.9.2、RL Zoo 2.9.0、Optuna 4.9.0、PyTorch 2.8.0+cu128；未安装或更改依赖。
 
-| 参数 | 原值 | 本次固定值 |
+| 参数 | 原始 DDPG 值 | 当前正式训练值 |
 | --- | --- | --- |
 | learning_rate | 0.001 | 0.001 |
 | gamma | 0.99 | 0.999 |
@@ -13,19 +13,56 @@
 | learning_starts | 100 | 5000 |
 | train_freq | 1 | 32 |
 | gradient_steps | 1 | 1 |
-| tau | 0.005 | 0.005 |
-| NormalActionNoise sigma | 0.1 | 0.1 |
+| tau | 0.005 | 0.03 |
+| NormalActionNoise sigma | 0.1 | 0.12 |
 | policy_kwargs | 未显式指定网络 | dict(net_arch=[256, 256]) |
 
-原生 DDPG 实际构造结果（CPU，仅构造、不训练）：
+网络结构已在前次配置验收中实际构造确认（CPU，仅构造、不训练）：
 
 - Actor 与 Actor target：3 → 256 → ReLU → 256 → ReLU → 1 → Tanh。
 - Critic 与 Critic target：状态+动作共 4 维 → 256 → ReLU → 256 → ReLU → 1；单 Critic，Adam 优化器。
 - SB3 DDPG 内部复用 `TD3Policy` 类并设置 `n_critics=1`，日志中的该类名不代表切换了算法。
 - 实际 `train_freq=TrainFreq(32, STEP)`、`gradient_steps=1`；不会转换成 32:32。
-- 单环境、1 秒周期、原有 device 选择逻辑保持不变。
+- 单环境、1 秒周期；正式 Zoo 运行命令显式指定 `--device cuda`。
 - `train.py --total-timesteps` 默认仍为 **1000**，正式训练务必显式传预算。
-- 正式 `zoo_ddpg.yml` 仍为 500000 步，并保留原有 `max_episodes=484` 回调与数据路径。它不代表保证完成 500 episode。
+- 正式 `zoo_ddpg.yml` 使用 `n_timesteps=20000000` 作为安全上限，原生 `StopTrainingOnMaxEpisodes(max_episodes=500)` 在第 500 次 Episode 结束时停止；数据路径保持不变。
+- 每次 reset 从原有 35 条 Train 航段中随机抽取一条完整航段。原生回调也会把物理失败导致的提前终止计作一个 Episode，因此不是保证 500 条成功完成的航段；未修改环境或终止规则。
+- Optuna 配置独立保持原样：基线 tau=0.005、noise_std=0.1，搜索空间和既有 Trial 18 结果均未改动。`train.py` 也不随本次正式 Zoo 配置更改。
+
+## PyCharm PowerShell 正式训练命令（未执行）
+
+以下命令从头训练原生 SB3 DDPG，不加载或覆盖之前的模型。CUDA 使用 Zoo 的 `--device` CLI 参数，不放入算法 YAML，以免与 Zoo 显式传入的 device 参数重复。
+
+```powershell
+Set-Location -LiteralPath 'C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-sb3-baseline'
+$env:PYTHONPATH = "$PWD\src;$PWD"
+
+& '.\.venv\Scripts\python.exe' -u -m rl_zoo3.train `
+  --algo ddpg --env AggregateShipDDPG-v0 `
+  --gym-packages experiments.sb3_manual.ddpg_aggregate.zoo_register `
+  --conf-file experiments/sb3_manual/ddpg_aggregate/zoo_ddpg.yml `
+  --device cuda --eval-freq -1 --seed 42 `
+  --log-folder outputs/ddpg_train_500ep `
+  --save-replay-buffer
+```
+
+训练仅使用 Train35，`--eval-freq -1` 关闭 Zoo 内部周期性评估。Zoo 在独立目录 `outputs/ddpg_train_500ep/ddpg/AggregateShipDDPG-v0_N/` 下保存最终模型、Replay 和配置；重复启动会使用新的运行编号，保留旧运行。
+
+训练命令返回后，在同一 PowerShell 会话中手动执行一次独立 Validation8（不由训练自动调用）：
+
+```powershell
+$run = Get-ChildItem -LiteralPath 'outputs/ddpg_train_500ep/ddpg' -Directory -Filter 'AggregateShipDDPG-v0_*' |
+  Sort-Object { [int]($_.Name -replace '^AggregateShipDDPG-v0_', '') } -Descending |
+  Select-Object -First 1
+$validationDir = Join-Path $run.FullName ('validation8_' + (Get-Date -Format 'yyyyMMdd_HHmmss'))
+
+& '.\.venv\Scripts\python.exe' -u -m experiments.sb3_manual.ddpg_aggregate.evaluate `
+  --data-root data/processed/operating_dataset_v6_1s `
+  --model (Join-Path $run.FullName 'AggregateShipDDPG-v0.zip') `
+  --output-dir $validationDir
+```
+
+现有 evaluate.py 使用 CPU 独立评估全部 8 条 Validation 航段，不读取 Test。带时间戳的输出目录保留已有验证记录。本次仅修改正式配置与本文档，未运行以上训练或评估命令。
 
 ## 原生 Zoo 与本地适配边界
 
@@ -103,7 +140,9 @@ $env:PYTHONPATH = "$PWD\src;$PWD"
 - `outputs/ddpg_optuna/logs/ddpg/report_*.csv/.pkl`：原生搜索汇总；终端输出原生最优 Trial。
 - 以上目录被 Git 忽略，模型和数据库不提交。
 
-## 配置验收命令
+## Optuna 接入时的历史配置验收（2026-11-01）
+
+本节记录前次接入时执行的检查。本次按要求仅核对配置、Git 差异与提交推送，不重跑这些命令。既有测试包含旧正式预算、Tau、噪声与 Episode 数的断言，未在本次两文件修改范围内更新，不应将历史通过结果当作当前正式配置的测试结果。
 
 在上述工作目录与 PYTHONPATH 下执行：
 
