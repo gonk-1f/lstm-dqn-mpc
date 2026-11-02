@@ -97,7 +97,7 @@ rl_zoo3.train.train()
 - `--eval-env-kwargs` 必须指定 split=validation；8 次连续评估将遍历 8 条不同 Validation 航段，即便 VecEnv auto-reset 使下一轮从不同游标位置开始。
 - 测试通过 reset 检查完整一轮及偏移后一轮均为 8 个不同航段；未执行整航段评估，也未读取 Test payload。
 
-目标是原生 `TrialEvalCallback.last_mean_reward`，即**第二次 Validation8 的平均 episode reward，maximize**。当前奖励仍为 SOC 偏差罚项、FC 功率变化罚项的负值及失败惩罚；不是直接最小化氢耗或经济成本。奖励、SOC 权重、参考值、状态、动作、物理模型与数据划分均未修改。
+目标是原生 `TrialEvalCallback.last_mean_reward`，即**第二次 Validation8 的平均 episode reward，maximize**。当前奖励仍为 SOC 偏差罚项、FC 功率变化罚项的负值及失败惩罚；不是直接最小化氢耗或经济成本。SOC 权重现为 10.0；奖励数学形式、SOC 参考值、状态、动作、物理模型与数据划分保持原样。
 
 ## Windows PowerShell 搜索命令（交付命令，未执行搜索）
 

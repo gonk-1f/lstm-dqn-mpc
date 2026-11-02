@@ -19,7 +19,7 @@ from v4.v6_dataset import V6TrainingDataset
 FC_RATED_KW = 600.0
 FC_RAMP_KW_PER_S = 48.0
 SOC_REFERENCE = 0.5
-SOC_WEIGHT = 100.0
+SOC_WEIGHT = 10.0
 RAMP_WEIGHT = 0.0025
 FAILURE_REWARD = -1000.0  # Provisional terminal penalty, NOT a proven safe choice.
 
