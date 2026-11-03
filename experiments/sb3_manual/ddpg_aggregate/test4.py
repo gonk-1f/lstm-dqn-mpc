@@ -25,7 +25,7 @@ from stable_baselines3.common.utils import check_for_correct_spaces
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 import torch
 
-DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_test_economic_v1"
+DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_fixed_parent_005_test_linear_v2"
 
 
 def run_test4(

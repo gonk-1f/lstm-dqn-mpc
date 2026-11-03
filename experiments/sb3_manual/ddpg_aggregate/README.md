@@ -5,7 +5,7 @@
 
 ## 奖励与成本
 
-版本：`ddpg_economic_tanh_v1`。
+版本：`ddpg_economic_linear_v2`。
 
 - `C_H2`：现有实际氢耗乘现有氢价 21.9 CNY/kg。
 - `C_FC_deg`、`C_LB_deg`：直接使用现有物理 interval 返回的退化账本，不重复推进物理或另加寿命惩罚。
@@ -20,14 +20,14 @@
 economic_cost = C_H2 + C_FC_deg + C_LB_deg + C_bat_eq
 C_SOC = lambda_soc * (SOC_next - 0.5)**2
 r = economic_cost + C_SOC
-reward = tanh(1/r)       # 正常执行，r=0 时取右极限 reward=1
-reward = -1             # 原有真实物理不可行终止
+reward = -r             # 正常执行，r=0 时 reward=0；不做 tanh、clip 或额外缩放
+reward = -10000         # 原有真实物理不可行终止，固定替换，无其他失败补偿
 ```
 
 不对 SOC 平方偏差做区间归一化或再乘时间步长。独立 FC ramp 惩罚已经删除；
 Ramp RMS 继续作为诊断指标，原 CSV 的 ramp penalty 字段固定为0。
 负值或非有限总成本明确报错，不取绝对值、不裁剪、不加 epsilon。
-失败奖励不记入经济成本；未执行失败步不制造电池功率、氢耗或时间。
+失败奖励不记入经济成本；失败步不再计算其他补偿或经济奖励，未执行失败步不制造电池功率、氢耗或时间。
 
 CSV/JSON 的 `total_cost_cny` 是四项经济成本；`c_soc_cny` 为 SOC 惩罚，
 `reward_total_cost_cny` 才是奖励公式中的 r。不再额外做终端 SOC 补能计价，
@@ -72,8 +72,9 @@ SHA256 `caf67c28eea863c01c8d6f9a8f7e38ea27b2f3ce924fe1d12dc4a843551f100f`。
 本次开发不启动正式训练。固定航段诊断、Validation/Test默认指向本次训练输出的首个模型；
 该模型要在用户后续训练完成后才存在。
 也可通过原模块的 `--model-path` 明确选择模型。
-旧策略可以在新奖励下单独重新评估，输出明确标记 legacy；
-旧奖励checkpoint不能恢复到新奖励训练，不混用旧奖励的评估结果。
+新奖励必须从头训练，不传 `--trained-agent`，不加载旧模型或旧Replay。
+训练恢复及所有评估入口校验完整奖励身份；旧tanh模型、无奖励身份模型和不同权重模型均拒绝混用。
+新版本模型以后可在相同奖励身份下暂停恢复，但不能将旧版本权重或Replay作为本次初始条件。
 
 原生训练参数：
 gamma=.999、learning_rate=.001、batch_size=64、learning_starts=5000、
@@ -85,11 +86,11 @@ Zoo仍以20000000环境步作安全上限，原生 StopTrainingOnMaxEpisodes=500
 真实物理失败终止也计为一个已结束Episode，不能把500次结束等同于500次成功完成。
 构造环境时 `fixed_train_id=None` 仍保留随机Train35机制；Validation/Test不使用固定训练ID。
 
-新训练输出：`outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v1/ddpg/AggregateShipDDPG-v0_N/`。
+新训练输出：`outputs/ddpg_fixed_parent_005_seg01_500ep_linear_v2/ddpg/AggregateShipDDPG-v0_N/`。
 初次运行N=1；Zoo后续运行使用新编号，不覆盖历史模型。若运行编号改变，应通过模块的
 `--model-path` 指定实际模型，或同步根目录三个评估入口的路径，不能误评估旧的N=1模型。
-独立输出分别为 `outputs/ddpg_fixed_parent_005_evaluation_economic_v1`、
-`outputs/ddpg_fixed_parent_005_validation_economic_v1`、`outputs/ddpg_fixed_parent_005_test_economic_v1`，
+独立输出分别为 `outputs/ddpg_fixed_parent_005_evaluation_linear_v2`、
+`outputs/ddpg_fixed_parent_005_validation_linear_v2`、`outputs/ddpg_fixed_parent_005_test_linear_v2`，
 每次评估再创建带时间戳的独立子目录。
 历史模型、Replay、Trial18及全部旧输出保留。
 
@@ -159,60 +160,38 @@ Adam更新之前，checkpoint_metadata.json明确记录该阶段；不额外做A
 原77760步预算、两次Validation8评估、TPE/NopPruner、单job、最多20trial保持不变。
 正式500轮的周期回调不加入Optuna YAML。
 
-新Study：`ddpg_tau_noise_economic_tanh_v1`。
-新存储：`sqlite:///outputs/ddpg_optuna_economic_v1/study.db`。
+新Study：`ddpg_tau_noise_economic_linear_v2`。
+新存储：`sqlite:///outputs/ddpg_optuna_linear_v2/study.db`。
 入口拒绝旧奖励Study名称；trial/study/参数导出均记录固定reward_identity，
 不允许沿用无身份或不同权重的Study。旧Study数据库及Trial18均未修改。
 本轮没有执行搜索或创建新Study。
 参数导出以新Study的 `effective_parameters.json` 及 reward_identity 为准；
 原生全量 DDPG `--trial-id` converter 不适用于这里仅含tau/noise的搜索参数，未新增转换逻辑。
 
-本次不修改Optuna脚本、搜索YAML、数据库或历史Trial。历史搜索使用lambda_soc=17，
-不能作为lambda_soc=8的同一Study继续搜索；现有奖励身份检查会拒绝混用，历史结果保留。
+本次只更新Optuna默认Study和输出路径，不改搜索YAML、采样范围、数据库或历史Trial。
+历史tanh搜索及lambda_soc=17的结果不能与线性奖励混用，现有奖励身份检查会拒绝混用，历史结果保留。
 固定ID和tau=.045、noise=.1仅用于本次正式固定航段实验，不改历史随机Train35搜索配置。
 
 ## 本次修改与限定验收
 
-修改范围：环境增加固定Train ID；正式YAML和次要train入口同步tau/noise；
-经济配置仅将SOC权重17改为8；三个原根目录入口同步新模型/输出路径；
-新增固定航段评估模块及根目录入口；更新本README和相关配置/奖励断言，新增固定航段测试。
-物理模型、数据集、Validation/Test评估实现、历史Optuna脚本/YAML/数据库均未修改。
+本轮只更改奖励公式、固定失败值、奖励身份及独立输出路径；两个Zoo YAML、train.py超参数、
+所有物理模型、约束、动作投影、数据集与35/8/4划分均保持不变。lambda_soc继续固定为8。
+每20轮固定航段诊断、每100轮Validation8、500次真实Episode结束停止均保持不变。
 
-相关测试分批执行，19项通过：`test_fixed_train` 10项、`test_periodic_validation` 4项、
-`test_test4` 数据适配3项、`test_economic_reward` 固定配置断言1项、
-`test_zoo_optuna.NativeConfigurationTests.test_fixed_configs_and_budget` 1项。
-最后一项只构建配置，不运行Optuna；其历史FixedTrial的noise_std=.06低于现有采样下限，
-产生一条已存在的UserWarning，不影响本次配置检查，未扩大范围修改该旧fixture。
+当前训练入口没有恢复参数，所有评估入口默认指向本次新目录中的模型。
+历史 `ddpg_fixed_parent_005_seg01_500ep_economic_v1` 的模型、Replay和结果完整保留，
+其中已暂停的99轮属于旧tanh奖励，不能接到本次线性奖励训练中。
+先前第20轮故障后的旧续训命令仅适用于旧代码版本，不再作为当前运行命令。
 
-真实Train有界检查：小模型4步/4次Adam更新及独立子进程3步推理；
-原生Zoo正式配置另跑32步，Replay=32、Adam=0（未达learning_starts=5000）。
-20轮/100轮回调以模拟结束事件验证，分别触发25次/5次；没有执行完整Validation8或Test4推理。
-编译、固定评估CLI `--help`、`git diff --check` 通过；未启动正式500轮训练。
+必要检查包括线性奖励数值、失败固定-10000且账本不变、正常终止无额外奖励、旧模型/旧Study身份拒绝、
+固定参数/启动器路径、20轮/100轮回调，以及临时新建未训练模型上的深目录2步推理和3步Validation预检。
+不进行正式训练、完整Validation8/Test4推理或Optuna搜索。未训练模型仅为接口测试夹具，不是实验结果。
+本轮上述相关测试35项通过；编译、三个评估模块的CLI帮助及 `git diff --check` 通过。
 
-相关测试复现（项目根目录PowerShell；无需运行正式入口）：
+复现相关测试（项目根目录PowerShell）：
 
 ```powershell
 $pkg = 'experiments.sb3_manual.ddpg_aggregate'
-& '.\.venv\Scripts\python.exe' -m unittest "$pkg.test_fixed_train" "$pkg.test_periodic_validation" "$pkg.test_test4" "$pkg.test_economic_reward.EconomicRewardTests.test_fixed_config_is_loaded_only_on_request_and_identity_is_stable" "$pkg.test_zoo_optuna.NativeConfigurationTests.test_fixed_configs_and_budget" -v
+& '.\.venv\Scripts\python.exe' -m unittest "$pkg.test_economic_reward" "$pkg.test_linear_reward_env" "$pkg.test_periodic_validation" "$pkg.test_periodic_paths" "$pkg.test_validate" "$pkg.test_fixed_train.FixedConfigurationTests.test_formal_parameters_and_budgets" "$pkg.test_fixed_train.FixedConfigurationTests.test_root_launchers_use_new_model_and_independent_splits" "$pkg.test_fixed_train.FixedEvaluationTests.test_checkpoint_child_command_and_unique_node" "$pkg.test_fixed_train.FixedEvaluationTests.test_combined_callback_triggers_include_failed_episodes_and_500" "$pkg.test_zoo_optuna.SamplerTests" -v
 git diff --check
 ```
-
-### 第20轮路径错误后的接续
-
-首次运行在第20轮的固定航段评估建目录时因Windows路径过长退出。
-`fixed_train_evaluation/episode_0020/model.zip` 已保存权重与优化器：58655环境步、
-1676次更新循环、累计20次Episode结束。该运行尚无Replay文件，不能精确恢复原训练轨迹。
-以下命令仅从该checkpoint继续权重/优化器训练，回放重新收集、重新执行5000步warmup；
-Zoo环境步时钟重新计数，自定义累计Episode从20继续，到500停止，即最多新增480轮。
-原运行及模型不变，Zoo会使用新的运行编号。直接重新运行根目录训练脚本则是新实验。
-
-在本DDPG工作树根目录PowerShell执行（本次修复未执行此命令）：
-
-```powershell
-$env:PYTHONPATH = "$PWD;$PWD\src"
-& '.\.venv\Scripts\python.exe' -u -m rl_zoo3.train --algo ddpg --env AggregateShipDDPG-v0 --gym-packages experiments.sb3_manual.ddpg_aggregate.zoo_register --conf-file experiments/sb3_manual/ddpg_aggregate/zoo_ddpg.yml --device cuda --eval-freq -1 --seed 42 --trained-agent outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v1/ddpg/AggregateShipDDPG-v0_1/fixed_train_evaluation/episode_0020/model.zip --log-folder outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v1 --save-replay-buffer
-```
-
-路径修复验收仅运行定向回调/路径回归，以及加载此checkpoint在临时深目录下的
-固定Train、Validation各2步CPU推理；不进行学习或完整Validation8/Test4评估。
-原检查点SHA256在推理前后保持一致。

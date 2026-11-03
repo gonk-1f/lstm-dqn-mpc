@@ -78,6 +78,23 @@ def validation_subprocess(command, **kwargs):
 
 
 class EpisodeValidationTests(unittest.TestCase):
+    def test_unversioned_replay_cannot_resume_after_step_counter_reset(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            model = FakeModel(Path(tmp))
+            del model._ddpg_reward_identity
+            model.num_timesteps = model._n_updates = 0
+            model.replay_buffer = SimpleNamespace(size=lambda: 1)
+            with self.assertRaisesRegex(ValueError, "Legacy reward checkpoint"):
+                self.start(model, output_root=Path(tmp) / "periodic")
+
+    def test_old_reward_checkpoint_cannot_resume_even_after_counter_reset(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            model = FakeModel(Path(tmp))
+            model.num_timesteps = 0
+            model._ddpg_reward_identity = {"reward_version": "ddpg_economic_tanh_v1"}
+            with self.assertRaisesRegex(ValueError, "another reward definition"):
+                self.start(model, output_root=Path(tmp) / "periodic")
+
     def test_legacy_resume_is_rejected_after_sb3_resets_step_counter(self):
         with tempfile.TemporaryDirectory() as tmp:
             model = FakeModel(Path(tmp))

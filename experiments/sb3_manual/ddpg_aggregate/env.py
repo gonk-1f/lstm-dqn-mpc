@@ -16,7 +16,7 @@ from v3.control import AccountState, EconomicMPC, SOC_MAX, SOC_MIN
 from v4.v6_dataset import V6TrainingDataset
 from .economic_reward import (
     load_reward_config, reward_identity, peak_fc_efficiency,
-    interval_economic_components, economic_reward,
+    interval_economic_components, economic_reward, FAILURE_REWARD,
 )
 
 
@@ -26,7 +26,6 @@ SOC_REFERENCE = 0.5
 REWARD_CONFIG = load_reward_config()
 SOC_WEIGHT = REWARD_CONFIG["lambda_soc"]
 RAMP_WEIGHT = 0.0  # Legacy diagnostic field; no independent ramp penalty.
-FAILURE_REWARD = -1.0
 ECONOMIC_SUM_FIELDS = (
     "hydrogen_mass_kg", "h2_cost_cny", "fuel_cell_degradation_cost_cny",
     "battery_degradation_cost_cny", "shore_cost_cny", "physical_economic_cost_cny",

@@ -1,4 +1,4 @@
-"""Bounded validation checks using real Validation data and a trained model."""
+"""Bounded validation checks using real data and an initialized current-reward model."""
 from __future__ import annotations
 
 import importlib
@@ -75,10 +75,6 @@ class ValidationTests(unittest.TestCase):
     def test_three_real_validation_steps_keep_model_unchanged_and_export(self):
         import torch
         from stable_baselines3 import DDPG
-        model = self.validation.PROJECT_ROOT / (
-            "outputs/ddpg_train_500ep/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip"
-        )
-        self.assertTrue(model.is_file(), "The completed formal model is required for this check")
         predict = DDPG.predict
 
         def deterministic_predict(*args, **kwargs):
@@ -86,6 +82,14 @@ class ValidationTests(unittest.TestCase):
             return predict(*args, **kwargs)
 
         with tempfile.TemporaryDirectory() as tmp:
+            fixture_env = self.make_env()
+            torch.set_num_threads(1)
+            fresh = DDPG("MlpPolicy", fixture_env, buffer_size=32, device="cpu", seed=42,
+                         policy_kwargs=dict(net_arch=[16, 16]))
+            fresh._ddpg_reward_identity = dict(fixture_env.reward_identity)
+            self.assertEqual((fresh.num_timesteps, fresh._n_updates), (0, 0))
+            model = Path(tmp) / "current_reward_model.zip"
+            fresh.save(model)
             with mock.patch.object(DDPG, "learn", side_effect=AssertionError("Validation learn()")), \
                  mock.patch.object(torch.optim.Adam, "step", side_effect=AssertionError("Validation Adam")), \
                  mock.patch.object(DDPG, "predict", new=deterministic_predict):

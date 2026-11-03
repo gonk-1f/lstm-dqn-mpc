@@ -22,7 +22,7 @@ sys.path.insert(0, str(ROOT / "src"))
 PACKAGE = "experiments.sb3_manual.ddpg_aggregate"
 DATA = ROOT / "data/processed/operating_dataset_v6_1s"
 FIXED_ID = "parent_005_seg01"
-RUN = "outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v1"
+RUN = "outputs/ddpg_fixed_parent_005_seg01_500ep_linear_v2"
 
 
 class FixedEnvironmentTests(unittest.TestCase):
@@ -148,6 +148,7 @@ class FixedEvaluationTests(unittest.TestCase):
         model = DDPG("MlpPolicy", env, buffer_size=32, learning_starts=0,
                      train_freq=1, gradient_steps=1,
                      policy_kwargs=dict(net_arch=[16, 16]), seed=42, device="cpu")
+        model._ddpg_reward_identity = dict(env.reward_identity)
         # A bounded real Train smoke performs an Adam update and creates nonempty Replay.
         model.learn(total_timesteps=4)
         with tempfile.TemporaryDirectory(prefix="ddpg_fixed_smoke_") as tmp:

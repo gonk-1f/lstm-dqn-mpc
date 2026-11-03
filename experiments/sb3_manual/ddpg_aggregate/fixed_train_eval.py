@@ -25,7 +25,7 @@ from .economic_reward import evaluation_identity
 from .validate import DEFAULT_DATA_ROOT, STEP_FIELDS, step_accounting, _model_snapshot
 
 FIXED_TRAIN_ID = "parent_005_seg01"
-DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_fixed_parent_005_evaluation_economic_v1"
+DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_fixed_parent_005_evaluation_linear_v2"
 
 
 def _append_csv(path: Path, row: dict) -> None:

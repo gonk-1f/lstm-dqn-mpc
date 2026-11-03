@@ -31,10 +31,10 @@ class SamplerTests(unittest.TestCase):
         adapter = importlib.import_module(PACKAGE + ".zoo_optuna")
         with mock.patch("optuna.create_study", side_effect=AssertionError("No Study during argument checks")):
             args = adapter.prepare_optimization_args(["--algo", "ddpg", "--optimize-hyperparameters"])
-        self.assertEqual(args[args.index("--study-name") + 1], "ddpg_tau_noise_economic_tanh_v1")
-        self.assertEqual(args[args.index("--storage") + 1], "sqlite:///outputs/ddpg_optuna_economic_v1/study.db")
-        self.assertEqual(args[args.index("--log-folder") + 1], "outputs/ddpg_optuna_economic_v1/logs")
-        self.assertEqual(args[args.index("--optimization-log-path") + 1], "outputs/ddpg_optuna_economic_v1/evaluations")
+        self.assertEqual(args[args.index("--study-name") + 1], "ddpg_tau_noise_economic_linear_v2")
+        self.assertEqual(args[args.index("--storage") + 1], "sqlite:///outputs/ddpg_optuna_linear_v2/study.db")
+        self.assertEqual(args[args.index("--log-folder") + 1], "outputs/ddpg_optuna_linear_v2/logs")
+        self.assertEqual(args[args.index("--optimization-log-path") + 1], "outputs/ddpg_optuna_linear_v2/evaluations")
         self.assertEqual(adapter.prepare_optimization_args(["--help"]), ["--help"])
 
     def test_old_study_name_is_rejected_and_new_seed_suffix_is_allowed(self):
@@ -43,9 +43,9 @@ class SamplerTests(unittest.TestCase):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 adapter.prepare_optimization_args(["--optimize-hyperparameters", "--study-name", name])
         args = adapter.prepare_optimization_args([
-            "--optimize-hyperparameters", "--study-name=ddpg_tau_noise_economic_tanh_v1_seed43",
+            "--optimize-hyperparameters", "--study-name=ddpg_tau_noise_economic_linear_v2_seed43",
         ])
-        self.assertIn("--study-name=ddpg_tau_noise_economic_tanh_v1_seed43", args)
+        self.assertIn("--study-name=ddpg_tau_noise_economic_linear_v2_seed43", args)
 
     def test_study_identity_guard_without_creating_study_or_storage(self):
         importlib.import_module(PACKAGE + ".zoo_optuna")
@@ -62,7 +62,7 @@ class SamplerTests(unittest.TestCase):
             def set_user_attr(self, key, value):
                 self.user_attrs[key] = value
 
-        identity = {"reward_version": "ddpg_economic_tanh_v1", "c_typ": 0.02, "lambda_soc": 2.0}
+        identity = {"reward_version": "ddpg_economic_linear_v2", "c_typ": 0.02, "lambda_soc": 2.0}
         fresh = Study([0])
         module.ensure_study_reward_identity(fresh, 0, identity)
         self.assertEqual(fresh.user_attrs["ddpg_reward_identity"], identity)
@@ -75,17 +75,17 @@ class SamplerTests(unittest.TestCase):
     def test_sampler_only_two_variables(self):
         self.assertIsNotNone(importlib.util.find_spec(PACKAGE + ".zoo_optuna"))
         adapter = importlib.import_module(PACKAGE + ".zoo_optuna")
-        for tau, sigma, n_actions in ((0.005, 0.03, 1), (0.15, 0.12, 3)):
+        for tau, sigma, n_actions in ((0.005, 0.07, 1), (0.06, 0.15, 3)):
             trial = FixedTrial({"tau": tau, "noise_std": sigma})
             params = adapter.sample_ddpg_params(trial, n_actions, 1, {})
             self.assertEqual(set(params), {"tau", "action_noise"})
             self.assertEqual(set(trial.params), {"tau", "noise_std"})
             self.assertTrue(trial.distributions["tau"].log)
             self.assertEqual(trial.distributions["tau"].low, 0.005)
-            self.assertEqual(trial.distributions["tau"].high, 0.15)
+            self.assertEqual(trial.distributions["tau"].high, 0.06)
             self.assertFalse(trial.distributions["noise_std"].log)
-            self.assertEqual(trial.distributions["noise_std"].low, 0.03)
-            self.assertEqual(trial.distributions["noise_std"].high, 0.12)
+            self.assertEqual(trial.distributions["noise_std"].low, 0.07)
+            self.assertEqual(trial.distributions["noise_std"].high, 0.15)
             self.assertIsInstance(params["action_noise"], NormalActionNoise)
             np.testing.assert_array_equal(params["action_noise"]._mu, np.zeros(n_actions))
             np.testing.assert_array_equal(params["action_noise"]._sigma, sigma * np.ones(n_actions))
@@ -123,7 +123,7 @@ class NativeConfigurationTests(unittest.TestCase):
         cls.addClassCleanup(cls.train_env.close)
         cls.addClassCleanup(cls.eval_env.close)
         adapter = importlib.import_module(PACKAGE + ".zoo_optuna")
-        cls.trial = FixedTrial({"tau": 0.02, "noise_std": 0.06})
+        cls.trial = FixedTrial({"tau": 0.02, "noise_std": 0.1})
         params = dict(cls.manager._hyperparams)
         params.update(adapter.sample_ddpg_params(cls.trial, cls.manager.n_actions, 1, {}))
         cls.model = DDPG(env=cls.train_env, seed=None, device="cpu", **params)
@@ -232,7 +232,7 @@ class NativeConfigurationTests(unittest.TestCase):
         self.assertEqual(saved["gradient_steps"], 1)
         self.assertEqual(saved["policy_kwargs"]["net_arch"], [256, 256])
         self.assertEqual(saved["tau"], 0.02)
-        self.assertEqual(saved["noise_std"], [0.06])
+        self.assertEqual(saved["noise_std"], [0.1])
         self.assertEqual(saved["evaluation_split"], ["validation"])
         self.assertEqual(saved, self.trial.user_attrs["effective_parameters"])
         self.assertEqual(set(self.trial.params), {"tau", "noise_std"})

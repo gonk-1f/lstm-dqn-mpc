@@ -12,7 +12,7 @@ from rl_zoo3.hyperparams_opt import HYPERPARAMS_SAMPLER
 from .economic_reward import REWARD_VERSION
 
 DEFAULT_STUDY_NAME = "ddpg_tau_noise_" + REWARD_VERSION.removeprefix("ddpg_")
-DEFAULT_OPTUNA_ROOT = "outputs/ddpg_optuna_economic_v1"
+DEFAULT_OPTUNA_ROOT = "outputs/ddpg_optuna_linear_v2"
 
 
 def prepare_optimization_args(argv):

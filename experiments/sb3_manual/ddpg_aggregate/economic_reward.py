@@ -15,7 +15,8 @@ from pathlib import Path
 from v2.economics import HYDROGEN_PRICE_CNY_PER_KG
 from v2.models.fuel_cell_efficiency import LHV_H2_KWH_PER_KG
 
-REWARD_VERSION = "ddpg_economic_tanh_v1"
+REWARD_VERSION = "ddpg_economic_linear_v2"
+FAILURE_REWARD = -10000.0
 DEFAULT_CONFIG_PATH = Path(__file__).with_name("economic_reward_config.json")
 
 
@@ -33,8 +34,11 @@ def _check_config(config: dict) -> None:
         raise ValueError("Economic reward config version does not match the implementation")
     typical = _finite(config["c_typ"], "c_typ")
     weight = _finite(config["lambda_soc"], "lambda_soc")
+    failure = _finite(config["failure_reward"], "failure_reward")
     if typical < 0.0 or weight < 0.0:
         raise ValueError("c_typ and lambda_soc must be nonnegative")
+    if failure != FAILURE_REWARD:
+        raise ValueError("Economic reward config failure_reward does not match the implementation")
 
 
 def load_reward_config(path=DEFAULT_CONFIG_PATH) -> dict:
@@ -109,19 +113,23 @@ def interval_economic_components(physics, before, after, fc_kw, ledger) -> dict:
 
 
 def evaluation_identity(model, current_identity: dict) -> dict:
-    """Distinguish old policies re-evaluated now from models trained on this reward."""
+    """Require models trained with the same supported reward identity."""
+    if not isinstance(current_identity, dict) or current_identity.get("reward_version") != REWARD_VERSION:
+        raise ValueError("Evaluation reward identity is missing or unsupported")
     saved = getattr(model, "_ddpg_reward_identity", None)
-    if saved is not None and saved != current_identity:
+    if not isinstance(saved, dict) or saved.get("reward_version") != REWARD_VERSION:
+        raise ValueError("Model reward identity is missing or unsupported; retrain with the current reward")
+    if saved != current_identity:
         raise ValueError("Model and evaluation reward identities differ")
     return {
         "model_reward_identity": saved,
         "evaluation_reward_identity": current_identity,
-        "legacy_policy_evaluated_with_current_reward": saved is None,
+        "legacy_policy_evaluated_with_current_reward": False,
     }
 
 
 def economic_reward(total_cost_cny, soc_next, lambda_soc) -> tuple[float, float, float]:
-    """Return tanh(1/r), the plain SOC-square cost, and their raw-CNY total."""
+    """Return the negative raw-CNY total, the plain SOC-square cost, and total."""
     cost = _finite(total_cost_cny, "four-item economic cost")
     soc = _finite(soc_next, "SOC next")
     weight = _finite(lambda_soc, "lambda_soc")
@@ -133,8 +141,7 @@ def economic_reward(total_cost_cny, soc_next, lambda_soc) -> tuple[float, float,
     total = _finite(cost + soc_cost, "reward total cost")
     if total < 0.0:
         raise ValueError("Negative reward total cost: check economic components and SOC weight")
-    reward = 1.0 if total == 0.0 else math.tanh(1.0 / total)
-    return reward, soc_cost, total
+    return -total, soc_cost, total
 
 
 def reward_identity(config: dict) -> dict:
@@ -148,8 +155,8 @@ def reward_identity(config: dict) -> dict:
         "c_typ": float(config["c_typ"]),
         "lambda_soc": float(config["lambda_soc"]),
         "soc_reference": 0.5,
-        "failure_reward": -1.0,
+        "failure_reward": FAILURE_REWARD,
         "config_sha256": hashlib.sha256(encoded).hexdigest(),
-        "formula": "tanh(1/(C_H2+C_FC_deg+C_LB_deg+C_bat_eq+lambda_soc*(SOC_next-0.5)**2))",
+        "formula": "-(C_H2+C_FC_deg+C_LB_deg+C_bat_eq+lambda_soc*(SOC_next-0.5)**2)",
         "battery_equivalence": "signed SOC cell-energy delta; actual eta(P_fc) when on, computed positive-power curve peak when off; no extra battery/DC-DC efficiency",
     }

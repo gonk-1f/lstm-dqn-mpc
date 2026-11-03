@@ -22,7 +22,7 @@ C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-sb3-base
 | Run kind | Module name |
 | Module name | `experiments.sb3_manual.ddpg_aggregate.validate` |
 | Working directory | 上述实际 DDPG 工作树根目录 |
-| Parameters | `--model-path outputs/ddpg_train_500ep_economic_v1/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip --device cpu` |
+| Parameters | `--model-path outputs/ddpg_fixed_parent_005_seg01_500ep_linear_v2/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip --device cpu` |
 | Python interpreter | `C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-sb3-baseline\.venv\Scripts\python.exe` |
 
 无需设置 `PYTHONPATH`，也无需启用 “Add content roots/source roots to PYTHONPATH”。
@@ -34,14 +34,14 @@ C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-sb3-base
 在上述 DDPG 项目根目录执行：
 
 ```powershell
-& ".\.venv\Scripts\python.exe" -m experiments.sb3_manual.ddpg_aggregate.validate --model-path "outputs/ddpg_train_500ep_economic_v1/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip" --device cpu
+& ".\.venv\Scripts\python.exe" -m experiments.sb3_manual.ddpg_aggregate.validate --model-path "outputs/ddpg_fixed_parent_005_seg01_500ep_linear_v2/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip" --device cpu
 ```
 
 验证其他模型时，只替换 `--model-path`，相对路径以当前项目根目录为准，也可填写绝对路径。
 无需复制模型、加载磁盘 Replay Buffer 或先运行训练。
 
 默认数据根为当前项目的 `data/processed/operating_dataset_v6_1s`；默认输出根为
-`outputs/ddpg_validation_economic_v1`。可分别通过 `--data-root`、`--output-root` 指定。
+`outputs/ddpg_fixed_parent_005_validation_linear_v2`。可分别通过 `--data-root`、`--output-root` 指定。
 默认 `--seed 42`、`--episodes 8`、`--torch-threads 1`。
 
 ## 验证范围与确定性
@@ -101,7 +101,7 @@ VecNormalize 训练的模型时，可通过 `--vecnormalize-path` 指定其对�
 仅运行第一条 Validation 的前 100 次环境调用：
 
 ```powershell
-& ".\.venv\Scripts\python.exe" -m experiments.sb3_manual.ddpg_aggregate.validate --model-path "outputs/ddpg_train_500ep_economic_v1/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip" --episodes 1 --max-steps-per-episode 100 --device cpu
+& ".\.venv\Scripts\python.exe" -m experiments.sb3_manual.ddpg_aggregate.validate --model-path "outputs/ddpg_fixed_parent_005_seg01_500ep_linear_v2/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip" --episodes 1 --max-steps-per-episode 100 --device cpu
 ```
 
 这是短程接口检查，不能作为 Validation8 结果；输出会保留未完成状态。省略
@@ -116,7 +116,9 @@ VecNormalize 训练的模型时，可通过 `--vecnormalize-path` 指定其对�
 
 ## 经济奖励版本更新
 
-当前默认采用 `ddpg_economic_tanh_v1`：四项经济成本（实际氢耗、FC退化、电池退化、实时电池等效氢耗）加固定 SOC 平方惩罚后计算 `tanh(1/r)`；物理失败为 -1。
-固定 `C_typ=0.17429534153424198` 为 Train35 实际执行步的四项经济成本中位数；`lambda_soc=17.0` 是将初始比例估算 `100*C_typ=17.4295` 取整后的固定权重。未使用 Validation/Test 标定，训练和验证期间均不重新计算权重。
+当前默认采用 `ddpg_economic_linear_v2`：四项经济成本（实际氢耗、FC退化、电池退化、实时电池等效氢耗）加固定 SOC 平方惩罚后计算 `reward=-r`；物理失败固定为 -10000，不再计算其他失败补偿。
+固定 `C_typ=0.17429534153424198` 为 Train35 实际执行步的四项经济成本中位数；`lambda_soc=8.0` 继续保持当前固定权重；C_typ仅保留为历史标定元数据，不参与线性奖励缩放。未使用 Validation/Test 标定，训练和验证期间均不重新计算权重。
 FC关机参考效率由现有正功率曲线取峰值，开启时使用实际功率点效率；每秒记录两种效率。`total_cost_cny` 为四项经济成本，`reward_total_cost_cny` 另加SOC罚项；无额外终端补能计价。
-新奖励模型默认路径需在后续新训练完成后才会存在。显式加载旧策略时，JSON标记其在新奖励下评估；不同奖励身份的模型不混用。根目录对应的直接运行脚本无需Module配置。
+新奖励模型默认路径需在后续从头训练完成后才会存在。不同奖励身份或无身份的模型明确拒绝加载评估。根目录对应的直接运行脚本无需Module配置。
+
+仅允许加载奖励身份完全一致的线性奖励模型；旧tanh模型及无身份历史模型拒绝评估。当前模型必须先在新目录从头训练，历史结果保留。

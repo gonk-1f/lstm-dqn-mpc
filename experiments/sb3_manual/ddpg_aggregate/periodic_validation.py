@@ -42,6 +42,7 @@ class EpisodeValidationCallback(BaseCallback):
         # SB3 may reset num_timesteps before this hook; optimizer updates survive.
         if saved_identity is None and (
             self.model.num_timesteps > 0 or self.model._n_updates > 0
+            or (self.model.replay_buffer is not None and self.model.replay_buffer.size() > 0)
         ):
             raise ValueError("Legacy reward checkpoint cannot resume economic-reward training")
         self.model._ddpg_completed_episodes = self.completed_episodes

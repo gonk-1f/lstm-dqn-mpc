@@ -29,7 +29,7 @@ from .economic_reward import evaluation_identity
 
 ENV_ID = "AggregateShipDDPG-v0"
 DEFAULT_DATA_ROOT = PROJECT_ROOT / "data/processed/operating_dataset_v6_1s"
-DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_validation_economic_v1"
+DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_fixed_parent_005_validation_linear_v2"
 ACCOUNTING_FIELDS = (
     "hydrogen_mass_kg", "battery_charge_bus_kwh", "battery_discharge_bus_kwh",
     "h2_cost_cny", "fuel_cell_degradation_cost_cny",

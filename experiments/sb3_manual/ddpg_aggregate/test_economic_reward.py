@@ -3,11 +3,13 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+import hashlib
 import json
 import math
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 import numpy as np
@@ -92,7 +94,7 @@ class EconomicRewardTests(unittest.TestCase):
         self.assertAlmostEqual(values["c_bat_eq_cny"], expected, places=12)
         self.assertTrue(math.isfinite(values["total_cost_cny"]))
 
-    def test_idle_zero_cost_has_reward_one_and_soc_penalty_is_plain_square(self):
+    def test_idle_zero_cost_has_reward_zero_and_soc_penalty_is_plain_square(self):
         module = self.module()
         from v3.control import AccountState
         physics = self.physics()
@@ -100,12 +102,17 @@ class EconomicRewardTests(unittest.TestCase):
         after, ledger, _ = physics.interval(before, 0.0, 0.0, duration_s=1.0)
         values = module.interval_economic_components(physics, before, after, 0.0, ledger)
         self.assertEqual(values["total_cost_cny"], 0.0)
-        self.assertEqual(module.economic_reward(0.0, 0.5, 100.0), (1.0, 0.0, 0.0))
-        reward, penalty, total = module.economic_reward(1.0, 0.6, 100.0)
-        self.assertAlmostEqual(penalty, 1.0)
-        self.assertAlmostEqual(total, 2.0)
-        self.assertAlmostEqual(reward, math.tanh(0.5))
-        self.assertEqual(module.economic_reward(1.0, 0.5, 0.0), (math.tanh(1.0), 0.0, 1.0))
+        self.assertEqual(module.economic_reward(0.0, 0.5, 8.0), (0.0, 0.0, 0.0))
+        reward, penalty, total = module.economic_reward(1.0, 0.6, 8.0)
+        self.assertAlmostEqual(penalty, 0.08)
+        self.assertAlmostEqual(total, 1.08)
+        self.assertAlmostEqual(reward, -1.08)
+
+    def test_positive_economic_cost_keeps_raw_cny_units_without_saturation(self):
+        module = self.module()
+        for cost in (0.0001, 1.0, 2.0, 358.65):
+            with self.subTest(cost=cost):
+                self.assertEqual(module.economic_reward(cost, 0.5, 8.0), (-cost, 0.0, cost))
 
     def test_negative_or_nonfinite_cost_is_never_abs_or_clipped(self):
         module = self.module()
@@ -125,8 +132,15 @@ class EconomicRewardTests(unittest.TestCase):
 
     def test_fixed_config_is_loaded_only_on_request_and_identity_is_stable(self):
         module = self.module()
-        self.assertEqual(module.load_reward_config()["lambda_soc"], 8.0)
-        config = {"reward_version": module.REWARD_VERSION, "c_typ": 0.02, "lambda_soc": 1.7}
+        default = module.load_reward_config()
+        self.assertEqual(default["lambda_soc"], 8.0)
+        self.assertEqual(default["reward_version"], "ddpg_economic_linear_v2")
+        self.assertEqual(default["failure_reward"], -10000.0)
+        self.assertEqual(getattr(module, "FAILURE_REWARD", None), -10000.0)
+        config = {
+            "reward_version": module.REWARD_VERSION, "c_typ": 0.02,
+            "lambda_soc": 1.7, "failure_reward": -10000.0,
+        }
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "reward.json"
             path.write_text(json.dumps(config), encoding="utf-8")
@@ -140,9 +154,53 @@ class EconomicRewardTests(unittest.TestCase):
             self.assertEqual(first["c_typ"], 0.02)
             self.assertNotEqual(first["lambda_soc"], 100.0 * first["c_typ"])
             self.assertEqual(first["reward_version"], module.REWARD_VERSION)
-            path.write_text(json.dumps({**config, "lambda_soc": -3.0}), encoding="utf-8")
-            with self.assertRaises(ValueError):
-                module.load_reward_config(path)
+            self.assertEqual(first["failure_reward"], -10000.0)
+            self.assertEqual(
+                first["formula"],
+                "-(C_H2+C_FC_deg+C_LB_deg+C_bat_eq+lambda_soc*(SOC_next-0.5)**2)",
+            )
+            encoded = json.dumps(
+                loaded, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+            ).encode("utf-8")
+            self.assertEqual(first["config_sha256"], hashlib.sha256(encoded).hexdigest())
+            for changes in (
+                {"lambda_soc": -3.0}, {"failure_reward": -1.0},
+                {"failure_reward": float("nan")}, {"reward_version": "ddpg_economic_tanh_v1"},
+            ):
+                with self.subTest(changes=changes):
+                    path.write_text(json.dumps({**config, **changes}), encoding="utf-8")
+                    with self.assertRaises(ValueError):
+                        module.load_reward_config(path)
+
+    def test_evaluation_accepts_equal_current_reward_identity(self):
+        module = self.module()
+        identity = module.reward_identity(module.load_reward_config())
+        metadata = module.evaluation_identity(SimpleNamespace(_ddpg_reward_identity=dict(identity)), identity)
+        self.assertEqual(metadata["model_reward_identity"], identity)
+        self.assertEqual(metadata["evaluation_reward_identity"], identity)
+        self.assertFalse(metadata["legacy_policy_evaluated_with_current_reward"])
+
+    def test_evaluation_rejects_unversioned_or_old_model_identity(self):
+        module = self.module()
+        identity = module.reward_identity(module.load_reward_config())
+        models = [SimpleNamespace()]
+        models.extend(SimpleNamespace(_ddpg_reward_identity=value) for value in (
+            None, {}, {**identity, "reward_version": "ddpg_economic_tanh_v1"},
+            {**identity, "reward_version": "unknown"}, {**identity, "lambda_soc": 9.0},
+        ))
+        for model in models:
+            with self.subTest(model=model), self.assertRaises(ValueError):
+                module.evaluation_identity(model, identity)
+
+    def test_evaluation_rejects_equal_but_unsupported_reward_identities(self):
+        module = self.module()
+        identity = module.reward_identity(module.load_reward_config())
+        for version in (None, "ddpg_economic_tanh_v1", "unknown"):
+            unsupported = {**identity, "reward_version": version}
+            if version is None:
+                unsupported.pop("reward_version")
+            with self.subTest(version=version), self.assertRaises(ValueError):
+                module.evaluation_identity(SimpleNamespace(_ddpg_reward_identity=unsupported), unsupported)
 
 
 if __name__ == "__main__":

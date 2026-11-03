@@ -20,17 +20,26 @@ from .fixed_train_eval import FIXED_TRAIN_ID, FixedTrainEvaluationCallback
 class PeriodicPathTests(unittest.TestCase):
     def test_real_checkpoint_children_write_under_deep_windows_paths(self):
         from .fixed_train_eval import PROJECT_ROOT
-        checkpoint = PROJECT_ROOT / (
-            "outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v1/ddpg/"
-            "AggregateShipDDPG-v0_1/fixed_train_evaluation/episode_0020/model.zip"
-        )
-        if not checkpoint.is_file():
-            self.skipTest("Requires the saved checkpoint from the reported path failure")
-        before_hash = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+        from .env import AggregateDDPGEnv
+        from stable_baselines3 import DDPG
+        import torch
         child_env = os.environ.copy()
         child_env["PYTHONPATH"] = os.pathsep.join((str(PROJECT_ROOT), str(PROJECT_ROOT / "src")))
         with tempfile.TemporaryDirectory(prefix="ddpg_path_smoke_") as tmp:
             base = Path(tmp)
+            checkpoint = base / "current_reward_model.zip"
+            env = AggregateDDPGEnv(PROJECT_ROOT / "data/processed/operating_dataset_v6_1s",
+                                   fixed_train_id=FIXED_TRAIN_ID)
+            try:
+                torch.set_num_threads(1)
+                model = DDPG("MlpPolicy", env, buffer_size=32, device="cpu", seed=42,
+                             policy_kwargs=dict(net_arch=[16, 16]))
+                model._ddpg_reward_identity = dict(env.reward_identity)
+                self.assertEqual((model.num_timesteps, model._n_updates), (0, 0))
+                model.save(checkpoint)
+            finally:
+                env.close()
+            before_hash = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
             parent = base / ("r" * (200 - len(str(base)) - 1))
             for module, metrics_name, csv_name, limit in (
                 ("fixed_train_eval", "fixed_train_metrics.json", "fixed_train_step_data.csv", ["--max-steps", "2"]),
@@ -56,7 +65,7 @@ class PeriodicPathTests(unittest.TestCase):
                         self.assertLess(len(str(path)), 240)
                         if path.suffix == ".png":
                             self.assertEqual(path.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
-        self.assertEqual(hashlib.sha256(checkpoint.read_bytes()).hexdigest(), before_hash)
+            self.assertEqual(hashlib.sha256(checkpoint.read_bytes()).hexdigest(), before_hash)
 
     def test_both_callbacks_use_flat_output_with_actual_windows_run_length(self):
         with tempfile.TemporaryDirectory(prefix="ddpg_paths_") as tmp:
