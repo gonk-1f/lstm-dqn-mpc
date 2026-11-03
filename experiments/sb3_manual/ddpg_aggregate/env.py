@@ -1,7 +1,7 @@
 """Minimal 3-observation, 1-action aggregate FC/battery ship environment.
 
 Physics and voyage splits are reused from the existing project. No action masking,
-forecasting, economic reward, additional observation features, or custom DDPG.
+forecasting, additional observation features, or custom DDPG.
 """
 from __future__ import annotations
 
@@ -14,14 +14,25 @@ import numpy as np
 from v2.data.supervisory_rules import normalize_onboard_load_kw
 from v3.control import AccountState, EconomicMPC, SOC_MAX, SOC_MIN
 from v4.v6_dataset import V6TrainingDataset
+from .economic_reward import (
+    load_reward_config, reward_identity, peak_fc_efficiency,
+    interval_economic_components, economic_reward,
+)
 
 
 FC_RATED_KW = 600.0
 FC_RAMP_KW_PER_S = 48.0
 SOC_REFERENCE = 0.5
-SOC_WEIGHT = 10.0
-RAMP_WEIGHT = 0.0025
-FAILURE_REWARD = -1000.0  # Provisional terminal penalty, NOT a proven safe choice.
+REWARD_CONFIG = load_reward_config()
+SOC_WEIGHT = REWARD_CONFIG["lambda_soc"]
+RAMP_WEIGHT = 0.0  # Legacy diagnostic field; no independent ramp penalty.
+FAILURE_REWARD = -1.0
+ECONOMIC_SUM_FIELDS = (
+    "hydrogen_mass_kg", "h2_cost_cny", "fuel_cell_degradation_cost_cny",
+    "battery_degradation_cost_cny", "shore_cost_cny", "physical_economic_cost_cny",
+    "c_bat_eq_cny", "battery_equivalent_hydrogen_kg", "total_cost_cny",
+    "c_soc_cny", "reward_total_cost_cny",
+)
 
 
 class AggregateDDPGEnv(gym.Env):
@@ -34,13 +45,20 @@ class AggregateDDPGEnv(gym.Env):
         if split not in ("train", "validation"):
             raise ValueError("split must be train or validation (Test is not accessible)")
         self.split = split
-        dataset = V6TrainingDataset.open(Path(data_root))
+        self.data_root = Path(data_root).resolve()
+        dataset = V6TrainingDataset.open(self.data_root)
         if dataset.split_sizes != (35, 8):
             raise ValueError(f"Expected immutable Train35/Validation8, got {dataset.split_sizes}")
         self.episodes = tuple(dataset.load_train() if split == "train" else dataset.load_validation())
         self._validation_cursor = 0
         self.physics = EconomicMPC(nominal_cost_cny=1.0)
         self.plant = self.physics.plant
+        self.reward_identity = reward_identity(REWARD_CONFIG)
+        self.reward_identity["fc_off_reference_efficiency"] = peak_fc_efficiency(self.physics.fc_efficiency)
+        self.economic_totals = dict.fromkeys(ECONOMIC_SUM_FIELDS, 0.0)
+        self.equivalent_eta_sum = 0.0
+        self.equivalent_eta_min = None
+        self.equivalent_eta_max = None
         if abs(self.plant.fuel_cell_rated_total_kw - FC_RATED_KW) > 1e-9:
             raise ValueError("Existing physical plant does not have 600kW FC rating")
         if abs(self.plant.battery_nominal_energy_kwh - 624.0) > 1e-9:
@@ -97,6 +115,10 @@ class AggregateDDPGEnv(gym.Env):
         self.soc_min_seen = self.physical.soc
         self.soc_max_seen = self.physical.soc
         self.projection_steps = 0
+        self.economic_totals = dict.fromkeys(ECONOMIC_SUM_FIELDS, 0.0)
+        self.equivalent_eta_sum = 0.0
+        self.equivalent_eta_min = None
+        self.equivalent_eta_max = None
         return self._observation(), {"sample_id": self.episode.sample_id, "split": self.split}
 
     def _physically_feasible_fc_range(self, load: float, prev_fc: float):
@@ -133,6 +155,13 @@ class AggregateDDPGEnv(gym.Env):
             "fc_ramp_rms_kw_per_step": sqrt(self.ramp_sq_sum / steps) if steps else 0.0,
             "power_projection_fraction": self.projection_steps / steps if steps else 0.0,
             "reward_sum": self.reward_sum,
+            **self.economic_totals,
+            "mean_equivalent_fc_efficiency": self.equivalent_eta_sum / steps if steps else None,
+            "min_equivalent_fc_efficiency": self.equivalent_eta_min,
+            "max_equivalent_fc_efficiency": self.equivalent_eta_max,
+            "reward_version": self.reward_identity["reward_version"],
+            "c_typ_cny": REWARD_CONFIG["c_typ"],
+            "lambda_soc": SOC_WEIGHT,
         }
 
     def step(self, action):
@@ -159,6 +188,7 @@ class AggregateDDPGEnv(gym.Env):
                 "feasible_fc_upper_kw": feasible_hi,
                 "soc": self.physical.soc,
                 "fc_actual_kw": prev_kw,
+                "step_executed": False,
             }
             info["vessel_episode"] = self._episode_summary(False, info["terminal_reason"])
             return self._observation(), reward, True, False, info
@@ -167,7 +197,7 @@ class AggregateDDPGEnv(gym.Env):
         # This is a deterministic physical actuator, not a learned action mask.
         fc_kw = float(np.clip(target_kw, feasible_lo, feasible_hi))
         self.projection_steps += int(abs(fc_kw - target_kw) > 1e-5)
-        next_physical, _ledger, battery_kw = self.physics.interval(
+        next_physical, ledger, battery_kw = self.physics.interval(
             self.physical, fc_kw, load_kw, duration_s=1.0
         )
         if not (self.plant.battery_charge_min_kw - 1e-6 <= battery_kw <= self.plant.battery_discharge_max_kw + 1e-6):
@@ -175,9 +205,19 @@ class AggregateDDPGEnv(gym.Env):
         if not (SOC_MIN - 1e-9 <= next_physical.soc <= SOC_MAX + 1e-9):
             raise RuntimeError("Internal implementation error: actual SOC exceeded bounds")
         delta_fc = fc_kw - prev_kw
-        j_soc = SOC_WEIGHT * (next_physical.soc - SOC_REFERENCE) ** 2
-        j_ramp = RAMP_WEIGHT * delta_fc ** 2
-        reward = -(j_soc + j_ramp)
+        costs = interval_economic_components(
+            self.physics, self.physical, next_physical, fc_kw, ledger
+        )
+        reward, j_soc, reward_cost = economic_reward(
+            costs["total_cost_cny"], next_physical.soc, SOC_WEIGHT
+        )
+        costs.update(c_soc_cny=j_soc, reward_total_cost_cny=reward_cost)
+        for name in ECONOMIC_SUM_FIELDS:
+            self.economic_totals[name] += costs[name]
+        eta = costs["equivalent_fc_efficiency"]
+        self.equivalent_eta_sum += eta
+        self.equivalent_eta_min = eta if self.equivalent_eta_min is None else min(self.equivalent_eta_min, eta)
+        self.equivalent_eta_max = eta if self.equivalent_eta_max is None else max(self.equivalent_eta_max, eta)
         self.starts += int(prev_kw <= 0.0 < fc_kw)
         self.ramp_sq_sum += delta_fc ** 2
         self.physical = next_physical
@@ -195,7 +235,9 @@ class AggregateDDPGEnv(gym.Env):
             "soc": float(self.physical.soc),
             "delta_fc_kw": delta_fc,
             "soc_penalty": j_soc,
-            "fc_ramp_penalty": j_ramp,
+            "fc_ramp_penalty": 0.0,
+            "step_executed": True,
+            **costs,
             "projected": abs(fc_kw - target_kw) > 1e-5,
             "terminal_reason": "completed" if self.terminated else None,
         }

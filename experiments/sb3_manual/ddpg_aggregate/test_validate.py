@@ -52,8 +52,10 @@ class ValidationTests(unittest.TestCase):
         self.assertIs(env.physical, state_after)
         self.assertEqual(env.index, 1)
         for field in ("h2_cost_cny", "fuel_cell_degradation_cost_cny",
-                      "battery_degradation_cost_cny", "shore_cost_cny", "total_cost_cny"):
+                      "battery_degradation_cost_cny", "shore_cost_cny"):
             self.assertAlmostEqual(result[field], getattr(ledger, field), places=12)
+        self.assertAlmostEqual(result["total_cost_cny"],
+                               ledger.total_cost_cny + result["c_bat_eq_cny"], places=12)
         self.assertGreaterEqual(result["hydrogen_mass_kg"], 0)
         self.assertAlmostEqual(result["battery_charge_bus_kwh"], max(-battery_kw, 0) / 3600)
         self.assertAlmostEqual(result["battery_discharge_bus_kwh"], max(battery_kw, 0) / 3600)
@@ -62,8 +64,8 @@ class ValidationTests(unittest.TestCase):
         env = self.make_env()
         before = env.physical
         info = {"terminal_reason": "no_feasible_physical_power", "fc_actual_kw": 0.0}
-        with mock.patch.object(self.validation, "hydrogen_mass_from_map_kg",
-                               side_effect=AssertionError("Unexecuted hydrogen")):
+        with mock.patch.object(env.physics, "interval",
+                               side_effect=AssertionError("Unexecuted physical interval")):
             result = self.validation.step_accounting(env, before, info)
         self.assertTrue(result)
         self.assertTrue(all(value is None for value in result.values()))

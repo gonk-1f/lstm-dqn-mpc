@@ -17,6 +17,9 @@ AggregateShipDDPG-v0:
     data_root: data/processed/operating_dataset_v6_1s
     split: train
   callback:
+  - experiments.sb3_manual.ddpg_aggregate.periodic_validation.EpisodeValidationCallback:
+      every_episodes: 100
+      max_episodes: 500
   - stable_baselines3.common.callbacks.StopTrainingOnMaxEpisodes:
       max_episodes: 500
       verbose: 1

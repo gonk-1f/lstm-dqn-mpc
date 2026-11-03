@@ -4,26 +4,31 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
 
 import numpy as np
 from stable_baselines3 import DDPG
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.noise import NormalActionNoise
+from stable_baselines3.common.callbacks import CallbackList, StopTrainingOnMaxEpisodes
 
 from .env import AggregateDDPGEnv
+from .periodic_validation import EpisodeValidationCallback
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--total-timesteps", type=int, default=1000)
+    parser.add_argument("--total-timesteps", type=int, default=20_000_000)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--device", default="auto")
+    parser.add_argument("--device", default="cuda")
     args = parser.parse_args()
     if args.total_timesteps < 1:
         parser.error("total-timesteps must be positive")
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    args.output_dir.mkdir(parents=True, exist_ok=False)
     env = Monitor(AggregateDDPGEnv(args.data_root, split="train"),
                   filename=str(args.output_dir / "train_monitor.csv"))
     try:
@@ -36,15 +41,19 @@ def main():
             learning_starts=5000,
             train_freq=32,
             gradient_steps=1,
-            tau=0.005,
+            tau=0.03,
             policy_kwargs=dict(net_arch=[256, 256]),
-            action_noise=NormalActionNoise(mean=np.zeros(1), sigma=0.1 * np.ones(1)),
+            action_noise=NormalActionNoise(mean=np.zeros(1), sigma=0.12 * np.ones(1)),
             seed=args.seed,
             device=args.device,
             verbose=1,
             tensorboard_log=str(args.output_dir / "tensorboard"),
         )
-        model.learn(total_timesteps=args.total_timesteps, log_interval=1)
+        callbacks = CallbackList([
+            EpisodeValidationCallback(every_episodes=100, max_episodes=500),
+            StopTrainingOnMaxEpisodes(max_episodes=500, verbose=1),
+        ])
+        model.learn(total_timesteps=args.total_timesteps, log_interval=1, callback=callbacks)
         model_path = args.output_dir / "ddpg_aggregate"
         model.save(str(model_path))
         meta = {"algorithm": "SB3.DDPG", "states": 3, "actions": 1,

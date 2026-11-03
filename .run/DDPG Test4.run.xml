@@ -9,7 +9,7 @@
     <option name="ADD_CONTENT_ROOTS" value="false" />
     <option name="ADD_SOURCE_ROOTS" value="false" />
     <option name="SCRIPT_NAME" value="experiments.sb3_manual.ddpg_aggregate.test4" />
-    <option name="PARAMETERS" value="--model-path &quot;$PROJECT_DIR$/outputs/ddpg_train_500ep/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip&quot; --device cpu" />
+    <option name="PARAMETERS" value="--model-path &quot;$PROJECT_DIR$/outputs/ddpg_train_500ep_economic_v1/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip&quot; --device cpu" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="true" />

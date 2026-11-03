@@ -8,6 +8,8 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 
 import numpy as np
 from optuna.trial import FixedTrial
@@ -25,6 +27,51 @@ DATA = Path("data/processed/operating_dataset_v6_1s")
 
 
 class SamplerTests(unittest.TestCase):
+    def test_economic_cli_defaults_are_pure_and_use_a_new_study(self):
+        adapter = importlib.import_module(PACKAGE + ".zoo_optuna")
+        with mock.patch("optuna.create_study", side_effect=AssertionError("No Study during argument checks")):
+            args = adapter.prepare_optimization_args(["--algo", "ddpg", "--optimize-hyperparameters"])
+        self.assertEqual(args[args.index("--study-name") + 1], "ddpg_tau_noise_economic_tanh_v1")
+        self.assertEqual(args[args.index("--storage") + 1], "sqlite:///outputs/ddpg_optuna_economic_v1/study.db")
+        self.assertEqual(args[args.index("--log-folder") + 1], "outputs/ddpg_optuna_economic_v1/logs")
+        self.assertEqual(args[args.index("--optimization-log-path") + 1], "outputs/ddpg_optuna_economic_v1/evaluations")
+        self.assertEqual(adapter.prepare_optimization_args(["--help"]), ["--help"])
+
+    def test_old_study_name_is_rejected_and_new_seed_suffix_is_allowed(self):
+        adapter = importlib.import_module(PACKAGE + ".zoo_optuna")
+        for name in ("ddpg_tau_noise_v1", "old_economic", ""):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                adapter.prepare_optimization_args(["--optimize-hyperparameters", "--study-name", name])
+        args = adapter.prepare_optimization_args([
+            "--optimize-hyperparameters", "--study-name=ddpg_tau_noise_economic_tanh_v1_seed43",
+        ])
+        self.assertIn("--study-name=ddpg_tau_noise_economic_tanh_v1_seed43", args)
+
+    def test_study_identity_guard_without_creating_study_or_storage(self):
+        importlib.import_module(PACKAGE + ".zoo_optuna")
+        module = importlib.import_module(PACKAGE + ".zoo_trial_logging")
+
+        class Study:
+            def __init__(self, numbers, identity=None):
+                self.user_attrs = {} if identity is None else {"ddpg_reward_identity": identity}
+                self.trials = [SimpleNamespace(number=number) for number in numbers]
+
+            def get_trials(self, deepcopy=False):
+                return self.trials
+
+            def set_user_attr(self, key, value):
+                self.user_attrs[key] = value
+
+        identity = {"reward_version": "ddpg_economic_tanh_v1", "c_typ": 0.02, "lambda_soc": 2.0}
+        fresh = Study([0])
+        module.ensure_study_reward_identity(fresh, 0, identity)
+        self.assertEqual(fresh.user_attrs["ddpg_reward_identity"], identity)
+        module.ensure_study_reward_identity(fresh, 0, dict(identity))
+        with self.assertRaises(ValueError):
+            module.ensure_study_reward_identity(Study([0, 1]), 1, identity)
+        with self.assertRaises(ValueError):
+            module.ensure_study_reward_identity(Study([0], {**identity, "lambda_soc": 3.0}), 1, identity)
+
     def test_sampler_only_two_variables(self):
         self.assertIsNotNone(importlib.util.find_spec(PACKAGE + ".zoo_optuna"))
         adapter = importlib.import_module(PACKAGE + ".zoo_optuna")
@@ -87,16 +134,19 @@ class NativeConfigurationTests(unittest.TestCase):
         tuning = yaml.safe_load((HERE / "zoo_ddpg_optuna.yml").read_text())["AggregateShipDDPG-v0"]
         expected = dict(learning_rate=0.001, gamma=0.999, batch_size=64,
                         buffer_size=1000000, learning_starts=5000, train_freq=32,
-                        gradient_steps=1, tau=0.005, policy="MlpPolicy",
-                        noise_type="normal", noise_std=0.1, n_envs=1,
+                        gradient_steps=1, tau=0.03, policy="MlpPolicy",
+                        noise_type="normal", noise_std=0.12, n_envs=1,
                         policy_kwargs="dict(net_arch=[256, 256])")
         for config in (formal, tuning):
             for key, value in expected.items():
                 self.assertEqual(config[key], value, key)
             self.assertEqual(config["env_kwargs"]["split"], "train")
-        self.assertEqual(formal["n_timesteps"], 500000)
-        stop = formal["callback"][0]["stable_baselines3.common.callbacks.StopTrainingOnMaxEpisodes"]
-        self.assertEqual(stop["max_episodes"], 484)
+        self.assertEqual(formal["n_timesteps"], 20000000)
+        self.assertEqual(len(formal["callback"]), 2)
+        periodic = formal["callback"][0][PACKAGE + ".periodic_validation.EpisodeValidationCallback"]
+        self.assertEqual((periodic["every_episodes"], periodic["max_episodes"]), (100, 500))
+        stop = formal["callback"][1]["stable_baselines3.common.callbacks.StopTrainingOnMaxEpisodes"]
+        self.assertEqual(stop["max_episodes"], 500)
         self.assertEqual(tuning["n_timesteps"], 77760)
         self.assertEqual(self.manager.n_timesteps, 77760)
         self.assertEqual(self.manager.n_timesteps // self.manager.n_evaluations, 38880)

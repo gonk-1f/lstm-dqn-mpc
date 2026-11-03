@@ -1,0 +1,323 @@
+{
+  "reward_version": "ddpg_economic_tanh_v1",
+  "c_typ": 0.17429534153424198,
+  "lambda_soc": 17.429534153424196,
+  "soc_reference": 0.5,
+  "soc_deviation_reference": 0.1,
+  "failure_reward": -1.0,
+  "fc_off_reference_efficiency": 0.6385540000000001,
+  "fc_off_reference_rule": "maximum of the existing system efficiency curve over positive-power support; recomputed from curve at runtime",
+  "calibration": {
+    "split": "train",
+    "baseline_model_path": "outputs/ddpg_train_500ep/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip",
+    "baseline_model_sha256": "caf67c28eea863c01c8d6f9a8f7e38ea27b2f3ce924fe1d12dc4a843551f100f",
+    "source_commit": "e16e5303390de7f19181587885f86c163225690f",
+    "collection_report": "outputs/ddpg_reward_calibration/collection_20261103_133754_684927/calibration_collection.json",
+    "collection_report_sha256": "5f9349717657d85a22a4bfe21b70af988dcce1ec9fc48eeed1dae9249405d2bb",
+    "raw_npz_sha256": "35bf61e46985adea0d28642384cdaaa3cb993adc5236f7d69c1d08dfd1a00869",
+    "data_manifest_sha256": "023002d83ef64a325af764e3f7f2201f975ba75e6daf7bc9e2c0f4a90b216e31",
+    "train_ids": [
+      "parent_003_seg01",
+      "parent_005_seg01",
+      "parent_006_seg01",
+      "parent_007_seg01",
+      "parent_008_seg01",
+      "parent_009_seg01",
+      "parent_009_seg02",
+      "parent_010_seg01",
+      "parent_010_seg02",
+      "parent_012_seg01",
+      "parent_015_seg01",
+      "parent_017_seg01",
+      "parent_018_seg01",
+      "parent_019_seg01",
+      "parent_019_seg02",
+      "parent_021_seg01",
+      "parent_022_seg01",
+      "parent_029_seg01",
+      "parent_029_seg02",
+      "parent_034_seg01",
+      "parent_035_seg01",
+      "parent_036_seg01",
+      "parent_037_seg01",
+      "parent_038_seg01",
+      "parent_041_seg01",
+      "parent_042_seg01",
+      "parent_043_seg01",
+      "parent_046_seg02",
+      "parent_047_seg01",
+      "parent_048_seg01",
+      "parent_049_seg01",
+      "parent_050_seg01",
+      "parent_051_seg01",
+      "parent_052_seg01",
+      "parent_053_seg01"
+    ],
+    "selected_voyages": 35,
+    "completed_voyages": 33,
+    "executed_physical_steps": 448434,
+    "planned_physical_steps": 457562,
+    "sampling": "median over every actual executed physical second from each Train35 voyage exactly once; real failure calls and unexecuted suffixes excluded",
+    "median_excludes_soc_penalty": true,
+    "negative_economic_steps": 0,
+    "zero_economic_steps": 0,
+    "economic_cost_quantiles_cny": {
+      "0": 0.04301742089671926,
+      "0.25": 0.09062854682552311,
+      "0.5": 0.17429534153424198,
+      "0.75": 0.2516654329595429,
+      "1": 477.203056491626
+    },
+    "minimum_positive_fc_efficiency": 7.318190273851422e-05,
+    "fc_off_steps": 0,
+    "per_voyage": [
+      {
+        "sample_id": "parent_003_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 21480,
+        "total_steps": 21480
+      },
+      {
+        "sample_id": "parent_005_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 9258,
+        "total_steps": 9258
+      },
+      {
+        "sample_id": "parent_006_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 10550,
+        "total_steps": 10550
+      },
+      {
+        "sample_id": "parent_007_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 8448,
+        "total_steps": 8448
+      },
+      {
+        "sample_id": "parent_008_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 22856,
+        "total_steps": 22856
+      },
+      {
+        "sample_id": "parent_009_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 9480,
+        "total_steps": 9480
+      },
+      {
+        "sample_id": "parent_009_seg02",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 7755,
+        "total_steps": 7755
+      },
+      {
+        "sample_id": "parent_010_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 11190,
+        "total_steps": 11190
+      },
+      {
+        "sample_id": "parent_010_seg02",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 15781,
+        "total_steps": 15781
+      },
+      {
+        "sample_id": "parent_012_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 17873,
+        "total_steps": 17873
+      },
+      {
+        "sample_id": "parent_015_seg01",
+        "completed": false,
+        "coverage": 0.45121107266435984,
+        "executed_steps": 4564,
+        "total_steps": 10115
+      },
+      {
+        "sample_id": "parent_017_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 29323,
+        "total_steps": 29323
+      },
+      {
+        "sample_id": "parent_018_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 27310,
+        "total_steps": 27310
+      },
+      {
+        "sample_id": "parent_019_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 10470,
+        "total_steps": 10470
+      },
+      {
+        "sample_id": "parent_019_seg02",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 8868,
+        "total_steps": 8868
+      },
+      {
+        "sample_id": "parent_021_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 6996,
+        "total_steps": 6996
+      },
+      {
+        "sample_id": "parent_022_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 5490,
+        "total_steps": 5490
+      },
+      {
+        "sample_id": "parent_029_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 10620,
+        "total_steps": 10620
+      },
+      {
+        "sample_id": "parent_029_seg02",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 5221,
+        "total_steps": 5221
+      },
+      {
+        "sample_id": "parent_034_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 9720,
+        "total_steps": 9720
+      },
+      {
+        "sample_id": "parent_035_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 9300,
+        "total_steps": 9300
+      },
+      {
+        "sample_id": "parent_036_seg01",
+        "completed": false,
+        "coverage": 0.4629935445128359,
+        "executed_steps": 3084,
+        "total_steps": 6661
+      },
+      {
+        "sample_id": "parent_037_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 36660,
+        "total_steps": 36660
+      },
+      {
+        "sample_id": "parent_038_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 21091,
+        "total_steps": 21091
+      },
+      {
+        "sample_id": "parent_041_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 19261,
+        "total_steps": 19261
+      },
+      {
+        "sample_id": "parent_042_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 18421,
+        "total_steps": 18421
+      },
+      {
+        "sample_id": "parent_043_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 11761,
+        "total_steps": 11761
+      },
+      {
+        "sample_id": "parent_046_seg02",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 3272,
+        "total_steps": 3272
+      },
+      {
+        "sample_id": "parent_047_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 5880,
+        "total_steps": 5880
+      },
+      {
+        "sample_id": "parent_048_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 8580,
+        "total_steps": 8580
+      },
+      {
+        "sample_id": "parent_049_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 8070,
+        "total_steps": 8070
+      },
+      {
+        "sample_id": "parent_050_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 30691,
+        "total_steps": 30691
+      },
+      {
+        "sample_id": "parent_051_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 4350,
+        "total_steps": 4350
+      },
+      {
+        "sample_id": "parent_052_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 7110,
+        "total_steps": 7110
+      },
+      {
+        "sample_id": "parent_053_seg01",
+        "completed": true,
+        "coverage": 1.0,
+        "executed_steps": 7650,
+        "total_steps": 7650
+      }
+    ],
+    "validation_payloads_used": 0,
+    "test_payloads_used": 0
+  }
+}

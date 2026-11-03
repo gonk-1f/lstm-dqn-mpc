@@ -25,16 +25,17 @@ import torch
 from . import zoo_register  # Register the same environment used by RL Zoo.
 from .env import SOC_REFERENCE, SOC_WEIGHT, RAMP_WEIGHT, FAILURE_REWARD
 from .validation_plots import save_validation_plots
-from v2.economics import build_formal_interval_ledger
-from v2.models.fuel_cell_efficiency import hydrogen_mass_from_map_kg
+from .economic_reward import evaluation_identity
 
 ENV_ID = "AggregateShipDDPG-v0"
 DEFAULT_DATA_ROOT = PROJECT_ROOT / "data/processed/operating_dataset_v6_1s"
-DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_validation"
+DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_validation_economic_v1"
 ACCOUNTING_FIELDS = (
     "hydrogen_mass_kg", "battery_charge_bus_kwh", "battery_discharge_bus_kwh",
     "h2_cost_cny", "fuel_cell_degradation_cost_cny",
-    "battery_degradation_cost_cny", "shore_cost_cny", "total_cost_cny",
+    "battery_degradation_cost_cny", "shore_cost_cny", "c_bat_eq_cny",
+    "battery_equivalent_hydrogen_kg", "physical_economic_cost_cny", "total_cost_cny",
+    "c_soc_cny", "reward_total_cost_cny",
 )
 STEP_FIELDS = (
     "episode", "sample_id", "step_index", "interval_start_s", "interval_end_s",
@@ -43,38 +44,21 @@ STEP_FIELDS = (
     "soc_penalty", "fc_ramp_penalty", "projected", "feasible_fc_lower_kw",
     "feasible_fc_upper_kw", "reward", "terminal_reason", "terminated",
     "truncated", "evaluation_truncated",
+    "fc_efficiency_actual", "equivalent_fc_efficiency",
 ) + ACCOUNTING_FIELDS
 
 
 def step_accounting(env, before, info) -> dict:
-    """Settle the existing ledger from actual states, without advancing physics."""
+    """Export the environment's actual economic calculation without recomputing it."""
     if info.get("terminal_reason") == "no_feasible_physical_power":
         return dict.fromkeys(ACCOUNTING_FIELDS)
-    after = env.physical
-    hydrogen = hydrogen_mass_from_map_kg(
-        info["fc_actual_kw"], 1.0, env.physics.fc_efficiency
-    )
-    ledger = build_formal_interval_ledger(
-        hydrogen_mass_kg=hydrogen,
-        fuel_cell_cumulative_voltage_loss_before_uv=before.fc_loss_uv,
-        fuel_cell_cumulative_voltage_loss_after_uv=after.fc_loss_uv,
-        fuel_cell_rated_kw=env.plant.fuel_cell_rated_total_kw,
-        battery_cumulative_weighted_ah_before=before.battery_weighted_ah,
-        battery_cumulative_weighted_ah_after=after.battery_weighted_ah,
-        battery_capacity_kwh=env.plant.battery_nominal_energy_kwh,
-        battery_normalization=env.physics.battery_normalization,
-        shore_energy=None,
-    )
     battery = info["battery_actual_kw"]
     return {
-        "hydrogen_mass_kg": hydrogen,
+        **{name: info[name] for name in ACCOUNTING_FIELDS if name not in (
+            "battery_charge_bus_kwh", "battery_discharge_bus_kwh"
+        )},
         "battery_charge_bus_kwh": max(-battery, 0.0) / 3600.0,
         "battery_discharge_bus_kwh": max(battery, 0.0) / 3600.0,
-        "h2_cost_cny": ledger.h2_cost_cny,
-        "fuel_cell_degradation_cost_cny": ledger.fuel_cell_degradation_cost_cny,
-        "battery_degradation_cost_cny": ledger.battery_degradation_cost_cny,
-        "shore_cost_cny": ledger.shore_cost_cny,
-        "total_cost_cny": ledger.total_cost_cny,
     }
 
 
@@ -143,6 +127,7 @@ def run_validation(
     normalizer = None
     try:
         check_for_correct_spaces(env, model.observation_space, model.action_space)
+        reward_metadata = evaluation_identity(model, vessel.reward_identity)
         if vecnormalize_path is None:
             for candidate in (model_path.parent / ENV_ID / "vecnormalize.pkl",
                               model_path.parent / "vecnormalize.pkl"):
@@ -261,6 +246,7 @@ def run_validation(
             "output_dir": str(output_dir), "model_path": str(model_path),
             "model_sha256": model_file_hash, "data_root": str(data_root),
             "split": "validation", "deterministic": True, "action_noise": None,
+            **reward_metadata,
             "vecnormalize_path": None if normalizer is None else str(vecnormalize_path),
             "vecnormalize_training": False if normalizer is not None else None,
             "vecnormalize_norm_reward": False if normalizer is not None else None,
@@ -278,7 +264,7 @@ def run_validation(
                 sum(r["total_cost_cny"] for r in rows) / 8
                 if validation_set_complete and successes == 8 else None
             ),
-            "economic_cost_scope": "Executed onboard intervals only; existing aggregate FC degradation proxy. No terminal SOC restoration or unexecuted failure costs.",
+            "economic_cost_scope": "Four economic components including signed instantaneous-efficiency battery hydrogen equivalence. SOC penalty is separate in reward_total_cost_cny; no additional terminal SOC/shore correction or unexecuted failure costs.",
             "unavailable_metrics": {
                 "terminal_soc_restoration_cost_cny": "Not performed by the existing environment.",
                 "stack_resolved_degradation_cost_cny": "No per-stack physical/health model in this environment.",

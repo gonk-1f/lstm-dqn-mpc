@@ -1,162 +1,116 @@
-# DDPG 固定参数与原生 Zoo Optuna
+# DDPG 聚合经济奖励与周期验证
 
-## 正式训练配置（500 Episode）
+当前路线使用 SB3 原生 DDPG、RL Zoo 原生训练/Optuna。FC 为 600 kW 聚合系统，
+电池为 624 kWh 聚合系统；不分堆、不分簇。物理模型、动作/状态和冻结数据划分不变。
 
-基准提交：`b45e6e472e8fb1538207b73e80e15fd6d986c52d`。Python 3.11.5、SB3 2.9.2、RL Zoo 2.9.0、Optuna 4.9.0、PyTorch 2.8.0+cu128；未安装或更改依赖。
+## 奖励与成本
 
-| 参数 | 原始 DDPG 值 | 当前正式训练值 |
-| --- | --- | --- |
-| learning_rate | 0.001 | 0.001 |
-| gamma | 0.99 | 0.999 |
-| batch_size | 256 | 64 |
-| buffer_size | 1000000 | 1000000 |
-| learning_starts | 100 | 5000 |
-| train_freq | 1 | 32 |
-| gradient_steps | 1 | 1 |
-| tau | 0.005 | 0.03 |
-| NormalActionNoise sigma | 0.1 | 0.12 |
-| policy_kwargs | 未显式指定网络 | dict(net_arch=[256, 256]) |
+版本：`ddpg_economic_tanh_v1`。
 
-网络结构已在前次配置验收中实际构造确认（CPU，仅构造、不训练）：
-
-- Actor 与 Actor target：3 → 256 → ReLU → 256 → ReLU → 1 → Tanh。
-- Critic 与 Critic target：状态+动作共 4 维 → 256 → ReLU → 256 → ReLU → 1；单 Critic，Adam 优化器。
-- SB3 DDPG 内部复用 `TD3Policy` 类并设置 `n_critics=1`，日志中的该类名不代表切换了算法。
-- 实际 `train_freq=TrainFreq(32, STEP)`、`gradient_steps=1`；不会转换成 32:32。
-- 单环境、1 秒周期；正式 Zoo 运行命令显式指定 `--device cuda`。
-- `train.py --total-timesteps` 默认仍为 **1000**，正式训练务必显式传预算。
-- 正式 `zoo_ddpg.yml` 使用 `n_timesteps=20000000` 作为安全上限，原生 `StopTrainingOnMaxEpisodes(max_episodes=500)` 在第 500 次 Episode 结束时停止；数据路径保持不变。
-- 每次 reset 从原有 35 条 Train 航段中随机抽取一条完整航段。原生回调也会把物理失败导致的提前终止计作一个 Episode，因此不是保证 500 条成功完成的航段；未修改环境或终止规则。
-- Optuna 配置独立保持原样：基线 tau=0.005、noise_std=0.1，搜索空间和既有 Trial 18 结果均未改动。`train.py` 也不随本次正式 Zoo 配置更改。
-
-## PyCharm PowerShell 正式训练命令（未执行）
-
-以下命令从头训练原生 SB3 DDPG，不加载或覆盖之前的模型。CUDA 使用 Zoo 的 `--device` CLI 参数，不放入算法 YAML，以免与 Zoo 显式传入的 device 参数重复。
-
-```powershell
-Set-Location -LiteralPath 'C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-sb3-baseline'
-$env:PYTHONPATH = "$PWD\src;$PWD"
-
-& '.\.venv\Scripts\python.exe' -u -m rl_zoo3.train `
-  --algo ddpg --env AggregateShipDDPG-v0 `
-  --gym-packages experiments.sb3_manual.ddpg_aggregate.zoo_register `
-  --conf-file experiments/sb3_manual/ddpg_aggregate/zoo_ddpg.yml `
-  --device cuda --eval-freq -1 --seed 42 `
-  --log-folder outputs/ddpg_train_500ep `
-  --save-replay-buffer
-```
-
-训练仅使用 Train35，`--eval-freq -1` 关闭 Zoo 内部周期性评估。Zoo 在独立目录 `outputs/ddpg_train_500ep/ddpg/AggregateShipDDPG-v0_N/` 下保存最终模型、Replay 和配置；重复启动会使用新的运行编号，保留旧运行。
-
-训练命令返回后，在同一 PowerShell 会话中手动执行一次独立 Validation8（不由训练自动调用）：
-
-```powershell
-$run = Get-ChildItem -LiteralPath 'outputs/ddpg_train_500ep/ddpg' -Directory -Filter 'AggregateShipDDPG-v0_*' |
-  Sort-Object { [int]($_.Name -replace '^AggregateShipDDPG-v0_', '') } -Descending |
-  Select-Object -First 1
-$validationDir = Join-Path $run.FullName ('validation8_' + (Get-Date -Format 'yyyyMMdd_HHmmss'))
-
-& '.\.venv\Scripts\python.exe' -u -m experiments.sb3_manual.ddpg_aggregate.evaluate `
-  --data-root data/processed/operating_dataset_v6_1s `
-  --model (Join-Path $run.FullName 'AggregateShipDDPG-v0.zip') `
-  --output-dir $validationDir
-```
-
-现有 evaluate.py 使用 CPU 独立评估全部 8 条 Validation 航段，不读取 Test。带时间戳的输出目录保留已有验证记录。本次仅修改正式配置与本文档，未运行以上训练或评估命令。
-
-## 原生 Zoo 与本地适配边界
-
-`zoo_optuna.py` 先替换 `rl_zoo3.hyperparams_opt.HYPERPARAMS_SAMPLER["ddpg"]`，再导入原生 `rl_zoo3.train.train`；不修改 site-packages。
-
-原生调用链保持为：
+- `C_H2`：现有实际氢耗乘现有氢价 21.9 CNY/kg。
+- `C_FC_deg`、`C_LB_deg`：直接使用现有物理 interval 返回的退化账本，不重复推进物理或另加寿命惩罚。
+- `C_bat_eq = (SOC_before-SOC_next)*E_bat*p_H2/(eta_eq*LHV_H2)`。
+  `E_bat=624 kWh`、`LHV_H2=120/3.6 kWh/kg` 均取现有模型。
+  放电为正成本，充电为负抵扣；SOC 差已包含现有充放电效率，不重复计 DC/DC 或电池效率。
+- FC 开启时 `eta_eq=eta_FC(P_FC_actual)`。FC 关闭时，使用现有系统 PCHIP 曲线
+  正功率范围的最大效率；程序从曲线计算为 `0.6385540000000001`，不手填替代效率。
+  每步导出 `fc_efficiency_actual` 和 `equivalent_fc_efficiency`。
 
 ```text
-rl_zoo3.train.train()
-  -> ExperimentManager.setup_experiment()
-  -> ExperimentManager.hyperparameters_optimization()
-  -> 原生 TPE / NopPruner / SQLite Study（maximize, load_if_exists=True）
-  -> ExperimentManager.objective()
-  -> 原生 SB3 DDPG.model.learn()
-  -> 原生 TrialEvalCallback
+economic_cost = C_H2 + C_FC_deg + C_LB_deg + C_bat_eq
+C_SOC = lambda_soc * (SOC_next - 0.5)**2
+r = economic_cost + C_SOC
+reward = tanh(1/r)       # 正常执行，r=0 时取右极限 reward=1
+reward = -1             # 原有真实物理不可行终止
 ```
 
-适配器只搜索 tau（0.005～0.15，对数）和 noise_std（0.03～0.12，均匀）；返回字典只有 `tau` 与 `action_noise=NormalActionNoise(...)`。Optuna trial.params 只包含 tau、noise_std。未调用默认 `sample_td3_params` 或 `convert_offpolicy_params`，因此固定参数继续来自 YAML。
+不对 SOC 平方偏差做区间归一化或再乘时间步长。独立 FC ramp 惩罚已经删除；
+Ramp RMS 继续作为诊断指标，原 CSV 的 ramp penalty 字段固定为0。
+负值或非有限总成本明确报错，不取绝对值、不裁剪、不加 epsilon。
+失败奖励不记入经济成本；未执行失败步不制造电池功率、氢耗或时间。
 
-`zoo_trial_logging.TrialParametersCallback` 在训练开始时读取已构造模型，通过原生 Trial 的 user_attrs 保存实际参数，同时打印一次并写入原生评估回调的目录 `effective_parameters.json`。它不采样、不建 Study、不创建目标函数、不调用 learn、不修改模型、不干预 step 或更新次数。
+CSV/JSON 的 `total_cost_cny` 是四项经济成本；`c_soc_cny` 为 SOC 惩罚，
+`reward_total_cost_cny` 才是奖励公式中的 r。不再额外做终端 SOC 补能计价，
+避免重复计算电池能量。FC 退化仍是现有聚合代理，未声称逐堆实测寿命。
 
-## Train 预算与 Validation8
+## 固定 Train35 标定
 
-核对 35 个真实 Train gzip CSV 的行数，扣除表头及末尾边界点后，步数与 manifest.duration_s 全部一致：
+正式基线模型：
+`outputs/ddpg_train_500ep/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip`，
+SHA256 `caf67c28eea863c01c8d6f9a8f7e38ea27b2f3ce924fe1d12dc4a843551f100f`。
+固定遍历 Train35 各一次，deterministic=True，未读取 Validation/Test payload。
 
-- 最短 3272 步，中位数 9720 步，最长 36660 步。
-- Trial 预算：`ceil(8 * 9720 / 32) * 32 = 77760` 步。
-- 这是约 8 个典型航段的等效预算，不保证完成 8 个完整 episode。
-- 独立 `zoo_ddpg_optuna.yml` 使用 77760 步；不包含 episode 提前停止回调。
-- 原生两次评估频率为 `77760 / 2 = 38880`，单环境下在 38880、77760 步执行，均与 32 步收集周期对齐。
-- Train 仍按原有随机抽样。Validation 原有 reset 已确定性顺序轮转，不需要修改 env.py。
-- `--eval-env-kwargs` 必须指定 split=validation；8 次连续评估将遍历 8 条不同 Validation 航段，即便 VecEnv auto-reset 使下一轮从不同游标位置开始。
-- 测试通过 reset 检查完整一轮及偏移后一轮均为 8 个不同航段；未执行整航段评估，也未读取 Test payload。
+- 计划457562秒，实际448434个物理步；33航段完成。
+- parent_015_seg01：4564/10115步后失败；parent_036_seg01：3084/6661步后失败。
+  标定保留35条航段的全部实际执行步，不为失败调用或未执行尾段补造成本。
+- 对全部实际步的四项经济成本取中位数（不包含SOC惩罚，不是35个航段均值的中位数）：
+  **C_typ = 0.17429534153424198 CNY**。
+- **lambda_soc = 100*C_typ = 17.429534153424196**。
+- 标定最小四项经济成本0.04301742089671926 CNY；没有负总成本。
+- 3个CPU推理worker用时118.80秒，模型、优化器、计数及Replay保持不变。
 
-目标是原生 `TrialEvalCallback.last_mean_reward`，即**第二次 Validation8 的平均 episode reward，maximize**。当前奖励仍为 SOC 偏差罚项、FC 功率变化罚项的负值及失败惩罚；不是直接最小化氢耗或经济成本。SOC 权重现为 10.0；奖励数学形式、SOC 参考值、状态、动作、物理模型与数据划分保持原样。
+固定值及基线/数据/原始结果SHA在 `economic_reward_config.json`。
+训练只读取该固定文件，不在线重算权重。日志记录 C_typ、lambda 和实际使用的等效效率。
+原始收集与命令：
+`outputs/ddpg_reward_calibration/collection_20261103_133754_684927/`。
+最终计算另存该目录的 `calibration_result.json` 和 `calibration_result.log`。
+`calibrate_reward.py` 仅负责离线收集，标定原始NPZ/日志不提交Git。
 
-## Windows PowerShell 搜索命令（交付命令，未执行搜索）
+## 直接运行
 
-```powershell
-Set-Location -LiteralPath 'C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-sb3-baseline'
-$env:PYTHONPATH = "$PWD\src;$PWD"
+在实际 DDPG 工作树用项目 `.venv` 解释器，打开根目录脚本，直接点击PyCharm绿色运行按钮：
 
-& '.\.venv\Scripts\python.exe' -u -m experiments.sb3_manual.ddpg_aggregate.zoo_optuna `
-  --algo ddpg --env AggregateShipDDPG-v0 `
-  --gym-packages experiments.sb3_manual.ddpg_aggregate.zoo_register `
-  --conf-file experiments/sb3_manual/ddpg_aggregate/zoo_ddpg_optuna.yml `
-  --optimize-hyperparameters --n-timesteps 77760 `
-  --sampler tpe --pruner none --n-startup-trials 10 `
-  --max-total-trials 20 --n-jobs 1 --seed 42 `
-  --eval-episodes 8 --n-eval-envs 1 --n-evaluations 2 `
-  --eval-env-kwargs "data_root:'data/processed/operating_dataset_v6_1s'" "split:'validation'" `
-  --storage "sqlite:///outputs/ddpg_optuna/study.db" `
-  --study-name ddpg_tau_noise_v1 `
-  --optimization-log-path outputs/ddpg_optuna/evaluations `
-  --log-folder outputs/ddpg_optuna/logs `
-  --device auto --no-optim-plots
-```
+| 用途 | 根目录脚本 |
+|---|---|
+| 正式500 Episode训练 | run_ddpg_train.py |
+| 独立Validation8 | run_ddpg_validate.py |
+| 授权后的独立Test4 | run_ddpg_test.py |
+| 原生Zoo Optuna搜索 | run_ddpg_optuna.py |
 
-原样重跑使用同一 SQLite Study，Zoo 原生 `load_if_exists=True` 和 `max-total-trials=20` 控制正常重启的累计预算，不会直接新增另一批 20 个 Trial。不要改变固定参数后复用此 Study。
+本次开发没有执行这四个正式入口。验证/Test默认指向新奖励训练输出的首个模型；
+新奖励训练尚未开始，故该默认模型要在用户后续训练完成后才存在。
+也可通过原模块的 `--model-path` 明确选择模型。
+旧策略可以在新奖励下单独重新评估，输出明确标记 legacy；
+旧奖励checkpoint不能恢复到新奖励训练，不混用旧奖励的评估结果。
 
-原生行为需要区分：
+原生训练参数：
+gamma=.999、learning_rate=.001、batch_size=64、learning_starts=5000、
+train_freq=32、gradient_steps=1、tau=.03、normal noise sigma=.12、
+network=[256,256]、buffer_size=1000000、device=cuda。
+Zoo仍以20000000环境步作安全上限，原生 StopTrainingOnMaxEpisodes=500。
+每轮从原Train35随机选一条完整航段；真实物理失败终止也计为一个已结束Episode。
 
-- `--seed 42` 设置 Zoo 全局随机数、环境和 TPE；Zoo 2.9.0 原生 objective 构造每个 trial 模型时传 `seed=None`。不额外改写此行为，也不声称每 Trial 都单独固定为 model.seed=42。
-- Zoo 的最大 Trial 统计包含 COMPLETE、RUNNING、PRUNED，不包含 FAIL；并非对所有历史失败尝试的绝对条数上限。
-- Zoo 在 HPO 中禁用 TensorBoard，评估记录使用每 Trial 的 evaluations.npz；本项目不另建训练/Study 日志系统。
-- 原生 best_model.zip 保存该 Trial 两次评估中较高回报的模型；Study 目标仍取第二次评估回报，二者不能混为同一个快照。
-- 普通 Zoo 的 `--study-name/--trial-id` 参数导入仍使用其默认 DDPG converter，要求更宽搜索空间中的字段；不要用它直接导入本项目仅两参数的 Study。参数依据下面 JSON 与保留的基线 YAML 读取。
+新训练输出：`outputs/ddpg_train_500ep_economic_v1/ddpg/AggregateShipDDPG-v0_N/`。
+独立评估输出使用 `ddpg_validation_economic_v1`、`ddpg_test_economic_v1`。
+历史模型、Replay、Trial18及全部旧输出保留。
 
-## 搜索产物（由用户运行后生成）
+## 每100 Episode独立Validation8
 
-- `outputs/ddpg_optuna/study.db`：原生 SQLite Study、tau/noise_std、结果、有效参数 user_attrs。
-- `outputs/ddpg_optuna/evaluations/trial_N/evaluations.npz`：原生两轮评估。
-- `outputs/ddpg_optuna/evaluations/trial_N/best_model.zip`：原生每 Trial 最佳模型。
-- `outputs/ddpg_optuna/evaluations/trial_N/effective_parameters.json`：实际生效配置、网络、噪声、Train/Validation split。
-- `outputs/ddpg_optuna/logs/ddpg/report_*.csv/.pkl`：原生搜索汇总；终端输出原生最优 Trial。
-- 以上目录被 Git 忽略，模型和数据库不提交。
+回调按实际 `dones` 计数，在100、200、300、400、500触发，绝不用环境步近似轮数。
+在当前Zoo运行目录的 `periodic_validation/episode_0100/` 等节点保存独立 model.zip，
+随后以同解释器启动独立CPU验证子进程，确定性遍历原Validation8，不调用Test。
 
-## Optuna 接入时的历史配置验收（2026-11-01）
+验证子进程加载模型副本，不更新Actor/Critic/Target或Replay，也不重置训练进程的
+随机数或线程设置。保留每节点CSV/JSON、逐步成本与功率/SOC图，另有累计
+`periodic_validation.csv/json`，记录完成率、平均累计奖励、四项经济成本及SOC表现。
+失败前缀费用不冒充完整航段费用。
 
-本节记录前次接入时执行的检查。本次按要求仅核对配置、Git 差异与提交推送，不重跑这些命令。既有测试包含旧正式预算、Tau、噪声与 Episode 数的断言，未在本次两文件修改范围内更新，不应将历史通过结果当作当前正式配置的测试结果。
+时钟保持SB3原口径：回调位于终止环境步之后、该transition入Replay及该rollout的
+Adam更新之前，checkpoint_metadata.json明确记录该阶段；不额外做Adam/Target更新。
+自定义完成轮数随checkpoint保存，恢复时继续计数；每个节点禁止覆盖。
+正式训练结束仍由Zoo按原选项保存一次最终Replay，不在每个验证节点重复保存Replay。
 
-在上述工作目录与 PYTHONPATH 下执行：
+## Optuna隔离
 
-```powershell
-& '.\.venv\Scripts\python.exe' -m compileall -q experiments/sb3_manual/ddpg_aggregate
-& '.\.venv\Scripts\python.exe' -m experiments.sb3_manual.ddpg_aggregate.train --help
-& '.\.venv\Scripts\python.exe' -m experiments.sb3_manual.ddpg_aggregate.zoo_optuna --help
-& '.\.venv\Scripts\python.exe' -m rl_zoo3.train --help
-& '.\.venv\Scripts\python.exe' -m unittest experiments.sb3_manual.ddpg_aggregate.test_zoo_optuna -v
-git diff --check
-```
+仍实际调用 Zoo ExperimentManager、原生Optuna及SB3 learn；不改site-packages。
+搜索空间仍仅tau [.005,.15]（log）和noise_std [.03,.12]，其余算法配置不变。
+原77760步预算、两次Validation8评估、TPE/NopPruner、单job、最多20trial保持不变。
+正式500轮的周期回调不加入Optuna YAML。
 
-实际配置单元检查：7 项全部通过（73.285 秒）。覆盖两份 YAML、原生 sampler 注册、两参数分布边界、32:1 更新配置、真实模型的四个网络、原生 TPE/NopPruner、独立 Validation8 轮转、实际参数 JSON/user_attrs。
-
-compileall 与上列三个 `--help` 命令均 exit 0。对照基准的 env.py、evaluate.py、zoo_register.py、src/ 和 data/ 差异检查无输出（exit 0）。唯一提示是原生 TPE 对 multivariate 参数的 ExperimentalWarning，不影响本次配置验收。
-
-验证只执行原生 ExperimentManager 的 setup、环境 reset、模型构造和回调初始化，环境步=0、Adam 更新=0、Replay=0。未执行 hyperparameters_optimization、未创建 Study、未启动 Trial 或正式训练；不能把配置验收说成已完成搜索。
+新Study：`ddpg_tau_noise_economic_tanh_v1`。
+新存储：`sqlite:///outputs/ddpg_optuna_economic_v1/study.db`。
+入口拒绝旧奖励Study名称；trial/study/参数导出均记录固定reward_identity，
+不允许沿用无身份或不同权重的Study。旧Study数据库及Trial18均未修改。
+本轮没有执行搜索或创建新Study。
+参数导出以新Study的 `effective_parameters.json` 及 reward_identity 为准；
+原生全量 DDPG `--trial-id` converter 不适用于这里仅含tau/noise的搜索参数，未新增转换逻辑。

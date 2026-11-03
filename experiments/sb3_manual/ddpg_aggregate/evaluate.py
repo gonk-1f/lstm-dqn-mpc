@@ -8,6 +8,8 @@ from pathlib import Path
 
 from stable_baselines3 import DDPG
 from .env import AggregateDDPGEnv
+from .validate import ACCOUNTING_FIELDS, step_accounting
+from .economic_reward import evaluation_identity
 
 
 def main():
@@ -16,9 +18,10 @@ def main():
     parser.add_argument("--model", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    args.output_dir.mkdir(parents=True, exist_ok=False)
     env = AggregateDDPGEnv(args.data_root, split="validation")
-    model = DDPG.load(str(args.model), device="cpu")
+    model = DDPG.load(str(args.model), device="cpu", action_noise=None)
+    reward_metadata = evaluation_identity(model, env.reward_identity)
     rows = []
     trajectories = []
     trajectory_fields = (
@@ -26,17 +29,20 @@ def main():
         "load_kw", "requested_fc_kw", "fc_actual_kw", "battery_actual_kw", "soc",
         "delta_fc_kw", "soc_penalty", "fc_ramp_penalty", "projected",
         "feasible_fc_lower_kw", "feasible_fc_upper_kw", "reward", "terminal_reason",
-    )
+        "fc_efficiency_actual", "equivalent_fc_efficiency",
+    ) + ACCOUNTING_FIELDS
     try:
         for _ in range(len(env.episodes)):
             obs, _ = env.reset()
             step_index = 0
             while True:
                 act, _ = model.predict(obs, deterministic=True)
+                before = env.physical
                 obs, reward, terminated, truncated, info = env.step(act)
                 step_index += 1
                 step_executed = info.get("terminal_reason") != "no_feasible_physical_power"
                 trajectory = {field: info.get(field) for field in trajectory_fields}
+                trajectory.update(step_accounting(env, before, info))
                 trajectory.update(
                     step_index=step_index,
                     interval_start_s=step_index - 1,
@@ -58,6 +64,7 @@ def main():
             writer.writeheader()
             writer.writerows(rows)
         summary = {
+            **reward_metadata,
             "validation_voyages": len(rows),
             "completed": sum(r["completed"] for r in rows),
             "completion_rate": sum(r["completed"] for r in rows) / len(rows),

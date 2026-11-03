@@ -18,13 +18,14 @@ from .validate import (
 )
 from .test4_env import AggregateDDPGTestEnv
 from .test4_plots import save_test_plots
+from .economic_reward import evaluation_identity
 import numpy as np
 from stable_baselines3 import DDPG
 from stable_baselines3.common.utils import check_for_correct_spaces
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 import torch
 
-DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_test"
+DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_test_economic_v1"
 
 
 def run_test4(
@@ -46,6 +47,7 @@ def run_test4(
     normalizer = None
     try:
         check_for_correct_spaces(env, model.observation_space, model.action_space)
+        reward_metadata = evaluation_identity(model, env.reward_identity)
         if vecnormalize_path is None:
             for candidate in (model_path.parent / ENV_ID / "vecnormalize.pkl",
                               model_path.parent / "vecnormalize.pkl"):
@@ -74,6 +76,7 @@ def run_test4(
             "test_order": expected_ids, "test_data": env.test_data_identity,
             "vecnormalize_path": None if normalizer is None else str(vecnormalize_path),
             "purpose": "Final evaluation of this frozen checkpoint; no parameter search or model selection.",
+            **reward_metadata,
             "environment_reward": {
                 "soc_reference": SOC_REFERENCE, "soc_weight": SOC_WEIGHT,
                 "ramp_weight": RAMP_WEIGHT, "failure_reward": FAILURE_REWARD,
@@ -184,7 +187,7 @@ def run_test4(
             "mean_full_voyage_economic_cost_cny": (
                 sum(row["total_cost_cny"] for row in rows) / 4 if successes == 4 else None
             ),
-            "economic_cost_scope": "Executed onboard intervals only; existing aggregate FC degradation proxy. No terminal SOC restoration or unexecuted failure costs.",
+            "economic_cost_scope": "Four economic components including signed instantaneous-efficiency battery hydrogen equivalence. SOC penalty is separate in reward_total_cost_cny; no additional terminal SOC/shore correction or unexecuted failure costs.",
             "battery_power_sign": "Positive bus power = discharge; negative = charge. Energy fields are positive gross bus kWh.",
             "vecnormalize_training": False if normalizer is not None else None,
             "vecnormalize_norm_reward": False if normalizer is not None else None,
