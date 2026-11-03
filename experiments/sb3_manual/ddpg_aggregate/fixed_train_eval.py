@@ -41,7 +41,7 @@ def run_fixed_train_evaluation(
     model_path: Path, data_root: Path = DEFAULT_DATA_ROOT,
     output_root: Path = DEFAULT_OUTPUT_ROOT, episode: int = 500,
     sample_id: str = FIXED_TRAIN_ID, device: str = "cpu", seed: int = 42,
-    max_steps: int | None = None,
+    max_steps: int | None = None, output_dir: Path | None = None,
 ) -> dict:
     """Load a model copy; one full Train voyage unless explicitly smoke-limited."""
     if max_steps is not None and max_steps < 1:
@@ -56,9 +56,15 @@ def run_fixed_train_evaluation(
     try:
         check_for_correct_spaces(env, model.observation_space, model.action_space)
         reward_metadata = evaluation_identity(model, env.reward_identity)
-        stamp = datetime.now(timezone(timedelta(hours=8))).strftime("%Y%m%d_%H%M%S_%f")
-        directory = Path(output_root).resolve() / f"fixed_train_{stamp}"
-        directory.mkdir(parents=True, exist_ok=False)
+        if output_dir is None:
+            stamp = datetime.now(timezone(timedelta(hours=8))).strftime("%Y%m%d_%H%M%S_%f")
+            directory = Path(output_root).resolve() / f"fixed_train_{stamp}"
+            directory.mkdir(parents=True, exist_ok=False)
+        else:
+            # Periodic checkpoints already own a unique directory. Avoid nesting
+            # another timestamp under it, which exceeds Windows MAX_PATH.
+            directory = Path(output_dir).resolve()
+            directory.mkdir(parents=True, exist_ok=True)
         obs, reset_info = env.reset(seed=seed)
         if reset_info["sample_id"] != sample_id:
             raise RuntimeError("Fixed training voyage selection changed")
@@ -198,14 +204,14 @@ class FixedTrainEvaluationCallback(BaseCallback):
         subprocess.run([
             sys.executable, "-u", "-m", "experiments.sb3_manual.ddpg_aggregate.fixed_train_eval",
             "--model-path", str(checkpoint), "--data-root", str(self.data_root),
-            "--output-root", str(node / "evaluation"), "--episode", str(episode),
+            "--output-dir", str(node), "--episode", str(episode),
             "--sample-id", FIXED_TRAIN_ID, "--device", "cpu",
             "--seed", str(self.model.seed if self.model.seed is not None else 42),
         ], cwd=PROJECT_ROOT, env=child_env, check=True)
-        files = list((node / "evaluation").glob("fixed_train_*/fixed_train_metrics.json"))
-        if len(files) != 1:
+        metrics_path = node / "fixed_train_metrics.json"
+        if not metrics_path.is_file():
             raise RuntimeError("Fixed evaluation must produce exactly one metrics file")
-        metrics = json.loads(files[0].read_text(encoding="utf-8"))
+        metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
         summary = metrics["summary"]
         if (metrics["split"] != "train" or summary["sample_id"] != FIXED_TRAIN_ID
                 or summary["evaluation_truncated"] or not metrics["deterministic"]
@@ -225,6 +231,7 @@ def main(argv=None):
     parser.add_argument("--model-path", type=Path, required=True)
     parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA_ROOT)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
+    parser.add_argument("--output-dir", type=Path, help="Exact periodic checkpoint directory; existing results are not overwritten")
     parser.add_argument("--episode", type=int, default=500)
     parser.add_argument("--sample-id", default=FIXED_TRAIN_ID)
     parser.add_argument("--device", default="cpu")

@@ -103,15 +103,14 @@ class EpisodeValidationCallback(BaseCallback):
         command = [
             sys.executable, "-u", "-m", "experiments.sb3_manual.ddpg_aggregate.validate",
             "--model-path", str(checkpoint), "--data-root", str(self.data_root),
-            "--output-root", str(node / "validation"), "--episodes", "8",
+            "--output-dir", str(node), "--episodes", "8",
             "--device", "cpu", "--seed", str(self.model.seed if self.model.seed is not None else 42),
         ]
         # Loading a second SB3 model in this process would reset global RNG seeds.
         subprocess.run(command, cwd=PROJECT_ROOT, env=child_env, check=True)
-        files = list((node / "validation").glob("validation_*/validation_metrics.json"))
-        if len(files) != 1:
+        metrics_path = node / "validation_metrics.json"
+        if not metrics_path.is_file():
             raise RuntimeError("Periodic validation must produce exactly one complete metrics file")
-        metrics_path = files[0]
         metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
         voyages = metrics["per_voyage"]
         if (

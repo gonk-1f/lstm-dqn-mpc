@@ -117,7 +117,7 @@ CUDA、`--eval-freq -1` 和 `--save-replay-buffer`；500轮周期验证由Episod
 
 - `training_episodes.csv`：带探索噪声的每轮训练奖励、平均每步奖励、调用步数、实际物理步数、完成状态、coverage和终止原因。
 - `episode_0020/model.zip` 等25个独立模型和checkpoint时钟元数据；不在每个节点重复保存Replay。
-- 各节点 `evaluation/fixed_train_*/fixed_train_summary.csv`、`fixed_train_metrics.json`、`fixed_train_step_data.csv`。
+- 各节点直接保存 `fixed_train_summary.csv`、`fixed_train_metrics.json`、`fixed_train_step_data.csv`。
 - 累计 `fixed_train_evaluation.csv/json`：轮数、航段ID、累计/平均每步奖励、长度、完成状态、coverage、终止原因、
   四项经济成本及总成本、SOC初/终/最小/最大、启停次数和FC功率变化RMS。
 
@@ -141,6 +141,11 @@ Validation8泛化结果、最终Test4测试结果分开保存和比较；不使�
 随机数或线程设置。保留每节点CSV/JSON、逐步成本与功率/SOC图，另有累计
 `periodic_validation.csv/json`，记录完成率、平均累计奖励、四项经济成本及SOC表现。
 失败前缀费用不冒充完整航段费用。
+
+周期评估通过 `--output-dir` 直接写入各自的 `episode_XXXX/` checkpoint目录，
+不再嵌套 `evaluation/固定航段时间戳` 或 `validation/验证时间戳`，避免当前Windows工作树
+触发WinError 206。独立运行入口仍用 `--output-root` 创建时间戳目录，原用法不变。
+已有逐步CSV以独占创建模式保护，不覆盖历史评估；checkpoint节点也继续禁止覆盖。
 
 时钟保持SB3原口径：回调位于终止环境步之后、该transition入Replay及该rollout的
 Adam更新之前，checkpoint_metadata.json明确记录该阶段；不额外做Adam/Target更新。
@@ -191,3 +196,23 @@ $pkg = 'experiments.sb3_manual.ddpg_aggregate'
 & '.\.venv\Scripts\python.exe' -m unittest "$pkg.test_fixed_train" "$pkg.test_periodic_validation" "$pkg.test_test4" "$pkg.test_economic_reward.EconomicRewardTests.test_fixed_config_is_loaded_only_on_request_and_identity_is_stable" "$pkg.test_zoo_optuna.NativeConfigurationTests.test_fixed_configs_and_budget" -v
 git diff --check
 ```
+
+### 第20轮路径错误后的接续
+
+首次运行在第20轮的固定航段评估建目录时因Windows路径过长退出。
+`fixed_train_evaluation/episode_0020/model.zip` 已保存权重与优化器：58655环境步、
+1676次更新循环、累计20次Episode结束。该运行尚无Replay文件，不能精确恢复原训练轨迹。
+以下命令仅从该checkpoint继续权重/优化器训练，回放重新收集、重新执行5000步warmup；
+Zoo环境步时钟重新计数，自定义累计Episode从20继续，到500停止，即最多新增480轮。
+原运行及模型不变，Zoo会使用新的运行编号。直接重新运行根目录训练脚本则是新实验。
+
+在本DDPG工作树根目录PowerShell执行（本次修复未执行此命令）：
+
+```powershell
+$env:PYTHONPATH = "$PWD;$PWD\src"
+& '.\.venv\Scripts\python.exe' -u -m rl_zoo3.train --algo ddpg --env AggregateShipDDPG-v0 --gym-packages experiments.sb3_manual.ddpg_aggregate.zoo_register --conf-file experiments/sb3_manual/ddpg_aggregate/zoo_ddpg.yml --device cuda --eval-freq -1 --seed 42 --trained-agent outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v1/ddpg/AggregateShipDDPG-v0_1/fixed_train_evaluation/episode_0020/model.zip --log-folder outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v1 --save-replay-buffer
+```
+
+路径修复验收仅运行定向回调/路径回归，以及加载此checkpoint在临时深目录下的
+固定Train、Validation各2步CPU推理；不进行学习或完整Validation8/Test4评估。
+原检查点SHA256在推理前后保持一致。

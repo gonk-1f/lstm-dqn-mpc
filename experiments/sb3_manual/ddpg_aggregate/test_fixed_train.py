@@ -243,8 +243,8 @@ class FixedEvaluationTests(unittest.TestCase):
                 self.assertEqual(command[command.index("--sample-id") + 1], FIXED_ID)
                 self.assertEqual(command[command.index("--device") + 1], "cpu")
                 self.assertNotIn("--max-steps", command)
-                directory = Path(command[command.index("--output-root") + 1]) / "fixed_train_mock"
-                directory.mkdir(parents=True)
+                directory = Path(command[command.index("--output-dir") + 1])
+                directory.mkdir(parents=True, exist_ok=True)
                 summary = dict(episode=20, sample_id=FIXED_ID, evaluation_truncated=False,
                                completed=False, coverage=0.5, mean_reward_per_step=0.8,
                                episode_reward=10.0, total_cost_cny=3.0, soc_final=0.5)

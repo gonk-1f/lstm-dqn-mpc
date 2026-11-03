@@ -106,6 +106,7 @@ def run_validation(
     output_root: Path | None = None, device: str = "cpu", seed: int = 42,
     episodes: int = 8, max_steps_per_episode: int | None = None,
     vecnormalize_path: Path | None = None, torch_threads: int = 1,
+    output_dir: Path | None = None,
 ) -> dict:
     if not 1 <= episodes <= 8:
         raise ValueError("episodes must be between 1 and 8; the default is Validation8")
@@ -145,12 +146,17 @@ def run_validation(
         expected_ids = [ep.sample_id for ep in vessel.episodes]
         if len(expected_ids) != 8 or len(set(expected_ids)) != 8:
             raise RuntimeError("The existing validation environment must contain eight distinct voyages")
-        timestamp = datetime.now(timezone(timedelta(hours=8))).strftime("%Y%m%d_%H%M%S_%f")
-        output_dir = output_root / f"validation_{timestamp}"
-        output_dir.mkdir(parents=True, exist_ok=False)
+        if output_dir is None:
+            timestamp = datetime.now(timezone(timedelta(hours=8))).strftime("%Y%m%d_%H%M%S_%f")
+            output_dir = output_root / f"validation_{timestamp}"
+            output_dir.mkdir(parents=True, exist_ok=False)
+        else:
+            # The periodic callback has already created a unique checkpoint node.
+            output_dir = Path(output_dir).resolve()
+            output_dir.mkdir(parents=True, exist_ok=True)
         rows, plot_data = [], []
         with (output_dir / "validation_step_data.csv").open(
-            "w", encoding="utf-8-sig", newline=""
+            "x", encoding="utf-8-sig", newline=""
         ) as handle, torch.inference_mode():
             writer = csv.DictWriter(handle, fieldnames=STEP_FIELDS)
             writer.writeheader()
@@ -302,6 +308,7 @@ def main(argv=None):
     parser.add_argument("--model-path", type=Path, required=True)
     parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA_ROOT)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
+    parser.add_argument("--output-dir", type=Path, help="Exact periodic checkpoint directory; existing results are not overwritten")
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--episodes", type=int, default=8, help="1..8; default: all Validation8")

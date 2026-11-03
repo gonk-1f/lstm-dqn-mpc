@@ -60,8 +60,8 @@ class FakeModel:
 
 
 def validation_subprocess(command, **kwargs):
-    output = Path(command[command.index("--output-root") + 1]) / "validation_mock"
-    output.mkdir(parents=True)
+    output = Path(command[command.index("--output-dir") + 1])
+    output.mkdir(parents=True, exist_ok=True)
     rows = [{
         "sample_id": f"validation_{index}", "split": "validation", "completed": True,
         "soc_initial": 0.6, "soc_final": 0.55, "soc_min": 0.4, "soc_max": 0.6,
