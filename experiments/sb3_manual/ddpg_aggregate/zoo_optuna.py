@@ -47,8 +47,8 @@ def prepare_optimization_args(argv):
 
 
 def sample_ddpg_params(trial, n_actions, n_envs, additional_args):
-    tau = trial.suggest_float("tau", 0.005, 0.15, log=True)
-    noise_std = trial.suggest_float("noise_std", 0.03, 0.12)
+    tau = trial.suggest_float("tau", 0.005, 0.06, log=True)
+    noise_std = trial.suggest_float("noise_std", 0.07, 0.15)
     return {
         "tau": tau,
         "action_noise": NormalActionNoise(
