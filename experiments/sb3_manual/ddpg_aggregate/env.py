@@ -40,16 +40,28 @@ class AggregateDDPGEnv(gym.Env):
 
     metadata = {"render_modes": []}
 
-    def __init__(self, data_root: str | Path, split: str = "train") -> None:
+    def __init__(
+        self, data_root: str | Path, split: str = "train",
+        fixed_train_id: str | None = None,
+    ) -> None:
         super().__init__()
         if split not in ("train", "validation"):
             raise ValueError("split must be train or validation (Test is not accessible)")
+        if fixed_train_id is not None and split != "train":
+            raise ValueError("fixed_train_id is only allowed for split=train")
         self.split = split
+        self.fixed_train_id = fixed_train_id
         self.data_root = Path(data_root).resolve()
         dataset = V6TrainingDataset.open(self.data_root)
         if dataset.split_sizes != (35, 8):
             raise ValueError(f"Expected immutable Train35/Validation8, got {dataset.split_sizes}")
         self.episodes = tuple(dataset.load_train() if split == "train" else dataset.load_validation())
+        self._fixed_train_index = None
+        if fixed_train_id is not None:
+            matches = [i for i, ep in enumerate(self.episodes) if ep.sample_id == fixed_train_id]
+            if len(matches) != 1:
+                raise ValueError(f"fixed_train_id {fixed_train_id!r} must match exactly one Train35 voyage; got {len(matches)}")
+            self._fixed_train_index = matches[0]
         self._validation_cursor = 0
         self.physics = EconomicMPC(nominal_cost_cny=1.0)
         self.plant = self.physics.plant
@@ -100,7 +112,9 @@ class AggregateDDPGEnv(gym.Env):
         super().reset(seed=seed)
         if options:
             raise ValueError("Cannot override frozen Train/Validation voyage selection")
-        if self.split == "train":
+        if self._fixed_train_index is not None:
+            pick = self._fixed_train_index
+        elif self.split == "train":
             pick = int(self.np_random.integers(0, len(self.episodes)))
         else:
             pick = self._validation_cursor % len(self.episodes)

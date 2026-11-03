@@ -139,13 +139,17 @@ class NativeConfigurationTests(unittest.TestCase):
                         policy_kwargs="dict(net_arch=[256, 256])")
         for config in (formal, tuning):
             for key, value in expected.items():
+                if config is formal and key in ("tau", "noise_std"):
+                    value = {"tau": 0.045, "noise_std": 0.1}[key]
                 self.assertEqual(config[key], value, key)
             self.assertEqual(config["env_kwargs"]["split"], "train")
+        self.assertEqual(formal["env_kwargs"]["fixed_train_id"], "parent_005_seg01")
+        self.assertNotIn("fixed_train_id", tuning["env_kwargs"])
         self.assertEqual(formal["n_timesteps"], 20000000)
-        self.assertEqual(len(formal["callback"]), 2)
-        periodic = formal["callback"][0][PACKAGE + ".periodic_validation.EpisodeValidationCallback"]
+        self.assertEqual(len(formal["callback"]), 3)
+        periodic = formal["callback"][1][PACKAGE + ".periodic_validation.EpisodeValidationCallback"]
         self.assertEqual((periodic["every_episodes"], periodic["max_episodes"]), (100, 500))
-        stop = formal["callback"][1]["stable_baselines3.common.callbacks.StopTrainingOnMaxEpisodes"]
+        stop = formal["callback"][2]["stable_baselines3.common.callbacks.StopTrainingOnMaxEpisodes"]
         self.assertEqual(stop["max_episodes"], 500)
         self.assertEqual(tuning["n_timesteps"], 77760)
         self.assertEqual(self.manager.n_timesteps, 77760)

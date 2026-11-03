@@ -1,4 +1,7 @@
-"""Train native Stable-Baselines3 DDPG on Train35, with an independent model file."""
+"""Secondary native-SB3 entry; formal RL Zoo entry is run_ddpg_train.py.
+
+Uses the same fixed-voyage parameters and diagnostics as the formal entry.
+"""
 from __future__ import annotations
 
 import argparse
@@ -16,6 +19,7 @@ from stable_baselines3.common.callbacks import CallbackList, StopTrainingOnMaxEp
 
 from .env import AggregateDDPGEnv
 from .periodic_validation import EpisodeValidationCallback
+from .fixed_train_eval import FixedTrainEvaluationCallback, FIXED_TRAIN_ID
 
 
 def main():
@@ -29,7 +33,7 @@ def main():
     if args.total_timesteps < 1:
         parser.error("total-timesteps must be positive")
     args.output_dir.mkdir(parents=True, exist_ok=False)
-    env = Monitor(AggregateDDPGEnv(args.data_root, split="train"),
+    env = Monitor(AggregateDDPGEnv(args.data_root, split="train", fixed_train_id=FIXED_TRAIN_ID),
                   filename=str(args.output_dir / "train_monitor.csv"))
     try:
         model = DDPG(
@@ -41,23 +45,26 @@ def main():
             learning_starts=5000,
             train_freq=32,
             gradient_steps=1,
-            tau=0.03,
+            tau=0.045,
             policy_kwargs=dict(net_arch=[256, 256]),
-            action_noise=NormalActionNoise(mean=np.zeros(1), sigma=0.12 * np.ones(1)),
+            action_noise=NormalActionNoise(mean=np.zeros(1), sigma=0.1 * np.ones(1)),
             seed=args.seed,
             device=args.device,
             verbose=1,
             tensorboard_log=str(args.output_dir / "tensorboard"),
         )
         callbacks = CallbackList([
+            FixedTrainEvaluationCallback(every_episodes=20),
             EpisodeValidationCallback(every_episodes=100, max_episodes=500),
             StopTrainingOnMaxEpisodes(max_episodes=500, verbose=1),
         ])
         model.learn(total_timesteps=args.total_timesteps, log_interval=1, callback=callbacks)
         model_path = args.output_dir / "ddpg_aggregate"
         model.save(str(model_path))
+        model.save_replay_buffer(str(args.output_dir / "replay_buffer.pkl"))
         meta = {"algorithm": "SB3.DDPG", "states": 3, "actions": 1,
                 "seed": args.seed, "total_timesteps": int(model.num_timesteps),
+                "fixed_train_id": FIXED_TRAIN_ID,
                 "data_root": str(args.data_root.resolve()),
                 "model": str(model_path) + ".zip"}
         (args.output_dir / "run.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")

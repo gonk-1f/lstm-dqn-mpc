@@ -22,7 +22,7 @@ def main() -> int:
         "--device", "cuda",
         "--eval-freq", "-1",
         "--seed", "42",
-        "--log-folder", "outputs/ddpg_train_500ep_economic_v1",
+        "--log-folder", "outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v1",
         "--save-replay-buffer",
     ]
     # Inherit stdin/stdout/stderr so training stays in PyCharm's Run console.

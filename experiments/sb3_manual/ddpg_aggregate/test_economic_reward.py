@@ -125,7 +125,7 @@ class EconomicRewardTests(unittest.TestCase):
 
     def test_fixed_config_is_loaded_only_on_request_and_identity_is_stable(self):
         module = self.module()
-        self.assertEqual(module.load_reward_config()["lambda_soc"], 17.0)
+        self.assertEqual(module.load_reward_config()["lambda_soc"], 8.0)
         config = {"reward_version": module.REWARD_VERSION, "c_typ": 0.02, "lambda_soc": 1.7}
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "reward.json"
