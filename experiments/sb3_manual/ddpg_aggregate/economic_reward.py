@@ -33,8 +33,8 @@ def _check_config(config: dict) -> None:
         raise ValueError("Economic reward config version does not match the implementation")
     typical = _finite(config["c_typ"], "c_typ")
     weight = _finite(config["lambda_soc"], "lambda_soc")
-    if typical < 0.0 or weight < 0.0 or weight != 100.0 * typical:
-        raise ValueError("Fixed lambda_soc must equal 100 * nonnegative Train35 c_typ")
+    if typical < 0.0 or weight < 0.0:
+        raise ValueError("c_typ and lambda_soc must be nonnegative")
 
 
 def load_reward_config(path=DEFAULT_CONFIG_PATH) -> dict:

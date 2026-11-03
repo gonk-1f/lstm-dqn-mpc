@@ -125,7 +125,8 @@ class EconomicRewardTests(unittest.TestCase):
 
     def test_fixed_config_is_loaded_only_on_request_and_identity_is_stable(self):
         module = self.module()
-        config = {"reward_version": module.REWARD_VERSION, "c_typ": 0.02, "lambda_soc": 2.0}
+        self.assertEqual(module.load_reward_config()["lambda_soc"], 17.0)
+        config = {"reward_version": module.REWARD_VERSION, "c_typ": 0.02, "lambda_soc": 1.7}
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "reward.json"
             path.write_text(json.dumps(config), encoding="utf-8")
@@ -135,9 +136,11 @@ class EconomicRewardTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), original)
             first = module.reward_identity(loaded)
             self.assertEqual(first, module.reward_identity(loaded))
-            self.assertEqual(first["lambda_soc"], 100.0 * first["c_typ"])
+            self.assertEqual(first["lambda_soc"], 1.7)
+            self.assertEqual(first["c_typ"], 0.02)
+            self.assertNotEqual(first["lambda_soc"], 100.0 * first["c_typ"])
             self.assertEqual(first["reward_version"], module.REWARD_VERSION)
-            path.write_text(json.dumps({**config, "lambda_soc": 3.0}), encoding="utf-8")
+            path.write_text(json.dumps({**config, "lambda_soc": -3.0}), encoding="utf-8")
             with self.assertRaises(ValueError):
                 module.load_reward_config(path)
 
