@@ -1,7 +1,21 @@
 # 聚合燃料电池–锂电池 SB3 DDPG
 
-版本：`ddpg_economic_normalized_tanh_v3`。模型仍为一个600 kW聚合燃料电池系统
-和一个624 kWh聚合锂电池系统，状态、动作映射、SOC动力学和35/8/4数据划分不变。
+版本：`ddpg_economic_normalized_tanh_v4`。模型仍为一个600 kW聚合燃料电池系统
+和一个624 kWh聚合锂电池系统，动作映射、SOC动力学和35/8/4数据划分不变。
+
+## 五维状态与 Critic 损失
+
+观测按以下顺序输入网络：
+`[SOC_t, P_load,t/600, P_FC,t-1/600, (P_load,t-P_load,t-1)/600, t_elapsed/3600]`。
+FC功率是上一已执行时刻的实际功率；首步负载变化量为0。
+负载变化只使用当前及上一秒负载，不读取未来负载。运行时间以小时为单位，
+不除以航段总时长，也不需要预计到港时间。
+Actor输入由3维变为5维；Critic输入为5维状态与1维动作，共6维。
+
+正式Zoo入口和备用`train.py`均使用继承SB3 DDPG的`HuberDDPG`，
+仅将Critic的TD误差损失改为Huber（delta=1）。Actor目标、Adam更新次数、
+Target软更新时钟、探索噪声和其余训练参数保持原样；batch_size仍为64。
+新增状态与损失配置写入模型身份，新实验须从头训练，不能续训旧三维状态模型。
 
 ## 四项经济成本奖励
 
@@ -9,7 +23,7 @@
 C = C_H2 + C_FC_deg + C_LB_deg + C_bat_eq
 reward = tanh(C_ref / C)   # C > 0，成本单位CNY
 reward = 1                # C == 0
-reward = -10000           # 原有真实物理不可行失败
+reward = -1               # 当前真实物理不可行失败；本次未修改奖励
 ```
 
 负总成本或非有限成本明确报错，不取绝对值、不裁剪、不加epsilon。
@@ -122,7 +136,7 @@ FC变载退化仍按实际功率变化计算。模型身份记录无爬坡限制
 仍调用Zoo原生ExperimentManager及Optuna，搜索空间不变：
 tau [.005,.06]（log）、noise_std [.07,.15]；其余配置和77760步预算、
 两次Validation8、TPE/NopPruner、单job及最多20trial不变。
-新Study为`ddpg_tau_noise_economic_normalized_tanh_v3`，
+新Study为`ddpg_tau_noise_economic_normalized_tanh_v4_obs5_huber1`，
 新存储为`sqlite:///outputs/ddpg_optuna_economic_v3/study.db`。
 Study、trial和导出的`effective_parameters.json`保存同一奖励身份；
 旧Study和不同标定身份不能混用。此改动不运行搜索。

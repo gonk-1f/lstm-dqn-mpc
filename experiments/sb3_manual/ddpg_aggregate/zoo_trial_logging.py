@@ -50,6 +50,7 @@ class TrialParametersCallback(BaseCallback):
             "train_freq": model.train_freq.frequency,
             "train_freq_unit": model.train_freq.unit.value,
             "gradient_steps": model.gradient_steps,
+            "critic_loss": identity["critic_loss"],
             "tau": model.tau,
             "policy": type(model.policy).__name__,
             "policy_kwargs": model.policy_kwargs,

@@ -1,7 +1,7 @@
-"""Minimal 3-observation, 1-action aggregate FC/battery ship environment.
+"""Five-observation, one-action aggregate FC/battery ship environment.
 
-Physics and voyage splits are reused from the existing project. No action masking,
-forecasting, additional observation features, or custom DDPG.
+Physics and voyage splits are reused from the existing project. Observations use
+current/past loads and elapsed time, without forecasting or action masking.
 """
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from .economic_reward import (
     load_reward_config, reward_identity, peak_fc_efficiency,
     interval_economic_components, economic_reward, FAILURE_REWARD,
 )
+from .huber_ddpg import CRITIC_LOSS_ID
 
 
 FC_RATED_KW = 600.0
@@ -66,6 +67,8 @@ class AggregateDDPGEnv(gym.Env):
         self.reward_identity = reward_identity(REWARD_CONFIG)
         self.reward_identity["fc_off_reference_efficiency"] = peak_fc_efficiency(self.physics.fc_efficiency)
         self.reward_identity["fc_ramp_limit_kw_per_s"] = None
+        self.reward_identity["observation_version"] = "soc_load_prev_fc_load_delta_elapsed_hours_v1"
+        self.reward_identity["critic_loss"] = CRITIC_LOSS_ID
         self.economic_totals = dict.fromkeys(ECONOMIC_SUM_FIELDS, 0.0)
         self.equivalent_eta_sum = 0.0
         self.equivalent_eta_min = None
@@ -78,12 +81,12 @@ class AggregateDDPGEnv(gym.Env):
             low=np.array([-1.0], dtype=np.float32),
             high=np.array([1.0], dtype=np.float32), dtype=np.float32,
         )
-        # Same 3-dimensional state as v4's `minimal3`:
-        # [SOC, current_load_kw/600, previous_actual_fc_kw/600]
+        # [SOC, current_load_kw/600, previous_actual_fc_kw/600,
+        #  (current_load_kw - previous_load_kw)/600, elapsed_seconds/3600]
         # Load can exceed 600kW because the battery may supplement FC output.
         self.observation_space = gym.spaces.Box(
-            low=np.array([0.0, 0.0, 0.0], dtype=np.float32),
-            high=np.array([1.0, np.inf, 1.0], dtype=np.float32), dtype=np.float32,
+            low=np.array([0.0, 0.0, 0.0, -np.inf, 0.0], dtype=np.float32),
+            high=np.array([1.0, np.inf, 1.0, np.inf, np.inf], dtype=np.float32), dtype=np.float32,
         )
         self.episode = None
         self.physical = AccountState()
@@ -101,10 +104,13 @@ class AggregateDDPGEnv(gym.Env):
             raise RuntimeError("reset() must precede observation")
         idx = min(self.index, len(self.episode.load_kw) - 1)
         current_load = normalize_onboard_load_kw(float(self.episode.load_kw[idx]))
+        previous_load = normalize_onboard_load_kw(float(self.episode.load_kw[max(0, idx - 1)]))
         return np.array([
             self.physical.soc,
             current_load / FC_RATED_KW,
             self.physical.previous_fc_kw / FC_RATED_KW,
+            (current_load - previous_load) / FC_RATED_KW,
+            self.index / 3600.0,
         ], dtype=np.float32)
 
     def reset(self, *, seed=None, options=None):

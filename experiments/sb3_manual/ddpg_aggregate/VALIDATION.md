@@ -50,6 +50,11 @@ C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-sb3-base
 探索噪声。不调用 `learn()`，不做 Actor/Critic 更新或目标网络同步，不修改模型文件和
 历史 Replay Buffer。程序检查推理前后参数及更新状态是否保持一致。
 
+验证直接复用环境的五维观测：
+`[SOC, load/600, previous_actual_fc/600, delta_load/600, elapsed_seconds/3600]`。
+每条航段首步`delta_load=0`，运行时间从0开始；不能加载旧三维状态模型。
+训练使用的Critic Huber损失不参与确定性验证，验证仍沿用SB3模型加载与Actor推理。
+
 固定按照现有数据加载器的航段编号顺序执行全部八条 Validation：
 
 1. `parent_002_seg01`
@@ -115,10 +120,10 @@ VecNormalize 训练的模型时，可通过 `--vecnormalize-path` 指定其对�
 
 ## 当前经济奖励与模型身份
 
-奖励版本为 `ddpg_economic_normalized_tanh_v3`。正常步仅计四项经济成本：
+奖励版本为 `ddpg_economic_normalized_tanh_v4`。正常步仅计四项经济成本：
 实际氢耗、FC退化、电池退化和有符号电池等效氢耗，`C=四项成本之和`。
 正常奖励为 `tanh(C_ref/C)`；`C=0` 时为1；负总成本或非有限值明确报错。
-原有真实物理不可行失败奖励保持 -10000，失败调用不制造物理经济成本。
+当前真实物理不可行失败奖励保持 -1，失败调用不制造物理经济成本。
 不再包含独立SOC目标偏差成本；电池退化模型内部的SOC应力函数仍保留。
 
 `C_ref` 固定读取 `economic_reward_config.json` 的 `c_ref`，由现有Train35基准轨迹

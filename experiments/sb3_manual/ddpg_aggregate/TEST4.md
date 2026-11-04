@@ -32,6 +32,10 @@ V6 目录仅保存 Test 元数据；原始 canonical 1 秒 payload 位于元数�
 构造时会只读加载 Validation8，随后替换为冻结的四条 Test；不会执行 Validation 航段。
 新 Test 环境不加入 Zoo 训练注册，不改变原环境仅允许 Train/Validation 的限制。
 
+观测与训练保持一致，为`[SOC, load/600, previous_actual_fc/600, delta_load/600,
+elapsed_seconds/3600]`五维状态，每条航段首步负载变化量为0，运行时间从0开始。
+旧三维状态模型不兼容；训练使用的Critic Huber损失不会在Test推理中计算。
+
 使用原生 `DDPG.load()`、`deterministic=True`，关闭加载副本的探索噪声；
 不调用 learn、梯度更新或目标网络同步，不加载或修改磁盘 Replay Buffer。
 结果包含模型和更新状态的不变性检查。若模型训练使用 VecNormalize，可通过
@@ -56,10 +60,10 @@ V6 目录仅保存 Test 元数据；原始 canonical 1 秒 payload 位于元数�
 
 ## 当前经济奖励与模型身份
 
-奖励版本为 `ddpg_economic_normalized_tanh_v3`。正常步仅计四项经济成本：
+奖励版本为 `ddpg_economic_normalized_tanh_v4`。正常步仅计四项经济成本：
 实际氢耗、FC退化、电池退化和有符号电池等效氢耗，`C=四项成本之和`。
 正常奖励为 `tanh(C_ref/C)`；`C=0` 时为1；负总成本或非有限值明确报错。
-原有真实物理不可行失败奖励保持 -10000，失败调用不制造物理经济成本。
+当前真实物理不可行失败奖励保持 -1，失败调用不制造物理经济成本。
 不再包含独立SOC目标偏差成本；电池退化模型内部的SOC应力函数仍保留。
 
 `C_ref` 固定读取 `economic_reward_config.json` 的 `c_ref`，由现有Train35基准轨迹

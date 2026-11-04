@@ -1,4 +1,4 @@
-"""Secondary native-SB3 entry; formal RL Zoo entry is run_ddpg_train.py.
+"""Secondary SB3 DDPG + Huber entry; formal RL Zoo entry is run_ddpg_train.py.
 
 Uses the same fixed-voyage parameters and diagnostics as the formal entry.
 """
@@ -12,12 +12,12 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
 
 import numpy as np
-from stable_baselines3 import DDPG
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.callbacks import CallbackList, StopTrainingOnMaxEpisodes
 
 from .env import AggregateDDPGEnv
+from .huber_ddpg import HuberDDPG as DDPG
 from .periodic_validation import EpisodeValidationCallback
 from .fixed_train_eval import FixedTrainEvaluationCallback, FIXED_TRAIN_ID
 
@@ -62,7 +62,7 @@ def main():
         model_path = args.output_dir / "ddpg_aggregate"
         model.save(str(model_path))
         model.save_replay_buffer(str(args.output_dir / "replay_buffer.pkl"))
-        meta = {"algorithm": "SB3.DDPG", "states": 3, "actions": 1,
+        meta = {"algorithm": "SB3.DDPG.Huber", "states": 5, "actions": 1,
                 "seed": args.seed, "total_timesteps": int(model.num_timesteps),
                 "fixed_train_id": FIXED_TRAIN_ID,
                 "data_root": str(args.data_root.resolve()),

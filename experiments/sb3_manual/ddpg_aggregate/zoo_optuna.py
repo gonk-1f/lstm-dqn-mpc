@@ -11,7 +11,7 @@ from rl_zoo3.hyperparams_opt import HYPERPARAMS_SAMPLER
 
 from .economic_reward import REWARD_VERSION
 
-DEFAULT_STUDY_NAME = "ddpg_tau_noise_" + REWARD_VERSION.removeprefix("ddpg_")
+DEFAULT_STUDY_NAME = "ddpg_tau_noise_" + REWARD_VERSION.removeprefix("ddpg_") + "_obs5_huber1"
 DEFAULT_OPTUNA_ROOT = "outputs/ddpg_optuna_economic_v3"
 
 
