@@ -79,6 +79,7 @@ def run_test4(
             **reward_metadata,
             "environment_reward": {
                 "c_ref": C_REF,
+                "c_ref_used_in_reward": False,
                 "ramp_weight": RAMP_WEIGHT, "failure_reward": FAILURE_REWARD,
             },
         }
@@ -187,7 +188,7 @@ def run_test4(
             "mean_full_voyage_economic_cost_cny": (
                 sum(row["total_cost_cny"] for row in rows) / 4 if successes == 4 else None
             ),
-            "economic_cost_scope": "Four economic components including signed instantaneous-efficiency battery hydrogen equivalence. reward_total_cost_cny equals total_cost_cny; no independent SOC penalty, terminal SOC/shore correction, or unexecuted failure costs.",
+            "economic_cost_scope": "total_cost_cny includes H2, fixed-average-efficiency signed battery equivalence, battery degradation and complete four-condition FC degradation. reward_total_cost_cny excludes only FC start/stop degradation; the other six costs are counted once. No independent SOC penalty or unexecuted failure costs.",
             "battery_power_sign": "Positive bus power = discharge; negative = charge. Energy fields are positive gross bus kWh.",
             "vecnormalize_training": False if normalizer is not None else None,
             "vecnormalize_norm_reward": False if normalizer is not None else None,

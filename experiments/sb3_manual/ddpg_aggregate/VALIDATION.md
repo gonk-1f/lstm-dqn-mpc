@@ -120,22 +120,25 @@ VecNormalize 训练的模型时，可通过 `--vecnormalize-path` 指定其对�
 
 ## 当前经济奖励与模型身份
 
-奖励版本为 `ddpg_economic_normalized_tanh_v4`。正常步仅计四项经济成本：
-实际氢耗、FC退化、电池退化和有符号电池等效氢耗，`C=四项成本之和`。
-正常奖励为 `tanh(C_ref/C)`；`C=0` 时为1；负总成本或非有限值明确报错。
-当前真实物理不可行失败奖励保持 -1，失败调用不制造物理经济成本。
+奖励版本为 `ddpg_economic_negative_no_start_stop_v5`。正常奖励为：
+`-(C_H2+C_bat_eq+C_LB_deg+C_FC_transient+C_FC_low+C_FC_high)`。
+六项成本零值对应奖励0；有限有符号合计直接取负，不使用tanh、倒数或C_ref缩放。
+非有限值报错，完整经济账本的原有负值检查不变。
+真实物理不可行失败奖励为 -2000，失败调用不制造物理经济成本。
 不再包含独立SOC目标偏差成本；电池退化模型内部的SOC应力函数仍保留。
 
-`C_ref` 固定读取 `economic_reward_config.json` 的 `c_ref`，由现有Train35基准轨迹
-按新退化定义重新核算四项单步成本后取中位数，未使用Validation/Test标定。
+`C_ref` 仅保留原Train35标定历史元数据，不参与当前奖励；未使用Validation/Test标定。
 FC累计电压损失报废阈值为142500 μV；保留四工况系数、设备价和50%更换比例。
 80%高负载分界为项目建模假设，不是Zhou原文参数。电池保持F(SOC)、G(I)、
 加权Ah吞吐和15000倍容量归一化，退化使用与物理SOC更新一致的实际电流。
 
 电池等效项固定使用`eta_fc_avg=0.5755641791002982`；FC实际氢耗仍用当前功率点效率。
 电池等效氢耗保持放电正、充电负的符号，不重复计算效率损失。
-`total_cost_cny`和`reward_total_cost_cny`均表示同一个四项经济成本总额；
-逐秒CSV另记`battery_current_a`，不再导出独立SOC惩罚字段。
+`total_cost_cny`保存含FC启停的完整经济总额，`reward_total_cost_cny`保存不含启停的六项奖励成本。
+FC四工况累计电压损失及完整账本保持不变，四类成本按本步raw损失占比分摊共同EOL裁剪。
+逐秒CSV记录`fuel_cell_transient_cost_cny`、`fuel_cell_low_load_cost_cny`、
+`fuel_cell_high_load_cost_cny`、`fuel_cell_start_stop_cost_cny`及`battery_current_a`，
+不导出独立SOC惩罚字段。
 
 仅加载完整奖励与标定身份一致的新版本模型，旧线性、旧tanh及无身份模型均拒绝。
 新训练默认输出为 `outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v3`；

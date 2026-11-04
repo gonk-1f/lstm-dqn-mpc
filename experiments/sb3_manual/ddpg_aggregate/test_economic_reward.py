@@ -55,6 +55,17 @@ class EconomicRewardTests(unittest.TestCase):
         self.assertAlmostEqual(values["c_bat_eq_cny"], expected * HYDROGEN_PRICE_CNY_PER_KG, places=12)
         self.assertEqual(values["physical_economic_cost_cny"], ledger.total_cost_cny)
         self.assertAlmostEqual(values["total_cost_cny"], ledger.total_cost_cny + values["c_bat_eq_cny"], places=12)
+        self.assertAlmostEqual(
+            values["fuel_cell_degradation_cost_cny"],
+            math.fsum(values[key] for key in (
+                "fuel_cell_transient_cost_cny", "fuel_cell_low_load_cost_cny",
+                "fuel_cell_high_load_cost_cny", "fuel_cell_start_stop_cost_cny",
+            )), places=12,
+        )
+        self.assertAlmostEqual(
+            values["reward_total_cost_cny"],
+            values["total_cost_cny"] - values["fuel_cell_start_stop_cost_cny"], places=12,
+        )
         for field in ("h2_cost_cny", "fuel_cell_degradation_cost_cny", "battery_degradation_cost_cny", "shore_cost_cny"):
             self.assertEqual(values[field], getattr(ledger, field))
 
@@ -94,7 +105,7 @@ class EconomicRewardTests(unittest.TestCase):
         self.assertAlmostEqual(values["c_bat_eq_cny"], expected, places=12)
         self.assertTrue(math.isfinite(values["total_cost_cny"]))
 
-    def test_idle_zero_cost_has_reward_one_without_independent_soc_penalty(self):
+    def test_idle_zero_cost_has_reward_zero_without_independent_soc_penalty(self):
         module = self.module()
         from v3.control import AccountState
         physics = self.physics()
@@ -102,26 +113,20 @@ class EconomicRewardTests(unittest.TestCase):
         after, ledger, _ = physics.interval(before, 0.0, 0.0, duration_s=1.0)
         values = module.interval_economic_components(physics, before, after, 0.0, ledger)
         self.assertEqual(values["total_cost_cny"], 0.0)
-        self.assertEqual(module.economic_reward(0.0, 0.02), 1.0)
+        self.assertEqual(module.economic_reward(0.0), 0.0)
 
-    def test_positive_cost_is_normalized_by_recalibrated_reference(self):
+    def test_finite_signed_reward_cost_is_negated_without_reference_scaling(self):
         module = self.module()
-        reference = 0.02
-        for cost in (0.0001, 1.0, 2.0, 358.65):
+        for cost in (-2.0, -0.0001, 0.0, 0.0001, 1.0, 2.0, 358.65):
             with self.subTest(cost=cost):
-                self.assertEqual(module.economic_reward(cost, reference), math.tanh(reference / cost))
-        self.assertEqual(module.economic_reward(reference, reference), math.tanh(1.0))
-        self.assertGreater(module.economic_reward(reference, reference),
-                           module.economic_reward(2.0 * reference, reference))
+                self.assertEqual(module.economic_reward(cost), -cost)
+        self.assertGreater(module.economic_reward(1.0), module.economic_reward(2.0))
 
-    def test_negative_or_nonfinite_cost_is_never_abs_or_clipped(self):
+    def test_nonfinite_reward_cost_and_invalid_physical_ledger_are_rejected(self):
         module = self.module()
-        for value in (-1.0, float("nan"), float("inf"), -float("inf")):
+        for value in (float("nan"), float("inf"), -float("inf"), True):
             with self.subTest(cost=value), self.assertRaises(ValueError):
-                module.economic_reward(value, 0.02)
-        for reference in (0.0, -1.0, float("nan"), float("inf"), True):
-            with self.subTest(reference=reference), self.assertRaises(ValueError):
-                module.economic_reward(1.0, reference)
+                module.economic_reward(value)
         from v3.control import AccountState
         from v2.economics import RawCnyIntervalLedger
         physics = self.physics()
@@ -137,12 +142,12 @@ class EconomicRewardTests(unittest.TestCase):
         self.assertNotIn("lambda_soc", default)
         self.assertNotIn("soc_reference", default)
         self.assertNotIn("c_typ", default)
-        self.assertEqual(default["reward_version"], "ddpg_economic_normalized_tanh_v4")
-        self.assertEqual(default["failure_reward"], -1.0)
-        self.assertEqual(getattr(module, "FAILURE_REWARD", None), -1.0)
+        self.assertEqual(default["reward_version"], "ddpg_economic_negative_no_start_stop_v5")
+        self.assertEqual(default["failure_reward"], -2000.0)
+        self.assertEqual(getattr(module, "FAILURE_REWARD", None), -2000.0)
         config = {
             "reward_version": module.REWARD_VERSION, "c_ref": 0.02,
-            "failure_reward": -1.0,
+            "failure_reward": -2000.0,
             "eta_fc_avg": default["eta_fc_avg"],
         }
         with tempfile.TemporaryDirectory() as tmp:
@@ -159,10 +164,10 @@ class EconomicRewardTests(unittest.TestCase):
             self.assertEqual(first["fuel_cell_eol_voltage_loss_uv"], 142500.0)
             self.assertEqual(first["battery_current_accounting"], "soc_delta_cell_current_v1")
             self.assertEqual(first["reward_version"], module.REWARD_VERSION)
-            self.assertEqual(first["failure_reward"], -1.0)
+            self.assertEqual(first["failure_reward"], -2000.0)
             self.assertEqual(
                 first["formula"],
-                "tanh(C_ref/(C_H2+C_FC_deg+C_LB_deg+C_bat_eq)); C=0 -> 1",
+                "-(C_H2+C_bat_eq+C_LB_deg+C_FC_transient+C_FC_low+C_FC_high)",
             )
             encoded = json.dumps(
                 loaded, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
@@ -185,7 +190,7 @@ class EconomicRewardTests(unittest.TestCase):
         self.assertEqual(metadata["evaluation_reward_identity"], identity)
         self.assertFalse(metadata["legacy_policy_evaluated_with_current_reward"])
 
-    def test_reference_is_recalibrated_from_train35_with_current_cost_models(self):
+    def test_reference_retains_historical_train35_calibration_metadata(self):
         config = self.module().load_reward_config()
         calibration = config["calibration"]
         self.assertEqual(calibration["split"], "train")
@@ -211,6 +216,7 @@ class EconomicRewardTests(unittest.TestCase):
         models.extend(SimpleNamespace(_ddpg_reward_identity=value) for value in (
             None, {}, {**identity, "reward_version": "ddpg_economic_tanh_v1"},
             {**identity, "reward_version": "ddpg_economic_linear_v2"},
+            {**identity, "reward_version": "ddpg_economic_normalized_tanh_v4"},
             {**identity, "reward_version": "unknown"}, {**identity, "c_ref": 9.0},
             {**identity, "fuel_cell_eol_voltage_loss_uv": 70000.0},
         ))

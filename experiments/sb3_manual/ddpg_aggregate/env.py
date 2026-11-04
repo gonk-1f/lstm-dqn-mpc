@@ -18,20 +18,21 @@ from v4.v6_dataset import V6TrainingDataset
 from .economic_reward import (
     load_reward_config, reward_identity,
     interval_economic_components, economic_reward, FAILURE_REWARD,
+    FC_DEGRADATION_COST_FIELDS,
 )
 from .huber_ddpg import CRITIC_LOSS_ID
 
 
 FC_RATED_KW = 600.0
 REWARD_CONFIG = load_reward_config()
-C_REF = REWARD_CONFIG["c_ref"]
+C_REF = REWARD_CONFIG["c_ref"]  # Historical calibration metadata; not used by reward.
 RAMP_WEIGHT = 0.0  # Legacy diagnostic field; no independent ramp penalty.
 ECONOMIC_SUM_FIELDS = (
     "hydrogen_mass_kg", "h2_cost_cny", "fuel_cell_degradation_cost_cny",
     "battery_degradation_cost_cny", "shore_cost_cny", "physical_economic_cost_cny",
     "c_bat_eq_cny", "battery_equivalent_hydrogen_kg", "total_cost_cny",
     "reward_total_cost_cny",
-)
+) + FC_DEGRADATION_COST_FIELDS
 
 
 class AggregateDDPGEnv(gym.Env):
@@ -179,6 +180,7 @@ class AggregateDDPGEnv(gym.Env):
             "max_equivalent_fc_efficiency": self.equivalent_eta_max,
             "reward_version": self.reward_identity["reward_version"],
             "c_ref_cny": C_REF,
+            "c_ref_used_in_reward": False,
         }
 
     def step(self, action):
@@ -229,8 +231,7 @@ class AggregateDDPGEnv(gym.Env):
         costs = interval_economic_components(
             self.physics, self.physical, next_physical, fc_kw, ledger
         )
-        reward = economic_reward(costs["total_cost_cny"], C_REF)
-        costs["reward_total_cost_cny"] = costs["total_cost_cny"]
+        reward = economic_reward(costs["reward_total_cost_cny"])
         for name in ECONOMIC_SUM_FIELDS:
             self.economic_totals[name] += costs[name]
         eta = costs["equivalent_fc_efficiency"]

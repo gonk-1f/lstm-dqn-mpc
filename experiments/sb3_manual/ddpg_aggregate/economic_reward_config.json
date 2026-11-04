@@ -1,7 +1,8 @@
 {
-  "reward_version": "ddpg_economic_normalized_tanh_v4",
+  "reward_version": "ddpg_economic_negative_no_start_stop_v5",
   "c_ref": 0.14112952687229602,
-  "failure_reward": -1.0,
+  "failure_reward": -2000.0,
+  "reward_cost_scope": "negative sum of H2, signed battery equivalent H2, battery degradation and FC transient/low/high degradation; no FC start/stop, SOC penalty or scaling",
   "eta_fc_avg": 0.5755641791002982,
   "eta_fc_avg_calibration": {
     "method": "trapezoidal integral(P dP) / integral(P/eta(P) dP), using the existing positive-power formal curve knots",
@@ -20,7 +21,7 @@
     "power_mapping": "P_formal/600 = P_source/100; the existing 600 kW endpoint is PCHIP-interpolated between positive source support points",
     "formula_reference": "Zhou et al. (2025), J. Mar. Sci. Eng. 13, 34, Eq. (25); k=1; SOC difference already includes battery efficiency"
   },
-  "c_ref_status": "retained unchanged for this efficiency-only change; calibration below records the previous instantaneous/FC-off-peak equivalence and has not been rerun",
+  "c_ref_status": "historical metadata only, unused by the negative-cost reward; calibration below records the old instantaneous/FC-off-peak equivalence and has not been rerun",
   "calibration": {
     "reward_version": "ddpg_economic_normalized_tanh_v4",
     "c_ref": 0.14112952687229602,

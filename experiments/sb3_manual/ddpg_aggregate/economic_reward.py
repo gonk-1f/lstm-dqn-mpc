@@ -1,4 +1,4 @@
-"""Reference-normalized four-cost reward with signed battery hydrogen equivalence.
+"""Negative six-cost reward, with complete four-condition FC accounting retained.
 
 SOC differences already include the formal battery charge/discharge efficiencies.
 Battery hydrogen equivalence uses one curve-calibrated FC average efficiency,
@@ -16,12 +16,20 @@ from v2.economics import HYDROGEN_PRICE_CNY_PER_KG
 from v2.models.battery_energy import BATTERY_CURRENT_ACCOUNTING_VERSION
 from v2.models.fuel_cell_degradation import (
     FC_DEGRADATION_MODEL_VERSION, FC_EOL_VOLTAGE_LOSS_UV,
+    aggregate_start_cycle_count, formal_aggregate_fc_voltage_loss_step_uv,
 )
 from v2.models.fuel_cell_efficiency import LHV_H2_KWH_PER_KG
 
-REWARD_VERSION = "ddpg_economic_normalized_tanh_v4"
-FAILURE_REWARD = -1.0
+REWARD_VERSION = "ddpg_economic_negative_no_start_stop_v5"
+FAILURE_REWARD = -2000.0
 DEFAULT_CONFIG_PATH = Path(__file__).with_name("economic_reward_config.json")
+FC_DEGRADATION_COST_FIELDS = (
+    "fuel_cell_transient_cost_cny", "fuel_cell_low_load_cost_cny",
+    "fuel_cell_high_load_cost_cny", "fuel_cell_start_stop_cost_cny",
+)
+REWARD_COST_FIELDS = (
+    "h2_cost_cny", "c_bat_eq_cny", "battery_degradation_cost_cny",
+) + FC_DEGRADATION_COST_FIELDS[:3]
 
 
 def _finite(value, name: str) -> float:
@@ -92,6 +100,21 @@ def interval_economic_components(physics, before, after, fc_kw, ledger) -> dict:
     """Reuse the executed physical ledger and add exactly one signed SOC value."""
     if ledger.shore_cost_cny != 0.0:
         raise ValueError("The aggregate onboard reward does not include shore settlement")
+    # Reuse the physical model's four raw losses for this executed 1-second step.
+    # Allocate the existing ledger cost rather than charging degradation again.
+    fc_loss = formal_aggregate_fc_voltage_loss_step_uv(
+        before.previous_fc_kw, fc_kw, 1.0, physics.plant.fuel_cell_rated_total_kw,
+        is_on=fc_kw > 0.0, mapping=physics.fc_mapping,
+        aggregate_start_stop_cycles=aggregate_start_cycle_count(before.previous_fc_kw, fc_kw),
+    )
+    # Common proportional allocation preserves the ledger's cumulative EOL cap.
+    cost_per_uv = ledger.fuel_cell_degradation_cost_cny / fc_loss.total_uv if fc_loss.total_uv else 0.0
+    fc_components = dict(zip(FC_DEGRADATION_COST_FIELDS, (
+        fc_loss.transient_uv * cost_per_uv,
+        fc_loss.low_runtime_uv * cost_per_uv,
+        fc_loss.high_runtime_uv * cost_per_uv,
+        fc_loss.start_stop_uv * cost_per_uv,
+    )))
     values = {
         "hydrogen_mass_kg": ledger.h2_cost_cny / HYDROGEN_PRICE_CNY_PER_KG,
         "h2_cost_cny": ledger.h2_cost_cny,
@@ -99,6 +122,7 @@ def interval_economic_components(physics, before, after, fc_kw, ledger) -> dict:
         "battery_degradation_cost_cny": ledger.battery_degradation_cost_cny,
         "shore_cost_cny": ledger.shore_cost_cny,
         "physical_economic_cost_cny": ledger.total_cost_cny,
+        **fc_components,
         **battery_equivalent_cost(physics, before, after, fc_kw),
     }
     for name, value in values.items():
@@ -114,6 +138,7 @@ def interval_economic_components(physics, before, after, fc_kw, ledger) -> dict:
             f"check cost signs and duplicate pricing; components={values!r}"
         )
     values["total_cost_cny"] = total
+    values["reward_total_cost_cny"] = math.fsum(values[name] for name in REWARD_COST_FIELDS)
     return values
 
 
@@ -133,15 +158,9 @@ def evaluation_identity(model, current_identity: dict) -> dict:
     }
 
 
-def economic_reward(total_cost_cny, c_ref) -> float:
-    """Return tanh(C_ref/C) in CNY; the exact zero-cost limit is one."""
-    cost = _finite(total_cost_cny, "four-item economic cost")
-    reference = _finite(c_ref, "c_ref")
-    if cost < 0.0:
-        raise ValueError("Negative economic cost: check cost signs and duplicate pricing; no abs/clip is allowed")
-    if reference <= 0.0:
-        raise ValueError("c_ref must be positive")
-    return 1.0 if cost == 0.0 else math.tanh(reference / cost)
+def economic_reward(reward_total_cost_cny) -> float:
+    """Return negative signed six-item cost in CNY, without scaling or shaping."""
+    return -_finite(reward_total_cost_cny, "six-item reward economic cost")
 
 
 def reward_identity(config: dict) -> dict:
@@ -153,9 +172,11 @@ def reward_identity(config: dict) -> dict:
     return {
         "reward_version": REWARD_VERSION,
         "c_ref": float(config["c_ref"]),
+        "c_ref_used_in_reward": False,
         "failure_reward": FAILURE_REWARD,
         "config_sha256": hashlib.sha256(encoded).hexdigest(),
-        "formula": "tanh(C_ref/(C_H2+C_FC_deg+C_LB_deg+C_bat_eq)); C=0 -> 1",
+        "formula": "-(C_H2+C_bat_eq+C_LB_deg+C_FC_transient+C_FC_low+C_FC_high)",
+        "fc_degradation_cost_allocation": "raw interval voltage-loss proportions of the original EOL-capped ledger cost; start/stop excluded only from reward",
         "fuel_cell_degradation_model": FC_DEGRADATION_MODEL_VERSION,
         "fuel_cell_eol_voltage_loss_uv": FC_EOL_VOLTAGE_LOSS_UV,
         "battery_current_accounting": BATTERY_CURRENT_ACCOUNTING_VERSION,

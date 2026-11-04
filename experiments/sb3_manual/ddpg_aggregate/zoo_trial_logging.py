@@ -5,7 +5,7 @@ from pathlib import Path
 from rl_zoo3.callbacks import TrialEvalCallback
 from stable_baselines3.common.callbacks import BaseCallback
 
-from .economic_reward import REWARD_VERSION
+from .economic_reward import REWARD_VERSION, FC_DEGRADATION_COST_FIELDS
 
 
 def ensure_study_reward_identity(study, trial_number, identity):
@@ -39,7 +39,6 @@ class TrialParametersCallback(BaseCallback):
         model._ddpg_reward_identity = dict(identity)
         evaluation.trial.set_user_attr("reward_identity", identity)
         self.logger.record("reward/version", identity["reward_version"], exclude=("tensorboard",))
-        self.logger.record("reward/c_ref", identity["c_ref"])
         self.logger.record("reward/eta_fc_avg", identity["eta_fc_avg"])
         parameters = {
             "learning_rate": float(model.lr_schedule(1.0)),
@@ -78,7 +77,11 @@ class TrialParametersCallback(BaseCallback):
 
     def _on_step(self):
         for info in self.locals.get("infos", []):
-            for name in ("equivalent_fc_efficiency", "fc_efficiency_actual", "c_bat_eq_cny", "battery_current_a"):
+            for name in (
+                "equivalent_fc_efficiency", "fc_efficiency_actual", "c_bat_eq_cny", "battery_current_a",
+                "h2_cost_cny", "fuel_cell_degradation_cost_cny", "battery_degradation_cost_cny",
+                "total_cost_cny", "reward_total_cost_cny",
+            ) + FC_DEGRADATION_COST_FIELDS:
                 if name in info:
                     self.logger.record(f"economics/{name}", info[name])
         return True

@@ -10,6 +10,7 @@ import sys
 
 import numpy as np
 from stable_baselines3.common.callbacks import BaseCallback
+from .economic_reward import FC_DEGRADATION_COST_FIELDS
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -47,7 +48,7 @@ class EpisodeValidationCallback(BaseCallback):
             raise ValueError("Legacy reward checkpoint cannot resume economic-reward training")
         self.model._ddpg_completed_episodes = self.completed_episodes
         self.model._ddpg_reward_identity = identity
-        for name in ("c_ref", "eta_fc_avg"):
+        for name in ("eta_fc_avg",):
             if name in identity:
                 self.logger.record(f"reward/{name}", identity[name])
         if self.verbose:
@@ -68,7 +69,8 @@ class EpisodeValidationCallback(BaseCallback):
                 "equivalent_fc_efficiency", "fc_efficiency_actual", "c_bat_eq_cny",
                 "h2_cost_cny", "fuel_cell_degradation_cost_cny",
                 "battery_degradation_cost_cny", "battery_current_a", "total_cost_cny",
-            ):
+                "reward_total_cost_cny",
+            ) + FC_DEGRADATION_COST_FIELDS:
                 if name in info:
                     self.logger.record(f"economics/{name}", info[name])
         ended = int(np.count_nonzero(self.locals["dones"]))
@@ -127,7 +129,7 @@ class EpisodeValidationCallback(BaseCallback):
             "total_battery_degradation_cost_cny": sum(row["battery_degradation_cost_cny"] for row in voyages),
             "total_battery_equivalent_hydrogen_cost_cny": sum(row["c_bat_eq_cny"] for row in voyages),
         }
-        total_economic_cost = sum(components.values())
+        total_economic_cost = sum(row["total_cost_cny"] for row in voyages)
         summary = {
             "episode": episode,
             "environment_steps": int(self.model.num_timesteps),
@@ -136,6 +138,8 @@ class EpisodeValidationCallback(BaseCallback):
             "mean_duration_coverage": metrics["mean_coverage"],
             "mean_reward": metrics["mean_episode_reward"],
             **components,
+            **{f"total_{name}": sum(row[name] for row in voyages) for name in FC_DEGRADATION_COST_FIELDS},
+            "total_reward_cost_cny": sum(row["reward_total_cost_cny"] for row in voyages),
             "total_economic_cost_cny": total_economic_cost,
             "mean_full_voyage_economic_cost_cny": (
                 total_economic_cost / 8 if all(row["completed"] for row in voyages) else None

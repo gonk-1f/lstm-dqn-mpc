@@ -25,7 +25,7 @@ import torch
 from . import zoo_register  # Register the same environment used by RL Zoo.
 from .env import C_REF, RAMP_WEIGHT, FAILURE_REWARD
 from .validation_plots import save_validation_plots
-from .economic_reward import evaluation_identity
+from .economic_reward import evaluation_identity, FC_DEGRADATION_COST_FIELDS
 
 ENV_ID = "AggregateShipDDPG-v0"
 DEFAULT_DATA_ROOT = PROJECT_ROOT / "data/processed/operating_dataset_v6_1s"
@@ -36,7 +36,7 @@ ACCOUNTING_FIELDS = (
     "battery_degradation_cost_cny", "shore_cost_cny", "c_bat_eq_cny",
     "battery_equivalent_hydrogen_kg", "physical_economic_cost_cny", "total_cost_cny",
     "reward_total_cost_cny",
-)
+) + FC_DEGRADATION_COST_FIELDS
 STEP_FIELDS = (
     "episode", "sample_id", "step_index", "interval_start_s", "interval_end_s",
     "step_executed", "actor_action", "load_kw", "requested_fc_kw",
@@ -270,7 +270,7 @@ def run_validation(
                 sum(r["total_cost_cny"] for r in rows) / 8
                 if validation_set_complete and successes == 8 else None
             ),
-            "economic_cost_scope": "Four economic components including signed instantaneous-efficiency battery hydrogen equivalence. reward_total_cost_cny equals total_cost_cny; no independent SOC penalty, terminal SOC/shore correction, or unexecuted failure costs.",
+            "economic_cost_scope": "total_cost_cny includes H2, fixed-average-efficiency signed battery equivalence, battery degradation and complete four-condition FC degradation. reward_total_cost_cny excludes only FC start/stop degradation; the other six costs are counted once. No independent SOC penalty or unexecuted failure costs.",
             "unavailable_metrics": {
                 "terminal_soc_restoration_cost_cny": "Not performed by the existing environment.",
                 "stack_resolved_degradation_cost_cny": "No per-stack physical/health model in this environment.",
@@ -278,6 +278,7 @@ def run_validation(
             "battery_power_sign": "Positive = bus discharge; negative = bus charge. Energy fields are positive gross bus kWh.",
             "environment_reward": {
                 "c_ref": C_REF,
+                "c_ref_used_in_reward": False,
                 "ramp_weight": RAMP_WEIGHT, "failure_reward": FAILURE_REWARD,
             },
             "integrity": integrity, "model_before": before_model, "model_after": after_model,
