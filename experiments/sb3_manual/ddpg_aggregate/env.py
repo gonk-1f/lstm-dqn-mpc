@@ -22,7 +22,6 @@ from .economic_reward import (
 
 
 FC_RATED_KW = 600.0
-FC_RAMP_KW_PER_S = 48.0
 REWARD_CONFIG = load_reward_config()
 C_REF = REWARD_CONFIG["c_ref"]
 RAMP_WEIGHT = 0.0  # Legacy diagnostic field; no independent ramp penalty.
@@ -66,6 +65,7 @@ class AggregateDDPGEnv(gym.Env):
         self.plant = self.physics.plant
         self.reward_identity = reward_identity(REWARD_CONFIG)
         self.reward_identity["fc_off_reference_efficiency"] = peak_fc_efficiency(self.physics.fc_efficiency)
+        self.reward_identity["fc_ramp_limit_kw_per_s"] = None
         self.economic_totals = dict.fromkeys(ECONOMIC_SUM_FIELDS, 0.0)
         self.equivalent_eta_sum = 0.0
         self.equivalent_eta_min = None
@@ -134,8 +134,8 @@ class AggregateDDPGEnv(gym.Env):
         self.equivalent_eta_max = None
         return self._observation(), {"sample_id": self.episode.sample_id, "split": self.split}
 
-    def _physically_feasible_fc_range(self, load: float, prev_fc: float):
-        """Continuous intersection of FC, 48kW ramp, battery power and SOC constraints.
+    def _physically_feasible_fc_range(self, load: float):
+        """Continuous intersection of FC rating, battery power and SOC constraints.
 
         +battery bus power = discharge; negative = charge. Same 0.95/0.95
         charge/discharge efficiencies as the existing formal battery model.
@@ -146,8 +146,8 @@ class AggregateDDPGEnv(gym.Env):
         max_charge_soc_kw = max(0.0, (SOC_MAX - self.physical.soc) * cap * 3600.0 / eta_chg)
         bat_lo = max(self.plant.battery_charge_min_kw, -max_charge_soc_kw)
         bat_hi = min(self.plant.battery_discharge_max_kw, max_discharge_soc_kw)
-        fc_lo = max(0.0, prev_fc - FC_RAMP_KW_PER_S, load - bat_hi)
-        fc_hi = min(FC_RATED_KW, prev_fc + FC_RAMP_KW_PER_S, load - bat_lo)
+        fc_lo = max(0.0, load - bat_hi)
+        fc_hi = min(FC_RATED_KW, load - bat_lo)
         return float(fc_lo), float(fc_hi)
 
     def _episode_summary(self, success: bool, reason: str):
@@ -186,7 +186,7 @@ class AggregateDDPGEnv(gym.Env):
         target_kw = FC_RATED_KW * (a + 1.0) / 2.0
         prev_kw = float(self.physical.previous_fc_kw)
         load_kw = normalize_onboard_load_kw(float(self.episode.load_kw[self.index]))
-        feasible_lo, feasible_hi = self._physically_feasible_fc_range(load_kw, prev_kw)
+        feasible_lo, feasible_hi = self._physically_feasible_fc_range(load_kw)
         if feasible_lo > feasible_hi + 1e-8:
             self.terminated = True
             reward = FAILURE_REWARD

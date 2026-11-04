@@ -39,7 +39,7 @@ def main():
         model = DDPG(
             "MlpPolicy", env,
             learning_rate=0.001,
-            gamma=0.999,
+            gamma=1.0,
             batch_size=64,
             buffer_size=1_000_000,
             learning_starts=5000,

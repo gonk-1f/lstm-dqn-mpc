@@ -139,8 +139,8 @@ class NativeConfigurationTests(unittest.TestCase):
                         policy_kwargs="dict(net_arch=[256, 256])")
         for config in (formal, tuning):
             for key, value in expected.items():
-                if config is formal and key in ("tau", "noise_std"):
-                    value = {"tau": 0.01, "noise_std": 0.1}[key]
+                if config is formal and key in ("tau", "noise_std", "gamma"):
+                    value = {"tau": 0.01, "noise_std": 0.1, "gamma": 1.0}[key]
                 self.assertEqual(config[key], value, key)
             self.assertEqual(config["env_kwargs"]["split"], "train")
         self.assertEqual(formal["env_kwargs"]["fixed_train_id"], "parent_005_seg01")

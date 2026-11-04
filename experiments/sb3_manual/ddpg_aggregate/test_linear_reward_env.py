@@ -37,6 +37,9 @@ class NormalizedEconomicRewardEnvironmentTests(unittest.TestCase):
     def test_normal_step_uses_four_costs_and_ledger_has_no_reward(self):
         _, reward, terminated, truncated, info = self.env.step([0.0])
         self.assertTrue(info["step_executed"])
+        self.assertEqual(info["fc_actual_kw"], 300.0)
+        self.assertEqual(info["delta_fc_kw"], 300.0)
+        self.assertIsNone(self.env.reward_identity["fc_ramp_limit_kw_per_s"])
         self.assertFalse(terminated or truncated)
         self.check_normal_reward(reward, info)
         self.assertEqual(self.env.index, 1)
@@ -62,7 +65,7 @@ class NormalizedEconomicRewardEnvironmentTests(unittest.TestCase):
         self.check_normal_reward(reward, info)
 
     def test_infeasible_step_is_minus_1_without_physics_or_compensation(self):
-        self.env.index = int(np.flatnonzero(self.env.episode.load_kw > 48.0)[0])
+        self.env.index = int(np.flatnonzero(self.env.episode.load_kw > self.env.plant.fuel_cell_rated_total_kw)[0])
         self.env.physical = AccountState(soc=SOC_MIN, previous_fc_kw=0.0)
         index = self.env.index
         state = self.env.physical

@@ -1,7 +1,7 @@
 # 聚合燃料电池–锂电池 SB3 DDPG
 
 版本：`ddpg_economic_normalized_tanh_v3`。模型仍为一个600 kW聚合燃料电池系统
-和一个624 kWh聚合锂电池系统，状态、动作映射、SOC动力学、动作投影和35/8/4数据划分不变。
+和一个624 kWh聚合锂电池系统，状态、动作映射、SOC动力学和35/8/4数据划分不变。
 
 ## 四项经济成本奖励
 
@@ -77,12 +77,14 @@ LB保留Zhou的F(SOC)、G(I)、加权Ah吞吐、15000倍额定容量寿命归一
 | 原生Zoo Optuna | run_ddpg_optuna.py |
 
 正式训练仍调用`sys.executable -m rl_zoo3.train`，加载`zoo_ddpg.yml`。
-正式参数保持：gamma=.999、learning_rate=.001、batch_size=64、learning_starts=5000、
+正式参数：gamma=1、learning_rate=.001、batch_size=64、learning_starts=5000、
 train_freq=32、gradient_steps=1、tau=.01、normal noise_std=.1、
 network=[256,256]、buffer_size=1000000、device=cuda、n_envs=1、seed=42。
 安全上限20000000环境步，实际500次Episode结束后停止。每次固定
 `parent_005_seg01`，SOC=0.6、FC=0 kW，从第0秒开始；真实失败也计一次Episode结束。
-备用`train.py`仍复用同一环境和奖励，保留其既有算法参数，不作为本次正式入口。
+取消FC的48 kW/s硬爬坡约束，保留0–600 kW额定范围、电池功率及SOC边界；
+FC变载退化仍按实际功率变化计算。模型身份记录无爬坡限制，防止旧约束模型混用。
+备用`train.py`同步gamma=1，其余既有算法参数不变，不作为本次正式入口。
 
 新训练目录：`outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v3/ddpg/AggregateShipDDPG-v0_N/`。
 初次N=1，后续Zoo使用新编号，不覆盖模型。三个独立评估入口默认指向N=1最终模型，

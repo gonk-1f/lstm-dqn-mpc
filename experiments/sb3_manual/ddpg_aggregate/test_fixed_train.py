@@ -102,7 +102,7 @@ class FixedConfigurationTests(unittest.TestCase):
         config = yaml.safe_load((Path(__file__).with_name("zoo_ddpg.yml")).read_text())["AggregateShipDDPG-v0"]
         expected = dict(tau=0.01, noise_std=0.1, n_envs=1, train_freq=32,
                         gradient_steps=1, learning_starts=5000, batch_size=64,
-                        gamma=0.999, learning_rate=0.001, buffer_size=1000000,
+                        gamma=1.0, learning_rate=0.001, buffer_size=1000000,
                         policy_kwargs="dict(net_arch=[256, 256])", noise_type="normal")
         for name, value in expected.items():
             self.assertEqual(config[name], value, name)
