@@ -1,197 +1,140 @@
-# DDPG 固定航段500 Episode实验
+# 聚合燃料电池–锂电池 SB3 DDPG
 
-当前路线使用 SB3 原生 DDPG、RL Zoo 原生训练/Optuna。FC 为 600 kW 聚合系统，
-电池为 624 kWh 聚合系统；不分堆、不分簇。物理模型、动作/状态和冻结数据划分不变。
+版本：`ddpg_economic_normalized_tanh_v3`。模型仍为一个600 kW聚合燃料电池系统
+和一个624 kWh聚合锂电池系统，状态、动作映射、SOC动力学、动作投影和35/8/4数据划分不变。
 
-## 奖励与成本
-
-版本：`ddpg_economic_linear_v2`。
-
-- `C_H2`：现有实际氢耗乘现有氢价 21.9 CNY/kg。
-- `C_FC_deg`、`C_LB_deg`：直接使用现有物理 interval 返回的退化账本，不重复推进物理或另加寿命惩罚。
-- `C_bat_eq = (SOC_before-SOC_next)*E_bat*p_H2/(eta_eq*LHV_H2)`。
-  `E_bat=624 kWh`、`LHV_H2=120/3.6 kWh/kg` 均取现有模型。
-  放电为正成本，充电为负抵扣；SOC 差已包含现有充放电效率，不重复计 DC/DC 或电池效率。
-- FC 开启时 `eta_eq=eta_FC(P_FC_actual)`。FC 关闭时，使用现有系统 PCHIP 曲线
-  正功率范围的最大效率；程序从曲线计算为 `0.6385540000000001`，不手填替代效率。
-  每步导出 `fc_efficiency_actual` 和 `equivalent_fc_efficiency`。
+## 四项经济成本奖励
 
 ```text
-economic_cost = C_H2 + C_FC_deg + C_LB_deg + C_bat_eq
-C_SOC = lambda_soc * (SOC_next - 0.5)**2
-r = economic_cost + C_SOC
-reward = -r             # 正常执行，r=0 时 reward=0；不做 tanh、clip 或额外缩放
-reward = -10000         # 原有真实物理不可行终止，固定替换，无其他失败补偿
+C = C_H2 + C_FC_deg + C_LB_deg + C_bat_eq
+reward = tanh(C_ref / C)   # C > 0，成本单位CNY
+reward = 1                # C == 0
+reward = -10000           # 原有真实物理不可行失败
 ```
 
-不对 SOC 平方偏差做区间归一化或再乘时间步长。独立 FC ramp 惩罚已经删除；
-Ramp RMS 继续作为诊断指标，原 CSV 的 ramp penalty 字段固定为0。
-负值或非有限总成本明确报错，不取绝对值、不裁剪、不加 epsilon。
-失败奖励不记入经济成本；失败步不再计算其他补偿或经济奖励，未执行失败步不制造电池功率、氢耗或时间。
+负总成本或非有限成本明确报错，不取绝对值、不裁剪、不加epsilon。
+失败奖励只进入训练回报，不进入经济账本；未执行失败调用不伪造物理动作和成本。
+正常完成没有额外终止奖励。已删除独立SOC目标偏差成本；SOC物理边界仍保留。
+电池退化模型内部的SOC应力函数也保留。
 
-CSV/JSON 的 `total_cost_cny` 是四项经济成本；`c_soc_cny` 为 SOC 惩罚，
-`reward_total_cost_cny` 才是奖励公式中的 r。不再额外做终端 SOC 补能计价，
-避免重复计算电池能量。FC 退化仍是现有聚合代理，未声称逐堆实测寿命。
+- `C_H2`：原物理账本的实际氢耗成本，保留现有氢价、效率曲线及LHV。
+- `C_FC_deg`：四工况电压损失按下述寿命阈值换算的更换成本。
+- `C_LB_deg`：原加权Ah吞吐模型，以物理模型实际电流计价。
+- `C_bat_eq`：有符号电芯能量变化除以实际等效FC效率及LHV后乘氢价。
+  放电为正，充电为负；SOC变化已含原充放电效率，不重复计效率或DC/DC损耗。
+  FC开启时使用实际功率点效率；关机时从现有系统曲线的正功率范围计算峰值效率。
 
-## 固定 Train35 标定
+`total_cost_cny`与`reward_total_cost_cny`均为同一四项经济成本总值；逐秒记录
+`fc_efficiency_actual`、`equivalent_fc_efficiency`和`battery_current_a`。
+FC Ramp RMS、启停次数及SOC轨迹继续作为诊断，不添加独立控制惩罚。
 
-正式基线模型：
-`outputs/ddpg_train_500ep/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip`，
-SHA256 `caf67c28eea863c01c8d6f9a8f7e38ea27b2f3ce924fe1d12dc4a843551f100f`。
-固定遍历 Train35 各一次，deterministic=True，未读取 Validation/Test payload。
+## 退化模型
 
-- 计划457562秒，实际448434个物理步；33航段完成。
-- parent_015_seg01：4564/10115步后失败；parent_036_seg01：3084/6661步后失败。
-  标定保留35条航段的全部实际执行步，不为失败调用或未执行尾段补造成本。
-- 对全部实际步的四项经济成本取中位数（不包含SOC惩罚，不是35个航段均值的中位数）：
-  **C_typ = 0.17429534153424198 CNY**。
-- **lambda_soc = 8.0**。本次按用户要求由17改为8；原始比例估算仍为
-  `100*C_typ = 17.4295`，`C_typ` 与原标定记录不变，8不是重新标定的结果。
-- 标定最小四项经济成本0.04301742089671926 CNY；没有负总成本。
-- 3个CPU推理worker用时118.80秒，模型、优化器、计数及Replay保持不变。
+FC保留Zhou四工况系数：低负载10.17 μV/h、高负载11.74 μV/h、
+变负载0.0441 μV/kW、启停23.91 μV/cycle。
+采用Mylonopoulos的0.95 V初始单电池电压下降15%作为报废标准：
+`0.95 × 0.15 × 10^6 = 142500 μV`。
+设备价格、50%更换比例和600 kW聚合功率映射不变。
+现有80%高负载分界明确属于项目建模假设，不作为Zhou原文参数。
 
-固定值及基线/数据/原始结果SHA在 `economic_reward_config.json`。
-训练只读取该固定文件，不在线重算权重。日志记录 C_typ、lambda 和实际使用的等效效率。
-原始收集与命令：
-`outputs/ddpg_reward_calibration/collection_20261103_133754_684927/`。
-最终计算另存该目录的 `calibration_result.json` 和 `calibration_result.log`。
-`calibrate_reward.py` 仅负责离线收集，标定原始NPZ/日志不提交Git。
+LB保留Zhou的F(SOC)、G(I)、加权Ah吞吐、15000倍额定容量寿命归一化及设备价。
+退化使用物理电池更新中的实际电流，避免用未经效率处理的母线功率直接除以432 V。
+不改变环境原有SOC更新、充放电效率、容量或物理功率约束。
 
-## 直接运行
+## Train35参考成本标定
 
-在实际 DDPG 工作树用项目 `.venv` 解释器，打开根目录脚本，直接点击PyCharm绿色运行按钮：
+`C_ref`固定存于`economic_reward_config.json`的`c_ref`，从现有正式基线
+在Train35各航段实际执行的一秒轨迹重新核算上述四项经济成本后取全体步中位数。
+此次按新FC寿命阈值和实际电池电流重新计价，不沿用历史参考值。
+重新核算得到 **C_ref = 0.14112952687229602 CNY**。35条Train航段共448434个实际物理秒，
+其中33条完整结束，另2条只使用真实失败前缀；负、零和非有限总成本样本均为0。
+重新核算报告：`outputs/ddpg_reward_recalibration_v3/recalibration_20261104_160123_698139/recalibration_result.json`。
+基线模型为`outputs/ddpg_train_500ep/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip`，
+原始轨迹来自`outputs/ddpg_reward_calibration/collection_20261103_133754_684927/`。
+模型、数据manifest、原始轨迹和重新核算报告的SHA及各航段覆盖情况保存在奖励配置中。
+只使用Train35，不使用Validation8或Test4；真实失败调用和未执行尾段不补造成本。
+训练和评估只读取固定参考值，不在线改变参考成本。
+
+离线重现此次标定（复用已保存的Train35实际FC/负载轨迹，不再运行Actor）：
+
+```powershell
+& '.\.venv\Scripts\python.exe' -m experiments.sb3_manual.ddpg_aggregate.recalibrate_costs --collection-report 'outputs/ddpg_reward_calibration/collection_20261103_133754_684927/calibration_collection.json' --write-config
+```
+
+该命令创建新的重核算报告并写入奖励配置，供新实验开始前固定使用；
+训练及恢复期间应保持该配置不变，避免改变模型对应的标定身份。
+
+## 直接运行入口
+
+打开实际DDPG工作树，选择项目`.venv`解释器，在PyCharm绿色运行：
 
 | 用途 | 根目录脚本 |
 |---|---|
 | 正式500 Episode训练 | run_ddpg_train.py |
-| 固定训练航段确定性诊断 | run_ddpg_fixed_eval.py |
+| 每20轮同航段诊断的独立入口 | run_ddpg_fixed_eval.py |
 | 独立Validation8 | run_ddpg_validate.py |
-| 授权后的独立Test4 | run_ddpg_test.py |
-| 原生Zoo Optuna搜索 | run_ddpg_optuna.py |
+| 最终授权后的Test4 | run_ddpg_test.py |
+| 原生Zoo Optuna | run_ddpg_optuna.py |
 
-本次开发不启动正式训练。固定航段诊断、Validation/Test默认指向本次训练输出的首个模型；
-该模型要在用户后续训练完成后才存在。
-也可通过原模块的 `--model-path` 明确选择模型。
-新奖励必须从头训练，不传 `--trained-agent`，不加载旧模型或旧Replay。
-训练恢复及所有评估入口校验完整奖励身份；旧tanh模型、无奖励身份模型和不同权重模型均拒绝混用。
-新版本模型以后可在相同奖励身份下暂停恢复，但不能将旧版本权重或Replay作为本次初始条件。
-
-原生训练参数：
-gamma=.999、learning_rate=.001、batch_size=64、learning_starts=5000、
-train_freq=32、gradient_steps=1、tau=.045、normal noise sigma=.1、
+正式训练仍调用`sys.executable -m rl_zoo3.train`，加载`zoo_ddpg.yml`。
+正式参数保持：gamma=.999、learning_rate=.001、batch_size=64、learning_starts=5000、
+train_freq=32、gradient_steps=1、tau=.01、normal noise_std=.1、
 network=[256,256]、buffer_size=1000000、device=cuda、n_envs=1、seed=42。
-Zoo仍以20000000环境步作安全上限，原生 StopTrainingOnMaxEpisodes=500。
-每轮固定从 Train35 中的 **parent_005_seg01** 第0秒开始，SOC=0.6、FC=0 kW。
-实测该航段长9258秒，500条完整航段最多4629000训练环境步，安全上限不会提前截断。
-真实物理失败终止也计为一个已结束Episode，不能把500次结束等同于500次成功完成。
-构造环境时 `fixed_train_id=None` 仍保留随机Train35机制；Validation/Test不使用固定训练ID。
+安全上限20000000环境步，实际500次Episode结束后停止。每次固定
+`parent_005_seg01`，SOC=0.6、FC=0 kW，从第0秒开始；真实失败也计一次Episode结束。
+备用`train.py`仍复用同一环境和奖励，保留其既有算法参数，不作为本次正式入口。
 
-新训练输出：`outputs/ddpg_fixed_parent_005_seg01_500ep_linear_v2/ddpg/AggregateShipDDPG-v0_N/`。
-初次运行N=1；Zoo后续运行使用新编号，不覆盖历史模型。若运行编号改变，应通过模块的
-`--model-path` 指定实际模型，或同步根目录三个评估入口的路径，不能误评估旧的N=1模型。
-独立输出分别为 `outputs/ddpg_fixed_parent_005_evaluation_linear_v2`、
-`outputs/ddpg_fixed_parent_005_validation_linear_v2`、`outputs/ddpg_fixed_parent_005_test_linear_v2`，
-每次评估再创建带时间戳的独立子目录。
-历史模型、Replay、Trial18及全部旧输出保留。
+新训练目录：`outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v3/ddpg/AggregateShipDDPG-v0_N/`。
+初次N=1，后续Zoo使用新编号，不覆盖模型。三个独立评估入口默认指向N=1最终模型，
+如编号不同请通过相应模块的`--model-path`选择实际checkpoint。新模型在用户后续训练后才存在。
+独立输出根分别为`outputs/ddpg_fixed_parent_005_evaluation_economic_v3`、
+`outputs/ddpg_fixed_parent_005_validation_economic_v3`、`outputs/ddpg_fixed_parent_005_test_economic_v3`，
+每次另建时间戳目录。历史模型、Replay及搜索结果不作为本次初始条件。
 
-PyCharm使用当前项目 `.venv` 解释器，工作目录为本DDPG工作树根目录，
-直接绿色运行 `run_ddpg_train.py`。等价PowerShell命令（仅供用户确认后执行）：
+新训练不传`--trained-agent`，不载入旧模型或旧Replay。完整奖励身份包含版本、
+`c_ref`、配置SHA及成本模型定义；恢复、Validation、Test和Optuna均拒绝旧身份或无身份模型。
+同版本、相同标定身份的checkpoint才能用于后续恢复与评估。
 
 ```powershell
 & '.\.venv\Scripts\python.exe' '.\run_ddpg_train.py'
 ```
 
-该脚本仍通过 `sys.executable -m rl_zoo3.train` 调用原生Zoo，使用正式YAML、
-CUDA、`--eval-freq -1` 和 `--save-replay-buffer`；500轮周期验证由Episode回调负责。
-`train.py` 是次要的原生SB3入口，已同步固定ID、tau、noise、两种周期回调及最终Replay保存；
-正式实验优先使用根目录Zoo入口。
+以上仅是运行命令，本次开发不启动正式500轮训练或Optuna搜索。
 
-## 每20 Episode固定训练航段诊断
+## 周期诊断与验证
 
-在20、40、…、500次真实Episode结束时，`FixedTrainEvaluationCallback` 保存独立checkpoint，
-以同一解释器启动独立CPU子进程，加载模型副本，对parent_005_seg01从头确定性运行。
-使用 `DDPG.load(action_noise=None)`、`predict(deterministic=True)` 和 `torch.inference_mode()`，
-不执行learn、梯度或Target更新，不接触训练Replay，不重置父进程Python/NumPy/PyTorch随机状态。
-当前正式配置没有VecNormalize，直接复用训练环境的状态和动作映射。
+每20次真实Episode结束保存checkpoint，并在独立CPU子进程中确定性运行固定Train航段。
+每100次真实Episode结束完整执行Validation8，节点为100、200、300、400、500。
+使用`DDPG.load(action_noise=None)`、`predict(deterministic=True)`和`torch.inference_mode()`，
+不更新Actor、Critic、Target或Replay，不重置训练进程的随机状态。Test4不参与周期验证。
 
-训练运行目录下的 `fixed_train_evaluation/` 保存：
-
-- `training_episodes.csv`：带探索噪声的每轮训练奖励、平均每步奖励、调用步数、实际物理步数、完成状态、coverage和终止原因。
-- `episode_0020/model.zip` 等25个独立模型和checkpoint时钟元数据；不在每个节点重复保存Replay。
-- 各节点直接保存 `fixed_train_summary.csv`、`fixed_train_metrics.json`、`fixed_train_step_data.csv`。
-- 累计 `fixed_train_evaluation.csv/json`：轮数、航段ID、累计/平均每步奖励、长度、完成状态、coverage、终止原因、
-  四项经济成本及总成本、SOC初/终/最小/最大、启停次数和FC功率变化RMS。
-
-失败前缀成本仅为已执行成本，完整航段经济成本字段留空；未执行失败步不伪造电池功率或时间。
-固定航段诊断属于训练过程诊断，不能作为独立泛化结果。训练噪声奖励、固定航段无噪声诊断、
-Validation8泛化结果、最终Test4测试结果分开保存和比较；不使用Test4挑选模型。
-
-训练后独立诊断可绿色运行 `run_ddpg_fixed_eval.py`；指定其他checkpoint用：
-
-```powershell
-& '.\.venv\Scripts\python.exe' -m experiments.sb3_manual.ddpg_aggregate.fixed_train_eval --model-path '实际模型路径.zip' --episode 500
-```
-
-## 每100 Episode独立Validation8
-
-回调按实际 `dones` 计数，在100、200、300、400、500触发，绝不用环境步近似轮数。
-在当前Zoo运行目录的 `periodic_validation/episode_0100/` 等节点保存独立 model.zip，
-随后以同解释器启动独立CPU验证子进程，确定性遍历原Validation8，不调用Test。
-
-验证子进程加载模型副本，不更新Actor/Critic/Target或Replay，也不重置训练进程的
-随机数或线程设置。保留每节点CSV/JSON、逐步成本与功率/SOC图，另有累计
-`periodic_validation.csv/json`，记录完成率、平均累计奖励、四项经济成本及SOC表现。
-失败前缀费用不冒充完整航段费用。
-
-周期评估通过 `--output-dir` 直接写入各自的 `episode_XXXX/` checkpoint目录，
-不再嵌套 `evaluation/固定航段时间戳` 或 `validation/验证时间戳`，避免当前Windows工作树
-触发WinError 206。独立运行入口仍用 `--output-root` 创建时间戳目录，原用法不变。
-已有逐步CSV以独占创建模式保护，不覆盖历史评估；checkpoint节点也继续禁止覆盖。
-
-时钟保持SB3原口径：回调位于终止环境步之后、该transition入Replay及该rollout的
-Adam更新之前，checkpoint_metadata.json明确记录该阶段；不额外做Adam/Target更新。
-自定义完成轮数随checkpoint保存，恢复时继续计数；每个节点禁止覆盖。
-正式训练结束仍由Zoo按原选项保存一次最终Replay，不在每个验证节点重复保存Replay。
+`fixed_train_evaluation/`保留带噪训练Episode汇总、各20轮模型和逐步CSV，
+`periodic_validation/`保留各100轮checkpoint、Validation8逐航段CSV/JSON及功率/SOC图。
+评价先看完成率、coverage，再比较完整航段经济成本；失败前缀成本不冒充完整航段成本。
+评估子进程直接写入`episode_XXXX/`以避免Windows路径过长，不覆盖已有逐步文件。
+回调时钟仍为环境步返回后、Replay插入与本rollout的Adam更新前，元数据明确标注。
+最终Replay只由Zoo按原选项保存，不在每个节点重复保存。
 
 ## Optuna隔离
 
-仍实际调用 Zoo ExperimentManager、原生Optuna及SB3 learn；不改site-packages。
-搜索空间仍仅tau [.005,.06]（log）和noise_std [.07,.15]，其余历史搜索配置不变。
-原77760步预算、两次Validation8评估、TPE/NopPruner、单job、最多20trial保持不变。
-正式500轮的周期回调不加入Optuna YAML。
+仍调用Zoo原生ExperimentManager及Optuna，搜索空间不变：
+tau [.005,.06]（log）、noise_std [.07,.15]；其余配置和77760步预算、
+两次Validation8、TPE/NopPruner、单job及最多20trial不变。
+新Study为`ddpg_tau_noise_economic_normalized_tanh_v3`，
+新存储为`sqlite:///outputs/ddpg_optuna_economic_v3/study.db`。
+Study、trial和导出的`effective_parameters.json`保存同一奖励身份；
+旧Study和不同标定身份不能混用。此改动不运行搜索。
 
-新Study：`ddpg_tau_noise_economic_linear_v2`。
-新存储：`sqlite:///outputs/ddpg_optuna_linear_v2/study.db`。
-入口拒绝旧奖励Study名称；trial/study/参数导出均记录固定reward_identity，
-不允许沿用无身份或不同权重的Study。旧Study数据库及Trial18均未修改。
-本轮没有执行搜索或创建新Study。
-参数导出以新Study的 `effective_parameters.json` 及 reward_identity 为准；
-原生全量 DDPG `--trial-id` converter 不适用于这里仅含tau/noise的搜索参数，未新增转换逻辑。
+## 检查
 
-本次只更新Optuna默认Study和输出路径，不改搜索YAML、采样范围、数据库或历史Trial。
-历史tanh搜索及lambda_soc=17的结果不能与线性奖励混用，现有奖励身份检查会拒绝混用，历史结果保留。
-固定ID和tau=.045、noise=.1仅用于本次正式固定航段实验，不改历史随机Train35搜索配置。
-
-## 本次修改与限定验收
-
-本轮只更改奖励公式、固定失败值、奖励身份及独立输出路径；两个Zoo YAML、train.py超参数、
-所有物理模型、约束、动作投影、数据集与35/8/4划分均保持不变。lambda_soc继续固定为8。
-每20轮固定航段诊断、每100轮Validation8、500次真实Episode结束停止均保持不变。
-
-当前训练入口没有恢复参数，所有评估入口默认指向本次新目录中的模型。
-历史 `ddpg_fixed_parent_005_seg01_500ep_economic_v1` 的模型、Replay和结果完整保留，
-其中已暂停的99轮属于旧tanh奖励，不能接到本次线性奖励训练中。
-先前第20轮故障后的旧续训命令仅适用于旧代码版本，不再作为当前运行命令。
-
-必要检查包括线性奖励数值、失败固定-10000且账本不变、正常终止无额外奖励、旧模型/旧Study身份拒绝、
-固定参数/启动器路径、20轮/100轮回调，以及临时新建未训练模型上的深目录2步推理和3步Validation预检。
-不进行正式训练、完整Validation8/Test4推理或Optuna搜索。未训练模型仅为接口测试夹具，不是实验结果。
-本轮上述相关测试35项通过；编译、三个评估模块的CLI帮助及 `git diff --check` 通过。
-
-复现相关测试（项目根目录PowerShell）：
+完整测试包括奖励数值/版本隔离、FC四工况与寿命阈值、LB应力/实际电流、
+固定航段配置、周期触发、训练/验证分离、深Windows路径及保存加载。
+有界测试只使用临时小模型，部分执行数步Train/Validation；Test4适配测试只检查数据与reset，
+不运行完整Test4模型推理。标定单独只使用Train35。
 
 ```powershell
 $pkg = 'experiments.sb3_manual.ddpg_aggregate'
-& '.\.venv\Scripts\python.exe' -m unittest "$pkg.test_economic_reward" "$pkg.test_linear_reward_env" "$pkg.test_periodic_validation" "$pkg.test_periodic_paths" "$pkg.test_validate" "$pkg.test_fixed_train.FixedConfigurationTests.test_formal_parameters_and_budgets" "$pkg.test_fixed_train.FixedConfigurationTests.test_root_launchers_use_new_model_and_independent_splits" "$pkg.test_fixed_train.FixedEvaluationTests.test_checkpoint_child_command_and_unique_node" "$pkg.test_fixed_train.FixedEvaluationTests.test_combined_callback_triggers_include_failed_episodes_and_500" "$pkg.test_zoo_optuna.SamplerTests" -v
+$modules = Get-ChildItem '.\experiments\sb3_manual\ddpg_aggregate' -Filter 'test_*.py' | ForEach-Object { "$pkg.$($_.BaseName)" }
+& '.\.venv\Scripts\python.exe' -m unittest @modules -v
 git diff --check
 ```

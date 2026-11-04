@@ -1,4 +1,4 @@
-"""Aggregate onboard economic reward with signed battery hydrogen equivalence.
+"""Reference-normalized four-cost reward with signed battery hydrogen equivalence.
 
 SOC differences already include the formal battery charge/discharge efficiencies.
 FC-off battery supply is valued at the computed positive-power curve peak, as
@@ -13,9 +13,13 @@ from numbers import Real
 from pathlib import Path
 
 from v2.economics import HYDROGEN_PRICE_CNY_PER_KG
+from v2.models.battery_energy import BATTERY_CURRENT_ACCOUNTING_VERSION
+from v2.models.fuel_cell_degradation import (
+    FC_DEGRADATION_MODEL_VERSION, FC_EOL_VOLTAGE_LOSS_UV,
+)
 from v2.models.fuel_cell_efficiency import LHV_H2_KWH_PER_KG
 
-REWARD_VERSION = "ddpg_economic_linear_v2"
+REWARD_VERSION = "ddpg_economic_normalized_tanh_v3"
 FAILURE_REWARD = -10000.0
 DEFAULT_CONFIG_PATH = Path(__file__).with_name("economic_reward_config.json")
 
@@ -32,11 +36,10 @@ def _finite(value, name: str) -> float:
 def _check_config(config: dict) -> None:
     if config["reward_version"] != REWARD_VERSION:
         raise ValueError("Economic reward config version does not match the implementation")
-    typical = _finite(config["c_typ"], "c_typ")
-    weight = _finite(config["lambda_soc"], "lambda_soc")
+    reference = _finite(config["c_ref"], "c_ref")
     failure = _finite(config["failure_reward"], "failure_reward")
-    if typical < 0.0 or weight < 0.0:
-        raise ValueError("c_typ and lambda_soc must be nonnegative")
+    if reference <= 0.0:
+        raise ValueError("c_ref must be positive")
     if failure != FAILURE_REWARD:
         raise ValueError("Economic reward config failure_reward does not match the implementation")
 
@@ -128,20 +131,15 @@ def evaluation_identity(model, current_identity: dict) -> dict:
     }
 
 
-def economic_reward(total_cost_cny, soc_next, lambda_soc) -> tuple[float, float, float]:
-    """Return the negative raw-CNY total, the plain SOC-square cost, and total."""
+def economic_reward(total_cost_cny, c_ref) -> float:
+    """Return tanh(C_ref/C) in CNY; the exact zero-cost limit is one."""
     cost = _finite(total_cost_cny, "four-item economic cost")
-    soc = _finite(soc_next, "SOC next")
-    weight = _finite(lambda_soc, "lambda_soc")
+    reference = _finite(c_ref, "c_ref")
     if cost < 0.0:
         raise ValueError("Negative economic cost: check cost signs and duplicate pricing; no abs/clip is allowed")
-    if weight < 0.0:
-        raise ValueError("lambda_soc must be nonnegative")
-    soc_cost = _finite(weight * (soc - 0.5) ** 2, "SOC cost")
-    total = _finite(cost + soc_cost, "reward total cost")
-    if total < 0.0:
-        raise ValueError("Negative reward total cost: check economic components and SOC weight")
-    return -total, soc_cost, total
+    if reference <= 0.0:
+        raise ValueError("c_ref must be positive")
+    return 1.0 if cost == 0.0 else math.tanh(reference / cost)
 
 
 def reward_identity(config: dict) -> dict:
@@ -152,11 +150,12 @@ def reward_identity(config: dict) -> dict:
     ).encode("utf-8")
     return {
         "reward_version": REWARD_VERSION,
-        "c_typ": float(config["c_typ"]),
-        "lambda_soc": float(config["lambda_soc"]),
-        "soc_reference": 0.5,
+        "c_ref": float(config["c_ref"]),
         "failure_reward": FAILURE_REWARD,
         "config_sha256": hashlib.sha256(encoded).hexdigest(),
-        "formula": "-(C_H2+C_FC_deg+C_LB_deg+C_bat_eq+lambda_soc*(SOC_next-0.5)**2)",
+        "formula": "tanh(C_ref/(C_H2+C_FC_deg+C_LB_deg+C_bat_eq)); C=0 -> 1",
+        "fuel_cell_degradation_model": FC_DEGRADATION_MODEL_VERSION,
+        "fuel_cell_eol_voltage_loss_uv": FC_EOL_VOLTAGE_LOSS_UV,
+        "battery_current_accounting": BATTERY_CURRENT_ACCOUNTING_VERSION,
         "battery_equivalence": "signed SOC cell-energy delta; actual eta(P_fc) when on, computed positive-power curve peak when off; no extra battery/DC-DC efficiency",
     }

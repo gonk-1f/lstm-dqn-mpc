@@ -13,7 +13,7 @@ import time
 # Import the existing entry's path bootstrap and accounting/integrity helpers.
 from .validate import (
     ACCOUNTING_FIELDS, STEP_FIELDS, DEFAULT_DATA_ROOT, ENV_ID, PROJECT_ROOT,
-    SOC_REFERENCE, SOC_WEIGHT, RAMP_WEIGHT, FAILURE_REWARD,
+    C_REF, RAMP_WEIGHT, FAILURE_REWARD,
     _model_snapshot, step_accounting,
 )
 from .test4_env import AggregateDDPGTestEnv
@@ -25,7 +25,7 @@ from stable_baselines3.common.utils import check_for_correct_spaces
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 import torch
 
-DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_fixed_parent_005_test_linear_v2"
+DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_fixed_parent_005_test_economic_v3"
 
 
 def run_test4(
@@ -78,7 +78,7 @@ def run_test4(
             "purpose": "Final evaluation of this frozen checkpoint; no parameter search or model selection.",
             **reward_metadata,
             "environment_reward": {
-                "soc_reference": SOC_REFERENCE, "soc_weight": SOC_WEIGHT,
+                "c_ref": C_REF,
                 "ramp_weight": RAMP_WEIGHT, "failure_reward": FAILURE_REWARD,
             },
         }
@@ -187,7 +187,7 @@ def run_test4(
             "mean_full_voyage_economic_cost_cny": (
                 sum(row["total_cost_cny"] for row in rows) / 4 if successes == 4 else None
             ),
-            "economic_cost_scope": "Four economic components including signed instantaneous-efficiency battery hydrogen equivalence. SOC penalty is separate in reward_total_cost_cny; no additional terminal SOC/shore correction or unexecuted failure costs.",
+            "economic_cost_scope": "Four economic components including signed instantaneous-efficiency battery hydrogen equivalence. reward_total_cost_cny equals total_cost_cny; no independent SOC penalty, terminal SOC/shore correction, or unexecuted failure costs.",
             "battery_power_sign": "Positive bus power = discharge; negative = charge. Energy fields are positive gross bus kWh.",
             "vecnormalize_training": False if normalizer is not None else None,
             "vecnormalize_norm_reward": False if normalizer is not None else None,

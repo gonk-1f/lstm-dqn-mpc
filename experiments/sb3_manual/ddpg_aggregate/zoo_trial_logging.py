@@ -18,7 +18,7 @@ def ensure_study_reward_identity(study, trial_number, identity):
             raise ValueError("Existing Study has trials without reward identity; start a new economic Study")
         study.set_user_attr("ddpg_reward_identity", identity)
     elif recorded != identity:
-        raise ValueError("Study reward/calibration identity differs; do not mix reward versions or SOC weights")
+        raise ValueError("Study reward/calibration identity differs; do not mix reward definitions")
 
 
 class TrialParametersCallback(BaseCallback):
@@ -39,8 +39,7 @@ class TrialParametersCallback(BaseCallback):
         model._ddpg_reward_identity = dict(identity)
         evaluation.trial.set_user_attr("reward_identity", identity)
         self.logger.record("reward/version", identity["reward_version"], exclude=("tensorboard",))
-        self.logger.record("reward/c_typ", identity["c_typ"])
-        self.logger.record("reward/lambda_soc", identity["lambda_soc"])
+        self.logger.record("reward/c_ref", identity["c_ref"])
         self.logger.record("reward/fc_off_reference_efficiency", identity["fc_off_reference_efficiency"])
         parameters = {
             "learning_rate": float(model.lr_schedule(1.0)),
@@ -78,7 +77,7 @@ class TrialParametersCallback(BaseCallback):
 
     def _on_step(self):
         for info in self.locals.get("infos", []):
-            for name in ("equivalent_fc_efficiency", "fc_efficiency_actual", "c_bat_eq_cny"):
+            for name in ("equivalent_fc_efficiency", "fc_efficiency_actual", "c_bat_eq_cny", "battery_current_a"):
                 if name in info:
                     self.logger.record(f"economics/{name}", info[name])
         return True

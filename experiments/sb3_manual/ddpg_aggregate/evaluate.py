@@ -26,8 +26,8 @@ def main():
     trajectories = []
     trajectory_fields = (
         "sample_id", "step_index", "interval_start_s", "interval_end_s", "step_executed",
-        "load_kw", "requested_fc_kw", "fc_actual_kw", "battery_actual_kw", "soc",
-        "delta_fc_kw", "soc_penalty", "fc_ramp_penalty", "projected",
+        "load_kw", "requested_fc_kw", "fc_actual_kw", "battery_actual_kw", "battery_current_a", "soc",
+        "delta_fc_kw", "fc_ramp_penalty", "projected",
         "feasible_fc_lower_kw", "feasible_fc_upper_kw", "reward", "terminal_reason",
         "fc_efficiency_actual", "equivalent_fc_efficiency",
     ) + ACCOUNTING_FIELDS

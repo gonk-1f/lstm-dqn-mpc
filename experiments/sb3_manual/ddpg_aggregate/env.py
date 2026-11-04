@@ -12,6 +12,7 @@ import gymnasium as gym
 import numpy as np
 
 from v2.data.supervisory_rules import normalize_onboard_load_kw
+from v2.models.battery_energy import battery_current_from_soc_change
 from v3.control import AccountState, EconomicMPC, SOC_MAX, SOC_MIN
 from v4.v6_dataset import V6TrainingDataset
 from .economic_reward import (
@@ -22,15 +23,14 @@ from .economic_reward import (
 
 FC_RATED_KW = 600.0
 FC_RAMP_KW_PER_S = 48.0
-SOC_REFERENCE = 0.5
 REWARD_CONFIG = load_reward_config()
-SOC_WEIGHT = REWARD_CONFIG["lambda_soc"]
+C_REF = REWARD_CONFIG["c_ref"]
 RAMP_WEIGHT = 0.0  # Legacy diagnostic field; no independent ramp penalty.
 ECONOMIC_SUM_FIELDS = (
     "hydrogen_mass_kg", "h2_cost_cny", "fuel_cell_degradation_cost_cny",
     "battery_degradation_cost_cny", "shore_cost_cny", "physical_economic_cost_cny",
     "c_bat_eq_cny", "battery_equivalent_hydrogen_kg", "total_cost_cny",
-    "c_soc_cny", "reward_total_cost_cny",
+    "reward_total_cost_cny",
 )
 
 
@@ -173,8 +173,7 @@ class AggregateDDPGEnv(gym.Env):
             "min_equivalent_fc_efficiency": self.equivalent_eta_min,
             "max_equivalent_fc_efficiency": self.equivalent_eta_max,
             "reward_version": self.reward_identity["reward_version"],
-            "c_typ_cny": REWARD_CONFIG["c_typ"],
-            "lambda_soc": SOC_WEIGHT,
+            "c_ref_cny": C_REF,
         }
 
     def step(self, action):
@@ -213,6 +212,10 @@ class AggregateDDPGEnv(gym.Env):
         next_physical, ledger, battery_kw = self.physics.interval(
             self.physical, fc_kw, load_kw, duration_s=1.0
         )
+        battery_current_a = battery_current_from_soc_change(
+            self.physical.soc, next_physical.soc, 1.0,
+            self.physics.battery_normalization.nominal_charge_capacity_ah,
+        )
         if not (self.plant.battery_charge_min_kw - 1e-6 <= battery_kw <= self.plant.battery_discharge_max_kw + 1e-6):
             raise RuntimeError("Internal implementation error: actual battery power exceeded bounds")
         if not (SOC_MIN - 1e-9 <= next_physical.soc <= SOC_MAX + 1e-9):
@@ -221,10 +224,8 @@ class AggregateDDPGEnv(gym.Env):
         costs = interval_economic_components(
             self.physics, self.physical, next_physical, fc_kw, ledger
         )
-        reward, j_soc, reward_cost = economic_reward(
-            costs["total_cost_cny"], next_physical.soc, SOC_WEIGHT
-        )
-        costs.update(c_soc_cny=j_soc, reward_total_cost_cny=reward_cost)
+        reward = economic_reward(costs["total_cost_cny"], C_REF)
+        costs["reward_total_cost_cny"] = costs["total_cost_cny"]
         for name in ECONOMIC_SUM_FIELDS:
             self.economic_totals[name] += costs[name]
         eta = costs["equivalent_fc_efficiency"]
@@ -245,9 +246,9 @@ class AggregateDDPGEnv(gym.Env):
             "requested_fc_kw": target_kw,
             "fc_actual_kw": fc_kw,
             "battery_actual_kw": float(battery_kw),
+            "battery_current_a": battery_current_a,
             "soc": float(self.physical.soc),
             "delta_fc_kw": delta_fc,
-            "soc_penalty": j_soc,
             "fc_ramp_penalty": 0.0,
             "step_executed": True,
             **costs,

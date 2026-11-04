@@ -17,11 +17,12 @@ from v2.economics import (
     build_formal_interval_ledger,
 )
 from v2.models.battery_degradation import (
-    BATTERY_NOMINAL_VOLTAGE_V,
     battery_degradation_step,
     formal_battery_lifetime_normalization,
 )
-from v2.models.battery_energy import formal_battery_efficiency, next_soc
+from v2.models.battery_energy import (
+    battery_current_from_soc_change, formal_battery_efficiency, next_soc,
+)
 from v2.models.fuel_cell_degradation import (
     FC_AGGREGATE_REPLACEMENT_COST_CNY,
     FC_EOL_VOLTAGE_LOSS_UV,
@@ -149,7 +150,10 @@ class EconomicMPC:
             aggregate_start_stop_cycles=aggregate_start_cycle_count(state.previous_fc_kw, fc),
         )
         battery_step = battery_degradation_step(
-            state.soc, batt * 1000.0 / BATTERY_NOMINAL_VOLTAGE_V,
+            state.soc, battery_current_from_soc_change(
+                state.soc, soc, duration,
+                self.battery_normalization.nominal_charge_capacity_ah,
+            ),
             duration, self.battery_normalization.nominal_charge_capacity_ah,
         )
         next_state = AccountState(
@@ -198,7 +202,10 @@ class EconomicMPC:
             aggregate_start_stop_cycles=aggregate_start_cycle_count(state.previous_fc_kw, 0.0),
         )
         battery_step = battery_degradation_step(
-            state.soc, batt * 1000.0 / BATTERY_NOMINAL_VOLTAGE_V,
+            state.soc, battery_current_from_soc_change(
+                state.soc, soc, DT_SECONDS,
+                self.battery_normalization.nominal_charge_capacity_ah,
+            ),
             DT_SECONDS, self.battery_normalization.nominal_charge_capacity_ah,
         )
         next_state = AccountState(

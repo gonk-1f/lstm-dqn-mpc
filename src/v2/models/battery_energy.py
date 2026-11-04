@@ -13,6 +13,7 @@ FORMAL_BATTERY_ETA_DIS = 0.95
 BATTERY_EFFICIENCY_CALIBRATION_STATUS = "SOURCE_BACKED"
 BATTERY_EFFICIENCY_SOURCE_DOI = "10.11930/j.issn.1004-9649.202507065"
 BATTERY_EFFICIENCY_SOURCE_LOCATION = "Table 3"
+BATTERY_CURRENT_ACCOUNTING_VERSION = "soc_delta_cell_current_v1"
 
 
 def _strict_scalar(value: object, name: str) -> float:
@@ -66,6 +67,27 @@ def formal_battery_efficiency() -> BatteryEfficiency:
     """Build the formal 0.95/0.95 source-backed battery efficiency object."""
 
     return BatteryEfficiency.formal_default()
+
+
+def battery_current_from_soc_change(
+    soc_before: float,
+    soc_after: float,
+    dt_seconds: float,
+    nominal_capacity_ah: float,
+) -> float:
+    """Return model-consistent cell current; positive discharge, negative charge.
+
+    The physical SOC update already includes charge/discharge efficiency, so
+    recovering its signed Ah change applies no efficiency a second time. This
+    is the existing aggregate energy model's current, not an ECM measurement.
+    """
+    before = _strict_scalar(soc_before, "soc_before")
+    after = _strict_scalar(soc_after, "soc_after")
+    duration = _strict_scalar(dt_seconds, "dt_seconds")
+    nominal = _strict_scalar(nominal_capacity_ah, "nominal_capacity_ah")
+    if duration <= 0.0 or nominal <= 0.0:
+        raise ValueError("duration and nominal charge capacity must be positive")
+    return _strict_scalar((before - after) * nominal * 3600.0 / duration, "cell current")
 
 
 def next_soc_unverified(

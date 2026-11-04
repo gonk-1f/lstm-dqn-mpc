@@ -8,7 +8,7 @@ from numbers import Integral, Real
 
 
 FC_DEGRADATION_MODEL_VERSION = (
-    "aggregate_four_condition_start_cycle_voltage_loss_v2"
+    "aggregate_four_condition_mylonopoulos_eol_142500_uv_v3"
 )
 FC_DEGRADATION_SOURCE_DOI = "10.1016/j.ijhydene.2024.02.349"
 FC_ACCOUNTING_STRUCTURE_SOURCE_DOI = "10.3390/jmse13010034"
@@ -17,16 +17,22 @@ FC_LOW_RUNTIME_LOSS_UV_PER_HOUR = 10.17
 FC_HIGH_RUNTIME_LOSS_UV_PER_HOUR = 11.74
 FC_TRANSIENT_LOSS_UV_PER_DELTA_KW = 0.0441
 FC_START_STOP_LOSS_UV_PER_CYCLE = 23.91
+# The 80% split is retained as a project modeling assumption, not a Zhou value.
 FC_HIGH_LOAD_FRACTION = 0.8
+FC_HIGH_LOAD_BOUNDARY_STATUS = "PROJECT_MODELING_ASSUMPTION"
 FC_SOURCE_POWER_BASIS = "source-compatible reference-unit power"
 FC_SINGLE_CELL_VOLTAGE_BASIS = "single-cell voltage"
 
-FC_EOL_VOLTAGE_LOSS_UV = 70_000.0
+# Project combination: existing four-condition rates with Mylonopoulos' EOL.
+FC_INITIAL_CELL_VOLTAGE_V = 0.95
+FC_EOL_VOLTAGE_DROP_FRACTION = 0.15
+FC_EOL_VOLTAGE_LOSS_UV = 142_500.0  # 0.95 V * 15% * 1e6 microvolt/V
+FC_EOL_SOURCE_DOI = "10.1016/j.ijhydene.2024.10.235"
 FC_REPLACEMENT_FRACTION = 0.5
 FC_REPLACEMENT_FRACTION_SOURCE_DOI = "10.1016/j.ijhydene.2024.10.235"
 FC_AGGREGATE_REPLACEMENT_COST_CNY = 3_500.0 * 600.0 * FC_REPLACEMENT_FRACTION
 FC_LIFETIME_NORMALIZATION_STATUS = "VERIFIED"
-FC_LIFETIME_EVIDENCE_CLASS = "literature/model verified; not vessel-measured"
+FC_LIFETIME_EVIDENCE_CLASS = "literature-based project EOL assumption; not vessel-measured"
 FC_AGGREGATE_POWER_MAPPING_STATUS = "FROZEN_PROJECT_MODEL"
 FC_AGGREGATE_TO_REFERENCE_POWER_RATIO = 1.0 / 6.0
 FC_AGGREGATE_MAPPING_APPLICABILITY = (

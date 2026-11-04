@@ -32,7 +32,7 @@ class FakeModel:
         self.num_timesteps = 0
         self._episode_num = 0
         self._n_updates = 17
-        self._ddpg_reward_identity = {"reward_mode": "economic", "lambda_soc": 12.5}
+        self._ddpg_reward_identity = {"reward_version": "ddpg_economic_normalized_tanh_v3", "c_ref": 0.02}
         self.seed = 42
         self.logger = FakeLogger()
         self.replay_buffer = [1, 2, 3]
@@ -46,7 +46,7 @@ class FakeModel:
     def get_attr(self, name):
         values = {
             "data_root": self.directory / "data",
-            "reward_identity": {"reward_mode": "economic", "lambda_soc": 12.5},
+            "reward_identity": {"reward_version": "ddpg_economic_normalized_tanh_v3", "c_ref": 0.02},
             "results_writer": SimpleNamespace(
                 file_handler=SimpleNamespace(name=str(self.directory / "0.monitor.csv"))
             ),

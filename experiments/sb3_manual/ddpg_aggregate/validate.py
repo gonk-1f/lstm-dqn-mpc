@@ -23,25 +23,25 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 import torch
 
 from . import zoo_register  # Register the same environment used by RL Zoo.
-from .env import SOC_REFERENCE, SOC_WEIGHT, RAMP_WEIGHT, FAILURE_REWARD
+from .env import C_REF, RAMP_WEIGHT, FAILURE_REWARD
 from .validation_plots import save_validation_plots
 from .economic_reward import evaluation_identity
 
 ENV_ID = "AggregateShipDDPG-v0"
 DEFAULT_DATA_ROOT = PROJECT_ROOT / "data/processed/operating_dataset_v6_1s"
-DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_fixed_parent_005_validation_linear_v2"
+DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "outputs/ddpg_fixed_parent_005_validation_economic_v3"
 ACCOUNTING_FIELDS = (
     "hydrogen_mass_kg", "battery_charge_bus_kwh", "battery_discharge_bus_kwh",
     "h2_cost_cny", "fuel_cell_degradation_cost_cny",
     "battery_degradation_cost_cny", "shore_cost_cny", "c_bat_eq_cny",
     "battery_equivalent_hydrogen_kg", "physical_economic_cost_cny", "total_cost_cny",
-    "c_soc_cny", "reward_total_cost_cny",
+    "reward_total_cost_cny",
 )
 STEP_FIELDS = (
     "episode", "sample_id", "step_index", "interval_start_s", "interval_end_s",
     "step_executed", "actor_action", "load_kw", "requested_fc_kw",
-    "fc_actual_kw", "battery_actual_kw", "soc_before", "soc", "delta_fc_kw",
-    "soc_penalty", "fc_ramp_penalty", "projected", "feasible_fc_lower_kw",
+    "fc_actual_kw", "battery_actual_kw", "battery_current_a", "soc_before", "soc", "delta_fc_kw",
+    "fc_ramp_penalty", "projected", "feasible_fc_lower_kw",
     "feasible_fc_upper_kw", "reward", "terminal_reason", "terminated",
     "truncated", "evaluation_truncated",
     "fc_efficiency_actual", "equivalent_fc_efficiency",
@@ -270,14 +270,14 @@ def run_validation(
                 sum(r["total_cost_cny"] for r in rows) / 8
                 if validation_set_complete and successes == 8 else None
             ),
-            "economic_cost_scope": "Four economic components including signed instantaneous-efficiency battery hydrogen equivalence. SOC penalty is separate in reward_total_cost_cny; no additional terminal SOC/shore correction or unexecuted failure costs.",
+            "economic_cost_scope": "Four economic components including signed instantaneous-efficiency battery hydrogen equivalence. reward_total_cost_cny equals total_cost_cny; no independent SOC penalty, terminal SOC/shore correction, or unexecuted failure costs.",
             "unavailable_metrics": {
                 "terminal_soc_restoration_cost_cny": "Not performed by the existing environment.",
                 "stack_resolved_degradation_cost_cny": "No per-stack physical/health model in this environment.",
             },
             "battery_power_sign": "Positive = bus discharge; negative = bus charge. Energy fields are positive gross bus kWh.",
             "environment_reward": {
-                "soc_reference": SOC_REFERENCE, "soc_weight": SOC_WEIGHT,
+                "c_ref": C_REF,
                 "ramp_weight": RAMP_WEIGHT, "failure_reward": FAILURE_REWARD,
             },
             "integrity": integrity, "model_before": before_model, "model_after": after_model,

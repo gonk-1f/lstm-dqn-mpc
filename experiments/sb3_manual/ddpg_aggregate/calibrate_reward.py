@@ -1,4 +1,4 @@
-"""Collect frozen-baseline Train35 transitions; no C_typ or SOC weight is chosen."""
+"""Collect frozen-baseline Train35 transitions without selecting a cost reference."""
 from __future__ import annotations
 
 import argparse
@@ -137,7 +137,7 @@ def main():
         "split": "train", "workers": args.workers, "deterministic": True,
         "action_noise": None, "training": False, "phase": "raw_collection_only",
         "command": [sys.executable, "-m", "experiments.sb3_manual.ddpg_aggregate.calibrate_reward", *sys.argv[1:]],
-        "economic_equivalence_status": "pending; no C_typ or lambda_soc calculated",
+        "economic_equivalence_status": "raw baseline collection only; no cost reference selected",
         "data_active_split_sha256": _sha256(data_root / "metadata/active_split.json"),
         "data_manifest_sha256": _sha256(data_root / metadata["manifest_relative_path"]),
     }

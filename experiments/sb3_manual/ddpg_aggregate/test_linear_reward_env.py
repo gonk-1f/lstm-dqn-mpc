@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import math
 import sys
 import unittest
 from unittest.mock import patch
@@ -14,7 +15,7 @@ from .env import AggregateDDPGEnv, ECONOMIC_SUM_FIELDS
 from v3.control import AccountState, SOC_MIN
 
 
-class LinearRewardEnvironmentTests(unittest.TestCase):
+class NormalizedEconomicRewardEnvironmentTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.env = AggregateDDPGEnv(ROOT / "data/processed/operating_dataset_v6_1s",
@@ -25,21 +26,31 @@ class LinearRewardEnvironmentTests(unittest.TestCase):
         self.env.reset(seed=42)
 
     def check_normal_reward(self, reward, info):
-        cost = sum(info[key] for key in ("h2_cost_cny", "fuel_cell_degradation_cost_cny",
-                                        "battery_degradation_cost_cny", "c_bat_eq_cny"))
-        penalty = 8.0 * (info["soc"] - 0.5) ** 2
+        cost = math.fsum(info[key] for key in ("h2_cost_cny", "fuel_cell_degradation_cost_cny",
+                                              "battery_degradation_cost_cny", "c_bat_eq_cny"))
         self.assertAlmostEqual(info["total_cost_cny"], cost)
-        self.assertAlmostEqual(info["c_soc_cny"], penalty)
-        self.assertEqual(reward, -info["reward_total_cost_cny"])
-        self.assertAlmostEqual(reward, -(cost + penalty))
+        self.assertNotIn("c_soc_cny", info)
+        self.assertNotIn("soc_penalty", info)
+        self.assertEqual(info["reward_total_cost_cny"], info["total_cost_cny"])
+        self.assertEqual(reward, 1.0 if cost == 0.0 else math.tanh(self.env.reward_identity["c_ref"] / cost))
 
-    def test_normal_step_is_negative_raw_cny_and_ledger_has_no_reward(self):
+    def test_normal_step_uses_four_costs_and_ledger_has_no_reward(self):
         _, reward, terminated, truncated, info = self.env.step([0.0])
         self.assertTrue(info["step_executed"])
         self.assertFalse(terminated or truncated)
         self.check_normal_reward(reward, info)
         self.assertEqual(self.env.index, 1)
         self.assertEqual(self.env.economic_totals["total_cost_cny"], info["total_cost_cny"])
+
+    def test_idle_at_initial_soc_has_zero_cost_and_reward_one(self):
+        # The first fixed-voyage load is the recorded zero.
+        _, reward, terminated, truncated, info = self.env.step([-1.0])
+        self.assertEqual(info["load_kw"], 0.0)
+        self.assertEqual(info["soc"], 0.6)
+        self.assertEqual(info["total_cost_cny"], 0.0)
+        self.assertEqual(reward, 1.0)
+        self.assertFalse(terminated or truncated)
+        self.check_normal_reward(reward, info)
 
     def test_normal_terminal_step_has_no_extra_terminal_reward(self):
         self.env.index = len(self.env.episode.load_kw) - 1

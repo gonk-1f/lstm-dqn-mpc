@@ -22,8 +22,7 @@ sys.path.insert(0, str(ROOT / "src"))
 PACKAGE = "experiments.sb3_manual.ddpg_aggregate"
 DATA = ROOT / "data/processed/operating_dataset_v6_1s"
 FIXED_ID = "parent_005_seg01"
-RUN = "outputs/ddpg_fixed_parent_005_seg01_500ep_linear_v2"
-TRAIN_RUN = RUN + "_tau001"
+RUN = "outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v3"
 
 
 class FixedEnvironmentTests(unittest.TestCase):
@@ -56,7 +55,7 @@ class FixedEnvironmentTests(unittest.TestCase):
     def test_duplicate_fixed_id_is_rejected(self):
         from .env import AggregateDDPGEnv, V6TrainingDataset
         from .env import REWARD_CONFIG
-        self.assertEqual(REWARD_CONFIG["lambda_soc"], 8.0)
+        self.assertGreater(REWARD_CONFIG["c_ref"], 0.0)
         dataset = V6TrainingDataset.open(DATA)
         voyages = dataset.load_train()
         fixed = next(ep for ep in voyages if ep.sample_id == FIXED_ID)
@@ -78,6 +77,7 @@ class FixedConfigurationTests(unittest.TestCase):
         import argparse
         from rl_zoo3.exp_manager import ExperimentManager
         from . import zoo_register
+        from .env import REWARD_CONFIG
         torch.set_num_threads(1)
         with tempfile.TemporaryDirectory(prefix="ddpg_fixed_zoo_") as tmp:
             manager = ExperimentManager(
@@ -92,7 +92,7 @@ class FixedConfigurationTests(unittest.TestCase):
                 self.assertEqual((model.num_timesteps, model._n_updates, model.replay_buffer.size()), (0, 0, 0))
                 np.testing.assert_array_equal(model.action_noise._sigma, [0.1])
                 self.assertEqual(model.get_env().get_attr("fixed_train_id"), [FIXED_ID])
-                self.assertEqual(model.get_env().get_attr("reward_identity")[0]["lambda_soc"], 8.0)
+                self.assertEqual(model.get_env().get_attr("reward_identity")[0]["c_ref"], REWARD_CONFIG["c_ref"])
                 manager.learn(model)
                 self.assertEqual((model.num_timesteps, model._n_updates, model.replay_buffer.size()), (32, 0, 32))
             finally:
@@ -127,7 +127,7 @@ class FixedConfigurationTests(unittest.TestCase):
             command = child.call_args.args[0]
             if name == "train":
                 self.assertEqual(command[command.index("-m") + 1], "rl_zoo3.train")
-                self.assertEqual(command[command.index("--log-folder") + 1], TRAIN_RUN)
+                self.assertEqual(command[command.index("--log-folder") + 1], RUN)
                 self.assertEqual(command[command.index("--conf-file") + 1], "experiments/sb3_manual/ddpg_aggregate/zoo_ddpg.yml")
                 self.assertEqual(command[command.index("--device") + 1], "cuda")
                 self.assertNotIn("--trained-agent", command)

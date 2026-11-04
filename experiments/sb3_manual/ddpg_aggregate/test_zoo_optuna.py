@@ -31,21 +31,21 @@ class SamplerTests(unittest.TestCase):
         adapter = importlib.import_module(PACKAGE + ".zoo_optuna")
         with mock.patch("optuna.create_study", side_effect=AssertionError("No Study during argument checks")):
             args = adapter.prepare_optimization_args(["--algo", "ddpg", "--optimize-hyperparameters"])
-        self.assertEqual(args[args.index("--study-name") + 1], "ddpg_tau_noise_economic_linear_v2")
-        self.assertEqual(args[args.index("--storage") + 1], "sqlite:///outputs/ddpg_optuna_linear_v2/study.db")
-        self.assertEqual(args[args.index("--log-folder") + 1], "outputs/ddpg_optuna_linear_v2/logs")
-        self.assertEqual(args[args.index("--optimization-log-path") + 1], "outputs/ddpg_optuna_linear_v2/evaluations")
+        self.assertEqual(args[args.index("--study-name") + 1], "ddpg_tau_noise_economic_normalized_tanh_v3")
+        self.assertEqual(args[args.index("--storage") + 1], "sqlite:///outputs/ddpg_optuna_economic_v3/study.db")
+        self.assertEqual(args[args.index("--log-folder") + 1], "outputs/ddpg_optuna_economic_v3/logs")
+        self.assertEqual(args[args.index("--optimization-log-path") + 1], "outputs/ddpg_optuna_economic_v3/evaluations")
         self.assertEqual(adapter.prepare_optimization_args(["--help"]), ["--help"])
 
     def test_old_study_name_is_rejected_and_new_seed_suffix_is_allowed(self):
         adapter = importlib.import_module(PACKAGE + ".zoo_optuna")
-        for name in ("ddpg_tau_noise_v1", "old_economic", ""):
+        for name in ("ddpg_tau_noise_v1", "ddpg_tau_noise_economic_linear_v2", "ddpg_tau_noise_economic_tanh_v1", "old_economic", ""):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 adapter.prepare_optimization_args(["--optimize-hyperparameters", "--study-name", name])
         args = adapter.prepare_optimization_args([
-            "--optimize-hyperparameters", "--study-name=ddpg_tau_noise_economic_linear_v2_seed43",
+            "--optimize-hyperparameters", "--study-name=ddpg_tau_noise_economic_normalized_tanh_v3_seed43",
         ])
-        self.assertIn("--study-name=ddpg_tau_noise_economic_linear_v2_seed43", args)
+        self.assertIn("--study-name=ddpg_tau_noise_economic_normalized_tanh_v3_seed43", args)
 
     def test_study_identity_guard_without_creating_study_or_storage(self):
         importlib.import_module(PACKAGE + ".zoo_optuna")
@@ -62,7 +62,7 @@ class SamplerTests(unittest.TestCase):
             def set_user_attr(self, key, value):
                 self.user_attrs[key] = value
 
-        identity = {"reward_version": "ddpg_economic_linear_v2", "c_typ": 0.02, "lambda_soc": 2.0}
+        identity = {"reward_version": "ddpg_economic_normalized_tanh_v3", "c_ref": 0.02}
         fresh = Study([0])
         module.ensure_study_reward_identity(fresh, 0, identity)
         self.assertEqual(fresh.user_attrs["ddpg_reward_identity"], identity)
@@ -70,7 +70,7 @@ class SamplerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.ensure_study_reward_identity(Study([0, 1]), 1, identity)
         with self.assertRaises(ValueError):
-            module.ensure_study_reward_identity(Study([0], {**identity, "lambda_soc": 3.0}), 1, identity)
+            module.ensure_study_reward_identity(Study([0], {**identity, "c_ref": 0.03}), 1, identity)
 
     def test_sampler_only_two_variables(self):
         self.assertIsNotNone(importlib.util.find_spec(PACKAGE + ".zoo_optuna"))
@@ -140,7 +140,7 @@ class NativeConfigurationTests(unittest.TestCase):
         for config in (formal, tuning):
             for key, value in expected.items():
                 if config is formal and key in ("tau", "noise_std"):
-                    value = {"tau": 0.045, "noise_std": 0.1}[key]
+                    value = {"tau": 0.01, "noise_std": 0.1}[key]
                 self.assertEqual(config[key], value, key)
             self.assertEqual(config["env_kwargs"]["split"], "train")
         self.assertEqual(formal["env_kwargs"]["fixed_train_id"], "parent_005_seg01")
@@ -234,6 +234,8 @@ class NativeConfigurationTests(unittest.TestCase):
         self.assertEqual(saved["tau"], 0.02)
         self.assertEqual(saved["noise_std"], [0.1])
         self.assertEqual(saved["evaluation_split"], ["validation"])
+        self.assertIn("c_ref", saved["reward_identity"])
+        self.assertNotIn("lambda_soc", saved["reward_identity"])
         self.assertEqual(saved, self.trial.user_attrs["effective_parameters"])
         self.assertEqual(set(self.trial.params), {"tau", "noise_std"})
         self.assertEqual((self.model.num_timesteps, self.model._n_updates), (0, 0))

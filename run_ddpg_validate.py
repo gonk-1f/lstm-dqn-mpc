@@ -7,7 +7,7 @@ import sys
 
 def main() -> int:
     project_root = Path(__file__).resolve().parent
-    model_path = project_root / "outputs/ddpg_fixed_parent_005_seg01_500ep_linear_v2/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip"
+    model_path = project_root / "outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v3/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip"
     env = os.environ.copy()
     python_paths = [str(project_root), str(project_root / "src")]
     if env.get("PYTHONPATH"):
@@ -17,7 +17,7 @@ def main() -> int:
     command = [
         sys.executable, "-u", "-m", "experiments.sb3_manual.ddpg_aggregate.validate",
         "--model-path", str(model_path),
-        "--output-root", str(project_root / "outputs/ddpg_fixed_parent_005_validation_linear_v2"),
+        "--output-root", str(project_root / "outputs/ddpg_fixed_parent_005_validation_economic_v3"),
         "--device", "cpu",
         "--seed", "42",
         "--episodes", "8",

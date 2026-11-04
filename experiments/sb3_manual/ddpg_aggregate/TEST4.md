@@ -6,7 +6,7 @@
 
 ```powershell
 Set-Location 'C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-sb3-baseline'
-& .\.venv\Scripts\python.exe -m experiments.sb3_manual.ddpg_aggregate.test4 --model-path "outputs/ddpg_fixed_parent_005_seg01_500ep_linear_v2/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip" --device cpu
+& .\.venv\Scripts\python.exe -m experiments.sb3_manual.ddpg_aggregate.test4 --model-path "outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v3/ddpg/AggregateShipDDPG-v0_1/AggregateShipDDPG-v0.zip" --device cpu
 ```
 
 PyCharm 可直接选择共享配置 **DDPG Test4** 并点击运行。配置位于项目根
@@ -14,7 +14,7 @@ PyCharm 可直接选择共享配置 **DDPG Test4** 并点击运行。配置位�
 `experiments.sb3_manual.ddpg_aggregate.test4`，工作目录为上述根目录，
 沿用项目解释器（该工作树的 `.venv\Scripts\python.exe`）。无需手动设置 PYTHONPATH。
 
-更换模型只需替换 `--model-path`。默认输出根为 `outputs/ddpg_fixed_parent_005_test_linear_v2`，
+更换模型只需替换 `--model-path`。默认输出根为 `outputs/ddpg_fixed_parent_005_test_economic_v3`，
 可用 `--output-root` 更改；默认 seed=42、CPU、torch_threads=1。
 
 ## 数据与推理
@@ -39,7 +39,7 @@ V6 目录仅保存 Test 元数据；原始 canonical 1 秒 payload 位于元数�
 
 ## 输出
 
-每次运行新建 `outputs/ddpg_fixed_parent_005_test_linear_v2/test_时间戳/`，保留已有结果：
+每次运行新建 `outputs/ddpg_fixed_parent_005_test_economic_v3/test_时间戳/`，保留已有结果：
 
 - `test_summary.csv`：每航段奖励、完成状态、覆盖率、功率变化、SOC、能量及经济指标。
 - `test_step_data.csv`：逐步真实动作、功率、SOC、奖励及可用账本。
@@ -54,12 +54,26 @@ V6 目录仅保存 Test 元数据；原始 canonical 1 秒 payload 位于元数�
 成本复用现有聚合 FC/电池经济模型，不是逐堆实测退化成本，未结算末端 SOC 恢复。
 失败前缀不能当成完成整条航段的成本，与其他模型比较时应先看完成状态和覆盖率。
 
+## 当前经济奖励与模型身份
 
-## 经济奖励版本更新
+奖励版本为 `ddpg_economic_normalized_tanh_v3`。正常步仅计四项经济成本：
+实际氢耗、FC退化、电池退化和有符号电池等效氢耗，`C=四项成本之和`。
+正常奖励为 `tanh(C_ref/C)`；`C=0` 时为1；负总成本或非有限值明确报错。
+原有真实物理不可行失败奖励保持 -10000，失败调用不制造物理经济成本。
+不再包含独立SOC目标偏差成本；电池退化模型内部的SOC应力函数仍保留。
 
-当前默认采用 `ddpg_economic_linear_v2`：四项经济成本（实际氢耗、FC退化、电池退化、实时电池等效氢耗）加固定 SOC 平方惩罚后计算 `reward=-r`；物理失败固定为 -10000，不再计算其他失败补偿。
-固定 `C_typ=0.17429534153424198` 为 Train35 实际执行步的四项经济成本中位数；`lambda_soc=8.0` 继续保持当前固定权重；C_typ仅保留为历史标定元数据，不参与线性奖励缩放。未使用 Validation/Test 标定，训练和验证期间均不重新计算权重。
-FC关机参考效率由现有正功率曲线取峰值，开启时使用实际功率点效率；每秒记录两种效率。`total_cost_cny` 为四项经济成本，`reward_total_cost_cny` 另加SOC罚项；无额外终端补能计价。
-新奖励模型默认路径需在后续从头训练完成后才会存在。不同奖励身份或无身份的模型明确拒绝加载评估。根目录对应的直接运行脚本无需Module配置。
+`C_ref` 固定读取 `economic_reward_config.json` 的 `c_ref`，由现有Train35基准轨迹
+按新退化定义重新核算四项单步成本后取中位数，未使用Validation/Test标定。
+FC累计电压损失报废阈值为142500 μV；保留四工况系数、设备价和50%更换比例。
+80%高负载分界为项目建模假设，不是Zhou原文参数。电池保持F(SOC)、G(I)、
+加权Ah吞吐和15000倍容量归一化，退化使用与物理SOC更新一致的实际电流。
 
-仅允许加载奖励身份完全一致的线性奖励模型；旧tanh模型及无身份历史模型拒绝评估。当前模型必须先在新目录从头训练，历史结果保留。
+开启FC时采用实际功率点效率，关机时采用现有曲线正功率范围计算出的峰值效率。
+电池等效氢耗保持放电正、充电负的符号，不重复计算效率损失。
+`total_cost_cny`和`reward_total_cost_cny`均表示同一个四项经济成本总额；
+逐秒CSV另记`battery_current_a`，不再导出独立SOC惩罚字段。
+
+仅加载完整奖励与标定身份一致的新版本模型，旧线性、旧tanh及无身份模型均拒绝。
+新训练默认输出为 `outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v3`；
+模型需在后续从头训练后才存在。根目录对应的运行脚本可直接在PyCharm绿色运行，
+无需Module配置；也可使用上述模块入口的`--model-path`选择相同版本的其他checkpoint。
