@@ -61,7 +61,7 @@ class NormalizedEconomicRewardEnvironmentTests(unittest.TestCase):
         self.assertTrue(info["vessel_episode"]["completed"])
         self.check_normal_reward(reward, info)
 
-    def test_infeasible_step_is_minus_10000_without_physics_or_compensation(self):
+    def test_infeasible_step_is_minus_1_without_physics_or_compensation(self):
         self.env.index = int(np.flatnonzero(self.env.episode.load_kw > 48.0)[0])
         self.env.physical = AccountState(soc=SOC_MIN, previous_fc_kw=0.0)
         index = self.env.index
@@ -70,7 +70,7 @@ class NormalizedEconomicRewardEnvironmentTests(unittest.TestCase):
              patch("experiments.sb3_manual.ddpg_aggregate.env.economic_reward",
                    side_effect=AssertionError("No failed-step economic reward or compensation")):
             _, reward, terminated, truncated, info = self.env.step([0.0])
-        self.assertEqual(reward, -10000.0)
+        self.assertEqual(reward, -1.0)
         self.assertTrue(terminated)
         self.assertFalse(truncated)
         self.assertFalse(info["step_executed"])
@@ -79,7 +79,7 @@ class NormalizedEconomicRewardEnvironmentTests(unittest.TestCase):
         self.assertIs(self.env.physical, state)
         self.assertEqual(self.env.index, index)
         self.assertTrue(all(self.env.economic_totals[key] == 0 for key in ECONOMIC_SUM_FIELDS))
-        self.assertEqual(info["vessel_episode"]["reward_sum"], -10000.0)
+        self.assertEqual(info["vessel_episode"]["reward_sum"], -1.0)
 
 
 if __name__ == "__main__":

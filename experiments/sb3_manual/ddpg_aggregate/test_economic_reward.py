@@ -137,12 +137,12 @@ class EconomicRewardTests(unittest.TestCase):
         self.assertNotIn("lambda_soc", default)
         self.assertNotIn("soc_reference", default)
         self.assertNotIn("c_typ", default)
-        self.assertEqual(default["reward_version"], "ddpg_economic_normalized_tanh_v3")
-        self.assertEqual(default["failure_reward"], -10000.0)
-        self.assertEqual(getattr(module, "FAILURE_REWARD", None), -10000.0)
+        self.assertEqual(default["reward_version"], "ddpg_economic_normalized_tanh_v4")
+        self.assertEqual(default["failure_reward"], -1.0)
+        self.assertEqual(getattr(module, "FAILURE_REWARD", None), -1.0)
         config = {
             "reward_version": module.REWARD_VERSION, "c_ref": 0.02,
-            "failure_reward": -10000.0,
+            "failure_reward": -1.0,
         }
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "reward.json"
@@ -158,7 +158,7 @@ class EconomicRewardTests(unittest.TestCase):
             self.assertEqual(first["fuel_cell_eol_voltage_loss_uv"], 142500.0)
             self.assertEqual(first["battery_current_accounting"], "soc_delta_cell_current_v1")
             self.assertEqual(first["reward_version"], module.REWARD_VERSION)
-            self.assertEqual(first["failure_reward"], -10000.0)
+            self.assertEqual(first["failure_reward"], -1.0)
             self.assertEqual(
                 first["formula"],
                 "tanh(C_ref/(C_H2+C_FC_deg+C_LB_deg+C_bat_eq)); C=0 -> 1",
@@ -168,7 +168,7 @@ class EconomicRewardTests(unittest.TestCase):
             ).encode("utf-8")
             self.assertEqual(first["config_sha256"], hashlib.sha256(encoded).hexdigest())
             for changes in (
-                {"c_ref": 0.0}, {"c_ref": -3.0}, {"c_ref": float("nan")}, {"failure_reward": -1.0},
+                {"c_ref": 0.0}, {"c_ref": -3.0}, {"c_ref": float("nan")}, {"failure_reward": -2.0},
                 {"failure_reward": float("nan")}, {"reward_version": "ddpg_economic_tanh_v1"},
             ):
                 with self.subTest(changes=changes):

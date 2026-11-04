@@ -1,11 +1,11 @@
 {
-  "reward_version": "ddpg_economic_normalized_tanh_v3",
+  "reward_version": "ddpg_economic_normalized_tanh_v4",
   "c_ref": 0.14112952687229602,
-  "failure_reward": -10000.0,
+  "failure_reward": -1.0,
   "fc_off_reference_efficiency": 0.6385540000000001,
   "fc_off_reference_rule": "maximum of the existing system efficiency curve over positive-power support; recomputed from curve at runtime",
   "calibration": {
-    "reward_version": "ddpg_economic_normalized_tanh_v3",
+    "reward_version": "ddpg_economic_normalized_tanh_v4",
     "c_ref": 0.14112952687229602,
     "split": "train",
     "collection_report": "outputs/ddpg_reward_calibration/collection_20261103_133754_684927/calibration_collection.json",

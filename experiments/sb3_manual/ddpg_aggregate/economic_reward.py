@@ -19,8 +19,8 @@ from v2.models.fuel_cell_degradation import (
 )
 from v2.models.fuel_cell_efficiency import LHV_H2_KWH_PER_KG
 
-REWARD_VERSION = "ddpg_economic_normalized_tanh_v3"
-FAILURE_REWARD = -10000.0
+REWARD_VERSION = "ddpg_economic_normalized_tanh_v4"
+FAILURE_REWARD = -1.0
 DEFAULT_CONFIG_PATH = Path(__file__).with_name("economic_reward_config.json")
 
 
