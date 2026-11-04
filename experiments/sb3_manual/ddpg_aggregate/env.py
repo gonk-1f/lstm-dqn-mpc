@@ -16,7 +16,7 @@ from v2.models.battery_energy import battery_current_from_soc_change
 from v3.control import AccountState, EconomicMPC, SOC_MAX, SOC_MIN
 from v4.v6_dataset import V6TrainingDataset
 from .economic_reward import (
-    load_reward_config, reward_identity, peak_fc_efficiency,
+    load_reward_config, reward_identity,
     interval_economic_components, economic_reward, FAILURE_REWARD,
 )
 from .huber_ddpg import CRITIC_LOSS_ID
@@ -65,7 +65,6 @@ class AggregateDDPGEnv(gym.Env):
         self.physics = EconomicMPC(nominal_cost_cny=1.0)
         self.plant = self.physics.plant
         self.reward_identity = reward_identity(REWARD_CONFIG)
-        self.reward_identity["fc_off_reference_efficiency"] = peak_fc_efficiency(self.physics.fc_efficiency)
         self.reward_identity["fc_ramp_limit_kw_per_s"] = None
         self.reward_identity["observation_version"] = "soc_load_prev_fc_load_delta_elapsed_hours_v1"
         self.reward_identity["critic_loss"] = CRITIC_LOSS_ID

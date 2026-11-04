@@ -47,7 +47,7 @@ class EpisodeValidationCallback(BaseCallback):
             raise ValueError("Legacy reward checkpoint cannot resume economic-reward training")
         self.model._ddpg_completed_episodes = self.completed_episodes
         self.model._ddpg_reward_identity = identity
-        for name in ("c_ref", "fc_off_reference_efficiency"):
+        for name in ("c_ref", "eta_fc_avg"):
             if name in identity:
                 self.logger.record(f"reward/{name}", identity[name])
         if self.verbose:

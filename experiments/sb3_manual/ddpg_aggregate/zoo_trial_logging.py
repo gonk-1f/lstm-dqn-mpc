@@ -40,7 +40,7 @@ class TrialParametersCallback(BaseCallback):
         evaluation.trial.set_user_attr("reward_identity", identity)
         self.logger.record("reward/version", identity["reward_version"], exclude=("tensorboard",))
         self.logger.record("reward/c_ref", identity["c_ref"])
-        self.logger.record("reward/fc_off_reference_efficiency", identity["fc_off_reference_efficiency"])
+        self.logger.record("reward/eta_fc_avg", identity["eta_fc_avg"])
         parameters = {
             "learning_rate": float(model.lr_schedule(1.0)),
             "gamma": model.gamma,

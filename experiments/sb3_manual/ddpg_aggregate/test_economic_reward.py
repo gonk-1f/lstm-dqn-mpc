@@ -37,7 +37,7 @@ class EconomicRewardTests(unittest.TestCase):
         dense = physics.fc_efficiency.eta(np.linspace(0.01, 600.0, 60000))
         self.assertLessEqual(float(dense.max()), peak + 1e-12)
 
-    def test_on_discharge_uses_actual_efficiency_and_original_ledger_once(self):
+    def test_on_discharge_uses_fixed_efficiency_and_original_ledger_once(self):
         module = self.module()
         from v3.control import AccountState
         physics = self.physics()
@@ -48,9 +48,9 @@ class EconomicRewardTests(unittest.TestCase):
         from v2.models.fuel_cell_efficiency import LHV_H2_KWH_PER_KG
         _, eta_dis = physics.efficiency.require_calibrated()
         eta_fc = physics.fc_efficiency.eta(300.0)
-        expected = battery_kw / 3600.0 / eta_dis / (eta_fc * LHV_H2_KWH_PER_KG)
+        expected = battery_kw / 3600.0 / eta_dis / (module.ETA_FC_AVG * LHV_H2_KWH_PER_KG)
         self.assertAlmostEqual(values["battery_equivalent_hydrogen_kg"], expected, places=12)
-        self.assertEqual(values["equivalent_fc_efficiency"], eta_fc)
+        self.assertEqual(values["equivalent_fc_efficiency"], module.ETA_FC_AVG)
         self.assertEqual(values["fc_efficiency_actual"], eta_fc)
         self.assertAlmostEqual(values["c_bat_eq_cny"], expected * HYDROGEN_PRICE_CNY_PER_KG, places=12)
         self.assertEqual(values["physical_economic_cost_cny"], ledger.total_cost_cny)
@@ -69,14 +69,14 @@ class EconomicRewardTests(unittest.TestCase):
         values = module.interval_economic_components(physics, before, after, 300.0, ledger)
         eta_chg, _ = physics.efficiency.require_calibrated()
         expected = battery_kw / 3600.0 * eta_chg / (
-            physics.fc_efficiency.eta(300.0) * LHV_H2_KWH_PER_KG
+            module.ETA_FC_AVG * LHV_H2_KWH_PER_KG
         ) * HYDROGEN_PRICE_CNY_PER_KG
         self.assertLess(values["c_bat_eq_cny"], 0)
         self.assertAlmostEqual(values["c_bat_eq_cny"], expected, places=12)
         self.assertGreaterEqual(ledger.h2_cost_cny + values["c_bat_eq_cny"], 0)
         self.assertGreaterEqual(values["total_cost_cny"], 0)
 
-    def test_fc_off_discharge_uses_computed_positive_curve_peak(self):
+    def test_fc_off_discharge_uses_same_fixed_efficiency(self):
         module = self.module()
         from v3.control import AccountState
         from v2.economics import HYDROGEN_PRICE_CNY_PER_KG
@@ -86,11 +86,11 @@ class EconomicRewardTests(unittest.TestCase):
         after, ledger, battery_kw = physics.interval(before, 0.0, 100.0, duration_s=1.0)
         values = module.interval_economic_components(physics, before, after, 0.0, ledger)
         _, eta_dis = physics.efficiency.require_calibrated()
-        peak = module.peak_fc_efficiency(physics.fc_efficiency)
+        eta_fc_avg = module.ETA_FC_AVG
         self.assertEqual(values["fc_efficiency_actual"], 0.0)
-        self.assertEqual(values["equivalent_fc_efficiency"], peak)
+        self.assertEqual(values["equivalent_fc_efficiency"], eta_fc_avg)
         self.assertEqual(values["h2_cost_cny"], 0.0)
-        expected = battery_kw / 3600.0 / eta_dis / (peak * LHV_H2_KWH_PER_KG) * HYDROGEN_PRICE_CNY_PER_KG
+        expected = battery_kw / 3600.0 / eta_dis / (eta_fc_avg * LHV_H2_KWH_PER_KG) * HYDROGEN_PRICE_CNY_PER_KG
         self.assertAlmostEqual(values["c_bat_eq_cny"], expected, places=12)
         self.assertTrue(math.isfinite(values["total_cost_cny"]))
 
@@ -130,7 +130,7 @@ class EconomicRewardTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "components|c_bat_eq_cny"):
             module.interval_economic_components(physics, before, after, 300.0, RawCnyIntervalLedger(0.0, 0.0, 0.0, 0.0))
 
-    def test_fixed_config_is_loaded_only_on_request_and_identity_is_stable(self):
+    def test_fixed_config_and_identity_are_stable(self):
         module = self.module()
         default = module.load_reward_config()
         self.assertGreater(default["c_ref"], 0.0)
@@ -143,6 +143,7 @@ class EconomicRewardTests(unittest.TestCase):
         config = {
             "reward_version": module.REWARD_VERSION, "c_ref": 0.02,
             "failure_reward": -1.0,
+            "eta_fc_avg": default["eta_fc_avg"],
         }
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "reward.json"

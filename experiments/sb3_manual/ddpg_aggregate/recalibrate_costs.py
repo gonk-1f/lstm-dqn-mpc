@@ -29,7 +29,7 @@ from v2.models.fuel_cell_degradation import (
 from v3.control import AccountState, EconomicMPC
 
 from .economic_reward import (
-    FAILURE_REWARD, REWARD_VERSION, interval_economic_components, peak_fc_efficiency,
+    FAILURE_REWARD, REWARD_VERSION, interval_economic_components, load_reward_config,
 )
 
 DEFAULT_COLLECTION = PROJECT_ROOT / (
@@ -226,10 +226,11 @@ def recalculate(collection_path: Path, data_root: Path, output_root: Path) -> tu
     }
     result_path = output / "recalibration_result.json"
     result_path.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    reference_config = load_reward_config()
     config = {
         "reward_version": REWARD_VERSION, "c_ref": reference, "failure_reward": FAILURE_REWARD,
-        "fc_off_reference_efficiency": peak_fc_efficiency(physics.fc_efficiency),
-        "fc_off_reference_rule": "maximum of the existing system efficiency curve over positive-power support; recomputed from curve at runtime",
+        "eta_fc_avg": reference_config["eta_fc_avg"],
+        "eta_fc_avg_calibration": reference_config["eta_fc_avg_calibration"],
         "calibration": {
             **result, "recalibration_report": result_path.relative_to(PROJECT_ROOT).as_posix(),
             "recalibration_report_sha256": sha256(result_path),

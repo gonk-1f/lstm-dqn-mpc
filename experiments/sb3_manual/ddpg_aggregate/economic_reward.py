@@ -1,8 +1,8 @@
 """Reference-normalized four-cost reward with signed battery hydrogen equivalence.
 
 SOC differences already include the formal battery charge/discharge efficiencies.
-FC-off battery supply is valued at the computed positive-power curve peak, as
-explicitly selected for this reward version. No model or config is loaded here.
+Battery hydrogen equivalence uses one curve-calibrated FC average efficiency,
+read once from the fixed configuration and independent of the current FC power.
 """
 from __future__ import annotations
 
@@ -38,10 +38,13 @@ def _check_config(config: dict) -> None:
         raise ValueError("Economic reward config version does not match the implementation")
     reference = _finite(config["c_ref"], "c_ref")
     failure = _finite(config["failure_reward"], "failure_reward")
+    average_efficiency = _finite(config["eta_fc_avg"], "eta_fc_avg")
     if reference <= 0.0:
         raise ValueError("c_ref must be positive")
     if failure != FAILURE_REWARD:
         raise ValueError("Economic reward config failure_reward does not match the implementation")
+    if not 0.0 < average_efficiency <= 1.0:
+        raise ValueError("eta_fc_avg must lie in (0, 1]")
 
 
 def load_reward_config(path=DEFAULT_CONFIG_PATH) -> dict:
@@ -49,6 +52,9 @@ def load_reward_config(path=DEFAULT_CONFIG_PATH) -> dict:
     config = json.loads(Path(path).read_text(encoding="utf-8"))
     _check_config(config)
     return config
+
+
+ETA_FC_AVG = load_reward_config()["eta_fc_avg"]
 
 
 def peak_fc_efficiency(curve) -> float:
@@ -64,14 +70,10 @@ def peak_fc_efficiency(curve) -> float:
 
 
 def battery_equivalent_cost(physics, before, after, fc_kw) -> dict:
-    """Price the signed cell-energy change once, with the selected FC efficiency."""
+    """Zhou Eq. (25), k=1: price signed cell energy using fixed FC efficiency."""
     power = _finite(fc_kw, "fc_kw")
     actual_efficiency = _finite(physics.fc_efficiency.eta(power), "actual FC efficiency")
-    equivalent_efficiency = (
-        actual_efficiency if power > 0.0 else peak_fc_efficiency(physics.fc_efficiency)
-    )
-    if equivalent_efficiency <= 0.0:
-        raise ValueError("Positive FC power must have positive formal-curve efficiency")
+    equivalent_efficiency = ETA_FC_AVG
     cell_energy_kwh = (
         _finite(before.soc, "SOC before") - _finite(after.soc, "SOC after")
     ) * physics.plant.battery_nominal_energy_kwh
@@ -157,5 +159,6 @@ def reward_identity(config: dict) -> dict:
         "fuel_cell_degradation_model": FC_DEGRADATION_MODEL_VERSION,
         "fuel_cell_eol_voltage_loss_uv": FC_EOL_VOLTAGE_LOSS_UV,
         "battery_current_accounting": BATTERY_CURRENT_ACCOUNTING_VERSION,
-        "battery_equivalence": "signed SOC cell-energy delta; actual eta(P_fc) when on, computed positive-power curve peak when off; no extra battery/DC-DC efficiency",
+        "eta_fc_avg": float(config["eta_fc_avg"]),
+        "battery_equivalence": "signed SOC cell-energy delta / fixed eta_fc_avg / LHV; Zhou Eq. (25), k=1; no extra battery/DC-DC efficiency",
     }
