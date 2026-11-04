@@ -9,7 +9,7 @@ AggregateShipDDPG-v0:
   learning_starts: 5000
   train_freq: 32
   gradient_steps: 1
-  tau: 0.045
+  tau: 0.01
   noise_type: normal
   noise_std: 0.1
   policy_kwargs: "dict(net_arch=[256, 256])"

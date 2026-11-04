@@ -23,6 +23,7 @@ PACKAGE = "experiments.sb3_manual.ddpg_aggregate"
 DATA = ROOT / "data/processed/operating_dataset_v6_1s"
 FIXED_ID = "parent_005_seg01"
 RUN = "outputs/ddpg_fixed_parent_005_seg01_500ep_linear_v2"
+TRAIN_RUN = RUN + "_tau001"
 
 
 class FixedEnvironmentTests(unittest.TestCase):
@@ -86,7 +87,9 @@ class FixedConfigurationTests(unittest.TestCase):
             )
             model, _ = manager.setup_experiment()
             try:
-                self.assertEqual(model.tau, 0.045)
+                self.assertEqual(model.tau, 0.01)
+                self.assertFalse(manager.continue_training)
+                self.assertEqual((model.num_timesteps, model._n_updates, model.replay_buffer.size()), (0, 0, 0))
                 np.testing.assert_array_equal(model.action_noise._sigma, [0.1])
                 self.assertEqual(model.get_env().get_attr("fixed_train_id"), [FIXED_ID])
                 self.assertEqual(model.get_env().get_attr("reward_identity")[0]["lambda_soc"], 8.0)
@@ -97,7 +100,7 @@ class FixedConfigurationTests(unittest.TestCase):
 
     def test_formal_parameters_and_budgets(self):
         config = yaml.safe_load((Path(__file__).with_name("zoo_ddpg.yml")).read_text())["AggregateShipDDPG-v0"]
-        expected = dict(tau=0.045, noise_std=0.1, n_envs=1, train_freq=32,
+        expected = dict(tau=0.01, noise_std=0.1, n_envs=1, train_freq=32,
                         gradient_steps=1, learning_starts=5000, batch_size=64,
                         gamma=0.999, learning_rate=0.001, buffer_size=1000000,
                         policy_kwargs="dict(net_arch=[256, 256])", noise_type="normal")
@@ -124,7 +127,11 @@ class FixedConfigurationTests(unittest.TestCase):
             command = child.call_args.args[0]
             if name == "train":
                 self.assertEqual(command[command.index("-m") + 1], "rl_zoo3.train")
-                self.assertEqual(command[command.index("--log-folder") + 1], RUN)
+                self.assertEqual(command[command.index("--log-folder") + 1], TRAIN_RUN)
+                self.assertEqual(command[command.index("--conf-file") + 1], "experiments/sb3_manual/ddpg_aggregate/zoo_ddpg.yml")
+                self.assertEqual(command[command.index("--device") + 1], "cuda")
+                self.assertNotIn("--trained-agent", command)
+                self.assertNotIn("-i", command)
                 self.assertIn("--save-replay-buffer", command)
             else:
                 self.assertTrue(command[command.index("--model-path") + 1].replace("\\", "/").endswith(model_suffix))
