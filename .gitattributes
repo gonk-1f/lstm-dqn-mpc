@@ -2,3 +2,5 @@ data/processed/operating_dataset_final/** -text
 data/processed/operating_dataset_independent_v2/** -text
 data/processed/operating_dataset_v6_1s/** -text
 docs/results/v4_minimal3_control_per_100r_analysis_20261016/** -text
+# Preserve historical artifact bytes, including original line endings/spacing.
+docs/results/ddpg_v5_500ep_20261105/** -text -whitespace

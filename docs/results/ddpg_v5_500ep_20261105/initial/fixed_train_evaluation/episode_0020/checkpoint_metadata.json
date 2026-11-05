@@ -1,0 +1,24 @@
+{
+  "completed_episodes": 20,
+  "environment_steps": 185160,
+  "adam_updates": 5630,
+  "clock_phase": "after_env_step_before_replay_insert_and_rollout_adam_update",
+  "sample_id": "parent_005_seg01",
+  "reward_identity": {
+    "reward_version": "ddpg_economic_negative_no_start_stop_v5",
+    "c_ref": 0.14112952687229602,
+    "c_ref_used_in_reward": false,
+    "failure_reward": -2000.0,
+    "config_sha256": "3b8ff7f8276b2b69d1f0cdb0fbaef7b01cbdb4a2515f5107a7d7efac3e9b68e1",
+    "formula": "-(C_H2+C_bat_eq+C_LB_deg+C_FC_transient+C_FC_low+C_FC_high)",
+    "fc_degradation_cost_allocation": "raw interval voltage-loss proportions of the original EOL-capped ledger cost; start/stop excluded only from reward",
+    "fuel_cell_degradation_model": "aggregate_four_condition_mylonopoulos_eol_142500_uv_v3",
+    "fuel_cell_eol_voltage_loss_uv": 142500.0,
+    "battery_current_accounting": "soc_delta_cell_current_v1",
+    "eta_fc_avg": 0.5755641791002982,
+    "battery_equivalence": "signed SOC cell-energy delta / fixed eta_fc_avg / LHV; Zhou Eq. (25), k=1; no extra battery/DC-DC efficiency",
+    "fc_ramp_limit_kw_per_s": null,
+    "observation_version": "soc_load_prev_fc_load_delta_elapsed_hours_v1",
+    "critic_loss": "huber_delta_1_v1"
+  }
+}

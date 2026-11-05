@@ -1,0 +1,33 @@
+{
+  "paused_at_local": "2026-11-05 01:08:25 Asia/Shanghai",
+  "branch": "feat/sb3-ddpg-aggregate",
+  "git_commit": "200dcfd87f9ed17486eca5cf8bf7062f5d34614c",
+  "completed_episodes": 195,
+  "num_timesteps": 1806496,
+  "adam_updates": 56297,
+  "replay_size": 1000000,
+  "replay_position": 806496,
+  "partial_episode_executed_steps": 1186,
+  "resume_semantics": "Continue model, optimizers, replay and counters; environment resets to a new voyage. No repeated learning_starts warmup. Global episode limit remains 500.",
+  "model_path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\ddpg_fixed_parent_005_seg01_500ep_economic_v3\\ddpg\\AggregateShipDDPG-v0_4\\AggregateShipDDPG-v0.zip",
+  "replay_path": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\outputs\\ddpg_fixed_parent_005_seg01_500ep_economic_v3\\ddpg\\AggregateShipDDPG-v0_4\\replay_buffer.pkl",
+  "model_sha256": "c65d4c10d6d52a4b20ca6e9c7dc777ceb379986f220d2ee1decc52d62f8ca424",
+  "replay_sha256": "c89c5661b0dbc39cca02003ce807cccb00f5c70d7dd6ea290673d703e7035d03",
+  "reward_identity": {
+    "reward_version": "ddpg_economic_negative_no_start_stop_v5",
+    "c_ref": 0.14112952687229602,
+    "c_ref_used_in_reward": false,
+    "failure_reward": -2000.0,
+    "config_sha256": "3b8ff7f8276b2b69d1f0cdb0fbaef7b01cbdb4a2515f5107a7d7efac3e9b68e1",
+    "formula": "-(C_H2+C_bat_eq+C_LB_deg+C_FC_transient+C_FC_low+C_FC_high)",
+    "fc_degradation_cost_allocation": "raw interval voltage-loss proportions of the original EOL-capped ledger cost; start/stop excluded only from reward",
+    "fuel_cell_degradation_model": "aggregate_four_condition_mylonopoulos_eol_142500_uv_v3",
+    "fuel_cell_eol_voltage_loss_uv": 142500.0,
+    "battery_current_accounting": "soc_delta_cell_current_v1",
+    "eta_fc_avg": 0.5755641791002982,
+    "battery_equivalence": "signed SOC cell-energy delta / fixed eta_fc_avg / LHV; Zhou Eq. (25), k=1; no extra battery/DC-DC efficiency",
+    "fc_ramp_limit_kw_per_s": null,
+    "observation_version": "soc_load_prev_fc_load_delta_elapsed_hours_v1",
+    "critic_loss": "huber_delta_1_v1"
+  }
+}

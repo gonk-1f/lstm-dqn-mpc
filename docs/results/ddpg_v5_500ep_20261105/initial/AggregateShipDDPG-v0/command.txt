@@ -1,0 +1,1 @@
+D:\py\Python3\python.exe -u -m rl_zoo3.train --algo ddpg --env AggregateShipDDPG-v0 --gym-packages experiments.sb3_manual.ddpg_aggregate.zoo_register --conf-file experiments/sb3_manual/ddpg_aggregate/zoo_ddpg.yml --device cuda --eval-freq -1 --seed 42 --log-folder outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v3 --save-replay-buffer

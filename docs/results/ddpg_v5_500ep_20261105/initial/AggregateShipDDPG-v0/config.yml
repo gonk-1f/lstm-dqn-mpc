@@ -1,0 +1,42 @@
+!!python/object/apply:collections.OrderedDict
+- - - batch_size
+    - 64
+  - - buffer_size
+    - 1000000
+  - - callback
+    - - experiments.sb3_manual.ddpg_aggregate.fixed_train_eval.FixedTrainEvaluationCallback:
+          every_episodes: 20
+      - experiments.sb3_manual.ddpg_aggregate.periodic_validation.EpisodeValidationCallback:
+          every_episodes: 100
+          max_episodes: 500
+      - stable_baselines3.common.callbacks.StopTrainingOnMaxEpisodes:
+          max_episodes: 500
+          verbose: 1
+  - - env_kwargs
+    - data_root: data/processed/operating_dataset_v6_1s
+      fixed_train_id: parent_005_seg01
+      split: train
+  - - gamma
+    - 1.0
+  - - gradient_steps
+    - 1
+  - - learning_rate
+    - 0.001
+  - - learning_starts
+    - 5000
+  - - n_envs
+    - 1
+  - - n_timesteps
+    - 20000000
+  - - noise_std
+    - 0.1
+  - - noise_type
+    - normal
+  - - policy
+    - MlpPolicy
+  - - policy_kwargs
+    - dict(net_arch=[256, 256])
+  - - tau
+    - 0.01
+  - - train_freq
+    - 32
