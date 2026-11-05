@@ -8,7 +8,7 @@ from pathlib import Path
 
 from stable_baselines3 import DDPG
 from .env import AggregateDDPGEnv
-from .validate import ACCOUNTING_FIELDS, step_accounting
+from .validate import ACCOUNTING_FIELDS, SHUTDOWN_FIELDS, step_accounting
 from .economic_reward import evaluation_identity
 
 
@@ -30,7 +30,7 @@ def main():
         "delta_fc_kw", "fc_ramp_penalty", "projected",
         "feasible_fc_lower_kw", "feasible_fc_upper_kw", "reward", "terminal_reason",
         "fc_efficiency_actual", "equivalent_fc_efficiency",
-    ) + ACCOUNTING_FIELDS
+    ) + ACCOUNTING_FIELDS + SHUTDOWN_FIELDS + ("reward_is_failure_override",)
     try:
         for _ in range(len(env.episodes)):
             obs, _ = env.reset()

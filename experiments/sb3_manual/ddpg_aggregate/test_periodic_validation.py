@@ -69,7 +69,9 @@ def validation_subprocess(command, **kwargs):
         "battery_degradation_cost_cny": 3.0, "c_bat_eq_cny": 0.25,
         "fuel_cell_transient_cost_cny": 0.5, "fuel_cell_low_load_cost_cny": 0.25,
         "fuel_cell_high_load_cost_cny": 0.25, "fuel_cell_start_stop_cost_cny": 1.0,
-        "total_cost_cny": 6.25, "reward_total_cost_cny": 5.25,
+        "total_cost_cny": 6.25, "reward_economic_cost_cny": 5.25,
+        "soc_deviation_penalty_cny": 0.025, "reward_total_cost_cny": 5.275,
+        "fc_shutdowns": 1, "fc_start_stop_cycles": 1,
     } for index in range(8)]
     metrics = {
         "validation_voyages": 8, "validation_set_complete": True,

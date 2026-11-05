@@ -53,19 +53,21 @@ elapsed_seconds/3600]`五维状态，每条航段首步负载变化量为0，运
 - `test_soc_curves.png`：各航段 SOC 轨迹与终止原因。
 
 电池母线功率正值为放电、负值为充电。失败调用如未执行物理动作，不制造新的
-执行时间、电池功率、氢耗或经济成本；失败奖励仍计入 Episode Reward。
+执行时间、电池功率或氢耗；独立关闭事件的真实成本仍保存，失败奖励计入Episode Reward。
 
 成本复用现有聚合 FC/电池经济模型，不是逐堆实测退化成本，未结算末端 SOC 恢复。
 失败前缀不能当成完成整条航段的成本，与其他模型比较时应先看完成状态和覆盖率。
 
 ## 当前经济奖励与模型身份
 
-奖励版本为 `ddpg_economic_negative_no_start_stop_v5`。正常奖励为：
-`-(C_H2+C_bat_eq+C_LB_deg+C_FC_transient+C_FC_low+C_FC_high)`。
-六项成本零值对应奖励0；有限有符号合计直接取负，不使用tanh、倒数或C_ref缩放。
+奖励版本为 `ddpg_economic_env_cycle_soc_v6`。正常奖励为：
+`-(C_H2+C_bat_eq+C_LB_deg+C_FC_transient+C_FC_low+C_FC_high+10*(SOC_next-0.5)**2)`。
+每个真实执行步只计算一次SOC惩罚，不使用tanh、倒数或C_ref缩放。
 非有限值报错，完整经济账本的原有负值检查不变。
-真实物理不可行失败奖励为 -2000，失败调用不制造物理经济成本。
-不再包含独立SOC目标偏差成本；电池退化模型内部的SOC应力函数仍保留。
+真实物理不可行失败奖励固定为-20000，不附加SOC或经济奖励。
+环境在reset管理启动，0 kW为on/idle；结束时以零时长事件关闭FC/LB并保留SOC，
+每条航段只结算一次完整启停循环。正常完成的关闭变载计入最后真实执行步的奖励，循环成本只入经济账本。
+失败关闭仍记录真实事件成本，不伪造氢耗、电池能量或新的执行区间。
 
 `C_ref` 仅保留原Train35标定历史元数据，不参与当前奖励；未使用Validation/Test标定。
 FC累计电压损失报废阈值为142500 μV；保留四工况系数、设备价和50%更换比例。
@@ -74,11 +76,13 @@ FC累计电压损失报废阈值为142500 μV；保留四工况系数、设备�
 
 电池等效项固定使用`eta_fc_avg=0.5755641791002982`；FC实际氢耗仍用当前功率点效率。
 电池等效氢耗保持放电正、充电负的符号，不重复计算效率损失。
-`total_cost_cny`保存含FC启停的完整经济总额，`reward_total_cost_cny`保存不含启停的六项奖励成本。
-FC四工况累计电压损失及完整账本保持不变，四类成本按本步raw损失占比分摊共同EOL裁剪。
+`total_cost_cny`保存含FC循环结算的完整经济总额，不含SOC惩罚；
+`reward_economic_cost_cny`保存六项经济成本，`soc_deviation_penalty_cny`独立记录SOC项，
+`reward_total_cost_cny`为两者之和。FC四工况系数及共同EOL封顶不变。
 逐秒CSV记录`fuel_cell_transient_cost_cny`、`fuel_cell_low_load_cost_cny`、
 `fuel_cell_high_load_cost_cny`、`fuel_cell_start_stop_cost_cny`及`battery_current_a`，
-不导出独立SOC惩罚字段。
+并导出SOC及关闭事件明细。最后真实区间的FC/LB功率保留；
+关闭后零功率另存`post_shutdown_*_kw`，图上以同一时刻的零时长关闭点表示。
 
 仅加载完整奖励与标定身份一致的新版本模型，旧线性、旧tanh及无身份模型均拒绝。
 新训练默认输出为 `outputs/ddpg_fixed_parent_005_seg01_500ep_economic_v3`；

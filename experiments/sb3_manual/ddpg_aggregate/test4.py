@@ -12,7 +12,8 @@ import time
 
 # Import the existing entry's path bootstrap and accounting/integrity helpers.
 from .validate import (
-    ACCOUNTING_FIELDS, STEP_FIELDS, DEFAULT_DATA_ROOT, ENV_ID, PROJECT_ROOT,
+    ACCOUNTING_FIELDS, STEP_FIELDS, SHUTDOWN_FIELDS, ECONOMIC_COST_SCOPE,
+    DEFAULT_DATA_ROOT, ENV_ID, PROJECT_ROOT,
     C_REF, RAMP_WEIGHT, FAILURE_REWARD,
     _model_snapshot, step_accounting,
 )
@@ -80,6 +81,8 @@ def run_test4(
             "environment_reward": {
                 "c_ref": C_REF,
                 "c_ref_used_in_reward": False,
+                "soc_deviation_weight": env.reward_identity["soc_deviation_weight"],
+                "soc_reference": env.reward_identity["soc_reference"],
                 "ramp_weight": RAMP_WEIGHT, "failure_reward": FAILURE_REWARD,
             },
         }
@@ -124,9 +127,11 @@ def run_test4(
                         evaluation_truncated=False, **accounting,
                     )
                     writer.writerow(step)
+                    for name in ACCOUNTING_FIELDS:
+                        totals[name] += accounting[name]
+                    if info.get("shutdown_executed"):
+                        trace["shutdown_event"] = {name: info[name] for name in SHUTDOWN_FIELDS}
                     if executed:
-                        for name in ACCOUNTING_FIELDS:
-                            totals[name] += accounting[name]
                         trace["time_s"].append(float(env.index))
                         trace["soc"].append(float(env.physical.soc))
                         trace["interval_start_s"].append(float(interval_start))
@@ -188,7 +193,7 @@ def run_test4(
             "mean_full_voyage_economic_cost_cny": (
                 sum(row["total_cost_cny"] for row in rows) / 4 if successes == 4 else None
             ),
-            "economic_cost_scope": "total_cost_cny includes H2, fixed-average-efficiency signed battery equivalence, battery degradation and complete four-condition FC degradation. reward_total_cost_cny excludes only FC start/stop degradation; the other six costs are counted once. No independent SOC penalty or unexecuted failure costs.",
+            "economic_cost_scope": ECONOMIC_COST_SCOPE,
             "battery_power_sign": "Positive bus power = discharge; negative = charge. Energy fields are positive gross bus kWh.",
             "vecnormalize_training": False if normalizer is not None else None,
             "vecnormalize_norm_reward": False if normalizer is not None else None,

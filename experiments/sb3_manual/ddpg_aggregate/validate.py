@@ -35,8 +35,21 @@ ACCOUNTING_FIELDS = (
     "h2_cost_cny", "fuel_cell_degradation_cost_cny",
     "battery_degradation_cost_cny", "shore_cost_cny", "c_bat_eq_cny",
     "battery_equivalent_hydrogen_kg", "physical_economic_cost_cny", "total_cost_cny",
-    "reward_total_cost_cny",
+    "reward_economic_cost_cny", "soc_deviation_penalty_cny", "reward_total_cost_cny",
 ) + FC_DEGRADATION_COST_FIELDS
+SHUTDOWN_FIELDS = (
+    "shutdown_executed", "shutdown_time_s", "shutdown_duration_s",
+    "post_shutdown_fc_kw", "post_shutdown_battery_kw", "physical_fc_on",
+    "shutdown_delta_fc_kw", "shutdown_fc_transient_cost_cny",
+    "shutdown_fc_start_stop_cost_cny", "shutdown_economic_cost_cny",
+)
+ECONOMIC_COST_SCOPE = (
+    "total_cost_cny includes complete physical economic costs and the zero-duration "
+    "shutdown/cycle settlement, but no SOC penalty. reward_economic_cost_cny excludes "
+    "FC cycle cost; reward_total_cost_cny adds the separate SOC deviation penalty. "
+    "Failure reward is fixed and does not enter the economic ledger. Shutdown consumes "
+    "no physical time, hydrogen or battery energy."
+)
 STEP_FIELDS = (
     "episode", "sample_id", "step_index", "interval_start_s", "interval_end_s",
     "step_executed", "actor_action", "load_kw", "requested_fc_kw",
@@ -45,14 +58,15 @@ STEP_FIELDS = (
     "feasible_fc_upper_kw", "reward", "terminal_reason", "terminated",
     "truncated", "evaluation_truncated",
     "fc_efficiency_actual", "equivalent_fc_efficiency",
-) + ACCOUNTING_FIELDS
+    "fc_start_stop_cycles", "fc_cumulative_voltage_loss_uv", "reward_is_failure_override",
+) + ACCOUNTING_FIELDS + SHUTDOWN_FIELDS
 
 
 def step_accounting(env, before, info) -> dict:
     """Export the environment's actual economic calculation without recomputing it."""
-    if info.get("terminal_reason") == "no_feasible_physical_power":
-        return dict.fromkeys(ACCOUNTING_FIELDS)
-    battery = info["battery_actual_kw"]
+    # A failed action executes no interval, but can still close the FC cycle.
+    # Export that event's costs without inventing hydrogen or battery throughput.
+    battery = info["battery_actual_kw"] if info["step_executed"] else 0.0
     return {
         **{name: info[name] for name in ACCOUNTING_FIELDS if name not in (
             "battery_charge_bus_kwh", "battery_discharge_bus_kwh"
@@ -199,9 +213,11 @@ def run_validation(
                         **accounting,
                     )
                     writer.writerow(step)
+                    for name in ACCOUNTING_FIELDS:
+                        totals[name] += accounting[name]
+                    if info.get("shutdown_executed"):
+                        trace["shutdown_event"] = {name: info[name] for name in SHUTDOWN_FIELDS}
                     if executed:
-                        for name in ACCOUNTING_FIELDS:
-                            totals[name] += accounting[name]
                         trace["time_s"].append(float(vessel.index))
                         trace["soc"].append(float(vessel.physical.soc))
                         trace["interval_start_s"].append(float(interval_start))
@@ -270,7 +286,7 @@ def run_validation(
                 sum(r["total_cost_cny"] for r in rows) / 8
                 if validation_set_complete and successes == 8 else None
             ),
-            "economic_cost_scope": "total_cost_cny includes H2, fixed-average-efficiency signed battery equivalence, battery degradation and complete four-condition FC degradation. reward_total_cost_cny excludes only FC start/stop degradation; the other six costs are counted once. No independent SOC penalty or unexecuted failure costs.",
+            "economic_cost_scope": ECONOMIC_COST_SCOPE,
             "unavailable_metrics": {
                 "terminal_soc_restoration_cost_cny": "Not performed by the existing environment.",
                 "stack_resolved_degradation_cost_cny": "No per-stack physical/health model in this environment.",
@@ -279,6 +295,8 @@ def run_validation(
             "environment_reward": {
                 "c_ref": C_REF,
                 "c_ref_used_in_reward": False,
+                "soc_deviation_weight": vessel.reward_identity["soc_deviation_weight"],
+                "soc_reference": vessel.reward_identity["soc_reference"],
                 "ramp_weight": RAMP_WEIGHT, "failure_reward": FAILURE_REWARD,
             },
             "integrity": integrity, "model_before": before_model, "model_after": after_model,

@@ -60,15 +60,22 @@ class ValidationTests(unittest.TestCase):
         self.assertAlmostEqual(result["battery_charge_bus_kwh"], max(-battery_kw, 0) / 3600)
         self.assertAlmostEqual(result["battery_discharge_bus_kwh"], max(battery_kw, 0) / 3600)
 
-    def test_unexecuted_failure_has_no_physical_accounting(self):
+    def test_unexecuted_failure_exports_shutdown_cost_without_physical_supply(self):
         env = self.make_env()
         before = env.physical
-        info = {"terminal_reason": "no_feasible_physical_power", "fc_actual_kw": 0.0}
+        from .economic_reward import shutdown_economic_components
+        _, costs = shutdown_economic_components(env.physics, before)
+        info = {**costs, "terminal_reason": "no_feasible_physical_power",
+                "fc_actual_kw": 0.0, "step_executed": False}
         with mock.patch.object(env.physics, "interval",
                                side_effect=AssertionError("Unexecuted physical interval")):
             result = self.validation.step_accounting(env, before, info)
         self.assertTrue(result)
-        self.assertTrue(all(value is None for value in result.values()))
+        self.assertEqual(result["total_cost_cny"], costs["total_cost_cny"])
+        self.assertGreater(result["fuel_cell_start_stop_cost_cny"], 0.0)
+        for name in ("hydrogen_mass_kg", "battery_charge_bus_kwh", "battery_discharge_bus_kwh",
+                     "battery_degradation_cost_cny", "soc_deviation_penalty_cny"):
+            self.assertEqual(result[name], 0.0)
         self.assertIs(env.physical, before)
         self.assertEqual(env.index, 0)
 

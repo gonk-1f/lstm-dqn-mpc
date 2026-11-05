@@ -9,6 +9,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+def draw_shutdown_event(axes, trace, colors):
+    """Mark a zero-time terminal event without changing the real interval curves."""
+    event = trace.get("shutdown_event")
+    if event is None:
+        return
+    time_min = float(event["shutdown_time_s"]) / 60.0
+    for axis_index, field, post_field, label in (
+        (0, "fc_kw", "post_shutdown_fc_kw", "FC"),
+        (1, "battery_kw", "post_shutdown_battery_kw", "LB"),
+        (2, "fc_kw", "post_shutdown_fc_kw", "FC"),
+        (2, "battery_kw", "post_shutdown_battery_kw", "LB"),
+    ):
+        final = float(event[post_field])
+        previous = trace[field][-1] if trace[field] else final
+        ax = axes[axis_index]
+        ax.plot([time_min, time_min], [previous, final], linestyle="--",
+                color=colors[field], linewidth=0.9)
+        ax.scatter([time_min], [final], marker="x", s=24, color=colors[field],
+                   label=f"{label} shutdown (dt=0)", zorder=4)
+
+
 def save_validation_plots(rows, traces, output_dir, validation_set_complete):
     plt.rcParams.update({
         "font.size": 9, "axes.spines.top": False, "axes.spines.right": False,
@@ -44,6 +65,7 @@ def save_validation_plots(rows, traces, output_dir, validation_set_complete):
             for ax in plot_axes:
                 ax.text(0.5, 0.5, "No physical interval executed", transform=ax.transAxes,
                         ha="center", va="center")
+            draw_shutdown_event(plot_axes, trace, colors)
             continue
         times = np.array(trace["interval_start_s"] + [trace["time_s"][-1]]) / 60.0
 
@@ -56,6 +78,7 @@ def save_validation_plots(rows, traces, output_dir, validation_set_complete):
         line(plot_axes[2], "load_kw", "Load")
         line(plot_axes[2], "fc_kw", "FC")
         line(plot_axes[2], "battery_kw", "LB")
+        draw_shutdown_event(plot_axes, trace, colors)
         plot_axes[2].legend(loc="upper right", fontsize=7, ncol=3)
     for ax, title in zip(axes[0], ("Fuel cell", "Battery bus (+ discharge / - charge)",
                                   "Load and power allocation")):

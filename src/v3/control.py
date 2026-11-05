@@ -133,8 +133,9 @@ class EconomicMPC:
         self.fc_mapping = formal_aggregate_fc_power_mapping()
 
     def interval(self, state: AccountState, fc_kw: float, load_kw: float, *,
-                 duration_s: float = DT_SECONDS) -> tuple[AccountState, RawCnyIntervalLedger, float]:
-        """One shared accounting function for prediction and actual execution."""
+                 duration_s: float = DT_SECONDS, fc_is_on: bool | None = None,
+                 fc_start_stop_cycles: int | None = None) -> tuple[AccountState, RawCnyIntervalLedger, float]:
+        """Shared interval physics, with optional externally managed FC lifecycle."""
         fc = float(fc_kw)
         load = float(load_kw)
         duration = float(duration_s)
@@ -146,8 +147,12 @@ class EconomicMPC:
         soc = next_soc(state.soc, batt, duration, self.plant.battery_nominal_energy_kwh, efficiency=self.efficiency)
         fc_step = formal_aggregate_fc_voltage_loss_step_uv(
             state.previous_fc_kw, fc, duration, self.plant.fuel_cell_rated_total_kw,
-            is_on=fc > 0.0, mapping=self.fc_mapping,
-            aggregate_start_stop_cycles=aggregate_start_cycle_count(state.previous_fc_kw, fc),
+            is_on=fc > 0.0 if fc_is_on is None else fc_is_on,
+            mapping=self.fc_mapping,
+            aggregate_start_stop_cycles=(
+                aggregate_start_cycle_count(state.previous_fc_kw, fc)
+                if fc_start_stop_cycles is None else fc_start_stop_cycles
+            ),
         )
         battery_step = battery_degradation_step(
             state.soc, battery_current_from_soc_change(

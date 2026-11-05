@@ -48,7 +48,7 @@ class EpisodeValidationCallback(BaseCallback):
             raise ValueError("Legacy reward checkpoint cannot resume economic-reward training")
         self.model._ddpg_completed_episodes = self.completed_episodes
         self.model._ddpg_reward_identity = identity
-        for name in ("eta_fc_avg",):
+        for name in ("eta_fc_avg", "soc_deviation_weight", "soc_reference"):
             if name in identity:
                 self.logger.record(f"reward/{name}", identity[name])
         if self.verbose:
@@ -70,9 +70,15 @@ class EpisodeValidationCallback(BaseCallback):
                 "h2_cost_cny", "fuel_cell_degradation_cost_cny",
                 "battery_degradation_cost_cny", "battery_current_a", "total_cost_cny",
                 "reward_total_cost_cny",
+                "reward_economic_cost_cny", "soc_deviation_penalty_cny",
+                "shutdown_fc_transient_cost_cny", "shutdown_fc_start_stop_cost_cny",
+                "shutdown_economic_cost_cny",
             ) + FC_DEGRADATION_COST_FIELDS:
                 if name in info:
                     self.logger.record(f"economics/{name}", info[name])
+            for name in ("physical_fc_on", "fc_start_stop_cycles"):
+                if name in info:
+                    self.logger.record(f"vessel/{name}", info[name])
         ended = int(np.count_nonzero(self.locals["dones"]))
         if ended:
             self.completed_episodes += ended
@@ -140,6 +146,10 @@ class EpisodeValidationCallback(BaseCallback):
             **components,
             **{f"total_{name}": sum(row[name] for row in voyages) for name in FC_DEGRADATION_COST_FIELDS},
             "total_reward_cost_cny": sum(row["reward_total_cost_cny"] for row in voyages),
+            "total_reward_economic_cost_cny": sum(row["reward_economic_cost_cny"] for row in voyages),
+            "total_soc_deviation_penalty_cny": sum(row["soc_deviation_penalty_cny"] for row in voyages),
+            "total_fc_shutdowns": sum(row["fc_shutdowns"] for row in voyages),
+            "total_fc_start_stop_cycles": sum(row["fc_start_stop_cycles"] for row in voyages),
             "total_economic_cost_cny": total_economic_cost,
             "mean_full_voyage_economic_cost_cny": (
                 total_economic_cost / 8 if all(row["completed"] for row in voyages) else None

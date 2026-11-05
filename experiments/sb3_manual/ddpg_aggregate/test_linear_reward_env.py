@@ -11,7 +11,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "src"))
-from .env import AggregateDDPGEnv, ECONOMIC_SUM_FIELDS
+from .env import AggregateDDPGEnv
 from v3.control import AccountState, SOC_MIN
 
 
@@ -36,42 +36,61 @@ class NegativeEconomicRewardEnvironmentTests(unittest.TestCase):
             "fuel_cell_transient_cost_cny", "fuel_cell_low_load_cost_cny",
             "fuel_cell_high_load_cost_cny",
         ))
-        self.assertAlmostEqual(info["reward_total_cost_cny"], reward_cost)
+        self.assertAlmostEqual(info["reward_economic_cost_cny"], reward_cost)
+        self.assertAlmostEqual(info["soc_deviation_penalty_cny"], 10.0 * (info["soc"] - 0.5) ** 2)
+        self.assertAlmostEqual(info["reward_total_cost_cny"], reward_cost + info["soc_deviation_penalty_cny"])
         self.assertAlmostEqual(cost, reward_cost + info["fuel_cell_start_stop_cost_cny"])
         self.assertEqual(reward, -info["reward_total_cost_cny"])
 
-    def test_normal_step_excludes_start_stop_from_reward_but_not_ledger(self):
+    def test_normal_step_defers_start_stop_cycle_until_shutdown(self):
         _, reward, terminated, truncated, info = self.env.step([0.0])
         self.assertTrue(info["step_executed"])
         self.assertEqual(info["fc_actual_kw"], 300.0)
         self.assertEqual(info["delta_fc_kw"], 300.0)
         self.assertIsNone(self.env.reward_identity["fc_ramp_limit_kw_per_s"])
         self.assertFalse(terminated or truncated)
-        self.assertGreater(info["fuel_cell_start_stop_cost_cny"], 0.0)
+        self.assertEqual(info["fuel_cell_start_stop_cost_cny"], 0.0)
+        self.assertTrue(self.env.physical_fc_on)
+        self.assertEqual(self.env.starts, 1)
         self.check_normal_reward(reward, info)
         self.assertEqual(self.env.index, 1)
         self.assertEqual(self.env.economic_totals["total_cost_cny"], info["total_cost_cny"])
 
-    def test_idle_at_initial_soc_has_zero_cost_and_reward_zero(self):
+    def test_idle_at_initial_soc_is_on_with_runtime_cost_and_soc_penalty(self):
         # The first fixed-voyage load is the recorded zero.
         _, reward, terminated, truncated, info = self.env.step([-1.0])
         self.assertEqual(info["load_kw"], 0.0)
         self.assertEqual(info["soc"], 0.6)
-        self.assertEqual(info["total_cost_cny"], 0.0)
-        self.assertEqual(reward, 0.0)
+        self.assertGreater(info["fuel_cell_low_load_cost_cny"], 0.0)
+        self.assertEqual(info["fuel_cell_start_stop_cost_cny"], 0.0)
+        self.assertTrue(info["physical_fc_on"])
+        self.assertAlmostEqual(info["soc_deviation_penalty_cny"], 0.1)
         self.assertFalse(terminated or truncated)
         self.check_normal_reward(reward, info)
 
-    def test_normal_terminal_step_has_no_extra_terminal_reward(self):
+    def test_normal_terminal_step_settles_zero_duration_shutdown_once(self):
         self.env.index = len(self.env.episode.load_kw) - 1
         self.env.physical = AccountState(soc=0.6, previous_fc_kw=300.0)
         _, reward, terminated, truncated, info = self.env.step([0.0])
         self.assertTrue(terminated)
         self.assertFalse(truncated)
         self.assertTrue(info["vessel_episode"]["completed"])
+        self.assertTrue(info["shutdown_executed"])
+        self.assertEqual(info["shutdown_duration_s"], 0.0)
+        self.assertGreater(info["shutdown_fc_transient_cost_cny"], 0.0)
+        self.assertGreater(info["fuel_cell_start_stop_cost_cny"], 0.0)
+        self.assertEqual(self.env.index, len(self.env.episode.load_kw))
+        self.assertEqual(self.env.physical.previous_fc_kw, 0.0)
+        self.assertEqual(self.env.battery_power_kw, 0.0)
+        self.assertFalse(self.env.physical_fc_on)
+        self.assertEqual(info["vessel_episode"]["fc_start_stop_cycles"], 1)
+        self.assertEqual(info["fc_actual_kw"], 300.0)
+        self.assertEqual(info["soc"], self.env.physical.soc)
+        with self.assertRaises(RuntimeError):
+            self.env.step([0.0])
         self.check_normal_reward(reward, info)
 
-    def test_infeasible_step_is_minus_2000_without_physics_or_compensation(self):
+    def test_infeasible_step_is_minus_20000_without_physics_or_compensation(self):
         self.env.index = int(np.flatnonzero(self.env.episode.load_kw > self.env.plant.fuel_cell_rated_total_kw)[0])
         self.env.physical = AccountState(soc=SOC_MIN, previous_fc_kw=0.0)
         index = self.env.index
@@ -80,16 +99,23 @@ class NegativeEconomicRewardEnvironmentTests(unittest.TestCase):
              patch("experiments.sb3_manual.ddpg_aggregate.env.economic_reward",
                    side_effect=AssertionError("No failed-step economic reward or compensation")):
             _, reward, terminated, truncated, info = self.env.step([0.0])
-        self.assertEqual(reward, -2000.0)
+        self.assertEqual(reward, -20000.0)
         self.assertTrue(terminated)
         self.assertFalse(truncated)
         self.assertFalse(info["step_executed"])
         self.assertEqual(info["terminal_reason"], "no_feasible_physical_power")
         self.assertNotIn("battery_actual_kw", info)
-        self.assertIs(self.env.physical, state)
+        self.assertEqual(self.env.physical.soc, state.soc)
+        self.assertEqual(self.env.physical.battery_weighted_ah, state.battery_weighted_ah)
+        self.assertAlmostEqual(self.env.physical.fc_loss_uv - state.fc_loss_uv, 23.91)
+        self.assertFalse(self.env.physical_fc_on)
         self.assertEqual(self.env.index, index)
-        self.assertTrue(all(self.env.economic_totals[key] == 0 for key in ECONOMIC_SUM_FIELDS))
-        self.assertEqual(info["vessel_episode"]["reward_sum"], -2000.0)
+        self.assertEqual(info["soc_deviation_penalty_cny"], 0.0)
+        self.assertEqual(info["h2_cost_cny"], 0.0)
+        self.assertTrue(info["reward_is_failure_override"])
+        self.assertGreater(info["total_cost_cny"], 0.0)
+        self.assertEqual(self.env.economic_totals["total_cost_cny"], info["total_cost_cny"])
+        self.assertEqual(info["vessel_episode"]["reward_sum"], -20000.0)
 
 
 if __name__ == "__main__":

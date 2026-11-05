@@ -1,8 +1,9 @@
 {
-  "reward_version": "ddpg_economic_negative_no_start_stop_v5",
+  "reward_version": "ddpg_economic_env_cycle_soc_v6",
   "c_ref": 0.14112952687229602,
-  "failure_reward": -2000.0,
-  "reward_cost_scope": "negative sum of H2, signed battery equivalent H2, battery degradation and FC transient/low/high degradation; no FC start/stop, SOC penalty or scaling",
+  "failure_reward": -20000.0,
+  "reward_cost_scope": "negative sum of H2, signed battery equivalent H2, battery degradation, FC transient/low/high degradation and soc_deviation_weight*(SOC_next-0.5)^2; one terminal start-stop cycle remains physical-only; no scaling",
+  "soc_deviation_weight": 10.0,
   "eta_fc_avg": 0.5755641791002982,
   "eta_fc_avg_calibration": {
     "method": "trapezoidal integral(P dP) / integral(P/eta(P) dP), using the existing positive-power formal curve knots",

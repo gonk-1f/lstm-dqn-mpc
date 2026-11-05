@@ -32,7 +32,7 @@ def main() -> int:
         "--n-evaluations", "2",
         "--eval-env-kwargs", "data_root:'data/processed/operating_dataset_v6_1s'", "split:'validation'",
         "--storage", "sqlite:///outputs/ddpg_optuna_economic_v3/study.db",
-        "--study-name", "ddpg_tau_noise_economic_negative_no_start_stop_v5_obs5_huber1",
+        "--study-name", "ddpg_tau_noise_economic_env_cycle_soc_v6_obs5_huber1",
         "--optimization-log-path", "outputs/ddpg_optuna_economic_v3/evaluations",
         "--log-folder", "outputs/ddpg_optuna_economic_v3/logs",
         "--device", "cuda",

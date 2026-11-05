@@ -18,7 +18,8 @@ from v4.v6_dataset import V6TrainingDataset
 from .economic_reward import (
     load_reward_config, reward_identity,
     interval_economic_components, economic_reward, FAILURE_REWARD,
-    FC_DEGRADATION_COST_FIELDS,
+    shutdown_economic_components, FC_DEGRADATION_COST_FIELDS,
+    SOC_DEVIATION_WEIGHT, SOC_REFERENCE,
 )
 from .huber_ddpg import CRITIC_LOSS_ID
 
@@ -31,7 +32,7 @@ ECONOMIC_SUM_FIELDS = (
     "hydrogen_mass_kg", "h2_cost_cny", "fuel_cell_degradation_cost_cny",
     "battery_degradation_cost_cny", "shore_cost_cny", "physical_economic_cost_cny",
     "c_bat_eq_cny", "battery_equivalent_hydrogen_kg", "total_cost_cny",
-    "reward_total_cost_cny",
+    "reward_economic_cost_cny", "soc_deviation_penalty_cny", "reward_total_cost_cny",
 ) + FC_DEGRADATION_COST_FIELDS
 
 
@@ -93,6 +94,11 @@ class AggregateDDPGEnv(gym.Env):
         self.index = 0
         self.terminated = True
         self.starts = 0
+        self.physical_fc_on = False
+        self._cycle_settled = False
+        self.battery_power_kw = 0.0
+        self.last_interval_fc_kw = 0.0
+        self.last_interval_battery_kw = 0.0
         self.ramp_sq_sum = 0.0
         self.reward_sum = 0.0
         self.soc_min_seen = 0.6
@@ -128,7 +134,14 @@ class AggregateDDPGEnv(gym.Env):
         self.physical = AccountState()  # Project's established SOC=0.6, FC=0 initial state
         self.index = 0
         self.terminated = False
-        self.starts = 0
+        # Starting the operating cycle is an environment event, not an Actor action.
+        # Zero output while physically on is idle; settle the full cycle at shutdown.
+        self.starts = 1
+        self.physical_fc_on = True
+        self._cycle_settled = False
+        self.battery_power_kw = 0.0
+        self.last_interval_fc_kw = 0.0
+        self.last_interval_battery_kw = 0.0
         self.ramp_sq_sum = 0.0
         self.reward_sum = 0.0
         self.soc_min_seen = self.physical.soc
@@ -138,7 +151,32 @@ class AggregateDDPGEnv(gym.Env):
         self.equivalent_eta_sum = 0.0
         self.equivalent_eta_min = None
         self.equivalent_eta_max = None
-        return self._observation(), {"sample_id": self.episode.sample_id, "split": self.split}
+        return self._observation(), {
+            "sample_id": self.episode.sample_id, "split": self.split,
+            "physical_fc_on": self.physical_fc_on, "fc_starts": self.starts,
+            "soc_deviation_weight": SOC_DEVIATION_WEIGHT, "soc_reference": SOC_REFERENCE,
+        }
+
+    def _shutdown(self):
+        """Close one operating cycle without executing another physical interval."""
+        if self._cycle_settled:
+            raise RuntimeError("The voyage start-stop cycle has already been settled")
+        final_interval_fc_kw = self.physical.previous_fc_kw
+        self.physical, costs = shutdown_economic_components(self.physics, self.physical)
+        self.physical_fc_on = False
+        self.battery_power_kw = 0.0
+        self._cycle_settled = True
+        return costs, {
+            "shutdown_executed": True,
+            "shutdown_time_s": self.index,
+            "shutdown_duration_s": 0.0,
+            "post_shutdown_fc_kw": 0.0,
+            "post_shutdown_battery_kw": 0.0,
+            "shutdown_delta_fc_kw": -float(final_interval_fc_kw),
+            "shutdown_fc_transient_cost_cny": costs["fuel_cell_transient_cost_cny"],
+            "shutdown_fc_start_stop_cost_cny": costs["fuel_cell_start_stop_cost_cny"],
+            "shutdown_economic_cost_cny": costs["total_cost_cny"],
+        }
 
     def _physically_feasible_fc_range(self, load: float):
         """Continuous intersection of FC rating, battery power and SOC constraints.
@@ -170,7 +208,14 @@ class AggregateDDPGEnv(gym.Env):
             "soc_min": float(self.soc_min_seen),
             "soc_max": float(self.soc_max_seen),
             "fc_final_kw": float(self.physical.previous_fc_kw),
+            "battery_final_kw": float(self.battery_power_kw),
+            "last_interval_fc_kw": float(self.last_interval_fc_kw),
+            "last_interval_battery_kw": float(self.last_interval_battery_kw),
+            "physical_fc_on": self.physical_fc_on,
             "fc_starts": self.starts,
+            "fc_shutdowns": int(self._cycle_settled),
+            "fc_start_stop_cycles": int(self._cycle_settled),
+            "fc_cumulative_voltage_loss_uv": float(self.physical.fc_loss_uv),
             "fc_ramp_rms_kw_per_step": sqrt(self.ramp_sq_sum / steps) if steps else 0.0,
             "power_projection_fraction": self.projection_steps / steps if steps else 0.0,
             "reward_sum": self.reward_sum,
@@ -179,6 +224,8 @@ class AggregateDDPGEnv(gym.Env):
             "min_equivalent_fc_efficiency": self.equivalent_eta_min,
             "max_equivalent_fc_efficiency": self.equivalent_eta_max,
             "reward_version": self.reward_identity["reward_version"],
+            "soc_deviation_weight": SOC_DEVIATION_WEIGHT,
+            "soc_reference": SOC_REFERENCE,
             "c_ref_cny": C_REF,
             "c_ref_used_in_reward": False,
         }
@@ -196,6 +243,12 @@ class AggregateDDPGEnv(gym.Env):
         feasible_lo, feasible_hi = self._physically_feasible_fc_range(load_kw)
         if feasible_lo > feasible_hi + 1e-8:
             self.terminated = True
+            shutdown_costs, shutdown_info = self._shutdown()
+            for name in ECONOMIC_SUM_FIELDS:
+                self.economic_totals[name] += shutdown_costs[name]
+            # A failed, unexecuted action has no SOC penalty or physical supply.
+            # Shutdown life losses remain in accounting; the fixed failure reward
+            # overrides cost-based reward, without rewriting any earlier transition.
             reward = FAILURE_REWARD
             self.reward_sum += reward
             info = {
@@ -208,6 +261,12 @@ class AggregateDDPGEnv(gym.Env):
                 "soc": self.physical.soc,
                 "fc_actual_kw": prev_kw,
                 "step_executed": False,
+                **{name: shutdown_costs[name] for name in ECONOMIC_SUM_FIELDS},
+                **shutdown_info,
+                "physical_fc_on": self.physical_fc_on,
+                "fc_start_stop_cycles": int(self._cycle_settled),
+                "fc_cumulative_voltage_loss_uv": float(self.physical.fc_loss_uv),
+                "reward_is_failure_override": True,
             }
             info["vessel_episode"] = self._episode_summary(False, info["terminal_reason"])
             return self._observation(), reward, True, False, info
@@ -217,7 +276,8 @@ class AggregateDDPGEnv(gym.Env):
         fc_kw = float(np.clip(target_kw, feasible_lo, feasible_hi))
         self.projection_steps += int(abs(fc_kw - target_kw) > 1e-5)
         next_physical, ledger, battery_kw = self.physics.interval(
-            self.physical, fc_kw, load_kw, duration_s=1.0
+            self.physical, fc_kw, load_kw, duration_s=1.0,
+            fc_is_on=True, fc_start_stop_cycles=0,
         )
         battery_current_a = battery_current_from_soc_change(
             self.physical.soc, next_physical.soc, 1.0,
@@ -229,8 +289,23 @@ class AggregateDDPGEnv(gym.Env):
             raise RuntimeError("Internal implementation error: actual SOC exceeded bounds")
         delta_fc = fc_kw - prev_kw
         costs = interval_economic_components(
-            self.physics, self.physical, next_physical, fc_kw, ledger
+            self.physics, self.physical, next_physical, fc_kw, ledger,
+            fc_is_on=True, fc_start_stop_cycles=0,
         )
+        self.ramp_sq_sum += delta_fc ** 2
+        self.physical = next_physical
+        self.battery_power_kw = float(battery_kw)
+        self.last_interval_fc_kw = fc_kw
+        self.last_interval_battery_kw = float(battery_kw)
+        self.index += 1
+        self.terminated = self.index >= len(self.episode.load_kw)
+        shutdown_info = {"shutdown_executed": False}
+        if self.terminated:
+            shutdown_costs, shutdown_info = self._shutdown()
+            # Merge only additive accounting fields. Preserve the real interval's
+            # efficiency/power diagnostics and its single SOC penalty.
+            for name in ECONOMIC_SUM_FIELDS:
+                costs[name] += shutdown_costs[name]
         reward = economic_reward(costs["reward_total_cost_cny"])
         for name in ECONOMIC_SUM_FIELDS:
             self.economic_totals[name] += costs[name]
@@ -238,14 +313,9 @@ class AggregateDDPGEnv(gym.Env):
         self.equivalent_eta_sum += eta
         self.equivalent_eta_min = eta if self.equivalent_eta_min is None else min(self.equivalent_eta_min, eta)
         self.equivalent_eta_max = eta if self.equivalent_eta_max is None else max(self.equivalent_eta_max, eta)
-        self.starts += int(prev_kw <= 0.0 < fc_kw)
-        self.ramp_sq_sum += delta_fc ** 2
-        self.physical = next_physical
-        self.index += 1
         self.soc_min_seen = min(self.soc_min_seen, self.physical.soc)
         self.soc_max_seen = max(self.soc_max_seen, self.physical.soc)
         self.reward_sum += reward
-        self.terminated = self.index >= len(self.episode.load_kw)
         info = {
             "sample_id": self.episode.sample_id,
             "load_kw": load_kw,
@@ -258,6 +328,11 @@ class AggregateDDPGEnv(gym.Env):
             "fc_ramp_penalty": 0.0,
             "step_executed": True,
             **costs,
+            **shutdown_info,
+            "physical_fc_on": self.physical_fc_on,
+            "fc_start_stop_cycles": int(self._cycle_settled),
+            "fc_cumulative_voltage_loss_uv": float(self.physical.fc_loss_uv),
+            "reward_is_failure_override": False,
             "projected": abs(fc_kw - target_kw) > 1e-5,
             "terminal_reason": "completed" if self.terminated else None,
         }

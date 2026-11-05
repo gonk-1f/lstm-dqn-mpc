@@ -63,8 +63,13 @@ class EconomicRewardTests(unittest.TestCase):
             )), places=12,
         )
         self.assertAlmostEqual(
-            values["reward_total_cost_cny"],
+            values["reward_economic_cost_cny"],
             values["total_cost_cny"] - values["fuel_cell_start_stop_cost_cny"], places=12,
+        )
+        self.assertAlmostEqual(values["soc_deviation_penalty_cny"], 10.0 * (after.soc - 0.5) ** 2)
+        self.assertAlmostEqual(
+            values["reward_total_cost_cny"],
+            values["reward_economic_cost_cny"] + values["soc_deviation_penalty_cny"],
         )
         for field in ("h2_cost_cny", "fuel_cell_degradation_cost_cny", "battery_degradation_cost_cny", "shore_cost_cny"):
             self.assertEqual(values[field], getattr(ledger, field))
@@ -105,7 +110,7 @@ class EconomicRewardTests(unittest.TestCase):
         self.assertAlmostEqual(values["c_bat_eq_cny"], expected, places=12)
         self.assertTrue(math.isfinite(values["total_cost_cny"]))
 
-    def test_idle_zero_cost_has_reward_zero_without_independent_soc_penalty(self):
+    def test_soc_reference_has_zero_deviation_penalty(self):
         module = self.module()
         from v3.control import AccountState
         physics = self.physics()
@@ -113,6 +118,7 @@ class EconomicRewardTests(unittest.TestCase):
         after, ledger, _ = physics.interval(before, 0.0, 0.0, duration_s=1.0)
         values = module.interval_economic_components(physics, before, after, 0.0, ledger)
         self.assertEqual(values["total_cost_cny"], 0.0)
+        self.assertEqual(values["soc_deviation_penalty_cny"], 0.0)
         self.assertEqual(module.economic_reward(0.0), 0.0)
 
     def test_finite_signed_reward_cost_is_negated_without_reference_scaling(self):
@@ -142,13 +148,15 @@ class EconomicRewardTests(unittest.TestCase):
         self.assertNotIn("lambda_soc", default)
         self.assertNotIn("soc_reference", default)
         self.assertNotIn("c_typ", default)
-        self.assertEqual(default["reward_version"], "ddpg_economic_negative_no_start_stop_v5")
-        self.assertEqual(default["failure_reward"], -2000.0)
-        self.assertEqual(getattr(module, "FAILURE_REWARD", None), -2000.0)
+        self.assertEqual(default["reward_version"], "ddpg_economic_env_cycle_soc_v6")
+        self.assertEqual(default["soc_deviation_weight"], 10.0)
+        self.assertEqual(default["failure_reward"], -20000.0)
+        self.assertEqual(getattr(module, "FAILURE_REWARD", None), -20000.0)
         config = {
             "reward_version": module.REWARD_VERSION, "c_ref": 0.02,
-            "failure_reward": -2000.0,
+            "failure_reward": -20000.0,
             "eta_fc_avg": default["eta_fc_avg"],
+            "soc_deviation_weight": default["soc_deviation_weight"],
         }
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "reward.json"
@@ -164,10 +172,10 @@ class EconomicRewardTests(unittest.TestCase):
             self.assertEqual(first["fuel_cell_eol_voltage_loss_uv"], 142500.0)
             self.assertEqual(first["battery_current_accounting"], "soc_delta_cell_current_v1")
             self.assertEqual(first["reward_version"], module.REWARD_VERSION)
-            self.assertEqual(first["failure_reward"], -2000.0)
+            self.assertEqual(first["failure_reward"], -20000.0)
             self.assertEqual(
                 first["formula"],
-                "-(C_H2+C_bat_eq+C_LB_deg+C_FC_transient+C_FC_low+C_FC_high)",
+                "-(C_H2+C_bat_eq+C_LB_deg+C_FC_transient+C_FC_low+C_FC_high+soc_deviation_weight*(SOC_next-0.5)^2)",
             )
             encoded = json.dumps(
                 loaded, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
@@ -217,6 +225,7 @@ class EconomicRewardTests(unittest.TestCase):
             None, {}, {**identity, "reward_version": "ddpg_economic_tanh_v1"},
             {**identity, "reward_version": "ddpg_economic_linear_v2"},
             {**identity, "reward_version": "ddpg_economic_normalized_tanh_v4"},
+            {**identity, "reward_version": "ddpg_economic_negative_no_start_stop_v5"},
             {**identity, "reward_version": "unknown"}, {**identity, "c_ref": 9.0},
             {**identity, "fuel_cell_eol_voltage_loss_uv": 70000.0},
         ))

@@ -40,7 +40,8 @@ class Test4AdapterTests(unittest.TestCase):
                 self.assertEqual((episode.terminal_boundary_timestamp - episode.timestamp[-1]).total_seconds(), 1)
             for sample_id in list(EXPECTED) + [next(iter(EXPECTED))]:
                 _, info = env.reset(seed=42)
-                self.assertEqual(info, {"sample_id": sample_id, "split": "test"})
+                self.assertEqual((info["sample_id"], info["split"]), (sample_id, "test"))
+                self.assertTrue(info["physical_fc_on"])
                 self.assertEqual(env.index, 0)
                 self.assertEqual(env.physical.soc, 0.6)
             payloads = env.test_data_identity["payloads"]

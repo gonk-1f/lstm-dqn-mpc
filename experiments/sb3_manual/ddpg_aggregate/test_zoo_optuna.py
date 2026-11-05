@@ -32,7 +32,7 @@ class SamplerTests(unittest.TestCase):
         adapter = importlib.import_module(PACKAGE + ".zoo_optuna")
         with mock.patch("optuna.create_study", side_effect=AssertionError("No Study during argument checks")):
             args = adapter.prepare_optimization_args(["--algo", "ddpg", "--optimize-hyperparameters"])
-        self.assertEqual(args[args.index("--study-name") + 1], "ddpg_tau_noise_economic_negative_no_start_stop_v5_obs5_huber1")
+        self.assertEqual(args[args.index("--study-name") + 1], "ddpg_tau_noise_economic_env_cycle_soc_v6_obs5_huber1")
         self.assertEqual(args[args.index("--storage") + 1], "sqlite:///outputs/ddpg_optuna_economic_v3/study.db")
         self.assertEqual(args[args.index("--log-folder") + 1], "outputs/ddpg_optuna_economic_v3/logs")
         self.assertEqual(args[args.index("--optimization-log-path") + 1], "outputs/ddpg_optuna_economic_v3/evaluations")
@@ -40,13 +40,13 @@ class SamplerTests(unittest.TestCase):
 
     def test_old_study_name_is_rejected_and_new_seed_suffix_is_allowed(self):
         adapter = importlib.import_module(PACKAGE + ".zoo_optuna")
-        for name in ("ddpg_tau_noise_v1", "ddpg_tau_noise_economic_linear_v2", "ddpg_tau_noise_economic_tanh_v1", "ddpg_tau_noise_economic_normalized_tanh_v4_obs5_huber1", "old_economic", ""):
+        for name in ("ddpg_tau_noise_v1", "ddpg_tau_noise_economic_linear_v2", "ddpg_tau_noise_economic_tanh_v1", "ddpg_tau_noise_economic_normalized_tanh_v4_obs5_huber1", "ddpg_tau_noise_economic_negative_no_start_stop_v5_obs5_huber1", "old_economic", ""):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 adapter.prepare_optimization_args(["--optimize-hyperparameters", "--study-name", name])
         args = adapter.prepare_optimization_args([
-            "--optimize-hyperparameters", "--study-name=ddpg_tau_noise_economic_negative_no_start_stop_v5_obs5_huber1_seed43",
+            "--optimize-hyperparameters", "--study-name=ddpg_tau_noise_economic_env_cycle_soc_v6_obs5_huber1_seed43",
         ])
-        self.assertIn("--study-name=ddpg_tau_noise_economic_negative_no_start_stop_v5_obs5_huber1_seed43", args)
+        self.assertIn("--study-name=ddpg_tau_noise_economic_env_cycle_soc_v6_obs5_huber1_seed43", args)
 
     def test_study_identity_guard_without_creating_study_or_storage(self):
         importlib.import_module(PACKAGE + ".zoo_optuna")
@@ -63,7 +63,7 @@ class SamplerTests(unittest.TestCase):
             def set_user_attr(self, key, value):
                 self.user_attrs[key] = value
 
-        identity = {"reward_version": "ddpg_economic_negative_no_start_stop_v5", "c_ref": 0.02}
+        identity = {"reward_version": "ddpg_economic_env_cycle_soc_v6", "c_ref": 0.02}
         fresh = Study([0])
         module.ensure_study_reward_identity(fresh, 0, identity)
         self.assertEqual(fresh.user_attrs["ddpg_reward_identity"], identity)

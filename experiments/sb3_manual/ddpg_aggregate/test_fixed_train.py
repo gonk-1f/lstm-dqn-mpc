@@ -36,7 +36,9 @@ class FixedEnvironmentTests(unittest.TestCase):
         env = self.make_env(fixed_train_id=FIXED_ID)
         for seed in (42, None, 7):
             obs, info = env.reset(seed=seed)
-            self.assertEqual(info, {"sample_id": FIXED_ID, "split": "train"})
+            self.assertEqual((info["sample_id"], info["split"]), (FIXED_ID, "train"))
+            self.assertTrue(info["physical_fc_on"])
+            self.assertEqual(info["fc_starts"], 1)
             self.assertEqual((env.index, env.episode.time_s[0]), (0, 0))
             self.assertEqual((env.physical.soc, env.physical.previous_fc_kw), (0.6, 0))
             self.assertEqual(len(env.episode.load_kw), 9258)
@@ -103,7 +105,7 @@ class FixedConfigurationTests(unittest.TestCase):
         expected = dict(tau=0.01, noise_std=0.1, n_envs=1, train_freq=32,
                         gradient_steps=1, learning_starts=5000, batch_size=64,
                         gamma=1.0, learning_rate=0.001, buffer_size=1000000,
-                        policy_kwargs="dict(net_arch=[256, 256])", noise_type="normal")
+                        policy_kwargs="dict(net_arch=[128, 128])", noise_type="normal")
         for name, value in expected.items():
             self.assertEqual(config[name], value, name)
         self.assertEqual(config["env_kwargs"]["fixed_train_id"], FIXED_ID)

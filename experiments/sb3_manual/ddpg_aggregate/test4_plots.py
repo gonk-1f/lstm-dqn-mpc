@@ -7,6 +7,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from .validation_plots import draw_shutdown_event
 
 
 def save_test_plots(rows, traces, output_dir) -> None:
@@ -43,6 +44,7 @@ def save_test_plots(rows, traces, output_dir) -> None:
             for ax in plot_axes:
                 ax.text(0.5, 0.5, "No physical interval executed",
                         transform=ax.transAxes, ha="center", va="center")
+            draw_shutdown_event(plot_axes, trace, colors)
             continue
         times = np.array(trace["interval_start_s"] + [trace["time_s"][-1]]) / 60.0
 
@@ -55,6 +57,7 @@ def save_test_plots(rows, traces, output_dir) -> None:
         line(plot_axes[2], "load_kw", "Load")
         line(plot_axes[2], "fc_kw", "FC")
         line(plot_axes[2], "battery_kw", "LB")
+        draw_shutdown_event(plot_axes, trace, colors)
         plot_axes[2].legend(loc="upper right", fontsize=7, ncol=3)
         plot_axes[2].text(0.01, 0.02, row["terminal_reason"],
                           transform=plot_axes[2].transAxes, fontsize=7)

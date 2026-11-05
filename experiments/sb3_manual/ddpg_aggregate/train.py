@@ -46,7 +46,7 @@ def main():
             train_freq=32,
             gradient_steps=1,
             tau=0.045,
-            policy_kwargs=dict(net_arch=[256, 256]),
+            policy_kwargs=dict(net_arch=[128, 128]),
             action_noise=NormalActionNoise(mean=np.zeros(1), sigma=0.1 * np.ones(1)),
             seed=args.seed,
             device=args.device,

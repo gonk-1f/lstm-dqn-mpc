@@ -40,6 +40,8 @@ class TrialParametersCallback(BaseCallback):
         evaluation.trial.set_user_attr("reward_identity", identity)
         self.logger.record("reward/version", identity["reward_version"], exclude=("tensorboard",))
         self.logger.record("reward/eta_fc_avg", identity["eta_fc_avg"])
+        self.logger.record("reward/soc_deviation_weight", identity["soc_deviation_weight"])
+        self.logger.record("reward/soc_reference", identity["soc_reference"])
         parameters = {
             "learning_rate": float(model.lr_schedule(1.0)),
             "gamma": model.gamma,
@@ -81,7 +83,13 @@ class TrialParametersCallback(BaseCallback):
                 "equivalent_fc_efficiency", "fc_efficiency_actual", "c_bat_eq_cny", "battery_current_a",
                 "h2_cost_cny", "fuel_cell_degradation_cost_cny", "battery_degradation_cost_cny",
                 "total_cost_cny", "reward_total_cost_cny",
+                "reward_economic_cost_cny", "soc_deviation_penalty_cny",
+                "shutdown_fc_transient_cost_cny", "shutdown_fc_start_stop_cost_cny",
+                "shutdown_economic_cost_cny",
             ) + FC_DEGRADATION_COST_FIELDS:
                 if name in info:
                     self.logger.record(f"economics/{name}", info[name])
+            for name in ("physical_fc_on", "fc_start_stop_cycles"):
+                if name in info:
+                    self.logger.record(f"vessel/{name}", info[name])
         return True

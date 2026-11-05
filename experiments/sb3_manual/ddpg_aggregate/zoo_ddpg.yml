@@ -12,7 +12,7 @@ AggregateShipDDPG-v0:
   tau: 0.01
   noise_type: normal
   noise_std: 0.1
-  policy_kwargs: "dict(net_arch=[256, 256])"
+  policy_kwargs: "dict(net_arch=[128, 128])"
   env_kwargs:
     data_root: data/processed/operating_dataset_v6_1s
     split: train
