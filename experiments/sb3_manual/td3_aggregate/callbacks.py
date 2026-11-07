@@ -186,7 +186,7 @@ class TD3TrainingCallback(BaseCallback):
             "reward_scale": self.reward_scale, "reward_identity": identity,
             "starting_completed_episodes": self.completed_episodes,
             "starting_successful_episodes": self.successful_episodes,
-            "max_episodes": self.max_episodes, "fixed_train_id": FIXED_TRAIN_ID,
+            "max_episodes": self.max_episodes, "fixed_train_id": FIXED_TRAIN_ID if self.require_fixed_train else None,
             "fixed_train_steps": FIXED_TRAIN_STEPS,
             "fixed_eval_every_episodes": self.fixed_eval_every_episodes,
             "validation_every_episodes": self.validation_every_episodes,
@@ -384,7 +384,7 @@ class TD3TrainingCallback(BaseCallback):
             "sb3_episode_counter": int(self.model._episode_num),
             "clock_phase": "after_env_step_before_replay_insert_and_rollout_update",
             "reward_identity": self.model._td3_reward_identity,
-            "reward_scale": REWARD_SCALE, "checkpoint": str(checkpoint),
+            "reward_scale": self.reward_scale, "checkpoint": str(checkpoint),
             "replay_buffer_saved": False,
             "evaluation_split": split, "evaluation_device": "cpu",
         })
