@@ -41,7 +41,8 @@ class EconomicEMSTests(unittest.TestCase):
         config = load_economic_ems_config()
         self.assertEqual(config["reward_scale"], 0.001)
         self.assertEqual(config["soc_reference"], 0.5)
-        self.assertEqual(config["soc_terminal_weight_cny"], 20000.0)
+        self.assertEqual(config["soc_step_weight_cny"], 5.0)
+        self.assertEqual(config["soc_terminal_weight_cny"], 0.0)
     def test_feasible_interval_mapping(self):
         env = FeasibleIntervalActionWrapper(FakePhysicalEnv()); env.reset(seed=42)
         for action, expected in ((-1.0, 250.0), (0.0, 375.0), (1.0, 500.0)):
@@ -72,7 +73,7 @@ class EconomicEMSTests(unittest.TestCase):
                 make_economic_env("data", split="train", fixed_train_id="parent_001_seg01")
         self.assertIn("parent_005_seg01", env.reward_identity["training_selection"])
 
-    def test_terminal_soc_uses_signed_cost_and_penalizes_only_success(self):
+    def test_step_soc_penalty_is_strong_and_no_terminal_term_is_applied(self):
         base = FakePhysicalEnv()
         env = EconomicEMSTD3Reward(base)
         env.reset(seed=42)
@@ -82,9 +83,9 @@ class EconomicEMSTests(unittest.TestCase):
         with patch.object(base, "step", return_value=(np.zeros(1), 0.0, True, False, info)):
             _, reward, _, _, result = env.step(np.zeros(1))
         self.assertAlmostEqual(result["reward_battery_equivalent_hydrogen_cost_cny"], -0.04)
-        self.assertAlmostEqual(result["reward_soc_tracking_penalty_cny"], 0.045)
-        self.assertAlmostEqual(result["reward_terminal_soc_penalty_cny"], 1800.0)
-        self.assertAlmostEqual(reward, -1.800185)
+        self.assertAlmostEqual(result["reward_soc_tracking_penalty_cny"], 0.45)
+        self.assertEqual(result["reward_terminal_soc_penalty_cny"], 0.0)
+        self.assertAlmostEqual(reward, -0.00059)
         self.assertEqual(result["total_cost_cny"], info["total_cost_cny"])
 
         env.reset(seed=42)
