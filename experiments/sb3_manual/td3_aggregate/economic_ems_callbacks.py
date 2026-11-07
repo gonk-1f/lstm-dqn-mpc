@@ -3,7 +3,7 @@
 import subprocess
 import sys
 
-from .callbacks import ECONOMIC_FIELDS, FIXED_TRAIN_ID, TD3TrainingCallback
+from .callbacks import ECONOMIC_FIELDS, FIXED_TRAIN_ID, PROJECT_ROOT, TD3TrainingCallback
 from .economic_ems import REWARD_COMPONENT_FIELDS
 
 
@@ -31,7 +31,7 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
             subprocess.run(
                 [sys.executable, "-m", "experiments.sb3_manual.td3_aggregate.economic_ems_plots",
                  "--run-dir", str(self.directory)],
-                cwd=self.directory.parents[2] if len(self.directory.parents) > 2 else None,
+                cwd=PROJECT_ROOT,
                 check=True,
             )
         return keep_training
