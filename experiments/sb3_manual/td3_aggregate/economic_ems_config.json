@@ -1,0 +1,22 @@
+{
+  "reward_version": "td3_economic_cost_no_bat_eq_soc_step5_feasible_interval_train35_v5",
+  "reward_scale": 0.001,
+  "hydrogen_cost_weight": 1.0,
+  "fuel_cell_variable_degradation_weight": 1.0,
+  "battery_degradation_weight": 1.0,
+  "soc_reference": 0.5,
+  "soc_step_weight_cny": 5.0,
+  "failure_reward": -20000.0,
+  "fc_degradation_reward_scope": [
+    "fuel_cell_transient_cost_cny",
+    "fuel_cell_low_load_cost_cny",
+    "fuel_cell_high_load_cost_cny"
+  ],
+  "fc_start_stop_reward_scope": "The fixed one-cycle start-stop settlement remains in the complete physical ledger but is excluded from the learning reward because the current Actor does not control the physical on/off event. Action-dependent shutdown transient degradation remains included.",
+  "battery_equivalent_hydrogen_sign": "Signed CNY ledger term for reporting only. Discharge is positive cost and charge is negative credit.",
+  "reward_formula": "-(C_H2 + C_FC_transient + C_FC_low + C_FC_high + C_LB_deg + 5.0*(SOC_next-0.5)^2)",
+  "action_mapping": "feasible_interval_affine_v1",
+  "observation_version": "soc_load_prev_fc_load_delta_voyage_progress_fraction_v2",
+  "training_selection": "uniform random Train35 voyage at every reset, with replacement; one-second intervals; reset at t=0 with SOC=0.6",
+  "evaluation_protocol": "Deterministic fixed parent_005_seg01 every 20 episodes and full Validation8 every 100 episodes"
+}

@@ -61,7 +61,8 @@ ECONOMIC_COST_SCOPE = (
     "Shutdown consumes no physical time, hydrogen or battery energy. All costs remain unscaled CNY."
 )
 _CHECKPOINT_METADATA = {"checkpoint_metadata.json", "model_metadata.json", "reward_identity.json"}
-REWARD_MODES = ("economic", "simple", "control", "control_huber")
+REWARD_MODES = ("economic", "economic_ems", "simple", "control", "control_huber")
+ECONOMIC_EMS_ENV_ID = "AggregateShipTD3Economic-v0"
 
 
 def step_accounting(vessel, before, info: dict, accounting_fields=ACCOUNTING_FIELDS) -> dict:
@@ -131,7 +132,8 @@ def _check_output_dir(output_dir: Path | None, model_path: Path) -> None:
 
 def _reject_vecnormalize(model_path: Path) -> None:
     for directory in (model_path.parent, model_path.parent / "AggregateShipTD3-v0",
-                      model_path.parent / "AggregateShipDDPG-v0"):
+                      model_path.parent / "AggregateShipDDPG-v0",
+                      model_path.parent / ECONOMIC_EMS_ENV_ID):
         if (directory / "vecnormalize.pkl").is_file():
             raise ValueError("VecNormalize is unsupported in this TD3 experiment")
 
@@ -174,7 +176,7 @@ def _rollout(model, env, expected_id: str, episode: int, seed: int | None,
         calls += 1
         raw = float(info["raw_reward"])
         scale = float(info["reward_scale"])
-        if scale != 0.0001 or not math.isclose(float(scaled), raw / 10000.0, rel_tol=1e-12, abs_tol=1e-15):
+        if scale != float(env.reward_identity["reward_scale"]) or not math.isclose(float(scaled), raw * scale, rel_tol=1e-12, abs_tol=1e-15):
             raise RuntimeError("Evaluation reward scaling differs from the training contract")
         if float(info["scaled_reward"]) != float(scaled):
             raise RuntimeError("Wrapper info and algorithm reward differ")
@@ -216,7 +218,7 @@ def _rollout(model, env, expected_id: str, episode: int, seed: int | None,
             success = bool(summary["completed"])
             summary.update(
                 episode=episode, episode_reward=raw_sum, reward_sum=raw_sum,
-                raw_reward_sum=raw_sum, algorithm_reward_sum=algorithm_sum, reward_scale=0.0001,
+                raw_reward_sum=raw_sum, algorithm_reward_sum=algorithm_sum, reward_scale=float(env.reward_identity["reward_scale"]),
                 algorithm_reward_version=env.reward_identity["reward_version"],
                 mean_reward_per_step=raw_sum / calls,
                 mean_algorithm_reward_per_step=algorithm_sum / calls,
@@ -234,6 +236,22 @@ def _rollout(model, env, expected_id: str, episode: int, seed: int | None,
             if "reward_fc_variation_penalty" in totals:
                 summary["reward_version"] = env.reward_identity["reward_version"]
                 summary["fc_ramp_penalty"] = totals["reward_fc_variation_penalty"]
+            if "reward_soc_tracking_penalty_cny" in totals:
+                identity = env.reward_identity
+                target_soc = identity["soc_reference"]
+                summary.update(
+                    reward_version=identity["reward_version"],
+                    soc_deviation_weight=identity["soc_step_weight_cny"],
+                    soc_reference=target_soc,
+                    terminal_soc_target=target_soc,
+                    terminal_soc_error=float(vessel.physical.soc - target_soc),
+                    max_fc_kw=max(powers) if powers else None,
+                    std_fc_kw=float(np.std(powers)) if powers else None,
+                    mean_abs_battery_power_change_kw=(
+                        float(np.mean(np.abs(np.diff(battery_powers))))
+                        if len(battery_powers) > 1 else None
+                    ),
+                )
             print(f"TD3 {split} {expected_id}: {summary['terminal_reason']}, "
                   f"coverage={summary['coverage']:.4f}, raw_return={raw_sum:.6f}, "
                   f"algorithm_return={algorithm_sum:.6f}, cost={totals['total_cost_cny']:.6f} CNY", flush=True)
@@ -257,12 +275,14 @@ def evaluate(
     """
     if reward_mode not in REWARD_MODES:
         raise ValueError(f"Unsupported TD3 reward mode {reward_mode!r}")
-    if reward_mode != "economic" and split == "test":
-        raise ValueError("The simple-reward experiment only uses Train and Validation")
+    if reward_mode in ("simple", "control", "control_huber") and split == "test":
+        raise ValueError("The simple/control reward experiments only use Train and Validation")
     if split not in ("fixed_train", "validation", "test"):
         raise ValueError("split must be fixed_train, validation or test")
     if max_steps is not None and max_steps < 1:
         raise ValueError("max_steps must be positive")
+    if split == "test" and reward_mode == "economic_ems" and max_steps is not None:
+        raise ValueError("Economic EMS Test4 requires complete voyages from the frozen model")
     if torch_threads < 1:
         raise ValueError("torch_threads must be positive")
     if episodes is not None and (split != "validation" or not 1 <= episodes <= 8):
@@ -281,7 +301,27 @@ def evaluate(
     algorithm = "stable_baselines3.TD3"
     accounting_fields, step_fields = ACCOUNTING_FIELDS, STEP_FIELDS
     cost_scope = ECONOMIC_COST_SCOPE
-    if reward_mode != "economic":
+    if reward_mode == "economic_ems":
+        from .economic_ems import (
+            load_economic_ems_config, make_economic_env, REWARD_COMPONENT_FIELDS as ECONOMIC_REWARD_FIELDS,
+            assert_economic_model_identity,
+        )
+        factory = make_economic_env
+        accounting_fields = ACCOUNTING_FIELDS + ECONOMIC_REWARD_FIELDS
+        step_fields = STEP_FIELDS + ECONOMIC_REWARD_FIELDS + (
+            "actor_reference_fc_kw", "action_mapped_fc_kw", "action_mapping",
+            "feasible_interval_width_kw",
+        )
+        cost_scope = (
+            "Training reward is the weighted sum of actual H2 cost, FC transient/low/high variable degradation, "
+            "battery degradation and per-step SOC deviation. "
+            "Signed battery-equivalent hydrogen cost and start-stop cycle settlement remain in the complete economic ledger. "
+            "All physical costs and rewards are reported in raw CNY; TD3 receives reward_scale=0.001."
+        )
+        from .huber_td3 import HuberTD3
+        model_class = HuberTD3
+        algorithm = f"{HuberTD3.__module__}.{HuberTD3.__name__}"
+    elif reward_mode != "economic":
         from .simple_reward import make_simple_env, make_control_env, REWARD_COMPONENT_FIELDS
         if reward_mode == "control_huber":
             from .huber_control import make_huber_control_env
@@ -306,6 +346,12 @@ def evaluate(
     else:
         factory = make_env
     model = model_class.load(str(model_path), device=device, action_noise=None)
+    if reward_mode == "economic_ems":
+        identity = getattr(model, "_td3_reward_identity", None)
+        expected_version = load_economic_ems_config()["reward_version"]
+        if not isinstance(identity, dict) or identity.get("reward_version") != expected_version:
+            raise ValueError("Economic EMS evaluation requires a checkpoint with the matching reward version")
+        assert_economic_model_identity(model, identity)
     if model.get_vec_normalize_env() is not None:
         raise ValueError("VecNormalize is unsupported in this TD3 experiment")
     model.policy.set_training_mode(False)
@@ -313,14 +359,22 @@ def evaluate(
     if split == "test":
         # Explicit final-only import: train and validation never open Test data.
         from ..ddpg_aggregate.test4_env import AggregateDDPGTestEnv
-        env = ScaledEconomicReward(AggregateDDPGTestEnv(data_root, test_source_root=test_source_root))
+        test_env = AggregateDDPGTestEnv(data_root, test_source_root=test_source_root)
+        if reward_mode == "economic_ems":
+            from .economic_ems import wrap_economic_env
+            env = wrap_economic_env(test_env)
+        else:
+            env = ScaledEconomicReward(test_env)
     else:
         env = factory(data_root, split="train" if split == "fixed_train" else "validation",
                        fixed_train_id=FIXED_TRAIN_ID if split == "fixed_train" else None)
     try:
         vessel = env.unwrapped
         check_for_correct_spaces(env, model.observation_space, model.action_space)
-        assert_model_identity(model, env.reward_identity)
+        if reward_mode == "economic_ems":
+            assert_economic_model_identity(model, env.reward_identity)
+        else:
+            assert_model_identity(model, env.reward_identity)
         if split == "fixed_train":
             selected = [voyage for voyage in vessel.episodes if voyage.sample_id == FIXED_TRAIN_ID]
             if len(selected) != 1 or len(selected[0].load_kw) != 9258:
@@ -362,12 +416,12 @@ def evaluate(
             "model_path": str(model_path), "model_sha256": model_hash, "data_root": str(data_root),
             "split": "train" if split == "fixed_train" else split, "evaluation_split": split,
             "deterministic": True, "action_noise": None, "device": str(model.device), "seed": seed,
-            "reward_scale": 0.0001,
+            "reward_scale": float(env.reward_identity["reward_scale"]),
             "model_reward_identity": dict(model._td3_reward_identity),
             "evaluation_reward_identity": dict(env.reward_identity),
             "vecnormalize_path": None,
             "reward_units": {"reward_sum": "raw negative economic/SOC reward", "episode_reward": "raw negative economic/SOC reward",
-                             "raw_reward_sum": "raw negative economic/SOC reward", "algorithm_reward_sum": "raw_reward_sum / 10000",
+                             "raw_reward_sum": "raw negative economic/SOC reward", "algorithm_reward_sum": "raw_reward_sum * reward_scale",
                              "economic_costs": "unscaled CNY"},
             "completed": successes, "completion_rate": successes / len(rows),
             "mean_coverage": sum(row["coverage"] for row in rows) / len(rows),
@@ -427,3 +481,23 @@ def argument_parser(description: str) -> argparse.ArgumentParser:
                         help="Bounded diagnostic only; default runs full voyages or true physical failure")
     parser.add_argument("--torch-threads", type=int, default=1)
     return parser
+
+
+def entrypoint_arguments(arguments: list[str], *, final_test: bool = False) -> list[str]:
+    """Supply the latest model only within the requested experiment."""
+    if any(arg in ("--model-path", "--help", "-h") or arg.startswith("--model-path=")
+           for arg in arguments):
+        return arguments
+    parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+    parser.add_argument("--reward-mode", choices=REWARD_MODES, default="economic")
+    options, _ = parser.parse_known_args(arguments)
+    if options.reward_mode == "economic_ems":
+        if final_test:
+            raise ValueError("Specify --model-path for the frozen economic EMS checkpoint before Test4")
+        output, env_id = "td3_economic_ems_train35_soc5_no_bat_eq_500ep", ECONOMIC_EMS_ENV_ID
+    else:
+        output, env_id = "td3_train_500ep", "AggregateShipTD3-v0"
+    models = list((PROJECT_ROOT / "outputs" / output / "td3").glob(f"{env_id}_*/{env_id}.zip"))
+    if not models:
+        raise FileNotFoundError(f"No final {env_id} model found; specify --model-path explicitly")
+    return ["--model-path", str(max(models, key=lambda path: path.stat().st_mtime)), *arguments]

@@ -79,6 +79,8 @@ class TD3TrainingCallback(BaseCallback):
     environment_id = ENV_ID
     algorithm_name = "stable_baselines3.TD3"
     evaluation_extra_args = ()
+    reward_scale = REWARD_SCALE
+    require_fixed_train = True
 
     def __init__(
         self, fixed_eval_every_episodes: int = 20,
@@ -111,18 +113,19 @@ class TD3TrainingCallback(BaseCallback):
     def _on_training_start(self) -> None:
         if self.training_env.num_envs != 1:
             raise ValueError("TD3 fixed-voyage diagnostics require n_envs=1")
-        if self.training_env.get_attr("fixed_train_id") != [FIXED_TRAIN_ID]:
-            raise ValueError("TD3 training must use parent_005_seg01")
+        expected_fixed_id = [FIXED_TRAIN_ID] if self.require_fixed_train else [None]
+        if self.training_env.get_attr("fixed_train_id") != expected_fixed_id:
+            raise ValueError(f"TD3 training fixed_train_id must be {expected_fixed_id[0]!r}")
         if self.training_env.get_attr("split") != ["train"]:
             raise ValueError("Validation/Test environments cannot enter training")
         identity = deepcopy(self.training_env.get_attr("reward_identity")[0])
-        if identity.get("algorithm") != "TD3" or identity.get("reward_scale") != REWARD_SCALE:
-            raise ValueError("Training requires the TD3 economic reward wrapper at scale 0.0001")
+        if identity.get("algorithm") != "TD3" or identity.get("reward_scale") != self.reward_scale:
+            raise ValueError(f"Training requires the TD3 reward wrapper at scale {self.reward_scale}")
         if getattr(self.model, "_ddpg_reward_identity", None) is not None:
             raise ValueError("A DDPG checkpoint cannot be relabeled as scaled TD3")
         saved_identity = getattr(self.model, "_td3_reward_identity", None)
         if saved_identity is not None:
-            if saved_identity != identity or getattr(self.model, "reward_scale", None) != REWARD_SCALE:
+            if saved_identity != identity or getattr(self.model, "reward_scale", None) != self.reward_scale:
                 raise ValueError("Checkpoint TD3 reward identity/scale differs from this environment")
             if not hasattr(self.model, "_td3_completed_episodes"):
                 raise ValueError("TD3 checkpoint lacks its cumulative episode counter")
@@ -145,7 +148,7 @@ class TD3TrainingCallback(BaseCallback):
             raise ValueError("Checkpoint needs its valid cumulative successful-episode counter")
         self.successful_episodes = int(successes)
         self.model._td3_reward_identity = identity
-        self.model.reward_scale = REWARD_SCALE
+        self.model.reward_scale = self.reward_scale
         self.model._td3_completed_episodes = self.completed_episodes
         self.model._td3_successful_episodes = self.successful_episodes
         self.data_root = Path(self.training_env.get_attr("data_root")[0]).resolve()
@@ -180,11 +183,11 @@ class TD3TrainingCallback(BaseCallback):
         self._pending_dump = False
         _write_json(log_directory / "td3_training_metadata.json", {
             "algorithm": self.algorithm_name, "env_id": self.environment_id,
-            "reward_scale": REWARD_SCALE, "reward_identity": identity,
+            "reward_scale": self.reward_scale, "reward_identity": identity,
             "starting_completed_episodes": self.completed_episodes,
             "starting_successful_episodes": self.successful_episodes,
-            "max_episodes": self.max_episodes, "fixed_train_id": FIXED_TRAIN_ID,
-            "fixed_train_steps": FIXED_TRAIN_STEPS,
+            "max_episodes": self.max_episodes, "fixed_train_id": FIXED_TRAIN_ID if self.require_fixed_train else None,
+            "fixed_train_steps": FIXED_TRAIN_STEPS if self.require_fixed_train else None,
             "fixed_eval_every_episodes": self.fixed_eval_every_episodes,
             "validation_every_episodes": self.validation_every_episodes,
             "log_every_steps": self.log_every_steps,
@@ -195,9 +198,9 @@ class TD3TrainingCallback(BaseCallback):
             "checkpoint_clock": "after_env_step_before_replay_insert_and_rollout_update",
             "checkpoint_replay_saved": False,
             "raw_reward_units": "negative raw CNY reward cost, except fixed physical failure override",
-            "algorithm_reward_units": "raw_reward * 0.0001",
+            "algorithm_reward_units": f"raw_reward * {self.reward_scale}",
         })
-        self.logger.record("reward/reward_scale", REWARD_SCALE)
+        self.logger.record("reward/reward_scale", self.reward_scale)
         self.logger.record("time/completed_episodes", self.completed_episodes)
 
     def _accumulate(self, name: str, value: float) -> None:
@@ -249,11 +252,13 @@ class TD3TrainingCallback(BaseCallback):
         return self.completed_episodes < self.max_episodes
 
     def _record_episode(self, summary: dict[str, Any]) -> None:
-        if summary["split"] != "train" or summary["sample_id"] != FIXED_TRAIN_ID:
-            raise ValueError("Only the fixed Train35 voyage may produce TD3 training episodes")
+        if summary["split"] != "train":
+            raise ValueError("Only Train35 voyages may produce TD3 training episodes")
+        if self.require_fixed_train and summary["sample_id"] != FIXED_TRAIN_ID:
+            raise ValueError("This TD3 experiment requires the fixed Train voyage")
         raw = float(summary["reward_sum"])
         scaled = float(summary["algorithm_reward_sum"])
-        if not math.isclose(scaled, raw * REWARD_SCALE, rel_tol=1e-10, abs_tol=1e-9):
+        if not math.isclose(scaled, raw * self.reward_scale, rel_tol=1e-10, abs_tol=1e-9):
             raise ValueError("Episode raw/algorithm reward sums violate TD3 reward scaling")
         self.successful_episodes += int(bool(summary["completed"]))
         self.model._td3_successful_episodes = self.successful_episodes
@@ -271,7 +276,7 @@ class TD3TrainingCallback(BaseCallback):
             "cumulative_completion_rate": self.successful_episodes / self.completed_episodes,
             "terminal_reason": summary["terminal_reason"],
             "raw_reward_sum": raw, "algorithm_reward_sum": scaled,
-            "reward_scale": REWARD_SCALE,
+            "reward_scale": self.reward_scale,
             "soc_min": summary["soc_min"], "soc_final": summary["soc_final"],
             "mean_requested_fc_kw": mean("requested_fc_kw"),
             "mean_fc_kw": mean("fc_actual_kw"),
@@ -379,7 +384,7 @@ class TD3TrainingCallback(BaseCallback):
             "sb3_episode_counter": int(self.model._episode_num),
             "clock_phase": "after_env_step_before_replay_insert_and_rollout_update",
             "reward_identity": self.model._td3_reward_identity,
-            "reward_scale": REWARD_SCALE, "checkpoint": str(checkpoint),
+            "reward_scale": self.reward_scale, "checkpoint": str(checkpoint),
             "replay_buffer_saved": False,
             "evaluation_split": split, "evaluation_device": "cpu",
         })
@@ -407,7 +412,7 @@ class TD3TrainingCallback(BaseCallback):
             raise RuntimeError("Periodic TD3 evaluation must use deterministic actions without noise")
         if not metrics.get("integrity") or not all(metrics["integrity"].values()):
             raise RuntimeError("Periodic TD3 evaluation failed frozen-model integrity checks")
-        if metrics.get("reward_scale") != REWARD_SCALE:
+        if metrics.get("reward_scale") != self.reward_scale:
             raise RuntimeError("Periodic TD3 evaluation used a different reward scale")
         if fixed:
             summary = metrics["summary"]
