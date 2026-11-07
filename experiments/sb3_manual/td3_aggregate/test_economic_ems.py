@@ -13,7 +13,7 @@ class FakePhysicalEnv(gym.Env):
         self.observation_space = gym.spaces.Box(-1.0, 1.0, shape=(1,), dtype=np.float32)
         self.episode = type("Episode", (), {"load_kw": np.array([400.0])})()
         self.index, self.terminated = 0, False
-        self.physical = type("Physical", (), {"soc": 0.5})()
+        self.physical = type("Physical", (), {"soc": 0.5})()\n        self.reward_identity = {"reward_version": "test_physical_v1"}
     def _physically_feasible_fc_range(self, load_kw): return 250.0, 500.0
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed); self.index = 0; self.terminated = False
