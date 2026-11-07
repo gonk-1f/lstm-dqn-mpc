@@ -216,7 +216,7 @@ def _rollout(model, env, expected_id: str, episode: int, seed: int | None,
             success = bool(summary["completed"])
             summary.update(
                 episode=episode, episode_reward=raw_sum, reward_sum=raw_sum,
-                raw_reward_sum=raw_sum, algorithm_reward_sum=algorithm_sum, reward_scale=0.0001,
+                raw_reward_sum=raw_sum, algorithm_reward_sum=algorithm_sum, reward_scale=float(env.reward_identity["reward_scale"]),
                 algorithm_reward_version=env.reward_identity["reward_version"],
                 mean_reward_per_step=raw_sum / calls,
                 mean_algorithm_reward_per_step=algorithm_sum / calls,
@@ -339,7 +339,10 @@ def evaluate(
     try:
         vessel = env.unwrapped
         check_for_correct_spaces(env, model.observation_space, model.action_space)
-        if reward_mode == "economic_ems":\n            assert_economic_model_identity(model, env.reward_identity)\n        else:\n            assert_model_identity(model, env.reward_identity)
+        if reward_mode == "economic_ems":
+            assert_economic_model_identity(model, env.reward_identity)
+        else:
+            assert_model_identity(model, env.reward_identity)
         if split == "fixed_train":
             selected = [voyage for voyage in vessel.episodes if voyage.sample_id == FIXED_TRAIN_ID]
             if len(selected) != 1 or len(selected[0].load_kw) != 9258:
