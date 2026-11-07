@@ -2,13 +2,24 @@
 
 ## Reward
 
-Raw reward is the negative of the sum of actual hydrogen cost, FC transient/low/high variable degradation, signed battery-equivalent hydrogen cost, battery degradation, per-step SOC deviation, and a successful terminal SOC penalty.
+The learning objective is the negative of the four economic cost groups plus a dense per-step SOC shaping term:
 
-r_raw = -(C_H2 + C_FC_transient + C_FC_low + C_FC_high + C_LB_eq,signed + C_LB_deg + 0.5*(SOC_next-0.5)^2 + I_terminal*20000*(SOC_final-0.5)^2).
+```
+r_raw = -(C_H2 + C_FC_transient + C_FC_low + C_FC_high
+          + C_LB_eq,signed + C_LB_deg
+          + 5.0 * (SOC_next - 0.5)^2)
+r_TD3 = 0.001 * r_raw
+```
 
-TD3 receives 0.001*r_raw. All physical costs remain in the raw CNY ledger. The one start-stop cycle settlement remains in the complete ledger but is excluded from the learning reward because the present environment fixes one start and one stop per voyage and the Actor does not control these events. The action-dependent shutdown transient loss remains included. Do not clip the signed battery-equivalent hydrogen term: discharge is a cost and charge is a credit; the signed episode sum is needed for energy balance.
+The per-step SOC coefficient is increased from 0.5 to **5.0 CNY/SOC² (10×)**. The separate terminal SOC penalty is removed (weight=0). The stage penalty is calculated on every executed physical step, including the final step of a completed voyage. This gives the critic a dense SOC signal throughout the 9,258-step horizon rather than relying on an additional sparse endpoint charge.
 
-The step SOC coefficient is 0.5 CNY per squared deviation. The successful terminal coefficient is 20,000 CNY per squared deviation from 0.5. For a terminal SOC of 0.20 the terminal term is 1,800 CNY. At 0.45 or 0.55 it is 50 CNY. The coefficients define this experiment. A physical failure receives a raw reward of −20,000 (−20 to TD3), and a truncated or failed episode has no successful-terminal penalty.
+For the episode-13 trajectory, if its SOC path were unchanged, the reported 342 CNY step-SOC penalty would scale to approximately 3,420 CNY. This is a scale illustration, not a prediction of the next policy's cost. It is about 46% of the reported 7,363 CNY FC transient cost, providing a materially stronger but not dominant shaping term.
+
+The terminal SOC is still recorded and checked as an outcome in deterministic diagnostics and Validation8. It is no longer an additional reward term. The validation criterion remains useful for rejecting a policy that reaches the end with an unacceptable energy state; it does not add reward to training.
+
+All economic costs use the existing physical CNY model. The FC start-stop cycle settlement remains in the complete physical ledger but is excluded from reward because the current plant lifecycle fixes one start and one stop per voyage; the Actor does not control these events. Action-dependent FC transient degradation remains included. Battery equivalent hydrogen remains signed: discharge is a cost and charging is a credit. Do not clip this term per step.
+
+A physical failure receives raw reward −20,000 (−20 after scaling). A truncated or failed episode receives no extra terminal SOC charge.
 
 ## Action parameterization
 
@@ -47,7 +58,7 @@ Fixed training establishes whether the agent learns the known duty cycle. Since 
 
 ## Run
 
-Use the existing SB3/RL Zoo 2.9.2 interpreter in PyCharm and run `run_td3_train_economic_ems.py` from this worktree. The launcher starts a fresh run under `outputs/td3_economic_ems_v2_500ep`. For independent evaluation from PowerShell in this worktree, supply the versioned checkpoint explicitly.
+Use the existing SB3/RL Zoo 2.9.2 interpreter in PyCharm and run `run_td3_train_economic_ems.py` from this worktree. The launcher starts a fresh run under `outputs/td3_economic_ems_v3_soc5_500ep`. For independent evaluation from PowerShell in this worktree, supply the versioned checkpoint explicitly.
 
 ```powershell
 python .\run_td3_fixed_eval.py --reward-mode economic_ems --model-path '<checkpoint.zip>'
