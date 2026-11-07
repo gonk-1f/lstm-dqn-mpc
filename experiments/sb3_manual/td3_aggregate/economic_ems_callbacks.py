@@ -1,4 +1,4 @@
-"""TD3 economic EMS diagnostics and selection for the fixed Train voyage."""
+"""TD3 economic EMS diagnostics and model selection for Train35."""
 
 from collections import deque
 import json
@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from .callbacks import (
-    ECONOMIC_FIELDS, FIXED_TRAIN_ID, FIXED_TRAIN_STEPS, PROJECT_ROOT, TD3TrainingCallback,
+    ECONOMIC_FIELDS, PROJECT_ROOT, TD3TrainingCallback,
 )
 from .economic_ems import REWARD_COMPONENT_FIELDS
 from .huber_td3 import HuberTD3
@@ -21,20 +21,25 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
     algorithm_name = "experiments.sb3_manual.td3_aggregate.huber_td3.HuberTD3"
     evaluation_extra_args = ("--reward-mode", "economic_ems")
     reward_scale = 0.001
-    require_fixed_train = True
+    require_fixed_train = False
 
     def _on_training_start(self):
         identity = self.training_env.get_attr("reward_identity")[0]
         if identity.get("env_id") != self.environment_id or not isinstance(self.model, HuberTD3):
             raise ValueError("Economic EMS training requires its registered environment and HuberTD3")
+        voyages = self.training_env.get_attr("episodes")[0]
+        self._train_steps = {voyage.sample_id: len(voyage.load_kw) for voyage in voyages}
+        if len(self._train_steps) != 35:
+            raise ValueError("Economic EMS training requires all 35 Train voyages")
         super()._on_training_start()
+        self.pause_request = self.directory / "pause_after_episode.request"
         self._recent_raw_rewards = deque(getattr(self.model, "_td3_recent_raw_rewards", ()), maxlen=20)
         self._previous_battery_kw = None
         self._max_fc_kw = None
 
     def _observe_step(self, info):
-        if info["sample_id"] != FIXED_TRAIN_ID:
-            raise ValueError(f"Economic EMS training only accepts {FIXED_TRAIN_ID}")
+        if info["sample_id"] not in self._train_steps:
+            raise ValueError(f"Unexpected Train35 sample: {info['sample_id']}")
         super()._observe_step(info)
         action = float(info["actor_action"])
         self._accumulate("actor_action", action)
@@ -56,14 +61,16 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
         calls = self._episode_counts["raw_reward"]
         executed = summary["executed_steps"]
         reason = summary["terminal_reason"]
-        if summary["total_steps"] != FIXED_TRAIN_STEPS or summary["soc_initial"] != 0.6:
-            raise ValueError("Economic EMS voyage requires 9258 steps and initial SOC=0.6")
+        sample_id = summary["sample_id"]
+        expected_steps = self._train_steps[sample_id]
+        if summary["total_steps"] != expected_steps or summary["soc_initial"] != 0.6:
+            raise ValueError(f"{sample_id} requires {expected_steps} steps and initial SOC=0.6")
         if summary["completed"]:
-            valid_ending = reason == "completed" and calls == executed == FIXED_TRAIN_STEPS
+            valid_ending = reason == "completed" and calls == executed == expected_steps
         else:
             valid_ending = (
                 reason == "no_feasible_physical_power"
-                and 0 <= executed < FIXED_TRAIN_STEPS
+                and 0 <= executed < expected_steps
                 and calls == executed + 1
             )
         if not valid_ending:
@@ -116,6 +123,9 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
     def _on_step(self):
         keep_training = super()._on_step()
         if self.locals["dones"][0]:
+            if self.pause_request.is_file():
+                self.logger.info(f"Pausing economic TD3 after episode {self.completed_episodes}.")
+                keep_training = False
             if self.completed_episodes % 20 == 0:
                 subprocess.run(
                     [sys.executable, "-m", "experiments.sb3_manual.td3_aggregate.economic_ems_plots",

@@ -23,15 +23,13 @@ from .huber_td3 import CRITIC_LOSS_ID
 
 DEFAULT_CONFIG_PATH = Path(__file__).with_name("economic_ems_config.json")
 ECONOMIC_EMS_ENV_ID = "AggregateShipTD3Economic-v0"
-ECONOMIC_EMS_REWARD_VERSION = "td3_economic_cost_soc_terminal_feasible_interval_fixed_v2"
+ECONOMIC_EMS_REWARD_VERSION = "td3_economic_cost_no_bat_eq_soc_step5_feasible_interval_train35_v5"
 REWARD_SCALE = 0.001
 REWARD_COMPONENT_FIELDS = (
     "reward_h2_cost_cny",
     "reward_fc_degradation_cost_cny",
-    "reward_battery_equivalent_hydrogen_cost_cny",
     "reward_battery_degradation_cost_cny",
     "reward_soc_tracking_penalty_cny",
-    "reward_terminal_soc_penalty_cny",
     "reward_failure_penalty_cny",
 )
 FC_VARIABLE_DEGRADATION_FIELDS = (
@@ -50,10 +48,8 @@ def load_economic_ems_config(path: str | Path = DEFAULT_CONFIG_PATH) -> dict:
     for key in (
         "hydrogen_cost_weight",
         "fuel_cell_variable_degradation_weight",
-        "battery_equivalent_hydrogen_weight",
         "battery_degradation_weight",
         "soc_step_weight_cny",
-        "soc_terminal_weight_cny",
     ):
         value = config.get(key)
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
@@ -74,7 +70,6 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
         self.reward_scale = float(self.config["reward_scale"])
         self.soc_reference = float(self.config["soc_reference"])
         self.soc_step_weight = float(self.config["soc_step_weight_cny"])
-        self.soc_terminal_weight = float(self.config["soc_terminal_weight_cny"])
         self.failure_reward = float(self.config["failure_reward"])
         base_identity = deepcopy(env.unwrapped.reward_identity)
         config_hash = hashlib.sha256(
@@ -93,12 +88,10 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
             "economic_cost_weights": {
                 "hydrogen": self.config["hydrogen_cost_weight"],
                 "fuel_cell_variable_degradation": self.config["fuel_cell_variable_degradation_weight"],
-                "battery_equivalent_hydrogen": self.config["battery_equivalent_hydrogen_weight"],
                 "battery_degradation": self.config["battery_degradation_weight"],
             },
             "soc_reference": self.soc_reference,
             "soc_step_weight_cny": self.soc_step_weight,
-            "soc_terminal_weight_cny": self.soc_terminal_weight,
             "failure_reward": self.failure_reward,
             "fc_degradation_reward_scope": list(FC_VARIABLE_DEGRADATION_FIELDS),
             "fc_start_stop_reward_scope": self.config["fc_start_stop_reward_scope"],
@@ -119,20 +112,18 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
         self.raw_reward_sum = 0.0
         self.algorithm_reward_sum = 0.0
         self.component_totals = dict.fromkeys(REWARD_COMPONENT_FIELDS, 0.0)
-        self.initial_soc = float(self.env.unwrapped.physical.soc)
+        base = self.env.unwrapped
+        self.initial_soc = float(base.physical.soc)
         if info.get("split") == "train" and (
-            info["sample_id"] != FIXED_TRAIN_ID
-            or self.env.unwrapped.index != 0
-            or not math.isclose(self.initial_soc, 0.6, abs_tol=1e-9)
+            base.index != 0 or not math.isclose(self.initial_soc, 0.6, abs_tol=1e-9)
         ):
-            raise RuntimeError("Economic TD3 training must reset parent_005_seg01 at t=0 and SOC=0.6")
+            raise RuntimeError("Economic TD3 Train voyages must reset at t=0 and SOC=0.6")
         return observation, {
             **info,
             "reward_version": self.reward_identity["reward_version"],
             "reward_scale": self.reward_scale,
             "soc_reference": self.soc_reference,
             "soc_step_weight_cny": self.soc_step_weight,
-            "soc_terminal_weight_cny": self.soc_terminal_weight,
         }
 
     def step(self, action):
@@ -151,9 +142,6 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
                 math.fsum(float(original[name]) for name in FC_VARIABLE_DEGRADATION_FIELDS)
                 * float(weights["fuel_cell_variable_degradation_weight"])
             )
-            components["reward_battery_equivalent_hydrogen_cost_cny"] = (
-                float(original["c_bat_eq_cny"]) * float(weights["battery_equivalent_hydrogen_weight"])
-            )
             components["reward_battery_degradation_cost_cny"] = (
                 float(original["battery_degradation_cost_cny"])
                 * float(weights["battery_degradation_weight"])
@@ -161,10 +149,6 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
             components["reward_soc_tracking_penalty_cny"] = (
                 self.soc_step_weight * (float(original["soc"]) - self.soc_reference) ** 2
             )
-            if terminated and not truncated and original.get("terminal_reason") == "completed":
-                components["reward_terminal_soc_penalty_cny"] = (
-                    self.soc_terminal_weight * (float(original["soc"]) - self.soc_reference) ** 2
-                )
             raw_reward = -math.fsum(components.values())
 
         if not math.isfinite(raw_reward):
@@ -173,13 +157,9 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
         economic_reward_cost = math.fsum((
             components["reward_h2_cost_cny"],
             components["reward_fc_degradation_cost_cny"],
-            components["reward_battery_equivalent_hydrogen_cost_cny"],
             components["reward_battery_degradation_cost_cny"],
         ))
-        soc_penalty = (
-            components["reward_soc_tracking_penalty_cny"]
-            + components["reward_terminal_soc_penalty_cny"]
-        )
+        soc_penalty = components["reward_soc_tracking_penalty_cny"]
         scaled_reward = raw_reward * self.reward_scale
         self.raw_reward_sum += raw_reward
         self.algorithm_reward_sum += scaled_reward
@@ -203,13 +183,9 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
             episode_economic_cost = math.fsum((
                 totals["reward_h2_cost_cny"],
                 totals["reward_fc_degradation_cost_cny"],
-                totals["reward_battery_equivalent_hydrogen_cost_cny"],
                 totals["reward_battery_degradation_cost_cny"],
             ))
-            episode_soc_penalty = (
-                totals["reward_soc_tracking_penalty_cny"]
-                + totals["reward_terminal_soc_penalty_cny"]
-            )
+            episode_soc_penalty = totals["reward_soc_tracking_penalty_cny"]
             episode_reward_cost = math.fsum(totals.values())
             summary = {
                 **original["vessel_episode"],
@@ -244,17 +220,15 @@ def make_economic_env(
     split: str = "train",
     fixed_train_id: str | None = None,
 ) -> EconomicEMSTD3Reward:
-    """Build the fixed Train voyage or the separate ordered validation set."""
-    if split == "train":
-        if fixed_train_id not in (None, FIXED_TRAIN_ID):
-            raise ValueError(f"Economic TD3 training requires {FIXED_TRAIN_ID}")
-        fixed_train_id = FIXED_TRAIN_ID
+    """Sample Train35 or use the fixed diagnostic or ordered Validation8."""
+    if fixed_train_id not in (None, FIXED_TRAIN_ID):
+        raise ValueError(f"The fixed Train diagnostic requires {FIXED_TRAIN_ID}")
     base_env = AggregateDDPGEnv(
         data_root=data_root,
         split=split,
         fixed_train_id=fixed_train_id,
     )
-    if split == "train":
+    if fixed_train_id is not None:
         voyage = next(episode for episode in base_env.episodes if episode.sample_id == FIXED_TRAIN_ID)
         if len(voyage.load_kw) != FIXED_TRAIN_STEPS:
             base_env.close()

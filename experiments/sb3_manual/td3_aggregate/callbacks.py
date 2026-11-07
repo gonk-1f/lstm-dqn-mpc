@@ -187,7 +187,7 @@ class TD3TrainingCallback(BaseCallback):
             "starting_completed_episodes": self.completed_episodes,
             "starting_successful_episodes": self.successful_episodes,
             "max_episodes": self.max_episodes, "fixed_train_id": FIXED_TRAIN_ID if self.require_fixed_train else None,
-            "fixed_train_steps": FIXED_TRAIN_STEPS,
+            "fixed_train_steps": FIXED_TRAIN_STEPS if self.require_fixed_train else None,
             "fixed_eval_every_episodes": self.fixed_eval_every_episodes,
             "validation_every_episodes": self.validation_every_episodes,
             "log_every_steps": self.log_every_steps,

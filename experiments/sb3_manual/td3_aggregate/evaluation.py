@@ -314,8 +314,8 @@ def evaluate(
         )
         cost_scope = (
             "Training reward is the weighted sum of actual H2 cost, FC transient/low/high variable degradation, "
-            "signed battery-equivalent hydrogen cost, battery degradation, per-step SOC deviation and successful "
-            "terminal SOC deviation. Start-stop cycle settlement remains in the complete physical ledger only. "
+            "battery degradation and per-step SOC deviation. "
+            "Signed battery-equivalent hydrogen cost and start-stop cycle settlement remain in the complete economic ledger. "
             "All physical costs and rewards are reported in raw CNY; TD3 receives reward_scale=0.001."
         )
         from .huber_td3 import HuberTD3
@@ -494,7 +494,7 @@ def entrypoint_arguments(arguments: list[str], *, final_test: bool = False) -> l
     if options.reward_mode == "economic_ems":
         if final_test:
             raise ValueError("Specify --model-path for the frozen economic EMS checkpoint before Test4")
-        output, env_id = "td3_economic_ems_v2_500ep", ECONOMIC_EMS_ENV_ID
+        output, env_id = "td3_economic_ems_train35_soc5_no_bat_eq_500ep", ECONOMIC_EMS_ENV_ID
     else:
         output, env_id = "td3_train_500ep", "AggregateShipTD3-v0"
     models = list((PROJECT_ROOT / "outputs" / output / "td3").glob(f"{env_id}_*/{env_id}.zip"))

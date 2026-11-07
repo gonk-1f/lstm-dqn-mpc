@@ -30,7 +30,7 @@ def validate_resume_metadata(argv):
         or metadata.get("reward_scale") != REWARD_SCALE
         or any(key not in metadata for key in ("_td3_completed_episodes", "_td3_successful_episodes"))
     ):
-        raise ValueError("Economic TD3 resume requires a checkpoint from the fixed-voyage reward protocol")
+        raise ValueError("Economic TD3 resume requires a checkpoint from the Train35 reward protocol")
 
 
 validate_resume_metadata(sys.argv[1:])
