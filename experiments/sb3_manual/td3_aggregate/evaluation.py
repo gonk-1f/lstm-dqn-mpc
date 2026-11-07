@@ -257,8 +257,8 @@ def evaluate(
     """
     if reward_mode not in REWARD_MODES:
         raise ValueError(f"Unsupported TD3 reward mode {reward_mode!r}")
-    if reward_mode != "economic" and split == "test":
-        raise ValueError("The simple-reward experiment only uses Train and Validation")
+    if reward_mode in ("simple", "control", "control_huber") and split == "test":
+        raise ValueError("The simple/control reward experiments only use Train and Validation")
     if split not in ("fixed_train", "validation", "test"):
         raise ValueError("split must be fixed_train, validation or test")
     if max_steps is not None and max_steps < 1:
@@ -333,7 +333,12 @@ def evaluate(
     if split == "test":
         # Explicit final-only import: train and validation never open Test data.
         from ..ddpg_aggregate.test4_env import AggregateDDPGTestEnv
-        env = ScaledEconomicReward(AggregateDDPGTestEnv(data_root, test_source_root=test_source_root))
+        test_env = AggregateDDPGTestEnv(data_root, test_source_root=test_source_root)
+        if reward_mode == "economic_ems":
+            from .economic_ems import wrap_economic_env
+            env = wrap_economic_env(test_env)
+        else:
+            env = ScaledEconomicReward(test_env)
     else:
         env = factory(data_root, split="train" if split == "fixed_train" else "validation",
                        fixed_train_id=FIXED_TRAIN_ID if split == "fixed_train" else None)
