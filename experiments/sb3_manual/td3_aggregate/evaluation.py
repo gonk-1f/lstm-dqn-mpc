@@ -61,13 +61,14 @@ ECONOMIC_COST_SCOPE = (
     "Shutdown consumes no physical time, hydrogen or battery energy. All costs remain unscaled CNY."
 )
 _CHECKPOINT_METADATA = {"checkpoint_metadata.json", "model_metadata.json", "reward_identity.json"}
+REWARD_MODES = ("economic", "simple", "control", "control_huber")
 
 
-def step_accounting(vessel, before, info: dict) -> dict:
+def step_accounting(vessel, before, info: dict, accounting_fields=ACCOUNTING_FIELDS) -> dict:
     """Export the original ledger; only derive gross battery bus energy in kWh."""
     battery = info["battery_actual_kw"] if info["step_executed"] else 0.0
     return {
-        **{name: info[name] for name in ACCOUNTING_FIELDS if name not in (
+        **{name: info[name] for name in accounting_fields if name not in (
             "battery_charge_bus_kwh", "battery_discharge_bus_kwh"
         )},
         "battery_charge_bus_kwh": max(-battery, 0.0) / 3600.0,
@@ -150,14 +151,15 @@ def _model_integrity(before: dict, after: dict, model_path: Path, model_hash: st
 
 
 def _rollout(model, env, expected_id: str, episode: int, seed: int | None,
-             max_steps: int | None, split: str, writer) -> tuple[dict, dict]:
+             max_steps: int | None, split: str, writer,
+             accounting_fields=ACCOUNTING_FIELDS, step_fields=STEP_FIELDS) -> tuple[dict, dict]:
     vessel = env.unwrapped
     obs, reset_info = env.reset(seed=seed)
     expected_split = "train" if split == "fixed_train" else split
     if reset_info["sample_id"] != expected_id or reset_info["split"] != expected_split:
         raise RuntimeError(f"{split} voyage identity/order changed")
     initial_soc = float(vessel.physical.soc)
-    totals = dict.fromkeys(ACCOUNTING_FIELDS, 0.0)
+    totals = dict.fromkeys(accounting_fields, 0.0)
     trace = {
         "sample_id": expected_id, "time_s": [0.0], "soc": [initial_soc],
         "interval_start_s": [], "fc_kw": [], "battery_kw": [], "load_kw": [],
@@ -180,8 +182,8 @@ def _rollout(model, env, expected_id: str, episode: int, seed: int | None,
         algorithm_sum += float(scaled)
         executed = vessel.index > start
         limited = bool(not (terminated or truncated) and max_steps is not None and calls >= max_steps)
-        accounting = step_accounting(vessel, before, info)
-        row = {key: info.get(key) for key in STEP_FIELDS}
+        accounting = step_accounting(vessel, before, info, accounting_fields)
+        row = {key: info.get(key) for key in step_fields}
         row.update(
             episode=episode, step_index=calls, interval_start_s=start,
             interval_end_s=vessel.index if executed else None,
@@ -195,7 +197,7 @@ def _rollout(model, env, expected_id: str, episode: int, seed: int | None,
         )
         writer.writerow(row)
         actions.append(float(np.asarray(action).item()))
-        for name in ACCOUNTING_FIELDS:
+        for name in accounting_fields:
             totals[name] += accounting[name]
         if info.get("shutdown_executed"):
             trace["shutdown_event"] = {name: info[name] for name in SHUTDOWN_FIELDS}
@@ -229,6 +231,9 @@ def _rollout(model, env, expected_id: str, episode: int, seed: int | None,
                 **totals,
                 full_voyage_economic_cost_cny=totals["total_cost_cny"] if success else None,
             )
+            if "reward_fc_variation_penalty" in totals:
+                summary["reward_version"] = env.reward_identity["reward_version"]
+                summary["fc_ramp_penalty"] = totals["reward_fc_variation_penalty"]
             print(f"TD3 {split} {expected_id}: {summary['terminal_reason']}, "
                   f"coverage={summary['coverage']:.4f}, raw_return={raw_sum:.6f}, "
                   f"algorithm_return={algorithm_sum:.6f}, cost={totals['total_cost_cny']:.6f} CNY", flush=True)
@@ -241,6 +246,7 @@ def evaluate(
     device: str = "cpu", seed: int = 42, max_steps: int | None = None,
     episodes: int | None = None, episode: int | None = None,
     torch_threads: int = 1, test_source_root: Path | None = None,
+    reward_mode: str = "economic",
 ) -> dict:
     """Evaluate a saved model copy; only an explicit step limit shortens voyages.
 
@@ -249,6 +255,10 @@ def evaluate(
     a Validation prefix for bounded diagnostics and never changes voyage order.
     Training callbacks invoke this function via an independent CPU subprocess.
     """
+    if reward_mode not in REWARD_MODES:
+        raise ValueError(f"Unsupported TD3 reward mode {reward_mode!r}")
+    if reward_mode != "economic" and split == "test":
+        raise ValueError("The simple-reward experiment only uses Train and Validation")
     if split not in ("fixed_train", "validation", "test"):
         raise ValueError("split must be fixed_train, validation or test")
     if max_steps is not None and max_steps < 1:
@@ -267,7 +277,35 @@ def evaluate(
     started = time.perf_counter()
     data_root = Path(data_root or DEFAULT_DATA_ROOT).resolve()
     model_hash = hashlib.sha256(model_path.read_bytes()).hexdigest()
-    model = TD3.load(str(model_path), device=device, action_noise=None)
+    model_class = TD3
+    algorithm = "stable_baselines3.TD3"
+    accounting_fields, step_fields = ACCOUNTING_FIELDS, STEP_FIELDS
+    cost_scope = ECONOMIC_COST_SCOPE
+    if reward_mode != "economic":
+        from .simple_reward import make_simple_env, make_control_env, REWARD_COMPONENT_FIELDS
+        if reward_mode == "control_huber":
+            from .huber_control import make_huber_control_env
+            from .huber_td3 import HuberTD3
+
+            factory = make_huber_control_env
+            model_class = HuberTD3
+            algorithm = f"{HuberTD3.__module__}.{HuberTD3.__name__}"
+        else:
+            factory = make_control_env if reward_mode == "control" else make_simple_env
+        accounting_fields = ACCOUNTING_FIELDS + REWARD_COMPONENT_FIELDS
+        step_fields = STEP_FIELDS + REWARD_COMPONENT_FIELDS
+        cost_scope = (
+            ("Training reward contains quadratic FC variation and SOC deviation penalties only; H2 cost is excluded. "
+             if reward_mode != "simple" else
+             "Training reward contains actual H2 cost, quadratic FC variation penalty and SOC deviation penalty only. ")
+            +
+            "The original complete economic ledger (including degradation and signed battery equivalent H2) "
+            "is retained for reporting and is excluded from the simple training reward. "
+            "Failure reward is a separate override; zero-duration shutdown adds no simple reward penalty."
+        )
+    else:
+        factory = make_env
+    model = model_class.load(str(model_path), device=device, action_noise=None)
     if model.get_vec_normalize_env() is not None:
         raise ValueError("VecNormalize is unsupported in this TD3 experiment")
     model.policy.set_training_mode(False)
@@ -277,7 +315,7 @@ def evaluate(
         from ..ddpg_aggregate.test4_env import AggregateDDPGTestEnv
         env = ScaledEconomicReward(AggregateDDPGTestEnv(data_root, test_source_root=test_source_root))
     else:
-        env = make_env(data_root, split="train" if split == "fixed_train" else "validation",
+        env = factory(data_root, split="train" if split == "fixed_train" else "validation",
                        fixed_train_id=FIXED_TRAIN_ID if split == "fixed_train" else None)
     try:
         vessel = env.unwrapped
@@ -302,13 +340,14 @@ def evaluate(
             output_dir.mkdir(parents=True, exist_ok=True)
         rows, traces = [], []
         with (output_dir / f"{split}_step_data.csv").open("x", encoding="utf-8-sig", newline="") as handle, torch.inference_mode():
-            writer = csv.DictWriter(handle, fieldnames=STEP_FIELDS)
+            writer = csv.DictWriter(handle, fieldnames=step_fields)
             writer.writeheader()
             for index, expected_id in enumerate(chosen_ids, 1):
                 summary, trace = _rollout(
                     model, env, expected_id,
                     episode if split == "fixed_train" and episode is not None else index,
                     seed if index == 1 else None, max_steps, split, writer,
+                    accounting_fields=accounting_fields, step_fields=step_fields,
                 )
                 rows.append(summary)
                 traces.append(trace)
@@ -319,7 +358,7 @@ def evaluate(
         complete = len(chosen_ids) == len(expected_ids) and not any(row["evaluation_truncated"] for row in rows)
         successes = sum(row["success"] for row in rows)
         metrics = {
-            "algorithm": "stable_baselines3.TD3", "output_dir": str(output_dir),
+            "algorithm": algorithm, "output_dir": str(output_dir),
             "model_path": str(model_path), "model_sha256": model_hash, "data_root": str(data_root),
             "split": "train" if split == "fixed_train" else split, "evaluation_split": split,
             "deterministic": True, "action_noise": None, "device": str(model.device), "seed": seed,
@@ -344,7 +383,7 @@ def evaluate(
                 sum(row["total_cost_cny"] for row in rows) / len(rows)
                 if complete and successes == len(rows) else None
             ),
-            "economic_cost_scope": ECONOMIC_COST_SCOPE,
+            "economic_cost_scope": cost_scope,
             "battery_power_sign": "Positive bus power = discharge; negative = charge. Energy fields are positive gross bus kWh.",
             "integrity": integrity, "model_before": before_model, "model_after": after_model,
         }
@@ -378,6 +417,7 @@ def evaluate(
 def argument_parser(description: str) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--model-path", type=Path, required=True)
+    parser.add_argument("--reward-mode", choices=REWARD_MODES, default="economic")
     parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA_ROOT)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--output-dir", type=Path, help="Fresh result directory or existing checkpoint-only periodic node")

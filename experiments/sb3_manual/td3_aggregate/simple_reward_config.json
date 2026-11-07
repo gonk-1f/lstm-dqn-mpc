@@ -1,0 +1,20 @@
+{
+  "reward_version": "td3_hydrogen_quadratic_fc_soc_scaled_1e4_v1",
+  "formula": "-(C_H2 + lambda_fc*(P_FC_actual-P_FC_previous_actual)^2 + lambda_soc*(SOC_next-0.5)^2)",
+  "lambda_fc": 0.0025,
+  "fc_variation_power": 2,
+  "lambda_soc": 10.0,
+  "soc_reference": 0.5,
+  "failure_reward": -20000.0,
+  "reward_scale": 0.0001,
+  "historical_source": {
+    "commit": "49082cdbb45fcbd964420b36e6d0263682783370",
+    "path": "experiments/sb3_manual/ddpg_aggregate/env.py",
+    "coefficient_lines": "21-23",
+    "reward_lines": "178-180",
+    "original_formula": "-(10.0*(SOC_next-0.5)^2 + 0.0025*(P_FC_actual-P_FC_previous_actual)^2)",
+    "experiment_difference": "The user confirmed restoration of the historical quadratic term; actual hydrogen cost is added for this new comparison. This is not an L1 coefficient or a restored complete historical experiment."
+  },
+  "terminal_rule": "Use each real load interval's actual FC change and SOC once. Zero-duration shutdown and cycle settlement remain in the physical economic ledger and add no extra reward term.",
+  "accounting_scope": "Complete FC/battery degradation and signed battery-equivalent hydrogen accounting are retained for comparison, but excluded from this training reward. Auxiliary FC/SOC penalties are not physical economic costs."
+}

@@ -10,13 +10,14 @@ def run_validation(
     device: str = "cpu", seed: int = 42, episodes: int = 8,
     max_steps_per_episode: int | None = None, torch_threads: int = 1,
     output_dir: Path | None = None, max_steps: int | None = None,
+    reward_mode: str = "economic",
 ) -> dict:
     if max_steps is not None and max_steps_per_episode is not None:
         raise ValueError("Specify only one max_steps argument")
     return evaluate(model_path, split="validation", data_root=data_root, output_root=output_root,
                     output_dir=output_dir, device=device, seed=seed, episodes=episodes,
                     max_steps=max_steps if max_steps is not None else max_steps_per_episode,
-                    torch_threads=torch_threads)
+                    torch_threads=torch_threads, reward_mode=reward_mode)
 
 
 def main(argv=None):

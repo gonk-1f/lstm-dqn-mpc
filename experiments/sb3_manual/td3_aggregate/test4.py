@@ -9,10 +9,11 @@ def run_test4(
     model_path: Path, data_root: Path | None = None, output_root: Path | None = None,
     device: str = "cpu", seed: int = 42, test_source_root: Path | None = None,
     torch_threads: int = 1, output_dir: Path | None = None, max_steps: int | None = None,
+    reward_mode: str = "economic",
 ) -> dict:
     return evaluate(model_path, split="test", data_root=data_root, output_root=output_root,
                     output_dir=output_dir, device=device, seed=seed, max_steps=max_steps,
-                    torch_threads=torch_threads, test_source_root=test_source_root)
+                    torch_threads=torch_threads, test_source_root=test_source_root, reward_mode=reward_mode)
 
 
 def main(argv=None):

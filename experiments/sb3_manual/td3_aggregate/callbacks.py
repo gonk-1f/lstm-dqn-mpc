@@ -74,6 +74,12 @@ class TD3TrainingCallback(BaseCallback):
     they describe the latest completed update, before this rollout's update.
     """
 
+    economic_fields = ECONOMIC_FIELDS
+    reward_component_fields = ()
+    environment_id = ENV_ID
+    algorithm_name = "stable_baselines3.TD3"
+    evaluation_extra_args = ()
+
     def __init__(
         self, fixed_eval_every_episodes: int = 20,
         validation_every_episodes: int = 100, max_episodes: int = 500,
@@ -173,7 +179,7 @@ class TD3TrainingCallback(BaseCallback):
         self._observations.clear()
         self._pending_dump = False
         _write_json(log_directory / "td3_training_metadata.json", {
-            "algorithm": "stable_baselines3.TD3", "env_id": ENV_ID,
+            "algorithm": self.algorithm_name, "env_id": self.environment_id,
             "reward_scale": REWARD_SCALE, "reward_identity": identity,
             "starting_completed_episodes": self.completed_episodes,
             "starting_successful_episodes": self.successful_episodes,
@@ -218,7 +224,7 @@ class TD3TrainingCallback(BaseCallback):
                 self._accumulate(name, info[name])
             self._accumulate("executed_action", info["fc_actual_kw"] / 300.0 - 1.0)
             self._accumulate("projected", float(info.get("projected", False)))
-        for name in ECONOMIC_FIELDS:
+        for name in self.economic_fields:
             if name in info:
                 self._accumulate(name, info[name])
         self.logger.record("vessel/soc", info["soc"])
@@ -271,7 +277,8 @@ class TD3TrainingCallback(BaseCallback):
             "mean_fc_kw": mean("fc_actual_kw"),
             "mean_battery_kw": mean("battery_actual_kw"), "mean_load_kw": mean("load_kw"),
             "power_projection_fraction": summary["power_projection_fraction"],
-            **{name: summary.get(name) for name in ECONOMIC_FIELDS},
+            **{name: summary.get(name) for name in self.economic_fields},
+            **self._additional_episode_fields(summary),
         }
         _append_csv(self.directory / "training_episodes.csv", row)
         for name, value in row.items():
@@ -280,6 +287,9 @@ class TD3TrainingCallback(BaseCallback):
         self.logger.record("episode/terminal_reason", summary["terminal_reason"])
         self._episode_sums.clear()
         self._episode_counts.clear()
+
+    def _additional_episode_fields(self, summary: dict[str, Any]) -> dict:
+        return {}
 
     def _network_diagnostics(self) -> None:
         if not self._observations:
@@ -315,7 +325,9 @@ class TD3TrainingCallback(BaseCallback):
     def _flush(self) -> None:
         self._network_diagnostics()
         for name, total in self._window_sums.items():
-            if name in ECONOMIC_FIELDS:
+            if name in self.reward_component_fields:
+                self.logger.record(f"reward/window_sum_{name}", total)
+            elif name in self.economic_fields:
                 self.logger.record(f"economics/window_sum_{name}", total)
             elif name in {"raw_reward", "scaled_reward"}:
                 key = "raw_reward_sum" if name == "raw_reward" else "algorithm_reward_sum"
@@ -359,7 +371,7 @@ class TD3TrainingCallback(BaseCallback):
         checkpoint = node / "model.zip"
         self.model.save(str(checkpoint))
         _write_json(node / "checkpoint_metadata.json", {
-            "algorithm": "stable_baselines3.TD3", "env_id": ENV_ID,
+            "algorithm": self.algorithm_name, "env_id": self.environment_id,
             "completed_episodes": self.completed_episodes,
             "successful_episodes": self.successful_episodes,
             "environment_steps": int(self.num_timesteps),
@@ -377,6 +389,7 @@ class TD3TrainingCallback(BaseCallback):
             "--model-path", str(checkpoint), "--data-root", str(self.data_root),
             "--output-dir", str(node), "--device", "cpu",
             "--seed", str(self.model.seed if self.model.seed is not None else 42),
+            *self.evaluation_extra_args,
         ]
         if fixed:
             command += ["--episode", str(self.completed_episodes), "--sample-id", FIXED_TRAIN_ID]
@@ -424,7 +437,7 @@ class TD3TrainingCallback(BaseCallback):
                 "mean_algorithm_reward_sum": float(np.mean([v["algorithm_reward_sum"] for v in voyages])),
                 "mean_soc_final": float(np.mean([v["soc_final"] for v in voyages])),
                 "min_soc": min(v["soc_min"] for v in voyages),
-                **{f"total_{name}": sum(v[name] for v in voyages) for name in ECONOMIC_FIELDS},
+                **{f"total_{name}": sum(v[name] for v in voyages) for name in self.economic_fields},
             }
             _append_csv(directory / "periodic_validation.csv", row)
             for name, value in row.items():

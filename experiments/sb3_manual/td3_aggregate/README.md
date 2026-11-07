@@ -1,5 +1,63 @@
 # 原生 SB3 TD3 聚合船舶实验
 
+## 独立简化奖励对照实验
+
+最新的纯控制奖励入口为 `run_td3_train_control.py`，配置 `zoo_td3_control.yml`，环境
+`AggregateShipTD3Control-v0`。正常奖励只保留
+`-(0.0025*(P_FC_actual-P_FC_previous_actual)**2 + 10*(SOC_next-0.5)**2)`，
+仍除以10000；失败仍为-20000。实际氢耗继续记入物理账本，但不参与该版本奖励。
+训练从新模型/新Replay开始，输出独立保存到 `outputs/td3_control_fc_soc_500ep/`，
+其余TD3参数、500次episode预算及20/100轮评估流程不变。独立评估使用
+`--reward-mode control`；暂停方式仍为在具体run目录创建 `pause_after_episode.request`。
+恢复使用 `run_td3_train_control.py --trained-agent "本版本模型完整路径"`。
+不允许用含氢耗奖励模型或其Replay继续训练纯控制奖励版本。
+
+下述 `run_td3_train_simple.py` 保留上一版含氢耗的三项奖励实验，方便复现历史记录。
+
+PyCharm直接运行根目录 `run_td3_train_simple.py`，使用原生Zoo TD3、独立环境
+`AggregateShipTD3Simple-v0` 和 `zoo_td3_simple.yml`。新实验从头开始；不能加载
+旧经济奖励模型或旧Replay。原入口和 `zoo_td3.yml` 保持原设置。
+
+用户确认恢复历史平方波动项，本次原始奖励为：
+
+`raw_reward = -(C_H2 + 0.0025*(P_FC_actual-P_FC_previous_actual)**2 + 10*(SOC_next-0.5)**2)`。
+
+系数追溯提交 `49082cdbb45fcbd964420b36e6d0263682783370` 的DDPG环境；
+原历史奖励只含FC平方波动和SOC，本次按要求额外加入实际氢耗成本，故并非完全复现
+旧实验，也不使用绝对值项。失败仍为 `-20000`，所有奖励仍除以10000再交给TD3。
+最后真实负载区间按该步实际功率变化计算一次；零时长关闭事件只保留原物理账本，
+不增加额外关闭波动惩罚或SOC项。
+
+电池等效氢耗、FC和电池退化均不进入此训练奖励，但完整经济账本继续保存。
+FC额定功率、投影、SOC动力学、状态/动作及全部TD3参数均与原配置相同；仍固定
+`parent_005_seg01`、500次实际episode结束事件，每20轮固定Train诊断、每100轮Validation8。
+不读取Test；失败episode不等同于完整成功航段。
+
+```powershell
+.\.venv\Scripts\python.exe run_td3_train_simple.py
+```
+
+结果单独保存到 `outputs/td3_simple_h2_fc_soc_500ep/td3/AggregateShipTD3Simple-v0_N/`。
+`training_episodes.csv`逐轮保存回报、三项奖励组成、失败覆盖奖励、长度、完成状态和
+SOC初末变化；`reward_curves.png`及`reward_curve_summary.json`每20轮和结束时更新。
+保留SB3原生终端、CSV和TensorBoard日志。两套奖励定义不同，比较时应同时查看独立
+确定性评估的完成率、SOC及同口径完整经济账本，不能直接比较两种原始奖励的数值大小。
+
+安全暂停：在具体run目录创建空文件 `pause_after_episode.request`，当前episode结束后
+Zoo自动保存模型及Replay退出。恢复前移除该请求文件，并指定本实验对应模型：
+
+```powershell
+.\.venv\Scripts\python.exe run_td3_train_simple.py --trained-agent "完整路径/AggregateShipTD3Simple-v0.zip"
+```
+
+Zoo会从模型所在目录加载对应Replay；禁止将其他实验的Replay复制进该目录。
+单独评估新模型时，沿用原入口并显式选择新奖励，例如：
+
+```powershell
+.\.venv\Scripts\python.exe -m experiments.sb3_manual.td3_aggregate.fixed_train_eval --model-path "完整路径/model.zip" --reward-mode simple
+.\.venv\Scripts\python.exe -m experiments.sb3_manual.td3_aggregate.validate --model-path "完整路径/model.zip" --reward-mode simple
+```
+
 本实验使用 **Stable-Baselines3 2.9.2 原生 `TD3`** 和 **RL Zoo 2.9.2** 的
 `rl_zoo3.train` / `ExperimentManager` / `model.learn()`。不替换 `TD3.train()`，
 不使用自定义 Huber。TD3 的三个改进是双 Critic 取较小目标值、延迟 Actor/目标网络
