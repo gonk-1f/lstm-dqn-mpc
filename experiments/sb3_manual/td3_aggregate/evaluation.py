@@ -61,7 +61,7 @@ ECONOMIC_COST_SCOPE = (
     "Shutdown consumes no physical time, hydrogen or battery energy. All costs remain unscaled CNY."
 )
 _CHECKPOINT_METADATA = {"checkpoint_metadata.json", "model_metadata.json", "reward_identity.json"}
-REWARD_MODES = ("economic", "simple", "control", "control_huber")
+REWARD_MODES = ("economic", "economic_ems", "simple", "control", "control_huber")
 
 
 def step_accounting(vessel, before, info: dict, accounting_fields=ACCOUNTING_FIELDS) -> dict:
@@ -174,7 +174,7 @@ def _rollout(model, env, expected_id: str, episode: int, seed: int | None,
         calls += 1
         raw = float(info["raw_reward"])
         scale = float(info["reward_scale"])
-        if scale != 0.0001 or not math.isclose(float(scaled), raw / 10000.0, rel_tol=1e-12, abs_tol=1e-15):
+        if scale != 0.0001 or not math.isclose(float(scaled), raw * scale, rel_tol=1e-12, abs_tol=1e-15):
             raise RuntimeError("Evaluation reward scaling differs from the training contract")
         if float(info["scaled_reward"]) != float(scaled):
             raise RuntimeError("Wrapper info and algorithm reward differ")
@@ -281,7 +281,26 @@ def evaluate(
     algorithm = "stable_baselines3.TD3"
     accounting_fields, step_fields = ACCOUNTING_FIELDS, STEP_FIELDS
     cost_scope = ECONOMIC_COST_SCOPE
-    if reward_mode != "economic":
+    if reward_mode == "economic_ems":
+        from .economic_ems import (
+            make_economic_env, REWARD_COMPONENT_FIELDS as ECONOMIC_REWARD_FIELDS,
+            assert_economic_model_identity,
+        )
+        factory = make_economic_env
+        accounting_fields = ACCOUNTING_FIELDS + ECONOMIC_REWARD_FIELDS
+        step_fields = STEP_FIELDS + ECONOMIC_REWARD_FIELDS + (
+            "actor_reference_fc_kw", "action_mapped_fc_kw", "action_mapping",
+            "feasible_interval_width_kw",
+        )
+        cost_scope = (
+            "Training reward is the weighted sum of actual H2 cost, FC transient/low/high variable degradation, "
+            "signed battery-equivalent hydrogen cost, battery degradation, per-step SOC deviation and successful "
+            "terminal SOC deviation. Start-stop cycle settlement remains in the complete physical ledger only. "
+            "All physical costs and rewards are reported in raw CNY; TD3 receives reward_scale=0.001."
+        )
+        model_class = TD3
+        algorithm = "stable_baselines3.TD3"
+    elif reward_mode != "economic":
         from .simple_reward import make_simple_env, make_control_env, REWARD_COMPONENT_FIELDS
         if reward_mode == "control_huber":
             from .huber_control import make_huber_control_env
@@ -320,7 +339,7 @@ def evaluate(
     try:
         vessel = env.unwrapped
         check_for_correct_spaces(env, model.observation_space, model.action_space)
-        assert_model_identity(model, env.reward_identity)
+        if reward_mode == "economic_ems":\n            assert_economic_model_identity(model, env.reward_identity)\n        else:\n            assert_model_identity(model, env.reward_identity)
         if split == "fixed_train":
             selected = [voyage for voyage in vessel.episodes if voyage.sample_id == FIXED_TRAIN_ID]
             if len(selected) != 1 or len(selected[0].load_kw) != 9258:
@@ -367,7 +386,7 @@ def evaluate(
             "evaluation_reward_identity": dict(env.reward_identity),
             "vecnormalize_path": None,
             "reward_units": {"reward_sum": "raw negative economic/SOC reward", "episode_reward": "raw negative economic/SOC reward",
-                             "raw_reward_sum": "raw negative economic/SOC reward", "algorithm_reward_sum": "raw_reward_sum / 10000",
+                             "raw_reward_sum": "raw negative economic/SOC reward", "algorithm_reward_sum": "raw_reward_sum * reward_scale",
                              "economic_costs": "unscaled CNY"},
             "completed": successes, "completion_rate": successes / len(rows),
             "mean_coverage": sum(row["coverage"] for row in rows) / len(rows),
