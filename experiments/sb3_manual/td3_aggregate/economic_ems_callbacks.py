@@ -8,7 +8,7 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
     economic_fields = ECONOMIC_FIELDS + REWARD_COMPONENT_FIELDS
     reward_component_fields = REWARD_COMPONENT_FIELDS
     environment_id = "AggregateShipTD3Economic-v0"
-    algorithm_name = "stable_baselines3.TD3"
+    algorithm_name = "experiments.sb3_manual.td3_aggregate.huber_td3.HuberTD3"
     evaluation_extra_args = ("--reward-mode", "economic_ems")
     reward_scale = 0.001
     require_fixed_train = False
