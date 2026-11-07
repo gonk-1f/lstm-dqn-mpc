@@ -298,8 +298,9 @@ def evaluate(
             "terminal SOC deviation. Start-stop cycle settlement remains in the complete physical ledger only. "
             "All physical costs and rewards are reported in raw CNY; TD3 receives reward_scale=0.001."
         )
-        model_class = TD3
-        algorithm = "stable_baselines3.TD3"
+        from .huber_td3 import HuberTD3
+        model_class = HuberTD3
+        algorithm = f"{HuberTD3.__module__}.{HuberTD3.__name__}"
     elif reward_mode != "economic":
         from .simple_reward import make_simple_env, make_control_env, REWARD_COMPONENT_FIELDS
         if reward_mode == "control_huber":
