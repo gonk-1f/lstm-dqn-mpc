@@ -221,7 +221,12 @@ class TD3TrainingCallback(BaseCallback):
         for name in ("raw_reward", "scaled_reward"):
             self._accumulate(name, info[name])
         self._accumulate("requested_fc_kw", info["requested_fc_kw"])
-        self._accumulate("requested_action", info["requested_fc_kw"] / 300.0 - 1.0)
+        actor_action = float(info.get("actor_action", info["requested_fc_kw"] / 300.0 - 1.0))
+        self._accumulate("actor_action", actor_action)
+        self._accumulate("actor_action_saturated", float(abs(actor_action) >= 0.99))
+        self._accumulate("actor_reference_fc_kw", float(info.get("actor_reference_fc_kw", info["requested_fc_kw"])))
+        self._accumulate("action_mapped_fc_kw", float(info.get("action_mapped_fc_kw", info["requested_fc_kw"])))
+        self._accumulate("feasible_interval_width_kw", float(info.get("feasible_interval_width_kw", 600.0)))
         if info["step_executed"]:
             for name in ("fc_actual_kw", "battery_actual_kw", "load_kw"):
                 self._accumulate(name, info[name])
