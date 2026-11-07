@@ -174,7 +174,7 @@ def _rollout(model, env, expected_id: str, episode: int, seed: int | None,
         calls += 1
         raw = float(info["raw_reward"])
         scale = float(info["reward_scale"])
-        if scale != 0.0001 or not math.isclose(float(scaled), raw * scale, rel_tol=1e-12, abs_tol=1e-15):
+        if scale != float(env.reward_identity["reward_scale"]) or not math.isclose(float(scaled), raw * scale, rel_tol=1e-12, abs_tol=1e-15):
             raise RuntimeError("Evaluation reward scaling differs from the training contract")
         if float(info["scaled_reward"]) != float(scaled):
             raise RuntimeError("Wrapper info and algorithm reward differ")
