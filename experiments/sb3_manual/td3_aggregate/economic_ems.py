@@ -23,7 +23,7 @@ from .huber_td3 import CRITIC_LOSS_ID
 
 DEFAULT_CONFIG_PATH = Path(__file__).with_name("economic_ems_config.json")
 ECONOMIC_EMS_ENV_ID = "AggregateShipTD3Economic-v0"
-ECONOMIC_EMS_REWARD_VERSION = "td3_economic_cost_soc_terminal_feasible_interval_fixed_v2"
+ECONOMIC_EMS_REWARD_VERSION = "td3_economic_cost_soc_step5_no_terminal_feasible_interval_fixed_v3"
 REWARD_SCALE = 0.001
 REWARD_COMPONENT_FIELDS = (
     "reward_h2_cost_cny",
@@ -74,7 +74,7 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
         self.reward_scale = float(self.config["reward_scale"])
         self.soc_reference = float(self.config["soc_reference"])
         self.soc_step_weight = float(self.config["soc_step_weight_cny"])
-        self.soc_terminal_weight = float(self.config["soc_terminal_weight_cny"])
+        self.soc_terminal_weight = 0.0
         self.failure_reward = float(self.config["failure_reward"])
         base_identity = deepcopy(env.unwrapped.reward_identity)
         config_hash = hashlib.sha256(
@@ -98,7 +98,8 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
             },
             "soc_reference": self.soc_reference,
             "soc_step_weight_cny": self.soc_step_weight,
-            "soc_terminal_weight_cny": self.soc_terminal_weight,
+            "soc_terminal_weight_cny": 0.0,
+            "soc_terminal_penalty_enabled": False,
             "failure_reward": self.failure_reward,
             "fc_degradation_reward_scope": list(FC_VARIABLE_DEGRADATION_FIELDS),
             "fc_start_stop_reward_scope": self.config["fc_start_stop_reward_scope"],
@@ -161,10 +162,8 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
             components["reward_soc_tracking_penalty_cny"] = (
                 self.soc_step_weight * (float(original["soc"]) - self.soc_reference) ** 2
             )
-            if terminated and not truncated and original.get("terminal_reason") == "completed":
-                components["reward_terminal_soc_penalty_cny"] = (
-                    self.soc_terminal_weight * (float(original["soc"]) - self.soc_reference) ** 2
-                )
+            # No separate terminal SOC term: the per-step shaping above
+            # already applies on the final executed physical step.
             raw_reward = -math.fsum(components.values())
 
         if not math.isfinite(raw_reward):
