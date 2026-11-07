@@ -384,7 +384,7 @@ def evaluate(
             "model_path": str(model_path), "model_sha256": model_hash, "data_root": str(data_root),
             "split": "train" if split == "fixed_train" else split, "evaluation_split": split,
             "deterministic": True, "action_noise": None, "device": str(model.device), "seed": seed,
-            "reward_scale": 0.0001,
+            "reward_scale": float(env.reward_identity["reward_scale"]),
             "model_reward_identity": dict(model._td3_reward_identity),
             "evaluation_reward_identity": dict(env.reward_identity),
             "vecnormalize_path": None,
