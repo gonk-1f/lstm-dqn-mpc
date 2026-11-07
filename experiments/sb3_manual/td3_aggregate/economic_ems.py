@@ -12,6 +12,7 @@ import gymnasium as gym
 
 from experiments.sb3_manual.ddpg_aggregate.env import AggregateDDPGEnv
 
+from .callbacks import FIXED_TRAIN_ID, FIXED_TRAIN_STEPS
 from .economic_action_wrappers import (
     ACTION_MAPPING_VERSION,
     OBSERVATION_VERSION,
@@ -21,6 +22,9 @@ from .economic_action_wrappers import (
 from .huber_td3 import CRITIC_LOSS_ID
 
 DEFAULT_CONFIG_PATH = Path(__file__).with_name("economic_ems_config.json")
+ECONOMIC_EMS_ENV_ID = "AggregateShipTD3Economic-v0"
+ECONOMIC_EMS_REWARD_VERSION = "td3_economic_cost_soc_terminal_feasible_interval_fixed_v2"
+REWARD_SCALE = 0.001
 REWARD_COMPONENT_FIELDS = (
     "reward_h2_cost_cny",
     "reward_fc_degradation_cost_cny",
@@ -39,9 +43,9 @@ FC_VARIABLE_DEGRADATION_FIELDS = (
 
 def load_economic_ems_config(path: str | Path = DEFAULT_CONFIG_PATH) -> dict:
     config = json.loads(Path(path).read_text(encoding="utf-8"))
-    if config.get("reward_version") != "td3_economic_cost_soc_terminal_feasible_interval_v1":
+    if config.get("reward_version") != ECONOMIC_EMS_REWARD_VERSION:
         raise ValueError("Unsupported TD3 economic reward version")
-    if config.get("reward_scale") != 0.001:
+    if config.get("reward_scale") != REWARD_SCALE:
         raise ValueError("TD3 economic reward scale must be 0.001")
     for key in (
         "hydrogen_cost_weight",
@@ -54,7 +58,7 @@ def load_economic_ems_config(path: str | Path = DEFAULT_CONFIG_PATH) -> dict:
         value = config.get(key)
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
             raise ValueError(f"{key} must be finite and nonnegative")
-    if config["failure_reward"] >= 0:
+    if not math.isfinite(config["failure_reward"]) or config["failure_reward"] >= 0:
         raise ValueError("failure_reward must be negative")
     if not 0.0 <= config["soc_reference"] <= 1.0:
         raise ValueError("soc_reference must lie in [0, 1]")
@@ -73,12 +77,14 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
         self.soc_terminal_weight = float(self.config["soc_terminal_weight_cny"])
         self.failure_reward = float(self.config["failure_reward"])
         base_identity = deepcopy(env.unwrapped.reward_identity)
-        config_hash = hashlib.sha256(DEFAULT_CONFIG_PATH.read_bytes()).hexdigest()
+        config_hash = hashlib.sha256(
+            json.dumps(self.config, sort_keys=True, allow_nan=False).encode("utf-8")
+        ).hexdigest()
         self.reward_identity = {
             **base_identity,
             "base_reward_version": base_identity["reward_version"],
             "reward_version": self.config["reward_version"],
-            "env_id": "AggregateShipTD3Economic-v0",
+            "env_id": ECONOMIC_EMS_ENV_ID,
             "algorithm": "TD3",
             "critic_loss": CRITIC_LOSS_ID,
             "critic_huber_delta": 1.0,
@@ -114,6 +120,12 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
         self.algorithm_reward_sum = 0.0
         self.component_totals = dict.fromkeys(REWARD_COMPONENT_FIELDS, 0.0)
         self.initial_soc = float(self.env.unwrapped.physical.soc)
+        if info.get("split") == "train" and (
+            info["sample_id"] != FIXED_TRAIN_ID
+            or self.env.unwrapped.index != 0
+            or not math.isclose(self.initial_soc, 0.6, abs_tol=1e-9)
+        ):
+            raise RuntimeError("Economic TD3 training must reset parent_005_seg01 at t=0 and SOC=0.6")
         return observation, {
             **info,
             "reward_version": self.reward_identity["reward_version"],
@@ -155,6 +167,8 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
                 )
             raw_reward = -math.fsum(components.values())
 
+        if not math.isfinite(raw_reward):
+            raise ValueError("Nonfinite economic TD3 reward")
         total_reward_cost = math.fsum(components.values())
         economic_reward_cost = math.fsum((
             components["reward_h2_cost_cny"],
@@ -230,19 +244,32 @@ def make_economic_env(
     split: str = "train",
     fixed_train_id: str | None = None,
 ) -> EconomicEMSTD3Reward:
-    """Zoo/evaluation factory. Train defaults to random Train35 sampling."""
+    """Build the fixed Train voyage or the separate ordered validation set."""
+    if split == "train":
+        if fixed_train_id not in (None, FIXED_TRAIN_ID):
+            raise ValueError(f"Economic TD3 training requires {FIXED_TRAIN_ID}")
+        fixed_train_id = FIXED_TRAIN_ID
     base_env = AggregateDDPGEnv(
         data_root=data_root,
         split=split,
         fixed_train_id=fixed_train_id,
     )
+    if split == "train":
+        voyage = next(episode for episode in base_env.episodes if episode.sample_id == FIXED_TRAIN_ID)
+        if len(voyage.load_kw) != FIXED_TRAIN_STEPS:
+            base_env.close()
+            raise ValueError(f"{FIXED_TRAIN_ID} must contain {FIXED_TRAIN_STEPS} one-second steps")
     return wrap_economic_env(base_env)
 
 
 def assert_economic_model_identity(model, identity: dict) -> None:
-    if identity.get("algorithm") != "TD3" or identity.get("reward_scale") != 0.001:
+    if (
+        identity.get("algorithm") != "TD3"
+        or identity.get("reward_version") != ECONOMIC_EMS_REWARD_VERSION
+        or identity.get("reward_scale") != REWARD_SCALE
+    ):
         raise ValueError("Expected the versioned TD3 economic reward at scale 0.001")
     if getattr(model, "_td3_reward_identity", None) != identity:
         raise ValueError("TD3 checkpoint reward identity does not match economic evaluation")
-    if getattr(model, "reward_scale", None) != 0.001:
+    if getattr(model, "reward_scale", None) != REWARD_SCALE:
         raise ValueError("TD3 checkpoint reward_scale must be 0.001")

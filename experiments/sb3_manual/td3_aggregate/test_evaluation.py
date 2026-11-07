@@ -39,7 +39,7 @@ class SummarySchemaTests(unittest.TestCase):
         evaluation = importlib.import_module(PACKAGE + ".evaluation")
 
         class Endpoint:
-            reward_identity = {"reward_version": "td3_economic_scaled_1e4_v1"}
+            reward_identity = {"reward_version": "td3_economic_scaled_1e4_v1", "reward_scale": 0.0001}
 
             def __init__(self, terminal):
                 self.unwrapped = self

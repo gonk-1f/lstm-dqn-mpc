@@ -22,6 +22,7 @@ def main() -> int:
         "--gym-packages", "experiments.sb3_manual.td3_aggregate.economic_ems_registration",
         "--conf-file", "experiments/sb3_manual/td3_aggregate/zoo_td3_economic_ems.yml",
         "--device", "cuda",
+        "--num-threads", "1",
         "--eval-freq", "-1",
         "--seed", "42",
         "--log-folder", "outputs/td3_economic_ems_v2_500ep",

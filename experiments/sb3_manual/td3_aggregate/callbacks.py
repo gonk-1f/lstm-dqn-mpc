@@ -120,7 +120,7 @@ class TD3TrainingCallback(BaseCallback):
             raise ValueError("Validation/Test environments cannot enter training")
         identity = deepcopy(self.training_env.get_attr("reward_identity")[0])
         if identity.get("algorithm") != "TD3" or identity.get("reward_scale") != self.reward_scale:
-            raise ValueError("Training requires the TD3 economic reward wrapper at scale 0.0001")
+            raise ValueError(f"Training requires the TD3 reward wrapper at scale {self.reward_scale}")
         if getattr(self.model, "_ddpg_reward_identity", None) is not None:
             raise ValueError("A DDPG checkpoint cannot be relabeled as scaled TD3")
         saved_identity = getattr(self.model, "_td3_reward_identity", None)
@@ -198,7 +198,7 @@ class TD3TrainingCallback(BaseCallback):
             "checkpoint_clock": "after_env_step_before_replay_insert_and_rollout_update",
             "checkpoint_replay_saved": False,
             "raw_reward_units": "negative raw CNY reward cost, except fixed physical failure override",
-            "algorithm_reward_units": "raw_reward * 0.0001",
+            "algorithm_reward_units": f"raw_reward * {self.reward_scale}",
         })
         self.logger.record("reward/reward_scale", self.reward_scale)
         self.logger.record("time/completed_episodes", self.completed_episodes)
@@ -221,12 +221,7 @@ class TD3TrainingCallback(BaseCallback):
         for name in ("raw_reward", "scaled_reward"):
             self._accumulate(name, info[name])
         self._accumulate("requested_fc_kw", info["requested_fc_kw"])
-        actor_action = float(info.get("actor_action", info["requested_fc_kw"] / 300.0 - 1.0))
-        self._accumulate("actor_action", actor_action)
-        self._accumulate("actor_action_saturated", float(abs(actor_action) >= 0.99))
-        self._accumulate("actor_reference_fc_kw", float(info.get("actor_reference_fc_kw", info["requested_fc_kw"])))
-        self._accumulate("action_mapped_fc_kw", float(info.get("action_mapped_fc_kw", info["requested_fc_kw"])))
-        self._accumulate("feasible_interval_width_kw", float(info.get("feasible_interval_width_kw", 600.0)))
+        self._accumulate("requested_action", info["requested_fc_kw"] / 300.0 - 1.0)
         if info["step_executed"]:
             for name in ("fc_actual_kw", "battery_actual_kw", "load_kw"):
                 self._accumulate(name, info[name])
@@ -281,8 +276,6 @@ class TD3TrainingCallback(BaseCallback):
             "cumulative_completion_rate": self.successful_episodes / self.completed_episodes,
             "terminal_reason": summary["terminal_reason"],
             "raw_reward_sum": raw, "algorithm_reward_sum": scaled,
-            "mean_reward_per_step": raw / max(counts["raw_reward"], 1),
-            "mean_reward_cost_per_step_cny": (summary.get("reward_total_cost_cny") / max(summary.get("executed_steps", 0), 1)) if summary.get("reward_total_cost_cny") is not None else None,
             "reward_scale": self.reward_scale,
             "soc_min": summary["soc_min"], "soc_final": summary["soc_final"],
             "mean_requested_fc_kw": mean("requested_fc_kw"),

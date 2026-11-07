@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import math
-
 import gymnasium as gym
 import numpy as np
 
@@ -23,10 +21,10 @@ class VoyageProgressObservationWrapper(gym.ObservationWrapper):
 
     def __init__(self, env: gym.Env):
         super().__init__(env)
+        high = env.observation_space.high.copy()
+        high[4] = 1.0
         self.observation_space = gym.spaces.Box(
-            low=np.array([0.0, 0.0, 0.0, -np.inf, 0.0], dtype=np.float32),
-            high=np.array([1.0, np.inf, 1.0, np.inf, 1.0], dtype=np.float32),
-            dtype=np.float32,
+            low=env.observation_space.low.copy(), high=high, dtype=np.float32,
         )
 
     def observation(self, observation: np.ndarray) -> np.ndarray:
@@ -69,9 +67,10 @@ class FeasibleIntervalActionWrapper(gym.ActionWrapper):
         feasible = lower_kw <= upper_kw + 1e-8
         if feasible:
             width_kw = max(0.0, upper_kw - lower_kw)
-            mapped_kw = lower_kw + (a + 1.0) * 0.5 * width_kw
+            # When the physical range collapses within its round-off tolerance,
+            # use the same upper endpoint as the underlying actuator.
+            mapped_kw = min(lower_kw, upper_kw) + (a + 1.0) * 0.5 * width_kw
             inner_action = 2.0 * mapped_kw / FC_RATED_KW - 1.0
-            mapped_kw = float(np.clip(mapped_kw, lower_kw, upper_kw))
             inner = np.array([inner_action], dtype=np.float32)
         else:
             # The inner environment will execute its existing fail-closed path.
@@ -85,6 +84,8 @@ class FeasibleIntervalActionWrapper(gym.ActionWrapper):
             "action_mapped_fc_kw": mapped_kw,
             "action_mapping": ACTION_MAPPING_VERSION,
             "feasible_interval_width_kw": width_kw,
+            "feasible_fc_lower_kw": lower_kw,
+            "feasible_fc_upper_kw": upper_kw,
         }
         self.last_mapping = metadata
         return inner, metadata
@@ -106,4 +107,6 @@ class FeasibleIntervalActionWrapper(gym.ActionWrapper):
                 )
             # Any residual below tolerance is float32 round-off, not a real projection.
             info["projected"] = False
+        if "vessel_episode" in info:
+            info["vessel_episode"] = {**info["vessel_episode"], "power_projection_fraction": 0.0}
         return observation, reward, terminated, truncated, info

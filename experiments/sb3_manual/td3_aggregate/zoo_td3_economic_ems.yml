@@ -23,7 +23,7 @@ AggregateShipTD3Economic-v0:
   env_kwargs:
     data_root: data/processed/operating_dataset_v6_1s
     split: train
-    fixed_train_id: null
+    fixed_train_id: parent_005_seg01
   callback:
   - experiments.sb3_manual.td3_aggregate.economic_ems_callbacks.EconomicEMSTrainingCallback:
       fixed_eval_every_episodes: 20

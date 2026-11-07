@@ -62,6 +62,7 @@ ECONOMIC_COST_SCOPE = (
 )
 _CHECKPOINT_METADATA = {"checkpoint_metadata.json", "model_metadata.json", "reward_identity.json"}
 REWARD_MODES = ("economic", "economic_ems", "simple", "control", "control_huber")
+ECONOMIC_EMS_ENV_ID = "AggregateShipTD3Economic-v0"
 
 
 def step_accounting(vessel, before, info: dict, accounting_fields=ACCOUNTING_FIELDS) -> dict:
@@ -131,7 +132,8 @@ def _check_output_dir(output_dir: Path | None, model_path: Path) -> None:
 
 def _reject_vecnormalize(model_path: Path) -> None:
     for directory in (model_path.parent, model_path.parent / "AggregateShipTD3-v0",
-                      model_path.parent / "AggregateShipDDPG-v0"):
+                      model_path.parent / "AggregateShipDDPG-v0",
+                      model_path.parent / ECONOMIC_EMS_ENV_ID):
         if (directory / "vecnormalize.pkl").is_file():
             raise ValueError("VecNormalize is unsupported in this TD3 experiment")
 
@@ -234,6 +236,22 @@ def _rollout(model, env, expected_id: str, episode: int, seed: int | None,
             if "reward_fc_variation_penalty" in totals:
                 summary["reward_version"] = env.reward_identity["reward_version"]
                 summary["fc_ramp_penalty"] = totals["reward_fc_variation_penalty"]
+            if "reward_soc_tracking_penalty_cny" in totals:
+                identity = env.reward_identity
+                target_soc = identity["soc_reference"]
+                summary.update(
+                    reward_version=identity["reward_version"],
+                    soc_deviation_weight=identity["soc_step_weight_cny"],
+                    soc_reference=target_soc,
+                    terminal_soc_target=target_soc,
+                    terminal_soc_error=float(vessel.physical.soc - target_soc),
+                    max_fc_kw=max(powers) if powers else None,
+                    std_fc_kw=float(np.std(powers)) if powers else None,
+                    mean_abs_battery_power_change_kw=(
+                        float(np.mean(np.abs(np.diff(battery_powers))))
+                        if len(battery_powers) > 1 else None
+                    ),
+                )
             print(f"TD3 {split} {expected_id}: {summary['terminal_reason']}, "
                   f"coverage={summary['coverage']:.4f}, raw_return={raw_sum:.6f}, "
                   f"algorithm_return={algorithm_sum:.6f}, cost={totals['total_cost_cny']:.6f} CNY", flush=True)
@@ -263,6 +281,8 @@ def evaluate(
         raise ValueError("split must be fixed_train, validation or test")
     if max_steps is not None and max_steps < 1:
         raise ValueError("max_steps must be positive")
+    if split == "test" and reward_mode == "economic_ems" and max_steps is not None:
+        raise ValueError("Economic EMS Test4 requires complete voyages from the frozen model")
     if torch_threads < 1:
         raise ValueError("torch_threads must be positive")
     if episodes is not None and (split != "validation" or not 1 <= episodes <= 8):
@@ -283,7 +303,7 @@ def evaluate(
     cost_scope = ECONOMIC_COST_SCOPE
     if reward_mode == "economic_ems":
         from .economic_ems import (
-            make_economic_env, REWARD_COMPONENT_FIELDS as ECONOMIC_REWARD_FIELDS,
+            load_economic_ems_config, make_economic_env, REWARD_COMPONENT_FIELDS as ECONOMIC_REWARD_FIELDS,
             assert_economic_model_identity,
         )
         factory = make_economic_env
@@ -326,6 +346,12 @@ def evaluate(
     else:
         factory = make_env
     model = model_class.load(str(model_path), device=device, action_noise=None)
+    if reward_mode == "economic_ems":
+        identity = getattr(model, "_td3_reward_identity", None)
+        expected_version = load_economic_ems_config()["reward_version"]
+        if not isinstance(identity, dict) or identity.get("reward_version") != expected_version:
+            raise ValueError("Economic EMS evaluation requires a checkpoint with the matching reward version")
+        assert_economic_model_identity(model, identity)
     if model.get_vec_normalize_env() is not None:
         raise ValueError("VecNormalize is unsupported in this TD3 experiment")
     model.policy.set_training_mode(False)
@@ -455,3 +481,23 @@ def argument_parser(description: str) -> argparse.ArgumentParser:
                         help="Bounded diagnostic only; default runs full voyages or true physical failure")
     parser.add_argument("--torch-threads", type=int, default=1)
     return parser
+
+
+def entrypoint_arguments(arguments: list[str], *, final_test: bool = False) -> list[str]:
+    """Supply the latest model only within the requested experiment."""
+    if any(arg in ("--model-path", "--help", "-h") or arg.startswith("--model-path=")
+           for arg in arguments):
+        return arguments
+    parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+    parser.add_argument("--reward-mode", choices=REWARD_MODES, default="economic")
+    options, _ = parser.parse_known_args(arguments)
+    if options.reward_mode == "economic_ems":
+        if final_test:
+            raise ValueError("Specify --model-path for the frozen economic EMS checkpoint before Test4")
+        output, env_id = "td3_economic_ems_v2_500ep", ECONOMIC_EMS_ENV_ID
+    else:
+        output, env_id = "td3_train_500ep", "AggregateShipTD3-v0"
+    models = list((PROJECT_ROOT / "outputs" / output / "td3").glob(f"{env_id}_*/{env_id}.zip"))
+    if not models:
+        raise FileNotFoundError(f"No final {env_id} model found; specify --model-path explicitly")
+    return ["--model-path", str(max(models, key=lambda path: path.stat().st_mtime)), *arguments]

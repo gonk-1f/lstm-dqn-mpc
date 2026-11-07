@@ -8,7 +8,7 @@ r_raw = -(C_H2 + C_FC_transient + C_FC_low + C_FC_high + C_LB_eq,signed + C_LB_d
 
 TD3 receives 0.001*r_raw. All physical costs remain in the raw CNY ledger. The one start-stop cycle settlement remains in the complete ledger but is excluded from the learning reward because the present environment fixes one start and one stop per voyage and the Actor does not control these events. The action-dependent shutdown transient loss remains included. Do not clip the signed battery-equivalent hydrogen term: discharge is a cost and charge is a credit; the signed episode sum is needed for energy balance.
 
-The step SOC shaping coefficient is 0.5 CNY per squared SOC deviation. The successful terminal SOC coefficient is 20,000 CNY per squared deviation from 0.5. A truncated or failed episode does not receive the successful-terminal term.
+The step SOC coefficient is 0.5 CNY per squared deviation. The successful terminal coefficient is 20,000 CNY per squared deviation from 0.5. For a terminal SOC of 0.20 the terminal term is 1,800 CNY. At 0.45 or 0.55 it is 50 CNY. The coefficients define this experiment. A physical failure receives a raw reward of −20,000 (−20 to TD3), and a truncated or failed episode has no successful-terminal penalty.
 
 ## Action parameterization
 
@@ -16,7 +16,7 @@ For each state, the normalized Actor action a in [-1,1] maps affinely to the int
 
 P_FC = P_FC,min(s) + (a+1)/2 * (P_FC,max(s)-P_FC,min(s)).
 
-This removes the flat clipping region of the old absolute-setpoint mapping. The physical environment retains its fail-closed check. Logs distinguish raw Actor action, old-style reference power, mapped power, feasible interval width, and executed power.
+The physical environment retains its fail-closed check. A degenerate feasible interval still has only one attainable power. Logs distinguish the normalized action, mapped power, feasible interval width, and executed power. The first four observations retain the original scaling. The fifth is elapsed steps divided by voyage length, from 0 at reset to 1 after a complete voyage.
 
 ## TD3 configuration
 
@@ -24,24 +24,41 @@ This removes the flat clipping region of the old absolute-setpoint mapping. The 
 - batch=32; replay=1,000,000; gamma=1; tau=0.001.
 - Actor/Critic learning rate=1e-4.
 - train_freq=32 environment steps; gradient_steps=1.
-- learning_starts=30,000 random-action steps, roughly three long-voyage equivalents of replay warm-up.
-- Gaussian exploration noise std=0.05 in normalized action coordinates.
+- learning_starts=30,000 random-action steps, equivalent to three completed fixed voyages plus 2,226 steps in the absence of failures. SB3 uses random actions and applies its configured exploration noise during warm-up. No gradient update occurs during this phase.
+- Gaussian exploration noise std=0.05 in normalized action coordinates. Away from the action boundaries, this is a power standard deviation of 2.5% of the current feasible interval width.
 - Target policy smoothing sigma=0.2, clip=0.5.
-- One environment; 500 episode budget; 6,000,000 timestep ceiling.
-
-The exploration std of 0.05 is a controlled starting choice, not a literature-proven optimum. Compare it with 0.1 only after the economic reward and feasible mapping pass the acceptance tests.
+- One environment and one PyTorch CPU thread, with CUDA as the training device. The episode limit is 500 and the environment-step safety ceiling is 6,000,000. With continuous full completion the episode limit is reached at 4,629,000 steps.
+- With uninterrupted default training, the first Critic update occurs at step 30,016 and the first Actor and target updates at step 30,048.
 
 ## Voyage protocol
 
-- Train: random sampling with replacement from all 35 Train voyages; each episode is one complete voyage.
-- Fixed diagnostic: deterministic parent_005_seg01 every 20 episodes.
+- Train: always `parent_005_seg01`, initialized at t=0 and SOC=0.6. A normal episode executes all 9,258 one-second intervals. A genuine physical failure terminates the attempt and is reported separately from successful completions. Replay accumulates across episodes.
+- Fixed diagnostic: deterministic, full `parent_005_seg01` rollout every 20 episode endings, without exploration noise.
 - Model selection: full deterministic Validation8 every 100 episodes.
 - Test4 remains untouched until final frozen-checkpoint evaluation.
 
-A fixed voyage is appropriate for debugging whether the reward and controller can learn a known trajectory. It is not a sufficient final training distribution. Random Train35 training reduces overfitting to one time-indexed load curve; fixed-voyage evaluation remains a repeatable diagnostic.
+Fixed training establishes whether the agent learns the known duty cycle. Since the observation includes time progress, the agent can exploit recurring load patterns. Independent Validation8 and the frozen Test4 are needed to quantify transfer.
+
+## Research basis
+
+- Wu et al. (2025) use Huber loss, an update every 32 steps, a policy delay of two, and learning rate 0.0001 for uniform FC control. Their increment-based action and historical voyage distribution differ from this protocol. Figure 5 aggregates 21 converged seeds out of 28. [Published paper, Table 1 and §§4.2–4.3](https://discovery.ucl.ac.uk/10204302/1/1-s2.0-S0360319925004239-main.pdf)
+- Huang et al. (2023) compare action representations and train on one driving cycle with independent evaluation cycles. Liu et al. (2025) combine economic and degradation objectives with SOC management using MPC and TD3. These results motivate checking the action representation and independent economics. [Huang et al.](https://www.sciencedirect.com/science/article/pii/S0360544223025719) · [Liu et al.](https://www.sciencedirect.com/science/article/pii/S0196890425006053)
+- The reference implementation of TD3 defaults to 25,000 random-action steps. The 30,000-step warm-up and exploration standard deviation of 0.05 are project settings. [Fujimoto et al. reference code](https://github.com/sfujim/TD3/blob/master/main.py) · [SB3 rollout and sampling code](https://stable-baselines3.readthedocs.io/en/master/_modules/stable_baselines3/common/off_policy_algorithm.html)
+
+## Run
+
+Use the existing SB3/RL Zoo 2.9.2 interpreter in PyCharm and run `run_td3_train_economic_ems.py` from this worktree. The launcher starts a fresh run under `outputs/td3_economic_ems_v2_500ep`. For independent evaluation from PowerShell in this worktree, supply the versioned checkpoint explicitly.
+
+```powershell
+python .\run_td3_fixed_eval.py --reward-mode economic_ems --model-path '<checkpoint.zip>'
+python .\run_td3_validate.py --reward-mode economic_ems --model-path '<checkpoint.zip>'
+python .\run_td3_test.py --reward-mode economic_ems --model-path '<frozen-final-checkpoint.zip>'
+```
+
+Select the checkpoint after Validation8 has eight successes, all final SOC values within 0.05 of 0.5, and all minimum SOC values at least 0.2. Among eligible candidates, minimize mean full-voyage physical CNY cost. If no checkpoint qualifies, the run produces no best-validation model.
 
 ## Acceptance criteria
 
 Do not select a checkpoint from training reward alone. Require full-voyage completion, hard SOC compliance, terminal SOC close to 0.5, no persistent Actor boundary saturation, stable FC output with transient degradation measured, battery response to load residuals, and separate reporting of H2, FC degradation, LB equivalent hydrogen, LB degradation, and total physical CNY cost.
 
-Validation8 economic cost and terminal SOC must improve together. Use at least three random seeds before claiming convergence. A monotonic reward curve is not guaranteed by TD3 and must not be artificially imposed; report 20-episode moving averages, per-step normalized return, completion rate, and Validation8 economics.
+Use the raw and 20-episode mean return, the noise-free fixed-voyage diagnostics, and independent Validation8 economics together. Assess economic advantage at comparable final SOC and completion rates. Report the raw training points alongside the moving average.

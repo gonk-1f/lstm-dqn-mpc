@@ -1,5 +1,5 @@
 {
-  "reward_version": "td3_economic_cost_soc_terminal_feasible_interval_v1",
+  "reward_version": "td3_economic_cost_soc_terminal_feasible_interval_fixed_v2",
   "reward_scale": 0.001,
   "hydrogen_cost_weight": 1.0,
   "fuel_cell_variable_degradation_weight": 1.0,
@@ -20,6 +20,6 @@
   "reward_formula": "-(C_H2 + C_FC_transient + C_FC_low + C_FC_high + C_LB_eq_signed + C_LB_deg + 0.5*(SOC_next-0.5)^2 + I_success_terminal*20000*(SOC_final-0.5)^2)",
   "action_mapping": "feasible_interval_affine_v1",
   "observation_version": "soc_load_prev_fc_load_delta_voyage_progress_fraction_v2",
-  "training_selection": "random Train35 voyages with replacement; each episode is one complete voyage",
+  "training_selection": "fixed Train voyage parent_005_seg01; 9258 one-second intervals; reset at t=0 with SOC=0.6",
   "evaluation_protocol": "Deterministic fixed parent_005_seg01 every 20 episodes and full Validation8 every 100 episodes"
 }
