@@ -280,7 +280,7 @@ class TD3TrainingCallback(BaseCallback):
             "successful_episodes": self.successful_episodes,
             "cumulative_completion_rate": self.successful_episodes / self.completed_episodes,
             "terminal_reason": summary["terminal_reason"],
-            "raw_reward_sum": raw, "algorithm_reward_sum": scaled,
+            "raw_reward_sum": raw, "algorithm_reward_sum": scaled,\n            "mean_reward_per_step": raw / max(counts["raw_reward"], 1),\n            "mean_reward_cost_per_step_cny": (summary.get("reward_total_cost_cny") / max(summary.get("executed_steps", 0), 1)) if summary.get("reward_total_cost_cny") is not None else None,
             "reward_scale": self.reward_scale,
             "soc_min": summary["soc_min"], "soc_final": summary["soc_final"],
             "mean_requested_fc_kw": mean("requested_fc_kw"),
