@@ -40,6 +40,7 @@ class AggregateDDPGEnv(gym.Env):
     """One complete train/validation voyage, with 1s actions and real constraints."""
 
     metadata = {"render_modes": []}
+    physical_accounting_only = False
 
     def __init__(
         self, data_root: str | Path, split: str = "train",
@@ -291,6 +292,7 @@ class AggregateDDPGEnv(gym.Env):
         costs = interval_economic_components(
             self.physics, self.physical, next_physical, fc_kw, ledger,
             fc_is_on=True, fc_start_stop_cycles=0,
+            physical_accounting_only=self.physical_accounting_only,
         )
         self.ramp_sq_sum += delta_fc ** 2
         self.physical = next_physical

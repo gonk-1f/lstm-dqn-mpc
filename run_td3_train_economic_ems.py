@@ -25,8 +25,8 @@ def main() -> int:
         "--num-threads", "1",
         "--eval-freq", "-1",
         "--seed", "42",
-        "--log-folder", "outputs/td3_economic_ems_train35_soc5_no_bat_eq_500ep",
-        "--tensorboard-log", "outputs/td3_economic_ems_train35_soc5_no_bat_eq_500ep/tensorboard",
+        "--log-folder", "outputs/td3_economic_ems_v31_n32_fixed_parent005_500ep",
+        "--tensorboard-log", "outputs/td3_economic_ems_v31_n32_fixed_parent005_500ep/tensorboard",
         "--log-interval", "-2",
         "--save-replay-buffer",
     ]

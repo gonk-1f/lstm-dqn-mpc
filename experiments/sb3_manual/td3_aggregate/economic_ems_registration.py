@@ -9,7 +9,7 @@ from zipfile import ZipFile
 from gymnasium.envs.registration import register
 from rl_zoo3.utils import ALGOS
 
-from .economic_ems import ECONOMIC_EMS_ENV_ID, ECONOMIC_EMS_REWARD_VERSION, REWARD_SCALE
+from .economic_ems import ECONOMIC_EMS_ENV_ID, ECONOMIC_EMS_REWARD_VERSION, N_STEP_RETURN, REWARD_SCALE
 from .huber_td3 import HuberTD3
 
 
@@ -26,11 +26,13 @@ def validate_resume_metadata(argv):
     if (
         identity.get("env_id") != ECONOMIC_EMS_ENV_ID
         or identity.get("reward_version") != ECONOMIC_EMS_REWARD_VERSION
+        or identity.get("n_step_return") != N_STEP_RETURN
         or identity.get("reward_scale") != REWARD_SCALE
+        or metadata.get("n_steps") != N_STEP_RETURN
         or metadata.get("reward_scale") != REWARD_SCALE
         or any(key not in metadata for key in ("_td3_completed_episodes", "_td3_successful_episodes"))
     ):
-        raise ValueError("Economic TD3 resume requires a checkpoint from the Train35 reward protocol")
+        raise ValueError("Economic TD3 resume requires a v3.1 fixed-voyage checkpoint with a 32-step return")
 
 
 validate_resume_metadata(sys.argv[1:])

@@ -1,4 +1,4 @@
-"""TD3 economic EMS diagnostics and model selection for Train35."""
+"""TD3 economic EMS diagnostics and model selection for the fixed voyage."""
 
 from collections import deque
 import json
@@ -7,39 +7,59 @@ import shutil
 import subprocess
 import sys
 
+from stable_baselines3.common.buffers import NStepReplayBuffer
+
 from .callbacks import (
-    ECONOMIC_FIELDS, PROJECT_ROOT, TD3TrainingCallback,
+    ECONOMIC_FIELDS, FIXED_TRAIN_ID, FIXED_TRAIN_STEPS, PROJECT_ROOT, TD3TrainingCallback,
 )
-from .economic_ems import REWARD_COMPONENT_FIELDS
+from .economic_ems import N_STEP_RETURN, REWARD_COMPONENT_FIELDS
 from .huber_td3 import HuberTD3
+
+from v3.control import SOC_MAX, SOC_MIN
 
 
 class EconomicEMSTrainingCallback(TD3TrainingCallback):
-    economic_fields = ECONOMIC_FIELDS + REWARD_COMPONENT_FIELDS
+    economic_fields = tuple(
+        name for name in ECONOMIC_FIELDS if name != "soc_deviation_penalty_cny"
+    ) + REWARD_COMPONENT_FIELDS
     reward_component_fields = REWARD_COMPONENT_FIELDS
     environment_id = "AggregateShipTD3Economic-v0"
     algorithm_name = "experiments.sb3_manual.td3_aggregate.huber_td3.HuberTD3"
     evaluation_extra_args = ("--reward-mode", "economic_ems")
     reward_scale = 0.001
-    require_fixed_train = False
+    require_fixed_train = True
 
     def _on_training_start(self):
         identity = self.training_env.get_attr("reward_identity")[0]
         if identity.get("env_id") != self.environment_id or not isinstance(self.model, HuberTD3):
             raise ValueError("Economic EMS training requires its registered environment and HuberTD3")
+        replay = self.model.replay_buffer
+        if (
+            not isinstance(replay, NStepReplayBuffer)
+            or replay.n_steps != N_STEP_RETURN
+            or self.model.n_steps != N_STEP_RETURN
+            or replay.gamma != 1.0
+            or self.model.gamma != 1.0
+        ):
+            raise ValueError(
+                f"Economic EMS requires SB3 NStepReplayBuffer with n_steps={N_STEP_RETURN} and gamma=1.0"
+            )
         voyages = self.training_env.get_attr("episodes")[0]
-        self._train_steps = {voyage.sample_id: len(voyage.load_kw) for voyage in voyages}
-        if len(self._train_steps) != 35:
-            raise ValueError("Economic EMS training requires all 35 Train voyages")
+        fixed = [voyage for voyage in voyages if voyage.sample_id == FIXED_TRAIN_ID]
+        if len(fixed) != 1 or len(fixed[0].load_kw) != FIXED_TRAIN_STEPS:
+            raise ValueError(f"Economic EMS requires {FIXED_TRAIN_ID} with {FIXED_TRAIN_STEPS} steps")
         super()._on_training_start()
+        self.logger.info(f"Replay: {type(replay).__name__}, n_steps={replay.n_steps}, gamma={replay.gamma}")
+        self.logger.record("replay/n_steps", replay.n_steps)
+        self.logger.record("replay/gamma", replay.gamma)
         self.pause_request = self.directory / "pause_after_episode.request"
         self._recent_raw_rewards = deque(getattr(self.model, "_td3_recent_raw_rewards", ()), maxlen=20)
         self._previous_battery_kw = None
         self._max_fc_kw = None
 
     def _observe_step(self, info):
-        if info["sample_id"] not in self._train_steps:
-            raise ValueError(f"Unexpected Train35 sample: {info['sample_id']}")
+        if info["sample_id"] != FIXED_TRAIN_ID:
+            raise ValueError(f"Unexpected fixed training voyage: {info['sample_id']}")
         super()._observe_step(info)
         action = float(info["actor_action"])
         self._accumulate("actor_action", action)
@@ -62,7 +82,7 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
         executed = summary["executed_steps"]
         reason = summary["terminal_reason"]
         sample_id = summary["sample_id"]
-        expected_steps = self._train_steps[sample_id]
+        expected_steps = FIXED_TRAIN_STEPS
         if summary["total_steps"] != expected_steps or summary["soc_initial"] != 0.6:
             raise ValueError(f"{sample_id} requires {expected_steps} steps and initial SOC=0.6")
         if summary["completed"]:
@@ -116,8 +136,12 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
             "mean_feasible_interval_width_kw": mean("feasible_interval_width_kw"),
             "soc_initial": summary["soc_initial"],
             "soc_delta": summary["soc_delta"],
-            "terminal_soc_target": summary["terminal_soc_target"],
-            "terminal_soc_error": summary["terminal_soc_error"],
+            "mean_soc_equivalence_factor": summary["mean_soc_equivalence_factor"],
+            "battery_equivalent_hydrogen_total_kg": summary["battery_equivalent_hydrogen_total_kg"],
+            "battery_equivalent_hydrogen_total_cny": summary["battery_equivalent_hydrogen_total_cny"],
+            "soc_upper_dwell_steps": summary["soc_upper_dwell_steps"],
+            "soc_lower_dwell_steps": summary["soc_lower_dwell_steps"],
+            "fc_transient_cost_per_step": summary["fc_transient_cost_per_step"],
         }
 
     def _on_step(self):
@@ -156,20 +180,23 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
         )
         metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
         voyages = metrics["per_voyage"]
-        # A candidate must complete all Validation8 voyages and keep every
-        # terminal SOC within 0.05 of the specified 0.5 target.
+        # Full physical completion is required before comparing learning costs.
         eligible = (
             metrics.get("validation_set_complete") is True
             and len(voyages) == 8
-            and all(voyage.get("success") is True for voyage in voyages)
-            and max(abs(float(voyage["soc_final"]) - 0.5) for voyage in voyages) <= 0.05 + 1e-12
-            and min(float(voyage["soc_min"]) for voyage in voyages) >= 0.2 - 1e-9
+            and all(
+                voyage["success"] is True
+                and voyage["executed_steps"] == voyage["total_steps"]
+                and float(voyage["soc_min"]) >= SOC_MIN - 1e-9
+                and float(voyage["soc_max"]) <= SOC_MAX + 1e-9
+                for voyage in voyages
+            )
         )
         if not eligible:
             return
-        score = metrics["mean_full_voyage_economic_cost_cny"]
-        if score is None or not math.isfinite(score):
-            raise RuntimeError("Eligible Validation8 results lack a finite complete-voyage cost")
+        score = metrics["total_learning_economic_cost_cny"]
+        if not math.isfinite(score):
+            raise RuntimeError("Eligible Validation8 results lack a finite learning cost")
         best_path = self.directory / "best_validation_model.zip"
         current = getattr(self, "best_validation_cost_cny", float("inf"))
         if score < current:
@@ -179,13 +206,16 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
             (self.directory / "best_validation_metadata.json").write_text(
                 json.dumps({
                     "training_episode": self.completed_episodes,
-                    "mean_validation_total_cost_cny": score,
-                    "max_abs_terminal_soc_error": max(
-                        abs(float(voyage["soc_final"]) - 0.5) for voyage in voyages
-                    ),
+                    "total_validation_learning_economic_cost_cny": score,
+                    "mean_validation_learning_economic_cost_cny": metrics["mean_full_voyage_learning_economic_cost_cny"],
+                    "total_validation_physical_economic_cost_cny": metrics["total_physical_economic_cost_cny"],
+                    "mean_validation_physical_economic_cost_cny": metrics["mean_full_voyage_physical_economic_cost_cny"],
                     "validation_voyages": [voyage["sample_id"] for voyage in voyages],
                     "checkpoint": str(best_path),
-                    "selection_rule": "complete Validation8; every terminal SOC within 0.05 of 0.5; minimize mean full-voyage physical CNY cost",
+                    "selection_rule": (
+                        "complete Validation8 within physical limits, "
+                        "then minimize cumulative four-component learning cost"
+                    ),
                 }, ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )
