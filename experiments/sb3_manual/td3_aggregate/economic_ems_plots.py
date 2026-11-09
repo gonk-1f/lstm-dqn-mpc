@@ -9,6 +9,7 @@ from statistics import fmean
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-dir", type=Path, required=True)
+    parser.add_argument("--plot-fixed-evaluation", action="store_true")
     args = parser.parse_args()
     import matplotlib
 
@@ -56,7 +57,7 @@ def main():
         axis.set_ylabel("Raw episode reward / environment steps")
 
     cost.plot(episodes, [float(row["physical_economic_cost_cny"]) for row in rows], label="Physical economic cost")
-    cost.plot(episodes, [float(row["reward_economic_cost_cny"]) for row in rows], alpha=0.6, label="Four-term learning cost")
+    cost.plot(episodes, [float(row["reward_economic_cost_cny"]) for row in rows], alpha=0.6, label="Learning economic cost")
     cost.set_title("Voyage costs")
     cost.set_ylabel("CNY per voyage")
     soc.plot(episodes, [float(row["soc_final"]) for row in rows], label="Terminal SOC")
@@ -71,6 +72,25 @@ def main():
             axis.legend()
     fig.savefig(args.run_dir / "economic_ems_reward_curves.png", dpi=160)
     plt.close(fig)
+
+    if args.plot_fixed_evaluation:
+        path = args.run_dir / "fixed_train_evaluation" / "fixed_train_evaluation.csv"
+        with path.open(encoding="utf-8-sig", newline="") as handle:
+            evaluations = list(csv.DictReader(handle))
+        fig, axis = plt.subplots(figsize=(8, 4), layout="constrained")
+        axis.plot(
+            [int(row["training_episode"]) for row in evaluations],
+            [float(row["mean_reward_per_step"]) for row in evaluations],
+            marker="o",
+        )
+        axis.set(
+            title="Fixed-voyage deterministic evaluation",
+            xlabel="Completed training voyages",
+            ylabel="Raw evaluation reward / environment steps",
+        )
+        axis.grid(alpha=0.2)
+        fig.savefig(args.run_dir / "economic_ems_fixed_evaluation_reward_curve.png", dpi=160)
+        plt.close(fig)
 
 
 if __name__ == "__main__":

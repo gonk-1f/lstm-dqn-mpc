@@ -10,8 +10,8 @@ from gymnasium.envs.registration import register
 from rl_zoo3.utils import ALGOS
 
 from .economic_ems import (
-    ECONOMIC_EMS_ENV_ID, ECONOMIC_EMS_REWARD_VERSION, N_STEP_RETURN, REWARD_SCALE,
-    V6_ENV_ID, V6_REWARD_VERSION,
+    ECONOMIC_EMS_ENV_ID, ECONOMIC_REWARD_VERSIONS, N_STEP_RETURN, REWARD_SCALE,
+    V6_ENV_ID, V7_ENV_ID,
 )
 from .economic_action_wrappers import PREVIOUS_FC_ACTION_MAPPING_VERSION
 from .huber_td3 import HuberTD3
@@ -28,12 +28,11 @@ def validate_resume_metadata(argv):
     with ZipFile(options.trained_agent) as archive:
         metadata = json.loads(archive.read("data"))
     identity = metadata.get("_td3_reward_identity") or {}
-    v6 = options.env == V6_ENV_ID
-    reward_version = V6_REWARD_VERSION if v6 else ECONOMIC_EMS_REWARD_VERSION
+    reward_version = ECONOMIC_REWARD_VERSIONS[options.env]
     if (
         identity.get("env_id") != options.env
         or identity.get("reward_version") != reward_version
-        or (v6 and identity.get("action_mapping") != PREVIOUS_FC_ACTION_MAPPING_VERSION)
+        or (options.env != ECONOMIC_EMS_ENV_ID and identity.get("action_mapping") != PREVIOUS_FC_ACTION_MAPPING_VERSION)
         or identity.get("n_step_return") != N_STEP_RETURN
         or identity.get("reward_scale") != REWARD_SCALE
         or metadata.get("n_steps") != N_STEP_RETURN
@@ -53,4 +52,8 @@ register(
 register(
     id=V6_ENV_ID,
     entry_point="experiments.sb3_manual.td3_aggregate.economic_ems:make_v6_env",
+)
+register(
+    id=V7_ENV_ID,
+    entry_point="experiments.sb3_manual.td3_aggregate.economic_ems:make_v7_env",
 )

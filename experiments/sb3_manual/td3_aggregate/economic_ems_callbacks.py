@@ -1,20 +1,25 @@
 """TD3 economic EMS diagnostics and model selection for the fixed voyage."""
 
 from collections import deque
+from inspect import getfile
 import json
 import math
 import shutil
 import subprocess
 import sys
 
+import stable_baselines3
 from stable_baselines3.common.buffers import NStepReplayBuffer
+from stable_baselines3.common.noise import NormalActionNoise
 
 from .callbacks import (
     ECONOMIC_FIELDS, FIXED_TRAIN_ID, FIXED_TRAIN_STEPS, PROJECT_ROOT, TD3TrainingCallback,
 )
 from .economic_ems import (
     N_STEP_RETURN, REWARD_COMPONENT_FIELDS, V6_ENV_ID, V6_REWARD_COMPONENT_FIELDS, V6_REWARD_VERSION,
+    V7_ENV_ID, V7_REWARD_COMPONENT_FIELDS, V7_REWARD_VERSION, EconomicEMSTD3Reward,
 )
+from .economic_action_wrappers import FeasibleIntervalActionWrapper
 from .huber_td3 import HuberTD3
 
 from v3.control import SOC_MAX, SOC_MIN
@@ -30,6 +35,7 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
     evaluation_extra_args = ("--reward-mode", "economic_ems")
     reward_scale = 0.001
     require_fixed_train = True
+    plot_extra_args = ()
 
     def _on_training_start(self):
         identity = self.training_env.get_attr("reward_identity")[0]
@@ -149,7 +155,7 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
             ):
                 subprocess.run(
                     [sys.executable, "-m", "experiments.sb3_manual.td3_aggregate.economic_ems_plots",
-                     "--run-dir", str(self.directory)],
+                     "--run-dir", str(self.directory), *self.plot_extra_args],
                     cwd=PROJECT_ROOT,
                     check=True,
                 )
@@ -238,21 +244,27 @@ class EconomicEMSV6TrainingCallback(EconomicEMSTrainingCallback):
     environment_id = V6_ENV_ID
     evaluation_extra_args = ("--reward-mode", "economic_ems_v6")
     count_successful_episodes = True
+    reward_version = V6_REWARD_VERSION
+    expected_train_frequency = 32
 
     def _on_training_start(self):
         identity = self.training_env.get_attr("reward_identity")[0]
-        if identity.get("reward_version") != V6_REWARD_VERSION or not getattr(self.model, "log_td_errors", False):
-            raise ValueError("Economic EMS v6 requires the v6 reward identity and Critic TD error logging")
+        if identity.get("reward_version") != self.reward_version or not getattr(self.model, "log_td_errors", False):
+            raise ValueError("Economic EMS requires the matching reward identity and Critic TD error logging")
         if self.model.device.type != "cuda":
-            raise ValueError("Economic EMS v6 requires CUDA")
+            raise ValueError("Economic EMS requires CUDA")
         if (
-            self.model.train_freq.frequency != 32 or self.model.train_freq.unit.value != "step"
+            self.model.train_freq.frequency != self.expected_train_frequency
+            or self.model.train_freq.unit.value != "step"
             or self.model.gradient_steps != 1 or self.model.policy_delay != 2
         ):
-            raise ValueError("Economic EMS v6 requires one Critic update every 32 steps and policy_delay=2")
+            raise ValueError(
+                f"Economic EMS requires one Critic update every {self.expected_train_frequency} "
+                "environment step(s) and policy_delay=2"
+            )
         replay = self.model.replay_buffer
         if replay is not None and replay.size() and not replay.dones[(replay.pos - 1) % replay.buffer_size, 0]:
-            raise ValueError("Economic EMS v6 can only resume replay saved at a voyage boundary")
+            raise ValueError("Economic EMS can only resume replay saved at a voyage boundary")
         super()._on_training_start()
         self.logger.info("algorithm: TD3")
         for name, value in self._additional_training_metadata().items():
@@ -280,3 +292,60 @@ class EconomicEMSV6TrainingCallback(EconomicEMSTrainingCallback):
             "policy_delay": self.model.policy_delay,
             "td_error_diagnostics": "both Critics pooled, absolute pre-Huber residuals in scaled reward units",
         }
+
+
+class EconomicEMSV7TrainingCallback(EconomicEMSV6TrainingCallback):
+    economic_fields = ECONOMIC_FIELDS + V7_REWARD_COMPONENT_FIELDS
+    reward_component_fields = V7_REWARD_COMPONENT_FIELDS
+    environment_id = V7_ENV_ID
+    evaluation_extra_args = ("--reward-mode", "economic_ems_v7")
+    plot_extra_args = ("--plot-fixed-evaluation",)
+    reward_version = V7_REWARD_VERSION
+    expected_train_frequency = 1
+
+    def _on_training_start(self):
+        if (
+            self.model.learning_starts != 0 or self.model.batch_size != 64
+            or not getattr(self.model, "require_complete_n_step_batch", False)
+            or not isinstance(self.model.action_noise, NormalActionNoise)
+        ):
+            raise ValueError("Economic EMS v7 requires Actor + Normal noise from step one and 64 eligible n-step starts")
+        git = ["git", "-C", str(PROJECT_ROOT)]
+        self._source_audit = {
+            "code_head": subprocess.check_output([*git, "rev-parse", "HEAD"], text=True).strip(),
+            "code_worktree_dirty": bool(subprocess.check_output([*git, "status", "--porcelain"], text=True).strip()),
+            "imported_module_paths": {
+                "reward": getfile(EconomicEMSTD3Reward),
+                "action_mapping": getfile(FeasibleIntervalActionWrapper),
+                "algorithm": getfile(type(self.model)),
+                "callback": getfile(type(self)),
+                "native_replay": getfile(NStepReplayBuffer),
+            },
+            "stable_baselines3_version": stable_baselines3.__version__,
+        }
+        super()._on_training_start()
+
+    def _additional_training_metadata(self):
+        return {
+            **super()._additional_training_metadata(),
+            "learning_starts": self.model.learning_starts,
+            "batch_size": self.model.batch_size,
+            "minimum_eligible_n_step_starts": self.model.batch_size,
+            **self._source_audit,
+        }
+
+    def _observe_step(self, info):
+        super()._observe_step(info)
+        if info["step_executed"]:
+            self._accumulate("soc", float(info["soc"]))
+
+    def _additional_episode_fields(self, summary):
+        count = self._episode_counts["soc"]
+        return {
+            **super()._additional_episode_fields(summary),
+            "soc_mean": self._episode_sums["soc"] / count if count else None,
+        }
+
+    def _flush(self):
+        self.logger.record("replay/eligible_n_step_starts", self.model.eligible_n_step_starts())
+        super()._flush()
