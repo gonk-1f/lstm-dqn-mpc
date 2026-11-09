@@ -299,7 +299,10 @@ class TD3TrainingCallback(BaseCallback):
         _append_csv(self.directory / "training_episodes.csv", row)
         for name, value in row.items():
             if name not in {"sample_id", "split", "terminal_reason"} and value is not None:
-                self.logger.record(f"episode/{name}", value)
+                if name in {"battery_equivalent_hydrogen_total_kg", "battery_equivalent_hydrogen_total_cny"}:
+                    self.logger.record(f"episode/{name}", value, exclude="stdout")
+                else:
+                    self.logger.record(f"episode/{name}", value)
         self.logger.record("episode/terminal_reason", summary["terminal_reason"])
         self._episode_sums.clear()
         self._episode_counts.clear()

@@ -1,0 +1,59 @@
+!!python/object/apply:collections.OrderedDict
+- - - batch_size
+    - 64
+  - - buffer_size
+    - 1000000
+  - - callback
+    - - experiments.sb3_manual.td3_aggregate.economic_ems_callbacks.EconomicEMSV7TrainingCallback:
+          fixed_eval_every_episodes: 5
+          log_every_steps: 1000
+          max_episodes: 500
+          validation_every_episodes: 50
+  - - env_kwargs
+    - data_root: data/processed/operating_dataset_v6_1s
+      fixed_train_id: parent_005_seg01
+      split: train
+  - - gamma
+    - 1.0
+  - - gradient_steps
+    - 1
+  - - learning_rate
+    - 0.001
+  - - learning_starts
+    - 0
+  - - log_td_errors
+    - true
+  - - n_envs
+    - 1
+  - - n_steps
+    - 32
+  - - n_timesteps
+    - 20000000
+  - - noise_std
+    - 0.05
+  - - noise_type
+    - normal
+  - - normalize
+    - false
+  - - policy
+    - MlpPolicy
+  - - policy_delay
+    - 2
+  - - policy_kwargs
+    - net_arch:
+        pi:
+        - 256
+        - 256
+        qf:
+        - 256
+        - 256
+  - - require_complete_n_step_batch
+    - true
+  - - target_noise_clip
+    - 0.5
+  - - target_policy_noise
+    - 0.2
+  - - tau
+    - 0.001
+  - - train_freq
+    - 1
