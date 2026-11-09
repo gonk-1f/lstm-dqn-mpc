@@ -12,7 +12,9 @@ from stable_baselines3.common.buffers import NStepReplayBuffer
 from .callbacks import (
     ECONOMIC_FIELDS, FIXED_TRAIN_ID, FIXED_TRAIN_STEPS, PROJECT_ROOT, TD3TrainingCallback,
 )
-from .economic_ems import N_STEP_RETURN, REWARD_COMPONENT_FIELDS
+from .economic_ems import (
+    N_STEP_RETURN, REWARD_COMPONENT_FIELDS, V6_ENV_ID, V6_REWARD_COMPONENT_FIELDS, V6_REWARD_VERSION,
+)
 from .huber_td3 import HuberTD3
 
 from v3.control import SOC_MAX, SOC_MIN
@@ -33,17 +35,7 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
         identity = self.training_env.get_attr("reward_identity")[0]
         if identity.get("env_id") != self.environment_id or not isinstance(self.model, HuberTD3):
             raise ValueError("Economic EMS training requires its registered environment and HuberTD3")
-        replay = self.model.replay_buffer
-        if (
-            not isinstance(replay, NStepReplayBuffer)
-            or replay.n_steps != N_STEP_RETURN
-            or self.model.n_steps != N_STEP_RETURN
-            or replay.gamma != 1.0
-            or self.model.gamma != 1.0
-        ):
-            raise ValueError(
-                f"Economic EMS requires SB3 NStepReplayBuffer with n_steps={N_STEP_RETURN} and gamma=1.0"
-            )
+        replay = require_economic_n_step_replay(self.model)
         voyages = self.training_env.get_attr("episodes")[0]
         fixed = [voyage for voyage in voyages if voyage.sample_id == FIXED_TRAIN_ID]
         if len(fixed) != 1 or len(fixed[0].load_kw) != FIXED_TRAIN_STEPS:
@@ -145,12 +137,16 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
         }
 
     def _on_step(self):
+        previous_scheduled_episode = self.scheduled_episode
         keep_training = super()._on_step()
         if self.locals["dones"][0]:
             if self.pause_request.is_file():
                 self.logger.info(f"Pausing economic TD3 after episode {self.completed_episodes}.")
                 keep_training = False
-            if self.completed_episodes % 20 == 0:
+            if (
+                self.scheduled_episode != previous_scheduled_episode
+                and self.scheduled_episode % self.fixed_eval_every_episodes == 0
+            ):
                 subprocess.run(
                     [sys.executable, "-m", "experiments.sb3_manual.td3_aggregate.economic_ems_plots",
                      "--run-dir", str(self.directory)],
@@ -176,7 +172,7 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
             return
         metrics_path = (
             self.directory / "periodic_validation"
-            / f"episode_{self.completed_episodes:04d}" / "validation_metrics.json"
+            / f"episode_{self.scheduled_episode:04d}" / "validation_metrics.json"
         )
         metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
         voyages = metrics["per_voyage"]
@@ -205,7 +201,7 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
             self.best_validation_cost_cny = score
             (self.directory / "best_validation_metadata.json").write_text(
                 json.dumps({
-                    "training_episode": self.completed_episodes,
+                    "training_episode": self.scheduled_episode,
                     "total_validation_learning_economic_cost_cny": score,
                     "mean_validation_learning_economic_cost_cny": metrics["mean_full_voyage_learning_economic_cost_cny"],
                     "total_validation_physical_economic_cost_cny": metrics["total_physical_economic_cost_cny"],
@@ -214,8 +210,73 @@ class EconomicEMSTrainingCallback(TD3TrainingCallback):
                     "checkpoint": str(best_path),
                     "selection_rule": (
                         "complete Validation8 within physical limits, "
-                        "then minimize cumulative four-component learning cost"
+                        "then minimize cumulative learning economic cost"
                     ),
                 }, ensure_ascii=False, indent=2),
                 encoding="utf-8",
             )
+
+
+def require_economic_n_step_replay(model):
+    replay = model.replay_buffer
+    if (
+        model.n_steps != N_STEP_RETURN
+        or not isinstance(replay, NStepReplayBuffer)
+        or replay.n_steps != N_STEP_RETURN
+        or replay.gamma != 1.0
+        or model.gamma != 1.0
+    ):
+        raise ValueError(
+            f"Economic EMS requires SB3 NStepReplayBuffer with n_steps={N_STEP_RETURN} and gamma=1.0"
+        )
+    return replay
+
+
+class EconomicEMSV6TrainingCallback(EconomicEMSTrainingCallback):
+    economic_fields = ECONOMIC_FIELDS + V6_REWARD_COMPONENT_FIELDS
+    reward_component_fields = V6_REWARD_COMPONENT_FIELDS
+    environment_id = V6_ENV_ID
+    evaluation_extra_args = ("--reward-mode", "economic_ems_v6")
+    count_successful_episodes = True
+
+    def _on_training_start(self):
+        identity = self.training_env.get_attr("reward_identity")[0]
+        if identity.get("reward_version") != V6_REWARD_VERSION or not getattr(self.model, "log_td_errors", False):
+            raise ValueError("Economic EMS v6 requires the v6 reward identity and Critic TD error logging")
+        if self.model.device.type != "cuda":
+            raise ValueError("Economic EMS v6 requires CUDA")
+        if (
+            self.model.train_freq.frequency != 32 or self.model.train_freq.unit.value != "step"
+            or self.model.gradient_steps != 1 or self.model.policy_delay != 2
+        ):
+            raise ValueError("Economic EMS v6 requires one Critic update every 32 steps and policy_delay=2")
+        replay = self.model.replay_buffer
+        if replay is not None and replay.size() and not replay.dones[(replay.pos - 1) % replay.buffer_size, 0]:
+            raise ValueError("Economic EMS v6 can only resume replay saved at a voyage boundary")
+        super()._on_training_start()
+        self.logger.info("algorithm: TD3")
+        for name, value in self._additional_training_metadata().items():
+            self.logger.info(f"{name}: {value}")
+
+    def _additional_training_metadata(self):
+        identity = self.model._td3_reward_identity
+        replay = self.model.replay_buffer
+        return {
+            "reward_version": identity["reward_version"],
+            "training_selection": identity["training_selection"],
+            "episode_length": FIXED_TRAIN_STEPS,
+            "episode_budget_unit": "successful_full_voyages",
+            "initial_soc": 0.6,
+            "initial_fc_kw": 0.0,
+            "action_mapping": identity["action_mapping"],
+            "soc_deviation_weight": identity["soc_deviation_weight"],
+            "physical_environment_soc_weight": identity["physical_accounting_identity"]["soc_deviation_weight"],
+            "n_steps": self.model.n_steps,
+            "replay_buffer_class": type(replay).__name__,
+            "replay_buffer_n_steps": replay.n_steps,
+            "gamma": self.model.gamma,
+            "train_freq": self.model.train_freq.frequency,
+            "gradient_steps": self.model.gradient_steps,
+            "policy_delay": self.model.policy_delay,
+            "td_error_diagnostics": "both Critics pooled, absolute pre-Huber residuals in scaled reward units",
+        }

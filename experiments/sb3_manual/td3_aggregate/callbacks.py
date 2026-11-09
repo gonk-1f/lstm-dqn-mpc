@@ -81,6 +81,11 @@ class TD3TrainingCallback(BaseCallback):
     evaluation_extra_args = ()
     reward_scale = REWARD_SCALE
     require_fixed_train = True
+    count_successful_episodes = False
+
+    @property
+    def scheduled_episode(self) -> int:
+        return self.successful_episodes if self.count_successful_episodes else self.completed_episodes
 
     def __init__(
         self, fixed_eval_every_episodes: int = 20,
@@ -138,8 +143,6 @@ class TD3TrainingCallback(BaseCallback):
         if isinstance(count, bool) or not isinstance(count, (int, np.integer)) or count < 0:
             raise ValueError("Checkpoint episode counter must be a nonnegative integer")
         self.completed_episodes = int(count)
-        if self.completed_episodes >= self.max_episodes:
-            raise ValueError("This checkpoint has already reached the cumulative episode budget")
         successes = getattr(self.model, "_td3_successful_episodes", 0 if count == 0 else None)
         if (
             isinstance(successes, bool) or not isinstance(successes, (int, np.integer))
@@ -147,6 +150,8 @@ class TD3TrainingCallback(BaseCallback):
         ):
             raise ValueError("Checkpoint needs its valid cumulative successful-episode counter")
         self.successful_episodes = int(successes)
+        if self.scheduled_episode >= self.max_episodes:
+            raise ValueError("This checkpoint has already reached the cumulative episode budget")
         self.model._td3_reward_identity = identity
         self.model.reward_scale = self.reward_scale
         self.model._td3_completed_episodes = self.completed_episodes
@@ -199,9 +204,13 @@ class TD3TrainingCallback(BaseCallback):
             "checkpoint_replay_saved": False,
             "raw_reward_units": "negative raw CNY reward cost, except fixed physical failure override",
             "algorithm_reward_units": f"raw_reward * {self.reward_scale}",
+            **self._additional_training_metadata(),
         })
         self.logger.record("reward/reward_scale", self.reward_scale)
         self.logger.record("time/completed_episodes", self.completed_episodes)
+
+    def _additional_training_metadata(self) -> dict[str, Any]:
+        return {}
 
     def _accumulate(self, name: str, value: float) -> None:
         for sums, counts in (
@@ -239,17 +248,19 @@ class TD3TrainingCallback(BaseCallback):
         info = infos[0]
         self._observe_step(info)
         if bool(dones[0]):
+            previous_scheduled_episode = self.scheduled_episode
             self.completed_episodes += 1
             self.model._td3_completed_episodes = self.completed_episodes
             self._record_episode(info["vessel_episode"])
-            if self.completed_episodes % self.fixed_eval_every_episodes == 0:
-                self._evaluate("fixed_train")
-            if self.completed_episodes % self.validation_every_episodes == 0:
-                self._evaluate("validation")
+            if self.scheduled_episode != previous_scheduled_episode:
+                if self.scheduled_episode % self.fixed_eval_every_episodes == 0:
+                    self._evaluate("fixed_train")
+                if self.scheduled_episode % self.validation_every_episodes == 0:
+                    self._evaluate("validation")
             self._pending_dump = True
         if self.num_timesteps - self._last_dump_step >= self.log_every_steps:
             self._pending_dump = True
-        return self.completed_episodes < self.max_episodes
+        return self.scheduled_episode < self.max_episodes
 
     def _record_episode(self, summary: dict[str, Any]) -> None:
         if summary["split"] != "train":
@@ -371,7 +382,7 @@ class TD3TrainingCallback(BaseCallback):
         fixed = split == "fixed_train"
         directory = self.directory / ("fixed_train_evaluation" if fixed else "periodic_validation")
         directory.mkdir(exist_ok=True)
-        node = directory / f"episode_{self.completed_episodes:04d}"
+        node = directory / f"episode_{self.scheduled_episode:04d}"
         node.mkdir(exist_ok=False)
         checkpoint = node / "model.zip"
         self.model.save(str(checkpoint))
@@ -397,7 +408,7 @@ class TD3TrainingCallback(BaseCallback):
             *self.evaluation_extra_args,
         ]
         if fixed:
-            command += ["--episode", str(self.completed_episodes), "--sample-id", FIXED_TRAIN_ID]
+            command += ["--episode", str(self.scheduled_episode), "--sample-id", FIXED_TRAIN_ID]
         else:
             command += ["--episodes", "8"]
         child_env = os.environ.copy()
@@ -422,7 +433,7 @@ class TD3TrainingCallback(BaseCallback):
                 or summary["evaluation_truncated"]
             ):
                 raise RuntimeError("Fixed diagnostic did not follow the full 9258s voyage protocol")
-            row = {"training_episode": self.completed_episodes, **summary}
+            row = {"training_episode": self.scheduled_episode, **summary}
             _append_csv(directory / "fixed_train_evaluation.csv", row)
             for name in ("coverage", "completed", "total_cost_cny", "soc_min", "soc_final", "reward_sum", "algorithm_reward_sum"):
                 self.logger.record(f"fixed_train/{'raw_reward_sum' if name == 'reward_sum' else name}", summary[name])
@@ -435,7 +446,7 @@ class TD3TrainingCallback(BaseCallback):
             ):
                 raise RuntimeError("Periodic TD3 evaluation did not cover independent Validation8")
             row = {
-                "training_episode": self.completed_episodes,
+                "training_episode": self.scheduled_episode,
                 "environment_steps": int(self.num_timesteps),
                 "completion_rate": metrics["completion_rate"], "mean_coverage": metrics["mean_coverage"],
                 "mean_raw_reward_sum": float(np.mean([v["reward_sum"] for v in voyages])),
@@ -448,4 +459,4 @@ class TD3TrainingCallback(BaseCallback):
             for name, value in row.items():
                 self.logger.record(f"validation/{name}", value)
         if self.verbose:
-            self.logger.info(f"TD3 episode {self.completed_episodes}: independent {split} results: {metrics_path}")
+            self.logger.info(f"TD3 episode {self.scheduled_episode}: independent {split} results: {metrics_path}")

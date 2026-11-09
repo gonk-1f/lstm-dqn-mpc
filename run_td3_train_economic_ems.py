@@ -9,7 +9,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 
 
-def main() -> int:
+def main(
+    env_id="AggregateShipTD3Economic-v0",
+    config_name="zoo_td3_economic_ems.yml",
+    output_name="td3_economic_ems_v31_n32_fixed_parent005_500ep",
+) -> int:
     env = os.environ.copy()
     paths = [str(ROOT), str(ROOT / "src")]
     if env.get("PYTHONPATH"):
@@ -18,15 +22,15 @@ def main() -> int:
     command = [
         sys.executable, "-u", "-m", "rl_zoo3.train",
         "--algo", "td3",
-        "--env", "AggregateShipTD3Economic-v0",
+        "--env", env_id,
         "--gym-packages", "experiments.sb3_manual.td3_aggregate.economic_ems_registration",
-        "--conf-file", "experiments/sb3_manual/td3_aggregate/zoo_td3_economic_ems.yml",
+        "--conf-file", f"experiments/sb3_manual/td3_aggregate/{config_name}",
         "--device", "cuda",
         "--num-threads", "1",
         "--eval-freq", "-1",
         "--seed", "42",
-        "--log-folder", "outputs/td3_economic_ems_v31_n32_fixed_parent005_500ep",
-        "--tensorboard-log", "outputs/td3_economic_ems_v31_n32_fixed_parent005_500ep/tensorboard",
+        "--log-folder", f"outputs/{output_name}",
+        "--tensorboard-log", f"outputs/{output_name}/tensorboard",
         "--log-interval", "-2",
         "--save-replay-buffer",
     ]

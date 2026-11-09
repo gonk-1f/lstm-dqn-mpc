@@ -14,12 +14,17 @@ CRITIC_LOSS_ID = "huber_delta_1_v1"
 class HuberTD3(TD3):
     """Use Huber with delta 1 while retaining TD3's update schedule."""
 
+    def __init__(self, *args, log_td_errors: bool = False, **kwargs) -> None:
+        self.log_td_errors = log_td_errors
+        super().__init__(*args, **kwargs)
+
     def train(self, gradient_steps: int, batch_size: int = 100) -> None:
-        # Adapted from the vendored SB3 TD3.train. Only the critic loss changes.
+        # Adapted from SB3 TD3.train with Huber critic loss and optional diagnostics.
         self.policy.set_training_mode(True)
         self._update_learning_rate([self.actor.optimizer, self.critic.optimizer])
 
         actor_losses, critic_losses = [], []
+        absolute_td_errors = []
         for _ in range(gradient_steps):
             self._n_updates += 1
             replay_data = self.replay_buffer.sample(batch_size, env=self._vec_normalize_env)
@@ -35,6 +40,10 @@ class HuberTD3(TD3):
                 target_q_values = replay_data.rewards + (1 - replay_data.dones) * discounts * next_q_values
 
             current_q_values = self.critic(replay_data.observations, replay_data.actions)
+            if self.log_td_errors:
+                with th.no_grad():
+                    errors = th.cat(current_q_values, dim=1) - target_q_values
+                    absolute_td_errors.append(errors.abs().flatten())
             critic_loss = sum(F.huber_loss(current_q, target_q_values, delta=1.0) for current_q in current_q_values)
             assert isinstance(critic_loss, th.Tensor)
             critic_losses.append(critic_loss.item())
@@ -60,3 +69,11 @@ class HuberTD3(TD3):
         if len(actor_losses) > 0:
             self.logger.record("train/actor_loss", np.mean(actor_losses))
         self.logger.record("train/critic_loss", np.mean(critic_losses))
+        if absolute_td_errors:
+            errors = th.cat(absolute_td_errors).cpu().numpy()
+            median, p90, p99 = np.percentile(errors, [50, 90, 99])
+            self.logger.record("train/td_error_abs_mean", errors.mean())
+            self.logger.record("train/td_error_abs_median", median)
+            self.logger.record("train/td_error_abs_p90", p90)
+            self.logger.record("train/td_error_abs_p99", p99)
+            self.logger.record("train/td_error_fraction_above_1", np.mean(errors > 1.0))
