@@ -330,7 +330,6 @@ def evaluate(
                 economic_env_id, expected_version = V8_ENV_ID, V8_REWARD_VERSION
                 reward_fields = V8_REWARD_COMPONENT_FIELDS
                 fc_degradation_scope = "FC transient/low/high degradation"
-                action_fields += ("ramp_safety_override", "command_fc_lower_kw", "command_fc_upper_kw")
             elif v7:
                 factory, wrap_test_env = make_v7_env, wrap_v7_env
                 economic_env_id, expected_version = V7_ENV_ID, V7_REWARD_VERSION

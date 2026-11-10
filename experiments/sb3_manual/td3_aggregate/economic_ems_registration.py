@@ -13,7 +13,7 @@ from .economic_ems import (
     ECONOMIC_EMS_ENV_ID, ECONOMIC_REWARD_VERSIONS, N_STEP_RETURN, REWARD_SCALE,
     V6_ENV_ID, V7_ENV_ID, V8_ENV_ID,
 )
-from .economic_action_wrappers import PREVIOUS_FC_ACTION_MAPPING_VERSION, V8_ACTION_MAPPING_VERSION
+from .economic_action_wrappers import PREVIOUS_FC_ACTION_MAPPING_VERSION
 from .huber_td3 import HuberTD3
 
 
@@ -29,11 +29,10 @@ def validate_resume_metadata(argv):
         metadata = json.loads(archive.read("data"))
     identity = metadata.get("_td3_reward_identity") or {}
     reward_version = ECONOMIC_REWARD_VERSIONS[options.env]
-    action_mapping = V8_ACTION_MAPPING_VERSION if options.env == V8_ENV_ID else PREVIOUS_FC_ACTION_MAPPING_VERSION
     if (
         identity.get("env_id") != options.env
         or identity.get("reward_version") != reward_version
-        or (options.env != ECONOMIC_EMS_ENV_ID and identity.get("action_mapping") != action_mapping)
+        or (options.env != ECONOMIC_EMS_ENV_ID and identity.get("action_mapping") != PREVIOUS_FC_ACTION_MAPPING_VERSION)
         or identity.get("n_step_return") != N_STEP_RETURN
         or identity.get("reward_scale") != REWARD_SCALE
         or metadata.get("n_steps") != N_STEP_RETURN

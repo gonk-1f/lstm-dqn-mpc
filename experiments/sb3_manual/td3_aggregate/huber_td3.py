@@ -24,6 +24,8 @@ class HuberTD3(TD3):
         require_complete_n_step_batch: bool = False,
         actor_learning_rate: float | None = None,
         critic_learning_rate: float | None = None,
+        actor_output_init_gain: float | None = None,
+        log_actor_gradients: bool = False,
         **kwargs,
     ) -> None:
         if (actor_learning_rate is None) != (critic_learning_rate is None):
@@ -32,7 +34,15 @@ class HuberTD3(TD3):
         self.critic_learning_rate = critic_learning_rate
         self.log_td_errors = log_td_errors
         self.require_complete_n_step_batch = require_complete_n_step_batch
+        self.actor_output_init_gain = actor_output_init_gain
+        self.log_actor_gradients = log_actor_gradients
         super().__init__(*args, **kwargs)
+        # SB3 load constructs with _init_setup_model=False, then restores the networks.
+        if actor_output_init_gain is not None and hasattr(self, "actor"):
+            output = next(layer for layer in reversed(self.actor.mu) if isinstance(layer, th.nn.Linear))
+            th.nn.init.orthogonal_(output.weight, gain=actor_output_init_gain)
+            th.nn.init.zeros_(output.bias)
+            self.actor_target.load_state_dict(self.actor.state_dict())
 
     def _setup_model(self) -> None:
         super()._setup_model()
@@ -66,6 +76,21 @@ class HuberTD3(TD3):
         if boundaries.size:
             eligible += int(boundaries[-1]) + 1
         return eligible
+
+    @th.no_grad()
+    def _record_actor_gradients(self, actions: th.Tensor) -> None:
+        parameter_norms = th.stack([
+            th.linalg.vector_norm(parameter.grad)
+            for parameter in self.actor.parameters() if parameter.grad is not None
+        ])
+        grad_l2, derivative, saturation = th.stack((
+            th.linalg.vector_norm(parameter_norms),
+            (1.0 - actions.square()).mean(),
+            (actions.abs() >= 0.99).float().mean(),
+        )).tolist()
+        self.logger.record("train/actor_grad_l2", grad_l2)
+        self.logger.record("train/actor_tanh_derivative_mean", derivative)
+        self.logger.record("train/actor_action_saturation_fraction", saturation)
 
     def train(self, gradient_steps: int, batch_size: int = 100) -> None:
         # Adapted from SB3 TD3.train with Huber critic loss and optional diagnostics.
@@ -116,11 +141,14 @@ class HuberTD3(TD3):
             self.critic.optimizer.step()
 
             if self._n_updates % self.policy_delay == 0:
-                actor_loss = -self.critic.q1_forward(replay_data.observations, self.actor(replay_data.observations)).mean()
+                actor_actions = self.actor(replay_data.observations)
+                actor_loss = -self.critic.q1_forward(replay_data.observations, actor_actions).mean()
                 actor_losses.append(actor_loss.item())
 
                 self.actor.optimizer.zero_grad()
                 actor_loss.backward()
+                if self.log_actor_gradients:
+                    self._record_actor_gradients(actor_actions)
                 self.actor.optimizer.step()
 
                 polyak_update(self.critic.parameters(), self.critic_target.parameters(), self.tau)

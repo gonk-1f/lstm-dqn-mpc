@@ -365,6 +365,8 @@ class EconomicEMSV8TrainingCallback(EconomicEMSV7TrainingCallback):
     expected_learning_starts = FIXED_TRAIN_STEPS
 
     def _on_training_start(self):
+        if self.model.actor_output_init_gain != 0.01 or not self.model.log_actor_gradients:
+            raise ValueError("Economic EMS v8 requires Actor output gain 0.01 and Actor gradient diagnostics")
         for name, optimizer, expected in (
             ("actor_learning_rate", self.model.actor.optimizer, 0.0001),
             ("critic_learning_rate", self.model.critic.optimizer, 0.0003),
@@ -380,21 +382,12 @@ class EconomicEMSV8TrainingCallback(EconomicEMSV7TrainingCallback):
             **super()._additional_training_metadata(),
             "actor_learning_rate": self.model.actor.optimizer.param_groups[0]["lr"],
             "critic_learning_rate": self.model.critic.optimizer.param_groups[0]["lr"],
+            "actor_output_initialization": "orthogonal",
+            "actor_output_init_gain": self.model.actor_output_init_gain,
+            "log_actor_gradients": self.model.log_actor_gradients,
             "warmup_protocol": "One complete fixed voyage with random actions and no optimizer updates",
         }
-
     def _record_episode(self, summary):
         super()._record_episode(summary)
         if self.completed_episodes == 1 and not summary["completed"]:
             raise RuntimeError("Economic EMS v8 warmup ended before completing the full fixed voyage")
-
-    def _observe_step(self, info):
-        super()._observe_step(info)
-        if info["step_executed"]:
-            self._accumulate("ramp_safety_override", float(info["ramp_safety_override"]))
-
-    def _additional_episode_fields(self, summary):
-        return {
-            **super()._additional_episode_fields(summary),
-            "ramp_safety_override_steps": summary["ramp_safety_override_steps"],
-        }

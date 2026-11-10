@@ -7,5 +7,5 @@ if __name__ == "__main__":
     raise SystemExit(main(
         env_id="AggregateShipTD3EconomicV8-v0",
         config_name="zoo_td3_economic_ems_v8.yml",
-        output_name="td3_v8_fixed_parent005_n32_delta60_soc_potential_500ep",
+        output_name="td3_v8_fixed_parent005_n32_prevfc_soc_potential_500ep",
     ))

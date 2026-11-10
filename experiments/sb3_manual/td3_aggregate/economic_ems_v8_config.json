@@ -1,5 +1,5 @@
 {
-  "reward_version": "td3_v8_fixed_parent005_n32_delta60_soc_potential",
+  "reward_version": "td3_v8_fixed_parent005_n32_prevfc_soc_potential",
   "reward_scale": 0.001,
   "hydrogen_cost_weight": 1.0,
   "fuel_cell_variable_degradation_weight": 1.0,
@@ -12,6 +12,6 @@
   "battery_equivalent_hydrogen_sign": "Signed CNY reporting only. Discharge is positive and charge is negative.",
   "battery_equivalence": "Signed SOC cell-energy delta / fixed eta_fc_avg / LHV, without applying battery efficiency twice.",
   "reward_formula": "-0.001*(C_H2+C_FC_transient+C_FC_low+C_FC_high+C_LB_deg+(SOC_next-0.5)^2)+20*((SOC-0.5)^2-(SOC_next-0.5)^2)",
-  "action_mapping": "previous_fc_delta60_v3",
+  "action_mapping": "previous_fc_centered_v2",
   "training_selection": "fixed parent_005_seg01"
 }

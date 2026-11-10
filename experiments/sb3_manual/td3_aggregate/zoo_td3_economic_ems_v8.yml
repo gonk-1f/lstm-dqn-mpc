@@ -5,6 +5,8 @@ AggregateShipTD3EconomicV8-v0:
   learning_rate: 0.0001
   actor_learning_rate: 0.0001
   critic_learning_rate: 0.0003
+  actor_output_init_gain: 0.01
+  log_actor_gradients: true
   n_steps: 32
   gamma: 1.0
   replay_buffer_kwargs:

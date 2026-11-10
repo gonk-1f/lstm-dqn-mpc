@@ -39,8 +39,8 @@ V7_ENV_ID = "AggregateShipTD3EconomicV7-v0"
 V7_REWARD_VERSION = "td3_v7_fixed_parent005_n32_prevfc"
 V7_OUTPUT_NAME = "td3_v7_fixed_parent005_n32_prevfc_500ep"
 V8_ENV_ID = "AggregateShipTD3EconomicV8-v0"
-V8_REWARD_VERSION = "td3_v8_fixed_parent005_n32_delta60_soc_potential"
-V8_OUTPUT_NAME = "td3_v8_fixed_parent005_n32_delta60_soc_potential_500ep"
+V8_REWARD_VERSION = "td3_v8_fixed_parent005_n32_prevfc_soc_potential"
+V8_OUTPUT_NAME = "td3_v8_fixed_parent005_n32_prevfc_soc_potential_500ep"
 ECONOMIC_REWARD_VERSIONS = {
     ECONOMIC_EMS_ENV_ID: ECONOMIC_EMS_REWARD_VERSION,
     V6_ENV_ID: V6_REWARD_VERSION,

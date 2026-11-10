@@ -10,8 +10,6 @@ from v2.data.supervisory_rules import normalize_onboard_load_kw
 FC_RATED_KW = 600.0
 ACTION_MAPPING_VERSION = "feasible_interval_affine_v1"
 PREVIOUS_FC_ACTION_MAPPING_VERSION = "previous_fc_centered_v2"
-V8_ACTION_MAPPING_VERSION = "previous_fc_delta60_v3"
-V8_FC_DELTA_LIMIT_KW = 60.0
 OBSERVATION_VERSION = "soc_load_prev_fc_load_delta_voyage_progress_fraction_v2"
 
 
@@ -47,20 +45,14 @@ class FeasibleIntervalActionWrapper(gym.ActionWrapper):
 
     The legacy mapping centers on the interval midpoint. The v6 mapping uses
     the previous executed FC power as its center after the first interval.
-    The v8 mapping intersects a 60 kW change window with the physical interval.
     """
 
     def __init__(self, env: gym.Env, *, action_mapping: str = ACTION_MAPPING_VERSION):
         super().__init__(env)
-        if action_mapping not in (ACTION_MAPPING_VERSION, PREVIOUS_FC_ACTION_MAPPING_VERSION, V8_ACTION_MAPPING_VERSION):
+        if action_mapping not in (ACTION_MAPPING_VERSION, PREVIOUS_FC_ACTION_MAPPING_VERSION):
             raise ValueError(f"Unknown feasible-interval action mapping: {action_mapping}")
         self.action_mapping = action_mapping
         self.last_mapping: dict | None = None
-        self._ramp_safety_override_steps = 0
-
-    def reset(self, **kwargs):
-        self._ramp_safety_override_steps = 0
-        return super().reset(**kwargs)
 
     def _map(self, action) -> tuple[np.ndarray, dict]:
         value = np.asarray(action, dtype=np.float32).reshape(-1)
@@ -76,29 +68,14 @@ class FeasibleIntervalActionWrapper(gym.ActionWrapper):
         lower_kw, upper_kw = base._physically_feasible_fc_range(load_kw)
         reference_kw = FC_RATED_KW * (a + 1.0) / 2.0
         previous_centered = self.action_mapping == PREVIOUS_FC_ACTION_MAPPING_VERSION
-        delta_limited = self.action_mapping == V8_ACTION_MAPPING_VERSION
         center_kw = None
-        command_lo = command_hi = None
-        ramp_safety_override = False
         feasible = lower_kw <= upper_kw + 1e-8
         if feasible:
             width_kw = max(0.0, upper_kw - lower_kw)
             # When the physical range collapses within its round-off tolerance,
             # use the same upper endpoint as the underlying actuator.
             mapping_lower_kw = min(lower_kw, upper_kw)
-            if delta_limited:
-                previous_kw = float(base.physical.previous_fc_kw)
-                reference_kw = previous_kw + a * V8_FC_DELTA_LIMIT_KW
-                command_lo = max(mapping_lower_kw, previous_kw - V8_FC_DELTA_LIMIT_KW)
-                command_hi = min(upper_kw, previous_kw + V8_FC_DELTA_LIMIT_KW)
-                if command_lo > command_hi:
-                    # No power can satisfy both intervals. Preserve physical safety.
-                    ramp_safety_override = True
-                    command_lo = command_hi = float(np.clip(previous_kw, mapping_lower_kw, upper_kw))
-                command_width = command_hi - command_lo
-                center_kw = command_lo + 0.5 * command_width
-                mapped_kw = command_lo + (a + 1.0) * 0.5 * command_width
-            elif previous_centered and base.index > 0:
+            if previous_centered and base.index > 0:
                 center_kw = float(np.clip(base.physical.previous_fc_kw, mapping_lower_kw, upper_kw))
                 span_kw = center_kw - mapping_lower_kw if a < 0.0 else upper_kw - center_kw
                 mapped_kw = center_kw + a * span_kw
@@ -106,17 +83,6 @@ class FeasibleIntervalActionWrapper(gym.ActionWrapper):
                 center_kw = mapping_lower_kw + 0.5 * width_kw
                 mapped_kw = mapping_lower_kw + (a + 1.0) * 0.5 * width_kw
             inner_action = 2.0 * mapped_kw / FC_RATED_KW - 1.0
-            if delta_limited:
-                # The actuator decodes float32 actions. Round inward when its
-                # quantized setpoint would exceed the V8 command interval.
-                encoded = np.float32(inner_action)
-                rounded_kw = FC_RATED_KW * (float(encoded) + 1.0) / 2.0
-                executable_kw = min(max(rounded_kw, mapping_lower_kw), upper_kw)
-                eps = np.finfo(float).eps
-                if executable_kw < command_lo:
-                    inner_action = np.nextafter(np.float32(float(encoded) + eps), np.float32(1.0))
-                elif executable_kw > command_hi:
-                    inner_action = np.nextafter(np.float32(float(encoded) - eps), np.float32(-1.0))
             inner = np.array([inner_action], dtype=np.float32)
         else:
             # The inner environment will execute its existing fail-closed path.
@@ -133,16 +99,10 @@ class FeasibleIntervalActionWrapper(gym.ActionWrapper):
             "feasible_fc_lower_kw": lower_kw,
             "feasible_fc_upper_kw": upper_kw,
         }
-        if previous_centered or delta_limited:
+        if previous_centered:
             metadata.update(
                 previous_fc_kw=float(base.physical.previous_fc_kw),
                 action_center_fc_kw=center_kw,
-            )
-        if delta_limited:
-            metadata.update(
-                command_fc_lower_kw=command_lo,
-                command_fc_upper_kw=command_hi,
-                ramp_safety_override=ramp_safety_override,
             )
         self.last_mapping = metadata
         return inner, metadata
@@ -164,10 +124,6 @@ class FeasibleIntervalActionWrapper(gym.ActionWrapper):
                 )
             # Any residual below tolerance is float32 round-off, not a real projection.
             info["projected"] = False
-        if info.get("ramp_safety_override") and info.get("step_executed"):
-            self._ramp_safety_override_steps += 1
         if "vessel_episode" in info:
             info["vessel_episode"] = {**info["vessel_episode"], "power_projection_fraction": 0.0}
-            if self.action_mapping == V8_ACTION_MAPPING_VERSION:
-                info["vessel_episode"]["ramp_safety_override_steps"] = self._ramp_safety_override_steps
         return observation, reward, terminated, truncated, info
