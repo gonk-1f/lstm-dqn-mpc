@@ -8,7 +8,7 @@ from torch.nn import functional as F
 
 from stable_baselines3 import TD3
 from stable_baselines3.common.buffers import NStepReplayBuffer
-from stable_baselines3.common.utils import polyak_update
+from stable_baselines3.common.utils import polyak_update, update_learning_rate
 
 
 CRITIC_LOSS_ID = "huber_delta_1_v1"
@@ -17,10 +17,39 @@ CRITIC_LOSS_ID = "huber_delta_1_v1"
 class HuberTD3(TD3):
     """Use Huber with delta 1 while retaining TD3's update schedule."""
 
-    def __init__(self, *args, log_td_errors: bool = False, require_complete_n_step_batch: bool = False, **kwargs) -> None:
+    def __init__(
+        self,
+        *args,
+        log_td_errors: bool = False,
+        require_complete_n_step_batch: bool = False,
+        actor_learning_rate: float | None = None,
+        critic_learning_rate: float | None = None,
+        **kwargs,
+    ) -> None:
+        if (actor_learning_rate is None) != (critic_learning_rate is None):
+            raise ValueError("Set both actor_learning_rate and critic_learning_rate for independent rates")
+        self.actor_learning_rate = actor_learning_rate
+        self.critic_learning_rate = critic_learning_rate
         self.log_td_errors = log_td_errors
         self.require_complete_n_step_batch = require_complete_n_step_batch
         super().__init__(*args, **kwargs)
+
+    def _setup_model(self) -> None:
+        super()._setup_model()
+        self._apply_independent_learning_rates()
+
+    def _apply_independent_learning_rates(self) -> None:
+        if self.actor_learning_rate is not None and self.critic_learning_rate is not None:
+            update_learning_rate(self.actor.optimizer, self.actor_learning_rate)
+            update_learning_rate(self.critic.optimizer, self.critic_learning_rate)
+
+    def _update_learning_rate(self, optimizers: list[th.optim.Optimizer] | th.optim.Optimizer) -> None:
+        if self.actor_learning_rate is None:
+            super()._update_learning_rate(optimizers)
+            return
+        self._apply_independent_learning_rates()
+        self.logger.record("train/actor_learning_rate", self.actor.optimizer.param_groups[0]["lr"])
+        self.logger.record("train/critic_learning_rate", self.critic.optimizer.param_groups[0]["lr"])
 
     def eligible_n_step_starts(self) -> int:
         """Count distinct starts with a full horizon or an observed episode boundary."""

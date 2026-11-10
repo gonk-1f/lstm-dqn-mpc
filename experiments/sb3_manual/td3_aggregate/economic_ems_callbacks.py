@@ -17,7 +17,8 @@ from .callbacks import (
 )
 from .economic_ems import (
     N_STEP_RETURN, REWARD_COMPONENT_FIELDS, V6_ENV_ID, V6_REWARD_COMPONENT_FIELDS, V6_REWARD_VERSION,
-    V7_ENV_ID, V7_REWARD_COMPONENT_FIELDS, V7_REWARD_VERSION, EconomicEMSTD3Reward,
+    V7_ENV_ID, V7_REWARD_COMPONENT_FIELDS, V7_REWARD_VERSION,
+    V8_ENV_ID, V8_REWARD_COMPONENT_FIELDS, V8_REWARD_VERSION, EconomicEMSTD3Reward,
 )
 from .economic_action_wrappers import FeasibleIntervalActionWrapper
 from .huber_td3 import HuberTD3
@@ -302,14 +303,18 @@ class EconomicEMSV7TrainingCallback(EconomicEMSV6TrainingCallback):
     plot_extra_args = ("--plot-fixed-evaluation",)
     reward_version = V7_REWARD_VERSION
     expected_train_frequency = 1
+    expected_learning_starts = 0
 
     def _on_training_start(self):
         if (
-            self.model.learning_starts != 0 or self.model.batch_size != 64
+            self.model.learning_starts != self.expected_learning_starts or self.model.batch_size != 64
             or not getattr(self.model, "require_complete_n_step_batch", False)
             or not isinstance(self.model.action_noise, NormalActionNoise)
         ):
-            raise ValueError("Economic EMS v7 requires Actor + Normal noise from step one and 64 eligible n-step starts")
+            raise ValueError(
+                f"{self.reward_version} requires learning_starts={self.expected_learning_starts}, "
+                "Normal action noise and a batch of 64 eligible n-step starts"
+            )
         git = ["git", "-C", str(PROJECT_ROOT)]
         self._source_audit = {
             "code_head": subprocess.check_output([*git, "rev-parse", "HEAD"], text=True).strip(),
@@ -349,3 +354,47 @@ class EconomicEMSV7TrainingCallback(EconomicEMSV6TrainingCallback):
     def _flush(self):
         self.logger.record("replay/eligible_n_step_starts", self.model.eligible_n_step_starts())
         super()._flush()
+
+
+class EconomicEMSV8TrainingCallback(EconomicEMSV7TrainingCallback):
+    economic_fields = ECONOMIC_FIELDS + V8_REWARD_COMPONENT_FIELDS
+    reward_component_fields = V8_REWARD_COMPONENT_FIELDS
+    environment_id = V8_ENV_ID
+    evaluation_extra_args = ("--reward-mode", "economic_ems_v8")
+    reward_version = V8_REWARD_VERSION
+    expected_learning_starts = FIXED_TRAIN_STEPS
+
+    def _on_training_start(self):
+        for name, optimizer, expected in (
+            ("actor_learning_rate", self.model.actor.optimizer, 0.0001),
+            ("critic_learning_rate", self.model.critic.optimizer, 0.0003),
+        ):
+            if getattr(self.model, name, None) != expected or any(
+                group["lr"] != expected for group in optimizer.param_groups
+            ):
+                raise ValueError(f"Economic EMS v8 requires {name}={expected}")
+        super()._on_training_start()
+
+    def _additional_training_metadata(self):
+        return {
+            **super()._additional_training_metadata(),
+            "actor_learning_rate": self.model.actor.optimizer.param_groups[0]["lr"],
+            "critic_learning_rate": self.model.critic.optimizer.param_groups[0]["lr"],
+            "warmup_protocol": "One complete fixed voyage with random actions and no optimizer updates",
+        }
+
+    def _record_episode(self, summary):
+        super()._record_episode(summary)
+        if self.completed_episodes == 1 and not summary["completed"]:
+            raise RuntimeError("Economic EMS v8 warmup ended before completing the full fixed voyage")
+
+    def _observe_step(self, info):
+        super()._observe_step(info)
+        if info["step_executed"]:
+            self._accumulate("ramp_safety_override", float(info["ramp_safety_override"]))
+
+    def _additional_episode_fields(self, summary):
+        return {
+            **super()._additional_episode_fields(summary),
+            "ramp_safety_override_steps": summary["ramp_safety_override_steps"],
+        }

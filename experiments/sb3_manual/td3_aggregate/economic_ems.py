@@ -28,6 +28,7 @@ from .huber_td3 import CRITIC_LOSS_ID
 DEFAULT_CONFIG_PATH = Path(__file__).with_name("economic_ems_config.json")
 V6_CONFIG_PATH = Path(__file__).with_name("economic_ems_v6_config.json")
 V7_CONFIG_PATH = Path(__file__).with_name("economic_ems_v7_config.json")
+V8_CONFIG_PATH = Path(__file__).with_name("economic_ems_v8_config.json")
 ECONOMIC_EMS_ENV_ID = "AggregateShipTD3Economic-v0"
 ECONOMIC_EMS_REWARD_VERSION = "td3_economic_cost_bat_eq_stepwise_soc_factor_mu03_n32_fixed_parent005_v3"
 ECONOMIC_EMS_OUTPUT_NAME = "td3_economic_ems_v31_n32_fixed_parent005_500ep"
@@ -37,10 +38,14 @@ V6_OUTPUT_NAME = "td3_v6_fixed_parent005_n32_prevfc_500ep"
 V7_ENV_ID = "AggregateShipTD3EconomicV7-v0"
 V7_REWARD_VERSION = "td3_v7_fixed_parent005_n32_prevfc"
 V7_OUTPUT_NAME = "td3_v7_fixed_parent005_n32_prevfc_500ep"
+V8_ENV_ID = "AggregateShipTD3EconomicV8-v0"
+V8_REWARD_VERSION = "td3_v8_fixed_parent005_n32_delta60_soc_potential"
+V8_OUTPUT_NAME = "td3_v8_fixed_parent005_n32_delta60_soc_potential_500ep"
 ECONOMIC_REWARD_VERSIONS = {
     ECONOMIC_EMS_ENV_ID: ECONOMIC_EMS_REWARD_VERSION,
     V6_ENV_ID: V6_REWARD_VERSION,
     V7_ENV_ID: V7_REWARD_VERSION,
+    V8_ENV_ID: V8_REWARD_VERSION,
 }
 N_STEP_RETURN = 32
 REWARD_SCALE = 0.001
@@ -66,6 +71,7 @@ V6_REWARD_COMPONENT_FIELDS = (
     "reward_failure_penalty_cny",
 )
 V7_REWARD_COMPONENT_FIELDS = V6_REWARD_COMPONENT_FIELDS
+V8_REWARD_COMPONENT_FIELDS = (*V6_REWARD_COMPONENT_FIELDS, "reward_soc_potential_cost_cny")
 FC_VARIABLE_DEGRADATION_FIELDS = (
     "fuel_cell_transient_cost_cny",
     "fuel_cell_low_load_cost_cny",
@@ -91,7 +97,13 @@ def load_economic_ems_config(
             raise ValueError(f"{key} must be finite and nonnegative")
     if not math.isfinite(config["failure_reward"]) or config["failure_reward"] >= 0:
         raise ValueError("failure_reward must be negative")
-    if reward_version in (V6_REWARD_VERSION, V7_REWARD_VERSION):
+    if reward_version == V8_REWARD_VERSION:
+        if (
+            config["soc_step_weight_cny"] != 1.0 or config["soc_reference"] != 0.5
+            or config["soc_potential_weight_cny"] != 20000.0
+        ):
+            raise ValueError("Economic TD3 V8 requires SOC path weight 1, reference 0.5 and potential weight 20000")
+    elif reward_version in (V6_REWARD_VERSION, V7_REWARD_VERSION):
         if config["soc_step_weight_cny"] != 5.0 or config["soc_reference"] != 0.5:
             raise ValueError("Economic TD3 requires SOC weight 5.0 and reference 0.5")
     elif not 0.0 <= config["soc_equivalence_mu"] <= 1.0:
@@ -106,8 +118,13 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
         super().__init__(env)
         self.config = load_economic_ems_config() if config is None else dict(config)
         version = self.config["reward_version"]
-        self.uses_soc_tracking = version in (V6_REWARD_VERSION, V7_REWARD_VERSION)
-        self.component_fields = V6_REWARD_COMPONENT_FIELDS if self.uses_soc_tracking else REWARD_COMPONENT_FIELDS
+        self.uses_soc_tracking = version in (V6_REWARD_VERSION, V7_REWARD_VERSION, V8_REWARD_VERSION)
+        self.soc_potential_weight = self.config.get("soc_potential_weight_cny") if version == V8_REWARD_VERSION else None
+        self.component_fields = {
+            V6_REWARD_VERSION: V6_REWARD_COMPONENT_FIELDS,
+            V7_REWARD_VERSION: V7_REWARD_COMPONENT_FIELDS,
+            V8_REWARD_VERSION: V8_REWARD_COMPONENT_FIELDS,
+        }.get(version, REWARD_COMPONENT_FIELDS)
         self.fc_reward_fields = (
             ("fuel_cell_transient_cost_cny",) if version == V7_REWARD_VERSION else FC_VARIABLE_DEGRADATION_FIELDS
         )
@@ -163,13 +180,16 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
             self.reward_identity.pop("soc_equivalence_mu")
             self.reward_identity["economic_cost_weights"].pop("battery_equivalent_hydrogen")
             self.reward_identity.update(
-                env_id=V7_ENV_ID if version == V7_REWARD_VERSION else V6_ENV_ID,
+                env_id={V6_REWARD_VERSION: V6_ENV_ID, V7_REWARD_VERSION: V7_ENV_ID, V8_REWARD_VERSION: V8_ENV_ID}[version],
                 action_mapping=self.config["action_mapping"],
                 soc_deviation_weight=self.config["soc_step_weight_cny"],
                 soc_step_weight_cny=self.config["soc_step_weight_cny"],
                 soc_reference=self.config["soc_reference"],
                 physical_accounting_identity=physical_identity,
             )
+        if self.soc_potential_weight is not None:
+            self.reward_identity["soc_potential_weight_cny"] = self.soc_potential_weight
+            self.reward_identity["soc_potential_reward_coefficient"] = self.soc_potential_weight * self.reward_scale
         self.initial_soc = None
         self._reset_accounting()
 
@@ -253,9 +273,14 @@ class EconomicEMSTD3Reward(gym.RewardWrapper):
                 equivalent = battery_equivalent_cost(base.physics, before, base.physical, original["fc_actual_kw"])
                 battery_mass_kg = equivalent["battery_equivalent_hydrogen_kg"]
                 battery_eq_cost = equivalent["c_bat_eq_cny"]
-                components["reward_soc_tracking_penalty_cny"] = (
-                    self.config["soc_step_weight_cny"] * (float(original["soc"]) - self.config["soc_reference"]) ** 2
-                )
+                reference = self.config["soc_reference"]
+                next_deviation_sq = (float(original["soc"]) - reference) ** 2
+                components["reward_soc_tracking_penalty_cny"] = self.config["soc_step_weight_cny"] * next_deviation_sq
+                if self.soc_potential_weight is not None:
+                    before_deviation_sq = (float(before.soc) - reference) ** 2
+                    components["reward_soc_potential_cost_cny"] = (
+                        self.soc_potential_weight * (next_deviation_sq - before_deviation_sq)
+                    )
             else:
                 battery_mass_kg, factor = self._battery_equivalent_hydrogen(
                     float(original["battery_actual_kw"]), float(before.soc),
@@ -370,6 +395,10 @@ def wrap_v7_env(base_env: gym.Env) -> EconomicEMSTD3Reward:
     return _wrap_soc_tracking_env(base_env, V7_CONFIG_PATH, V7_REWARD_VERSION)
 
 
+def wrap_v8_env(base_env: gym.Env) -> EconomicEMSTD3Reward:
+    return _wrap_soc_tracking_env(base_env, V8_CONFIG_PATH, V8_REWARD_VERSION)
+
+
 def make_economic_env(
     data_root: str | Path,
     split: str = "train",
@@ -405,6 +434,12 @@ def make_v7_env(
     data_root: str | Path, split: str = "train", fixed_train_id: str | None = None,
 ) -> EconomicEMSTD3Reward:
     return make_economic_env(data_root, split=split, fixed_train_id=fixed_train_id, wrapper=wrap_v7_env)
+
+
+def make_v8_env(
+    data_root: str | Path, split: str = "train", fixed_train_id: str | None = None,
+) -> EconomicEMSTD3Reward:
+    return make_economic_env(data_root, split=split, fixed_train_id=fixed_train_id, wrapper=wrap_v8_env)
 
 
 def assert_economic_model_identity(model, identity: dict) -> None:
