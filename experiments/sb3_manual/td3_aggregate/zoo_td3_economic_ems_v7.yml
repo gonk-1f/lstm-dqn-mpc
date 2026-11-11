@@ -1,0 +1,35 @@
+AggregateShipTD3EconomicV7-v0:
+  n_timesteps: 20000000
+  policy: MlpPolicy
+  n_envs: 1
+  learning_rate: 0.001
+  n_steps: 32
+  gamma: 1.0
+  buffer_size: 1000000
+  batch_size: 64
+  tau: 0.001
+  learning_starts: 0
+  train_freq: 1
+  gradient_steps: 1
+  policy_delay: 2
+  target_policy_noise: 0.2
+  target_noise_clip: 0.5
+  noise_type: normal
+  noise_std: 0.05
+  log_td_errors: true
+  require_complete_n_step_batch: true
+  policy_kwargs:
+    net_arch:
+      pi: [256, 256]
+      qf: [256, 256]
+  normalize: false
+  env_kwargs:
+    data_root: data/processed/operating_dataset_v6_1s
+    split: train
+    fixed_train_id: parent_005_seg01
+  callback:
+  - experiments.sb3_manual.td3_aggregate.economic_ems_callbacks.EconomicEMSV7TrainingCallback:
+      fixed_eval_every_episodes: 5
+      validation_every_episodes: 50
+      max_episodes: 500
+      log_every_steps: 1000

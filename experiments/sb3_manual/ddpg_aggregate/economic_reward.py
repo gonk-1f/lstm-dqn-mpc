@@ -119,8 +119,9 @@ def _fc_degradation_components(fc_loss, ledger) -> dict:
 def interval_economic_components(
     physics, before, after, fc_kw, ledger, *,
     fc_is_on: bool | None = None, fc_start_stop_cycles: int | None = None,
+    physical_accounting_only: bool = False,
 ) -> dict:
-    """Reuse the executed physical ledger and add exactly one signed SOC value."""
+    """Reuse the physical ledger, optionally adding the legacy DDPG reward terms."""
     if ledger.shore_cost_cny != 0.0:
         raise ValueError("The aggregate onboard reward does not include shore settlement")
     # Reuse the physical model's four raw losses for this executed 1-second step.
@@ -143,8 +144,16 @@ def interval_economic_components(
         "shore_cost_cny": ledger.shore_cost_cny,
         "physical_economic_cost_cny": ledger.total_cost_cny,
         **fc_components,
-        **battery_equivalent_cost(physics, before, after, fc_kw),
     }
+    if physical_accounting_only:
+        values.update(
+            c_bat_eq_cny=0.0,
+            battery_equivalent_hydrogen_kg=0.0,
+            equivalent_fc_efficiency=ETA_FC_AVG,
+            fc_efficiency_actual=float(physics.fc_efficiency.eta(fc_kw)),
+        )
+    else:
+        values.update(battery_equivalent_cost(physics, before, after, fc_kw))
     for name, value in values.items():
         _finite(value, name)
     total = math.fsum((
@@ -159,7 +168,9 @@ def interval_economic_components(
         )
     values["total_cost_cny"] = total
     values["reward_economic_cost_cny"] = math.fsum(values[name] for name in REWARD_COST_FIELDS)
-    values["soc_deviation_penalty_cny"] = SOC_DEVIATION_WEIGHT * (after.soc - SOC_REFERENCE) ** 2
+    values["soc_deviation_penalty_cny"] = (
+        0.0 if physical_accounting_only else SOC_DEVIATION_WEIGHT * (after.soc - SOC_REFERENCE) ** 2
+    )
     values["reward_total_cost_cny"] = math.fsum((
         values["reward_economic_cost_cny"], values["soc_deviation_penalty_cny"],
     ))
