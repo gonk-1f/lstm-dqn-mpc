@@ -6,7 +6,9 @@ Step reward:
     Hydrogen consumption
     + FC operating degradation
     + Battery degradation
-    + Terminal SOC squared penalty
+    + Per-step SOC squared penalty
+
+No additional terminal SOC penalty.
 
 Voyage economic cost:
     Actual hydrogen
@@ -270,58 +272,94 @@ class CostCalculator:
     # =====================================================
 
     def calculate_reward(
-        self,
-        step_costs: StepCost,
-        alpha: float = 0.001,
-        beta: float = 20000.0,
-        final_soc: float | None = None,
+            self,
+            step_costs: StepCost,
+            next_soc: float,
+            alpha: float = 0.001,
+            beta_step: float = 0.5,
     ) -> float:
         """
-        r_t = -alpha * (
-            C_H2 + C_FC_deg + C_battery_deg
-        )
+        Calculate TD3 reward at each executed environment step.
 
-        At voyage termination:
+        Reward:
+            r_t = -alpha * (
+                C_H2,t
+                + C_FC_deg,t
+                + C_LB_deg,t
+                + beta_step * (SOC_next - SOC_target)**2
+            )
 
-        r_T = r_T - alpha * beta * (SOC_final - SOC_target)^2
+        SOC penalty:
+            Applied at every normal environment step.
 
-        beta is on the same raw-cost scale as the economic terms;
-        alpha scales both economic and terminal-SOC terms.
+        Terminal SOC penalty:
+            Disabled. No additional terminal penalty.
 
-        Excluded:
-            Battery equivalent hydrogen.
-            FC start-stop degradation.
+        Excluded from reward:
+            Battery equivalent hydrogen consumption.
+            Fuel-cell start-stop degradation.
+
+        These excluded costs remain in the independent
+        voyage economic cost ledger.
         """
 
         alpha = float(alpha)
+        beta_step = float(beta_step)
+        next_soc = float(next_soc)
 
-        beta = float(beta)
+        # ------------------------------------------------
+        # 1. Validate reward parameters
+        # ------------------------------------------------
 
         if not math.isfinite(alpha) or alpha < 0:
-            raise ValueError("Invalid alpha.")
+            raise ValueError(
+                "Invalid alpha."
+            )
 
-        if not math.isfinite(beta) or beta < 0:
-            raise ValueError("Invalid beta.")
+        if not math.isfinite(beta_step) or beta_step < 0:
+            raise ValueError(
+                "Invalid beta_step."
+            )
 
-        reward = (
-            -alpha
-            * step_costs.reward_cost_rmb
+        if not math.isfinite(next_soc):
+            raise ValueError(
+                "Invalid next_soc."
+            )
+
+        # ------------------------------------------------
+        # 2. Economic operating costs
+        # ------------------------------------------------
+
+        economic_cost = float(
+            step_costs.reward_cost_rmb
         )
 
-        if final_soc is not None:
+        # ------------------------------------------------
+        # 3. Per-step SOC penalty
+        # ------------------------------------------------
 
-            final_soc = float(final_soc)
+        soc_error = (
+                next_soc
+                - self.config.soc_target
+        )
 
-            if not math.isfinite(final_soc):
-                raise ValueError("Invalid final SOC.")
+        soc_penalty = (
+                beta_step
+                * soc_error ** 2
+        )
 
-            reward -= (
-                alpha
-                * beta
-                * (
-                    final_soc
-                    - self.config.soc_target
-                ) ** 2
+        # ------------------------------------------------
+        # 4. Final step reward
+        # ------------------------------------------------
+
+        reward = (
+                -alpha
+                * (economic_cost + soc_penalty)
+        )
+
+        if not math.isfinite(reward):
+            raise ValueError(
+                "Non-finite reward."
             )
 
         return float(reward)

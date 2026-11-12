@@ -1,80 +1,33 @@
 
-"""
-Ship Energy Management Environment.
+"""Ship energy management environment (fuel cell + lithium battery).
 
-Gymnasium API.
+The action requests a fraction of the maximum FC net power. The environment
+projects that request into the feasible power interval.
 
-Hybrid system:
-    Fuel Cell + Lithium Battery.
+Reward on every executed, feasible step:
+    -reward_alpha * (H2 cost + FC degradation cost + LB degradation cost
+                     + soc_step_weight * (SOC_next - soc_target)**2)
 
-State:
-    [SOC,
-     P_load / P_FC_max,
-     P_FC_previous / P_FC_max,
-     delta_P_load / P_FC_max,
-     time_progress]
-
-Action:
-    Total FC net power increment:
-    [-60, +60] kW per environment step.
-
-Power balance:
-    P_load = P_FC_net + P_battery
-
-Battery:
-    Positive power = discharge.
-    Negative power = charge.
-
-Episode:
-    One complete voyage segment.
-
-Reward:
-    Hydrogen cost.
-    FC operating degradation cost.
-    Battery degradation cost.
-    Terminal SOC squared deviation.
-
-Excluded from step reward:
-    FC start-stop degradation.
-    Battery equivalent hydrogen.
-
-FC start-stop degradation is accounted for
-once at voyage-level economic accounting.
+There is no additional terminal SOC penalty. Power infeasibility retains
+its standalone failure penalty.
 """
 
 from __future__ import annotations
 
 from typing import Callable, Sequence
 
-import numpy as np
-
 import gymnasium as gym
-
+import numpy as np
 from gymnasium import spaces
 
+from .battery import BatteryConfig, LithiumBattery
 from .config import CONFIG
-
-from .fuel_cell import (
-    FuelCellSystem,
-    FuelCellParameters,
-)
-
-from .battery import (
-    LithiumBattery,
-    BatteryConfig,
-)
-
-from .costs import (
-    CostCalculator,
-    StepCost,
-)
+from .costs import CostCalculator, StepCost
+from .fuel_cell import FuelCellParameters, FuelCellSystem
 
 
 class ShipEMSEnv(gym.Env):
-
-    metadata = {
-        "render_modes": []
-    }
+    metadata = {"render_modes": []}
 
     def __init__(
         self,
@@ -83,196 +36,107 @@ class ShipEMSEnv(gym.Env):
         fuel_cell_params: FuelCellParameters | None = None,
         battery_config: BatteryConfig | None = None,
         dt_s: float = 1.0,
-        max_fc_delta_kw: float = 60.0,
         random_voyage: bool = True,
         reward_fn: Callable[[dict], float] | None = None,
         cost_calculator: CostCalculator | None = None,
         reward_alpha: float | None = 0.001,
-        soc_terminal_weight: float | None = 20000.0,
+        soc_step_weight: float | None = 0.5,
         soc_target: float = CONFIG.soc_target,
         failure_penalty: float = -20.0,
     ):
-
         super().__init__()
-
-        # =================================================
-        # 1. Basic parameters
-        # =================================================
 
         if not np.isfinite(dt_s) or dt_s <= 0:
             raise ValueError("Invalid dt_s.")
 
-        if (
-            not np.isfinite(max_fc_delta_kw)
-            or max_fc_delta_kw <= 0
-        ):
-            raise ValueError("Invalid FC action range.")
-
         if not np.isfinite(soc_target):
             raise ValueError("Invalid SOC target.")
 
-        if (
-            not np.isfinite(failure_penalty)
-            or failure_penalty > 0
-        ):
+        if not np.isfinite(failure_penalty) or failure_penalty > 0:
             raise ValueError("Invalid failure penalty.")
 
-        if (reward_alpha is None) != (
-            soc_terminal_weight is None
-        ):
+        if (reward_alpha is None) != (soc_step_weight is None):
             raise ValueError(
-                "reward_alpha and soc_terminal_weight "
-                "must be configured together."
+                "reward_alpha and soc_step_weight must be configured together."
             )
 
         if reward_alpha is not None:
-
-            if (
-                not np.isfinite(reward_alpha)
-                or reward_alpha < 0
-            ):
+            if not np.isfinite(reward_alpha) or reward_alpha < 0:
                 raise ValueError("Invalid reward_alpha.")
 
-            if (
-                not np.isfinite(soc_terminal_weight)
-                or soc_terminal_weight < 0
-            ):
-                raise ValueError(
-                    "Invalid SOC terminal weight."
-                )
+            if not np.isfinite(soc_step_weight) or soc_step_weight < 0:
+                raise ValueError("Invalid SOC step weight.")
 
-        if (
-            reward_fn is not None
-            and reward_alpha is not None
-        ):
+        if reward_fn is not None and reward_alpha is not None:
             raise ValueError(
-                "Use either reward_fn or built-in reward "
-                "parameters, not both."
+                "Use either reward_fn or built-in reward parameters, not both."
             )
 
         self.dt_s = float(dt_s)
-
-        self.max_fc_delta_kw = float(
-            max_fc_delta_kw
-        )
-
-        self.random_voyage = bool(
-            random_voyage
-        )
+        self.random_voyage = bool(random_voyage)
 
         self.reward_fn = reward_fn
-
         self.reward_alpha = (
-            None
-            if reward_alpha is None
-            else float(reward_alpha)
+            None if reward_alpha is None else float(reward_alpha)
         )
-
-        self.soc_terminal_weight = (
-            None
-            if soc_terminal_weight is None
-            else float(soc_terminal_weight)
+        self.soc_step_weight = (
+            None if soc_step_weight is None else float(soc_step_weight)
         )
-
         self.soc_target = float(soc_target)
+        self.failure_penalty = float(failure_penalty)
 
-        self.failure_penalty = float(
-            failure_penalty
-        )
-
-        # =================================================
-        # 2. Physical models
-        # =================================================
-
-        fc_params = (
-            fuel_cell_params
-            or FuelCellParameters()
-        )
-
-        lb_config = (
-            battery_config
-            or BatteryConfig()
-        )
+        # ------------------------------------------------
+        # Physical models
+        # ------------------------------------------------
 
         self.fuel_cell = FuelCellSystem(
-            fc_params
+            fuel_cell_params or FuelCellParameters()
         )
-
         self.battery = LithiumBattery(
-            lb_config
+            battery_config or BatteryConfig()
         )
 
-        # Important:
-        # FC maximum power means maximum NET power,
-        # not total gross rated power.
-
-        self.fc_max_kw = (
-            self.fuel_cell.max_net_power_kw
-        )
-
-        self.fc_gross_max_kw = (
-            self.fuel_cell.max_gross_power_kw
-        )
+        self.fc_max_kw = self.fuel_cell.max_net_power_kw
+        self.fc_gross_max_kw = self.fuel_cell.max_gross_power_kw
 
         if not (
             self.battery.config.soc_min
             <= self.soc_target
             <= self.battery.config.soc_max
         ):
-            raise ValueError(
-                "SOC target outside battery limits."
-            )
+            raise ValueError("SOC target outside battery limits.")
 
-        # =================================================
-        # 3. Cost calculator
-        # =================================================
-
-        if cost_calculator is None:
-
-            # Use the project's frozen eta_fc_avg=0.5755641791.
-            self.cost_calculator = CostCalculator()
-
-        else:
-
-            self.cost_calculator = cost_calculator
-
+        self.cost_calculator = (
+            cost_calculator
+            if cost_calculator is not None
+            else CostCalculator()
+        )
         cost_cfg = self.cost_calculator.config
 
-        # -------------------------------------------------
+        # ------------------------------------------------
         # Configuration consistency
-        # -------------------------------------------------
+        # ------------------------------------------------
 
-        if (
-            self.fuel_cell.params.n_stacks
-            != cost_cfg.fc_stack_count
-        ):
-            raise ValueError(
-                "FC stack count mismatch."
-            )
+        if self.fuel_cell.params.n_stacks != cost_cfg.fc_stack_count:
+            raise ValueError("FC stack count mismatch.")
 
         if not np.isclose(
             self.fuel_cell.params.rated_stack_gross_power_kw,
             cost_cfg.fc_stack_rated_gross_kw,
         ):
-            raise ValueError(
-                "FC gross rated power mismatch."
-            )
+            raise ValueError("FC gross rated power mismatch.")
 
         if not np.isclose(
             self.fuel_cell.params.replacement_cost_rmb,
             cost_cfg.fc_replacement_cost_rmb,
         ):
-            raise ValueError(
-                "FC replacement cost mismatch."
-            )
+            raise ValueError("FC replacement cost mismatch.")
 
         if not np.isclose(
             self.battery.config.capacity_kwh,
             cost_cfg.battery_total_capacity_kwh,
         ):
-            raise ValueError(
-                "Battery capacity mismatch."
-            )
+            raise ValueError("Battery capacity mismatch.")
 
         battery_config_checks = (
             (
@@ -320,107 +184,63 @@ class ShipEMSEnv(gym.Env):
             self.battery.config.max_charge_power_kw,
             cost_cfg.battery_max_charge_kw,
         ):
-            raise ValueError(
-                "Battery charge power mismatch."
-            )
+            raise ValueError("Battery charge power mismatch.")
 
         if not np.isclose(
             self.battery.config.max_discharge_power_kw,
             cost_cfg.battery_max_discharge_kw,
         ):
-            raise ValueError(
-                "Battery discharge power mismatch."
-            )
+            raise ValueError("Battery discharge power mismatch.")
 
         if not np.isclose(
             self.fuel_cell.params.hydrogen_price_rmb_per_kg,
             cost_cfg.hydrogen_price_rmb_per_kg,
         ):
-            raise ValueError(
-                "Hydrogen price mismatch."
-            )
+            raise ValueError("Hydrogen price mismatch.")
 
-        if not np.isclose(
-            self.soc_target,
-            cost_cfg.soc_target,
-        ):
-            raise ValueError(
-                "SOC target mismatch."
-            )
+        if not np.isclose(self.soc_target, cost_cfg.soc_target):
+            raise ValueError("SOC target mismatch.")
 
-        # =================================================
-        # 4. Load voyage profiles
-        # =================================================
+        # ------------------------------------------------
+        # Load voyage profiles
+        # ------------------------------------------------
 
         if hasattr(load_profiles, "columns"):
-
             if "load_total_kw" not in load_profiles.columns:
                 raise ValueError(
                     "DataFrame must contain load_total_kw."
                 )
-
             raw_profiles = [load_profiles]
 
         elif isinstance(load_profiles, np.ndarray):
-
             if load_profiles.ndim == 1:
-
-                raw_profiles = [
-                    load_profiles
-                ]
-
+                raw_profiles = [load_profiles]
             elif load_profiles.ndim == 2:
-
-                raw_profiles = list(
-                    load_profiles
-                )
-
+                raw_profiles = list(load_profiles)
             else:
-
-                raise ValueError(
-                    "load_profiles must be 1D or 2D."
-                )
+                raise ValueError("load_profiles must be 1D or 2D.")
 
         else:
-
-            raw_profiles = list(
-                load_profiles
-            )
-
-            if (
-                raw_profiles
-                and all(
-                    np.isscalar(x)
-                    for x in raw_profiles
-                )
+            raw_profiles = list(load_profiles)
+            if raw_profiles and all(
+                np.isscalar(x) for x in raw_profiles
             ):
                 raw_profiles = [
-                    np.asarray(
-                        raw_profiles,
-                        dtype=np.float64
-                    )
+                    np.asarray(raw_profiles, dtype=np.float64)
                 ]
 
         if not raw_profiles:
-            raise ValueError(
-                "No voyage profiles provided."
-            )
+            raise ValueError("No voyage profiles provided.")
 
         self.load_profiles = []
 
         for profile in raw_profiles:
-
             if hasattr(profile, "columns"):
-
                 if "load_total_kw" not in profile.columns:
                     raise ValueError(
-                        "Voyage DataFrame must contain "
-                        "load_total_kw."
+                        "Voyage DataFrame must contain load_total_kw."
                     )
 
-                # This environment uses one scalar dt_s for every transition.
-                # If the loader supplied per-row intervals, reject irregular or
-                # mismatched sampling instead of silently ignoring real timing.
                 if "dt_to_next_s" in profile.columns:
                     profile_dt = profile[
                         "dt_to_next_s"
@@ -446,345 +266,227 @@ class ShipEMSEnv(gym.Env):
                 arr = profile[
                     "load_total_kw"
                 ].to_numpy(dtype=np.float64)
-
             else:
-
-                arr = np.asarray(
-                    profile,
-                    dtype=np.float64
-                )
+                arr = np.asarray(profile, dtype=np.float64)
 
             if arr.ndim != 1 or len(arr) < 2:
                 raise ValueError(
-                    "Each voyage must contain at least "
-                    "two samples."
+                    "Each voyage must contain at least two samples."
                 )
 
             if not np.all(np.isfinite(arr)):
-                raise ValueError(
-                    "Invalid load values."
-                )
+                raise ValueError("Invalid load values.")
 
             if np.any(arr < 0):
-                raise ValueError(
-                    "Negative ship load detected."
-                )
+                raise ValueError("Negative ship load detected.")
 
-            self.load_profiles.append(
-                arr.copy()
-            )
+            self.load_profiles.append(arr.copy())
 
-        self.num_voyages = len(
-            self.load_profiles
-        )
+        self.num_voyages = len(self.load_profiles)
 
         if sample_ids is None:
-
             self.sample_ids = [
                 f"voyage_{i:03d}"
                 for i in range(self.num_voyages)
             ]
-
         else:
-
             if len(sample_ids) != self.num_voyages:
-                raise ValueError(
-                    "sample_ids length mismatch."
-                )
+                raise ValueError("sample_ids length mismatch.")
+            self.sample_ids = list(sample_ids)
 
-            self.sample_ids = list(
-                sample_ids
-            )
-
-        # =================================================
-        # 5. Action space
-        # =================================================
+        # ------------------------------------------------
+        # Action space
+        # ------------------------------------------------
 
         self.action_space = spaces.Box(
-            low=np.array(
-                [-self.max_fc_delta_kw],
-                dtype=np.float32
-            ),
-            high=np.array(
-                [self.max_fc_delta_kw],
-                dtype=np.float32
-            ),
-            dtype=np.float32
+            low=0.0,
+            high=1.0,
+            shape=(1,),
+            dtype=np.float32,
         )
 
-        # =================================================
-        # 6. Observation space
-        # =================================================
+        # ------------------------------------------------
+        # Observation space
+        # ------------------------------------------------
 
         self.observation_space = spaces.Box(
-
             low=np.array(
                 [
                     self.battery.config.soc_min,
                     -np.inf,
                     0.0,
                     -np.inf,
-                    0.0,
                 ],
-                dtype=np.float32
+                dtype=np.float32,
             ),
-
             high=np.array(
                 [
                     self.battery.config.soc_max,
                     np.inf,
                     1.0,
                     np.inf,
-                    1.0,
                 ],
-                dtype=np.float32
+                dtype=np.float32,
             ),
-
-            dtype=np.float32
+            dtype=np.float32,
         )
 
-        # =================================================
-        # 7. Episode variables
-        # =================================================
+        # ------------------------------------------------
+        # Episode state
+        # ------------------------------------------------
 
         self.voyage_index = 0
-
         self.voyage_id = None
-
         self.load_profile = None
-
         self.step_index = 0
-
         self.fc_power_kw = 0.0
-
         self.initial_soc = None
 
         self.episode_step_costs: list[StepCost] = []
-
         self.voyage_costs = None
-
         self._episode_done = True
 
-    # =====================================================
-    # 8. Observation
-    # =====================================================
+    # ====================================================
+    # Observation
+    # ====================================================
 
     def _get_obs(self):
+        n = len(self.load_profile)
+        idx = min(self.step_index, n - 1)
 
-        n = len(
-            self.load_profile
-        )
+        load_kw = float(self.load_profile[idx])
 
-        idx = min(
-            self.step_index,
-            n - 1
-        )
-
-        load_kw = float(
-            self.load_profile[idx]
-        )
-
-        if self.step_index == 0:
-
-            delta_load_kw = 0.0
-
-        else:
-
-            delta_load_kw = float(
+        delta_load_kw = (
+            0.0
+            if self.step_index == 0
+            else float(
                 self.load_profile[idx]
                 - self.load_profile[idx - 1]
             )
-
-        time_progress = min(
-            self.step_index / (n - 1),
-            1.0
         )
 
         return np.array(
             [
                 self.battery.soc,
-
                 load_kw / self.fc_max_kw,
-
                 self.fc_power_kw / self.fc_max_kw,
-
                 delta_load_kw / self.fc_max_kw,
-
-                time_progress,
             ],
-            dtype=np.float32
+            dtype=np.float32,
         )
 
-    # =====================================================
-    # 9. Reward readiness
-    # =====================================================
+    # ====================================================
+    # Reward readiness
+    # ====================================================
 
     @property
     def reward_ready(self):
-
         return (
             self.reward_fn is not None
             or (
                 self.reward_alpha is not None
-                and self.soc_terminal_weight is not None
+                and self.soc_step_weight is not None
             )
         )
 
-    # =====================================================
-    # 10. Step costs
-    # =====================================================
+    # ====================================================
+    # Step cost
+    # ====================================================
 
-    def _calculate_step_cost(
-        self,
-        fc_result,
-        battery_result,
-    ):
-
-        return (
-            self.cost_calculator.calculate_step_costs(
-
-                fc_result=fc_result,
-
-                battery_result=battery_result,
-
-                fuel_cell=self.fuel_cell,
-
-                battery=self.battery,
-            )
+    def _calculate_step_cost(self, fc_result, battery_result):
+        return self.cost_calculator.calculate_step_costs(
+            fc_result=fc_result,
+            battery_result=battery_result,
+            fuel_cell=self.fuel_cell,
+            battery=self.battery,
         )
 
-    # =====================================================
-    # 11. Reward
-    # =====================================================
+    # ====================================================
+    # Reward calculation
+    # ====================================================
 
-    def _calculate_reward(
-        self,
-        info,
-        step_cost=None,
-    ):
+    def _calculate_reward(self, info, step_cost=None):
+        """
+        Normal step:
+            r = -alpha * (
+                H2_cost + FC_deg_cost + LB_deg_cost
+                + beta_step * (SOC_next - target)^2
+            )
+
+        Final normal step:
+            Same formula, without any extra terminal penalty.
+
+        Infeasible failure:
+            Fixed failure penalty, replacing normal reward.
+        """
 
         if info.get("failure", False):
-
             return self.failure_penalty
 
         if self.reward_fn is not None:
-
-            reward = float(
-                self.reward_fn(info)
-            )
+            reward = float(self.reward_fn(info))
 
             if not np.isfinite(reward):
-                raise ValueError(
-                    "Non-finite reward."
-                )
+                raise ValueError("Non-finite reward.")
 
             return reward
 
         if self.reward_alpha is None:
-
             return 0.0
 
         if step_cost is None:
+            raise RuntimeError("Missing step cost.")
 
-            raise RuntimeError(
-                "Missing step cost."
-            )
-
-        # H2 + FC operating degradation
-        # + battery degradation.
-
-        reward = (
-            -self.reward_alpha
-            * step_cost.reward_cost_rmb
+        # Actual SOC after executing the current battery step.
+        soc_error = (
+            self.battery.soc - self.soc_target
         )
 
-        # Terminal SOC squared penalty.
+        soc_penalty = (
+            self.soc_step_weight * soc_error ** 2
+        )
 
-        if info.get("terminated", False):
-
-            soc_error = (
-                self.battery.soc
-                - self.soc_target
-            )
-
-            # SOC terminal penalty is expressed on the same raw-cost scale
-            # as the economic terms, so apply reward_alpha to it as well.
-            reward -= (
-                self.reward_alpha
-                * self.soc_terminal_weight
-                * soc_error ** 2
-            )
+        reward = -self.reward_alpha * (
+            step_cost.reward_cost_rmb
+            + soc_penalty
+        )
 
         if not np.isfinite(reward):
-            raise ValueError(
-                "Non-finite reward."
-            )
+            raise ValueError("Non-finite reward.")
 
         return float(reward)
 
-    # =====================================================
-    # 12. Voyage economic accounting
-    # =====================================================
+    # ====================================================
+    # Voyage economic accounting
+    # ====================================================
 
     def _calculate_voyage_costs(self):
-
-        return (
-            self.cost_calculator.calculate_voyage_costs(
-
-                step_costs=self.episode_step_costs,
-
-                fuel_cell=self.fuel_cell,
-
-                battery=self.battery,
-
-                initial_soc=float(self.initial_soc),
-
-                final_soc=float(self.battery.soc),
-
-                # One start-stop cycle per complete voyage.
-                start_stop_cycles=1,
-            )
+        return self.cost_calculator.calculate_voyage_costs(
+            step_costs=self.episode_step_costs,
+            fuel_cell=self.fuel_cell,
+            battery=self.battery,
+            initial_soc=float(self.initial_soc),
+            final_soc=float(self.battery.soc),
+            start_stop_cycles=1,
         )
 
-    def _add_voyage_economic_info(
-        self,
-        info,
-        voyage_costs,
-    ):
-
+    def _add_voyage_economic_info(self, info, voyage_costs):
         info.update({
-
-            "initial_soc": float(
-                self.initial_soc
-            ),
-
-            "final_soc": float(
-                self.battery.soc
-            ),
+            "initial_soc": float(self.initial_soc),
+            "final_soc": float(self.battery.soc),
 
             "soc_terminal_error": (
-                self.battery.soc
-                - self.soc_target
+                self.battery.soc - self.soc_target
             ),
 
             "soc_terminal_abs_error": abs(
-                self.battery.soc
-                - self.soc_target
+                self.battery.soc - self.soc_target
             ),
 
-            "soc_terminal_penalty": (
-                0.0
-                if self.soc_terminal_weight is None
-                else (
-                    self.soc_terminal_weight
-                    * (
-                        self.battery.soc
-                        - self.soc_target
-                    ) ** 2
-                )
-            ),
+            # Compatibility with earlier evaluation tables.
+            # No terminal SOC penalty is applied.
+            "soc_terminal_penalty": 0.0,
 
-            # Actual hydrogen.
             "voyage_hydrogen_kg": (
                 voyage_costs.hydrogen_kg
             ),
@@ -793,7 +495,6 @@ class ShipEMSEnv(gym.Env):
                 voyage_costs.hydrogen_cost_rmb
             ),
 
-            # FC degradation.
             "fc_operating_degradation_cost_rmb": (
                 voyage_costs.fc_operating_degradation_cost_rmb
             ),
@@ -806,17 +507,12 @@ class ShipEMSEnv(gym.Env):
                 voyage_costs.fc_total_degradation_cost_rmb
             ),
 
-            # Voyage-level FC indicator includes the separately booked
-            # end-of-voyage stop event. The per-step FC indicator above
-            # remains the operating-only cumulative indicator.
             "voyage_fc_degradation_indicator": (
                 voyage_costs.fc_degradation_indicator
             ),
 
             "voyage_fc_start_stop_cycles": 1,
 
-            # Voyage-level battery totals use distinct keys. They must not
-            # overwrite the last step's incremental cost fields.
             "voyage_battery_degradation_increment": (
                 voyage_costs.battery_degradation_increment
             ),
@@ -833,7 +529,6 @@ class ShipEMSEnv(gym.Env):
                 voyage_costs.battery_degradation_cost_rmb
             ),
 
-            # Battery equivalent hydrogen.
             "battery_equivalent_hydrogen_kg": (
                 voyage_costs.battery_equivalent_hydrogen_kg
             ),
@@ -842,7 +537,6 @@ class ShipEMSEnv(gym.Env):
                 voyage_costs.battery_equivalent_hydrogen_cost_rmb
             ),
 
-            # Total equivalent hydrogen.
             "total_equivalent_hydrogen_kg": (
                 voyage_costs.total_equivalent_hydrogen_kg
             ),
@@ -851,329 +545,186 @@ class ShipEMSEnv(gym.Env):
                 voyage_costs.total_equivalent_hydrogen_cost_rmb
             ),
 
-            # Total economic cost.
             "total_economic_cost_rmb": (
                 voyage_costs.total_economic_cost_rmb
             ),
-
         })
 
-    # =====================================================
-    # 13. Reset
-    # =====================================================
+    # ====================================================
+    # Reset
+    # ====================================================
 
-    def reset(
-        self,
-        *,
-        seed=None,
-        options=None
-    ):
-
+    def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
-
         options = options or {}
 
         if "voyage_index" in options:
-
-            idx = int(
-                options["voyage_index"]
-            )
+            idx = int(options["voyage_index"])
 
             if not 0 <= idx < self.num_voyages:
-                raise ValueError(
-                    "Invalid voyage_index."
-                )
+                raise ValueError("Invalid voyage_index.")
 
         elif self.random_voyage:
-
             idx = int(
-                self.np_random.integers(
-                    self.num_voyages
-                )
+                self.np_random.integers(self.num_voyages)
             )
 
         else:
-
             idx = 0
 
         self.voyage_index = idx
+        self.voyage_id = self.sample_ids[idx]
+        self.load_profile = self.load_profiles[idx]
 
-        self.voyage_id = (
-            self.sample_ids[idx]
-        )
-
-        self.load_profile = (
-            self.load_profiles[idx]
-        )
-
-        # FC remains ON in standby at zero output.
-        # No artificial ON/OFF transition is generated
-        # during normal environment steps.
-
-        self.fuel_cell.reset(
-            initial_is_on=True
-        )
-
+        # FC stays on in standby at zero power.
+        self.fuel_cell.reset(initial_is_on=True)
         self.battery.reset()
 
-        self.initial_soc = float(
-            self.battery.soc
-        )
-
+        self.initial_soc = float(self.battery.soc)
         self.step_index = 0
-
         self.fc_power_kw = 0.0
 
         self.episode_step_costs.clear()
-
         self.voyage_costs = None
-
         self._episode_done = False
 
-        obs = self._get_obs()
-
         info = {
-
             "voyage_id": self.voyage_id,
-
             "voyage_index": self.voyage_index,
-
-            "num_samples": len(
-                self.load_profile
-            ),
-
-            "episode_length": (
-                len(self.load_profile) - 1
-            ),
-
+            "num_samples": len(self.load_profile),
+            "episode_length": len(self.load_profile) - 1,
             "initial_soc": self.initial_soc,
-
             "initial_fc_net_kw": 0.0,
-
-            "fc_max_net_power_kw": (
-                self.fc_max_kw
-            ),
-
-            "fc_max_gross_power_kw": (
-                self.fc_gross_max_kw
-            ),
-
+            "fc_max_net_power_kw": self.fc_max_kw,
+            "fc_max_gross_power_kw": self.fc_gross_max_kw,
             "soc_target": self.soc_target,
-
             "reward_ready": self.reward_ready,
-
             "economic_cost_ready": True,
         }
 
-        return obs, info
+        return self._get_obs(), info
 
-    # =====================================================
-    # 14. Environment step
-    # =====================================================
+    # ====================================================
+    # Environment step
+    # ====================================================
 
     def step(self, action):
-
         if self._episode_done:
-
             raise RuntimeError(
                 "Episode finished. Call reset() first."
             )
 
-        # -------------------------------------------------
-        # 14.1 Action validation
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 1. Validate action
+        # ------------------------------------------------
 
         action = np.asarray(
             action,
-            dtype=np.float64
+            dtype=np.float64,
         ).reshape(-1)
 
         if action.size != 1:
-            raise ValueError(
-                "Action must have shape (1,)."
-            )
+            raise ValueError("Action must have shape (1,).")
 
         if not np.all(np.isfinite(action)):
-            raise ValueError(
-                "Invalid action."
-            )
+            raise ValueError("Invalid action.")
 
-        delta_fc_requested = float(
-            np.clip(
-                action[0],
-                -self.max_fc_delta_kw,
-                self.max_fc_delta_kw
-            )
-        )
+        action_fraction = float(np.clip(action[0], 0.0, 1.0))
+        requested_fc_kw = action_fraction * self.fc_max_kw
 
-        previous_fc_kw = float(
-            self.fc_power_kw
-        )
+        previous_fc_kw = float(self.fc_power_kw)
 
-        requested_fc_kw = (
-            previous_fc_kw
-            + delta_fc_requested
-        )
-
-        requested_fc_clipped_kw = float(
-            np.clip(
-                requested_fc_kw,
-                0.0,
-                self.fc_max_kw
-            )
-        )
-
-        # -------------------------------------------------
-        # 14.2 Current ship load
-        # -------------------------------------------------
-
-        if (
-            self.step_index
-            >= len(self.load_profile) - 1
-        ):
+        if self.step_index >= len(self.load_profile) - 1:
             raise RuntimeError(
                 "No remaining voyage transition."
             )
+
+        # ------------------------------------------------
+        # 2. Current ship load
+        # ------------------------------------------------
 
         load_kw = float(
             self.load_profile[self.step_index]
         )
 
-        # -------------------------------------------------
-        # 14.3 Battery physical feasible range
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 3. Physical feasible intervals
+        # ------------------------------------------------
 
         battery_min_kw, battery_max_kw = (
-            self.battery.get_power_bounds(
-                self.dt_s
-            )
+            self.battery.get_power_bounds(self.dt_s)
         )
 
-        # P_battery = P_load - P_FC_net.
-
-        fc_physical_min = max(
-            0.0,
-            load_kw - battery_max_kw
-        )
-
-        fc_physical_max = min(
-            self.fc_max_kw,
-            load_kw - battery_min_kw
-        )
-
-        # -------------------------------------------------
-        # 14.4 FC action increment constraints
-        # -------------------------------------------------
-
-        fc_action_min = max(
-            0.0,
-            previous_fc_kw - self.max_fc_delta_kw
-        )
-
-        fc_action_max = min(
-            self.fc_max_kw,
-            previous_fc_kw + self.max_fc_delta_kw
-        )
+        # Power balance:
+        # P_battery = P_load - P_FC_net
 
         fc_feasible_min = max(
-            fc_physical_min,
-            fc_action_min
+            0.0,
+            load_kw - battery_max_kw,
         )
 
         fc_feasible_max = min(
-            fc_physical_max,
-            fc_action_max
+            self.fc_max_kw,
+            load_kw - battery_min_kw,
         )
 
-        # -------------------------------------------------
-        # 14.5 Infeasible operating condition
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 4. Infeasible operating condition
+        # ------------------------------------------------
 
-        if (
-            fc_feasible_min
-            > fc_feasible_max + 1e-8
-        ):
-
+        if fc_feasible_min > fc_feasible_max + 1e-8:
             self._episode_done = True
 
             info = {
-
                 "voyage_id": self.voyage_id,
-
                 "voyage_index": self.voyage_index,
-
                 "step_index": self.step_index,
 
                 "load_kw": load_kw,
 
-                "requested_action_delta_kw": (
-                    delta_fc_requested
-                ),
-
-                "requested_fc_kw": (
-                    requested_fc_clipped_kw
-                ),
+                "requested_action_fraction": action_fraction,
+                "requested_fc_kw": requested_fc_kw,
 
                 "fc_actual_kw": None,
-
                 "battery_actual_kw": None,
 
-                "soc": float(
-                    self.battery.soc
-                ),
+                "soc": float(self.battery.soc),
 
-                "feasible_fc_lower_kw": (
-                    fc_feasible_min
-                ),
+                "feasible_fc_lower_kw": fc_feasible_min,
+                "feasible_fc_upper_kw": fc_feasible_max,
 
-                "feasible_fc_upper_kw": (
-                    fc_feasible_max
-                ),
-
-                "battery_feasible_lower_kw": (
-                    battery_min_kw
-                ),
-
-                "battery_feasible_upper_kw": (
-                    battery_max_kw
-                ),
+                "battery_feasible_lower_kw": battery_min_kw,
+                "battery_feasible_upper_kw": battery_max_kw,
 
                 "failure": True,
-
-                "terminal_reason": (
-                    "no_feasible_power"
-                ),
+                "terminal_reason": "no_feasible_power",
 
                 "terminated": True,
-
                 "truncated": False,
 
                 "reward_ready": self.reward_ready,
-
                 "economic_cost_ready": False,
             }
 
-            reward = self._calculate_reward(
-                info
-            )
+            reward = self._calculate_reward(info)
 
             return (
                 self._get_obs(),
                 reward,
                 True,
                 False,
-                info
+                info,
             )
 
-        # -------------------------------------------------
-        # 14.6 Project action into feasible FC interval
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 5. Project FC output into feasible interval
+        # ------------------------------------------------
 
         fc_actual_kw = float(
             np.clip(
-                requested_fc_clipped_kw,
+                requested_fc_kw,
                 fc_feasible_min,
-                fc_feasible_max
+                fc_feasible_max,
             )
         )
 
@@ -1182,53 +733,43 @@ class ShipEMSEnv(gym.Env):
         )
 
         projected = (
-            abs(
-                fc_actual_kw
-                - requested_fc_clipped_kw
-            ) > 1e-8
+            abs(fc_actual_kw - requested_fc_kw)
+            > 1e-8
         )
 
-        # -------------------------------------------------
-        # 14.7 Battery residual power
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 6. Battery residual power
+        # ------------------------------------------------
 
         battery_actual_kw = (
             load_kw - fc_actual_kw
         )
 
-        # -------------------------------------------------
-        # 14.8 Fuel cell
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 7. Fuel-cell update
+        # ------------------------------------------------
 
         fc_result = self.fuel_cell.step(
-
             net_total_power_kw=fc_actual_kw,
-
             dt_s=self.dt_s,
-
             is_on=True,
-
-            # No start-stop degradation in step reward.
             start_stop_cycles=0,
         )
 
-        # -------------------------------------------------
-        # 14.9 Battery
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 8. Battery update
+        # ------------------------------------------------
 
         battery_result = self.battery.step(
-
             power_kw=battery_actual_kw,
-
             dt_s=self.dt_s,
         )
 
-        # -------------------------------------------------
-        # 14.10 Update state
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 9. Update state
+        # ------------------------------------------------
 
         self.fc_power_kw = fc_actual_kw
-
         self.step_index += 1
 
         terminated = (
@@ -1238,108 +779,91 @@ class ShipEMSEnv(gym.Env):
 
         self._episode_done = terminated
 
-        # -------------------------------------------------
-        # 14.11 Step costs
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 10. Step operating costs
+        # ------------------------------------------------
 
         step_cost = self._calculate_step_cost(
             fc_result=fc_result,
             battery_result=battery_result,
         )
 
-        self.episode_step_costs.append(
-            step_cost
-        )
+        self.episode_step_costs.append(step_cost)
 
         if int(fc_result["start_stop_cycles"]) != 0:
-
             raise RuntimeError(
                 "Unexpected FC start-stop degradation "
                 "in step reward."
             )
 
-        # -------------------------------------------------
-        # 14.12 Information
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 11. Per-step SOC penalty for diagnostics
+        # ------------------------------------------------
+
+        soc_penalty_unscaled = (
+            0.0
+            if self.soc_step_weight is None
+            else float(
+                self.soc_step_weight
+                * (
+                    self.battery.soc
+                    - self.soc_target
+                ) ** 2
+            )
+        )
+
+        # ------------------------------------------------
+        # 12. Step information
+        # ------------------------------------------------
 
         info = {
-
             "voyage_id": self.voyage_id,
-
             "voyage_index": self.voyage_index,
-
             "step_index": self.step_index - 1,
 
             "load_kw": load_kw,
 
-            # Action.
-            "requested_action_delta_kw": (
-                delta_fc_requested
-            ),
-
-            "requested_fc_kw": (
-                requested_fc_clipped_kw
-            ),
-
-            "fc_actual_kw": (
-                fc_actual_kw
-            ),
-
-            "delta_fc_kw": (
-                delta_fc_actual_kw
-            ),
-
+            # Actions
+            "requested_action_fraction": action_fraction,
+            "requested_fc_kw": requested_fc_kw,
+            "fc_actual_kw": fc_actual_kw,
+            "delta_fc_kw": delta_fc_actual_kw,
             "projected": projected,
 
-            # Battery.
-            "battery_actual_kw": (
-                battery_actual_kw
-            ),
+            # Battery power
+            "battery_actual_kw": battery_actual_kw,
 
-            # FC and battery feasible ranges.
-            "feasible_fc_lower_kw": (
-                fc_feasible_min
-            ),
+            # Feasibility intervals
+            "feasible_fc_lower_kw": fc_feasible_min,
+            "feasible_fc_upper_kw": fc_feasible_max,
+            "battery_feasible_lower_kw": battery_min_kw,
+            "battery_feasible_upper_kw": battery_max_kw,
 
-            "feasible_fc_upper_kw": (
-                fc_feasible_max
-            ),
-
-            "battery_feasible_lower_kw": (
-                battery_min_kw
-            ),
-
-            "battery_feasible_upper_kw": (
-                battery_max_kw
-            ),
-
-            # Power balance.
+            # Power balance
             "power_balance_error_kw": (
-                fc_actual_kw
-                + battery_actual_kw
-                - load_kw
+                fc_actual_kw + battery_actual_kw - load_kw
             ),
 
-            # FC gross/net/auxiliary power.
-            "fc_net_power_kw": (
-                float(fc_result["net_power_kw"])
+            # FC gross/net power
+            "fc_net_power_kw": float(
+                fc_result["net_power_kw"]
             ),
 
-            "fc_gross_power_kw": (
-                float(fc_result["gross_power_kw"])
+            "fc_gross_power_kw": float(
+                fc_result["gross_power_kw"]
             ),
 
-            "fc_auxiliary_power_kw": (
-                float(fc_result["auxiliary_power_kw"])
+            "fc_auxiliary_power_kw": float(
+                fc_result["auxiliary_power_kw"]
             ),
 
-            # SOC.
-            "soc_before": (
-                float(battery_result.soc_before)
+            # Battery SOC
+            "soc_before": float(
+                battery_result.soc_before
             ),
 
-            "soc": (
-                float(battery_result.soc_after)
+            "soc": float(
+                battery_result.soc_after
             ),
 
             "soc_delta_from_initial": (
@@ -1349,126 +873,125 @@ class ShipEMSEnv(gym.Env):
 
             "soc_target": self.soc_target,
 
-            # Hydrogen.
-            "hydrogen_kg": (
-                step_cost.hydrogen_kg
+            # Hydrogen consumption
+            "hydrogen_kg": step_cost.hydrogen_kg,
+            "hydrogen_cost_rmb": step_cost.hydrogen_cost_rmb,
+
+            "fc_efficiency": float(
+                fc_result["efficiency"]
             ),
 
-            "hydrogen_cost_rmb": (
-                step_cost.hydrogen_cost_rmb
+            "fc_cell_voltage_v": float(
+                fc_result["cell_voltage_v"]
             ),
 
-            "fc_efficiency": (
-                float(fc_result["efficiency"])
+            # FC degradation
+            "fc_low_power_hours": float(
+                fc_result["low_power_hours"]
             ),
 
-            "fc_cell_voltage_v": (
-                float(fc_result["cell_voltage_v"])
+            "fc_high_power_hours": float(
+                fc_result["high_power_hours"]
             ),
 
-            # FC four-condition degradation.
-            "fc_low_power_hours": (
-                float(fc_result["low_power_hours"])
+            "fc_power_variation_kw": float(
+                fc_result["power_variation_kw"]
             ),
 
-            "fc_high_power_hours": (
-                float(fc_result["high_power_hours"])
+            "fc_delta_v_low_uv": float(
+                fc_result["delta_v_low_uv"]
             ),
 
-            "fc_power_variation_kw": (
-                float(fc_result["power_variation_kw"])
+            "fc_delta_v_high_uv": float(
+                fc_result["delta_v_high_uv"]
             ),
 
-            "fc_delta_v_low_uv": (
-                float(fc_result["delta_v_low_uv"])
+            "fc_delta_v_transient_uv": float(
+                fc_result["delta_v_transient_uv"]
             ),
 
-            "fc_delta_v_high_uv": (
-                float(fc_result["delta_v_high_uv"])
+            "fc_delta_v_start_stop_uv": float(
+                fc_result["delta_v_start_stop_uv"]
             ),
 
-            "fc_delta_v_transient_uv": (
-                float(fc_result["delta_v_transient_uv"])
+            "fc_delta_voltage_loss_uv": float(
+                fc_result["delta_voltage_loss_uv"]
             ),
 
-            "fc_delta_v_start_stop_uv": (
-                float(fc_result["delta_v_start_stop_uv"])
+            "fc_cumulative_voltage_loss_uv": float(
+                fc_result["cumulative_voltage_loss_uv"]
             ),
 
-            "fc_delta_voltage_loss_uv": (
-                float(fc_result["delta_voltage_loss_uv"])
+            "fc_degradation_ratio": float(
+                fc_result["degradation_ratio"]
             ),
 
-            "fc_cumulative_voltage_loss_uv": (
-                float(fc_result["cumulative_voltage_loss_uv"])
+            "fc_degradation_pct": float(
+                fc_result["degradation_pct"]
             ),
 
-            "fc_degradation_ratio": (
-                float(fc_result["degradation_ratio"])
+            "fc_degradation_increment": float(
+                step_cost.fc_degradation_increment
             ),
 
-            "fc_degradation_pct": (
-                float(fc_result["degradation_pct"])
+            "fc_degradation_cost_rmb": float(
+                step_cost.fc_degradation_cost_rmb
             ),
 
-            "fc_degradation_increment": (
-                float(step_cost.fc_degradation_increment)
+            "fc_start_stop_cycles": int(
+                fc_result["start_stop_cycles"]
             ),
 
-            "fc_degradation_cost_rmb": (
-                float(step_cost.fc_degradation_cost_rmb)
+            # Battery degradation
+            "battery_current_a": float(
+                battery_result.current_a
             ),
 
-            "fc_start_stop_cycles": (
-                int(fc_result["start_stop_cycles"])
+            "battery_cluster_current_a": float(
+                battery_result.cluster_current_a
             ),
 
-            # Battery degradation.
-            "battery_current_a": (
-                float(battery_result.current_a)
+            "battery_f_soc": float(
+                battery_result.f_soc
             ),
 
-            "battery_cluster_current_a": (
-                float(battery_result.cluster_current_a)
+            "battery_g_current": float(
+                battery_result.g_current
             ),
 
-            "battery_f_soc": (
-                float(battery_result.f_soc)
+            "battery_weighted_aging_increment_ah": float(
+                battery_result.weighted_aging_increment_ah
             ),
 
-            "battery_g_current": (
-                float(battery_result.g_current)
+            "battery_degradation_indicator": float(
+                self.battery.degradation_fraction()
             ),
 
-            "battery_weighted_aging_increment_ah": (
-                float(
-                    battery_result.weighted_aging_increment_ah
-                )
+            "battery_raw_degradation_indicator": float(
+                self.battery.raw_degradation_fraction
             ),
 
-            "battery_degradation_indicator": (
-                float(self.battery.degradation_fraction())
+            "battery_degradation_increment": float(
+                step_cost.battery_degradation_increment
             ),
 
-            "battery_raw_degradation_indicator": (
-                float(self.battery.raw_degradation_fraction)
+            "battery_degradation_cost_rmb": float(
+                step_cost.battery_degradation_cost_rmb
             ),
 
-            "battery_degradation_increment": (
-                float(step_cost.battery_degradation_increment)
+            # Economic costs included in RL reward
+            "step_reward_cost_rmb": float(
+                step_cost.reward_cost_rmb
             ),
 
-            "battery_degradation_cost_rmb": (
-                float(step_cost.battery_degradation_cost_rmb)
+            # Reward SOC penalty before applying alpha=0.001
+            # This is NOT actual economic cost.
+            "step_soc_penalty_unscaled": (
+                soc_penalty_unscaled
             ),
 
-            # Reward operating costs.
-            "step_reward_cost_rmb": (
-                float(step_cost.reward_cost_rmb)
-            ),
-
+            # Episode status
             "terminated": terminated,
-
             "truncated": False,
 
             "terminal_reason": (
@@ -1476,18 +999,15 @@ class ShipEMSEnv(gym.Env):
             ),
 
             "failure": False,
-
             "reward_ready": self.reward_ready,
-
             "economic_cost_ready": True,
         }
 
-        # -------------------------------------------------
-        # 14.13 Voyage-level economic accounting
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 13. Voyage economic accounting
+        # ------------------------------------------------
 
         if terminated:
-
             self.voyage_costs = (
                 self._calculate_voyage_costs()
             )
@@ -1497,9 +1017,9 @@ class ShipEMSEnv(gym.Env):
                 voyage_costs=self.voyage_costs,
             )
 
-        # -------------------------------------------------
-        # 14.14 Reward
-        # -------------------------------------------------
+        # ------------------------------------------------
+        # 14. Final reward
+        # ------------------------------------------------
 
         reward = self._calculate_reward(
             info=info,
@@ -1511,12 +1031,12 @@ class ShipEMSEnv(gym.Env):
             reward,
             terminated,
             False,
-            info
+            info,
         )
 
-    # =====================================================
-    # 15. Close
-    # =====================================================
+    # ====================================================
+    # Close
+    # ====================================================
 
     def close(self):
         pass

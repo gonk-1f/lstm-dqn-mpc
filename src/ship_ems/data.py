@@ -12,7 +12,8 @@ Required columns:
 
 Original columns are preserved.
 Actual time intervals are preserved.
-No interpolation or clipping is performed.
+No interpolation is performed. Callers may opt into a tolerance for small
+negative load residuals that represent zero onboard demand.
 """
 
 from pathlib import Path
@@ -30,6 +31,8 @@ REQUIRED_COLUMNS = {
 def load_voyage_csv(
     file_path: str | Path,
     expected_interval_s: float | None = None,
+    *,
+    negative_load_tolerance_kw: float = 0.0,
 ) -> pd.DataFrame:
     """
     Load one voyage CSV file.
@@ -44,6 +47,8 @@ def load_voyage_csv(
         Use 1 for 1-second data.
         Use 30 for 30-second data.
         None means automatic detection.
+    negative_load_tolerance_kw:
+        Negative loads within this magnitude become zero in the loaded profile.
 
     Returns
     -------
@@ -128,10 +133,13 @@ def load_voyage_csv(
             "Invalid or missing load power values."
         )
 
-    if (load_values < 0).any():
+    if (load_values < -negative_load_tolerance_kw).any():
         raise ValueError(
             "Negative ship load detected."
         )
+
+    if negative_load_tolerance_kw > 0:
+        df["load_total_kw"] = np.maximum(load_values, 0.0)
 
     # -------------------------------------------------
     # 4. Calculate actual time intervals
