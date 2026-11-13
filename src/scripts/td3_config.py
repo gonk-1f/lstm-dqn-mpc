@@ -61,7 +61,7 @@ DATA_ROOT = Path(
 OUTPUT_ROOT = (
     PROJECT_ROOT
     / "outputs"
-    / "td3_ship_ems_parent005_obs3_1s_eq_h2_soc50_no_failure_penalty_20ep"
+    / "td3_ship_ems_parent005_obs3_1s_eq_h2_soc100_c1_a2_tau005_20ep"
 )
 
 ACTION_MAPPING = "relative_feasible_fc_fraction"
@@ -102,7 +102,7 @@ SOURCE_LOAD_DEADBAND_KW = 1.0
 REWARD_VERSION = "economic4_plus_soc_step_unscaled_no_failure_penalty"
 
 # 逐步 SOC 惩罚权重
-SOC_STEP_WEIGHT = 50.0
+SOC_STEP_WEIGHT = 100.0
 
 # SOC 目标值
 SOC_TARGET = 0.50

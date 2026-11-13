@@ -55,9 +55,9 @@ ADAM_BETAS = (0.9, 0.999)
 HUBER_DELTA = 1.0
 
 GAMMA = 1.0
-TAU = 0.001
+TAU = 0.005
 
-TRAIN_FREQ = (32, "step")
+TRAIN_FREQ = (1, "step")
 GRADIENT_STEPS = 1
 
 N_STEPS = 1
@@ -186,6 +186,7 @@ class SeparateLearningRateTD3(TD3):
                 polyak_update(self.actor_batch_norm_stats, self.actor_batch_norm_stats_target, 1.0)
 
         self.logger.record("train/n_updates", self._n_updates, exclude="tensorboard")
+        self.logger.record("train/target_updates", self._n_updates // self.policy_delay)
         if actor_losses:
             self.logger.record("train/actor_loss", np.mean(actor_losses))
         self.logger.record("train/critic_loss", np.mean(critic_losses))
@@ -280,6 +281,7 @@ def main() -> None:
 
         "gamma": GAMMA,
         "tau": TAU,
+        "target_update_interval_env_steps": TRAIN_FREQ[0] * POLICY_DELAY,
 
         "train_freq": TRAIN_FREQ,
         "gradient_steps": GRADIENT_STEPS,
@@ -507,6 +509,7 @@ def main() -> None:
     print(f"Adam betas: {model.critic.optimizer.param_groups[0]['betas']}")
     print(f"Gamma: {GAMMA}")
     print(f"Tau: {TAU}")
+    print(f"Target network update interval: {TRAIN_FREQ[0] * POLICY_DELAY} environment steps")
 
     print(f"Action noise: Gaussian sigma={ACTION_NOISE_SIGMA}")
     print(f"Target policy noise: {TARGET_POLICY_NOISE}")
@@ -559,6 +562,7 @@ def main() -> None:
             "critic_updates": int(
                 getattr(model, "_n_updates", 0)
             ),
+            "target_updates": model._n_updates // model.policy_delay,
 
             "actor_learning_rate": ACTOR_LEARNING_RATE,
             "critic_learning_rate": CRITIC_LEARNING_RATE,
