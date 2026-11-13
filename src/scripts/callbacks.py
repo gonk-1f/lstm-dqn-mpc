@@ -182,6 +182,9 @@ class ShipEMSTrainingCallback(BaseCallback):
             "feasible_fc_lower_kw", "feasible_fc_upper_kw",
             "step_battery_equivalent_hydrogen_cost_rmb", "step_soc_penalty_unscaled",
             "soc_before", "soc", "reward", "terminal_reason",
+            "soc_after", "battery_equivalent_soc_factor", "battery_equivalent_s",
+            "battery_equivalent_hydrogen_kg", "battery_equivalent_hydrogen_cost_rmb",
+            "step_reward_cost_rmb",
         )
         write_csv(
             self.output_dir / f"power_episode_{episode_number:04d}.csv",
@@ -304,6 +307,10 @@ class ShipEMSTrainingCallback(BaseCallback):
                 ),
                 "voyage_battery_degradation_cost_rmb": info.get(
                     "voyage_battery_degradation_cost_rmb"
+                ),
+                "battery_equivalent_hydrogen_kg": info.get("battery_equivalent_hydrogen_kg"),
+                "battery_equivalent_hydrogen_cost_rmb": info.get(
+                    "battery_equivalent_hydrogen_cost_rmb"
                 ),
             })
 

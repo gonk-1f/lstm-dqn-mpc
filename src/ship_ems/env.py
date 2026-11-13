@@ -374,6 +374,7 @@ class ShipEMSEnv(gym.Env):
             battery_result=battery_result,
             fuel_cell=self.fuel_cell,
             battery=self.battery,
+            dt_s=self.dt_s,
         )
 
     # ====================================================
@@ -830,6 +831,7 @@ class ShipEMSEnv(gym.Env):
                 battery_result.soc_before
             ),
 
+            "soc_after": float(battery_result.soc_after),
             "soc": float(
                 battery_result.soc_after
             ),
@@ -957,6 +959,8 @@ class ShipEMSEnv(gym.Env):
             "step_battery_equivalent_hydrogen_cost_rmb": (
                 step_cost.battery_equivalent_hydrogen_cost_rmb
             ),
+            "battery_equivalent_soc_factor": step_cost.battery_equivalent_soc_factor,
+            "battery_equivalent_s": step_cost.battery_equivalent_s,
 
             # SOC penalty used by the reward function, independent of costs.
             # This is NOT actual economic cost.

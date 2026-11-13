@@ -111,10 +111,11 @@ class FuelCellParameters:
     # Low-load threshold per stack.
     low_power_threshold_kw: float = 30.0
 
-    # Degradation EOL definition.
-    initial_cell_voltage_v: float = 0.70
+    # Mylonopoulos et al. (2024), section 4.3, sets the EOL criterion
+    # used with the Zhou degradation rates above. DOI: 10.1016/j.ijhydene.2024.10.235.
+    initial_cell_voltage_v: float = 0.95
 
-    eol_voltage_drop_ratio: float = 0.10
+    eol_voltage_drop_ratio: float = 0.15
 
     # Replacement economics.
     fc_cost_rmb_per_kw: float = 3500.0

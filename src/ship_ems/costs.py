@@ -28,6 +28,7 @@ import math
 from typing import Sequence
 
 from .battery import (
+    BatteryConfig,
     BatteryStepResult,
     LithiumBattery,
 )
@@ -74,6 +75,10 @@ class StepCost:
     battery_equivalent_hydrogen_kg: float
 
     battery_equivalent_hydrogen_cost_rmb: float
+
+    battery_equivalent_soc_factor: float
+
+    battery_equivalent_s: float
 
     @property
     def reward_cost_rmb(self):
@@ -162,13 +167,35 @@ class CostCalculator:
             raise ValueError("Invalid battery replacement cost.")
 
     def _battery_equivalent_hydrogen(
-        self, soc_before: float, soc_after: float, capacity_kwh: float
-    ) -> tuple[float, float]:
+        self,
+        soc_before: float,
+        battery_power_kw: float,
+        battery: BatteryConfig,
+        *,
+        dt_s: float,
+    ) -> tuple[float, float, float, float]:
+        # Jung & Chang (2023), Eq. (24), corrected in DOI: 10.3390/jmse12030484.
+        if not battery.soc_min <= soc_before <= battery.soc_max:
+            raise ValueError("Battery SOC outside its physical bounds.")
+        half_soc_range = 0.5 * (battery.soc_max - battery.soc_min)
+        soc_factor = (1.0 - (soc_before - self.config.soc_target) / half_soc_range) ** 3
+
+        # Match the former SOC-change valuation at the target SOC using
+        # the same bus-to-stored-energy conversion as the battery dynamics.
+        if battery_power_kw >= 0:
+            equivalence = 1.0 / (self.eta_fc_avg * battery.discharge_efficiency)
+        else:
+            equivalence = battery.charge_efficiency / self.eta_fc_avg
+
         lhv_kwh_per_kg = self.config.hydrogen_lhv_mj_per_kg / 3.6
-        mass_kg = (soc_before - soc_after) * capacity_kwh / (
-            self.eta_fc_avg * lhv_kwh_per_kg
+        dt_h = dt_s / 3600.0
+        mass_kg = equivalence * battery_power_kw * dt_h * soc_factor / lhv_kwh_per_kg
+        return (
+            mass_kg,
+            mass_kg * self.config.hydrogen_price_rmb_per_kg,
+            soc_factor,
+            equivalence,
         )
-        return mass_kg, mass_kg * self.config.hydrogen_price_rmb_per_kg
 
     # =====================================================
     # 5. Single-step operating costs
@@ -180,6 +207,8 @@ class CostCalculator:
         battery_result: BatteryStepResult,
         fuel_cell: FuelCellSystem,
         battery: LithiumBattery,
+        *,
+        dt_s: float,
     ) -> StepCost:
         """
         Single-step costs.
@@ -235,10 +264,13 @@ class CostCalculator:
             * battery.config.capacity_kwh
         )
 
-        equivalent_kg, equivalent_cost = self._battery_equivalent_hydrogen(
-            battery_result.soc_before,
-            battery_result.soc_after,
-            battery.config.capacity_kwh,
+        equivalent_kg, equivalent_cost, equivalent_soc_factor, equivalent_s = (
+            self._battery_equivalent_hydrogen(
+                battery_result.soc_before,
+                battery_result.power_kw,
+                battery.config,
+                dt_s=dt_s,
+            )
         )
 
         values = (
@@ -286,6 +318,8 @@ class CostCalculator:
             ),
             battery_equivalent_hydrogen_kg=equivalent_kg,
             battery_equivalent_hydrogen_cost_rmb=equivalent_cost,
+            battery_equivalent_soc_factor=equivalent_soc_factor,
+            battery_equivalent_s=equivalent_s,
         )
 
     # =====================================================
@@ -463,17 +497,8 @@ class CostCalculator:
         """
         Complete voyage economic cost.
 
-        Battery equivalent hydrogen:
-
-        m_H2_eq =
-            (SOC_initial - SOC_final) * E_battery
-            / (eta_fc_avg * LHV_H2)
-
-        SOC decrease:
-            Positive equivalent hydrogen.
-
-        SOC increase:
-            Negative equivalent hydrogen.
+        Battery equivalent hydrogen accumulates signed step values
+        weighted by the SOC before each action.
 
         One FC start-stop cycle is accounted for here,
         not in the step reward.
@@ -633,10 +658,11 @@ class CostCalculator:
         # 5. Battery equivalent hydrogen
         # -------------------------------------------------
 
-        battery_equivalent_hydrogen_kg, battery_equivalent_hydrogen_cost = (
-            self._battery_equivalent_hydrogen(
-                initial_soc, final_soc, battery.config.capacity_kwh
-            )
+        battery_equivalent_hydrogen_kg = math.fsum(
+            x.battery_equivalent_hydrogen_kg for x in step_costs
+        )
+        battery_equivalent_hydrogen_cost = math.fsum(
+            x.battery_equivalent_hydrogen_cost_rmb for x in step_costs
         )
 
         # -------------------------------------------------
@@ -649,8 +675,7 @@ class CostCalculator:
         )
 
         total_equivalent_hydrogen_cost = (
-            total_equivalent_hydrogen_kg
-            * self.config.hydrogen_price_rmb_per_kg
+            hydrogen_cost + battery_equivalent_hydrogen_cost
         )
 
         # -------------------------------------------------

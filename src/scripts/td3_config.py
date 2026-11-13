@@ -61,7 +61,7 @@ DATA_ROOT = Path(
 OUTPUT_ROOT = (
     PROJECT_ROOT
     / "outputs"
-    / "td3_ship_ems_parent005_obs3_1s_eq_h2_soc100_c1_a2_tau005_20ep"
+    / "td3_ship_ems_parent005_obs3_1s_literature_reward_v1"
 )
 
 ACTION_MAPPING = "relative_feasible_fc_fraction"
@@ -99,7 +99,7 @@ SOURCE_LOAD_DEADBAND_KW = 1.0
 # 3. Reward parameters
 # =============================================================
 
-REWARD_VERSION = "economic4_plus_soc_step_unscaled_no_failure_penalty"
+REWARD_VERSION = "economic4_eol142500_soc_cubic_eq_h2_soc100_v1"
 
 # 逐步 SOC 惩罚权重
 SOC_STEP_WEIGHT = 100.0
@@ -1216,6 +1216,14 @@ def evaluate_profiles(
                             for k, v in info.items()
                         }
                     )
+                    # Keep step values distinct from the final row's voyage totals.
+                    for key in (
+                        "battery_equivalent_hydrogen_kg",
+                        "battery_equivalent_hydrogen_cost_rmb",
+                    ):
+                        if key in info:
+                            row[f"voyage_{key}"] = info[key]
+                        row[key] = info.get(f"step_{key}")
 
                     step_rows.append(row)
 
