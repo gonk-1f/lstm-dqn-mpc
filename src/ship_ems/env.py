@@ -1,10 +1,10 @@
 
 """Ship energy management environment (fuel cell + lithium battery).
 
-The action requests a fraction of the maximum FC net power. The environment
-projects that request into the feasible power interval.
+The action selects a relative position in the current feasible FC net-power
+interval.
 
-Reward on every executed, feasible step:
+Default reward when no custom reward is supplied:
     -reward_alpha * (H2 cost + FC degradation cost + LB degradation cost
                      + soc_step_weight * (SOC_next - soc_target)**2)
 
@@ -98,6 +98,9 @@ class ShipEMSEnv(gym.Env):
 
         self.fc_max_kw = self.fuel_cell.max_net_power_kw
         self.fc_gross_max_kw = self.fuel_cell.max_gross_power_kw
+        self.load_scale_kw = (
+            self.fc_max_kw + self.battery.config.max_discharge_power_kw
+        )
 
         if not (
             self.battery.config.soc_min
@@ -310,24 +313,9 @@ class ShipEMSEnv(gym.Env):
         # ------------------------------------------------
 
         self.observation_space = spaces.Box(
-            low=np.array(
-                [
-                    self.battery.config.soc_min,
-                    -np.inf,
-                    0.0,
-                    -np.inf,
-                ],
-                dtype=np.float32,
-            ),
-            high=np.array(
-                [
-                    self.battery.config.soc_max,
-                    np.inf,
-                    1.0,
-                    np.inf,
-                ],
-                dtype=np.float32,
-            ),
+            low=0.0,
+            high=1.0,
+            shape=(3,),
             dtype=np.float32,
         )
 
@@ -351,29 +339,16 @@ class ShipEMSEnv(gym.Env):
     # ====================================================
 
     def _get_obs(self):
-        n = len(self.load_profile)
-        idx = min(self.step_index, n - 1)
-
-        load_kw = float(self.load_profile[idx])
-
-        delta_load_kw = (
-            0.0
-            if self.step_index == 0
-            else float(
-                self.load_profile[idx]
-                - self.load_profile[idx - 1]
-            )
-        )
-
-        return np.array(
+        idx = min(self.step_index, len(self.load_profile) - 1)
+        observation = np.array(
             [
-                self.battery.soc,
-                load_kw / self.fc_max_kw,
                 self.fc_power_kw / self.fc_max_kw,
-                delta_load_kw / self.fc_max_kw,
+                self.load_profile[idx] / self.load_scale_kw,
+                self.battery.soc,
             ],
             dtype=np.float32,
         )
+        return np.clip(observation, 0.0, 1.0)
 
     # ====================================================
     # Reward readiness
@@ -630,7 +605,6 @@ class ShipEMSEnv(gym.Env):
             raise ValueError("Invalid action.")
 
         action_fraction = float(np.clip(action[0], 0.0, 1.0))
-        requested_fc_kw = action_fraction * self.fc_max_kw
 
         previous_fc_kw = float(self.fc_power_kw)
 
@@ -683,7 +657,7 @@ class ShipEMSEnv(gym.Env):
                 "load_kw": load_kw,
 
                 "requested_action_fraction": action_fraction,
-                "requested_fc_kw": requested_fc_kw,
+                "requested_fc_kw": None,
 
                 "fc_actual_kw": None,
                 "battery_actual_kw": None,
@@ -717,24 +691,18 @@ class ShipEMSEnv(gym.Env):
             )
 
         # ------------------------------------------------
-        # 5. Project FC output into feasible interval
+        # 5. Map the action directly into the feasible FC interval
         # ------------------------------------------------
 
-        fc_actual_kw = float(
-            np.clip(
-                requested_fc_kw,
-                fc_feasible_min,
-                fc_feasible_max,
-            )
+        # Collapse an interval inverted only by the rounding tolerance.
+        fc_feasible_min = min(fc_feasible_min, fc_feasible_max)
+        requested_fc_kw = fc_feasible_min + action_fraction * (
+            fc_feasible_max - fc_feasible_min
         )
+        fc_actual_kw = requested_fc_kw
 
         delta_fc_actual_kw = (
             fc_actual_kw - previous_fc_kw
-        )
-
-        projected = (
-            abs(fc_actual_kw - requested_fc_kw)
-            > 1e-8
         )
 
         # ------------------------------------------------
@@ -828,7 +796,7 @@ class ShipEMSEnv(gym.Env):
             "requested_fc_kw": requested_fc_kw,
             "fc_actual_kw": fc_actual_kw,
             "delta_fc_kw": delta_fc_actual_kw,
-            "projected": projected,
+            "projected": False,
 
             # Battery power
             "battery_actual_kw": battery_actual_kw,
@@ -979,12 +947,18 @@ class ShipEMSEnv(gym.Env):
                 step_cost.battery_degradation_cost_rmb
             ),
 
-            # Economic costs included in RL reward
+            # Base operating costs and signed battery energy adjustment
             "step_reward_cost_rmb": float(
                 step_cost.reward_cost_rmb
             ),
+            "step_battery_equivalent_hydrogen_kg": (
+                step_cost.battery_equivalent_hydrogen_kg
+            ),
+            "step_battery_equivalent_hydrogen_cost_rmb": (
+                step_cost.battery_equivalent_hydrogen_cost_rmb
+            ),
 
-            # Reward SOC penalty before applying alpha=0.001
+            # SOC penalty used by the reward function, independent of costs.
             # This is NOT actual economic cost.
             "step_soc_penalty_unscaled": (
                 soc_penalty_unscaled

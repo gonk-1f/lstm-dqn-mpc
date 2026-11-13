@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from math import ceil
 
 import numpy as np
 import torch
@@ -26,9 +25,10 @@ from td3_config import (
     DEVICE,
     DIAGNOSTIC_VOYAGE_ID,
     DT_S,
+    FAILURE_PENALTY,
     MAX_EPISODES,
     OUTPUT_ROOT,
-    REWARD_ALPHA,
+    REWARD_VERSION,
     REWARD_PLOT_INTERVAL,
     SEED,
     SOC_STEP_WEIGHT,
@@ -49,8 +49,7 @@ ACTOR_LEARNING_RATE = 0.0001
 CRITIC_LEARNING_RATE = 0.001
 
 BUFFER_SIZE = 1_000_000
-# Preserve the previous 5,000 seconds of random exploration.
-LEARNING_STARTS = ceil(5000 / DT_S)
+LEARNING_STARTS = 5000
 BATCH_SIZE = 64
 ADAM_BETAS = (0.9, 0.999)
 HUBER_DELTA = 1.0
@@ -207,14 +206,13 @@ def main() -> None:
 
     bundle = load_dataset_bundle(DATA_ROOT)
 
-    train_profiles = bundle.train_profiles
-    train_ids = bundle.train_ids
-    diagnostic_profile = train_profiles[train_ids.index(DIAGNOSTIC_VOYAGE_ID)]
+    train_id = DIAGNOSTIC_VOYAGE_ID
+    train_profile = bundle.train_profiles[bundle.train_ids.index(train_id)]
 
     validation_profiles = bundle.validation_profiles
     validation_ids = bundle.validation_ids
 
-    max_train_voyage_steps = max(map(len, train_profiles)) - 1
+    train_voyage_steps = len(train_profile) - 1
 
     # --------------------------------------------------------
     # 3.2 Create independent output directory
@@ -259,11 +257,11 @@ def main() -> None:
         "data_root": str(DATA_ROOT.resolve()),
         "split_manifest": bundle.manifest_path,
         "step_duration_s": DT_S,
-        "train_voyage_sampling": "uniform_with_replacement",
-        "train_voyage_ids": train_ids,
-        "train_voyage_count": len(train_ids),
-        "max_train_voyage_steps": max_train_voyage_steps,
-        "diagnostic_voyage": DIAGNOSTIC_VOYAGE_ID,
+        "train_voyage_sampling": "fixed",
+        "train_voyage_ids": [train_id],
+        "train_voyage_count": 1,
+        "max_train_voyage_steps": train_voyage_steps,
+        "diagnostic_voyage": train_id,
 
         "validation_ids": validation_ids,
         "validation_count": len(validation_ids),
@@ -302,12 +300,12 @@ def main() -> None:
         "adam_betas": ADAM_BETAS,
 
         # New reward configuration
-        "reward_version": "economic3_plus_soc_step",
-        "reward_alpha": REWARD_ALPHA,
+        "reward_version": REWARD_VERSION,
+        "reward_alpha": 1.0,
         "soc_step_weight": SOC_STEP_WEIGHT,
         "soc_target": 0.5,
         "terminal_soc_penalty_enabled": False,
-        "failure_penalty": -20.0,
+        "failure_penalty": FAILURE_PENALTY,
 
         "reward_plot_interval": REWARD_PLOT_INTERVAL,
         "train_diagnostic_interval": TRAIN_DIAGNOSTIC_INTERVAL,
@@ -320,15 +318,14 @@ def main() -> None:
     )
 
     # --------------------------------------------------------
-    # 3.4 Create the random-voyage training environment
+    # 3.4 Create the fixed-voyage training environment
     # --------------------------------------------------------
 
     def make_training_env():
 
         env = make_env(
-            train_profiles,
-            train_ids,
-            random_voyage=True,
+            [train_profile],
+            [train_id],
         )
 
         return Monitor(
@@ -448,8 +445,8 @@ def main() -> None:
     # --------------------------------------------------------
 
     callback = ShipEMSTrainingCallback(
-        train_profile=diagnostic_profile,
-        train_id=DIAGNOSTIC_VOYAGE_ID,
+        train_profile=train_profile,
+        train_id=train_id,
 
         validation_profiles=validation_profiles,
         validation_ids=validation_ids,
@@ -471,7 +468,7 @@ def main() -> None:
     # --------------------------------------------------------
 
     total_timesteps_upper_bound = (
-        MAX_EPISODES * max_train_voyage_steps
+        MAX_EPISODES * train_voyage_steps
     )
 
     print("=" * 72)
@@ -479,8 +476,7 @@ def main() -> None:
     print("=" * 72)
 
     print("Algorithm: SB3 TD3")
-    print(f"Training voyages: {len(train_ids)}, uniform draw per episode")
-    print(f"Fixed diagnostic voyage: {DIAGNOSTIC_VOYAGE_ID}")
+    print(f"Fixed training voyage: {train_id} ({train_voyage_steps} steps)")
     print(f"Training episodes: {MAX_EPISODES}")
     print(f"Step duration: {DT_S:g} s")
 
@@ -516,6 +512,8 @@ def main() -> None:
     print(f"Target policy noise: {TARGET_POLICY_NOISE}")
     print(f"Target noise clip: {TARGET_NOISE_CLIP}")
     print(f"Action mapping: {ACTION_MAPPING}")
+    print(f"Reward version: {REWARD_VERSION}")
+    print(f"Physical failure reward: {FAILURE_PENALTY:g}")
     print(f"Device: {model.device}")
 
     print(f"Output directory: {run_dir}")

@@ -54,17 +54,17 @@ from ship_ems.env import ShipEMSEnv
 DATA_ROOT = Path(
     os.environ.get(
         "SHIP_EMS_DATA_ROOT",
-        str(PROJECT_ROOT / "data" / "processed" / "operating_dataset_independent_v2"),
+        str(PROJECT_ROOT / "data" / "processed" / "operating_dataset_v6_1s"),
     )
 )
 
 OUTPUT_ROOT = (
     PROJECT_ROOT
     / "outputs"
-    / "td3_ship_ems_train35_net_fraction_obs4_30s_huber_500ep"
+    / "td3_ship_ems_parent005_obs3_1s_eq_h2_soc50_no_failure_penalty_20ep"
 )
 
-ACTION_MAPPING = "absolute_fc_net_fraction"
+ACTION_MAPPING = "relative_feasible_fc_fraction"
 
 DIAGNOSTIC_VOYAGE_ID = "parent_005_seg01"
 
@@ -72,7 +72,7 @@ EXPECTED_TRAIN_COUNT = 35
 EXPECTED_VALIDATION_COUNT = 8
 
 
-MAX_EPISODES = 500
+MAX_EPISODES = 20
 
 REWARD_PLOT_INTERVAL = 10
 
@@ -89,7 +89,7 @@ DEVICE = "auto"
 # 2. Physical and training parameters
 # =============================================================
 
-DT_S = 30.0
+DT_S = 1.0
 
 # Existing onboard control deadband from v2/data/supervisory_rules.py.
 SOURCE_LOAD_DEADBAND_KW = 1.0
@@ -99,16 +99,16 @@ SOURCE_LOAD_DEADBAND_KW = 1.0
 # 3. Reward parameters
 # =============================================================
 
-REWARD_ALPHA = 0.001
+REWARD_VERSION = "economic4_plus_soc_step_unscaled_no_failure_penalty"
 
 # 逐步 SOC 惩罚权重
-SOC_STEP_WEIGHT = 13.0
+SOC_STEP_WEIGHT = 50.0
 
 # SOC 目标值
 SOC_TARGET = 0.50
 
 # 失败惩罚
-FAILURE_PENALTY = -20.0
+FAILURE_PENALTY = 0.0
 
 
 # =============================================================
@@ -216,7 +216,6 @@ def _find_manifest_columns(df: pd.DataFrame):
         (
             columns[k]
             for k in (
-                "preview30srelativepath",
                 "filepath",
                 "relativepath",
                 "filename",
@@ -673,7 +672,7 @@ def load_dataset_bundle(
         raise FileNotFoundError(
             f"正式数据集目录不存在：{data_root}\n"
             "默认目录为项目根目录下 "
-            "data/processed/operating_dataset_independent_v2。"
+            "data/processed/operating_dataset_v6_1s。"
         )
 
     payload_files = _list_payload_files(
@@ -814,10 +813,11 @@ def calculate_step_reward(info: dict) -> float:
     """
     每个环境步计算一次奖励。
 
-    r_t = -REWARD_ALPHA * (
+    r_t = -(
         C_H2
         + C_FC_degradation
         + C_LB_degradation
+        + C_LB_equivalent_hydrogen
         + SOC_STEP_WEIGHT * (SOC_next - SOC_target)^2
     )
 
@@ -829,6 +829,7 @@ def calculate_step_reward(info: dict) -> float:
 
     required_keys = (
         "step_reward_cost_rmb",
+        "step_battery_equivalent_hydrogen_cost_rmb",
         "soc",
     )
 
@@ -863,13 +864,11 @@ def calculate_step_reward(info: dict) -> float:
 
     total_step_cost = (
         economic_cost
+        + float(info["step_battery_equivalent_hydrogen_cost_rmb"])
         + soc_step_cost
     )
 
-    reward = (
-        -REWARD_ALPHA
-        * total_step_cost
-    )
+    reward = -total_step_cost
 
     if not np.isfinite(reward):
 
@@ -877,6 +876,7 @@ def calculate_step_reward(info: dict) -> float:
             "计算得到非有限奖励。"
         )
 
+    info["step_soc_penalty_unscaled"] = soc_step_cost
     return float(reward)
 
 

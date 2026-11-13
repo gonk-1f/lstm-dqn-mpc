@@ -2,10 +2,11 @@
 """
 Ship EMS Cost Calculator.
 
-Step reward:
+TD3 step reward costs:
     Hydrogen consumption
     + FC operating degradation
     + Battery degradation
+    + Signed battery equivalent hydrogen
     + Per-step SOC squared penalty
 
 No additional terminal SOC penalty.
@@ -17,8 +18,7 @@ Voyage economic cost:
     + Battery degradation
     + Battery equivalent hydrogen
 
-Battery equivalent hydrogen and FC start-stop
-degradation are excluded from the step reward.
+FC start-stop degradation is accounted for at voyage level.
 """
 
 from __future__ import annotations
@@ -71,8 +71,13 @@ class StepCost:
 
     battery_degradation_cost_rmb: float
 
+    battery_equivalent_hydrogen_kg: float
+
+    battery_equivalent_hydrogen_cost_rmb: float
+
     @property
     def reward_cost_rmb(self):
+        """Base operating costs before the signed battery energy adjustment."""
 
         return (
             self.hydrogen_cost_rmb
@@ -156,6 +161,15 @@ class CostCalculator:
         if self.config.battery_replacement_cost_rmb_per_kwh <= 0:
             raise ValueError("Invalid battery replacement cost.")
 
+    def _battery_equivalent_hydrogen(
+        self, soc_before: float, soc_after: float, capacity_kwh: float
+    ) -> tuple[float, float]:
+        lhv_kwh_per_kg = self.config.hydrogen_lhv_mj_per_kg / 3.6
+        mass_kg = (soc_before - soc_after) * capacity_kwh / (
+            self.eta_fc_avg * lhv_kwh_per_kg
+        )
+        return mass_kg, mass_kg * self.config.hydrogen_price_rmb_per_kg
+
     # =====================================================
     # 5. Single-step operating costs
     # =====================================================
@@ -171,7 +185,6 @@ class CostCalculator:
         Single-step costs.
 
         FC start-stop degradation must be zero here.
-        Battery equivalent hydrogen is excluded.
         """
 
         if int(fc_result.get("start_stop_cycles", 0)) != 0:
@@ -222,6 +235,12 @@ class CostCalculator:
             * battery.config.capacity_kwh
         )
 
+        equivalent_kg, equivalent_cost = self._battery_equivalent_hydrogen(
+            battery_result.soc_before,
+            battery_result.soc_after,
+            battery.config.capacity_kwh,
+        )
+
         values = (
             hydrogen_kg,
             hydrogen_cost,
@@ -233,7 +252,7 @@ class CostCalculator:
 
         if not all(
             math.isfinite(float(v))
-            for v in values
+            for v in (*values, equivalent_kg, equivalent_cost)
         ):
             raise ValueError(
                 "Non-finite operating cost."
@@ -264,7 +283,9 @@ class CostCalculator:
 
             battery_degradation_cost_rmb=(
                 battery_degradation_cost
-            )
+            ),
+            battery_equivalent_hydrogen_kg=equivalent_kg,
+            battery_equivalent_hydrogen_cost_rmb=equivalent_cost,
         )
 
     # =====================================================
@@ -612,23 +633,10 @@ class CostCalculator:
         # 5. Battery equivalent hydrogen
         # -------------------------------------------------
 
-        hydrogen_lhv_kwh_per_kg = (
-            self.config.hydrogen_lhv_mj_per_kg
-            / 3.6
-        )
-
-        battery_equivalent_hydrogen_kg = (
-            (initial_soc - final_soc)
-            * battery.config.capacity_kwh
-            / (
-                self.eta_fc_avg
-                * hydrogen_lhv_kwh_per_kg
+        battery_equivalent_hydrogen_kg, battery_equivalent_hydrogen_cost = (
+            self._battery_equivalent_hydrogen(
+                initial_soc, final_soc, battery.config.capacity_kwh
             )
-        )
-
-        battery_equivalent_hydrogen_cost = (
-            battery_equivalent_hydrogen_kg
-            * self.config.hydrogen_price_rmb_per_kg
         )
 
         # -------------------------------------------------

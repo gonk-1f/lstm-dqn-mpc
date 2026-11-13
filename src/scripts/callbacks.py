@@ -176,6 +176,17 @@ class ShipEMSTrainingCallback(BaseCallback):
             self.output_dir / "fixed_train_diagnostics.csv",
             self.train_diagnostic_rows,
         )
+        fields = (
+            "sample_id", "step", "load_kw", "actor_action_fraction",
+            "requested_fc_kw", "fc_actual_kw", "battery_actual_kw",
+            "feasible_fc_lower_kw", "feasible_fc_upper_kw",
+            "step_battery_equivalent_hydrogen_cost_rmb", "step_soc_penalty_unscaled",
+            "soc_before", "soc", "reward", "terminal_reason",
+        )
+        write_csv(
+            self.output_dir / f"power_episode_{episode_number:04d}.csv",
+            [{field: row.get(field) for field in fields} for row in steps],
+        )
         self._save_power_plot(episode_number, results[0], steps)
 
         if self.verbose:
