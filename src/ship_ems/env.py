@@ -559,13 +559,11 @@ class ShipEMSEnv(gym.Env):
         self.voyage_id = self.sample_ids[idx]
         profile = self.load_profiles[idx]
         self.load_profile = profile
-        self._reaches_voyage_end = True
         self._window_info = {}
         if self.train_window_steps is not None:
             start = int(self.np_random.integers(len(profile) - self.train_window_steps))
             end = start + self.train_window_steps
             self.load_profile = profile[start:end + 1]
-            self._reaches_voyage_end = end == len(profile) - 1
             self._window_info = {
                 "episode_scope": "training_window",
                 "window_start_step": start,
@@ -763,12 +761,13 @@ class ShipEMSEnv(gym.Env):
         self.fc_power_kw = fc_actual_kw
         self.step_index += 1
 
-        self._episode_done = self.step_index >= len(self.load_profile) - 1
-        terminated = self._episode_done and self._reaches_voyage_end
-        truncated = self._episode_done and not self._reaches_voyage_end
-        terminal_reason = "voyage_end" if terminated else None
-        if truncated:
-            terminal_reason = "training_window_end"
+        terminated = self.step_index >= len(self.load_profile) - 1
+        self._episode_done = terminated
+        terminal_reason = None
+        if terminated:
+            terminal_reason = (
+                "training_window_end" if self.train_window_steps is not None else "voyage_end"
+            )
 
         # ------------------------------------------------
         # 10. Step operating costs
@@ -993,7 +992,7 @@ class ShipEMSEnv(gym.Env):
 
             # Episode status
             "terminated": terminated,
-            "truncated": truncated,
+            "truncated": False,
             "terminal_reason": terminal_reason,
 
             "failure": False,
@@ -1005,11 +1004,9 @@ class ShipEMSEnv(gym.Env):
         # 13. Voyage economic accounting
         # ------------------------------------------------
 
-        if self._episode_done:
-            # A partial voyage has no complete physical start/stop cycle.
-            start_stop_cycles = int(
-                terminated and self._window_info.get("window_start_step", 0) == 0
-            )
+        if terminated:
+            # Only full-voyage episodes record a complete physical cycle.
+            start_stop_cycles = int(self.train_window_steps is None)
             self.voyage_costs = self._calculate_voyage_costs(start_stop_cycles)
             self._add_voyage_economic_info(
                 info=info,
@@ -1030,7 +1027,7 @@ class ShipEMSEnv(gym.Env):
             self._get_obs(),
             reward,
             terminated,
-            truncated,
+            False,
             info,
         )
 
