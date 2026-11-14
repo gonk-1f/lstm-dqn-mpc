@@ -1,0 +1,7 @@
+--extra-index-url https://download.pytorch.org/whl/cu128
+stable-baselines3==2.2.1
+gymnasium==0.29.1
+torch==2.8.0+cu128
+numpy==1.26.4
+pandas<3
+matplotlib
