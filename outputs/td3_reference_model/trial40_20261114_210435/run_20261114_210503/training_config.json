@@ -1,0 +1,100 @@
+{
+  "learning_rate": 0.0001,
+  "buffer_size": 200000,
+  "learning_starts": 25000,
+  "batch_size": 64,
+  "gamma": 1.0,
+  "tau": 0.005,
+  "policy_delay": 2,
+  "target_policy_noise": 0.1,
+  "target_noise_clip": 0.2,
+  "policy_kwargs": {
+    "net_arch": [
+      256,
+      256
+    ]
+  },
+  "train_freq": [
+    1,
+    "episode"
+  ],
+  "gradient_steps": -1,
+  "algorithm": "native SB3 TD3",
+  "critic_loss": "mse",
+  "versions": {
+    "python": "3.11.5",
+    "stable-baselines3": "2.2.1",
+    "gymnasium": "0.29.1",
+    "torch": "2.8.0+cu128",
+    "numpy": "1.26.4"
+  },
+  "device": "cuda",
+  "torch_cuda": "12.8",
+  "data_root": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\data\\processed\\operating_dataset_v6_1s",
+  "split_manifest": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\v6-sb3-baseline\\data\\processed\\operating_dataset_v6_1s\\metadata\\sample_manifest.csv",
+  "model_version": "simulationcode_ship_600kw_624kwh_v1",
+  "model_parameters": {
+    "fc_rated_kw": 600.0,
+    "fc_minimum_output_kw": 1.0,
+    "fc_command_ramp_kw_per_s": 20.0,
+    "fc_filter_s": 10.0,
+    "fc_degradation_normalization_kw": 1920.0,
+    "fc_running_threshold_kw": 0.1,
+    "fc_low_load_threshold_kw": 120.0,
+    "fc_high_load_threshold_kw": 480.0,
+    "fc_startup_uv": 13.79,
+    "fc_low_uv_per_hour": 8.66,
+    "fc_high_uv_per_hour": 10.0,
+    "fc_transient_uv_per_normalized_unit": 0.0441,
+    "fc_eol_uv": 60000.0,
+    "fc_step_cost_cap": 0.05,
+    "fc_replacement_cost_per_kw": 1071.4285714285713,
+    "battery_capacity_kwh": 624.0,
+    "battery_voltage_v": 432.0,
+    "battery_max_charge_kw": 624.0,
+    "battery_max_discharge_kw": 624.0,
+    "battery_cost_per_qloss": 109.2,
+    "soc_target": 0.5,
+    "soc_initial_range": [
+      0.4,
+      0.7
+    ],
+    "soc_boundary_range": [
+      0.3,
+      0.8
+    ],
+    "soc_boundary_cost": 0.1,
+    "hydrogen_lhv_kj_per_kg": 120000.0,
+    "hydrogen_cost_per_kg": 4.0,
+    "cost_unit": "SimulationCode cost unit (currency unspecified)",
+    "failure_cost_per_remaining_step": 2.0,
+    "normal_step_cost_upper_bound": 1.7471422715150808
+  },
+  "action_mapping": "absolute_fc_command_kw",
+  "observation_normalization": {
+    "load_scale_kw": 1103.8994,
+    "load_delta_scale_kw": 45.80449022846085
+  },
+  "soc_weight": 10.0,
+  "seed": 42,
+  "action_noise_sigma": 0.05,
+  "train_voyage_ids": [
+    "parent_005_seg01"
+  ],
+  "step_duration_s": 1.0,
+  "train_window_steps": 5000,
+  "max_episodes": 40,
+  "total_timesteps": 200000,
+  "diagnostic_interval": 20,
+  "validation_interval": 100,
+  "validation_ids": [
+    "parent_002_seg01",
+    "parent_011_seg01",
+    "parent_016_seg01",
+    "parent_020_seg01",
+    "parent_033_seg01",
+    "parent_040_seg01",
+    "parent_044_seg01",
+    "parent_045_seg01"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "completed_training_windows": 1,
+  "physical_failure_episodes": 1,
+  "total_timesteps": 8175,
+  "critic_updates": 0,
+  "actor_and_target_updates": 0,
+  "best_validation_episode": null,
+  "last_model": "C:\\Users\\20883\\OneDrive\\Desktop\\lstm-dqn-mpc\\lstm-dqn-mpc\\.worktrees\\td3-sb3-221-simulationcode-model\\outputs\\td3_reference_model\\trial40_20261114_210435\\run_20261114_210503\\last_model.zip"
+}

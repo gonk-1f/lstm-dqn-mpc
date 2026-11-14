@@ -1,0 +1,20 @@
+========================================================================
+Ship EMS TD3 数据加载完成
+数据目录：C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-sb3-baseline\data\processed\operating_dataset_v6_1s
+划分文件：C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\v6-sb3-baseline\data\processed\operating_dataset_v6_1s\metadata\sample_manifest.csv
+Train 航段数：35 | 环境步范围：3272–36660
+Validation 航段数：8
+  Val 01: parent_002_seg01 | 12169 个采样点
+  Val 02: parent_011_seg01 | 23197 个采样点
+  Val 03: parent_016_seg01 | 21071 个采样点
+  Val 04: parent_020_seg01 | 3559 个采样点
+  Val 05: parent_033_seg01 | 11071 个采样点
+  Val 06: parent_040_seg01 | 15541 个采样点
+  Val 07: parent_044_seg01 | 24482 个采样点
+  Val 08: parent_045_seg01 | 32680 个采样点
+Test 数据：未加载
+========================================================================
+Using cuda device
+Wrapping the env in a DummyVecEnv.
+Logging to C:\Users\20883\OneDrive\Desktop\lstm-dqn-mpc\lstm-dqn-mpc\.worktrees\td3-sb3-221-simulationcode-model\outputs\td3_reference_model\trial40_20261114_210435\run_20261114_210503\sb3_logs
+[Training] stopping on incomplete window at episode 2, step 8175: no_feasible_physical_power.
