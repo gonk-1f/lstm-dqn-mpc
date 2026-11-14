@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from math import isfinite
 
 import numpy as np
 import torch
@@ -33,6 +34,7 @@ from td3_config import (
     SEED,
     SOC_STEP_WEIGHT,
     TRAIN_DIAGNOSTIC_INTERVAL,
+    TRAIN_WINDOW_STEPS,
     VALIDATION_INTERVAL,
     load_dataset_bundle,
     make_env,
@@ -48,8 +50,8 @@ from td3_config import (
 ACTOR_LEARNING_RATE = 0.0001
 CRITIC_LEARNING_RATE = 0.001
 
-BUFFER_SIZE = 1_000_000
-LEARNING_STARTS = 5000
+BUFFER_SIZE = 200_000
+LEARNING_STARTS = 25_000
 BATCH_SIZE = 64
 ADAM_BETAS = (0.9, 0.999)
 HUBER_DELTA = 1.0
@@ -165,20 +167,26 @@ class SeparateLearningRateTD3(TD3):
                 F.huber_loss(current_q, target_q_values, delta=HUBER_DELTA)
                 for current_q in current_q_values
             )
+            critic_loss_value = critic_loss.item()
+            if not isfinite(critic_loss_value):
+                raise FloatingPointError(f"Non-finite Critic loss at step {self.num_timesteps}")
             self.critic.optimizer.zero_grad()
             critic_loss.backward()
             self.critic.optimizer.step()
-            critic_losses.append(critic_loss.item())
+            critic_losses.append(critic_loss_value)
 
             if self._n_updates % self.policy_delay == 0:
                 actor_actions = self.actor(replay_data.observations)
                 actor_loss = -self.critic.q1_forward(
                     replay_data.observations, actor_actions
                 ).mean()
+                actor_loss_value = actor_loss.item()
+                if not isfinite(actor_loss_value):
+                    raise FloatingPointError(f"Non-finite Actor loss at step {self.num_timesteps}")
                 self.actor.optimizer.zero_grad()
                 actor_loss.backward()
                 self.actor.optimizer.step()
-                actor_losses.append(actor_loss.item())
+                actor_losses.append(actor_loss_value)
 
                 polyak_update(self.critic.parameters(), self.critic_target.parameters(), self.tau)
                 polyak_update(self.actor.parameters(), self.actor_target.parameters(), self.tau)
@@ -258,10 +266,13 @@ def main() -> None:
         "data_root": str(DATA_ROOT.resolve()),
         "split_manifest": bundle.manifest_path,
         "step_duration_s": DT_S,
-        "train_voyage_sampling": "fixed",
+        "train_voyage_sampling": "random_window_on_fixed_voyage",
         "train_voyage_ids": [train_id],
         "train_voyage_count": 1,
         "max_train_voyage_steps": train_voyage_steps,
+        "train_window_steps": TRAIN_WINDOW_STEPS,
+        "train_window_samples": TRAIN_WINDOW_STEPS + 1,
+        "max_train_window_start_step": train_voyage_steps - TRAIN_WINDOW_STEPS,
         "diagnostic_voyage": train_id,
 
         "validation_ids": validation_ids,
@@ -320,7 +331,7 @@ def main() -> None:
     )
 
     # --------------------------------------------------------
-    # 3.4 Create the fixed-voyage training environment
+    # 3.4 Sample training windows from the fixed voyage
     # --------------------------------------------------------
 
     def make_training_env():
@@ -328,11 +339,13 @@ def main() -> None:
         env = make_env(
             [train_profile],
             [train_id],
+            train_window_steps=TRAIN_WINDOW_STEPS,
         )
 
         return Monitor(
             env,
             filename=str(run_dir / "monitor"),
+            info_keywords=("window_start_step", "window_end_step"),
         )
 
     train_env = DummyVecEnv([
@@ -469,9 +482,7 @@ def main() -> None:
     # 3.10 Training
     # --------------------------------------------------------
 
-    total_timesteps_upper_bound = (
-        MAX_EPISODES * train_voyage_steps
-    )
+    total_timesteps_upper_bound = MAX_EPISODES * TRAIN_WINDOW_STEPS
 
     print("=" * 72)
     print("Ship EMS TD3 training")
@@ -479,6 +490,7 @@ def main() -> None:
 
     print("Algorithm: SB3 TD3")
     print(f"Fixed training voyage: {train_id} ({train_voyage_steps} steps)")
+    print(f"Random training window: {TRAIN_WINDOW_STEPS} steps")
     print(f"Training episodes: {MAX_EPISODES}")
     print(f"Step duration: {DT_S:g} s")
 
@@ -536,6 +548,10 @@ def main() -> None:
             log_interval=10,
         )
 
+    except (FloatingPointError, ValueError):
+        callback._save_training_tables()
+        raise
+
     finally:
 
         train_env.close()
@@ -548,11 +564,16 @@ def main() -> None:
         str(run_dir / "last_model")
     )
 
+    completed_windows = sum(row["completed"] for row in callback.episode_rows)
     save_json(
         run_dir / "training_summary.json",
         {
             "episodes_completed": len(
                 callback.episode_rows
+            ),
+            "completed_training_windows": completed_windows,
+            "physical_failure_episodes": sum(
+                row["failure"] for row in callback.episode_rows
             ),
 
             "total_timesteps": int(
@@ -591,7 +612,7 @@ def main() -> None:
     )
 
     print("=" * 72)
-    print("TD3 training finished")
+    print(f"TD3 finished with {completed_windows}/{MAX_EPISODES} complete windows")
 
     print(
         f"Episodes completed: "

@@ -283,10 +283,16 @@ class ShipEMSTrainingCallback(BaseCallback):
                 episode_info.get("l", info.get("episode_length", 0))
             )
             mean_reward = episode_reward / episode_length
+            recent_rewards = [row["mean_reward_per_step"] for row in self.episode_rows[-9:]]
+            moving_average = (sum(recent_rewards) + mean_reward) / (len(recent_rewards) + 1)
+            window_start = info.get("window_start_step")
+            window_end = info.get("window_end_step")
+            is_window = info.get("episode_scope") == "training_window"
             completed = (
-                info.get("terminal_reason") == "voyage_end"
+                info.get("terminal_reason") in ("voyage_end", "training_window_end")
                 and not info.get("failure", False)
                 and bool(info.get("economic_cost_ready", False))
+                and (not is_window or episode_length == window_end - window_start)
             )
 
             self.episode_rows.append({
@@ -295,10 +301,17 @@ class ShipEMSTrainingCallback(BaseCallback):
                 "sample_id": info.get("voyage_id", self.train_id),
                 "episode_reward": episode_reward,
                 "mean_reward_per_step": mean_reward,
+                "mean_reward_per_step_ma10": moving_average,
                 "episode_length": episode_length,
                 "completed": bool(completed),
                 "failure": bool(info.get("failure", False)),
                 "terminal_reason": info.get("terminal_reason"),
+                "episode_scope": info.get("episode_scope", "full_voyage"),
+                "window_start_step": window_start,
+                "window_end_step": window_end,
+                "terminated": info.get("terminated"),
+                "truncated": info.get("truncated"),
+                "fc_start_stop_cycles": info.get("voyage_fc_start_stop_cycles"),
                 "final_soc": info.get("final_soc", info.get("soc")),
                 "total_economic_cost_rmb": info.get("total_economic_cost_rmb"),
                 "voyage_hydrogen_kg": info.get("voyage_hydrogen_kg"),
@@ -313,6 +326,13 @@ class ShipEMSTrainingCallback(BaseCallback):
                     "battery_equivalent_hydrogen_cost_rmb"
                 ),
             })
+
+            if is_window and not completed:
+                print(
+                    f"[Training] stopping on incomplete window at episode {episode_number}, "
+                    f"step {self.num_timesteps}: {info.get('terminal_reason')}."
+                )
+                return False
 
             if episode_number % self.reward_plot_interval == 0:
                 self._save_training_tables()
@@ -338,7 +358,9 @@ class ShipEMSTrainingCallback(BaseCallback):
             if episode_number % self.validation_interval == 0:
                 self._run_validation(episode_number)
 
-            if episode_number >= self.max_episodes:
+            # Fixed-length windows reach the SB3 step budget exactly. Let it
+            # store their final transition and perform the last update.
+            if not is_window and episode_number >= self.max_episodes:
                 self._save_training_tables()
                 self._save_reward_plot()
                 self.model.save(str(self.output_dir / "last_model"))

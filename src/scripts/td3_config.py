@@ -61,7 +61,7 @@ DATA_ROOT = Path(
 OUTPUT_ROOT = (
     PROJECT_ROOT
     / "outputs"
-    / "td3_ship_ems_parent005_obs3_1s_literature_reward_v1"
+    / "td3_ship_ems_parent005_obs3_1s_literature_reward_v1_window5000_100ep"
 )
 
 ACTION_MAPPING = "relative_feasible_fc_fraction"
@@ -72,11 +72,12 @@ EXPECTED_TRAIN_COUNT = 35
 EXPECTED_VALIDATION_COUNT = 8
 
 
-MAX_EPISODES = 20
+TRAIN_WINDOW_STEPS = 5000
+MAX_EPISODES = 100
 
-REWARD_PLOT_INTERVAL = 10
+REWARD_PLOT_INTERVAL = 20
 
-TRAIN_DIAGNOSTIC_INTERVAL = 10
+TRAIN_DIAGNOSTIC_INTERVAL = 20
 
 VALIDATION_INTERVAL = 100
 
@@ -889,6 +890,7 @@ def make_env(
     sample_ids: Sequence[str],
     *,
     random_voyage: bool = False,
+    train_window_steps: int | None = None,
 ) -> ShipEMSEnv:
 
     return ShipEMSEnv(
@@ -900,6 +902,7 @@ def make_env(
         dt_s=DT_S,
 
         random_voyage=random_voyage,
+        train_window_steps=train_window_steps,
 
         # 使用自定义逐步奖励函数。
         reward_fn=calculate_step_reward,

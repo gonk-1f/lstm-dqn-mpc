@@ -43,6 +43,8 @@ class ShipEMSEnv(gym.Env):
         soc_step_weight: float | None = 0.5,
         soc_target: float = CONFIG.soc_target,
         failure_penalty: float = -20.0,
+        *,
+        train_window_steps: int | None = None,
     ):
         super().__init__()
 
@@ -286,6 +288,11 @@ class ShipEMSEnv(gym.Env):
             self.load_profiles.append(arr.copy())
 
         self.num_voyages = len(self.load_profiles)
+        if train_window_steps is not None and not (
+            0 < train_window_steps < min(map(len, self.load_profiles))
+        ):
+            raise ValueError("Training window must fit every supplied voyage.")
+        self.train_window_steps = train_window_steps
 
         if sample_ids is None:
             self.sample_ids = [
@@ -436,17 +443,17 @@ class ShipEMSEnv(gym.Env):
     # Voyage economic accounting
     # ====================================================
 
-    def _calculate_voyage_costs(self):
+    def _calculate_voyage_costs(self, start_stop_cycles: int):
         return self.cost_calculator.calculate_voyage_costs(
             step_costs=self.episode_step_costs,
             fuel_cell=self.fuel_cell,
             battery=self.battery,
             initial_soc=float(self.initial_soc),
             final_soc=float(self.battery.soc),
-            start_stop_cycles=1,
+            start_stop_cycles=start_stop_cycles,
         )
 
-    def _add_voyage_economic_info(self, info, voyage_costs):
+    def _add_voyage_economic_info(self, info, voyage_costs, start_stop_cycles: int):
         info.update({
             "initial_soc": float(self.initial_soc),
             "final_soc": float(self.battery.soc),
@@ -487,7 +494,7 @@ class ShipEMSEnv(gym.Env):
                 voyage_costs.fc_degradation_indicator
             ),
 
-            "voyage_fc_start_stop_cycles": 1,
+            "voyage_fc_start_stop_cycles": start_stop_cycles,
 
             "voyage_battery_degradation_increment": (
                 voyage_costs.battery_degradation_increment
@@ -550,7 +557,20 @@ class ShipEMSEnv(gym.Env):
 
         self.voyage_index = idx
         self.voyage_id = self.sample_ids[idx]
-        self.load_profile = self.load_profiles[idx]
+        profile = self.load_profiles[idx]
+        self.load_profile = profile
+        self._reaches_voyage_end = True
+        self._window_info = {}
+        if self.train_window_steps is not None:
+            start = int(self.np_random.integers(len(profile) - self.train_window_steps))
+            end = start + self.train_window_steps
+            self.load_profile = profile[start:end + 1]
+            self._reaches_voyage_end = end == len(profile) - 1
+            self._window_info = {
+                "episode_scope": "training_window",
+                "window_start_step": start,
+                "window_end_step": end,
+            }
 
         # FC stays on in standby at zero power.
         self.fuel_cell.reset(initial_is_on=True)
@@ -565,6 +585,7 @@ class ShipEMSEnv(gym.Env):
         self._episode_done = False
 
         info = {
+            **self._window_info,
             "voyage_id": self.voyage_id,
             "voyage_index": self.voyage_index,
             "num_samples": len(self.load_profile),
@@ -651,6 +672,7 @@ class ShipEMSEnv(gym.Env):
             self._episode_done = True
 
             info = {
+                **self._window_info,
                 "voyage_id": self.voyage_id,
                 "voyage_index": self.voyage_index,
                 "step_index": self.step_index,
@@ -741,12 +763,12 @@ class ShipEMSEnv(gym.Env):
         self.fc_power_kw = fc_actual_kw
         self.step_index += 1
 
-        terminated = (
-            self.step_index
-            >= len(self.load_profile) - 1
-        )
-
-        self._episode_done = terminated
+        self._episode_done = self.step_index >= len(self.load_profile) - 1
+        terminated = self._episode_done and self._reaches_voyage_end
+        truncated = self._episode_done and not self._reaches_voyage_end
+        terminal_reason = "voyage_end" if terminated else None
+        if truncated:
+            terminal_reason = "training_window_end"
 
         # ------------------------------------------------
         # 10. Step operating costs
@@ -786,6 +808,7 @@ class ShipEMSEnv(gym.Env):
         # ------------------------------------------------
 
         info = {
+            **self._window_info,
             "voyage_id": self.voyage_id,
             "voyage_index": self.voyage_index,
             "step_index": self.step_index - 1,
@@ -970,11 +993,8 @@ class ShipEMSEnv(gym.Env):
 
             # Episode status
             "terminated": terminated,
-            "truncated": False,
-
-            "terminal_reason": (
-                "voyage_end" if terminated else None
-            ),
+            "truncated": truncated,
+            "terminal_reason": terminal_reason,
 
             "failure": False,
             "reward_ready": self.reward_ready,
@@ -985,14 +1005,16 @@ class ShipEMSEnv(gym.Env):
         # 13. Voyage economic accounting
         # ------------------------------------------------
 
-        if terminated:
-            self.voyage_costs = (
-                self._calculate_voyage_costs()
+        if self._episode_done:
+            # A partial voyage has no complete physical start/stop cycle.
+            start_stop_cycles = int(
+                terminated and self._window_info.get("window_start_step", 0) == 0
             )
-
+            self.voyage_costs = self._calculate_voyage_costs(start_stop_cycles)
             self._add_voyage_economic_info(
                 info=info,
                 voyage_costs=self.voyage_costs,
+                start_stop_cycles=start_stop_cycles,
             )
 
         # ------------------------------------------------
@@ -1008,7 +1030,7 @@ class ShipEMSEnv(gym.Env):
             self._get_obs(),
             reward,
             terminated,
-            False,
+            truncated,
             info,
         )
 
