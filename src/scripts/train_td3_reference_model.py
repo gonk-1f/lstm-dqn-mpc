@@ -34,7 +34,7 @@ ACCOUNTING_FIELDS = (
     "fc_startup_uv", "fc_low_uv", "fc_high_uv", "fc_transient_uv", "battery_qloss",
 )
 TRACE_FIELDS = (
-    "load_kw", "requested_fc_kw", "actor_action_fraction", "ramp_limited_fc_kw",
+    "load_kw", "requested_fc_kw", "actor_action_fraction",
     "fc_actual_kw", "requested_battery_kw", "battery_actual_kw", "delta_fc_kw", "soc_before", "soc",
     "power_balance_error_kw", "unserved_load_kw", "excess_power_kw", "soc_boundary_violation",
     "fc_efficiency", "hydrogen_rate_kg_per_hour",
