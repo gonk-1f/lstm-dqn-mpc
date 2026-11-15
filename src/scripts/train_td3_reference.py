@@ -83,6 +83,8 @@ def build_model(env, *, seed: int = SEED, device: str = DEVICE) -> TD3:
 class ReferenceDiagnostics(ShipEMSTrainingCallback):
     """Evaluate the saved policy after SB3 finishes each scheduled update batch."""
 
+    checkpoint_interval = DIAGNOSTIC_INTERVAL
+
     def _on_training_start(self) -> None:
         super()._on_training_start()
         self._episode_reward_costs = dict.fromkeys(REWARD_COST_FIELDS, 0.0)
@@ -167,7 +169,7 @@ class ReferenceDiagnostics(ShipEMSTrainingCallback):
             or (self.train_diagnostic_rows and self.train_diagnostic_rows[-1]["training_episode"] == episode)
         ):
             return
-        if episode % DIAGNOSTIC_INTERVAL == 0:
+        if episode % self.checkpoint_interval == 0:
             row = self.episode_rows[-1]
             self.logger.record("train/mean_reward_per_step", row["mean_reward_per_step"])
             self.logger.record("train/mean_reward_per_step_ma10", row["mean_reward_per_step_ma10"])
@@ -180,7 +182,7 @@ class ReferenceDiagnostics(ShipEMSTrainingCallback):
             self.logger.dump(self.num_timesteps)
         if episode % VALIDATION_INTERVAL == 0:
             self._run_validation(episode)
-        if episode % DIAGNOSTIC_INTERVAL == 0 or episode % VALIDATION_INTERVAL == 0:
+        if episode % self.checkpoint_interval == 0 or episode % VALIDATION_INTERVAL == 0:
             self._save_training_tables()
 
     def _on_rollout_start(self) -> None:

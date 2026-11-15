@@ -6,8 +6,10 @@ from td3_config import PROJECT_ROOT
 from ship_ems import reference_model as source
 
 
-MODEL_VERSION = "simulationcode_ship_no_fc_dynamics_v1"
-OUTPUT_ROOT = PROJECT_ROOT / "outputs" / "td3_no_fc_dynamics"
+MODEL_VERSION = "simulationcode_feasible_action_four_cost_v1"
+OUTPUT_ROOT = PROJECT_ROOT / "outputs" / "td3_feasible_action"
+TRIAL_EPISODES = 20
+TRAIN_DIAGNOSTIC_INTERVAL = 5
 SOC_WEIGHT = 10.0
 FAILURE_COST_PER_REMAINING_STEP = 2.0
 NORMAL_STEP_COST_UPPER_BOUND = source.maximum_step_cost(SOC_WEIGHT)
@@ -24,7 +26,6 @@ MODEL_PARAMETERS = {
     "fc_high_uv_per_hour": source.FC_HIGH_UV_PER_HOUR,
     "fc_transient_uv_per_normalized_unit": source.FC_TRANSIENT_UV_PER_NORMALIZED_UNIT,
     "fc_eol_uv": source.FC_EOL_UV,
-    "fc_step_cost_cap": source.FC_STEP_COST_CAP,
     "fc_replacement_cost_per_kw": source.FC_REPLACEMENT_COST_PER_KW,
     "battery_capacity_kwh": source.BATTERY_KWH,
     "battery_voltage_v": source.BATTERY_VOLTAGE_V,
@@ -34,7 +35,6 @@ MODEL_PARAMETERS = {
     "soc_target": source.SOC_TARGET,
     "soc_initial": source.SOC_INITIAL,
     "soc_boundary_range": (source.SOC_MIN, source.SOC_MAX),
-    "soc_boundary_cost": source.SOC_BOUNDARY_COST,
     "hydrogen_lhv_kj_per_kg": source.LHV_KJ_PER_KG,
     "hydrogen_cost_per_kg": source.HYDROGEN_COST_PER_KG,
     "cost_unit": "SimulationCode cost unit (currency unspecified)",

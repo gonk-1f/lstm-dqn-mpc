@@ -23,7 +23,6 @@ FC_HIGH_UV_PER_HOUR = 10.0
 FC_TRANSIENT_UV_PER_NORMALIZED_UNIT = 0.0441
 FC_EOL_UV = 60_000.0
 FC_REPLACEMENT_COST_PER_KW = 7_500.0 / 7.0
-FC_STEP_COST_CAP = 0.05
 
 BATTERY_KWH = CONFIG.battery_total_capacity_kwh
 BATTERY_VOLTAGE_V = CONFIG.battery_rated_voltage_v
@@ -33,7 +32,6 @@ BATTERY_COST_PER_QLOSS = 350.0 * BATTERY_KWH / 20.0 / 100.0
 SOC_MIN, SOC_MAX = 0.30, 0.80
 SOC_INITIAL = CONFIG.soc_initial
 SOC_TARGET = 0.50
-SOC_BOUNDARY_COST = 0.10
 HYDROGEN_COST_PER_KG = 4.0  # SimulationCode cost units, currency unspecified.
 LHV_KJ_PER_KG = CONFIG.hydrogen_lhv_mj_per_kg * 1_000.0
 STEP_S = 1.0
@@ -95,24 +93,30 @@ def battery_capacity_loss(power_kw: float) -> float:
 def maximum_step_cost(soc_weight: float) -> float:
     """Conservative bound for reporting how the fixed failure cost compares."""
     battery_kw = max(BATTERY_CHARGE_KW, BATTERY_DISCHARGE_KW)
-    min_efficiency = min(fuel_cell_efficiency(FC_MIN_KW), fuel_cell_efficiency(FC_RATED_KW))
-    fuel = (
-        (FC_RATED_KW + battery_kw) * STEP_S / (min_efficiency * LHV_KJ_PER_KG)
-        * HYDROGEN_COST_PER_KG
+    # In the first segment efficiency grows at least linearly with power.
+    # Beyond it, use the smallest efficiency at a positive tabulated load.
+    low_power_ratio = FC_RATED_KW * FC_LOAD_REFERENCE[1] / (
+        FC_EFFICIENCY_REFERENCE[1] - FC_EFFICIENCY_REFERENCE[0]
     )
+    rated_ratio = FC_RATED_KW / float(np.min(FC_EFFICIENCY_REFERENCE[1:]))
+    fuel = max(low_power_ratio, rated_ratio) * STEP_S * HYDROGEN_COST_PER_KG / LHV_KJ_PER_KG
     c_rate = battery_kw / BATTERY_KWH
     battery = (
         (battery_kw / 3_600.0) ** 0.55 * (32_350.0 + 4_041.0 * exp(0.1271 * c_rate))
         * exp(-(63_400.0 - (c_rate + 1.0) * 370.3) / (8.31 * 350.0))
         * STEP_S * BATTERY_COST_PER_QLOSS
     )
+    fc_degradation_uv = (
+        FC_STARTUP_UV + (FC_LOW_UV_PER_HOUR + FC_HIGH_UV_PER_HOUR) * STEP_S / 3_600.0
+        + FC_TRANSIENT_UV_PER_NORMALIZED_UNIT * (FC_RATED_KW - FC_MIN_KW) / FC_NORMALIZATION_KW
+    )
+    fc = FC_REPLACEMENT_COST_PER_KW * FC_RATED_KW * fc_degradation_uv / FC_EOL_UV
     soc_distance = max(SOC_TARGET - SOC_MIN, SOC_MAX - SOC_TARGET)
-    soc_distance += battery_kw * STEP_S / (BATTERY_KWH * 3_600.0)
-    return fuel + battery + FC_STEP_COST_CAP + soc_weight * soc_distance**2 + SOC_BOUNDARY_COST
+    return fuel + battery + fc + soc_weight * soc_distance**2
 
 
 class SimulationCodeShipEnv(gym.Env):
-    """Execute absolute FC power commands within the rated limits."""
+    """Map a relative action into the current feasible FC power interval."""
 
     def __init__(
         self, load_profiles, sample_ids, *, load_scale_kw: float, load_delta_scale_kw: float,
@@ -135,7 +139,7 @@ class SimulationCodeShipEnv(gym.Env):
         self.load_scale_kw = load_scale_kw
         self.load_delta_scale_kw = load_delta_scale_kw
         self.observation_space = spaces.Box(-1.0, 1.0, shape=(4,), dtype=np.float32)
-        self.action_space = spaces.Box(FC_MIN_KW, FC_RATED_KW, shape=(1,), dtype=np.float32)
+        self.action_space = spaces.Box(0.0, 1.0, shape=(1,), dtype=np.float32)
 
     def _observation(self) -> np.ndarray:
         load_kw = self.profile[self.step_index]
@@ -173,39 +177,41 @@ class SimulationCodeShipEnv(gym.Env):
     def step(self, action):
         if self.episode_done:
             raise RuntimeError("Reset the environment before taking another step.")
-        (command_kw,) = np.asarray(action).reshape(-1)
-        if not isfinite(command_kw):
-            raise ValueError("Fuel-cell command must be finite.")
-        fc_kw = float(np.clip(command_kw, FC_MIN_KW, FC_RATED_KW))
+        (action_value,) = np.asarray(action).reshape(-1)
+        if not isfinite(action_value):
+            raise ValueError("Fuel-cell action fraction must be finite.")
+        action_fraction = float(np.clip(action_value, 0.0, 1.0))
         previous_fc_kw = self.fc_kw
         load_kw = float(self.profile[self.step_index])
-        requested_battery_kw = load_kw - fc_kw
-        soc_at_boundary = not SOC_MIN <= self.soc <= SOC_MAX
-        battery_kw = float(np.clip(
-            requested_battery_kw,
-            0.0 if self.soc > SOC_MAX else -BATTERY_CHARGE_KW,
-            0.0 if self.soc < SOC_MIN else BATTERY_DISCHARGE_KW,
-        ))
+        battery_energy_kw = BATTERY_KWH * 3_600.0 / STEP_S
+        battery_min_kw = max(-BATTERY_CHARGE_KW, (self.soc - SOC_MAX) * battery_energy_kw)
+        battery_max_kw = min(BATTERY_DISCHARGE_KW, (self.soc - SOC_MIN) * battery_energy_kw)
+        fc_min_kw = max(FC_MIN_KW, load_kw - battery_max_kw)
+        fc_max_kw = min(FC_RATED_KW, load_kw - battery_min_kw)
         info = {
             **self.window_info, "load_kw": load_kw, "soc_before": self.soc,
-            "requested_fc_kw": float(command_kw),
-            "actor_action_fraction": fc_kw / FC_RATED_KW, "truncated": False,
-            "requested_battery_kw": requested_battery_kw,
-            "soc_boundary_violation": soc_at_boundary,
+            "actor_action_fraction": action_fraction, "truncated": False,
+            "feasible_fc_lower_kw": fc_min_kw, "feasible_fc_upper_kw": fc_max_kw,
+            "battery_feasible_lower_kw": battery_min_kw, "battery_feasible_upper_kw": battery_max_kw,
         }
-        if abs(requested_battery_kw - battery_kw) > 1e-8:
+        if fc_min_kw > fc_max_kw + 1e-8:
             self.episode_done = True
             penalty = self.failure_cost_per_remaining_step * (self.episode_length - self.step_index)
             return self._observation(), -penalty, True, False, {
                 **info, "soc": self.soc, "failure": True, "terminated": True,
                 "fc_actual_kw": None, "battery_actual_kw": None,
-                "unserved_load_kw": max(0.0, requested_battery_kw - battery_kw),
-                "excess_power_kw": max(0.0, battery_kw - requested_battery_kw),
+                "unserved_load_kw": max(0.0, load_kw - FC_RATED_KW - battery_max_kw),
+                "excess_power_kw": max(0.0, FC_MIN_KW + battery_min_kw - load_kw),
                 "economic_cost_ready": False, "failure_penalty": penalty,
                 "terminal_reason": "no_feasible_physical_power",
             }
 
-        self.soc -= battery_kw * STEP_S / (BATTERY_KWH * 3_600.0)
+        # A discrepancy below the infeasibility tolerance is an endpoint.
+        fc_min_kw = min(fc_min_kw, fc_max_kw)
+        info["feasible_fc_lower_kw"] = fc_min_kw
+        fc_kw = fc_min_kw + action_fraction * (fc_max_kw - fc_min_kw)
+        battery_kw = load_kw - fc_kw
+        self.soc -= battery_kw / battery_energy_kw
         self.fc_kw = fc_kw
         self.step_index += 1
         self.episode_done = self.step_index == self.episode_length
@@ -223,12 +229,10 @@ class SimulationCodeShipEnv(gym.Env):
         qloss = battery_capacity_loss(battery_kw)
         battery_cost = qloss * BATTERY_COST_PER_QLOSS
         degradation = fuel_cell_degradation(previous_fc_kw, fc_kw)
-        fc_cost_raw = FC_REPLACEMENT_COST_PER_KW * FC_RATED_KW * sum(degradation) / FC_EOL_UV
-        fc_cost = min(fc_cost_raw, FC_STEP_COST_CAP)
+        fc_cost = FC_REPLACEMENT_COST_PER_KW * FC_RATED_KW * sum(degradation) / FC_EOL_UV
         soc_penalty = self.soc_weight * (self.soc - SOC_TARGET) ** 2
-        boundary_penalty = SOC_BOUNDARY_COST if soc_at_boundary else 0.0
-        operating_cost = hydrogen_cost + battery_equivalent_cost + battery_cost
-        reward = -(operating_cost + fc_cost + soc_penalty + boundary_penalty)
+        actual_cost = hydrogen_cost + battery_cost + fc_cost
+        reward = -(actual_cost + soc_penalty)
 
         return self._observation(), reward, self.episode_done, False, {
             **info, "soc": self.soc, "fc_actual_kw": fc_kw, "battery_actual_kw": battery_kw,
@@ -240,12 +244,12 @@ class SimulationCodeShipEnv(gym.Env):
             "battery_equivalent_rate_kg_per_hour": battery_equivalent_rate,
             "hydrogen_kg": hydrogen_kg, "battery_equivalent_hydrogen_kg": battery_equivalent_kg,
             "hydrogen_cost": hydrogen_cost, "battery_equivalent_hydrogen_cost": battery_equivalent_cost,
-            "battery_degradation_cost": battery_cost, "fc_degradation_cost_raw": fc_cost_raw,
+            "battery_degradation_cost": battery_cost,
             "fc_degradation_cost": fc_cost, "fc_start_count": int(degradation.startup > 0.0),
             "fc_startup_uv": degradation.startup, "fc_low_uv": degradation.low_load,
             "fc_high_uv": degradation.high_load, "fc_transient_uv": degradation.transient,
-            "soc_penalty": soc_penalty, "soc_boundary_penalty": boundary_penalty,
-            "total_economic_cost": operating_cost + fc_cost_raw,
+            "soc_penalty": soc_penalty,
+            "total_economic_cost": actual_cost + battery_equivalent_cost,
             "failure": False, "failure_penalty": 0.0, "economic_cost_ready": True,
             "terminated": self.episode_done, "terminal_reason": reason,
         }

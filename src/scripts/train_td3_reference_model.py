@@ -1,6 +1,9 @@
-"""Train native TD3 with the adapted SimulationCode vessel environment."""
+"""Run the 20-episode feasible-action trial after the warm-up diagnostic passes."""
 
+from argparse import ArgumentParser
 from datetime import datetime
+import json
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -13,30 +16,25 @@ from td3_config import (
     DIAGNOSTIC_VOYAGE_ID, DT_S, SEED, TRAIN_WINDOW_STEPS, VALIDATION_INTERVAL,
     load_dataset_bundle, save_json, write_csv,
 )
-from td3_reference_config import (
-    ACTION_NOISE_SIGMA, DATA_ROOT, DIAGNOSTIC_INTERVAL, EPISODES, TD3_KWARGS,
-    TOTAL_TIMESTEPS,
-)
+from td3_reference_config import ACTION_NOISE_SIGMA, DATA_ROOT, TD3_KWARGS
 from td3_reference_model_config import (
     MODEL_PARAMETERS, MODEL_VERSION, OUTPUT_ROOT, SOC_WEIGHT, make_env,
-    observation_scales,
+    observation_scales, TRAIN_DIAGNOSTIC_INTERVAL, TRIAL_EPISODES,
 )
 from train_td3_reference import ReferenceDiagnostics, build_model, runtime_versions
 
 
-COST_FIELDS = (
-    "hydrogen_cost", "battery_equivalent_hydrogen_cost", "battery_degradation_cost",
-    "fc_degradation_cost_raw", "fc_degradation_cost", "soc_penalty",
-    "soc_boundary_penalty", "total_economic_cost", "failure_penalty",
-)
+REWARD_COST_FIELDS = ("hydrogen_cost", "battery_degradation_cost", "fc_degradation_cost", "soc_penalty")
+COST_FIELDS = (*REWARD_COST_FIELDS, "battery_equivalent_hydrogen_cost", "total_economic_cost", "failure_penalty")
 ACCOUNTING_FIELDS = (
     *COST_FIELDS, "fc_start_count", "hydrogen_kg", "battery_equivalent_hydrogen_kg",
     "fc_startup_uv", "fc_low_uv", "fc_high_uv", "fc_transient_uv", "battery_qloss",
 )
 TRACE_FIELDS = (
-    "load_kw", "requested_fc_kw", "actor_action_fraction",
-    "fc_actual_kw", "requested_battery_kw", "battery_actual_kw", "delta_fc_kw", "soc_before", "soc",
-    "power_balance_error_kw", "unserved_load_kw", "excess_power_kw", "soc_boundary_violation",
+    "load_kw", "actor_action_fraction", "feasible_fc_lower_kw", "feasible_fc_upper_kw",
+    "battery_feasible_lower_kw", "battery_feasible_upper_kw",
+    "fc_actual_kw", "battery_actual_kw", "delta_fc_kw", "soc_before", "soc",
+    "power_balance_error_kw", "unserved_load_kw", "excess_power_kw",
     "fc_efficiency", "hydrogen_rate_kg_per_hour",
     "battery_equivalent_rate_kg_per_hour", "battery_current_a", "battery_c_rate",
     *ACCOUNTING_FIELDS, "failure", "terminal_reason",
@@ -95,6 +93,8 @@ def evaluate_voyage(model, env, voyage_index: int, seed: int | None, *, capture_
 
 
 class ModelDiagnostics(ReferenceDiagnostics):
+    checkpoint_interval = TRAIN_DIAGNOSTIC_INTERVAL
+
     def __init__(self, *args, observation_scales: dict, **kwargs):
         super().__init__(*args, **kwargs)
         self.observation_scales = observation_scales
@@ -137,14 +137,19 @@ class ModelDiagnostics(ReferenceDiagnostics):
             [self.train_profile], [self.train_id], capture_steps=True,
         )
         actions = np.array([row["actor_action_fraction"] for row in steps])
+        fc_power_kw = [row["fc_actual_kw"] for row in steps if row["fc_actual_kw"] is not None]
         counts, edges = np.histogram(actions, bins=20, range=(0.0, 1.0))
-        rated_kw = float(self.model.action_space.high[0])
+        fc_counts, fc_edges = np.histogram(fc_power_kw, bins=20, range=(0.0, MODEL_PARAMETERS["fc_rated_kw"]))
         result.update({
             "training_episode": episode_number,
             "critic_updates": self.model._n_updates,
+            "actor_updates": self.model._n_updates // self.model.policy_delay,
+            "actor_loss": self.logger.name_to_value.get("train/actor_loss"),
             "critic_loss": self.logger.name_to_value.get("train/critic_loss"),
-            "actor_command_mean_kw": float(actions.mean()) * rated_kw,
-            "actor_command_std_kw": float(actions.std()) * rated_kw,
+            "actor_action_fraction_mean": float(actions.mean()),
+            "actor_action_fraction_std": float(actions.std()),
+            "actor_lower_endpoint_fraction": float(np.mean(actions == 0.0)),
+            "actor_upper_endpoint_fraction": float(np.mean(actions == 1.0)),
             "actor_action_saturation_fraction": float(np.mean(np.abs(2 * actions - 1) >= 0.99)),
             **self._replay_q_metrics(),
         })
@@ -153,11 +158,43 @@ class ModelDiagnostics(ReferenceDiagnostics):
         write_csv(
             self.output_dir / f"actor_actions_episode_{episode_number:04d}.csv",
             [
-                {"command_lower_kw": lo * rated_kw, "command_upper_kw": hi * rated_kw, "count": int(count)}
+                {"fraction_lower": lo, "fraction_upper": hi, "count": int(count)}
                 for lo, hi, count in zip(edges[:-1], edges[1:], counts)
             ],
         )
+        write_csv(
+            self.output_dir / f"fc_actual_power_episode_{episode_number:04d}.csv",
+            [
+                {"fc_lower_kw": lo, "fc_upper_kw": hi, "count": int(count)}
+                for lo, hi, count in zip(fc_edges[:-1], fc_edges[1:], fc_counts)
+            ],
+        )
         self._save_power_plot(episode_number, result, steps)
+
+    def _save_reward_plot(self, episode_number: int | None = None) -> None:
+        super()._save_reward_plot(episode_number)
+        rows = [
+            row for row in self.episode_rows
+            if row["global_timesteps"] - row["episode_length"] >= self.model.learning_starts
+        ]
+        if not rows:
+            return
+        import matplotlib.pyplot as plt
+
+        episodes = [row["episode"] for row in rows]
+        rewards = [row["mean_reward_per_step"] for row in rows]
+        fig, ax = plt.subplots(figsize=(9, 4.5), layout="constrained")
+        ax.plot(episodes, rewards, ".-", label="Mean reward per step")
+        ax.plot(
+            episodes[9:], [row["mean_reward_per_step_ma10"] for row in rows[9:]], "--",
+            label="10-episode moving average",
+        )
+        ax.set(xlabel="Training episode", ylabel="Reward / step", title="Training reward after random warm-up")
+        ax.set_xticks(episodes)
+        ax.grid(alpha=.25)
+        ax.legend()
+        fig.savefig(self.output_dir / "reward_after_warmup.png", dpi=180)
+        plt.close(fig)
 
     def _run_validation(self, episode_number: int) -> None:
         rows = [row for row, _ in self._evaluate(self.validation_profiles, self.validation_ids)]
@@ -185,7 +222,11 @@ class ModelDiagnostics(ReferenceDiagnostics):
             save_json(self.output_dir / "best_validation.json", report)
 
 
-def main() -> None:
+def main(warmup_summary: Path) -> None:
+    diagnostic = json.loads(warmup_summary.read_text(encoding="utf-8"))
+    if diagnostic["model_version"] != MODEL_VERSION or not diagnostic["diagnostic_passed"]:
+        raise ValueError("A passing warm-up diagnostic for this model version is required.")
+    total_timesteps = TRIAL_EPISODES * TRAIN_WINDOW_STEPS
     versions = runtime_versions()
     if (versions["stable-baselines3"], versions["gymnasium"]) != ("2.2.1", "0.29.1"):
         raise RuntimeError("Use the isolated environment from requirements-td3-reference.txt.")
@@ -208,8 +249,8 @@ def main() -> None:
         model.set_logger(configure(str(run_dir / "sb3_logs"), ["stdout", "csv"]))
         callback = ModelDiagnostics(
             train_profile, train_id, bundle.validation_profiles, bundle.validation_ids, run_dir,
-            max_episodes=EPISODES, reward_plot_interval=EPISODES + 1,
-            train_diagnostic_interval=EPISODES + 1, validation_interval=EPISODES + 1,
+            max_episodes=TRIAL_EPISODES, reward_plot_interval=TRIAL_EPISODES + 1,
+            train_diagnostic_interval=TRIAL_EPISODES + 1, validation_interval=TRIAL_EPISODES + 1,
             seed=SEED, observation_scales=scales,
         )
         save_json(run_dir / "training_config.json", {
@@ -218,14 +259,15 @@ def main() -> None:
             "versions": versions, "device": str(model.device), "torch_cuda": torch.version.cuda,
             "data_root": str(DATA_ROOT.resolve()), "split_manifest": bundle.manifest_path,
             "model_version": MODEL_VERSION, "model_parameters": MODEL_PARAMETERS,
-            "action_mapping": "absolute_fc_command_kw", "observation_normalization": scales,
+            "action_mapping": "relative_feasible_fc_interval", "observation_normalization": scales,
+            "warmup_diagnostic": str(warmup_summary.resolve()),
             "soc_weight": SOC_WEIGHT, "seed": SEED, "action_noise_sigma": ACTION_NOISE_SIGMA,
             "train_voyage_ids": [train_id], "step_duration_s": DT_S,
-            "train_window_steps": TRAIN_WINDOW_STEPS, "max_episodes": EPISODES,
-            "total_timesteps": TOTAL_TIMESTEPS, "diagnostic_interval": DIAGNOSTIC_INTERVAL,
+            "train_window_steps": TRAIN_WINDOW_STEPS, "max_episodes": TRIAL_EPISODES,
+            "total_timesteps": total_timesteps, "diagnostic_interval": TRAIN_DIAGNOSTIC_INTERVAL,
             "validation_interval": VALIDATION_INTERVAL, "validation_ids": bundle.validation_ids,
         })
-        model.learn(total_timesteps=TOTAL_TIMESTEPS, callback=callback, log_interval=5)
+        model.learn(total_timesteps=total_timesteps, callback=callback, log_interval=5)
         save_json(run_dir / "training_summary.json", {
             "completed_training_windows": sum(row["completed"] for row in callback.episode_rows),
             "physical_failure_episodes": sum(row["failure"] for row in callback.episode_rows),
@@ -239,4 +281,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("--warmup-summary", required=True, type=Path)
+    main(parser.parse_args().warmup_summary)
